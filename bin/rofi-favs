@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+"""rofi script mode: app launcher with favourites.  rofi -show apps -modi "apps:rofi-apps"
+Enter launches, Ctrl+S (kb-custom-1) stars / unstars the selected app. Favourites live in ~/.config/rofi/favorites."""
+import os, sys, subprocess, configparser, glob
+
+FAV = os.path.expanduser("~/.config/rofi/favorites")
+
+def favs():
+    try: return [l.strip() for l in open(FAV) if l.strip()]
+    except OSError: return []
+
+def apps():
+    dirs = [os.path.expanduser("~/.local/share/applications"),
+            os.path.expanduser("~/.local/share/flatpak/exports/share/applications"),
+            "/var/lib/flatpak/exports/share/applications"]
+    dirs += [os.path.join(d, "applications") for d in os.environ.get("XDG_DATA_DIRS", "/usr/local/share:/usr/share").split(":")]
+    out = {}
+    for d in dirs:
+        for f in glob.glob(os.path.join(d, "**", "*.desktop"), recursive=True):
+            i = os.path.relpath(f, d)[:-8].replace("/", "-")
+            if i in out: continue
+            c = configparser.ConfigParser(interpolation=None, strict=False)
+            try: c.read(f, encoding="utf-8")
+            except Exception: continue
+            if "Desktop Entry" not in c: continue
+            e = c["Desktop Entry"]
+            if e.get("Type") != "Application" or e.get("NoDisplay", "").lower() == "true" or e.get("Hidden", "").lower() == "true": continue
+            if e.get("OnlyShowIn") and "niri" not in e["OnlyShowIn"].lower(): continue
+            out[i] = (e.get("Name", i), e.get("Icon", ""), f)
+    return out
+
+A = apps()
+retv = int(os.environ.get("ROFI_RETV", "0"))
+info = os.environ.get("ROFI_INFO", "")
+
+if retv == 1 and info in A:                      # launch
+    subprocess.Popen(["gio", "launch", A[info][2]], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, start_new_session=True)
+    sys.exit(0)
+if retv == 10 and info in A:                     # toggle favourite
+    f = favs()
+    f = [x for x in f if x != info] if info in f else f + [info]
+    os.makedirs(os.path.dirname(FAV), exist_ok=True)
+    open(FAV, "w").write("\n".join(f) + ("\n" if f else ""))
+
+f = set(favs())
+print("\0prompt\x1ffavs\n\0message\x1fctrl+s  unstar the selected app\n\0keep-selection\x1ftrue\n\0use-hot-keys\x1ftrue", end="\n")
+for i, (n, ic, _) in sorted([(k, v) for k, v in A.items() if k in f], key=lambda kv: kv[1][0].lower()):
+    print(("★ " if i in f else "   ") + n + "\0icon\x1f" + ic + "\x1finfo\x1f" + i)

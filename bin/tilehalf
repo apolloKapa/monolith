@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+niri msg action toggle-window-floating
+sleep 0.1
+niri msg -j focused-window | jq -e ".is_floating == false" >/dev/null && niri msg action set-column-width 50%

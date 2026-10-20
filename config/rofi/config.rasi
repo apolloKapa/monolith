@@ -1,0 +1,114 @@
+configuration {
+    font: "JetBrains Mono 14";
+    show-icons: true;
+    icon-theme: "YAMIS";
+    display-drun: "run";
+    display-window: "window";
+    display-dmenu: ">";
+    drun-display-format: "{name}";
+    matching: "fuzzy";
+    kb-custom-1: "Control+s";
+}
+
+* {
+    bg:      #1a1a1a;
+    bg-alt:  #111111;
+    fg:      #ffffff;
+    dim:     #a0a0a0;
+    border:  #ffffff;
+    accent:  #ffffff;
+
+    background-color: transparent;
+    text-color: @fg;
+    margin: 0;
+    padding: 0;
+    spacing: 0;
+}
+
+window {
+    location: center;
+    width: 640px;
+    background-color: @bg;
+    border: 2px;
+    border-color: @border;
+    border-radius: 0;
+}
+
+mainbox {
+    padding: 12px;
+    children: [ inputbar, listview ];
+    spacing: 10px;
+}
+
+inputbar {
+    background-color: @bg-alt;
+    padding: 8px 10px;
+    spacing: 8px;
+    children: [ prompt, entry ];
+}
+
+prompt { text-color: @dim; }
+entry  { placeholder: "type to filter"; placeholder-color: #666666; }
+
+listview {
+    lines: 10;
+    scrollbar: false;
+    fixed-height: true;
+}
+
+element {
+    padding: 6px 10px;
+    spacing: 10px;
+    children: [ element-icon, element-text ];
+}
+
+element-icon {
+    size: 1.4em;
+    vertical-align: 0.5;
+}
+
+element-text { vertical-align: 0.5; text-color: inherit; highlight: bold underline; }
+
+element.selected.normal, element.selected.active, element.selected.urgent {
+    background-color: @fg;
+    text-color: #000000;
+}
+
+element.normal.normal, element.alternate.normal,
+element.normal.active, element.alternate.active {
+    background-color: transparent;
+    text-color: @fg;
+}
+element.normal.urgent, element.alternate.urgent {
+    background-color: transparent;
+    text-color: #9b0000;
+}
+
+message { padding: 6px 10px; background-color: @bg-alt; }
+
+inputbar { text-color: #ffffff; }
+entry    { text-color: #ffffff; cursor-color: #ffffff; }
+listview { border: 2px solid 0px 0px; border-color: #ffffff; }
+
+element.selected.normal, element.selected.active, element.selected.urgent {
+    background-color: transparent;
+    text-color: #ffffff;
+    border: 1px;
+    border-color: #ffffff;
+}
+
+window { width: 820px; }
+listview { columns: 5; lines: 4; flow: horizontal; fixed-height: true; }
+element { orientation: vertical; padding: 12px 6px; spacing: 6px; }
+element-icon { size: 3em; horizontal-align: 0.5; }
+element-text { horizontal-align: 0.5; }
+
+listview { spacing: 0px; }
+element.normal.active, element.alternate.active {
+    background-color: transparent;
+    text-color: @fg;
+    border: 0px 0px 1px 0px;
+    border-color: #ffffff;
+}
+
+element.normal.active, element.alternate.active { margin: 0px 0px 10px 0px; }

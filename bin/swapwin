@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# usage: swapwin left|right|up|down
+#  tiled focused:    swap with the neighbour column/window if there is one, else swap with a floating window
+#  floating focused: swap position+size with the nearest floating window in that direction, else with a tiled window
+dir="$1"
+a() { niri msg action "$@" >/dev/null; }
+r() { printf '%.0f' "$1"; }
+f=$(niri msg -j focused-window) || exit 0
+fid=$(jq -r .id <<<"$f"); ws=$(jq -r .workspace_id <<<"$f")
+all=$(niri msg -j windows)
+geom() { jq -r --argjson i "$1" '.[]|select(.id==$i)|.layout|"\(.tile_pos_in_workspace_view[0]) \(.tile_pos_in_workspace_view[1]) \(.window_size[0]) \(.window_size[1])"' <<<"$all"; }
+
+# swap focused tiled window $1 with floating window $2
+swap_tiled_float() {
+  local t=$1 fl=$2 fx fy fw fh tw th
+  read -r fx fy fw fh < <(geom "$fl")
+  read -r tw th < <(jq -r --argjson i "$t" '.[]|select(.id==$i)|.layout.window_size|"\(.[0]) \(.[1])"' <<<"$all")
+  a toggle-window-floating --id "$fl"          # floating -> tiled
+  a toggle-window-floating --id "$t"           # tiled -> floating
+  a set-window-width --id "$t" "$fw"; a set-window-height --id "$t" "$fh"
+  a move-floating-window --id "$t" -x "$(r "$fx")" -y "$(r "$fy")"
+  a set-column-width --id "$fl" "$tw" 2>/dev/null || true
+  a focus-window --id "$fid"
+}
+
+if [ "$(jq -r .is_floating <<<"$f")" != true ]; then
+  read -r col row <<<"$(jq -r '.layout.pos_in_scrolling_layout|"\(.[0]) \(.[1])"' <<<"$f")"
+  ncol=$(jq --argjson w "$ws" '[.[]|select(.workspace_id==$w and (.is_floating|not))|.layout.pos_in_scrolling_layout[0]]|max // 0' <<<"$all")
+  nrow=$(jq --argjson w "$ws" --argjson c "$col" '[.[]|select(.workspace_id==$w and (.is_floating|not) and .layout.pos_in_scrolling_layout[0]==$c)]|length' <<<"$all")
+  case "$dir" in
+    left)  [ "$col" -gt 1 ]      && { a move-column-left;  exit 0; } ;;
+    right) [ "$col" -lt "$ncol" ] && { a move-column-right; exit 0; } ;;
+    up)    [ "$row" -gt 1 ]      && { a move-window-up;    exit 0; } ;;
+    down)  [ "$row" -lt "$nrow" ] && { a move-window-down;  exit 0; } ;;
+  esac
+  o=$(jq -r --argjson w "$ws" '[.[]|select(.workspace_id==$w and .is_floating)]|sort_by(.focus_timestamp.secs)|reverse|.[0].id // empty' <<<"$all")
+  [ -n "$o" ] && swap_tiled_float "$fid" "$o"
+  exit 0
+fi
+
+o=$(jq -r --argjson f "$f" --arg d "$dir" '
+  def c: .layout as $l | [$l.tile_pos_in_workspace_view[0] + $l.tile_size[0]/2, $l.tile_pos_in_workspace_view[1] + $l.tile_size[1]/2];
+  ($f | c) as $fc
+  | [ .[] | select(.is_floating and .workspace_id == $f.workspace_id and .id != $f.id)
+      | . as $w | ($w | c) as $c
+      | { id: $w.id, dx: ($c[0]-$fc[0]), dy: ($c[1]-$fc[1]) }
+      | select(if $d=="left" then .dx < 0 elif $d=="right" then .dx > 0 elif $d=="up" then .dy < 0 else .dy > 0 end)
+      | . + { dist: (if ($d=="left" or $d=="right") then (.dx|fabs) + 2*(.dy|fabs) else (.dy|fabs) + 2*(.dx|fabs) end) } ]
+  | sort_by(.dist) | .[0].id // empty' <<<"$all")
+if [ -n "$o" ]; then
+  read -r fx fy fw fh < <(geom "$fid"); read -r ox oy ow oh < <(geom "$o")
+  a set-window-width --id "$fid" "$ow"; a set-window-height --id "$fid" "$oh"
+  a set-window-width --id "$o" "$fw";   a set-window-height --id "$o" "$fh"
+  a move-floating-window --id "$fid" -x "$(r "$ox")" -y "$(r "$oy")"
+  a move-floating-window --id "$o"   -x "$(r "$fx")" -y "$(r "$fy")"
+  exit 0
+fi
+t=$(jq -r --argjson w "$ws" '[.[]|select(.workspace_id==$w and (.is_floating|not))]|sort_by(.focus_timestamp.secs)|reverse|.[0].id // empty' <<<"$all")
+[ -n "$t" ] && swap_tiled_float "$t" "$fid"
+exit 0

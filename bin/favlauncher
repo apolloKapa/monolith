@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+rofi -show favs -modi "favs:$HOME/.local/bin/rofi-favs"

@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+import os, re, shutil, sys
+p = os.path.expanduser("~/.config/quickshell/bar/Theme.qml")
+key, val = sys.argv[1], sys.argv[2]
+s = open(p).read()
+pat = r"(readonly property \w+ " + re.escape(key) + r": ).*"
+new, n = re.subn(pat, lambda m: m.group(1) + val, s, count=1)
+if n != 1:
+    print("No such setting: " + key)
+    sys.exit(1)
+open(p, "w").write(new)
+print("Set " + key + " to " + val)
