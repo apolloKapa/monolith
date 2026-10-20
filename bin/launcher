@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+pkill -x rofi && exit
+# usage: launcher   -- rofi app launcher
+rofi -hover-select -me-select-entry "" -me-accept-entry MousePrimary -show apps -modi "apps:$HOME/.local/bin/rofi-apps"

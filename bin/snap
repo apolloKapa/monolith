@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# usage: snap left|right|up|down   -- Windows-style snapping for the focused floating window
+g=10; b=4   # b = 2x border width
+read -r W H < <(niri msg -j focused-output | jq -r '"\(.logical.width) \(.logical.height)"')
+a() { niri msg action "$@" >/dev/null; }
+case "$1" in
+  left|right)
+    w=$(( (W - 3*g) / 2 - b )); h=$(( H - 2*g - b ))
+    x=$g; [ "$1" = right ] && x=$(( W - g - w - b ))
+    a set-window-width "$w"; a set-window-height "$h"
+    a move-floating-window -x "$x" -y "$g" ;;
+  up)
+    a set-window-width $(( W - 2*g - b )); a set-window-height $(( H - 2*g - b ))
+    a move-floating-window -x "$g" -y "$g" ;;
+  down)
+    a set-window-width 1100; a set-window-height 700
+    a center-window ;;
+esac

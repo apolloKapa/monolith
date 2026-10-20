@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Mod+T: maximize the focused window but keep its border + gaps (works for tiled and floating); press again to restore
+g=10; b=4
+a() { niri msg action "$@" >/dev/null; }
+f=$(niri msg -j focused-window) || exit 0
+if [ "$(jq -r .is_floating <<<"$f")" != true ]; then a maximize-column; exit 0; fi
+id=$(jq -r .id <<<"$f")
+read -r W H < <(niri msg -j focused-output | jq -r '"\(.logical.width) \(.logical.height)"')
+mw=$(( W - 2*g - b )); mh=$(( H - 2*g - b ))
+read -r x y w h < <(jq -r '.layout|"\(.tile_pos_in_workspace_view[0]) \(.tile_pos_in_workspace_view[1]) \(.window_size[0]) \(.window_size[1])"' <<<"$f")
+sf="${XDG_RUNTIME_DIR:-/tmp}/maxtoggle-$id"
+if [ "$w" -ge $((mw-2)) ] && [ "$h" -ge $((mh-2)) ] && [ -f "$sf" ]; then
+  read -r x y w h < "$sf"; rm -f "$sf"
+  a set-window-width "$w"; a set-window-height "$h"; a move-floating-window -x "$x" -y "$y"
+else
+  printf '%.0f %.0f %s %s\n' "$x" "$y" "$w" "$h" > "$sf"
+  a set-window-width "$mw"; a set-window-height "$mh"; a move-floating-window -x "$g" -y "$g"
+fi

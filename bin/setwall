@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# usage: setwall [image]   (no arg = reapply; "pick" = rofi chooser)
+state="$HOME/.config/wallpaper"
+dir="$HOME/Pictures/Wallpapers"
+
+case "$1" in
+  "")
+    img="$(cat "$state" 2>/dev/null)"
+    ;;
+  pick)
+    name="$(for f in "$dir"/*; do
+        [ -f "$f" ] && printf "%s\0icon\x1f%s\n" "${f##*/}" "$f"
+      done | rofi -dmenu -i -p wallpaper -show-icons \
+        -hover-select -me-select-entry "" -me-accept-entry MousePrimary \
+        -theme-str "window { width: 70%; } listview { columns: 4; lines: 3; } element { orientation: vertical; padding: 8px; } element-icon { size: 10em; horizontal-align: 0.5; } element-text { horizontal-align: 0.5; }")"
+    [ -n "$name" ] || exit 0
+    img="$dir/$name"
+    [ -f "$img" ] || exit 0
+    ;;
+  *)
+    img="$(realpath "$1")"
+    ;;
+esac
+
+[ -f "$img" ] || exit 1
+echo "$img" > "$state"
+
+# start daemon if needed
+pgrep -x awww-daemon >/dev/null || awww-daemon >/dev/null 2>&1 &
+
+# stop old swaybg
+pkill -x swaybg 2>/dev/null
+
+# animated wallpaper change
+awww img "$img" \
+  --transition-type fade \
+  --transition-duration 1.2 \
+  --transition-fps 60 \
+  --resize crop

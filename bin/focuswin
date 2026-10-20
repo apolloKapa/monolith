@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# usage: focuswin left|right|up|down  -- focus the next window in that direction, staying on the current monitor
+# tiled: niri's own focus keys.  floating: nearest floating window in that direction, else the next window behind
+# (most recently used other window on this workspace, tiled ones included)
+dir="$1"
+f=$(niri msg -j focused-window) || exit 0
+if [ "$(jq -r .is_floating <<<"$f")" != true ]; then
+  before=$(jq -r .id <<<"$f")
+  case "$dir" in
+    left) niri msg action focus-column-left ;; right) niri msg action focus-column-right ;;
+    up) niri msg action focus-window-up ;; down) niri msg action focus-window-down ;;
+  esac
+  sleep 0.05
+  [ "$(niri msg -j focused-window | jq -r .id)" != "$before" ] && exit 0   # moved inside the tiling layout
+fi
+o=$(niri msg -j windows | jq -r --argjson f "$f" --arg d "$dir" '
+  def c: .layout as $l | [$l.tile_pos_in_workspace_view[0] + $l.tile_size[0]/2, $l.tile_pos_in_workspace_view[1] + $l.tile_size[1]/2];
+  ($f | c? // null) as $fc
+  | [ .[] | select(.workspace_id == $f.workspace_id and .id != $f.id) ] as $others
+  | ( if $fc == null then empty else
+      [ $others[] | select(.is_floating) | . as $w | ($w | c) as $c
+        | { id: $w.id, dx: ($c[0]-$fc[0]), dy: ($c[1]-$fc[1]) }
+        | select(if $d=="left" then .dx < 0 elif $d=="right" then .dx > 0 elif $d=="up" then .dy < 0 else .dy > 0 end)
+        | . + { dist: (if ($d=="left" or $d=="right") then (.dx|fabs) + 2*(.dy|fabs) else (.dy|fabs) + 2*(.dx|fabs) end) } ]
+      | sort_by(.dist) | .[0].id // empty end ),
+    ( $others | sort_by(.focus_timestamp.secs, .focus_timestamp.nanos) | reverse | .[0].id // empty )
+  | tostring' | head -1)
+[ -n "$o" ] && niri msg action focus-window --id "$o"
+exit 0

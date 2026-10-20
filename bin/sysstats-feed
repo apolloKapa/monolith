@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# prints one line per second: ram_used_GiB ram_total_GiB cpu% cpu_temp gpu% gpu_temp uptime_seconds
+# exits on its own when the reader goes away (SIGPIPE)
+hw() { for d in /sys/class/hwmon/hwmon*; do [ "$(cat "$d/name" 2>/dev/null)" = "$1" ] && { echo "$d"; return; }; done; }
+cpuhw=$(hw k10temp); gpuhw=$(hw amdgpu)
+gpubusy=$(ls /sys/class/drm/card*/device/gpu_busy_percent 2>/dev/null | head -1)
+read -r _ u n s i io irq sirq st _ < /proc/stat; pt=$((u+n+s+i+io+irq+sirq+st)); pi=$((i+io))
+while :; do
+  read -r _ u n s i io irq sirq st _ < /proc/stat; t=$((u+n+s+i+io+irq+sirq+st)); idle=$((i+io))
+  dt=$((t-pt)); cpu=0; [ "$dt" -gt 0 ] && cpu=$(( 100*(dt-(idle-pi))/dt )); pt=$t; pi=$idle
+  mem=$(awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{printf "%.1f %.1f",(t-a)/1048576,t/1048576}' /proc/meminfo)
+  ct=$(( $(cat "$cpuhw/temp1_input" 2>/dev/null || echo 0) / 1000 ))
+  gt=$(( $(cat "$gpuhw/temp1_input" 2>/dev/null || echo 0) / 1000 ))
+  gu=$(cat "$gpubusy" 2>/dev/null || echo 0)
+  up=$(cut -d. -f1 /proc/uptime)
+  echo "$mem $cpu $ct $gu $gt $up" || exit 0
+  sleep 1
+done

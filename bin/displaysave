@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+import json, os, re, shutil, subprocess, time
+
+cfg = os.path.expanduser("~/.config/niri/config.kdl")
+bdir = os.path.expanduser("~/niri-backups")
+os.makedirs(bdir, exist_ok=True)
+bak = os.path.join(bdir, "config.kdl.before-displaysave-" + time.strftime("%H%M%S"))
+shutil.copy(cfg, bak)
+
+raw = subprocess.run(["niri", "msg", "-j", "outputs"], capture_output=True, text=True).stdout
+outs = json.loads(raw)
+TF = {"normal": "normal", "90": "90", "180": "180", "270": "270", "flipped": "flipped", "flipped90": "flipped-90", "flipped180": "flipped-180", "flipped270": "flipped-270"}
+
+def num(x):
+    return str(int(x)) if float(x).is_integer() else str(x)
+
+blocks = []
+for name, o in sorted(outs.items()):
+    lg = o.get("logical")
+    cm = o.get("current_mode")
+    if not lg or cm is None:
+        blocks.append("output \"%s\" {\n    off\n}\n" % name)
+        continue
+    m = o["modes"][cm]
+    mode = "%dx%d@%.3f" % (m["width"], m["height"], m["refresh_rate"] / 1000)
+    tf = TF.get(str(lg.get("transform", "normal")).lstrip("_").replace("-", "").replace("_", "").lower(), "normal")
+    lines = ["output \"%s\" {" % name, "    mode \"%s\"" % mode, "    position x=%d y=%d" % (lg["x"], lg["y"]), "    scale %s" % num(lg.get("scale", 1))]
+    if tf != "normal":
+        lines.append("    transform \"%s\"" % tf)
+    lines.append("}")
+    blocks.append("\n".join(lines) + "\n")
+
+s = open(cfg).read()
+pat = re.compile(r"^output \"([^\"]+)\" \{[^}]*\}\n*", re.M)
+state = {"done": False}
+def sub(mo):
+    if mo.group(1) not in outs:
+        return mo.group(0)
+    if not state["done"]:
+        state["done"] = True
+        return "@@OUTPUTS@@\n"
+    return ""
+s = pat.sub(sub, s)
+new = "\n".join(blocks)
+if "@@OUTPUTS@@" in s:
+    s = s.replace("@@OUTPUTS@@\n", new + "\n")
+else:
+    s = s.rstrip("\n") + "\n\n" + new
+open(cfg, "w").write(s)
+r = subprocess.run(["niri", "validate"], capture_output=True, text=True)
+if r.returncode != 0:
+    shutil.copy(bak, cfg)
+    print("Config check failed, restored the backup")
+else:
+    print("Saved to config.kdl")

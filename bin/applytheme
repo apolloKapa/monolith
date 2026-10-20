@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+import colorsys, fcntl, json, os, re, shutil, subprocess, sys, time
+
+HOME = os.path.expanduser("~")
+STATE = HOME + "/.config/theme/state.json"
+CFG = HOME + "/.config/niri/config.kdl"
+ROLES = ["bg", "field", "hover", "border", "fg", "dim", "track", "onfg", "urgent", "backdrop"]
+IMG = (".png", ".jpg", ".jpeg", ".webp", ".bmp")
+
+PRESETS = {
+    "Mono": dict(bg="#1a1a1a", field="#111111", hover="#2a2a2a", border="#555555", fg="#ffffff", dim="#a0a0a0", track="#333333", onfg="#000000", urgent="#9b0000", backdrop="#101010", accent="#ffffff"),
+    "Cobalt": dict(bg="#121a2b", field="#0d1422", hover="#1d2a45", border="#2f4a7a", fg="#dbe7ff", dim="#8aa0c8", track="#24365a", onfg="#08101f", urgent="#c0392b", backdrop="#0a0f1a", accent="#4f8cff"),
+    "Crimson": dict(bg="#231215", field="#190c0f", hover="#3a1d22", border="#7a2f38", fg="#ffe3e5", dim="#c88a90", track="#4a2229", onfg="#1a0709", urgent="#ffb000", backdrop="#140809", accent="#ff4d5a"),
+    "Emerald": dict(bg="#10211b", field="#0b1814", hover="#1b362c", border="#2f7a5c", fg="#d9fbe9", dim="#86c4a8", track="#21473a", onfg="#06150f", urgent="#e5484d", backdrop="#08110d", accent="#34d399"),
+    "Amethyst": dict(bg="#1b1530", field="#130f24", hover="#2b2250", border="#5b479a", fg="#ece6ff", dim="#a99bd6", track="#3a2d6b", onfg="#0e0a1d", urgent="#e5484d", backdrop="#0d0918", accent="#a78bfa"),
+    "Sakura": dict(bg="#2a1621", field="#1e0f17", hover="#3d2131", border="#8a4a66", fg="#ffe6f0", dim="#d4a0b8", track="#4d2a3d", onfg="#1c0a13", urgent="#ffb020", backdrop="#160a10", accent="#ff8fb8"),
+    "Amber": dict(bg="#241b0e", field="#1a130a", hover="#3a2d17", border="#8a6a2a", fg="#fff1cf", dim="#c9b07a", track="#4a3a1d", onfg="#1b1306", urgent="#e5484d", backdrop="#120d06", accent="#fbbf24"),
+}
+DEFAULT = PRESETS["Mono"]
+
+def load_state():
+    try:
+        with open(STATE) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def uniq(p):
+    seen = set()
+    for r in ROLES:
+        v = p[r]
+        while v.lower() in seen:
+            v = "#%06x" % ((int(v[1:], 16) + 1) % 0x1000000)
+        p[r] = v
+        seen.add(v.lower())
+    return p
+
+def targets():
+    q = HOME + "/.config/quickshell/"
+    out = []
+    if os.path.isdir(q + "settings"):
+        out += [q + "settings/" + f for f in sorted(os.listdir(q + "settings")) if f.endswith(".qml")]
+    out += [q + "lock/shell.qml", q + "notifs/shell.qml", q + "bar/Theme.qml", HOME + "/.config/rofi/config.rasi"]
+    return [f for f in out if os.path.isfile(f)]
+
+def remap(path, old, new):
+    s = open(path).read()
+    t = s
+    for i, r in enumerate(ROLES):
+        t = re.sub(re.escape(old[r]) + "(?![0-9a-fA-F])", "@@%d@@" % i, t, flags=re.I)
+    for i, r in enumerate(ROLES):
+        t = t.replace("@@%d@@" % i, new[r])
+    if t != s:
+        open(path, "w").write(t)
+
+def set_niri(p):
+    s = open(CFG).read()
+    for key, val in (("active-color", p["accent"]), ("inactive-color", p["border"]), ("urgent-color", p["urgent"])):
+        s = re.sub(r"(?m)^(\s*%s\s+\x22)[^\x22]*(\x22)" % key, lambda m: m.group(1) + val + m.group(2), s, count=1)
+    open(CFG, "w").write(s)
+
+def set_rofi(p):
+    f = HOME + "/.config/rofi/config.rasi"
+    if not os.path.isfile(f):
+        return
+    s = open(f).read()
+    s = re.sub(r"(?m)^(\s*border:\s*)#[0-9a-fA-F]{6};", lambda m: m.group(1) + p["accent"] + ";", s, count=1)
+    open(f, "w").write(s)
+
+def apply(p, name, mode, wall=None):
+    p = uniq(dict(p))
+    old = load_state().get("palette") or DEFAULT
+    bdir = HOME + "/niri-backups"
+    os.makedirs(bdir, exist_ok=True)
+    bak = bdir + "/config.kdl.before-theme"
+    shutil.copy(CFG, bak)
+    set_niri(p)
+    if subprocess.run(["niri", "validate"], capture_output=True).returncode != 0:
+        shutil.copy(bak, CFG)
+        raise SystemExit("Niri rejected the new colours, nothing was changed")
+    for f in targets():
+        remap(f, old, p)
+    set_rofi(p)
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    with open(STATE, "w") as f:
+        json.dump({"name": name, "mode": mode, "palette": p, "wall": wall}, f)
+    subprocess.run(["niri", "msg", "action", "load-config-file"], capture_output=True)
+    print("Applied " + name)
+
+def find_wall():
+    p = HOME + "/.config/wallpaper"
+    if p.lower().endswith(IMG) and os.path.isfile(p):
+        return p
+    if not os.path.isfile(p):
+        return None
+    q = chr(34) + chr(39)
+    for line in open(p, errors="ignore").read().splitlines():
+        line = line.strip()
+        for c in [line, line.split("=", 1)[-1]] + re.split(r"[=\s]+", line):
+            c = os.path.expanduser(c.strip().strip(q))
+            if c.lower().endswith(IMG) and os.path.isfile(c):
+                return c
+    return None
+
+def from_wall(wp):
+    try:
+        from PIL import Image
+    except ImportError:
+        raise SystemExit("Needs python-pillow: sudo pacman -S python-pillow")
+    im = Image.open(wp).convert("RGB")
+    im.thumbnail((128, 128))
+    w = {}
+    for r, g, b in list(im.getdata()):
+        h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+        if s < 0.2 or v < 0.2:
+            continue
+        k = int(h * 36) % 36
+        w[k] = w.get(k, 0) + s * v
+    hue, sat = 0.0, 0.0
+    if w:
+        hue, sat = (max(w, key=w.get) + 0.5) / 36, 1.0
+    def hx(l, s):
+        r, g, b = colorsys.hls_to_rgb(hue, l, min(1.0, s * sat))
+        return "#%02x%02x%02x" % (round(r * 255), round(g * 255), round(b * 255))
+    return dict(bg=hx(0.09, 0.30), field=hx(0.06, 0.30), hover=hx(0.15, 0.30), border=hx(0.33, 0.35), fg=hx(0.93, 0.60), dim=hx(0.65, 0.25), track=hx(0.22, 0.30), onfg=hx(0.05, 0.30), urgent="#e5484d", backdrop=hx(0.04, 0.30), accent=hx(0.65, 0.85))
+
+def watch():
+    lock = open("/tmp/applytheme-watch.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return
+    last = None
+    while True:
+        try:
+            st = load_state()
+            if st.get("mode") == "wallpaper":
+                wp = find_wall()
+                if wp:
+                    key = [wp, os.path.getmtime(wp)]
+                    if key != st.get("wall") and key != last:
+                        last = key
+                        apply(from_wall(wp), "Wallpaper", "wallpaper", key)
+        except (Exception, SystemExit):
+            pass
+        time.sleep(3)
+
+def main():
+    a = sys.argv[1] if len(sys.argv) > 1 else ""
+    if a == "list":
+        print(json.dumps(PRESETS))
+    elif a == "wallpaper":
+        wp = find_wall()
+        if not wp:
+            raise SystemExit("Could not find the current wallpaper. Run: cat ~/.config/wallpaper")
+        apply(from_wall(wp), "Wallpaper", "wallpaper", [wp, os.path.getmtime(wp)])
+    elif a == "watch":
+        watch()
+    elif a in PRESETS:
+        apply(PRESETS[a], a, "preset")
+    else:
+        print("usage: applytheme <" + "|".join(PRESETS) + "|wallpaper|watch|list>")
+
+main()
