@@ -4,7 +4,7 @@
 // ===================== Autostart =====================
 // Programs launched automatically once niri starts.
 // steam = game launcher, silent boot. (openrgb now autostarts via its own "Start with system" setting)
-spawn-at-startup "/usr/lib/polkit-kde-authentication-agent-1"
+// password prompts come from Monolith's own polkit agent
 spawn-at-startup "sh" "-c" "sleep 8 && steam -silent"
 spawn-at-startup "bash" "-c" "wl-paste --type text --watch cliphist store"
 spawn-at-startup "bash" "-c" "wl-paste --type image --watch cliphist store"

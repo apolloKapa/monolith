@@ -36,7 +36,7 @@ It opens a menu (arrow keys or j/k, Enter, q to quit):
 | Option | Default | What it is |
 |---|---|---|
 | Packages overview | | everything it's about to install, and what you already have |
-| Apps for the keybinds | ON | what the keybinds/autostart call: librewolf, thunar, mission-center, rofi, steam, wooz, awww, swaylock, swappy, grim/slurp, cliphist, playerctl, brightnessctl, polkit-kde-agent, fonts, ... |
+| Apps for the keybinds | ON | what the keybinds/autostart call: librewolf, thunar, mission-center, rofi, steam, wooz, awww, swaylock, swappy, grim/slurp, cliphist, playerctl, brightnessctl, fonts, ... |
 | All my apps | OFF | everything in `packages.txt` and `packages-aur.txt` |
 | niri config | Monolith config | writes the niri config below (your old one is backed up to `~/.config/niri_backup/`); or "keep mine" |
 | Login screen | ON | SDDM theme, with options to replace your current display manager and use Wayland for SDDM |
@@ -128,7 +128,7 @@ Serpantinum-style modular config in `~/.config/niri/` (source: `monolith/composi
 | `config/output.kdl` | **generated**: each monitor's current mode, position, scale, rotation; disabled monitors set to `off` |
 | `config/workspaces.kdl` | **generated**: workspaces 1 to 10, plus `d2-1` to `d2-10` on a second monitor |
 | `config/layout.kdl` | 10px gaps, column presets, 2px white/grey borders, no focus ring, no hot corners, snappy spring animations |
-| `config/autostart.kdl` | polkit agent, Steam (silent), clipboard history, awww + setwall, EasyEffects, `monolithd start` |
+| `config/autostart.kdl` | Steam (silent), clipboard history, awww + setwall, EasyEffects, `monolithd start` |
 | `config/keybinds.kdl` | the keybinds below |
 | `config/rules.kdl` | rounded window corners, windows open floating, Roblox Studio helper windows hidden, Steam toasts as notifications, kitty default size |
 
