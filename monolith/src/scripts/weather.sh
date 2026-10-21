@@ -174,6 +174,13 @@ get_data() {
 
     log_debug "Resolved coordinates -> Lat: $lat, Lon: $lon, Timezone: $tz"
 
+    # no location set: stay offline instead of asking for a forecast at 0,0
+    if [[ "$lat" == "0.0" && "$lon" == "0.0" ]] || [[ "$lat" == "0" && "$lon" == "0" ]]; then
+        log_debug "No location set, skipping the forecast request."
+        write_dummy_data
+        return
+    fi
+
     case "$UNIT" in
         "imperial")
             OM_TEMP_UNIT="&temperature_unit=fahrenheit"

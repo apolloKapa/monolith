@@ -1655,7 +1655,6 @@
       "menu_overview": "Visão geral da instalação ({count} pacotes base)",
       "menu_sddm": "Gerenciador de login SDDM",
       "menu_wallpapers": "Pacote de papéis de parede",
-      "menu_telemetry": "Telemetria anônima",
       "menu_update": "Atualizar",
       "menu_reinstall": "Reinstalar",
       "menu_install": "Instalar",

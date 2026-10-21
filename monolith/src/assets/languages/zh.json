@@ -1655,7 +1655,6 @@
       "menu_overview": "软件包安装概览 ({count} 个核心包)",
       "menu_sddm": "SDDM 登录管理器",
       "menu_wallpapers": "壁纸包",
-      "menu_telemetry": "匿名遥测",
       "menu_update": "更新",
       "menu_reinstall": "重新安装",
       "menu_install": "安装",

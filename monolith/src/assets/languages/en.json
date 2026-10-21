@@ -1674,7 +1674,6 @@
       "menu_overview": "Package installation overview ({count} core packages)",
       "menu_sddm": "SDDM login manager",
       "menu_wallpapers": "Wallpaper pack",
-      "menu_telemetry": "Anonymous telemetry",
       "menu_update": "Update",
       "menu_reinstall": "Reinstall",
       "menu_install": "Install",

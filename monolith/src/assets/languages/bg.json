@@ -1655,7 +1655,6 @@
       "menu_overview": "Преглед на инсталацията на пакети ({count} основни пакета)",
       "menu_sddm": "SDDM мениджър за вход",
       "menu_wallpapers": "Пакет с тапети",
-      "menu_telemetry": "Анонимна телеметрия",
       "menu_update": "Обновяване",
       "menu_reinstall": "Преинсталиране",
       "menu_install": "Инсталиране",

@@ -96,13 +96,6 @@ Item {
         return LyricsMatch.durationSecondsFromMpris(root.player.length);
     }
 
-    function pickBestNetEaseSong(songs, session) {
-        let wantT = session ? session.title : root.trackTitle;
-        let wantA = session ? session.artist : root.trackArtist;
-        let targetDur = session && session.durationSec > 0 ? session.durationSec : getPlayerDurationSec();
-        return LyricsMatch.pickBestNetEaseSong(songs, wantT, wantA, targetDur);
-    }
-
     function getLineOpacity(idx, curIdx) {
         if (curIdx < 0) return 0.50;
         if (idx === curIdx) return 1.0;
@@ -678,7 +671,7 @@ Item {
         if (resp.syncedLyrics && String(resp.syncedLyrics).trim() !== "") {
             let lines = parseLrc(resp.syncedLyrics);
             if (lines && lines.length > 0) {
-                // Apply immediately — do not wait for NetEase / do not keep a weak first hit
+                // Apply immediately — do not keep a weak first hit
                 session.lineCandidate = lines;
                 session.lrclibDone = true;
                 session.done = true;
@@ -716,7 +709,7 @@ Item {
             durationSec: getPlayerDurationSec(),
             done: false,
             hasWordLyrics: false,
-            netEaseDone: false,
+            netEaseDone: true, // lrclib only: no second lyrics service
             lrclibDone: false,
             lineCandidate: null
         };
@@ -724,123 +717,7 @@ Item {
         activeSession = session;
         searchTimeoutTimer.restart();
 
-        fetchNetEase(session);
         fetchLrclib(session);
-    }
-
-    function fetchNetEase(session) {
-        let query = (session.artist + " " + session.title).trim();
-        if (query === "") query = session.title;
-
-        // cloudsearch is generally more reliable than the legacy web search endpoint
-        let url = "https://music.163.com/api/cloudsearch/pc?s=" + encodeURIComponent(query) + "&type=1&limit=8&offset=0";
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", url);
-        xhr.setRequestHeader("Referer", "https://music.163.com");
-        xhr.setRequestHeader("User-Agent", "Mozilla/5.0");
-
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState !== XMLHttpRequest.DONE) return;
-            if (session.key !== root.activeFetchKey || session.done) return;
-
-            if (xhr.status === 200) {
-                try {
-                    let resp = JSON.parse(xhr.responseText);
-                    let songs = resp.result && resp.result.songs ? resp.result.songs : [];
-                    let bestSong = pickBestNetEaseSong(songs, session);
-
-                    if (bestSong && bestSong.id) {
-                        fetchNetEaseLyric(bestSong.id, session);
-                        return;
-                    }
-                } catch(e) {}
-            }
-
-            fetchNetEaseLegacy(session);
-        };
-
-        xhr.send();
-    }
-
-    function fetchNetEaseLegacy(session) {
-        if (session.key !== root.activeFetchKey || session.done) return;
-        let query = (session.artist + " " + session.title).trim();
-        if (query === "") query = session.title;
-        let url = "https://music.163.com/api/search/get/web?csrf_token=&hlpretag=&hlposttag=&s=" + encodeURIComponent(query) + "&type=1&offset=0&total=true&limit=8";
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", url);
-        xhr.setRequestHeader("Referer", "https://music.163.com");
-        xhr.setRequestHeader("User-Agent", "Mozilla/5.0");
-
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState !== XMLHttpRequest.DONE) return;
-            if (session.key !== root.activeFetchKey || session.done) return;
-
-            if (xhr.status === 200) {
-                try {
-                    let resp = JSON.parse(xhr.responseText);
-                    let songs = resp.result && resp.result.songs ? resp.result.songs : [];
-                    let bestSong = pickBestNetEaseSong(songs, session);
-                    if (bestSong && bestSong.id) {
-                        fetchNetEaseLyric(bestSong.id, session);
-                        return;
-                    }
-                } catch(e) {}
-            }
-
-            session.netEaseDone = true;
-            checkCompletion(session);
-        };
-
-        xhr.send();
-    }
-
-    function fetchNetEaseLyric(songId, session) {
-        let url = "https://music.163.com/api/song/lyric?id=" + songId + "&lv=1&kv=1&tv=-1&yv=1";
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", url);
-        xhr.setRequestHeader("Referer", "https://music.163.com");
-        xhr.setRequestHeader("User-Agent", "Mozilla/5.0");
-
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState !== XMLHttpRequest.DONE) return;
-            if (session.key !== root.activeFetchKey || session.done) return;
-
-            if (xhr.status === 200) {
-                try {
-                    let resp = JSON.parse(xhr.responseText);
-                    let wordLyrics = null;
-
-                    if (resp.yrc && resp.yrc.lyric) {
-                        wordLyrics = parseWordLevelLyrics(resp.yrc.lyric);
-                    }
-                    if (!wordLyrics && resp.klyric && resp.klyric.lyric) {
-                        wordLyrics = parseWordLevelLyrics(resp.klyric.lyric);
-                    }
-
-                    if (wordLyrics && wordLyrics.length > 0) {
-                        session.hasWordLyrics = true;
-                        session.done = true;
-                        applyLyrics(wordLyrics, session.key, true);
-                        return;
-                    }
-
-                    if (resp.lrc && resp.lrc.lyric) {
-                        let lines = parseLrc(resp.lrc.lyric);
-                        if (lines && lines.length > 0) {
-                            if (!session.lineCandidate || lines.length > session.lineCandidate.length) {
-                                session.lineCandidate = lines;
-                            }
-                        }
-                    }
-                } catch(e) {}
-            }
-
-            session.netEaseDone = true;
-            checkCompletion(session);
-        };
-
-        xhr.send();
     }
 
     function fetchLrclib(session) {

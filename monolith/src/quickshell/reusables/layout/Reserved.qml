@@ -24,7 +24,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: root.imageSize
             Layout.preferredHeight: root.imageSize
-            source: root.imageSource !== "" ? root.imageSource : (Caching.monolithDir ? ("file://" + Caching.monolithDir + "/assets/pushy2.gif") : Qt.resolvedUrl("../assets/pushy2.gif"))
+            source: root.imageSource !== "" ? root.imageSource : (Caching.monolithDir ? ("file://" + Caching.monolithDir + "/assets/lith_rest.gif") : Qt.resolvedUrl("../assets/lith_rest.gif"))
             isGif: true
             playing: true
             fillMode: Image.PreserveAspectFit
