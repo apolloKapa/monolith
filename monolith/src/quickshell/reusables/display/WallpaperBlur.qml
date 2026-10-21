@@ -121,6 +121,11 @@ Item {
     onLiquidChanged: refreshTexture()
     onTintChanged: refreshTexture()
     onBlurStrengthChanged: refreshTexture()
+    // glass nested inside this panel refracts the snapshot, so it has to follow the cursor
+    // highlight too (it used to keep showing the old highlight until something moved)
+    onHoverAmountChanged: refreshTexture()
+    onCursorXChanged: refreshTexture()
+    onCursorYChanged: refreshTexture()
 
     property var geoSig: [NaN, 0, 0, 0, 0, 0, 0, 0]
 
@@ -367,8 +372,10 @@ Item {
 
     property real cursorX: width / 2
     property real cursorY: height / 2
-    Behavior on cursorX { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-    Behavior on cursorY { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+    // glide while inside; on entry jump straight to the cursor instead of sliding over from
+    // wherever it last left
+    Behavior on cursorX { enabled: root.hoverAmount > 0.05; NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+    Behavior on cursorY { enabled: root.hoverAmount > 0.05; NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
 
     Connections {
         target: pointer

@@ -54,6 +54,22 @@ float sdRoundBox(vec2 p, vec2 b, vec4 r) {
     return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - rad;
 }
 
+// Same box with the inner corner blended over k px. Only used for normals: the exact SDF
+// flips direction along each corner diagonal, which showed up as mitre-like creases.
+float smax(float a, float b, float k) {
+    float h = max(k - abs(a - b), 0.0) / k;
+    return max(a, b) + h * h * k * 0.25;
+}
+
+float sdRoundBoxSmooth(vec2 p, vec2 b, vec4 r, float k) {
+    float rad = p.x > 0.0 ? (p.y > 0.0 ? r.z : r.y) : (p.y > 0.0 ? r.w : r.x);
+    rad = min(rad, min(b.x, b.y));
+    vec2 q = abs(p) - b + rad;
+    // smax overshoots max by up to k/4; shift it back so the inside never clamps flat at 0
+    // (a flat patch has no gradient and left notches at the corners)
+    return min(smax(q.x, q.y, k) - k * 0.25, 0.0) + length(max(q, 0.0)) - rad;
+}
+
 vec2 boxHalf() {
     return box.z > 0.0 ? box.zw : itemSize * 0.5;
 }
@@ -65,6 +81,15 @@ float sdfCard(vec2 p) {
 float sdfPlane(vec2 p) {
     vec2 h = boxHalf();
     return abs(fillet.x) * h.x + abs(fillet.y) * h.y - dot(p - box.xy, fillet.xy) - filletInset;
+}
+
+float sdfNormal(vec2 p, float k) {
+    float a = sdRoundBoxSmooth(p - box.xy, boxHalf() - glassPad, radii, k);
+    if (fillet.z <= 0.0) return a;
+    float b = sdfPlane(p);
+    float r = fillet.z;
+    vec2 u = max(vec2(r - a, r - b), vec2(0.0));
+    return max(r, min(a, b)) - length(u);
 }
 
 float sdf(vec2 p) {
@@ -145,9 +170,11 @@ void main() {
     float t = max(-dist, 0.0);
     float bz = max(bezel, 1.0) * 1.45;
     vec2 g = vec2(0.0, -1.0);
-    if (t < bz + 2.0) {
+    {
+        // always: a cut-off here made the lighting snap to a fixed direction one bezel in
         const vec2 e = vec2(0.75, 0.0);
-        vec2 grad = vec2(sdf(p + e.xy) - sdf(p - e.xy), sdf(p + e.yx) - sdf(p - e.yx));
+        float k = max(bz * 0.6, 2.0);
+        vec2 grad = vec2(sdfNormal(p + e.xy, k) - sdfNormal(p - e.xy, k), sdfNormal(p + e.yx, k) - sdfNormal(p - e.yx, k));
         if (length(grad) > 0.0001) g = normalize(grad);
     }
 
@@ -183,15 +210,18 @@ void main() {
     vec2 ps = p + (vec2(p.x, p.y * (1.0 - 0.08 * 1.5)) * (1.0 - zoomAmt * (1.0 - zr * zr)) - p) * lensK;
     vec2 follow = clamp((cursor - itemSize * 0.5) / max(itemSize * 0.5, vec2(1.0)), vec2(-1.0), vec2(1.0));
     ps -= follow * 6.0 * near * morph * (1.0 - zr * zr * 0.5);
-    bool interior = t >= bz && near < 0.02;
-    int taps = interior ? 6 : (frost <= 1.2 ? 6 : TAPS);
+    // one sample count and blur level for the whole panel: switching them at the bezel
+    // (or when the cursor came near) left a visible ring and flicker
+    int taps = frost <= 1.2 ? 6 : TAPS;
     float lod = blurLod(rad, taps);
     vec3 col = blurredAt(ps + dG, rad, lod, taps);
-    if (!interior && dot(dG, dG) > 0.25) {
+    // colour fringing fades in with the refraction instead of switching on at 0.5px
+    float fringeW = smoothstep(0.25, 1.0, dot(dG, dG));
+    if (fringeW > 0.0) {
         vec4 cR = fetchLod4(ps + dR, lod + 0.5);
         vec4 cB = fetchLod4(ps + dB, lod + 0.5);
-        if (cR.a > 0.05) col.r = cR.r / cR.a;
-        if (cB.a > 0.05) col.b = cB.b / cB.a;
+        if (cR.a > 0.05) col.r = mix(col.r, cR.r / cR.a, fringeW);
+        if (cB.a > 0.05) col.b = mix(col.b, cB.b / cB.a, fringeW);
     }
 
     float l = dot(col, vec3(0.2126, 0.7152, 0.0722));

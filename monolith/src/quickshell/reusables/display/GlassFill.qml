@@ -36,6 +36,16 @@ Item {
 
     readonly property bool active: allowed && tintColor.a > 0.02 && root.visible && ThemeBackend.liquidGlass && backdrop !== null && backdrop.active && width > 0 && height > 0
 
+    // 1 while active; fades out when it turns off (hover ends etc.) instead of vanishing.
+    // Turning on stays instant: parents often go transparent the moment glass is active.
+    property real shown: active ? 1 : 0
+    Behavior on shown {
+        enabled: ThemeBackend.liquidGlass
+        NumberAnimation { duration: root.active ? 0 : 160; easing.type: Easing.OutCubic }
+    }
+    // the backdrop's texture is only safe to sample while the backdrop is alive
+    readonly property bool drawable: shown > 0.001 && backdrop !== null && backdrop.active
+
     function findBackdrop() {
         if (root.backdropOverride) {
             root.explicitOwner = null;
@@ -224,9 +234,13 @@ Item {
         }
     }
 
+    // movement wobble: bumps raise a target that `motion` eases towards, so a fast slide
+    // builds up over a few frames instead of popping to full strength in one
+    property real motionTarget: 0
+
     function bump(distance) {
         if (!root.active || !root.armed || distance < 0.05) return;
-        root.motion = Math.min(1, root.motion + distance / 36);
+        root.motionTarget = Math.min(1, root.motionTarget + distance / 36);
         if (!motionDecay.running) motionDecay.start();
     }
 
@@ -251,9 +265,12 @@ Item {
     FrameAnimation {
         id: motionDecay
         onTriggered: {
-            root.motion *= Math.pow(0.91, frameTime / 0.016);
-            if (root.motion < 0.004) {
+            const steps = frameTime / 0.016;
+            root.motionTarget *= Math.pow(0.91, steps);
+            root.motion += (root.motionTarget - root.motion) * (1 - Math.pow(0.7, steps));
+            if (root.motion < 0.004 && root.motionTarget < 0.004) {
                 root.motion = 0;
+                root.motionTarget = 0;
                 stop();
             }
         }
@@ -265,11 +282,12 @@ Item {
         width: (root.turns % 2 === 0 ? root.width : root.height) + root.pad * 2
         height: (root.turns % 2 === 0 ? root.height : root.width) + root.pad * 2
         rotation: root.turns * 90
-        visible: root.active
+        visible: root.drawable
+        opacity: root.shown
 
         Loader {
             anchors.fill: parent
-            active: root.active
+            active: root.drawable
             sourceComponent: Component {
                 LiquidGlass {
                     anchors.fill: parent
