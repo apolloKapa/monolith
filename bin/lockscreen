@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-pgrep -f "^qs -c lock" >/dev/null && exit 0
-exec qs -c lock

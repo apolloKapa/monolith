@@ -1,0 +1,282 @@
+{
+  "general": {
+    "language": "en",
+    "avatarPath": "/var/lib/AccountsService/icons/apollo",
+    "muteSfx": false,
+    "weatherInterval": 5,
+    "weatherUnit": "metric",
+    "sfxVolume": 100,
+    "screenshotCaptureOnRelease": false,
+    "quickactions": true
+  },
+  "syspanel": {
+    "clipExpandProgress": 0,
+    "clipExpanded": false,
+    "clipState": 1
+  },
+  "bar": {
+    "position": "top",
+    "width": 100,
+    "height": 40,
+    "opacity": 100,
+    "style": "fill",
+    "time": {
+      "format": "HH:mm:ss"
+    },
+    "autohide": false,
+    "autohideTimeout": 1000,
+    "modules": {
+      "left": [
+        "workspaces",
+        "media"
+      ],
+      "center": [
+        [
+          "timedate",
+          "info",
+          "weather"
+        ]
+      ],
+      "right": [
+        "tray",
+        [
+          "wifi",
+          "bt",
+          "vol"
+        ]
+      ]
+    },
+    "distinctPills": true,
+    "centerByEdges": true,
+    "groupColors": {
+      "g_timedate": "#9ecafc",
+      "g_kb": "#514060"
+    },
+    "menuStyle": "icon",
+    "workspacesStyle": "numbers",
+    "timeStyle": "material",
+    "visAlignment": "center",
+    "visContinuous": false,
+    "sysmonStyle": "wave",
+    "sysmonStats": [
+      "cpu",
+      "ram",
+      "temp"
+    ],
+    "batShowPercent": false,
+    "batShowIcon": true,
+    "visBarCount": 14,
+    "wifiStyle": "button",
+    "btShowIcon": true,
+    "btShowName": true,
+    "btStyle": "button"
+  },
+  "theme": {
+    "fontFamily": "JetBrains Mono",
+    "borderRadius": 0,
+    "activePreset": "Minimalist",
+    "matugen": false,
+    "colors": {
+      "base": "#1a1a1a",
+      "mantle": "#111111",
+      "crust": "#000000",
+      "text": "#ffffff",
+      "subtext0": "#a0a0a0",
+      "subtext1": "#c8c8c8",
+      "surface0": "#2a2a2a",
+      "surface1": "#333333",
+      "surface2": "#555555",
+      "overlay0": "#6a6a6a",
+      "overlay1": "#858585",
+      "overlay2": "#a0a0a0",
+      "blue": "#ffffff",
+      "sapphire": "#ffffff",
+      "peach": "#e0e0e0",
+      "green": "#ffffff",
+      "red": "#9b0000",
+      "mauve": "#ffffff",
+      "pink": "#ffffff",
+      "yellow": "#e0e0e0",
+      "maroon": "#9b0000",
+      "teal": "#ffffff"
+    },
+    "blurStyle": "minimalist",
+    "blurBackground": false,
+    "elementOpacity": 100
+  },
+  "idle": {
+    "enabled": true,
+    "actions": {
+      "dim": {
+        "id": "dim",
+        "timeout": 150,
+        "enabled": false,
+        "respectInhibitors": true,
+        "mprisInhibit": true,
+        "command": "",
+        "resumeCommand": "",
+        "isCustom": false
+      },
+      "dpms": {
+        "id": "dpms",
+        "timeout": 450,
+        "enabled": false,
+        "respectInhibitors": true,
+        "mprisInhibit": true,
+        "command": "",
+        "resumeCommand": "",
+        "isCustom": false
+      },
+      "lock": {
+        "id": "lock",
+        "timeout": 300,
+        "enabled": false,
+        "respectInhibitors": true,
+        "mprisInhibit": true,
+        "command": "",
+        "resumeCommand": "",
+        "isCustom": false
+      },
+      "suspend": {
+        "id": "suspend",
+        "timeout": 600,
+        "enabled": false,
+        "respectInhibitors": true,
+        "mprisInhibit": true,
+        "command": "",
+        "resumeCommand": "",
+        "isCustom": false
+      }
+    }
+  },
+  "notifications": {
+    "dnd": false,
+    "position": "top right",
+    "sound": true,
+    "soundFile": "/home/apollo/.local/share/monolith/src/assets/sounds/notifications/WakeUp.mp3"
+  },
+  "display": {
+    "monitors": {
+      "eDP-1": {
+        "enabled": false,
+        "scale": 1
+      },
+      "HDMI-A-1": {
+        "scale": 0.8
+      }
+    }
+  },
+  "wallpaperDir": "/home/apollo/Pictures/Wallpapers",
+  "launcher": {
+    "position": "center",
+    "width": 600,
+    "itemCount": 6,
+    "terminalCommand": "kitty -e",
+    "smartRanking": true
+  },
+  "dock": {
+    "enabled": true,
+    "position": "bottom",
+    "onTop": true,
+    "elementSize": 44,
+    "floating": false,
+    "background": true,
+    "exclusive": false,
+    "autohide": false,
+    "smartAutohide": true,
+    "autohideTimeout": 250,
+    "editing": false,
+    "apps": [
+      {
+        "name": "LibreWolf",
+        "comment": "Browse the World Wide Web",
+        "desktop_id": "librewolf",
+        "icon": "librewolf"
+      },
+      {
+        "name": "Brave Origin",
+        "comment": "Access the Internet",
+        "desktop_id": "brave-origin",
+        "icon": "brave-origin"
+      },
+      {
+        "name": "Steam",
+        "comment": "Application for managing and playing games on Steam",
+        "desktop_id": "steam",
+        "icon": "steam"
+      },
+      {
+        "name": "Heroic Games Launcher",
+        "comment": "An Open Source Launcher for GOG, Epic Games and Amazon Games",
+        "desktop_id": "heroic",
+        "icon": "heroic"
+      },
+      {
+        "name": "itch",
+        "comment": "The itch.io desktop app",
+        "desktop_id": "itch",
+        "icon": "itch"
+      },
+      {
+        "name": "osu! (stable)",
+        "comment": "osu! stable - Rhythm is just a *click* away!",
+        "desktop_id": "osu-wine",
+        "icon": "/home/apollo/.local/share/icons/osu-wine.png"
+      },
+      {
+        "name": "osu!lazer",
+        "comment": "Open source free-to-win rhythm game",
+        "desktop_id": "osu-lazer",
+        "icon": "osu-lazer"
+      },
+      {
+        "name": "Sober",
+        "comment": "Play, chat & explore on Roblox",
+        "desktop_id": "org.vinegarhq.Sober",
+        "icon": "org.vinegarhq.Sober"
+      },
+      {
+        "name": "Roblox Studio",
+        "comment": "Roblox Studio (in Bottles)",
+        "desktop_id": "roblox-studio-bottles",
+        "icon": "roblox-studio"
+      },
+      {
+        "name": "Obsidian",
+        "comment": "Obsidian",
+        "desktop_id": "obsidian",
+        "icon": "obsidian"
+      },
+      {
+        "name": "VSCodium",
+        "comment": "Code Editing. Redefined.",
+        "desktop_id": "codium",
+        "icon": "vscodium"
+      },
+      {
+        "name": "OBS Studio",
+        "comment": "Free and Open Source Streaming/Recording Software",
+        "desktop_id": "com.obsproject.Studio",
+        "icon": "com.obsproject.Studio"
+      }
+    ],
+    "overrideBoundsCorrection": false,
+    "enableScrolling": false,
+    "visibleElements": 7,
+    "hoverScale": 120,
+    "cascadeScale": true,
+    "focusRunning": true,
+    "showRunningIndicators": true,
+    "showRunningApps": true,
+    "runningScope": "auto"
+  },
+  "osd": {
+    "horizontalPosition": 50,
+    "verticalPosition": 90,
+    "orientation": "horizontal",
+    "showCapsLock": false,
+    "showNumLock": false,
+    "showAirplane": true,
+    "attachToBar": true
+  }
+}

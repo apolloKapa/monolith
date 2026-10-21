@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-# toggle the sysstats panel on the focused monitor
-if pgrep -f "^qs -c sysstats" >/dev/null; then
-  qs kill -c sysstats
-else
-  SYSSTATS_SCREEN=$(niri msg -j focused-output | jq -r .name) setsid qs -c sysstats >/dev/null 2>&1 &
-fi

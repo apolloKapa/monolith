@@ -1,21 +1,27 @@
 # dotfiles
 
-My Arch Linux setup: [niri](https://github.com/YaLTeR/niri) with a custom [Quickshell](https://quickshell.org) desktop (bar, lock screen, notifications, settings window), a rofi launcher, and helper scripts.
+My Arch Linux setup: [niri](https://github.com/YaLTeR/niri) running **Monolith**, my desktop shell (really good desktop :3), plus a rofi launcher and helper scripts.
+
+Monolith is built on [Serpantinum](https://github.com/ilyamiro/serpantinum) by @ilyamiro (AGPL-3.0, see `monolith/LICENSE.md`). It keeps every Serpantinum feature (bar, dock, launcher, lock screen, notifications, OSD, clipboard, music, network, widgets, settings guide, blur and liquid glass) and adds:
+
+- **Minimalist** style, next to Blur / Liquid glass in *Settings → Theme*: flat opaque panels, square corners, 2px `#555` outlines, white accent with inverted hover, JetBrains Mono. It's my old Quickshell look, and it's the default.
+- Minimalist colour preset (`monolith/src/assets/themes/Minimalist.json`)
+- own logo, intro (horizon backdrop), name and paths (`~/.config/monolith`, `~/.local/share/monolith`)
+- update button pulls this repo instead of upstream; automatic update checks are off
 
 ## What's in here
 
 | Path | Contents |
 |---|---|
 | `config/niri/` | niri config (monitors, binds, window rules, animations) |
-| `config/quickshell/` | Quickshell configs: `bar`, `lock`, `notifs`, `settings`, `launcher`, `displays`, `favs` |
+| `monolith/` | the Monolith shell: `bin/` (`monolith`, `monolithd`), `src/` (QML, scripts, assets), SDDM theme |
+| `config/monolith/` | default Monolith settings (only copied if you don't have any yet) |
 | `config/rofi/` | rofi theme and favourites list |
-| `config/mako/` | mako config (legacy, notifications now run through `quickshell/notifs`) |
-| `config/theme/` | saved theme state for the Themes settings page |
 | `config/wallpaper` | current wallpaper setting |
-| `bin/` | helper scripts that go in `~/.local/bin` (`launcher`, `applytheme`, `lockscreen`, `snap`, `focuswin`, ...) |
+| `bin/` | helper scripts that go in `~/.local/bin` (`launcher`, `setwall`, `snap`, `focuswin`, `swapwin`, ...) |
 | `packages.txt` | official repo packages |
 | `packages-aur.txt` | AUR packages |
-| `install.sh` | copies configs and scripts into place |
+| `install.sh` | copies configs and scripts into place and installs Monolith (`--sddm` also installs the login theme) |
 
 ## Install
 
@@ -75,27 +81,26 @@ Log out, then pick **niri** on the login screen (SDDM).
 
 ## Things to check after installing
 
-- **Monitors:** `config/niri/config.kdl` has my monitor layout (`DP-1`, `DP-2`, `HDMI-A-1`) hard-coded. On other hardware, run `niri msg outputs` and edit the `output` blocks to match. The Displays page in the settings window (`Mod+I`) can also change them and save the result.
-- **Wallpaper:** `setwall` reads wallpapers from `~/Pictures/Wallpapers`. Create that folder and add some images.
+- **Monitors:** `config/niri/config.kdl` has my monitor layout (`DP-1`, `DP-2`, `HDMI-A-1`) hard-coded. On other hardware, run `niri msg outputs` and edit the `output` blocks to match. Monolith's Display settings page can also change them.
+- **Wallpaper:** Monolith and `setwall` read wallpapers from `~/Pictures/Wallpapers`. Create that folder and add some images.
 - **Nvidia:** my desktop uses the legacy driver for a GTX 1070 (`nvidia-dkms-580xx`, installed through `chwd`). The package list may include drivers that don't suit your GPU. Remove them from `packages.txt` before installing if so.
-- **Lock screen:** test it before relying on it. This unlocks itself after 30 seconds:
-
-  ```sh
-  env LOCKTEST=30 qs -c lock
-  ```
-
-  If it ever locks you out, switch to a TTY with Ctrl+Alt+F3, log in and run `pkill -f "qs -c lock"`.
-- **Notifications:** `quickshell/notifs` replaces mako. Only one program can own notifications, so don't run both.
+- **Lock screen:** `install.sh` adds `/etc/pam.d/monolith` so the lock screen can check your password. Test it before relying on it (`monolith lock`). If it ever locks you out, switch to a TTY with Ctrl+Alt+F3, log in and run `monolithd stop`.
+- **Serpantinum:** don't run Serpantinum and Monolith at the same time (two bars, two notification daemons). The niri config only starts `monolithd`.
 
 ## Key bindings
 
 | Key | Action |
 |---|---|
-| `Mod+Z` / `Mod+Space` | launcher (rofi) |
+| `Mod+Z` / `Mod+Space` | launcher |
+| `Mod+Shift+Z` | favourites (rofi) |
 | `Mod+C` | terminal (kitty) |
 | `Mod+B` / `Mod+E` | browser / file manager |
-| `Mod+I` | settings window |
-| `Mod+L` | lock screen |
+| `Mod+D` | system panel |
+| `Mod+S` / `Mod+Alt+H` | settings guide |
+| `Mod+N` / `Mod+V` | network / volume popups |
+| `Mod+A` | bar autohide |
+| `Mod+Alt+C` / `Mod+Alt+M` / `Mod+Alt+W` | clipboard / music / wallpaper picker |
+| `Mod+L` / `Mod+Alt+L` | lock screen |
 | `Mod+Q` | close window |
 | `Mod+R` | float / tile toggle |
 | `Mod+T` | tile and maximize |
@@ -110,14 +115,15 @@ After changing your setup, copy the files back in and push:
 
 ```sh
 cd ~/dotfiles
-cp -r ~/.config/niri ~/.config/quickshell ~/.config/rofi config/
+cp -r ~/.config/niri ~/.config/rofi config/
 cp ~/.local/bin/<script> bin/
 git add . && git commit -m "update" && git push
 ```
 
+Shell code lives in `monolith/src`. After editing it, run `./install.sh` and `monolith reload` (your settings in `~/.config/monolith` are left alone).
+
 ## Troubleshooting
 
 - **`qs: command not found`:** `quickshell` isn't installed. Run `sudo pacman -S quickshell qt6-wayland`.
-- **Bar or panels don't appear after login:** start them by hand to see the error, for example `qs -c bar`.
-- **Tray menus don't open:** the bar needs `//@ pragma UseQApplication` on the first line of `quickshell/bar/shell.qml`. It's already there.
-- **Settings window pages are blank:** run `qs -c settings` in a terminal and open the page. The error prints there.
+- **Bar or panels don't appear after login:** run `monolith -v` in a terminal to see the errors. Logs are also in `$XDG_RUNTIME_DIR/monolith/logs`.
+- **Settings look wrong after switching style:** *Settings → Theme* → pick Blur, Liquid glass or Minimalist again. Minimalist also resets the font and colours to the mono preset; you can change them afterwards.

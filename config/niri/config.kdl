@@ -30,6 +30,9 @@ cursor {
 // QT_QPA_PLATFORMTHEME tells Qt apps (Dolphin, qt6ct-aware apps) to use qt6ct's theme config.
 environment {
     QT_QPA_PLATFORMTHEME "qt6ct"
+    XDG_CURRENT_DESKTOP "Niri"
+    XDG_SESSION_TYPE "wayland"
+    XDG_SESSION_DESKTOP "Niri"
 }
 
 // ===================== Outputs =====================
@@ -43,8 +46,8 @@ output "DP-1" {
 output "DP-2" {
     mode "1920x1080@239.760"
     position x=320 y=-1080
-    transform "180"
     scale 1
+    transform "180"
 }
 
 output "HDMI-A-1" {
@@ -58,12 +61,8 @@ spawn-at-startup "/usr/lib/polkit-kde-authentication-agent-1"
 spawn-at-startup "sh" "-c" "sleep 8 && steam -silent"
 spawn-at-startup "bash" "-c" "wl-paste --type text --watch cliphist store"
 spawn-at-startup "bash" "-c" "wl-paste --type image --watch cliphist store"
-spawn-at-startup "qs" "-c" "notifs"
 spawn-at-startup "awww-daemon"
 spawn-at-startup "setwall"
-spawn-at-startup "applytheme" "watch"
-spawn-at-startup "qs" "-c" "bar"
-spawn-at-startup "qs" "-c" "launcher"
 
 // ===================== Workspaces =====================
 // Named, static workspaces 1-10. Unlike niri's default dynamic workspaces (which appear/disappear
@@ -179,7 +178,7 @@ binds {
     Mod+H     { focus-column-left; }
     Mod+J     { focus-window-down; }
     Mod+K     { focus-window-up; }
-    Mod+L { spawn "lockscreen"; }
+    Mod+L { spawn "monolith" "lock"; }
 
     Mod+Shift+Left  { spawn "swapwin" "left"; }
     Mod+Shift+Down  { spawn "swapwin" "down"; }
@@ -216,7 +215,15 @@ binds {
     Mod+Page_Down      { focus-workspace-down; }
     Mod+Page_Up        { focus-workspace-up; }
     Mod+U              { focus-workspace-down; }
-    Mod+D { spawn "settingstoggle"; }
+    Mod+D { spawn "monolith" "msg" "toggle" "system"; }
+    Mod+S { spawn "monolith" "msg" "toggle" "guide"; }
+    Mod+N { spawn "monolith" "msg" "toggle" "network"; }
+    Mod+V { spawn "monolith" "msg" "toggle" "volume"; }
+    Mod+A { spawn "monolith" "msg" "toggle" "autohide"; }
+    Mod+Alt+C { spawn "monolith" "msg" "toggle" "clipboard"; }
+    Mod+Alt+M { spawn "monolith" "msg" "toggle" "music"; }
+    Mod+Alt+W { spawn "monolith" "msg" "toggle" "wallpaper"; }
+    Mod+Alt+H { spawn "monolith" "msg" "toggle" "guide"; }
     Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
     Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
     Mod+Ctrl+U         { move-column-to-workspace-down; }
@@ -295,9 +302,8 @@ binds {
     Mod+Shift+P { power-off-monitors; }
 
     // Launcher (rofi)
-    Mod+Z { spawn "qs" "-c" "launcher" "ipc" "call" "launcher" "toggle"; }
-    Mod+Shift+Z { spawn "favlauncher"; }
-    Mod+Space { spawn "qs" "-c" "launcher" "ipc" "call" "launcher" "toggle"; }
+    Mod+Z { spawn "monolith" "msg" "toggle" "launcher"; }
+    Mod+Space { spawn "monolith" "msg" "toggle" "launcher"; }
     Mod+Tab { spawn "rofi" "-show" "window" "-hover-select" "-me-select-entry" "" "-me-accept-entry" "MousePrimary"; }
     Mod+Alt+S { spawn "setwall" "pick"; }
     Mod+Alt+V { spawn-sh "cliphist list | rofi -dmenu | cliphist decode | wl-copy"; }
@@ -312,12 +318,12 @@ binds {
     Print { screenshot; }
     Mod+Shift+S { spawn-sh "grim -g \"$(slurp)\" - | swappy -f -"; }
     Mod+Ctrl+Alt+L { spawn "swaylock"; }
-    Mod+Alt+L { spawn "lockscreen"; }
+    Mod+Alt+L { spawn "monolith" "lock"; }
 }
 
 
 window-rule {
-    geometry-corner-radius 0
+    geometry-corner-radius 8
     clip-to-geometry true
 }
 
@@ -358,4 +364,15 @@ window-rule {
     border { off; }
     focus-ring { off; }
     shadow { off; }
+}
+
+// ===== Monolith shell =====
+spawn-at-startup "systemctl" "--user" "enable" "--now" "easyeffects"
+spawn-at-startup "monolithd" "start"
+
+// Terminal default size
+window-rule {
+    match app-id="kitty"
+    default-column-width { fixed 1100; }
+    default-window-height { fixed 700; }
 }
