@@ -723,7 +723,6 @@
       "menu_overview": "Przegląd instalacji pakietów ({count} głównych pakietów)",
       "menu_sddm": "Menedżer logowania SDDM",
       "menu_wallpapers": "Pakiet tapet",
-      "menu_telemetry": "Anonimowa telemetria",
       "menu_update": "Aktualizuj",
       "menu_reinstall": "Zainstaluj ponownie",
       "menu_install": "Zainstaluj",

@@ -10,12 +10,12 @@ if [[ -z "$lat" || -z "$lon" ]]; then
 fi
 
 now=$(date +%s)
-bdc="$(curl -sL --max-time 10 "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en")"
-
-city="$(echo "$bdc" | jq -r '.city // .locality // .principalSubdivision // "Unknown"')"
-country="$(echo "$bdc" | jq -r '.countryName // "Unknown"')"
-code="$(echo "$bdc" | jq -r '.countryCode // "Unknown" | ascii_upcase')"
-region="$(echo "$bdc" | jq -r '.principalSubdivision // "Unknown"')"
+# usage: location_manual.sh <lat> <lon> [city name]
+# No reverse geocoding: the coordinates stay between you and the weather service.
+city="${3:-$(LC_ALL=C printf '%.2f, %.2f' "$lat" "$lon")}"
+country="Unknown"
+code="Unknown"
+region="Unknown"
 
 tz_req="$(curl -s --max-time 10 "https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto")"
 tz="$(echo "$tz_req" | jq -r '.timezone // "UTC"')"

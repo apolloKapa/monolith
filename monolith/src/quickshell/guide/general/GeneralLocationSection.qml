@@ -18,7 +18,7 @@ SettingsBlob {
         icon: "󰍎"
         title: I18n.t("guide.general.location.title")
         description: I18n.t("guide.general.location.desc")
-        searchKeywords: "location coordinates city latitude longitude gps"
+        searchKeywords: "location coordinates city latitude longitude weather"
         showDivider: section.tab.isLocEditOpen
         dividerColor: Qt.alpha(ThemeBackend.surface1, 0.2)
         innerSpacing: section.tab.isLocEditOpen ? rootObj.s(12) : 0
@@ -34,22 +34,6 @@ SettingsBlob {
             running: Location.isDetecting
             visible: Location.isDetecting
             accentColor: ThemeBackend.mauve
-        }
-
-        ClickButton {
-            implicitHeight: rootObj.s(32)
-            buttonText: "Auto-detect"
-            buttonIcon: "󰢹"
-            accentColor: ThemeBackend.surface0
-            textColor: ThemeBackend.text
-            cornerRadius: ThemeBackend.borderRadius
-            horizontalPadding: rootObj.s(12)
-            iconFontSize: rootObj.s(15)
-            textFontSize: rootObj.s(12)
-            onTriggered: {
-                section.tab.isLocEditOpen = false;
-                Location.detectAuto();
-            }
         }
 
         IconButton {

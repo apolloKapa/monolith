@@ -241,12 +241,12 @@ Item {
                     visible: true
 
                     ImageBox {
-                        id: pushyImg
+                        id: mascotImg
                         anchors.fill: parent
                         size: root.emptyGraphicSize
                         cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(0))
                         imageRadius: ThemeBackend.minimalist ? 0 : (root.s(0))
-                        source: Caching.monolithDir ? ("file://" + Caching.monolithDir + "/assets/pushy.gif") : Qt.resolvedUrl("../../assets/pushy.gif")
+                        source: Caching.monolithDir ? ("file://" + Caching.monolithDir + "/assets/lith_sleep.gif") : Qt.resolvedUrl("../../assets/lith_sleep.gif")
                         isGif: true
                         playing: true
                         fillMode: Image.PreserveAspectFit

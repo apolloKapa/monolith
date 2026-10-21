@@ -4,9 +4,10 @@ My Arch Linux setup: [niri](https://github.com/YaLTeR/niri) running **Monolith**
 
 Monolith is built on [Serpantinum](https://github.com/ilyamiro/serpantinum) by @ilyamiro (AGPL-3.0, see `monolith/LICENSE.md`). It keeps every Serpantinum feature (bar, dock, launcher, lock screen, notifications, OSD, clipboard, music, network, widgets, settings guide, blur and liquid glass) and adds:
 
-- **Minimalist** style, next to Blur / Liquid glass in *Settings → Theme*: flat opaque panels, square corners, 2px `#555` outlines, white accent with inverted hover, JetBrains Mono. It's my old Quickshell look, and it's the default.
+- **Minimalist** style, next to Blur / Liquid glass in *Settings → Theme*: flat opaque panels, square corners, 2px `#555` outlines, white accent with inverted hover, JetBrains Mono. It's my old Quickshell look. The square corners/outlines only apply while Minimalist is selected; every other style is unchanged.
 - Minimalist colour preset (`monolith/src/assets/themes/Minimalist.json`)
-- own logo, intro (horizon backdrop), name and paths (`~/.config/monolith`, `~/.local/share/monolith`)
+- own logo, intro (horizon backdrop), mascot (Lith, the sleepy slab), name and paths (`~/.config/monolith`, `~/.local/share/monolith`)
+- **private**: no telemetry (Serpantinum's installer telemetry isn't included), no IP geolocation, no reverse geocoding, lyrics only from lrclib (no NetEase). Weather uses the location you set in *Settings → General* and only sends those coordinates to open-meteo. Things that still go online only do so when you use them: lyrics (track name → lrclib), YouTube cover art, GitHub widget, DuckDuckGo wallpaper search, the captive-portal "Sign in" button.
 - update button pulls this repo instead of upstream; automatic update checks are off
 
 ## What's in here
@@ -126,4 +127,5 @@ Shell code lives in `monolith/src`. After editing it, run `./install.sh` and `mo
 
 - **`qs: command not found`:** `quickshell` isn't installed. Run `sudo pacman -S quickshell qt6-wayland`.
 - **Bar or panels don't appear after login:** run `monolith -v` in a terminal to see the errors. Logs are also in `$XDG_RUNTIME_DIR/monolith/logs`.
-- **Settings look wrong after switching style:** *Settings → Theme* → pick Blur, Liquid glass or Minimalist again. Minimalist also resets the font and colours to the mono preset; you can change them afterwards.
+- **Settings look wrong after switching style:** *Settings → Theme* → pick Blur, Liquid glass or Minimalist again. Minimalist also switches the font and colours to the mono preset; you can change them afterwards.
+- **No weather:** set your location in *Settings → General* (latitude/longitude). Monolith never detects it automatically.

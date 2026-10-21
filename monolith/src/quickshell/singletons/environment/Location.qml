@@ -65,13 +65,6 @@ Item {
         return fallbackValue !== undefined ? fallbackValue : "";
     }
 
-    function detectAuto() {
-        if (!Caching.monolithDir) return;
-        root.isDetecting = true;
-        autoProcess.running = false;
-        autoProcess.running = true;
-    }
-
     function setManual(lat, lon) {
         if (!Caching.monolithDir) return;
         root.isDetecting = true;
@@ -79,14 +72,6 @@ Item {
         manualProcess.lon = lon.toString();
         manualProcess.running = false;
         manualProcess.running = true;
-    }
-
-    Process {
-        id: autoProcess
-        command: ["bash", "-c", Caching.monolithDir + "/scripts/location.sh --refresh"]
-        onExited: {
-            root.isDetecting = false;
-        }
     }
 
     Process {

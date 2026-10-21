@@ -1655,7 +1655,6 @@
       "menu_overview": "패키지 설치 개요 (핵심 패키지 {count}개)",
       "menu_sddm": "SDDM 로그인 관리자",
       "menu_wallpapers": "배경화면 팩",
-      "menu_telemetry": "익명 통계 수집",
       "menu_update": "업데이트",
       "menu_reinstall": "재설치",
       "menu_install": "설치",

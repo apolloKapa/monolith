@@ -1655,7 +1655,6 @@
       "menu_overview": "Aperçu de l'installation des paquets ({count} paquets de base)",
       "menu_sddm": "Gestionnaire de connexion SDDM",
       "menu_wallpapers": "Pack de fonds d'écran",
-      "menu_telemetry": "Télémétrie anonyme",
       "menu_update": "Mettre à jour",
       "menu_reinstall": "Réinstaller",
       "menu_install": "Installer",

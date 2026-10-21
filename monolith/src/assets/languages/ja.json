@@ -720,7 +720,6 @@
       "menu_overview": "パッケージインストール概要 ({count} 個のコアパッケージ)",
       "menu_sddm": "SDDM ログインマネージャー",
       "menu_wallpapers": "壁紙パック",
-      "menu_telemetry": "匿名テレメトリ",
       "menu_update": "アップデート",
       "menu_reinstall": "再インストール",
       "menu_install": "インストール",

@@ -1655,7 +1655,6 @@
       "menu_overview": "Ringkasan instalasi paket ({count} paket inti)",
       "menu_sddm": "Manajer login SDDM",
       "menu_wallpapers": "Paket gambar latar",
-      "menu_telemetry": "Telemetri anonim",
       "menu_update": "Perbarui",
       "menu_reinstall": "Instal ulang",
       "menu_install": "Instal",

@@ -1655,7 +1655,6 @@
       "menu_overview": "Overzicht pakketinstallatie ({count} basispakketten)",
       "menu_sddm": "SDDM-inlogbeheerder",
       "menu_wallpapers": "Achtergrondpakket",
-      "menu_telemetry": "Anonieme telemetrie",
       "menu_update": "Bijwerken",
       "menu_reinstall": "Opnieuw installeren",
       "menu_install": "Installeren",

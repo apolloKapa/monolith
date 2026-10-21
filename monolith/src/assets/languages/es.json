@@ -1699,7 +1699,6 @@
       "menu_overview": "Resumen de instalación de paquetes ({count} paquetes esenciales)",
       "menu_sddm": "Gestor de inicio de sesión SDDM",
       "menu_wallpapers": "Paquete de fondos de pantalla",
-      "menu_telemetry": "Telemetría anónima",
       "menu_update": "Actualizar",
       "menu_reinstall": "Reinstalar",
       "menu_install": "Instalar",
