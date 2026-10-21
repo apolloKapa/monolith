@@ -317,10 +317,10 @@ draw_completion_screen() {
 
     local choice=""
     if [ -t 0 ]; then
-        read -r -p "  Reboot now? [y/N] " choice
+        read -r -p "  Restart your computer now? [y/N] " choice
     elif [ -e /dev/tty ]; then
-        read -r -p "  Reboot now? [y/N] " choice < /dev/tty
+        read -r -p "  Restart your computer now? [y/N] " choice < /dev/tty
     fi
-    [[ "$choice" =~ ^[Yy]$ ]] && sudo reboot now
+    [[ "$choice" =~ ^[Yy]$ ]] && systemctl reboot
     return 0
 }

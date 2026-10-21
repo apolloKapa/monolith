@@ -4,6 +4,11 @@
 
 setterm -blank 0 -powerdown 0 2>/dev/null || true
 
+# Finish even if the terminal goes away: an update stops the shell, and older versions opened
+# the update terminal inside the shell's process group, so stopping the shell closed the
+# terminal mid-update (leaving no shell and dead keybinds).
+trap '' HUP
+
 # --update: no menu, just bring an existing install up to date (used by Settings -> About -> Update).
 # Keeps your niri config, login screen, wallpapers and settings; installs new dependencies.
 UPDATE_ONLY=false
@@ -142,7 +147,12 @@ if [ "$UPDATE_ONLY" = true ]; then
     if [ ${#FAILED_PKGS[@]} -gt 0 ]; then
         printf "%sThese packages failed to install: %s%s\n" "$C_RED" "${FAILED_PKGS[*]}" "$RESET"
     fi
-    { read -r -p "Press Enter to close. " _ < /dev/tty; } 2>/dev/null || true
+    printf "A restart makes sure everything (keybinds, login screen, services) uses the new version.\n"
+    answer=""
+    { read -r -p "Restart your computer now? [y/N] " answer < /dev/tty; } 2>/dev/null || true
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        systemctl reboot
+    fi
 else
     draw_completion_screen
 fi
