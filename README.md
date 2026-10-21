@@ -15,17 +15,17 @@ My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith
 One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...), as your normal user:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/kasc0b3r/dotfiles/main/install/get.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kasc0b3r/monolith/main/install/get.sh | bash
 ```
 
 While the repo is **private**, that URL needs a login, so use the GitHub CLI instead:
 
 ```sh
 gh auth login   # once
-gh api "repos/kasc0b3r/dotfiles/contents/install/get.sh?ref=main" -H "Accept: application/vnd.github.raw" | bash
+gh api "repos/kasc0b3r/monolith/contents/install/get.sh?ref=main" -H "Accept: application/vnd.github.raw" | bash
 ```
 
-Or from a clone: `git clone https://github.com/kasc0b3r/dotfiles && ./dotfiles/install.sh`.
+Or from a clone: `git clone https://github.com/kasc0b3r/monolith && ./monolith/install.sh`.
 
 Once it's installed, **`monolith installer`** opens the installer again to update, reinstall or change options. Settings → About → Update does the same.
 

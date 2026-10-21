@@ -8,7 +8,7 @@ import subprocess
 import urllib.request
 
 # where updates come from: written by the installer next to this install
-REPO = "kasc0b3r/dotfiles"
+REPO = "kasc0b3r/monolith"
 BRANCH = "main"
 _source_env = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "install", "source.env")
 try:
