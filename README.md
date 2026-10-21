@@ -306,4 +306,6 @@ While the repo is private, the update check goes through the GitHub CLI (`gh aut
 
 ## Licence
 
-[GNU AGPL-3.0](LICENSE). Monolith is a fork of Serpantinum by @ilyamiro, which is AGPL-3.0 too. You can use, change and share it; if you share a modified version (or run it for others over a network), share its source under the same licence.
+Copyright (C) 2026 apolloKapa
+
+Monolith is based on Serpantinum, copyright (C) its author [@ilyamiro](https://github.com/ilyamiro), and is licensed under the [GNU AGPL-3.0](LICENSE), like Serpantinum. You can use, change and share it; if you share a modified version (or run it for others over a network), share its source under the same licence.
