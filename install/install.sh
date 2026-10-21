@@ -62,6 +62,7 @@ source "$MODULES_DIR/niri.sh"
 source "$MODULES_DIR/pam.sh"
 source "$MODULES_DIR/sddm.sh"
 source "$MODULES_DIR/wallpapers.sh"
+source "$MODULES_DIR/migrate.sh"
 source "$MODULES_DIR/ui.sh"
 
 # read the install state before i18n.sh: sourcing it creates Monolith's state dir + version stamp
@@ -90,6 +91,11 @@ fi
 step "Packages"
 install_dependencies "$PROJECT_ROOT" "$INSTALL_STATE"
 
+if old_shell_installed; then
+    step "Replacing Serpantinum"
+    migrate_from_old_shell
+fi
+
 step "Monolith shell"
 SHELL_WAS_RUNNING=false
 monolithd status >/dev/null 2>&1 && SHELL_WAS_RUNNING=true
@@ -100,6 +106,7 @@ setup_pam_service
 
 step "niri"
 setup_niri_config "$PROJECT_ROOT" "$NIRI_MODE"
+[ "$UPDATE_ONLY" != true ] && [ "$NIRI_MODE" = replace ] && prefer_niri_session
 
 if [ "$OPT_SDDM" = true ]; then
     step "Login screen"
@@ -121,8 +128,11 @@ write_version_state "$PROJECT_ROOT"
 # fresh installs get the intro
 [[ "$INSTALL_STATE" == fresh || "$IS_REINSTALL" == true ]] && rm -f "$STATE_DIR/first_launch.done"
 
-if [ "$SHELL_WAS_RUNNING" = true ] && [ -n "$WAYLAND_DISPLAY" ]; then
-    setsid monolithd start >/dev/null 2>&1 < /dev/null &
+# switch over right away when we're inside a desktop session (no reboot needed). niri only runs
+# spawn-at-startup at login, so a fresh install has to start the shell itself.
+if [ -n "$WAYLAND_DISPLAY" ] && { [ "$UPDATE_ONLY" != true ] || [ "$SHELL_WAS_RUNNING" = true ]; }; then
+    setsid "$BIN_DIR/monolithd" start >/dev/null 2>&1 < /dev/null &
+    MONOLITH_STARTED=true
 fi
 
 if [ "$UPDATE_ONLY" = true ]; then

@@ -308,7 +308,11 @@ draw_completion_screen() {
         for fp in "${FAILED_PKGS[@]}"; do printf "    - %s%s%s\n" "$C_YELLOW" "$fp" "$RESET"; done
         printf "\n"
     fi
-    printf "  Log out and pick niri on the login screen, or run %smonolithd start%s inside niri.\n" "$BOLD" "$RESET"
+    if [ "$MONOLITH_STARTED" = true ]; then
+        printf "  Monolith is running now. Next time you log in, pick %sniri%s for the Monolith keybinds and layout.\n" "$BOLD" "$RESET"
+    else
+        printf "  Log in to %sniri%s and Monolith starts by itself (or run %smonolithd start%s inside niri).\n" "$BOLD" "$RESET" "$BOLD" "$RESET"
+    fi
     printf "  Run %smonolith installer%s any time to update or change these choices.\n\n" "$BOLD" "$RESET"
 
     local choice=""

@@ -57,20 +57,25 @@ deploy_dotfiles_extras() {
 init_settings() {
     local project_root="$1"
     local wallpaper_dir="$2"
-    [ -s "$SETTINGS_FILE" ] && { echo -e "  ${C_CYAN}settings:${RESET} keeping $SETTINGS_FILE"; return 0; }
+    # an existing file is kept, unless it's just the empty `{}` the shell's scripts create on first use
+    if [ -s "$SETTINGS_FILE" ] && jq -e 'length > 0' "$SETTINGS_FILE" >/dev/null 2>&1; then
+        echo -e "  ${C_CYAN}settings:${RESET} keeping $SETTINGS_FILE"
+        return 0
+    fi
     mkdir -p "$(dirname "$SETTINGS_FILE")"
 
     local src="$project_root/config/monolith/settings.json" from="defaults"
 
-    jq --arg home "$HOME" --arg user "$USER" --arg wp "$wallpaper_dir" '
-        # nothing that identifies you by network: IP, ISP, postcode
-        (if .general.location then .general.location |= (del(.ip, .asn, .org, .postal, .currency, .languages, .utc_offset)
-            | .latitude |= ((. * 100 | round) / 100) | .longitude |= ((. * 100 | round) / 100) | .source = "manual") else . end)
-        | .wallpaperDir = $wp
-        | (if .general.avatarPath then .general.avatarPath = "/var/lib/AccountsService/icons/\($user)" else . end)
-    ' "$src" \
-        | sed -e "s|/home/[^/\"]*/|$HOME/|g" \
-        > "$SETTINGS_FILE"
+    # the defaults carry my /home/<user>/ paths: point them at this home first, then set this
+    # machine's wallpaper folder and avatar (so those don't get rewritten twice)
+    sed -e "s|/home/[^/\"]*/|$HOME/|g" "$src" \
+        | jq --arg user "$USER" --arg wp "$wallpaper_dir" '
+            # nothing that identifies you by network: IP, ISP, postcode
+            (if .general.location then .general.location |= (del(.ip, .asn, .org, .postal, .currency, .languages, .utc_offset)
+                | .latitude |= ((. * 100 | round) / 100) | .longitude |= ((. * 100 | round) / 100) | .source = "manual") else . end)
+            | .wallpaperDir = $wp
+            | (if .general.avatarPath then .general.avatarPath = "/var/lib/AccountsService/icons/\($user)" else . end)
+        ' > "$SETTINGS_FILE"
     echo -e "  ${C_GREEN}settings:${RESET} created from $from"
 }
 
