@@ -368,6 +368,34 @@ Item {
         }
     }
 
+    // Window borders (Settings -> Theme -> Windows) with "follow theme" on: repaint niri's
+    // borders from the theme whenever its colours change.
+    function hexColor(c) {
+        const h = v => ("0" + Math.round(v * 255).toString(16)).slice(-2);
+        return "#" + h(c.r) + h(c.g) + h(c.b);
+    }
+
+    function themeBorderColors() {
+        return { "active": root.hexColor(root.mauve), "inactive": root.hexColor(root.surface2), "urgent": root.hexColor(root.red) };
+    }
+
+    function applyThemeBorders() {
+        const b = (Config.getSetting("windows", {}).borders) || {};
+        if (b.followTheme !== true || !Caching.monolithDir || !Quickshell.env("NIRI_SOCKET")) return;
+        const c = root.themeBorderColors();
+        Quickshell.execDetached(["bash", Caching.monolithDir + "/scripts/niri_borders.sh", "set",
+            "active=" + c.active, "inactive=" + c.inactive, "urgent=" + c.urgent]);
+    }
+
+    Timer {
+        id: themeBordersDebounce
+        interval: 600
+        onTriggered: root.applyThemeBorders()
+    }
+    onMauveChanged: themeBordersDebounce.restart()
+    onSurface2Changed: themeBordersDebounce.restart()
+    onRedChanged: themeBordersDebounce.restart()
+
     FileView {
         id: matugenColorsWatcher
         path: root.matugenConfigPath

@@ -45,7 +45,8 @@
       "bar_side_modules": "Yan modullar",
       "display_lockscreen": "Kilid ekranı",
       "theme_appearance": "Appearance",
-      "theme_animations": "Animations"
+      "theme_animations": "Animations",
+      "theme_windows": "Windows"
     },
     "launcher": {
       "position": {

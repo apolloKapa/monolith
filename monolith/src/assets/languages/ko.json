@@ -45,7 +45,8 @@
       "bar_side_modules": "사이드 모듈",
       "display_lockscreen": "잠금 화면",
       "theme_appearance": "Appearance",
-      "theme_animations": "Animations"
+      "theme_animations": "Animations",
+      "theme_windows": "Windows"
     },
     "launcher": {
       "position": {
