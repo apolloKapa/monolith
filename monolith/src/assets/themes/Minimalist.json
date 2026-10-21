@@ -1,0 +1,27 @@
+{
+  "name": "Minimalist",
+  "colors": {
+    "base": "#1a1a1a",
+    "mantle": "#111111",
+    "crust": "#000000",
+    "text": "#ffffff",
+    "subtext0": "#a0a0a0",
+    "subtext1": "#c8c8c8",
+    "surface0": "#2a2a2a",
+    "surface1": "#333333",
+    "surface2": "#555555",
+    "overlay0": "#6a6a6a",
+    "overlay1": "#858585",
+    "overlay2": "#a0a0a0",
+    "blue": "#ffffff",
+    "sapphire": "#ffffff",
+    "peach": "#e0e0e0",
+    "green": "#ffffff",
+    "red": "#9b0000",
+    "mauve": "#ffffff",
+    "pink": "#ffffff",
+    "yellow": "#e0e0e0",
+    "maroon": "#9b0000",
+    "teal": "#ffffff"
+  }
+}

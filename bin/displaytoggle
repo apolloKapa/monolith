@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-if niri msg -j windows | jq -e ".[] | select(.title == \"Displays\")" >/dev/null; then
-  qs kill -c displays
-else
-  qs kill -c displays 2>/dev/null
-  setsid qs -c displays >/dev/null 2>&1 &
-fi
