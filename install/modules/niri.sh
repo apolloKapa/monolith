@@ -49,18 +49,26 @@ generate_niri_outputs() {
         end'
 }
 
-# writes workspaces.kdl to stdout: 1-10 everywhere, plus d2-1..10 on a second monitor
+# writes workspaces.kdl to stdout: 1-10 on the main monitor, d2-1..10 on a second one.
+# Both sets are pinned with open-on-output, so when a monitor is turned off and on again its
+# workspaces move back (unpinned ones stayed on the other monitor: 21 workspaces on one screen).
 generate_niri_workspaces() {
-    local json="$1"
+    local json="$1" main="" second=""
+    if [ -n "$json" ]; then
+        # main = the monitor at 0,0 (or the first one on); second = the next one that's on
+        main=$(echo "$json" | jq -r '
+            [to_entries[] | select(.value.logical != null)] as $on |
+            ($on | map(select(.value.logical.x == 0 and .value.logical.y == 0)) | first // $on[0]) | .key // empty')
+        second=$(echo "$json" | jq -r --arg main "$main" '
+            [to_entries[] | select(.value.logical != null and .key != $main)] | sort_by(.key) | first | .key // empty')
+    fi
     echo "// Workspaces 1-10 always exist (they don't vanish when empty)."
-    for i in $(seq 1 10); do echo "workspace \"$i\""; done
-    [ -n "$json" ] || return
-    # main monitor = the one at 0,0 (or the first); the next enabled one gets its own set
-    local second
-    second=$(echo "$json" | jq -r '
-        [to_entries[] | select(.value.logical != null)] as $on |
-        ($on | map(select(.value.logical.x == 0 and .value.logical.y == 0)) | first // $on[0]) as $main |
-        [$on[] | select(.key != $main.key)] | sort_by(.key) | first | .key // empty')
+    if [ -n "$main" ]; then
+        echo "// Pinned to $main so they move back to it when it's turned off and on again."
+        for i in $(seq 1 10); do echo "workspace \"$i\" { open-on-output \"$main\"; }"; done
+    else
+        for i in $(seq 1 10); do echo "workspace \"$i\""; done
+    fi
     [ -n "$second" ] || return
     echo ""
     echo "// Second monitor ($second) has its own set, named d2-1..d2-10."
