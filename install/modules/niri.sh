@@ -75,6 +75,19 @@ generate_niri_workspaces() {
     for i in $(seq 1 10); do echo "workspace \"d2-$i\" { open-on-output \"$second\"; }"; done
 }
 
+# spawn-at-startup lines in the current niri config that aren't in Monolith's default
+# (and aren't the old shell), i.e. the user's own startup apps
+personal_startup_lines() {
+    local src="$1"
+    [ -d "$NIRI_DIR" ] || return 0
+    local defaults
+    defaults="$(grep -rhE '^\s*spawn(-sh)?-at-startup' "$src" 2>/dev/null | sed 's/^\s*//')"
+    grep -rhE '^\s*spawn(-sh)?-at-startup' "$NIRI_DIR" --include='*.kdl' 2>/dev/null | sed 's/^\s*//' \
+        | grep -v -e serpantinum -e monolithd \
+        | grep -vxF -f <(printf '%s\n' "$defaults") \
+        | awk '!seen[$0]++'
+}
+
 setup_niri_config() {
     local project_root="$1"
     local mode="${2:-replace}"   # replace | keep
@@ -87,10 +100,18 @@ setup_niri_config() {
         return 0
     fi
 
+    # the default config only starts what Monolith needs; keep the user's own startup apps
+    local own_startup
+    own_startup="$(personal_startup_lines "$src")"
+
     backup_niri_config
     rm -rf "$NIRI_DIR"
     mkdir -p "$NIRI_DIR/config"
     cp -r "$src/." "$NIRI_DIR/"
+    if [ -n "$own_startup" ]; then
+        printf '\n// your startup apps, kept from your previous niri config\n%s\n' "$own_startup" >> "$NIRI_DIR/config/autostart.kdl"
+        echo -e "  ${C_CYAN}niri:${RESET} kept your startup apps: $(echo "$own_startup" | wc -l)"
+    fi
 
     local json=""
     json="$(niri_outputs_json)" || json=""
