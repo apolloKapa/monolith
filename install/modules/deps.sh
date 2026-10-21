@@ -62,9 +62,9 @@ REQUIRED_PKGS=(
 KEYBIND_PKGS=(
     "niri" "xwayland-satellite" "xdg-desktop-portal-gnome"
     "rofi" "jq" "cliphist" "wl-clipboard" "playerctl" "brightnessctl"
-    "grim" "slurp" "swappy" "swaylock" "wireplumber" "polkit-kde-agent"
+    "grim" "slurp" "swappy" "swaylock" "wireplumber"
     "thunar" "mission-center" "librewolf|librewolf-bin" "wooz" "awww" "steam"
-    "ttf-jetbrains-mono" "ttf-jetbrains-mono-nerd" "noto-fonts-cjk" "breeze"
+    "ttf-jetbrains-mono" "noto-fonts-cjk" "breeze"
 )
 
 OPT_KEYBIND_APPS=true
