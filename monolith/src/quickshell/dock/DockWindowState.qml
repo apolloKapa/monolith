@@ -419,5 +419,5 @@ PanelWindow {
     }
 
     property real cornerRadius: ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 2 : Math.min(32, 32 - 16 * Math.exp(-(ThemeBackend.borderRadius - 16) / 12))
-    property real outerCornerRadius: cornerRadius
+    property real outerCornerRadius: ThemeBackend.minimalist ? 0 : cornerRadius
 }

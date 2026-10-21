@@ -189,7 +189,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                             Layout.preferredHeight: rootObj.s(25)
                             horizontalPadding: rootObj.s(8)
-                            cornerRadius: Math.min(ThemeBackend.borderRadius, rootObj.s(6))
+                            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
                             textFontSize: rootObj.s(13)
                             accentColor: Qt.alpha(ThemeBackend.surface1, 0.7)
                             textColor: details.tab.textSub

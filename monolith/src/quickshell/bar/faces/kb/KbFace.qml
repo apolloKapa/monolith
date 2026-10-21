@@ -281,7 +281,7 @@ Item {
             property bool initAnimTrigger: root.isPreview
             height: s(root.lockLook ? 36 : (root.isCompact ? 28 : 30))
             maxWidth: s(root.isCompact ? 96 : 100)
-            cornerRadius: root.lockLook ? ThemeBackend.borderRadius : Math.max(0, ThemeBackend.borderRadius - s(2))
+            cornerRadius: ThemeBackend.minimalist ? 0 : (root.lockLook ? ThemeBackend.borderRadius : Math.max(0, ThemeBackend.borderRadius - s(2)))
             horizontalPadding: s(root.isCompact ? 10 : 12)
             buttonIcon: root.showIcon ? "󰌌" : ""
             iconFontSize: s(root.isCompact ? 14 : 15)
@@ -313,7 +313,7 @@ Item {
         ClickButton {
             width: s(root.isCompact ? 28 : 30)
             height: s(root.isCompact ? 28 : 30)
-            cornerRadius: Math.max(0, ThemeBackend.borderRadius - s(2))
+            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
             horizontalPadding: 0
             buttonText: root.kbLayout
             textFontSize: s(root.isCompact ? 11 : 12)

@@ -561,7 +561,7 @@ Item {
         height: barWindow ? barWindow.barHeight : 0
         y: barWindow ? barWindow.baseOffsetY : 0
         color: Qt.alpha(ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
-        radius: isFill ? 0 : ThemeBackend.borderRadius
+        radius: ThemeBackend.minimalist ? 0 : (isFill ? 0 : ThemeBackend.borderRadius)
         topLeftRadius: ThemeBackend.minimalist ? 0 : (isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
         topRightRadius: ThemeBackend.minimalist ? 0 : (isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
         bottomLeftRadius: ThemeBackend.minimalist ? 0 : (isFill ? (contentWrapper.barAtBottom ? 0 : contentWrapper.fillFarRadius) : radius)
