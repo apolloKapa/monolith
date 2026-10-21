@@ -200,6 +200,14 @@ Item {
                 wCopy[p.window.id] = p.window;
                 _windows = wCopy;
             }
+        } else if ((p = ev.WindowLayoutsChanged)) {
+            // a window moved or resized (positions are what the dock's "dodge windows" checks)
+            let wCopy = Object.assign({}, _windows);
+            for (let change of (p.changes || [])) {
+                let cur = wCopy[change[0]];
+                if (cur) wCopy[change[0]] = Object.assign({}, cur, { layout: change[1] });
+            }
+            _windows = wCopy;
         } else if ((p = ev.WindowClosed)) {
             if (p.id !== undefined) {
                 let wCopy = Object.assign({}, _windows);

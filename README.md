@@ -86,7 +86,7 @@ Everything below is built in.
 
 **Bar**: top or side, fill / floating / pill styles, autohide. Modules: workspaces, media, time & date, weather, system info, tray, Wi-Fi, Bluetooth, volume, battery, keyboard layout, system monitor (CPU/RAM/temp/disk), audio visualizer, current window, quick buttons. Editable in Settings → Bar.
 
-**Dock**: pinned and running apps, autohide or smart autohide, any edge.
+**Dock**: pinned and running apps, any edge. Auto-hide, smart auto-hide (hides while windows are open), or smart auto-hide with **Dodge windows**: stays up with windows open and only hides when a window is over it; while covered, push the cursor to that screen edge to bring it back.
 
 **Launcher** (`Mod+Z` / `Mod+Space`): tabs for apps (with smart ranking), files and emojis.
 

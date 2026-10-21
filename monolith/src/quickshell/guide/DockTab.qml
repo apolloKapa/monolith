@@ -19,6 +19,7 @@ GuideTab {
         "exclusive": false,
         "autohide": false,
         "smartAutohide": true,
+        "dodgeWindows": false,
         "autohideTimeout": 1000,
         "editing": false,
         "apps": [],
@@ -55,6 +56,7 @@ GuideTab {
     property bool currentEnableScrolling: dockSettings && dockSettings.enableScrolling !== undefined ? dockSettings.enableScrolling : false
     property int currentVisibleElements: (dockSettings && dockSettings.visibleElements !== undefined && !isNaN(parseInt(dockSettings.visibleElements)) && parseInt(dockSettings.visibleElements) > 0) ? parseInt(dockSettings.visibleElements) : 7
     property bool currentSmartAutohide: dockSettings && dockSettings.smartAutohide !== undefined ? dockSettings.smartAutohide : true
+    property bool currentDodgeWindows: dockSettings && dockSettings.dodgeWindows === true
     property bool currentAutohide: dockSettings && dockSettings.autohide !== undefined ? dockSettings.autohide : false
     property int currentAutohideTimeout: (dockSettings && dockSettings.autohideTimeout !== undefined && !isNaN(parseInt(dockSettings.autohideTimeout))) ? parseInt(dockSettings.autohideTimeout) : 1000
     property bool currentEditing: dockSettings && dockSettings.editing !== undefined ? dockSettings.editing : false
@@ -82,6 +84,7 @@ GuideTab {
         dockTabRoot.currentEnableScrolling = s.enableScrolling !== undefined ? s.enableScrolling : false;
         dockTabRoot.currentVisibleElements = (s.visibleElements !== undefined && !isNaN(parseInt(s.visibleElements)) && parseInt(dockSettings.visibleElements) > 0) ? parseInt(s.visibleElements) : 7;
         dockTabRoot.currentSmartAutohide = s.smartAutohide !== undefined ? s.smartAutohide : true;
+        dockTabRoot.currentDodgeWindows = s.dodgeWindows === true;
         dockTabRoot.currentAutohide = s.autohide !== undefined ? s.autohide : false;
         dockTabRoot.currentAutohideTimeout = (s.autohideTimeout !== undefined && !isNaN(parseInt(s.autohideTimeout))) ? parseInt(s.autohideTimeout) : 1000;
         dockTabRoot.currentEditing = s.editing !== undefined ? s.editing : false;
@@ -1495,6 +1498,45 @@ GuideTab {
                             onToggled: function(val) {
                                 dockTabRoot.currentSmartAutohide = val;
                                 dockTabRoot.updateDockSetting("smartAutohide", val);
+                            }
+                        }
+                    }
+                }
+
+                // Dodge windows: a smart auto-hide variant, shown under it while it's on
+                Item {
+                    id: dodgeWindowsWrapper
+                    Layout.fillWidth: true
+                    clip: true
+                    readonly property bool shouldBeOpen: dockTabRoot.currentEnabled && dockTabRoot.currentSmartAutohide
+                    visible: implicitHeight > 0.01
+                    implicitHeight: shouldBeOpen ? dodgeWindowsRow.implicitHeight : 0
+                    Behavior on implicitHeight {
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
+                    }
+
+                    SettingsRow {
+                        id: dodgeWindowsRow
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        settingId: "dock_dodge_windows"
+                        rootObj: dockTabRoot.rootObj
+                        icon: "󰘕"
+                        title: I18n.t("guide.dock.dodge_windows.title", "Dodge windows")
+                        description: I18n.t("guide.dock.dodge_windows.desc", "Stay visible with windows open; hide only when a window is over the dock, then come back from the screen edge")
+                        searchKeywords: "dock dodge windows overlap cover hide autohide intellihide"
+
+                        Toggle {
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            checked: dockTabRoot.currentDodgeWindows
+                            accentColor: ThemeBackend.mauve
+                            baseColor: ThemeBackend.surface1
+                            handleColor: ThemeBackend.crust
+                            handleOffColor: ThemeBackend.text
+                            onToggled: function(val) {
+                                dockTabRoot.currentDodgeWindows = val;
+                                dockTabRoot.updateDockSetting("dodgeWindows", val);
                             }
                         }
                     }
