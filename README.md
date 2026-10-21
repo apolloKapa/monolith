@@ -96,6 +96,7 @@ Everything from Serpantinum, plus Monolith's own changes.
 - General: language, location, weather units, sounds
 - Display: monitors, widgets, lock screen
 - Theme: 97 colour presets, colours from your wallpaper (matugen), fonts, corner radius, opacity, and the surface style **Blur / Liquid glass / Minimalist**
+- Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, and the same speed for niri's window animations
 - Bar: general and modules
 - Launcher, Dock, On-screen display, Notifications
 - Wellbeing: screen-time stats
@@ -112,6 +113,7 @@ Everything from Serpantinum, plus Monolith's own changes.
   - things that still go online only do so when you use them: lyrics, YouTube cover art, the GitHub widget, wallpaper search, the Wi-Fi login-page button
 - **Its own look and voice**: Monolith logo, horizon intro ("really good desktop :3"), Lith the sleepy slab mascot (replaces the Pusheen GIFs), own name and paths
 - **Installer**: niri-focused, with my keybinds as defaults, generated display/workspace config, Serpantinum settings migration, `monolith installer`
+- **Animation controls**: one speed setting for every shell animation (and optionally niri's), or turn them off
 - **Updates** come from this repo (no automatic update checks)
 
 ---

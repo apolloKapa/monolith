@@ -31,7 +31,7 @@ ColumnLayout {
             speed: 25
             active: root.active
 
-            Behavior on color { ColorAnimation { duration: 600 } }
+            Behavior on color { ColorAnimation { duration: (600) * ThemeBackend.animScale } }
         }
 
         Text {
@@ -151,7 +151,7 @@ ColumnLayout {
                 font.family: ThemeBackend.fontFamily; 
                 font.bold: true; 
                 font.pixelSize: root.s(12); 
-                Behavior on color { ColorAnimation { duration: 600 } }
+                Behavior on color { ColorAnimation { duration: (600) * ThemeBackend.animScale } }
             }
             Item { Layout.fillWidth: true }
             Text { 
@@ -160,7 +160,7 @@ ColumnLayout {
                 font.family: ThemeBackend.fontFamily; 
                 font.bold: true; 
                 font.pixelSize: root.s(12); 
-                Behavior on color { ColorAnimation { duration: 600 } }
+                Behavior on color { ColorAnimation { duration: (600) * ThemeBackend.animScale } }
             }
         }
     }

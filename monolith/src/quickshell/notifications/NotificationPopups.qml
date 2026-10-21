@@ -156,19 +156,19 @@ PanelWindow {
 
                 add: Transition {
                     ParallelAnimation {
-                        NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 220; easing.type: Easing.OutCubic }
+                        NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                         NumberAnimation {
                             property: "x"
                             from: (popupWindow.isPreset ? (popupWindow.isCenter ? 0 : (popupWindow.isLeft ? -1 : 1)) : (popupWindow.horizontalPosition < 33 ? -1 : (popupWindow.horizontalPosition > 66 ? 1 : 0))) * popupWindow.s(350) * 0.35
                             to: 0
-                            duration: 250
+                            duration: (250) * ThemeBackend.animScale
                             easing.type: Easing.OutCubic
                         }
                         NumberAnimation {
                             property: "y"
                             from: (popupWindow.isPreset ? (popupWindow.isCenter ? (popupWindow.isBottom ? popupWindow.s(24) : -popupWindow.s(24)) : 0) : ((popupWindow.verticalPosition > 50) ? popupWindow.s(24) : -popupWindow.s(24)))
                             to: 0
-                            duration: 250
+                            duration: (250) * ThemeBackend.animScale
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -176,28 +176,28 @@ PanelWindow {
 
                 remove: Transition {
                     ParallelAnimation {
-                        NumberAnimation { property: "opacity"; to: 0.0; duration: 180; easing.type: Easing.OutCubic }
+                        NumberAnimation { property: "opacity"; to: 0.0; duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                         NumberAnimation {
                             property: "x"
                             to: (popupWindow.isPreset ? (popupWindow.isCenter ? 0 : (popupWindow.isLeft ? -1 : 1)) : (popupWindow.horizontalPosition < 33 ? -1 : (popupWindow.horizontalPosition > 66 ? 1 : 0))) * popupWindow.s(350) * 0.35
-                            duration: 200
+                            duration: (200) * ThemeBackend.animScale
                             easing.type: Easing.OutCubic
                         }
                         NumberAnimation {
                             property: "y"
                             to: (popupWindow.isPreset ? (popupWindow.isCenter ? (popupWindow.isBottom ? popupWindow.s(24) : -popupWindow.s(24)) : 0) : ((popupWindow.verticalPosition > 50) ? popupWindow.s(24) : -popupWindow.s(24)))
-                            duration: 200
+                            duration: (200) * ThemeBackend.animScale
                             easing.type: Easing.OutCubic
                         }
                     }
                 }
 
                 displaced: Transition {
-                    NumberAnimation { property: "y"; duration: 220; easing.type: Easing.OutCubic }
+                    NumberAnimation { property: "y"; duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                 }
 
                 removeDisplaced: Transition {
-                    NumberAnimation { property: "y"; duration: 220; easing.type: Easing.OutCubic }
+                    NumberAnimation { property: "y"; duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                 }
 
                 delegate: Item {

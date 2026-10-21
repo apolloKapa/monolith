@@ -191,7 +191,7 @@ Item {
         Behavior on y {
             enabled: root.animate
             NumberAnimation {
-                duration: 650
+                duration: (650) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
                 onRunningChanged: {
                     if (!running && !root.userScrolling) {
@@ -302,21 +302,21 @@ Item {
 
                         Behavior on color {
                             ColorAnimation {
-                                duration: 650
+                                duration: (650) * ThemeBackend.animScale
                                 easing.type: Easing.OutCubic
                             }
                         }
 
                         Behavior on opacity {
                             NumberAnimation {
-                                duration: 650
+                                duration: (650) * ThemeBackend.animScale
                                 easing.type: Easing.OutCubic
                             }
                         }
 
                         Behavior on scale {
                             NumberAnimation {
-                                duration: 650
+                                duration: (650) * ThemeBackend.animScale
                                 easing.type: Easing.OutCubic
                             }
                         }

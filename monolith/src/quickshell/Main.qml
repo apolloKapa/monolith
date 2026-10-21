@@ -561,7 +561,7 @@ PanelWindow {
             scale: masterWindow.isVisible ? 1.0 : 0.96
             Behavior on scale {
                 NumberAnimation {
-                    duration: masterWindow.isVisible ? 280 : 160
+                    duration: (masterWindow.isVisible ? 280 : 160) * ThemeBackend.animScale
                     easing.type: masterWindow.isVisible ? Easing.OutCubic : Easing.InCubic
                 }
             }
@@ -570,7 +570,7 @@ PanelWindow {
             visible: masterWindow.isVisible || opacity > 0
             Behavior on opacity {
                 NumberAnimation {
-                    duration: masterWindow.isVisible ? 200 : 140
+                    duration: (masterWindow.isVisible ? 200 : 140) * ThemeBackend.animScale
                     easing.type: Easing.OutCubic
                 }
             }
@@ -602,19 +602,19 @@ PanelWindow {
 
         Behavior on x {
             enabled: !masterWindow.disableMorph
-            NumberAnimation { duration: masterWindow.morphDuration; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (masterWindow.morphDuration) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
         Behavior on y {
             enabled: !masterWindow.disableMorph
-            NumberAnimation { duration: masterWindow.morphDuration; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (masterWindow.morphDuration) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
         Behavior on width {
             enabled: !masterWindow.disableMorph
-            NumberAnimation { duration: masterWindow.morphDuration; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (masterWindow.morphDuration) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
         Behavior on height {
             enabled: !masterWindow.disableMorph
-            NumberAnimation { duration: masterWindow.morphDuration; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (masterWindow.morphDuration) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
     }
 
@@ -764,7 +764,8 @@ PanelWindow {
 
     Timer {
         id: exitSafetyTimer
-        interval: 450
+        // waits for the close animation, so it follows the animation speed
+        interval: Math.max(1, 450 * ThemeBackend.animScale)
         property int scheduledGeneration: -1
         onTriggered: {
             if (scheduledGeneration === masterWindow.switchGeneration && masterWindow.isClosing) {

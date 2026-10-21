@@ -33,7 +33,7 @@ Item {
     property real animCapacity: 0
     Behavior on animCapacity {
         enabled: root.visible
-        NumberAnimation { duration: 1200; easing.type: Easing.OutQuint }
+        NumberAnimation { duration: (1200) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
 
     onBatCapacityChanged: {

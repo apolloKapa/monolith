@@ -964,7 +964,9 @@
       "update": "التحديثات",
       "welcome": "مرحبًا بك",
       "wellbeing": "الرفاهية الرقمية",
-      "display_lockscreen": "شاشة القفل"
+      "display_lockscreen": "شاشة القفل",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "theme": {
       "colors": {

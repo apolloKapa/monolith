@@ -97,11 +97,11 @@ Item {
 
     Behavior on currentOffsetX {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
     Behavior on currentOffsetY {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     Item {
@@ -127,14 +127,14 @@ Item {
                 tintColor: runningDockButton.btnColor
                 tintAmount: 0.3
                 press: runningBtnMa.pressed ? 1 : Math.max(runningBtnMa.containsMouse ? 0.3 : 0, 0.3 * Math.max(0, Math.min(1, (runningDockButton.baseHoverScale - 1.0) / Math.max(0.01, runningDockButton.hoverScaleDelta))))
-                Behavior on press { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                Behavior on press { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
             }
             transformOrigin: Item.Center
             scale: runningDockButton.targetScale * runningDockButton.popScale
 
-            Behavior on color { ColorAnimation { duration: 180 } }
+            Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
             Behavior on scale {
-                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
 
             Image {
@@ -177,7 +177,7 @@ Item {
                 PropertyAnimation on opacity {
                     id: runningBtnFlashAnim
                     to: 0
-                    duration: 400
+                    duration: (400) * ThemeBackend.animScale
                     easing.type: Easing.OutExpo
                 }
             }

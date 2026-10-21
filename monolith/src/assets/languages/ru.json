@@ -44,7 +44,9 @@
       "bar_general": "Основные",
       "bar_modules": "Модули",
       "bar_side_modules": "Боковые модули",
-      "display_lockscreen": "Экран блокировки"
+      "display_lockscreen": "Экран блокировки",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

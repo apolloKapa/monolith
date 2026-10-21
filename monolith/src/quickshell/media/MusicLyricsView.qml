@@ -16,8 +16,8 @@ Item {
     visible: opacity > 0.0
     clip: true
 
-    Behavior on x { NumberAnimation { duration: 420; easing.type: Easing.OutQuart } }
-    Behavior on opacity { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+    Behavior on x { NumberAnimation { duration: (420) * ThemeBackend.animScale; easing.type: Easing.OutQuart } }
+    Behavior on opacity { NumberAnimation { duration: (320) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     LyricsView {
         id: popupLyricsViewport

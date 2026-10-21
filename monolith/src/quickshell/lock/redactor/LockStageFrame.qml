@@ -62,7 +62,7 @@ Item {
         border.width: Scaler.s(2)
         border.color: frame.current ? ThemeBackend.mauve : Qt.alpha(ThemeBackend.text, 0.18)
         z: 10
-        Behavior on border.color { ColorAnimation { duration: 180 } }
+        Behavior on border.color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
     }
 
     MouseArea {

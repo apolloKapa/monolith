@@ -119,7 +119,7 @@ Item {
                         anchors.fill: parent
                         radius: ThemeBackend.borderRadius
                         color: (itemGlass.active || !itemMouseArea.containsMouse) ? "transparent" : root.alpha(root.cSurface1, 0.4)
-                        Behavior on color { ColorAnimation { duration: 300 } }
+                        Behavior on color { ColorAnimation { duration: (300) * ThemeBackend.animScale } }
 
                         GlassFill {
                             id: itemGlass
@@ -139,7 +139,7 @@ Item {
 
                         property real hoverScale: itemMouseArea.pressed ? 0.92 : (itemMouseArea.containsMouse ? 1.08 : 1.0)
                         scale: hoverScale
-                        Behavior on scale { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                         Image {
                             anchors.fill: parent

@@ -110,7 +110,7 @@ PanelWindow {
     property real animatedLauncherHeight: targetLauncherHeight
     Behavior on animatedLauncherHeight {
         NumberAnimation {
-            duration: 300
+            duration: (300) * ThemeBackend.animScale
             easing.type: Easing.OutCubic
         }
     }
@@ -566,7 +566,7 @@ PanelWindow {
         property real animProgress: clipboardWindow.isVisible ? 1.0 : 0.0
         Behavior on animProgress {
             NumberAnimation {
-                duration: clipboardWindow.isVisible ? 300 : 200
+                duration: (clipboardWindow.isVisible ? 300 : 200) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }
@@ -802,7 +802,7 @@ PanelWindow {
                         id: scrollAnim
                         target: clipList
                         property: "contentY"
-                        duration: 260
+                        duration: (260) * ThemeBackend.animScale
                         easing.type: Easing.OutCubic
                     }
 
@@ -958,14 +958,14 @@ PanelWindow {
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 250
+                                duration: (250) * ThemeBackend.animScale
                                 easing.type: Easing.OutCubic
                             }
                             NumberAnimation {
                                 property: "scale"
                                 from: 0.96
                                 to: 1.0
-                                duration: 270
+                                duration: (270) * ThemeBackend.animScale
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -974,13 +974,13 @@ PanelWindow {
                             NumberAnimation {
                                 property: "opacity"
                                 to: 0.0
-                                duration: 170
+                                duration: (170) * ThemeBackend.animScale
                                 easing.type: Easing.OutCubic
                             }
                             NumberAnimation {
                                 property: "scale"
                                 to: 0.96
-                                duration: 170
+                                duration: (170) * ThemeBackend.animScale
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -1024,19 +1024,19 @@ PanelWindow {
                                 property: "selectFlash"
                                 from: 1.0
                                 to: 0.0
-                                duration: 520
+                                duration: (520) * ThemeBackend.animScale
                                 easing.type: Easing.OutCubic
                             }
 
                             scale: clipCardMa.pressed ? 0.98 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                            Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                             property bool itemExpanded: false
                             property real itemExpandProgress: itemExpanded ? 1.0 : 0.0
                             Behavior on itemExpandProgress {
                                 enabled: !clipCardMa.draggingV
                                 NumberAnimation {
-                                    duration: 300
+                                    duration: (300) * ThemeBackend.animScale
                                     easing.type: Easing.OutQuart
                                     onRunningChanged: {
                                         if (!running && clipDelegateWrapper.isSelected) {
@@ -1062,7 +1062,7 @@ PanelWindow {
                                 target: clipDelegateWrapper
                                 property: "dragX"
                                 to: clipList.width * 1.2
-                                duration: 220
+                                duration: (220) * ThemeBackend.animScale
                                 easing.type: Easing.OutQuad
                             }
                             Timer {
@@ -1111,7 +1111,7 @@ PanelWindow {
                                 property: "dragX"
                                 from: clipDelegateWrapper.dragX
                                 to: 0
-                                duration: 200
+                                duration: (200) * ThemeBackend.animScale
                                 easing.type: Easing.OutCubic
                             }
 
@@ -1121,7 +1121,7 @@ PanelWindow {
                                 property: "dragX"
                                 from: clipDelegateWrapper.dragX
                                 to: 0
-                                duration: 200
+                                duration: (200) * ThemeBackend.animScale
                                 easing.type: Easing.OutQuad
                                 onFinished: clipboardWindow.deleteClip(clipDelegateWrapper.clipIdString, index)
                             }
@@ -1175,7 +1175,7 @@ PanelWindow {
                                 }
                                 clip: true
 
-                                Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                                Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                                 GlassFill {
                                     id: rowGlass
@@ -1222,7 +1222,7 @@ PanelWindow {
                                     radius: ThemeBackend.minimalist ? 0 : (clipDelegateCard.radius)
                                     color: Qt.rgba(0, 0, 0, clipCardMa.containsMouse ? 0.15 : 0.0)
                                     visible: clipDelegateCard.isImage
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                                 }
 
                                 Rectangle {
@@ -1235,7 +1235,7 @@ PanelWindow {
                                     z: 10
                                     visible: clipDelegateCard.isImage
 
-                                    Behavior on border.color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                                    Behavior on border.color { ColorAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                 }
 
                                 MouseArea {
@@ -1356,7 +1356,7 @@ PanelWindow {
                                     visible: (clipDelegateCard.isImage || clipDelegateWrapper.itemExpandProgress < 0.99) && opacity > 0.001
                                     opacity: clipDelegateCard.isImage ? 1.0 : Math.max(0.0, 1.0 - clipDelegateWrapper.itemExpandProgress * 2.0)
 
-                                    Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                                    Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                                     GlassFill {
                                         anchors.fill: parent
@@ -1390,7 +1390,7 @@ PanelWindow {
                                         text: model.type === "image" ? "󰋩" : "󰈙"
                                         visible: model.type !== "image" || (!model.content || clipThumbImg.status !== Image.Ready)
 
-                                        Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                                        Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                     }
                                 }
 

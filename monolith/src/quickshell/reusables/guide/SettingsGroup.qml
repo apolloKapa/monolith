@@ -71,7 +71,7 @@ Item {
 
     property real expandProgress: isOpen ? 1.0 : 0.0
     Behavior on expandProgress {
-        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
     }
 
     default property alias content: headerRow.content

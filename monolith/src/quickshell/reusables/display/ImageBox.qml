@@ -55,11 +55,11 @@ Item {
             shadow: root.interactive ? 1 : 0
             press: root.isPressed ? 1 : (root.isHoveredOrHighlighted ? 0.25 : 0)
             pulse: Math.min(1, root.flashOpacity * 2.5)
-            Behavior on press { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
         }
 
         scale: (!root.interactive ? 1.0 : (root.isPressed ? 0.94 : (root.isHoveredOrHighlighted ? 1.04 : 1.0))) * root.popScale
-        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+        Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         Item {
             anchors.fill: parent
@@ -121,14 +121,14 @@ Item {
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !glass.active
-            PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: 400; easing.type: Easing.OutExpo }
+            PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
         }
     }
 
     SequentialAnimation {
         id: btnPopAnim
-        NumberAnimation { target: root; property: "popScale"; to: 1.08; duration: 110; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "popScale"; to: 1.0; duration: 420; easing.type: Easing.OutQuint }
+        NumberAnimation { target: root; property: "popScale"; to: 1.08; duration: (110) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "popScale"; to: 1.0; duration: (420) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
 
     MouseArea {

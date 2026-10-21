@@ -219,7 +219,7 @@ PanelWindow {
         property real animProgress: sideMusicPopout.isVisible ? 1.0 : 0.0
         Behavior on animProgress {
             NumberAnimation {
-                duration: sideMusicPopout.isVisible ? 280 : 220
+                duration: (sideMusicPopout.isVisible ? 280 : 220) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }

@@ -43,7 +43,9 @@
       "bar_general": "Umum",
       "bar_modules": "Modul",
       "bar_side_modules": "Modul samping",
-      "display_lockscreen": "Layar kunci"
+      "display_lockscreen": "Layar kunci",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

@@ -71,7 +71,7 @@ Item {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 120
+                    duration: (120) * ThemeBackend.animScale
                     easing.type: Easing.OutQuad
                 }
             }
@@ -95,7 +95,7 @@ Item {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 40
+                    duration: (40) * ThemeBackend.animScale
                     easing.type: Easing.OutCubic
                 }
             }
@@ -144,7 +144,7 @@ Item {
                 radius: ThemeBackend.minimalist ? 0 : (width / 2)
                 color: ThemeBackend.mauve || "#cba6f7"
                 opacity: (root.targetPlayer && root.targetPlayer.isPlaying) ? (0.35 + root.kickLevel * 0.25) : 0.0
-                Behavior on opacity { NumberAnimation { duration: 500 } }
+                Behavior on opacity { NumberAnimation { duration: (500) * ThemeBackend.animScale } }
                 layer.enabled: true
                 layer.effect: MultiEffect {
                     blurEnabled: true
@@ -160,7 +160,7 @@ Item {
                 color: ThemeBackend.surface1 || "#45475a"
                 border.width: discContainer.borderWidth
                 border.color: (root.targetPlayer && root.targetPlayer.isPlaying) ? (ThemeBackend.mauve || "#cba6f7") : (ThemeBackend.overlay0 || "#6c7086")
-                Behavior on border.color { ColorAnimation { duration: 500 } }
+                Behavior on border.color { ColorAnimation { duration: (500) * ThemeBackend.animScale } }
 
                 NumberAnimation on rotation {
                     from: 0; to: 360; duration: 25000
@@ -201,7 +201,7 @@ Item {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 opacity: artCrossfader.showingA && status === Image.Ready ? 1.0 : 0.0
-                                Behavior on opacity { NumberAnimation { duration: 650; easing.type: Easing.InOutQuad } }
+                                Behavior on opacity { NumberAnimation { duration: (650) * ThemeBackend.animScale; easing.type: Easing.InOutQuad } }
                             }
 
                             Image {
@@ -209,7 +209,7 @@ Item {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 opacity: !artCrossfader.showingA && status === Image.Ready ? 1.0 : 0.0
-                                Behavior on opacity { NumberAnimation { duration: 650; easing.type: Easing.InOutQuad } }
+                                Behavior on opacity { NumberAnimation { duration: (650) * ThemeBackend.animScale; easing.type: Easing.InOutQuad } }
                             }
 
                             onArtSourceChanged: {
@@ -242,7 +242,7 @@ Item {
                         radius: ThemeBackend.minimalist ? 0 : (width / 2)
                         color: ThemeBackend.mantle || "#1e1e2e"
                         opacity: (root.hasTargetPlayer && root.activeArtUrl) ? 0.0 : 1.0
-                        Behavior on opacity { NumberAnimation { duration: 400 } }
+                        Behavior on opacity { NumberAnimation { duration: (400) * ThemeBackend.animScale } }
 
                         Text {
                             anchors.centerIn: parent
@@ -261,7 +261,7 @@ Item {
                             return Qt.rgba(m.r, m.g, m.b, 0.08 + (root.kickLevel * 0.08));
                         }
                         opacity: (root.hasTargetPlayer && root.activeArtUrl) ? 1.0 : 0.0
-                        Behavior on opacity { NumberAnimation { duration: 600 } }
+                        Behavior on opacity { NumberAnimation { duration: (600) * ThemeBackend.animScale } }
                     }
 
                     Repeater {

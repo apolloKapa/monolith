@@ -43,7 +43,9 @@
       "bar_general": "Ümumi",
       "bar_modules": "Modullar",
       "bar_side_modules": "Yan modullar",
-      "display_lockscreen": "Kilid ekranı"
+      "display_lockscreen": "Kilid ekranı",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

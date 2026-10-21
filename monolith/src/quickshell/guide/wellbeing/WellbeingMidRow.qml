@@ -61,7 +61,7 @@ RowLayout {
                         height: Math.max(rootObj.s(4), (parent.height - rootObj.s(24)) * (model.total / Math.max(middleSection.tab.maxWeekTotal, 1)) * middleSection.tab.introAppBars)
                         Behavior on height {
                             enabled: middleSection.tab.introAppBars === 1.0
-                            NumberAnimation { duration: 600; easing.type: Easing.OutQuint }
+                            NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
                         }
 
                         Rectangle {
@@ -70,7 +70,7 @@ RowLayout {
                             color: ThemeBackend.surface2
                             visible: !model.isTarget && !weekBarGlass.active
                             opacity: barMa.containsMouse ? 0.7 : 1.0
-                            Behavior on color { ColorAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                            Behavior on color { ColorAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                         }
 
                         Rectangle {
@@ -105,7 +105,7 @@ RowLayout {
                         font.pixelSize: rootObj.s(11)
                         color: ThemeBackend.liquidGlass ? "#ffffff" : (model.isTarget ? ThemeBackend.text : ThemeBackend.overlay0)
                         text: model.dayName
-                        Behavior on color { ColorAnimation { duration: 400 } }
+                        Behavior on color { ColorAnimation { duration: (400) * ThemeBackend.animScale } }
                     }
                 }
             }
@@ -176,11 +176,11 @@ RowLayout {
                         radius: ThemeBackend.minimalist ? 0 : (rootObj.s(3))
                         property real intensity: Math.min(1.0, 0.3 + 0.7 * (model.total / middleSection.tab.maxMonthTotal))
                         color: monthGlass.active || model.total === -1 ? "transparent" : (model.total === 0 ? ThemeBackend.surface2 : Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, intensity))
-                        Behavior on color { ColorAnimation { duration: 700; easing.type: Easing.OutQuint } }
+                        Behavior on color { ColorAnimation { duration: (700) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                         border.color: model.isTarget ? ThemeBackend.text : "transparent"
                         border.width: model.isTarget && !monthGlass.active ? 1 : 0
-                        Behavior on border.color { ColorAnimation { duration: 300 } }
+                        Behavior on border.color { ColorAnimation { duration: (300) * ThemeBackend.animScale } }
 
                         GlassFill {
                             id: monthGlass

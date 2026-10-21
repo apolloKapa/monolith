@@ -49,7 +49,7 @@ GuideTab {
                 font.family: ThemeBackend.iconFont
                 font.pixelSize: rootObj.s(18)
                 color: bRoot.textColor
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
                 property real charNorm: 0.15
                 property real bump: bRoot.fillLevel > 0.001 && bRoot.fillLevel < 0.999
@@ -77,7 +77,7 @@ GuideTab {
                         font.pixelSize: rootObj.s(14)
 
                         color: bRoot.textColor
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
                         property real charNorm: 0.25 + (index / 14) * 0.65
                         property real bump: bRoot.fillLevel > 0.001 && bRoot.fillLevel < 0.999
@@ -116,7 +116,7 @@ GuideTab {
         property: "logoFillLevel"
         from: 0.0
         to: 1.15
-        duration: 6500
+        duration: (6500) * ThemeBackend.animScale
         easing.type: Easing.OutCubic
     }
 

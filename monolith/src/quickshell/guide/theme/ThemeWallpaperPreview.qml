@@ -143,9 +143,9 @@ Item {
     SequentialAnimation {
         id: highlightAnimation
         PropertyAction { target: wpPreviewContainer; property: "highlightFlash"; value: 0.0 }
-        NumberAnimation { target: wpPreviewContainer; property: "highlightFlash"; from: 0.0; to: 1.0; duration: 400; easing.type: Easing.OutCubic }
-        PauseAnimation { duration: 1500 }
-        NumberAnimation { target: wpPreviewContainer; property: "highlightFlash"; from: 1.0; to: 0.0; duration: 900; easing.type: Easing.InOutSine }
+        NumberAnimation { target: wpPreviewContainer; property: "highlightFlash"; from: 0.0; to: 1.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: (1500) * ThemeBackend.animScale }
+        NumberAnimation { target: wpPreviewContainer; property: "highlightFlash"; from: 1.0; to: 0.0; duration: (900) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
     }
 
     Component.onCompleted: {
@@ -228,7 +228,7 @@ Item {
         visible: opacity > 0.001
         border.color: ThemeBackend.mauve
         border.width: wpPreviewContainer.highlightFlash > 0.01 ? 2 : 0
-        Behavior on opacity { NumberAnimation { duration: 180 } }
+        Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
     }
 
     IconButton {

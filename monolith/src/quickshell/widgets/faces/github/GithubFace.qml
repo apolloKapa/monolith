@@ -799,12 +799,12 @@ Item {
                                             height: root.cellSize
                                             radius: ThemeBackend.minimalist ? 0 : (Math.max(2, Math.min(Scaler.s(4), Math.round(root.cellSize * 0.22))))
                                             color: cellBox.dayObj === null ? "transparent" : (tileMa.pressed ? Qt.darker(cellBox.baseColor, 1.12) : (cellBox.isHovered ? Qt.lighter(cellBox.baseColor, 1.12) : cellBox.baseColor))
-                                            Behavior on color { ColorAnimation { duration: 180 } }
+                                            Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
 
                                             scale: (cellBox.dayObj === null ? 1.0 : (tileMa.pressed ? 1.08 : (cellBox.isHovered ? 1.04 : 1.0))) * cellBox.popScale
                                             Behavior on scale {
                                                 NumberAnimation {
-                                                    duration: 250
+                                                    duration: (250) * ThemeBackend.animScale
                                                     easing.type: Easing.OutQuint
                                                 }
                                             }
@@ -815,14 +815,14 @@ Item {
                                                     target: cellBox
                                                     property: "popScale"
                                                     to: 1.1
-                                                    duration: 110
+                                                    duration: (110) * ThemeBackend.animScale
                                                     easing.type: Easing.OutQuad
                                                 }
                                                 NumberAnimation {
                                                     target: cellBox
                                                     property: "popScale"
                                                     to: 1.0
-                                                    duration: 420
+                                                    duration: (420) * ThemeBackend.animScale
                                                     easing.type: Easing.OutQuint
                                                 }
                                             }
@@ -837,7 +837,7 @@ Item {
                                                 PropertyAnimation on opacity {
                                                     id: tileFlashAnim
                                                     to: 0
-                                                    duration: 400
+                                                    duration: (400) * ThemeBackend.animScale
                                                     easing.type: Easing.OutExpo
                                                 }
                                             }

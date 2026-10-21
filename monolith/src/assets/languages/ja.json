@@ -821,7 +821,9 @@
       "bar_general": "一般",
       "bar_modules": "モジュール",
       "bar_side_modules": "サイドモジュール",
-      "display_lockscreen": "ロック画面"
+      "display_lockscreen": "ロック画面",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

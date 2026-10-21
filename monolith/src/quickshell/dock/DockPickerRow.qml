@@ -34,7 +34,7 @@ Rectangle {
     color: pickerRowGlass.active ? "transparent" : (isAdded ? ThemeBackend.mauve : ((pickerMa.containsMouse && !pickerLens.glassActive) ? Qt.alpha(ThemeBackend.surface1, 0.4) : Qt.alpha(ThemeBackend.surface0, 0.25)))
     border.width: 0
 
-    Behavior on color { ColorAnimation { duration: 150 } }
+    Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
     GlassFill {
         id: pickerRowGlass
@@ -119,7 +119,7 @@ Rectangle {
                 color: pickerDelegate.isAdded ? pickerDelegate.contentOnAdded : ThemeBackend.text
                 elide: Text.ElideRight
                 Layout.fillWidth: true
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
             }
 
             Text {
@@ -130,7 +130,7 @@ Rectangle {
                 opacity: pickerDelegate.isAdded ? 0.9 : 0.85
                 elide: Text.ElideRight
                 Layout.fillWidth: true
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
             }
         }
     }

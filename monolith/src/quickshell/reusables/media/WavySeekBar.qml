@@ -17,7 +17,7 @@ Item {
     property bool active: bar.visible && (!Window.window || Window.window.visible)
 
     property color waveColor: ThemeBackend.mauve || "#cba6f7"
-    Behavior on waveColor { ColorAnimation { duration: 600 } }
+    Behavior on waveColor { ColorAnimation { duration: (600) * ThemeBackend.animScale } }
 
     property real trackAlpha: 0.28
     property color handleHoverColor: Qt.lighter(waveColor, 1.15)
@@ -40,7 +40,7 @@ Item {
 
     property real ampFactor: playing ? 1.0 : restingLevel
     Behavior on ampFactor {
-        NumberAnimation { duration: 600; easing.type: Easing.OutQuad }
+        NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
     }
 
     readonly property real liveAmp: ampFactor
@@ -49,7 +49,7 @@ Item {
     property real shownFraction: progressFraction
     Behavior on shownFraction {
         enabled: !bar.isDragging
-        NumberAnimation { duration: 250; easing.type: Easing.Linear }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.Linear }
     }
 
     readonly property real progressX: pad + shownFraction * (width - 2 * pad)
@@ -78,7 +78,7 @@ Item {
 
         opacity: (bar.isDragging || mouseArea.containsMouse) ? 1.0 : (bar.playing ? 1.0 : 0.55)
         Behavior on opacity {
-            NumberAnimation { duration: 350; easing.type: Easing.OutQuad }
+            NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
         }
 
         property color waveColor: bar.waveColor
@@ -110,10 +110,10 @@ Item {
         opacity: 1.0
         scale: bar.isDragging ? 1.25 : (mouseArea.containsMouse ? 1.15 : 1.0)
         Behavior on scale {
-            NumberAnimation { duration: 150; easing.type: Easing.OutBack }
+            NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutBack }
         }
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: (150) * ThemeBackend.animScale }
         }
 
         layer.enabled: true

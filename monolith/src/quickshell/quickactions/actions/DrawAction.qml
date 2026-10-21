@@ -272,7 +272,7 @@ Item {
                 y: (cameraRig.height - height) / 2
                 
                 transformOrigin: Item.Center
-                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                Behavior on scale { NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutQuad } }
 
                 DragHandler {
                     target: zoomContainer
@@ -683,7 +683,7 @@ Item {
             
             visible: root.showSizeConfig
             opacity: visible ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutExpo } }
+            Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
             RowLayout {
                 anchors.fill: parent
@@ -822,7 +822,7 @@ Item {
             
             visible: root.showColorPicker
             opacity: visible ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutExpo } }
+            Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
             Column {
                 anchors.centerIn: parent
@@ -1102,8 +1102,8 @@ Item {
                         property int curIdx: root.currentToolIndex
 
                         onCurIdxChanged: {
-                            if (curIdx > prevIdx) { rightAnim.duration = 200; leftAnim.duration = 350; }
-                            else if (curIdx < prevIdx) { leftAnim.duration = 200; rightAnim.duration = 350; }
+                            if (curIdx > prevIdx) { rightAnim.duration = (200) * ThemeBackend.animScale; leftAnim.duration = (350) * ThemeBackend.animScale; }
+                            else if (curIdx < prevIdx) { leftAnim.duration = (200) * ThemeBackend.animScale; rightAnim.duration = (350) * ThemeBackend.animScale; }
                             prevIdx = curIdx;
                         }
 
@@ -1114,8 +1114,8 @@ Item {
                         property real actualLeft: targetLeft
                         property real actualRight: targetRight
 
-                        Behavior on actualLeft { NumberAnimation { id: leftAnim; duration: 250; easing.type: Easing.OutExpo } }
-                        Behavior on actualRight { NumberAnimation { id: rightAnim; duration: 250; easing.type: Easing.OutExpo } }
+                        Behavior on actualLeft { NumberAnimation { id: leftAnim; duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
+                        Behavior on actualRight { NumberAnimation { id: rightAnim; duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
                         x: actualLeft
                         width: actualRight - actualLeft

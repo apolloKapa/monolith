@@ -60,7 +60,7 @@ Item {
             anchors.fill: parent
             visible: opacity > 0 && source !== ""
             opacity: preview.tab.customBackgroundActive ? 0.0 : 1.0
-            Behavior on opacity { NumberAnimation { duration: 200 } }
+            Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
             source: preview.wallpaperPath !== "" && !preview.wallpaperIsVideo ? "file://" + preview.wallpaperPath : ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
@@ -73,7 +73,7 @@ Item {
             anchors.fill: parent
             visible: opacity > 0 && source !== ""
             opacity: preview.tab.customBackgroundActive && !preview.customVideo ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 200 } }
+            Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
             source: preview.customPath !== "" && !preview.tab.isVideoPath(preview.customPath) ? "file://" + preview.customPath : ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
@@ -116,7 +116,7 @@ Item {
             anchors.fill: parent
             color: Qt.rgba(ThemeBackend.crust.r, ThemeBackend.crust.g, ThemeBackend.crust.b, 0.6)
             opacity: preview.following ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 200 } }
+            Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
         }
     }
 
@@ -125,7 +125,7 @@ Item {
         spacing: rootObj.s(6)
         opacity: preview.following ? 1.0 : 0.0
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
 
         Text {
             Layout.alignment: Qt.AlignHCenter
@@ -165,7 +165,7 @@ Item {
             contentAlignment: Qt.AlignHCenter
             enabled: !preview.following
             opacity: preview.following ? 0.45 : 1.0
-            Behavior on opacity { NumberAnimation { duration: 200 } }
+            Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
             onClicked: backgroundPicker.openPicker(preview.tab.currentCustomBackground, false)
         }
 

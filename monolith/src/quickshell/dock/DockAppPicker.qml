@@ -17,11 +17,11 @@ Item {
 
     Behavior on opacity {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
-        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (260) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
     Behavior on scale {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
-        NumberAnimation { duration: 280; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
+        NumberAnimation { duration: (280) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
     }
 
     width: Math.min(dockWindow.effectiveWindowWidth - dockWindow.s(16), dockWindow.isVertical ? dockWindow.s(320) : dockWindow.s(480))
@@ -37,7 +37,7 @@ Item {
     property real animatedPickerHeight: targetPickerHeight
     Behavior on animatedPickerHeight {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     height: animatedPickerHeight

@@ -49,11 +49,11 @@ Item {
         property: "successT"
         from: 0
         to: 1
-        duration: 500
+        duration: (500) * ThemeBackend.animScale
         easing.type: Easing.Linear
     }
     property real spin: pulsing ? 1 : 0
-    Behavior on spin { NumberAnimation { duration: 260 } }
+    Behavior on spin { NumberAnimation { duration: (260) * ThemeBackend.animScale } }
 
     NumberAnimation on shaderTime {
         running: fp.visible && fp.shaderLook
@@ -69,7 +69,7 @@ Item {
         property: "shaderBurst"
         from: 0
         to: 1
-        duration: 760
+        duration: (760) * ThemeBackend.animScale
         easing.type: Easing.OutCubic
     }
     SequentialAnimation {
@@ -89,8 +89,8 @@ Item {
     onShownAccentChanged: { ringCanvas.requestPaint(); sweepCanvas.requestPaint(); bracketCanvas.requestPaint(); }
     onShownFillChanged: ringCanvas.requestPaint()
 
-    Behavior on shownAccent { ColorAnimation { duration: 220 } }
-    Behavior on shownFill { NumberAnimation { duration: status === "success" ? 300 : 360; easing.type: Easing.OutCubic } }
+    Behavior on shownAccent { ColorAnimation { duration: (220) * ThemeBackend.animScale } }
+    Behavior on shownFill { NumberAnimation { duration: (status === "success" ? 300 : 360) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     readonly property real stageSize: glyphSize * 1.7
 
@@ -165,8 +165,8 @@ Item {
 
             SequentialAnimation {
                 id: flashAnim
-                NumberAnimation { target: flashRing; property: "opacity"; to: 0.3; duration: 90; easing.type: Easing.OutQuad }
-                NumberAnimation { target: flashRing; property: "opacity"; to: 0; duration: 520; easing.type: Easing.OutCubic }
+                NumberAnimation { target: flashRing; property: "opacity"; to: 0.3; duration: (90) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+                NumberAnimation { target: flashRing; property: "opacity"; to: 0; duration: (520) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
         }
 
@@ -208,7 +208,7 @@ Item {
             opacity: fp.pulsing && fp.shownFill < 0.05 ? 1 : 0
             onWidthChanged: requestPaint()
             onVisibleChanged: if (visible) requestPaint()
-            Behavior on opacity { NumberAnimation { duration: 200 } }
+            Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
             onPaint: {
                 let ctx = getContext("2d");
                 ctx.reset();
@@ -287,8 +287,8 @@ Item {
 
             SequentialAnimation {
                 id: lockOnAnim
-                NumberAnimation { target: scanFrame; property: "scale"; to: 1.18; duration: 120; easing.type: Easing.OutQuad }
-                NumberAnimation { target: scanFrame; property: "scale"; to: 1.0; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                NumberAnimation { target: scanFrame; property: "scale"; to: 1.18; duration: (120) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+                NumberAnimation { target: scanFrame; property: "scale"; to: 1.0; duration: (320) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
             }
 
             Canvas {
@@ -324,7 +324,7 @@ Item {
                 y: parent.height * 0.12 + fp.scanPos * (parent.height * 0.76 - height)
                 color: fp.shownAccent
                 opacity: fp.pulsing ? 0.9 : 0
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
             }
         }
 
@@ -376,17 +376,17 @@ Item {
 
             SequentialAnimation {
                 id: popAnim
-                NumberAnimation { target: glyphBox; property: "scale"; to: 1.14; duration: 170; easing.type: Easing.OutCubic }
-                NumberAnimation { target: glyphBox; property: "scale"; to: 1.0; duration: 260; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
+                NumberAnimation { target: glyphBox; property: "scale"; to: 1.14; duration: (170) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+                NumberAnimation { target: glyphBox; property: "scale"; to: 1.0; duration: (260) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
             }
 
             SequentialAnimation {
                 id: shakeAnim
-                NumberAnimation { target: shakeShift; property: "x"; to: -fp.glyphSize * 0.14; duration: 55; easing.type: Easing.OutQuad }
-                NumberAnimation { target: shakeShift; property: "x"; to: fp.glyphSize * 0.12; duration: 90; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: shakeShift; property: "x"; to: -fp.glyphSize * 0.08; duration: 80; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: shakeShift; property: "x"; to: fp.glyphSize * 0.04; duration: 70; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: shakeShift; property: "x"; to: 0; duration: 60; easing.type: Easing.InQuad }
+                NumberAnimation { target: shakeShift; property: "x"; to: -fp.glyphSize * 0.14; duration: (55) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+                NumberAnimation { target: shakeShift; property: "x"; to: fp.glyphSize * 0.12; duration: (90) * ThemeBackend.animScale; easing.type: Easing.InOutQuad }
+                NumberAnimation { target: shakeShift; property: "x"; to: -fp.glyphSize * 0.08; duration: (80) * ThemeBackend.animScale; easing.type: Easing.InOutQuad }
+                NumberAnimation { target: shakeShift; property: "x"; to: fp.glyphSize * 0.04; duration: (70) * ThemeBackend.animScale; easing.type: Easing.InOutQuad }
+                NumberAnimation { target: shakeShift; property: "x"; to: 0; duration: (60) * ThemeBackend.animScale; easing.type: Easing.InQuad }
             }
         }
         ShaderEffect {
@@ -419,13 +419,13 @@ Item {
         font.weight: Font.Medium
         color: fp.status === "ready" ? ThemeBackend.subtext0 : fp.shownAccent
 
-        Behavior on color { ColorAnimation { duration: 220 } }
+        Behavior on color { ColorAnimation { duration: (220) * ThemeBackend.animScale } }
     }
 
     SequentialAnimation {
         id: labelSwap
-        NumberAnimation { target: labelText; property: "opacity"; to: 0; duration: 80; easing.type: Easing.InQuad }
-        NumberAnimation { target: labelText; property: "opacity"; to: 1; duration: 220; easing.type: Easing.OutCubic }
+        NumberAnimation { target: labelText; property: "opacity"; to: 0; duration: (80) * ThemeBackend.animScale; easing.type: Easing.InQuad }
+        NumberAnimation { target: labelText; property: "opacity"; to: 1; duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     onLabelChanged: if (visible && showLabel) labelSwap.restart()
@@ -434,7 +434,7 @@ Item {
         id: pips
         visible: fp.showLabel
         opacity: (fp.attempts > 0 && fp.status !== "success") ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
         anchors.top: labelText.bottom
         anchors.topMargin: fp.glyphSize * 0.1
         anchors.horizontalCenter: parent.horizontalCenter
@@ -454,9 +454,9 @@ Item {
                 opacity: used ? 1.0 : 0.55
                 scale: used ? 1.0 : 0.8
 
-                Behavior on color { ColorAnimation { duration: 200 } }
-                Behavior on opacity { NumberAnimation { duration: 200 } }
-                Behavior on scale { NumberAnimation { duration: 260; easing.type: Easing.OutBack; easing.overshoot: 2.0 } }
+                Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
+                Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
+                Behavior on scale { NumberAnimation { duration: (260) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 2.0 } }
             }
         }
     }

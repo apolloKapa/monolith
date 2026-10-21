@@ -199,8 +199,8 @@ GuideTab {
                         opacity: osdTabRoot.isCustomPos ? 1.0 : 0.0
                         visible: opacity > 0.001
 
-                        Behavior on implicitWidth { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                        Behavior on implicitWidth { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                         Text {
                             id: customPosText
@@ -282,8 +282,8 @@ GuideTab {
                             opacity: isOpen ? 1.0 : 0.0
                             implicitHeight: isOpen ? selectorBox.implicitHeight : 0
 
-                            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                            Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                            Behavior on opacity { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+                            Behavior on implicitHeight { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                             Rectangle {
                                 id: selectorBox
@@ -589,7 +589,7 @@ GuideTab {
                         wrapText: true
                         titleColor: osdTabRoot.isVertical ? ThemeBackend.subtext0 : ThemeBackend.text
                         opacity: osdTabRoot.isVertical ? 0.6 : 1.0
-                        Behavior on opacity { NumberAnimation { duration: 250 } }
+                        Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale } }
                         spacing: rootObj.s(10)
 
                         Text {
@@ -633,7 +633,7 @@ GuideTab {
                         wrapText: true
                         titleColor: osdTabRoot.isVertical ? ThemeBackend.subtext0 : ThemeBackend.text
                         opacity: osdTabRoot.isVertical ? 0.6 : 1.0
-                        Behavior on opacity { NumberAnimation { duration: 250 } }
+                        Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale } }
                         spacing: rootObj.s(10)
 
                         Text {
@@ -677,7 +677,7 @@ GuideTab {
                         wrapText: true
                         titleColor: osdTabRoot.isVertical ? ThemeBackend.subtext0 : ThemeBackend.text
                         opacity: osdTabRoot.isVertical ? 0.6 : 1.0
-                        Behavior on opacity { NumberAnimation { duration: 250 } }
+                        Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale } }
                         spacing: rootObj.s(10)
 
                         Text {

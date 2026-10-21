@@ -87,11 +87,11 @@ Item {
         y: (!root.isVertical || root.showLayout) ? 0 : (barWindow ? barWindow.cs(60) : 60)
         Behavior on x {
             enabled: barWindow && barWindow.startupCascadeFinished && !barWindow.positionChanging && (!module || !module.suppressAnimation)
-            NumberAnimation { duration: 800; easing.type: Easing.OutQuint }
+            NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
         }
         Behavior on y {
             enabled: barWindow && barWindow.startupCascadeFinished && !barWindow.positionChanging && (!module || !module.suppressAnimation)
-            NumberAnimation { duration: 800; easing.type: Easing.OutQuint }
+            NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
         }
     }
 
@@ -162,8 +162,8 @@ Item {
                     onTriggered: trayIcon.initAnimTrigger = true
                 }
 
-                Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 function openMenu(action) {
                     TrayMenuController.cancelHide();

@@ -43,10 +43,10 @@ Rectangle {
     implicitHeight: appeared ? targetHeight : 0
     opacity: appeared ? 1.0 : 0.0
 
-    Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-    Behavior on color { ColorAnimation { duration: 250 } }
-    Behavior on border.color { ColorAnimation { duration: 250 } }
+    Behavior on implicitHeight { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+    Behavior on opacity { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+    Behavior on color { ColorAnimation { duration: (250) * ThemeBackend.animScale } }
+    Behavior on border.color { ColorAnimation { duration: (250) * ThemeBackend.animScale } }
 
     Component.onCompleted: {
         appeared = true;
@@ -214,8 +214,8 @@ Rectangle {
                     opacity: isOpen ? 1.0 : 0.0
                     implicitHeight: isOpen ? tempInnerBox.implicitHeight : 0
 
-                    Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                    Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+                    Behavior on implicitHeight { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                     SettingsRow {
                         id: tempInnerBox

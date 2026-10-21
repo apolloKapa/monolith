@@ -22,7 +22,7 @@ Item {
         interactive: true
         clip: true
 
-        move: Transition { NumberAnimation { properties: "x,y"; duration: 400; easing.type: Easing.OutQuint } }
+        move: Transition { NumberAnimation { properties: "x,y"; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         ScrollBar.vertical: ScrollBar {
             active: weekAppList.moving || weekAppList.movingVertically
@@ -40,8 +40,8 @@ Item {
             border.color: weekRowMa.containsMouse ? Qt.alpha(ThemeBackend.surface2, 0.45) : Qt.alpha(ThemeBackend.surface1, 0.3)
             border.width: ThemeBackend.liquidGlass ? 0 : 1
 
-            Behavior on color { ColorAnimation { duration: 150 } }
-            Behavior on border.color { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
+            Behavior on border.color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
             transform: Translate { y: (index * rootObj.s(12)) * (1 - details.tab.introBottom) }
 
@@ -52,7 +52,7 @@ Item {
                 tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
                 tintAmount: 0.25
                 press: weekRowMa.pressed ? 0.8 : (weekRowMa.containsMouse ? 0.25 : 0)
-                Behavior on press { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                Behavior on press { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
             }
 
             MouseArea {
@@ -162,7 +162,7 @@ Item {
                                 width: Math.max(rootObj.s(10), parent.width * (model.percent / 100.0) * details.tab.introAppBars)
                                 Behavior on width {
                                     enabled: details.tab.introAppBars === 1.0
-                                    NumberAnimation { duration: 600; easing.type: Easing.OutQuint }
+                                    NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
                                 }
 
                                 Rectangle {

@@ -43,7 +43,9 @@
       "bar_general": "일반",
       "bar_modules": "모듈",
       "bar_side_modules": "사이드 모듈",
-      "display_lockscreen": "잠금 화면"
+      "display_lockscreen": "잠금 화면",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

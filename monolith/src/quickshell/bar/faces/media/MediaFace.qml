@@ -188,7 +188,7 @@ Item {
                             transformOrigin: Item.Left
 
                             scale: mediaInfoMouse.containsMouse ? 1.01 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                            Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
                             Rectangle {
                                 id: mediaThumbBox

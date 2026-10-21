@@ -93,7 +93,7 @@ Item {
     property real introState: 0.0
     Behavior on introState {
         enabled: popupWindowRoot.visible
-        NumberAnimation { duration: 900; easing.type: Easing.Linear }
+        NumberAnimation { duration: (900) * ThemeBackend.animScale; easing.type: Easing.Linear }
     }
 
     property int cardIntroDelay: 0
@@ -114,7 +114,7 @@ Item {
             target: popupWindowRoot
             property: "exitOpacity"
             to: 0.0
-            duration: 85
+            duration: (85) * ThemeBackend.animScale
             easing.type: Easing.OutQuad
         }
         ScriptAction {

@@ -198,7 +198,7 @@ PanelWindow {
     Behavior on menuHeight {
         enabled: trayMenuWindow.isVisible && menuContainer.animProgress > 0.95
         NumberAnimation {
-            duration: 220
+            duration: (220) * ThemeBackend.animScale
             easing.type: Easing.OutCubic
         }
     }
@@ -282,7 +282,7 @@ PanelWindow {
             property real animProgress: trayMenuWindow.isVisible ? 1.0 : 0.0
             Behavior on animProgress {
                 NumberAnimation {
-                    duration: trayMenuWindow.isVisible ? 280 : 220
+                    duration: (trayMenuWindow.isVisible ? 280 : 220) * ThemeBackend.animScale
                     easing.type: Easing.OutCubic
                 }
             }
@@ -659,7 +659,7 @@ PanelWindow {
                 property real popoutProgress: (trayMenuWindow.isVisible && menuContainer.animProgress > 0.001) ? 1.0 : 0.0
                 Behavior on popoutProgress {
                     NumberAnimation {
-                        duration: (trayMenuWindow.isVisible && menuContainer.animProgress > 0.001) ? 220 : 160
+                        duration: ((trayMenuWindow.isVisible && menuContainer.animProgress > 0.001) ? 220 : 160) * ThemeBackend.animScale
                         easing.type: Easing.OutCubic
                     }
                 }

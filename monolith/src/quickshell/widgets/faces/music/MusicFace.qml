@@ -186,7 +186,7 @@ Item {
                         source: (root.isMediaActive && MprisController.artUrl) ? (MprisController.artUrl.startsWith("file://") || MprisController.artUrl.startsWith("http") ? MprisController.artUrl : "file://" + MprisController.artUrl) : ""
                         fillMode: Image.PreserveAspectCrop
                         opacity: (root.isMediaActive && status === Image.Ready && MprisController.artUrl !== "") ? 1.0 : 0.0
-                        Behavior on opacity { NumberAnimation { duration: 300 } }
+                        Behavior on opacity { NumberAnimation { duration: (300) * ThemeBackend.animScale } }
                     }
                 }
             }

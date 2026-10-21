@@ -38,7 +38,7 @@ Scope {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 250
+                        duration: (250) * ThemeBackend.animScale
                         easing.type: Easing.InOutQuad
                     }
                 }

@@ -43,7 +43,9 @@
       "bar_general": "Geral",
       "bar_modules": "Módulos",
       "bar_side_modules": "Módulos laterais",
-      "display_lockscreen": "Tela de bloqueio"
+      "display_lockscreen": "Tela de bloqueio",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

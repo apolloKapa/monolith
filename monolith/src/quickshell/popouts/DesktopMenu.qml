@@ -392,7 +392,7 @@ PanelWindow {
                 property: "animProgress"
                 from: menuContainer.animProgress > 0.8 ? 0.2 : 0.0
                 to: 1.0
-                duration: 140
+                duration: (140) * ThemeBackend.animScale
                 easing.type: Easing.OutBack
                 easing.overshoot: 1.05
             }
@@ -402,7 +402,7 @@ PanelWindow {
                 target: menuContainer
                 property: "animProgress"
                 to: 0.0
-                duration: 75
+                duration: (75) * ThemeBackend.animScale
                 easing.type: Easing.InCubic
                 onFinished: {
                     if (!desktopMenuWindow.isVisible) {

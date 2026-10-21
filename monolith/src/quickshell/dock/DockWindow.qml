@@ -72,7 +72,7 @@ DockWindowApps {
     property real floatingMargin: dockFloating ? s(8) : 0
     Behavior on floatingMargin {
         enabled: dockWindowRoot.initialized && !dockWindowRoot.positionChanging
-        NumberAnimation { duration: 280; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (280) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     property int autohideTimeout: rawDockSettings.autohideTimeout !== undefined ? rawDockSettings.autohideTimeout : 1000
@@ -81,7 +81,7 @@ DockWindowApps {
     property real editMargin: (editMode && !dockFloating) ? s(20) : 0
     Behavior on editMargin {
         enabled: dockWindowRoot.initialized && !dockWindowRoot.positionChanging
-        NumberAnimation { duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+        NumberAnimation { duration: (320) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
     }
     readonly property real effectiveMargin: floatingMargin + editMargin
 

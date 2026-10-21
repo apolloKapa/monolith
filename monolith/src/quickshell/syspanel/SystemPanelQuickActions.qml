@@ -34,8 +34,8 @@ Item {
 
         SequentialAnimation {
             id: togglePulseAnim
-            NumberAnimation { target: qaBtn; property: "togglePulse"; to: 1.0; duration: 90; easing.type: Easing.OutQuad }
-            NumberAnimation { target: qaBtn; property: "togglePulse"; to: 0.0; duration: 560; easing.type: Easing.OutCubic }
+            NumberAnimation { target: qaBtn; property: "togglePulse"; to: 1.0; duration: (90) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+            NumberAnimation { target: qaBtn; property: "togglePulse"; to: 0.0; duration: (560) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
 
         signal leftClicked()
@@ -52,18 +52,18 @@ Item {
             shadow: 1
             press: qaMa.pressed ? 1 : (qaMa.containsMouse ? 0.25 : 0)
             pulse: qaBtn.togglePulse
-            Behavior on press { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-            Behavior on tintAmount { NumberAnimation { duration: 180 } }
+            Behavior on press { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+            Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
         }
         Behavior on color {
             enabled: view.panel.visible
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: (150) * ThemeBackend.animScale }
         }
 
         scale: qaMa.pressed ? 0.95 : (qaMa.containsMouse ? 1.01 : 1.0)
         Behavior on scale {
             enabled: view.panel.visible
-            NumberAnimation { duration: 200; easing.type: Easing.OutQuart }
+            NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
         }
 
         Text {
@@ -75,7 +75,7 @@ Item {
             text: qaBtn.iconText
             Behavior on color {
                 enabled: view.panel.visible
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: (150) * ThemeBackend.animScale }
             }
         }
 

@@ -72,14 +72,14 @@ MusicPlayerState {
         NumberAnimation { 
             target: root; property: "eqLightningProgress"; 
             from: 0.0; to: 10.0; 
-            duration: 650; 
+            duration: (650) * ThemeBackend.animScale; 
             easing.type: Easing.OutSine 
         }
-        PauseAnimation { duration: 150 }
+        PauseAnimation { duration: (150) * ThemeBackend.animScale }
         NumberAnimation { 
             target: root; property: "eqLightningFade"; 
             from: 0.0; to: 1.0; 
-            duration: 800; 
+            duration: (800) * ThemeBackend.animScale; 
             easing.type: Easing.OutQuad 
         }
         ScriptAction { script: { root.eqLightningProgress = 0.0; } }

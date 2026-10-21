@@ -41,7 +41,7 @@ Item {
     property real shown: active ? 1 : 0
     Behavior on shown {
         enabled: ThemeBackend.liquidGlass
-        NumberAnimation { duration: root.active ? 0 : 160; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (root.active ? 0 : 160) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
     // the backdrop's texture is only safe to sample while the backdrop is alive
     readonly property bool drawable: shown > 0.001 && backdrop !== null && backdrop.active

@@ -71,7 +71,7 @@ Item {
 
             Behavior on width {
                 enabled: !root.isVertical && (barWindow ? (barWindow.startupCascadeFinished && !barWindow.positionChanging) : true)
-                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
 
             Item {
@@ -106,9 +106,9 @@ Item {
 
                     SequentialAnimation {
                         id: titleFadeAnim
-                        NumberAnimation { target: titleTextMain; property: "opacity"; to: 0.0; duration: 80; easing.type: Easing.OutQuad }
+                        NumberAnimation { target: titleTextMain; property: "opacity"; to: 0.0; duration: (80) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
                         ScriptAction { script: titleTextMain.text = titleTextMain.targetText; }
-                        NumberAnimation { target: titleTextMain; property: "opacity"; to: 1.0; duration: 120; easing.type: Easing.InQuad }
+                        NumberAnimation { target: titleTextMain; property: "opacity"; to: 1.0; duration: (120) * ThemeBackend.animScale; easing.type: Easing.InQuad }
                     }
                 }
             }

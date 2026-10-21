@@ -457,7 +457,7 @@ ShellRoot {
                     property: "transitionProgress"
                     from: 0.0
                     to: 1.0
-                    duration: barWindow.activeTransitionType === 0 ? barWindow.fadeDuration : barWindow.maskDuration
+                    duration: (barWindow.activeTransitionType === 0 ? barWindow.fadeDuration : barWindow.maskDuration) * ThemeBackend.animScale
                     easing.type: Easing.InOutCubic
 
                     onFinished: {

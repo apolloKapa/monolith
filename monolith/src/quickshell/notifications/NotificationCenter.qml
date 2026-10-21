@@ -58,7 +58,7 @@ Item {
             target: root
             property: "introContent"
             to: 1.0
-            duration: 400
+            duration: (400) * ThemeBackend.animScale
             easing.type: Easing.OutQuart
         } 
     }
@@ -70,7 +70,7 @@ Item {
                 target: root
                 property: "introContent"
                 to: 0.0
-                duration: 240
+                duration: (240) * ThemeBackend.animScale
                 easing.type: Easing.InQuart
             }
         }

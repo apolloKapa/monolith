@@ -37,7 +37,7 @@ Item {
 
     Behavior on fillAttachProgress {
         enabled: contentWrapper.layoutAnimationsEnabled
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     property bool fillDetached: isFill && !!barWindow && !barWindow.fillAttached
@@ -508,7 +508,7 @@ Item {
 
     Behavior on opacity {
         enabled: barWindow ? (!barWindow.positionChanging && barWindow.startupCascadeFinished) : true
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     Rectangle {
@@ -552,17 +552,17 @@ Item {
 
         Behavior on y {
             enabled: contentWrapper.layoutAnimationsEnabled
-            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
 
         Behavior on height {
             enabled: contentWrapper.layoutAnimationsEnabled
-            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
 
         Behavior on opacity {
             enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
     }
 
@@ -584,7 +584,7 @@ Item {
 
         Behavior on opacity {
             enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
-            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (80) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
     }
 
@@ -606,7 +606,7 @@ Item {
 
         Behavior on opacity {
             enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
-            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (80) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
     }
 
@@ -629,7 +629,7 @@ Item {
 
         Behavior on opacity {
             enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
     }
 
@@ -652,7 +652,7 @@ Item {
 
         Behavior on opacity {
             enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
     }
 
@@ -682,7 +682,7 @@ Item {
 
             Behavior on opacity {
                 enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
-                NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (80) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
         }
     }
@@ -700,7 +700,7 @@ Item {
 
         Behavior on opacity {
             enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
     }
 
@@ -785,22 +785,22 @@ Item {
 
             Behavior on y {
                 enabled: contentWrapper.layoutAnimationsEnabled
-                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
 
             Behavior on height {
                 enabled: contentWrapper.layoutAnimationsEnabled
-                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
 
             Behavior on width {
                 enabled: contentWrapper.layoutAnimationsEnabled
-                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
 
             Behavior on opacity {
                 enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
-                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
         }
     }

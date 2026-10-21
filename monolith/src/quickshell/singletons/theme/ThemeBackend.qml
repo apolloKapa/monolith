@@ -24,6 +24,13 @@ Item {
     property string blurStyle: "blur"
     readonly property real liquidGlassOpacity: 0.1
     readonly property bool minimalist: blurStyle === "minimalist"
+
+    // Animations (Settings -> Theme -> Animations). Every animation duration in the shell is
+    // multiplied by animScale: 0 = off (instant), <1 faster, >1 slower. Looping/ambient
+    // animations (spinners, waves) keep their own speed.
+    property bool animationsEnabled: true
+    property real animationSpeed: 1.0
+    readonly property real animScale: animationsEnabled ? 1.0 / Math.max(0.25, animationSpeed) : 0
     readonly property bool glassActive: blurBackground && !minimalist && elementOpacity < 0.999
     readonly property bool liquidGlass: blurBackground && blurStyle === "liquid"
 
@@ -267,6 +274,10 @@ Item {
         const pct = themeConfig.elementOpacity !== undefined ? Number(themeConfig.elementOpacity) : 100;
         root.blurBackground = themeConfig.blurBackground !== undefined ? Boolean(themeConfig.blurBackground) : false;
         root.blurStyle = (themeConfig.blurStyle === "liquid" || themeConfig.blurStyle === "minimalist") ? themeConfig.blurStyle : "blur";
+        const anim = themeConfig.animations || {};
+        root.animationsEnabled = anim.enabled !== false;
+        const speed = Number(anim.speed);
+        root.animationSpeed = isNaN(speed) ? 1.0 : Math.max(0.25, Math.min(3.0, speed));
         root.elementOpacity = root.minimalist ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));
     }
 

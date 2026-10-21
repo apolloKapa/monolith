@@ -45,7 +45,7 @@ Item {
     property real animCapacity: 0
     Behavior on animCapacity {
         enabled: root.visible
-        NumberAnimation { duration: 800; easing.type: Easing.OutQuint }
+        NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
 
     onBatCapacityChanged: animCapacity = hasBattery ? batCapacity : 0

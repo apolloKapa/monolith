@@ -44,7 +44,9 @@
       "bar_general": "General",
       "bar_modules": "Módulos",
       "bar_side_modules": "Módulos laterales",
-      "display_lockscreen": "Pantalla de bloqueo"
+      "display_lockscreen": "Pantalla de bloqueo",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

@@ -54,8 +54,8 @@ SettingsRow {
         opacity: row.tab.isCustomPos ? 1.0 : 0.0
         visible: opacity > 0.001
 
-        Behavior on implicitWidth { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        Behavior on implicitWidth { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
         Text {
             id: notifCustomPosText
@@ -133,8 +133,8 @@ SettingsRow {
             opacity: isOpen ? 1.0 : 0.0
             implicitHeight: isOpen ? selectorBox.implicitHeight : 0
 
-            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-            Behavior on implicitHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+            Behavior on implicitHeight { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
             Rectangle {
                 id: selectorBox

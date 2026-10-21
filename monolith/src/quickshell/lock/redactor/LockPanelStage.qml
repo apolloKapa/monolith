@@ -147,7 +147,7 @@ Item {
         z: 200
         opacity: stage.panelSelected && stage.active ? 1.0 : 0.0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
 
         SelectionOutline {
             anchors.fill: parent

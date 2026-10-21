@@ -43,7 +43,9 @@
       "bar_general": "सामान्य",
       "bar_modules": "मॉड्यूल्स",
       "bar_side_modules": "साइड मॉड्यूल्स",
-      "display_lockscreen": "लॉक स्क्रीन"
+      "display_lockscreen": "लॉक स्क्रीन",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

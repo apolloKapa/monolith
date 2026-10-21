@@ -43,7 +43,9 @@
       "bar_general": "通用",
       "bar_modules": "模块",
       "bar_side_modules": "侧边模块",
-      "display_lockscreen": "锁屏"
+      "display_lockscreen": "锁屏",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

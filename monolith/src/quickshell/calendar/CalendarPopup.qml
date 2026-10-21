@@ -162,29 +162,29 @@ Item {
         id: introAnim
         running: false
 
-        PauseAnimation { duration: 20 }
+        PauseAnimation { duration: (20) * ThemeBackend.animScale }
 
         ParallelAnimation {
-            NumberAnimation { target: window; property: "introMain"; from: 0; to: 1.0; duration: 800; easing.type: Easing.OutQuart }
+            NumberAnimation { target: window; property: "introMain"; from: 0; to: 1.0; duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
 
             SequentialAnimation {
-                PauseAnimation { duration: 150 }
-                NumberAnimation { target: window; property: "introAmbient"; from: 0; to: 1.0; duration: 1000; easing.type: Easing.OutSine }
+                PauseAnimation { duration: (150) * ThemeBackend.animScale }
+                NumberAnimation { target: window; property: "introAmbient"; from: 0; to: 1.0; duration: (1000) * ThemeBackend.animScale; easing.type: Easing.OutSine }
             }
 
             SequentialAnimation {
-                PauseAnimation { duration: 250 }
-                NumberAnimation { target: window; property: "introClock"; from: 0; to: 1.0; duration: 900; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+                PauseAnimation { duration: (250) * ThemeBackend.animScale }
+                NumberAnimation { target: window; property: "introClock"; from: 0; to: 1.0; duration: (900) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
             }
 
             SequentialAnimation {
-                PauseAnimation { duration: 350 }
-                NumberAnimation { target: window; property: "introCalendar"; from: 0; to: 1.0; duration: 850; easing.type: Easing.OutQuint }
+                PauseAnimation { duration: (350) * ThemeBackend.animScale }
+                NumberAnimation { target: window; property: "introCalendar"; from: 0; to: 1.0; duration: (850) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
             }
 
             SequentialAnimation {
-                PauseAnimation { duration: 400 }
-                NumberAnimation { target: window; property: "introWeather"; from: 0; to: 1.0; duration: 850; easing.type: Easing.OutQuint }
+                PauseAnimation { duration: (400) * ThemeBackend.animScale }
+                NumberAnimation { target: window; property: "introWeather"; from: 0; to: 1.0; duration: (850) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
             }
         }
         ScriptAction { script: window.startupComplete = true }
@@ -194,16 +194,16 @@ Item {
         id: exitAnim
         running: false
         ParallelAnimation {
-            NumberAnimation { target: window; property: "introWeather"; to: 0; duration: 150; easing.type: Easing.InCubic }
-            NumberAnimation { target: window; property: "introCalendar"; to: 0; duration: 150; easing.type: Easing.InCubic }
+            NumberAnimation { target: window; property: "introWeather"; to: 0; duration: (150) * ThemeBackend.animScale; easing.type: Easing.InCubic }
+            NumberAnimation { target: window; property: "introCalendar"; to: 0; duration: (150) * ThemeBackend.animScale; easing.type: Easing.InCubic }
             SequentialAnimation {
-                PauseAnimation { duration: 30 }
-                NumberAnimation { target: window; property: "introClock"; to: 0; duration: 160; easing.type: Easing.InBack }
-                NumberAnimation { target: window; property: "introAmbient"; to: 0; duration: 140; easing.type: Easing.InQuad }
+                PauseAnimation { duration: (30) * ThemeBackend.animScale }
+                NumberAnimation { target: window; property: "introClock"; to: 0; duration: (160) * ThemeBackend.animScale; easing.type: Easing.InBack }
+                NumberAnimation { target: window; property: "introAmbient"; to: 0; duration: (140) * ThemeBackend.animScale; easing.type: Easing.InQuad }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 50 }
-                NumberAnimation { target: window; property: "introMain"; to: 0; duration: 180; easing.type: Easing.InQuart }
+                PauseAnimation { duration: (50) * ThemeBackend.animScale }
+                NumberAnimation { target: window; property: "introMain"; to: 0; duration: (180) * ThemeBackend.animScale; easing.type: Easing.InQuart }
             }
         }
         ScriptAction {
@@ -233,7 +233,7 @@ Item {
     property real secondPulse: 1.0
     NumberAnimation on secondPulse {
         id: pulseReset
-        to: 1.0; duration: 600; easing.type: Easing.OutQuint; running: false
+        to: 1.0; duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint; running: false
     }
 
     property int gridDay: -1
@@ -286,7 +286,7 @@ Item {
     Behavior on displayedTemp {
         NumberAnimation {
             id: tempAnim
-            duration: 800
+            duration: (800) * ThemeBackend.animScale
             easing.type: Easing.OutQuart
         }
     }
@@ -302,10 +302,10 @@ Item {
     SequentialAnimation {
         id: weatherTransitionAnim
         ParallelAnimation {
-            NumberAnimation { target: window; property: "weatherContentOpacity"; to: 0.0; duration: 250; easing.type: Easing.InSine }
-            NumberAnimation { target: window; property: "weatherContentOffset"; to: -window.s(40) * weatherAnimDirection; duration: 250; easing.type: Easing.InSine }
-            NumberAnimation { target: window; property: "transitionSpin"; to: 180 * weatherAnimDirection; duration: 300; easing.type: Easing.InBack }
-            NumberAnimation { target: window; property: "transitionScale"; to: 0.8; duration: 300; easing.type: Easing.InCubic }
+            NumberAnimation { target: window; property: "weatherContentOpacity"; to: 0.0; duration: (250) * ThemeBackend.animScale; easing.type: Easing.InSine }
+            NumberAnimation { target: window; property: "weatherContentOffset"; to: -window.s(40) * weatherAnimDirection; duration: (250) * ThemeBackend.animScale; easing.type: Easing.InSine }
+            NumberAnimation { target: window; property: "transitionSpin"; to: 180 * weatherAnimDirection; duration: (300) * ThemeBackend.animScale; easing.type: Easing.InBack }
+            NumberAnimation { target: window; property: "transitionScale"; to: 0.8; duration: (300) * ThemeBackend.animScale; easing.type: Easing.InCubic }
         }
         ScriptAction {
             script: {
@@ -315,10 +315,10 @@ Item {
             }
         }
         ParallelAnimation {
-            NumberAnimation { target: window; property: "weatherContentOpacity"; to: 1.0; duration: 450; easing.type: Easing.OutQuart }
-            NumberAnimation { target: window; property: "weatherContentOffset"; to: 0.0; duration: 450; easing.type: Easing.OutQuart }
-            NumberAnimation { target: window; property: "transitionSpin"; to: 0.0; duration: 600; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
-            NumberAnimation { target: window; property: "transitionScale"; to: 1.0; duration: 500; easing.type: Easing.OutBack }
+            NumberAnimation { target: window; property: "weatherContentOpacity"; to: 1.0; duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
+            NumberAnimation { target: window; property: "weatherContentOffset"; to: 0.0; duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
+            NumberAnimation { target: window; property: "transitionSpin"; to: 0.0; duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+            NumberAnimation { target: window; property: "transitionScale"; to: 1.0; duration: (500) * ThemeBackend.animScale; easing.type: Easing.OutBack }
         }
     }
 
@@ -376,8 +376,8 @@ Item {
     SequentialAnimation {
         id: calendarTransitionAnim
         ParallelAnimation {
-            NumberAnimation { target: window; property: "calendarContentOpacity"; to: 0.0; duration: 200; easing.type: Easing.InSine }
-            NumberAnimation { target: window; property: "calendarContentOffset"; to: -window.s(20) * calendarAnimDirection; duration: 200; easing.type: Easing.InSine }
+            NumberAnimation { target: window; property: "calendarContentOpacity"; to: 0.0; duration: (200) * ThemeBackend.animScale; easing.type: Easing.InSine }
+            NumberAnimation { target: window; property: "calendarContentOffset"; to: -window.s(20) * calendarAnimDirection; duration: (200) * ThemeBackend.animScale; easing.type: Easing.InSine }
         }
         ScriptAction {
             script: {
@@ -386,8 +386,8 @@ Item {
             }
         }
         ParallelAnimation {
-            NumberAnimation { target: window; property: "calendarContentOpacity"; to: 1.0; duration: 350; easing.type: Easing.OutQuart }
-            NumberAnimation { target: window; property: "calendarContentOffset"; to: 0.0; duration: 350; easing.type: Easing.OutQuart }
+            NumberAnimation { target: window; property: "calendarContentOpacity"; to: 1.0; duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
+            NumberAnimation { target: window; property: "calendarContentOffset"; to: 0.0; duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
         }
     }
 
@@ -480,7 +480,7 @@ Item {
                 y: parent.height * 0.3 - height / 2
                 opacity: 0.012 * window.introAmbient
                 color: window.activeWeatherHex
-                Behavior on color { ColorAnimation { duration: 1000 } }
+                Behavior on color { ColorAnimation { duration: (1000) * ThemeBackend.animScale } }
 
                 transform: Translate {
                     SequentialAnimation on x {
@@ -505,7 +505,7 @@ Item {
                 y: parent.height * 0.7 - height / 2
                 opacity: 0.01 * window.introAmbient
                 color: window.timeColor
-                Behavior on color { ColorAnimation { duration: 1000 } }
+                Behavior on color { ColorAnimation { duration: (1000) * ThemeBackend.animScale } }
 
                 transform: Translate {
                     SequentialAnimation on x {
@@ -530,7 +530,7 @@ Item {
                 y: parent.height * 0.5 - height / 2
                 opacity: 0.007 * window.introAmbient
                 color: window.timeAccent
-                Behavior on color { ColorAnimation { duration: 1000 } }
+                Behavior on color { ColorAnimation { duration: (1000) * ThemeBackend.animScale } }
 
                 transform: Translate {
                     SequentialAnimation on x {
@@ -567,7 +567,7 @@ Item {
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: window.s(520)
                     color: window.activeWeatherHex
-                    Behavior on color { ColorAnimation { duration: 1500 } }
+                    Behavior on color { ColorAnimation { duration: (1500) * ThemeBackend.animScale } }
 
                     opacity: 0.015
                     SequentialAnimation on opacity {
@@ -662,7 +662,7 @@ Item {
                         NumberAnimation { to: 1.0; duration: 4000; easing.type: Easing.InOutSine }
                     }
 
-                    Behavior on opacity { NumberAnimation { duration: 1500 } }
+                    Behavior on opacity { NumberAnimation { duration: (1500) * ThemeBackend.animScale } }
                 }
 
                 ColumnLayout {
@@ -731,7 +731,7 @@ Item {
 
                             property real baseScale: isHighlighted ? (0.80 + 0.55 * depthFactor) : (0.68 + 0.42 * depthFactor)
                             property real hoverScale: hrMa.containsMouse && !isHighlighted ? 1.04 : 1.0
-                            Behavior on hoverScale { NumberAnimation { duration: 150 } }
+                            Behavior on hoverScale { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
 
                             scale: baseScale * hoverScale
 
@@ -756,11 +756,11 @@ Item {
                                     tintAmount: isHighlighted ? 0.4 : 0.2
                                     tintStrength: 1.0
                                     press: hrMa.pressed ? 0.8 : (hrMa.containsMouse ? 0.25 : 0)
-                                    Behavior on press { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                                    Behavior on press { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                 }
 
-                                Behavior on color { ColorAnimation { duration: 180 } }
-                                Behavior on border.color { ColorAnimation { duration: 180 } }
+                                Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
+                                Behavior on border.color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
 
                                 ColumnLayout {
                                     anchors.centerIn: parent
@@ -773,7 +773,7 @@ Item {
                                         font.weight: Font.Bold
                                         font.pixelSize: window.s(11.5)
                                         color: (isHighlighted && !hourGlass.active) ? window.base : (hrMa.containsMouse || isHighlighted ? window.text : window.overlay1)
-                                        Behavior on color { ColorAnimation { duration: 180 } }
+                                        Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
                                     }
 
                                     Text {
@@ -850,7 +850,7 @@ Item {
                             textColor: window.text
                             opacity: window.targetMonthOffset !== 0 ? 1.0 : 0.0
                             visible: opacity > 0
-                            Behavior on opacity { NumberAnimation { duration: 200 } }
+                            Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
                             onClicked: { if (window.targetMonthOffset !== 0) window.setMonthOffset(0) }
                         }
 
@@ -1016,8 +1016,8 @@ Item {
                             style: Text.Outline
                             styleColor: window.isTempAnimating ? Qt.alpha(window.tempGlowColor, 0.5) : Qt.alpha(window.crust, 0.4)
 
-                            Behavior on color { ColorAnimation { duration: 300 } }
-                            Behavior on styleColor { ColorAnimation { duration: 300 } }
+                            Behavior on color { ColorAnimation { duration: (300) * ThemeBackend.animScale } }
+                            Behavior on styleColor { ColorAnimation { duration: (300) * ThemeBackend.animScale } }
                         }
 
                         Text {
@@ -1044,10 +1044,10 @@ Item {
                             font.pixelSize: window.s(13)
                             wrapMode: Text.WordWrap
                             color: window.textAccent
-                            Behavior on color { ColorAnimation { duration: 1000 } }
+                            Behavior on color { ColorAnimation { duration: (1000) * ThemeBackend.animScale } }
 
                             opacity: window.weatherContentOpacity
-                            Behavior on opacity { NumberAnimation { duration: 200 } }
+                            Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
                         }
                     }
 

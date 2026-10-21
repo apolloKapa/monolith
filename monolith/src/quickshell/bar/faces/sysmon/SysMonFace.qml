@@ -121,8 +121,8 @@ Item {
     transform: Translate {
         x: (root.isVertical || root.showLayout) ? 0 : (barWindow ? barWindow.cs(60) : 60)
         y: (!root.isVertical || root.showLayout) ? 0 : (barWindow ? barWindow.cs(60) : 60)
-        Behavior on x { NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
-        Behavior on y { NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+        Behavior on x { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+        Behavior on y { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
     }
 
     component SysMonCircle: Rectangle {
@@ -136,7 +136,7 @@ Item {
         property bool initAnimTrigger: (!barWindow || !!(root.activeTarget && root.activeTarget.isPreview))
 
         property real animValue: initAnimTrigger ? value : 0
-        Behavior on animValue { NumberAnimation { duration: 600; easing.type: Easing.OutQuint } }
+        Behavior on animValue { NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         property real fillRatio: Math.max(0.0, Math.min(1.0, isNaN(animValue) ? 0.0 : animValue))
 
@@ -158,10 +158,10 @@ Item {
         transform: Translate {
             x: (!root.isVertical || initAnimTrigger) ? 0 : (barWindow ? barWindow.cs(15) : 15)
             y: (root.isVertical || initAnimTrigger) ? 0 : (barWindow ? barWindow.cs(15) : 15)
-            Behavior on x { NumberAnimation { duration: 620; easing.type: Easing.OutQuint } }
-            Behavior on y { NumberAnimation { duration: 620; easing.type: Easing.OutQuint } }
+            Behavior on x { NumberAnimation { duration: (620) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+            Behavior on y { NumberAnimation { duration: (620) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
         }
-        Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
         ShaderEffect {
             id: circleGauge

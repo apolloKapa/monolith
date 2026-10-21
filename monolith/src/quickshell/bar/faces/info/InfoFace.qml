@@ -163,7 +163,7 @@ Item {
                 opacity: root.isRecording ? 1.0 : 0.0
                 Behavior on opacity {
                     enabled: barWindow ? !barWindow.positionChanging : true
-                    NumberAnimation { duration: 300 }
+                    NumberAnimation { duration: (300) * ThemeBackend.animScale }
                 }
 
                 Rectangle {
@@ -215,7 +215,7 @@ Item {
                             font.family: ThemeBackend.iconFont
                             font.pixelSize: root.isVertical ? (barWindow ? barWindow.cs(root.isCompact ? 10 : 11) : (root.isCompact ? 10 : 11)) : (barWindow ? barWindow.cs(root.isCompact ? 11 : 12) : (root.isCompact ? 11 : 12))
                             color: root.isCompact ? Qt.lighter(timerItem.entryColor, 1.08) : timerItem.entryColor
-                            Behavior on color { ColorAnimation { duration: 250 } }
+                            Behavior on color { ColorAnimation { duration: (250) * ThemeBackend.animScale } }
                         }
 
                         Text {
@@ -224,7 +224,7 @@ Item {
                             font.pixelSize: root.isVertical ? (barWindow ? barWindow.cs(root.isCompact ? 11 : 12) : (root.isCompact ? 11 : 12)) : (barWindow ? barWindow.cs(root.isCompact ? 13 : 14) : (root.isCompact ? 13 : 14))
                             font.weight: Font.Bold
                             color: root.isCompact ? Qt.lighter(timerItem.entryColor, 1.08) : timerItem.entryColor
-                            Behavior on color { ColorAnimation { duration: 250 } }
+                            Behavior on color { ColorAnimation { duration: (250) * ThemeBackend.animScale } }
                         }
                     }
                 }

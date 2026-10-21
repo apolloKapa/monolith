@@ -43,7 +43,9 @@
       "bar_general": "Общи",
       "bar_modules": "Модули",
       "bar_side_modules": "Странични модули",
-      "display_lockscreen": "Заключен екран"
+      "display_lockscreen": "Заключен екран",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

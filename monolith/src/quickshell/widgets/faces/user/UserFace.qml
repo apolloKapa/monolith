@@ -131,12 +131,12 @@ Item {
 
                         color: Qt.alpha(actionMa.containsMouse ? (ThemeBackend.surface2 !== undefined ? ThemeBackend.surface2 : Qt.lighter(ThemeBackend.surface1, 1.12)) : ThemeBackend.surface1, ThemeBackend.elementOpacity)
                         Behavior on color {
-                            ColorAnimation { duration: 200 }
+                            ColorAnimation { duration: (200) * ThemeBackend.animScale }
                         }
 
                         scale: actionMa.pressed ? (0.98 - (0.01 * weight)) : (actionMa.containsMouse ? 1.02 : 1.0)
                         Behavior on scale {
-                            NumberAnimation { duration: 400; easing.type: Easing.OutQuart }
+                            NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
                         }
 
                         FluidWave {
@@ -170,7 +170,7 @@ Item {
                             PropertyAnimation on opacity {
                                 id: cardFlashAnim
                                 to: 0
-                                duration: 500
+                                duration: (500) * ThemeBackend.animScale
                                 easing.type: Easing.OutExpo
                             }
                         }
@@ -182,7 +182,7 @@ Item {
                             color: actionMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0
                             text: actionCapsule.icon
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation { duration: (150) * ThemeBackend.animScale }
                             }
                         }
 
@@ -251,7 +251,7 @@ Item {
                             target: actionCapsule
                             property: "fillLevel"
                             to: 1.0
-                            duration: (550 * weight) * (1.0 - actionCapsule.fillLevel)
+                            duration: ((550 * weight) * (1.0 - actionCapsule.fillLevel)) * ThemeBackend.animScale
                             easing.type: Easing.InSine
                             onFinished: {
                                 actionCapsule.triggered = true;
@@ -274,7 +274,7 @@ Item {
                             target: actionCapsule
                             property: "fillLevel"
                             to: 0.0
-                            duration: 1500 * actionCapsule.fillLevel
+                            duration: (1500 * actionCapsule.fillLevel) * ThemeBackend.animScale
                             easing.type: Easing.OutQuad
                         }
 

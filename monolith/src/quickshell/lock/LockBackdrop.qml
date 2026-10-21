@@ -108,7 +108,7 @@ Item {
 
             Behavior on opacity {
                 enabled: !screenRoot.isUnlocking
-                NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (260) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
 
             onStatusChanged: {
@@ -136,7 +136,7 @@ Item {
         blur: screenRoot.inputActive ? 1.0 : 0.72
         Behavior on blur {
             enabled: !screenRoot.isPlayingIntro && !screenRoot.isUnlocking
-            NumberAnimation { duration: 500; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (500) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
         opacity: backdrop.wallpaperReveal
         visible: opacity > 0.01
@@ -150,7 +150,7 @@ Item {
         opacity: (screenRoot.inputActive ? 0.14 : 0.38) * backdrop.wallpaperReveal
         Behavior on opacity {
             enabled: !screenRoot.isPlayingIntro && !screenRoot.isUnlocking
-            NumberAnimation { duration: 600; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
     }
 
