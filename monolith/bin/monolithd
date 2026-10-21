@@ -75,7 +75,7 @@ get_installed_version() {
         fi
     fi
     if [ -z "$ver" ]; then
-        ver="2.0.0"
+        ver="1.0.0"
     fi
     echo "$ver"
 }

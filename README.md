@@ -6,7 +6,7 @@ My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith
 
 > **INSPIRED BY SERPANTINUM BY [@ilyamiro](https://github.com/ilyamiro)**
 >
-> Monolith is a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) and keeps its licence (AGPL-3.0, see `monolith/LICENSE.md`). The installer is also adapted from Serpantinum's.
+> Monolith is a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) and keeps its licence (AGPL-3.0, see `monolith/LICENSE.md`).
 
 ---
 
@@ -40,7 +40,7 @@ It opens a menu (arrow keys or j/k, Enter, q to quit):
 | All my apps | OFF | everything in `packages.txt` and `packages-aur.txt` |
 | niri config | Monolith config | writes the niri config below (your old one is backed up to `~/.config/niri_backup/`); or "keep mine" |
 | Login screen | ON | SDDM theme, with options to replace your current display manager and use Wayland for SDDM |
-| Wallpapers | 3 random | 3 random / full pack / none, from the public [shell-wallpapers](https://github.com/ilyamiro/shell-wallpapers) repo |
+| Wallpapers | 3 random | 3 random / full pack / none, from my [wallpapers](https://github.com/kasc0b3r/wallpapers) repo (skipped if it doesn't exist; `WALLPAPER_REPO=` to use another) |
 | Install / Update / Reinstall | | Update keeps your settings; Reinstall starts them fresh |
 
 Then it:
@@ -51,7 +51,7 @@ Then it:
 4. adds `/etc/pam.d/monolith`, so the lock screen can check your password
 5. writes the niri config and generates the display and workspace setup from the monitors it finds
 6. sets up SDDM and wallpapers, if picked
-7. creates `~/.config/monolith/settings.json`. It keeps yours if you already have one, carries over your Serpantinum settings if Serpantinum is installed, or else uses the defaults in `config/monolith/settings.json`
+7. creates `~/.config/monolith/settings.json` from the defaults in `config/monolith/settings.json` (an existing one is kept)
 8. enables PipeWire, NetworkManager, power-profiles-daemon and EasyEffects
 
 There's no telemetry in the installer or the shell.
@@ -60,7 +60,7 @@ There's no telemetry in the installer or the shell.
 
 ## The shell
 
-Everything from Serpantinum, plus Monolith's own changes.
+Everything below is built in.
 
 **Bar**: top or side, fill / floating / pill styles, autohide. Modules: workspaces, media, time & date, weather, system info, tray, Wi-Fi, Bluetooth, volume, battery, keyboard layout, system monitor (CPU/RAM/temp/disk), audio visualizer, current window, quick buttons. Editable in Settings → Bar.
 
@@ -105,14 +105,14 @@ Everything from Serpantinum, plus Monolith's own changes.
 
 ### What Monolith changes
 
-- **Minimalist style**, next to Blur and Liquid glass in Settings → Theme. Flat opaque panels, square corners, 2px `#555` outlines, white accent with inverted hover, JetBrains Mono. It's my old Quickshell look. The squares and outlines only apply while Minimalist is picked; every other style is exactly as in Serpantinum.
+- **Minimalist style**, next to Blur and Liquid glass in Settings → Theme. Flat opaque panels, square corners, 2px `#555` outlines, white accent with inverted hover, JetBrains Mono. It's my old Quickshell look. The squares and outlines only apply while Minimalist is picked; every other style is unchanged.
 - **Private**:
   - no telemetry
   - no IP geolocation and no reverse geocoding; weather uses the location you set in Settings → General and only sends those coordinates to open-meteo
   - lyrics only from lrclib (NetEase removed)
   - things that still go online only do so when you use them: lyrics, YouTube cover art, the GitHub widget, wallpaper search, the Wi-Fi login-page button
 - **Its own look and voice**: Monolith logo, horizon intro ("really good desktop :3"), Lith the sleepy slab mascot (replaces the Pusheen GIFs), own name and paths
-- **Installer**: niri-focused, with my keybinds as defaults, generated display/workspace config, Serpantinum settings migration, `monolith installer`
+- **Installer**: niri-focused, with my keybinds as defaults, generated display/workspace config, `monolith installer`
 - **Animation controls**: one speed setting for every shell animation (and optionally niri's), or turn them off
 - **Updates** come from this repo (no automatic update checks)
 
@@ -120,7 +120,7 @@ Everything from Serpantinum, plus Monolith's own changes.
 
 ## niri config
 
-Serpantinum-style modular config in `~/.config/niri/` (source: `monolith/compositors/niri/`):
+Modular config in `~/.config/niri/` (source: `monolith/compositors/niri/`):
 
 | File | Contents |
 |---|---|
@@ -270,5 +270,4 @@ niri config changes: edit `monolith/compositors/niri/config/*.kdl` (or copy them
 - **No weather:** set your location in Settings → General. Monolith never detects it automatically.
 - **Wrong monitor layout:** run `monolith installer` from inside niri, or edit `~/.config/niri/config/output.kdl`, then `niri validate`.
 - **Lock screen won't accept your password:** check `/etc/pam.d/monolith` exists (the installer adds it). If you're ever stuck, switch to a TTY (Ctrl+Alt+F3), log in, and run `monolithd stop`.
-- **Serpantinum is installed too:** don't run both at once. The niri config only starts `monolithd`.
 - **Nvidia:** my desktop used the legacy GTX 1070 driver (`nvidia-dkms-580xx`). Drop GPU drivers that don't fit from `packages.txt` before choosing "All my apps".

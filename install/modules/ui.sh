@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Installer UI: banner, main menu, SDDM submenu, completion screen.
-# Menu/key handling adapted from Serpantinum's installer.
 
 RESET=$'\e[0m'
 BOLD=$'\e[1m'
@@ -185,7 +184,7 @@ draw_banner() {
  ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═╝
 EOF
     printf "%s" "$RESET"
-    printf " %sreally good desktop :3%s   %sinspired by Serpantinum by @ilyamiro%s\n" "$BOLD" "$RESET" "$DIM" "$RESET"
+    printf " %sreally good desktop :3%s\n" "$BOLD" "$RESET"
     printf "%s%s%s\n" "$DIM" "--------------------------------------------------------------------------------" "$RESET"
     printf " %sUser:%s %-25s | %sOS:%s  %s\n" "$BOLD" "$RESET" "$USER_NAME" "$BOLD" "$RESET" "$OS_NAME"
     printf " %sCPU:%s  %-25.25s | %sGPU:%s %.40s\n" "$BOLD" "$RESET" "$CPU_INFO" "$BOLD" "$RESET" "$GPU_INFO"

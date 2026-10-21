@@ -201,7 +201,7 @@ GuideTab {
                 spacing: 0
 
                 property string mainTitle: I18n.t("guide.about.title")
-                property string verText: " v" + (Updater.localVersion !== "..." ? Updater.localVersion : (rootObj.dotsVersion !== "Loading..." && rootObj.dotsVersion !== I18n.t("guide.about.loading") ? rootObj.dotsVersion : "2.0.0"))
+                property string verText: " v" + (Updater.localVersion !== "..." ? Updater.localVersion : (rootObj.dotsVersion !== "Loading..." && rootObj.dotsVersion !== I18n.t("guide.about.loading") ? rootObj.dotsVersion : "1.0.0"))
                 property string fullText: mainTitle + verText
 
                 Repeater {

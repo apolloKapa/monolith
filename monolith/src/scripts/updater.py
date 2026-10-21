@@ -6,7 +6,7 @@ import time
 import urllib.request
 
 REPO = "kasc0b3r/dotfiles"
-DEFAULT_VER = "2.0.0"
+DEFAULT_VER = "1.0.0"
 
 state_dir = os.path.expanduser("~/.local/state/monolith")
 if "--state-dir" in sys.argv:

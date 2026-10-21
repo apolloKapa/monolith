@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Monolith installer. Run it from a clone of the repo, through install/get.sh, or with
-# `monolith installer` once Monolith is installed. Inspired by Serpantinum's installer.
+# `monolith installer` once Monolith is installed.
 
 setterm -blank 0 -powerdown 0 2>/dev/null || true
 
