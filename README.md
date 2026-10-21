@@ -156,7 +156,7 @@ Modular config in `~/.config/niri/` (source: `monolith/compositors/niri/`):
 | `config/layout.kdl` | 10px gaps, column presets, 2px white/grey borders, no focus ring, no hot corners, snappy spring animations |
 | `config/autostart.kdl` | only what Monolith needs: clipboard history + `monolithd start`. Add your own apps here; when the installer replaces the niri config it keeps the startup apps you had |
 | `config/keybinds.kdl` | the keybinds below |
-| `config/rules.kdl` | rounded window corners, windows open floating, Roblox Studio helper windows hidden, Steam toasts as notifications, kitty default size |
+| `config/rules.kdl` | rounded window corners, Roblox Studio helper windows hidden, Steam toasts as notifications |
 
 The installer reads displays from the running niri. If you install from a TTY, nothing is pinned and niri picks each monitor's preferred mode; run `monolith installer` from inside niri later to pin the layout. The Display page in Settings can also change monitors live.
 
@@ -198,13 +198,13 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | Key | Action |
 |---|---|
 | `Mod+Q` | close |
-| `Mod+Arrows` | focus window in that direction (stays on this monitor) |
+| `Mod+Arrows` | focus column left/right, window up/down |
 | `Mod+H` / `J` / `K` | focus column left / window down / up |
-| `Mod+Shift+Arrows` | swap with the window in that direction (`swapwin`) |
-| `Mod+Ctrl+Arrows` | snap floating window to that half (`snap`) |
+| `Mod+Shift+Arrows` | focus monitor |
+| `Mod+Ctrl+Arrows` | move column left/right, window up/down |
 | `Mod+Ctrl+H/J/K/L` | move column / window |
-| `Mod+R` | float ↔ tile (tiled at half width) |
-| `Mod+T` | tile and maximize |
+| `Mod+R` | cycle column width (⅓ / ½ / ⅔) |
+| `Mod+T` | float / tile the focused window |
 | `Mod+F` / `Mod+Shift+F` | fullscreen / maximize column |
 | `Mod+Ctrl+F` | expand column to available width |
 | `Mod+Ctrl+C` | center visible columns |
@@ -262,8 +262,7 @@ The installer reads displays from the running niri. If you install from a TTY, n
 
 Helper scripts in `bin/` (installed to `~/.local/bin`):
 
-- `focuswin`, `swapwin`, `snap`: window focus, swap and snapping
-- `tilehalf`, `maxtoggle`: float/tile and maximize toggles
+- `focuswin`, `swapwin`, `snap`, `tilehalf`, `maxtoggle`: desktop-style window focus, swapping, half-screen snapping and maximizing for floating windows (not bound by default since Monolith uses normal niri tiling; bind them in `keybinds.kdl` if you want them)
 - `setwall`: wallpaper via awww (`setwall pick` = rofi chooser)
 - `launcher`, `favlauncher`, `rofi-apps`, `rofi-favs`: rofi launcher with favourites (Ctrl+S stars an app)
 - `gparted-dark`, `osu-wine`, `cosu-launch.sh`, `roblox-studio-mcp`: app launchers

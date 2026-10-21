@@ -24,23 +24,23 @@ binds {
 
     Mod+Q repeat=false { close-window; }
 
-    Mod+Left { spawn "focuswin" "left"; }
-    Mod+Ctrl+Left { spawn "snap" "left"; }
-    Mod+Down { spawn "focuswin" "down"; }
-    Mod+Ctrl+Down { spawn "snap" "down"; }
-    Mod+Up { spawn "focuswin" "up"; }
-    Mod+Ctrl+Up { spawn "snap" "up"; }
-    Mod+Right { spawn "focuswin" "right"; }
-    Mod+Ctrl+Right { spawn "snap" "right"; }
+    Mod+Left  { focus-column-left; }
+    Mod+Ctrl+Left  { move-column-left; }
+    Mod+Down  { focus-window-down; }
+    Mod+Ctrl+Down  { move-window-down; }
+    Mod+Up    { focus-window-up; }
+    Mod+Ctrl+Up    { move-window-up; }
+    Mod+Right { focus-column-right; }
+    Mod+Ctrl+Right { move-column-right; }
     Mod+H     { focus-column-left; }
     Mod+J     { focus-window-down; }
     Mod+K     { focus-window-up; }
     Mod+L { spawn "monolith" "lock"; }
 
-    Mod+Shift+Left  { spawn "swapwin" "left"; }
-    Mod+Shift+Down  { spawn "swapwin" "down"; }
-    Mod+Shift+Up    { spawn "swapwin" "up"; }
-    Mod+Shift+Right { spawn "swapwin" "right"; }
+    Mod+Shift+Left  { focus-monitor-left; }
+    Mod+Shift+Down  { focus-monitor-down; }
+    Mod+Shift+Up    { focus-monitor-up; }
+    Mod+Shift+Right { focus-monitor-right; }
     Mod+Ctrl+H     { move-column-left; }
     Mod+Ctrl+J     { move-window-down; }
     Mod+Ctrl+K     { move-window-up; }
@@ -133,14 +133,14 @@ binds {
     Mod+Comma  { consume-window-into-column; }
     Mod+Period { expel-window-from-column; }
 
-    Mod+R repeat=false { spawn "tilehalf"; }
+    Mod+R { switch-preset-column-width; }
     Mod+Shift+R { switch-preset-column-width-back; }
     Mod+Ctrl+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R { reset-window-height; }
 
     Mod+F { fullscreen-window; }
     Mod+Shift+F { maximize-column; }
-    Mod+T { spawn-sh "niri msg -j focused-window | jq -e .is_floating >/dev/null && niri msg action toggle-window-floating; niri msg action maximize-column"; }
+    Mod+T { toggle-window-floating; }
 
     Mod+Ctrl+F { expand-column-to-available-width; }
     Mod+Ctrl+C { center-visible-columns; }
