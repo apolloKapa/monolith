@@ -18,22 +18,28 @@ command -v pacman &>/dev/null || die "Monolith's installer supports Arch Linux a
 
 # --- find the repo: the one this script is in, or a cached clone of GitHub -------------------
 PROJECT_ROOT="$(dirname "$INSTALL_DIR")"
+# git that never stops to ask for a password; uses the GitHub CLI login when there is one
+# (needed while the repo is private)
+gitx() {
+    if command -v gh &>/dev/null && gh auth status &>/dev/null; then
+        GIT_TERMINAL_PROMPT=0 git -c credential.helper= -c 'credential.helper=!gh auth git-credential' "$@"
+    else
+        GIT_TERMINAL_PROMPT=0 git "$@"
+    fi
+}
+
 if [ ! -d "$PROJECT_ROOT/monolith/src" ]; then
     command -v git &>/dev/null || sudo pacman -Sy --noconfirm --needed git
     if [ -d "$CACHE_REPO/.git" ]; then
         echo "Updating $REPO_SLUG ($MONOLITH_BRANCH)..."
-        git -C "$CACHE_REPO" fetch --depth 1 origin "$MONOLITH_BRANCH" \
+        gitx -C "$CACHE_REPO" fetch --depth 1 origin "$MONOLITH_BRANCH" 2>/dev/null \
             && git -C "$CACHE_REPO" reset --hard FETCH_HEAD >/dev/null \
             || echo "Couldn't update, using the copy from last time."
     else
         echo "Downloading $REPO_SLUG ($MONOLITH_BRANCH)..."
         rm -rf "$CACHE_REPO"
-        if ! GIT_TERMINAL_PROMPT=0 git clone --depth 1 -b "$MONOLITH_BRANCH" "https://github.com/$REPO_SLUG.git" "$CACHE_REPO" 2>/dev/null; then
-            # private repo: fall back to the GitHub CLI's login
-            command -v gh &>/dev/null && gh auth status &>/dev/null \
-                && gh repo clone "$REPO_SLUG" "$CACHE_REPO" -- --depth 1 -b "$MONOLITH_BRANCH" \
-                || die "Couldn't download $REPO_SLUG. If the repo is private, run 'gh auth login' first."
-        fi
+        gitx clone --depth 1 -b "$MONOLITH_BRANCH" "https://github.com/$REPO_SLUG.git" "$CACHE_REPO" 2>/dev/null \
+            || die "Couldn't download $REPO_SLUG. If the repo is private, run 'gh auth login' first."
     fi
     PROJECT_ROOT="$CACHE_REPO"
     INSTALL_DIR="$CACHE_REPO/install"
