@@ -498,7 +498,7 @@ PanelWindow {
     // Keys (Settings -> Screenshots). Meta combos that niri itself binds (like Meta+C) never reach
     // this window; those niri binds are wrapped to call handleKey() over IPC instead.
     readonly property var defaultKeys: ({
-        "capture": "Return", "copy": "Meta+C", "edit": "Ctrl+E",
+        "capture": "Return", "copy": "Ctrl+C", "edit": "Ctrl+E",
         "cancel": "Escape", "mode": "Tab", "maximize": "F11"
     })
     property var screenshotSettings: Config.getSetting("screenshot", {})

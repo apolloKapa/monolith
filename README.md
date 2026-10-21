@@ -238,7 +238,7 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `Shift+Print` | screenshot a region and open it in the editor |
 | `Ctrl+Print` / `Mod+Print` | screenshot the whole screen |
 | `Alt+Print` | whole screen, then the editor |
-| inside the screenshot tool | `Enter` save + copy, **`Meta+C` copy only**, `Ctrl+E` edit, `Tab` photo/video, `F11` whole screen, `Esc` cancel (change them in Settings → Screenshots) |
+| inside the screenshot tool | `Enter` save + copy, **`Ctrl+C` copy only**, `Ctrl+E` edit, `Tab` photo/video, `F11` whole screen, `Esc` cancel (change them in Settings → Screenshots) |
 | media / volume / mic / brightness keys | work as labelled (also on the lock screen) |
 | `Mod+M`, `Mod+Shift+E`, `Ctrl+Alt+Delete` | quit niri |
 

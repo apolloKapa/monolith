@@ -12,7 +12,7 @@ GuideTab {
 
     readonly property var actions: [
         { id: "capture", icon: "󰄀", title: "Capture", desc: "Save the screenshot and copy it", def: "Return" },
-        { id: "copy", icon: "󰆏", title: "Copy only", desc: "Copy to the clipboard without saving", def: "Meta+C" },
+        { id: "copy", icon: "󰆏", title: "Copy only", desc: "Copy to the clipboard without saving", def: "Ctrl+C" },
         { id: "edit", icon: "󰏫", title: "Edit", desc: "Open the selection in the editor", def: "Ctrl+E" },
         { id: "cancel", icon: "󰅖", title: "Cancel", desc: "Close the screenshot tool", def: "Escape" },
         { id: "mode", icon: "󰕧", title: "Photo / video", desc: "Switch between screenshot and recording", def: "Tab" },

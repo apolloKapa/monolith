@@ -14,7 +14,7 @@ file="$(grep -l -E '^\s*binds\s*\{' "$conf_dir/config/keybinds.kdl" "$conf_dir"/
 
 # screenshot keys that use Meta, in niri's spelling (Meta+C -> Mod+C)
 keys="$(jq -r '
-    ({"capture":"Return","copy":"Meta+C","edit":"Ctrl+E","cancel":"Escape","mode":"Tab","maximize":"F11"}
+    ({"capture":"Return","copy":"Ctrl+C","edit":"Ctrl+E","cancel":"Escape","mode":"Tab","maximize":"F11"}
      + ((.screenshot.keys) // {})) | .[] | select(test("(^|\\+)(meta|super|mod)\\+"; "i"))
 ' "$settings" 2>/dev/null | sed -E 's/(^|\+)(Meta|Super|meta|super|mod)\+/\1Mod+/g')"
 
