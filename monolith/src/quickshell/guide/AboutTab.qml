@@ -203,7 +203,7 @@ GuideTab {
                             fillDuration: 1200
 
                             onTriggered: {
-                                let cmd = "kitty --hold bash -c 'cd ~/dotfiles && git pull && ./install.sh' || ${TERM:-xterm} -hold -e bash -c 'cd ~/dotfiles && git pull && ./install.sh'";
+                                let cmd = "monolith installer";
                                 Quickshell.execDetached(["bash", "-c", cmd]);
                                 Quickshell.execDetached(["bash", rootObj.appPaths.monolithDir + "/scripts/qs_manager.sh", "close"]);
                             }

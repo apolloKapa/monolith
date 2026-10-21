@@ -1,0 +1,27 @@
+// Input: keyboard layouts, mouse, focus
+// Part of Monolith's niri setup (included from ../config.kdl).
+
+// ===================== Input =====================
+// Keyboard layout, touchpad/mouse behavior, and focus-follows-mouse.
+input {
+    focus-follows-mouse
+    keyboard {
+        xkb {
+            layout "us,gr"
+            options "grp:alt_shift_toggle"
+        }
+        numlock
+    }
+
+    mouse {
+        accel-profile "flat"
+        accel-speed 0.0
+    }
+}   
+
+// ===================== Cursor =====================
+// Active cursor theme and size (used across all apps that respect XCURSOR settings).
+cursor {
+    xcursor-theme "breeze_cursors"
+    xcursor-size 22
+}

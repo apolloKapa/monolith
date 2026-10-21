@@ -1,131 +1,272 @@
-# dotfiles
+# Monolith
 
-My Arch Linux setup: [niri](https://github.com/YaLTeR/niri) running **Monolith**, my desktop shell (really good desktop :3), plus a rofi launcher and helper scripts.
+**really good desktop :3**
 
-Monolith is built on [Serpantinum](https://github.com/ilyamiro/serpantinum) by @ilyamiro (AGPL-3.0, see `monolith/LICENSE.md`). It keeps every Serpantinum feature (bar, dock, launcher, lock screen, notifications, OSD, clipboard, music, network, widgets, settings guide, blur and liquid glass) and adds:
+My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri config, keybinds and helper scripts.
 
-- **Minimalist** style, next to Blur / Liquid glass in *Settings → Theme*: flat opaque panels, square corners, 2px `#555` outlines, white accent with inverted hover, JetBrains Mono. It's my old Quickshell look. The square corners/outlines only apply while Minimalist is selected; every other style is unchanged.
-- Minimalist colour preset (`monolith/src/assets/themes/Minimalist.json`)
-- own logo, intro (horizon backdrop), mascot (Lith, the sleepy slab), name and paths (`~/.config/monolith`, `~/.local/share/monolith`)
-- **private**: no telemetry (Serpantinum's installer telemetry isn't included), no IP geolocation, no reverse geocoding, lyrics only from lrclib (no NetEase). Weather uses the location you set in *Settings → General* and only sends those coordinates to open-meteo. Things that still go online only do so when you use them: lyrics (track name → lrclib), YouTube cover art, GitHub widget, DuckDuckGo wallpaper search, the captive-portal "Sign in" button.
-- update button pulls this repo instead of upstream; automatic update checks are off
+> **INSPIRED BY SERPANTINUM BY [@ilyamiro](https://github.com/ilyamiro)**
+>
+> Monolith is a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) and keeps its licence (AGPL-3.0, see `monolith/LICENSE.md`). The installer is also adapted from Serpantinum's.
 
-## What's in here
-
-| Path | Contents |
-|---|---|
-| `config/niri/` | niri config (monitors, binds, window rules, animations) |
-| `monolith/` | the Monolith shell: `bin/` (`monolith`, `monolithd`), `src/` (QML, scripts, assets), SDDM theme |
-| `config/monolith/` | default Monolith settings (only copied if you don't have any yet) |
-| `config/rofi/` | rofi theme and favourites list |
-| `config/wallpaper` | current wallpaper setting |
-| `bin/` | helper scripts that go in `~/.local/bin` (`launcher`, `setwall`, `snap`, `focuswin`, `swapwin`, ...) |
-| `packages.txt` | official repo packages |
-| `packages-aur.txt` | AUR packages |
-| `install.sh` | copies configs and scripts into place and installs Monolith (`--sddm` also installs the login theme) |
+---
 
 ## Install
 
-These steps assume a fresh Arch install with a user account, network access and `sudo`.
-
-### 1. Base tools
+One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...), as your normal user:
 
 ```sh
-sudo pacman -S --needed git base-devel
+curl -fsSL https://raw.githubusercontent.com/kasc0b3r/dotfiles/main/install/get.sh | bash
 ```
 
-### 2. Clone
+While the repo is **private**, that URL needs a login, so use the GitHub CLI instead:
 
 ```sh
-git clone https://github.com/kasc0b3r/dotfiles ~/dotfiles
-cd ~/dotfiles
+gh auth login   # once
+gh api "repos/kasc0b3r/dotfiles/contents/install/get.sh?ref=main" -H "Accept: application/vnd.github.raw" | bash
 ```
 
-The repo is private, so run `gh auth login` first (or clone over SSH).
+Or from a clone: `git clone https://github.com/kasc0b3r/dotfiles && ./dotfiles/install.sh`.
 
-### 3. Official packages
+Once it's installed, **`monolith installer`** opens the installer again to update, reinstall or change options. Settings → About → Update does the same.
 
-```sh
-sudo pacman -S --needed - < packages.txt
-```
+### What the installer does
 
-If pacman says a package can't be found, it has left the repos since the list was made. Delete that line from `packages.txt` and run the command again.
+It opens a menu (arrow keys or j/k, Enter, q to quit):
 
-### 4. AUR helper and AUR packages
+| Option | Default | What it is |
+|---|---|---|
+| Packages overview | | everything it's about to install, and what you already have |
+| Apps for the keybinds | ON | what the keybinds/autostart call: librewolf, thunar, mission-center, rofi, steam, wooz, awww, swaylock, swappy, grim/slurp, cliphist, playerctl, brightnessctl, polkit-kde-agent, fonts, ... |
+| All my apps | OFF | everything in `packages.txt` and `packages-aur.txt` |
+| niri config | Monolith config | writes the niri config below (your old one is backed up to `~/.config/niri_backup/`); or "keep mine" |
+| Login screen | ON | SDDM theme, with options to replace your current display manager and use Wayland for SDDM |
+| Wallpapers | 3 random | 3 random / full pack / none, from the public [shell-wallpapers](https://github.com/ilyamiro/shell-wallpapers) repo |
+| Install / Update / Reinstall | | Update keeps your settings; Reinstall starts them fresh |
 
-`paru` is itself an AUR package, so build it by hand first:
+Then it:
 
-```sh
-git clone https://aur.archlinux.org/paru-bin.git ~/paru-bin
-cd ~/paru-bin && makepkg -si
-cd ~/dotfiles
-paru -S --needed - < packages-aur.txt
-```
+1. installs the packages (official repos via pacman, AUR via yay/paru; it builds yay if you have neither), plus the Iosevka Nerd Font
+2. installs the shell into `~/.local/share/monolith` and links `monolith` and `monolithd` into `~/.local/bin`
+3. copies the helper scripts (`bin/`) into `~/.local/bin` and the rofi config into `~/.config/rofi`
+4. adds `/etc/pam.d/monolith`, so the lock screen can check your password
+5. writes the niri config and generates the display and workspace setup from the monitors it finds
+6. sets up SDDM and wallpapers, if picked
+7. creates `~/.config/monolith/settings.json`. It keeps yours if you already have one, carries over your Serpantinum settings if Serpantinum is installed, or else uses the defaults in `config/monolith/settings.json`
+8. enables PipeWire, NetworkManager, power-profiles-daemon and EasyEffects
 
-### 5. Copy the configs
+There's no telemetry in the installer or the shell.
 
-```sh
-./install.sh
-```
+---
 
-This copies `config/*` into `~/.config` and `bin/*` into `~/.local/bin`. It overwrites files with the same name, so back up anything you want to keep first.
+## The shell
 
-Make sure `~/.local/bin` is on your `PATH`. With fish:
+Everything from Serpantinum, plus Monolith's own changes.
 
-```fish
-fish_add_path ~/.local/bin
-```
+**Bar**: top or side, fill / floating / pill styles, autohide. Modules: workspaces, media, time & date, weather, system info, tray, Wi-Fi, Bluetooth, volume, battery, keyboard layout, system monitor (CPU/RAM/temp/disk), audio visualizer, current window, quick buttons. Editable in Settings → Bar.
 
-### 6. Log in to niri
+**Dock**: pinned and running apps, autohide or smart autohide, any edge.
 
-Log out, then pick **niri** on the login screen (SDDM).
+**Launcher** (`Mod+Z` / `Mod+Space`): tabs for apps (with smart ranking), files and emojis.
 
-## Things to check after installing
+**Panels and popups**:
 
-- **Monitors:** `config/niri/config.kdl` has my monitor layout (`DP-1`, `DP-2`, `HDMI-A-1`) hard-coded. On other hardware, run `niri msg outputs` and edit the `output` blocks to match. Monolith's Display settings page can also change them.
-- **Wallpaper:** Monolith and `setwall` read wallpapers from `~/Pictures/Wallpapers`. Create that folder and add some images.
-- **Nvidia:** my desktop uses the legacy driver for a GTX 1070 (`nvidia-dkms-580xx`, installed through `chwd`). The package list may include drivers that don't suit your GPU. Remove them from `packages.txt` before installing if so.
-- **Lock screen:** `install.sh` adds `/etc/pam.d/monolith` so the lock screen can check your password. Test it before relying on it (`monolith lock`). If it ever locks you out, switch to a TTY with Ctrl+Alt+F3, log in and run `monolithd stop`.
-- **Serpantinum:** don't run Serpantinum and Monolith at the same time (two bars, two notification daemons). The niri config only starts `monolithd`.
+- System panel (`Mod+D`): user card, volume and brightness, toggles (night light, caffeine, Wi-Fi, Bluetooth, airplane), notification centre, lock / suspend / reboot / power off, power profiles
+- Notifications: popups, history, do-not-disturb, sounds
+- Network (`Mod+N`): Wi-Fi, Bluetooth, Ethernet
+- Volume mixer (`Mod+V`)
+- Music (`Mod+Alt+M`): player controls, synced lyrics, cover art
+- Clipboard history (`Mod+Alt+C`)
+- Calendar
+- On-screen display for volume, brightness and caps/num lock
+- Quick actions: calculator, notes, timer, drawing, system usage, dock
 
-## Key bindings
+**Wallpapers** (`Mod+Alt+W`): picker with transitions, video wallpapers, and online search (DuckDuckGo, only when you search).
+
+**Desktop widgets**: clock, music, system usage, weather, battery, image, GitHub contributions, user, visualizer. There's a drag-and-drop widget editor.
+
+**Lock screen** (`Mod+L`): password and fingerprint. Layout editor for avatar, user, battery, keyboard layout, notifications and lock status.
+
+**Idle**: dim, screen off, lock and suspend timers, with media/inhibitor awareness.
+
+**Other**: screenshots (region / window / full, with editing), polkit password prompts, blue-light filter, brightness (incl. external monitors via ddcutil), first-launch intro and tutorial, 23 languages.
+
+**Settings** (`Mod+S`):
+
+- Welcome
+- General: language, location, weather units, sounds
+- Display: monitors, widgets, lock screen
+- Theme: 97 colour presets, colours from your wallpaper (matugen), fonts, corner radius, opacity, and the surface style **Blur / Liquid glass / Minimalist**
+- Bar: general and modules
+- Launcher, Dock, On-screen display, Notifications
+- Wellbeing: screen-time stats
+- Idle
+- About: your system, update button
+
+### What Monolith changes
+
+- **Minimalist style**, next to Blur and Liquid glass in Settings → Theme. Flat opaque panels, square corners, 2px `#555` outlines, white accent with inverted hover, JetBrains Mono. It's my old Quickshell look. The squares and outlines only apply while Minimalist is picked; every other style is exactly as in Serpantinum.
+- **Private**:
+  - no telemetry
+  - no IP geolocation and no reverse geocoding; weather uses the location you set in Settings → General and only sends those coordinates to open-meteo
+  - lyrics only from lrclib (NetEase removed)
+  - things that still go online only do so when you use them: lyrics, YouTube cover art, the GitHub widget, wallpaper search, the Wi-Fi login-page button
+- **Its own look and voice**: Monolith logo, horizon intro ("really good desktop :3"), Lith the sleepy slab mascot (replaces the Pusheen GIFs), own name and paths
+- **Installer**: niri-focused, with my keybinds as defaults, generated display/workspace config, Serpantinum settings migration, `monolith installer`
+- **Updates** come from this repo (no automatic update checks)
+
+---
+
+## niri config
+
+Serpantinum-style modular config in `~/.config/niri/` (source: `monolith/compositors/niri/`):
+
+| File | Contents |
+|---|---|
+| `config.kdl` | includes the files below |
+| `config/env.kdl` | `prefer-no-csd`, environment variables (qt6ct, Niri session vars) |
+| `config/input.kdl` | keyboard (us + gr, Alt+Shift switches), numlock, flat mouse accel, focus follows mouse, Breeze cursor |
+| `config/output.kdl` | **generated**: each monitor's current mode, position, scale, rotation; disabled monitors set to `off` |
+| `config/workspaces.kdl` | **generated**: workspaces 1 to 10, plus `d2-1` to `d2-10` on a second monitor |
+| `config/layout.kdl` | 10px gaps, column presets, 2px white/grey borders, no focus ring, no hot corners, snappy spring animations |
+| `config/autostart.kdl` | polkit agent, Steam (silent), clipboard history, awww + setwall, EasyEffects, `monolithd start` |
+| `config/keybinds.kdl` | the keybinds below |
+| `config/rules.kdl` | rounded window corners, windows open floating, Roblox Studio helper windows hidden, Steam toasts as notifications, kitty default size |
+
+The installer reads displays from the running niri. If you install from a TTY, nothing is pinned and niri picks each monitor's preferred mode; run `monolith installer` from inside niri later to pin the layout. The Display page in Settings can also change monitors live.
+
+## Keybinds
+
+`Mod` is the Super/Windows key. `Mod+Shift+/` shows niri's own list.
+
+**Apps**
 
 | Key | Action |
 |---|---|
-| `Mod+Z` / `Mod+Space` | launcher |
-| `Mod+Shift+Z` | favourites (rofi) |
 | `Mod+C` | terminal (kitty) |
-| `Mod+B` / `Mod+E` | browser / file manager |
-| `Mod+D` | system panel |
-| `Mod+S` / `Mod+Alt+H` | settings guide |
-| `Mod+N` / `Mod+V` | network / volume popups |
-| `Mod+A` | bar autohide |
-| `Mod+Alt+C` / `Mod+Alt+M` / `Mod+Alt+W` | clipboard / music / wallpaper picker |
-| `Mod+L` / `Mod+Alt+L` | lock screen |
-| `Mod+Q` | close window |
-| `Mod+R` | float / tile toggle |
-| `Mod+T` | tile and maximize |
-| `Mod+O` | overview |
-| `Mod+1` to `Mod+0` | workspaces |
+| `Mod+B` | browser (LibreWolf) |
+| `Mod+E` | files (Thunar) |
+| `Mod+Escape` | Mission Center |
+| `Mod+Z` / `Mod+Space` | launcher |
+| `Mod+Tab` | window switcher (rofi) |
+| `Mod+Alt+V` | clipboard history (rofi) |
+| `Mod+Alt+S` | pick wallpaper (setwall) |
+| `Mod+Ctrl+Z` | zoom (wooz) |
 
-`Mod+Shift+/` shows niri's full hotkey list.
+**Monolith**
+
+| Key | Action |
+|---|---|
+| `Mod+D` | system panel |
+| `Mod+S` / `Mod+Alt+H` | settings |
+| `Mod+N` | network |
+| `Mod+V` | volume mixer |
+| `Mod+A` | bar autohide |
+| `Mod+Alt+C` | clipboard |
+| `Mod+Alt+M` | music |
+| `Mod+Alt+W` | wallpapers |
+| `Mod+L` / `Mod+Alt+L` | lock |
+| `Mod+Ctrl+Alt+L` | swaylock |
+
+**Windows**
+
+| Key | Action |
+|---|---|
+| `Mod+Q` | close |
+| `Mod+Arrows` | focus window in that direction (stays on this monitor) |
+| `Mod+H` / `J` / `K` | focus column left / window down / up |
+| `Mod+Shift+Arrows` | swap with the window in that direction (`swapwin`) |
+| `Mod+Ctrl+Arrows` | snap floating window to that half (`snap`) |
+| `Mod+Ctrl+H/J/K/L` | move column / window |
+| `Mod+R` | float ↔ tile (tiled at half width) |
+| `Mod+T` | tile and maximize |
+| `Mod+F` / `Mod+Shift+F` | fullscreen / maximize column |
+| `Mod+Ctrl+F` | expand column to available width |
+| `Mod+Ctrl+C` | center visible columns |
+| `Mod+-` / `Mod+=` | column width -/+ 10% |
+| `Mod+Shift+-` / `Mod+Shift+=` | window height -/+ 10% |
+| `Mod+Shift+R` / `Mod+Ctrl+Shift+R` / `Mod+Ctrl+R` | preset widths back / preset heights / reset height |
+| `Mod+[` / `Mod+]` | consume or expel window left / right |
+| `Mod+,` / `Mod+.` | consume into column / expel from column |
+| `Mod+W` | tabbed column |
+| `Mod+Shift+V` | switch focus floating ↔ tiling |
+| `Mod+Home` / `Mod+End` | first / last column (`+Ctrl` moves it) |
+
+**Workspaces and monitors**
+
+| Key | Action |
+|---|---|
+| `Mod+1` to `Mod+0` | workspace 1 to 10 |
+| `Mod+Ctrl+1-0` / `Mod+Shift+1-0` | move column to workspace |
+| `Mod+Page Up/Down`, `Mod+U` | workspace up / down (`+Ctrl` moves the column, `Mod+Ctrl+I` up) |
+| `Mod+Scroll` | workspace up / down (`+Ctrl` moves the column), sideways scroll = columns |
+| `Mod+O` | overview |
+| `Mod+Alt+Arrows`, `Mod+Shift+H/J/K/L` | focus monitor |
+| `Mod+Shift+Ctrl+Arrows` / `H/J/K/L` | move column to monitor |
+| `Mod+Shift+P` | turn monitors off |
+
+**System**
+
+| Key | Action |
+|---|---|
+| `Print` / `Ctrl+Print` / `Alt+Print` | screenshot region / screen / window |
+| `Mod+Shift+S` | region screenshot into swappy |
+| media / volume / mic / brightness keys | work as labelled (also on the lock screen) |
+| `Mod+M`, `Mod+Shift+E`, `Ctrl+Alt+Delete` | quit niri |
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `monolith installer` | open the installer (update, reinstall, change options) |
+| `monolithd start` / `stop` / `status` | run / stop the shell |
+| `monolith restart` / `kill` | restart / stop the shell |
+| `monolith msg toggle <panel>` | open/close `launcher`, `system`, `guide`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `autohide` |
+| `monolith msg workspace <n> [move]` | go to / move to workspace |
+| `monolith lock` | lock screen |
+| `monolith screenshot [--full] [--edit]` | screenshot |
+| `monolith volume raise\|lower\|mute-toggle\|mic-toggle` | volume with on-screen display |
+| `monolith brightness raise\|lower` | brightness with on-screen display |
+| `monolith reload` | reload the shell |
+| `monolith location_manual <lat> <lon> [city]` | set your location for weather |
+| `monolith -v ...` | verbose output |
+
+Helper scripts in `bin/` (installed to `~/.local/bin`):
+
+- `focuswin`, `swapwin`, `snap`: window focus, swap and snapping
+- `tilehalf`, `maxtoggle`: float/tile and maximize toggles
+- `setwall`: wallpaper via awww (`setwall pick` = rofi chooser)
+- `launcher`, `favlauncher`, `rofi-apps`, `rofi-favs`: rofi launcher with favourites (Ctrl+S stars an app)
+- `gparted-dark`, `osu-wine`, `cosu-launch.sh`, `roblox-studio-mcp`: app launchers
+
+## Repo layout
+
+| Path | Contents |
+|---|---|
+| `install/` | the installer: `get.sh` (one-command), `install.sh`, `modules/` |
+| `install.sh` | runs `install/install.sh` from a clone |
+| `monolith/bin/` | `monolith` and `monolithd` |
+| `monolith/src/` | the shell: QML (`quickshell/`), scripts, assets (themes, fonts, sounds, languages, shaders) |
+| `monolith/compositors/niri/` | the niri config |
+| `monolith/sddm/` | the SDDM login theme |
+| `config/monolith/settings.json` | default shell settings |
+| `config/rofi/`, `config/wallpaper` | rofi theme + favourites, setwall state |
+| `bin/` | helper scripts |
+| `packages.txt`, `packages-aur.txt` | all my apps (the installer's "All my apps" option) |
+
+Installed files: shell in `~/.local/share/monolith`; settings in `~/.config/monolith`; state, cache and logs in `~/.local/state/monolith`, `~/.cache/monolith` and `$XDG_RUNTIME_DIR/monolith`.
 
 ## Updating the repo
 
-After changing your setup, copy the files back in and push:
+Shell or installer changes: edit them here, commit and push, then run `monolith installer` → Update on any machine.
 
-```sh
-cd ~/dotfiles
-cp -r ~/.config/niri ~/.config/rofi config/
-cp ~/.local/bin/<script> bin/
-git add . && git commit -m "update" && git push
-```
-
-Shell code lives in `monolith/src`. After editing it, run `./install.sh` and `monolith reload` (your settings in `~/.config/monolith` are left alone).
+niri config changes: edit `monolith/compositors/niri/config/*.kdl` (or copy them back from `~/.config/niri/config/`). Don't commit `output.kdl` or `workspaces.kdl`; they're generated per machine.
 
 ## Troubleshooting
 
-- **`qs: command not found`:** `quickshell` isn't installed. Run `sudo pacman -S quickshell qt6-wayland`.
-- **Bar or panels don't appear after login:** run `monolith -v` in a terminal to see the errors. Logs are also in `$XDG_RUNTIME_DIR/monolith/logs`.
-- **Settings look wrong after switching style:** *Settings → Theme* → pick Blur, Liquid glass or Minimalist again. Minimalist also switches the font and colours to the mono preset; you can change them afterwards.
-- **No weather:** set your location in *Settings → General* (latitude/longitude). Monolith never detects it automatically.
+- **Bar or panels don't appear:** run `monolith -v restart` in a terminal to see errors. Logs are in `$XDG_RUNTIME_DIR/monolith/logs`.
+- **`qs: command not found`:** `sudo pacman -S quickshell qt6-wayland`.
+- **No weather:** set your location in Settings → General. Monolith never detects it automatically.
+- **Wrong monitor layout:** run `monolith installer` from inside niri, or edit `~/.config/niri/config/output.kdl`, then `niri validate`.
+- **Lock screen won't accept your password:** check `/etc/pam.d/monolith` exists (the installer adds it). If you're ever stuck, switch to a TTY (Ctrl+Alt+F3), log in, and run `monolithd stop`.
+- **Serpantinum is installed too:** don't run both at once. The niri config only starts `monolithd`.
+- **Nvidia:** my desktop used the legacy GTX 1070 driver (`nvidia-dkms-580xx`). Drop GPU drivers that don't fit from `packages.txt` before choosing "All my apps".
