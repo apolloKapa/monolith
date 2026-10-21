@@ -278,7 +278,7 @@ Item {
                 id: batButton
                 height: root.pillHeight
                 width: root.isVertical ? height : Math.max(s(root.isCompact ? 32 : 36), implicitWidth)
-                cornerRadius: root.lockLook ? ThemeBackend.borderRadius : Math.max(0, ThemeBackend.borderRadius - s(2))
+                cornerRadius: ThemeBackend.minimalist ? 0 : (root.lockLook ? ThemeBackend.borderRadius : Math.max(0, ThemeBackend.borderRadius - s(2)))
                 horizontalPadding: s(root.isCompact ? 10 : 12)
                 buttonIcon: root.effectiveShowIcon ? root.batIcon : ""
                 iconFontSize: s(root.isCompact ? 14 : 15)
@@ -349,7 +349,7 @@ Item {
                 scale: batMouseArea.pressed ? 0.94 : (batMouseArea.containsMouse ? 1.04 : 1.0)
                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
 
-                radius: Math.max(0, ThemeBackend.borderRadius - s(2))
+                radius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
                 property color baseColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                 color: batPillGlass.active ? "transparent" : (batMouseArea.pressed ? Qt.darker(baseColor, 1.15) : (batMouseArea.containsMouse ? Qt.lighter(baseColor, 1.08) : baseColor))
                 Behavior on color { ColorAnimation { duration: 150 } }
@@ -517,7 +517,7 @@ Item {
                 Behavior on width { NumberAnimation { duration: 480; easing.type: Easing.OutQuint } }
                 Behavior on height { NumberAnimation { duration: 480; easing.type: Easing.OutQuint } }
 
-                radius: Math.max(0, ThemeBackend.borderRadius - s(2))
+                radius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
                 property color baseColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                 color: batBtnGlass.active ? "transparent" : (sideBatMouseArea.pressed ? Qt.darker(baseColor, 1.15) : (sideBatMouseArea.containsMouse ? Qt.lighter(baseColor, 1.08) : baseColor))
                 Behavior on color { ColorAnimation { duration: 150 } }

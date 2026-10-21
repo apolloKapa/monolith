@@ -706,7 +706,7 @@ PanelWindow {
                         textColor: ThemeBackend.text
                         subTextColor: ThemeBackend.subtext0
                         borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                        cornerRadius: Math.min(ThemeBackend.borderRadius, clipboardWindow.s(10))
+                        cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, clipboardWindow.s(10)))
                         fontPixelSize: clipboardWindow.s(12)
                         charSpacing: 1
 
@@ -773,7 +773,7 @@ PanelWindow {
                         Layout.preferredWidth: clipboardWindow.s(80)
                         Layout.preferredHeight: clipboardWindow.s(36)
                         horizontalPadding: clipboardWindow.s(10)
-                        cornerRadius: Math.min(ThemeBackend.borderRadius, clipboardWindow.s(10))
+                        cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, clipboardWindow.s(10)))
                         buttonText: typeof I18n !== "undefined" ? (I18n.t("clipboard.clear") || "Clear") : "Clear"
                         textFontSize: clipboardWindow.s(11)
                         buttonIcon: "󰆴"
@@ -1164,7 +1164,7 @@ PanelWindow {
                                 transform: Translate { x: clipDelegateWrapper.dragX }
                                 opacity: Math.max(0.0, 1.0 - (Math.abs(clipDelegateWrapper.dragX) / (clipDelegateCard.width * 0.75)))
 
-                                radius: Math.min(ThemeBackend.borderRadius, clipboardWindow.s(12))
+                                radius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, clipboardWindow.s(12)))
                                 readonly property bool glassRow: !isImage && ThemeBackend.liquidGlass
                                 color: {
                                     if (glassRow) return "transparent";

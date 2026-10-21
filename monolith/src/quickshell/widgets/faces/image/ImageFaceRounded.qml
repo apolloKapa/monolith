@@ -22,7 +22,7 @@ Item {
         id: bgRect
         anchors.fill: parent
         color: (root.imagePath === "" || srcImage.status !== Image.Ready) ? ThemeBackend.surface0 : "transparent"
-        radius: ThemeBackend.borderRadius !== undefined ? ThemeBackend.borderRadius : 12
+        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius !== undefined ? ThemeBackend.borderRadius : 12)
         antialiasing: true
 
         AnimatedImage {
@@ -51,7 +51,7 @@ Item {
                 y: Math.round((parent.height - (srcImage.paintedHeight > 0 ? srcImage.paintedHeight : parent.height)) / 2)
                 width: Math.round(srcImage.paintedWidth > 0 ? srcImage.paintedWidth : parent.width)
                 height: Math.round(srcImage.paintedHeight > 0 ? srcImage.paintedHeight : parent.height)
-                radius: ThemeBackend.borderRadius !== undefined ? ThemeBackend.borderRadius : 12
+                radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius !== undefined ? ThemeBackend.borderRadius : 12)
                 color: "white"
                 antialiasing: true
             }

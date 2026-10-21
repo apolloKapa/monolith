@@ -66,7 +66,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 1.5 : 24
+        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 1.5 : 24)
         color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
         border.width: ThemeBackend.liquidGlass ? 0 : 1
         border.color: Qt.alpha(ThemeBackend.surface1, 0.45)

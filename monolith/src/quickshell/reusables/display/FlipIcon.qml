@@ -36,7 +36,7 @@ Item {
     Rectangle {
         id: btnShape
         anchors.fill: parent
-        radius: root.cornerRadius
+        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
         clip: !glass.active
         color: glass.active ? "transparent" : root.withBgOpacity(!root.enabled ? root.accentColor : (btnMa.pressed ? Qt.darker(root.accentColor, 1.12) : (root.isHoveredOrHighlighted ? Qt.lighter(root.accentColor, 1.12) : root.accentColor)))
         opacity: root.enabled ? 1.0 : 0.5
@@ -47,7 +47,7 @@ Item {
         GlassFill {
             id: glass
             anchors.fill: parent
-            radius: root.cornerRadius
+            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
             tintColor: root.accentColor
             tintAmount: (btnMa.pressed ? 0.55 : (root.isHoveredOrHighlighted ? 0.42 : 0.3)) * root.bgOpacity
             shadow: 1
@@ -90,7 +90,7 @@ Item {
                     anchors.centerIn: parent
                     width: chevronWrapper.dotSize
                     height: chevronWrapper.dotSize
-                    radius: width / 2
+                    radius: ThemeBackend.minimalist ? 0 : (width / 2)
                     color: root.iconColor
                     antialiasing: true
                     Behavior on color { ColorAnimation { duration: 180 } }
@@ -101,7 +101,7 @@ Item {
                     y: -chevronWrapper.armThickness / 2
                     width: chevronWrapper.armLength
                     height: chevronWrapper.armThickness
-                    radius: height / 2
+                    radius: ThemeBackend.minimalist ? 0 : (height / 2)
                     transformOrigin: Item.Left
                     rotation: 40
                     color: root.iconColor
@@ -114,7 +114,7 @@ Item {
                     y: -chevronWrapper.armThickness / 2
                     width: chevronWrapper.armLength
                     height: chevronWrapper.armThickness
-                    radius: height / 2
+                    radius: ThemeBackend.minimalist ? 0 : (height / 2)
                     transformOrigin: Item.Left
                     rotation: -40
                     color: root.iconColor
@@ -126,7 +126,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: root.cornerRadius
+            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !glass.active

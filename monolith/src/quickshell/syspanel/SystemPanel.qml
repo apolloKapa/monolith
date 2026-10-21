@@ -404,7 +404,7 @@ Item {
         id: sidebarPanel
         anchors.fill: parent
         color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-        radius: Math.min(ThemeBackend.borderRadius, root.s(28))
+        radius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, root.s(28)))
         topLeftRadius: ThemeBackend.minimalist ? 0 : (root.isLeftAnchored ? 0 : radius)
         bottomLeftRadius: ThemeBackend.minimalist ? 0 : (root.isLeftAnchored ? 0 : radius)
         topRightRadius: ThemeBackend.minimalist ? 0 : (root.isLeftAnchored ? radius : 0)

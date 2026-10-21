@@ -75,7 +75,7 @@ Rectangle {
 
         DeleteButton {
             size: rootObj.s(28)
-            cornerRadius: Math.min(ThemeBackend.borderRadius, rootObj.s(8))
+            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, rootObj.s(8)))
             iconFontSize: rootObj.s(14)
             Layout.alignment: Qt.AlignVCenter
             onClicked: {

@@ -83,7 +83,7 @@ Item {
         IconButton {
             anchors.fill: parent
             visible: !root.iconOnly
-            cornerRadius: Math.max(0, ThemeBackend.borderRadius - root.s(2))
+            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - root.s(2)))
             buttonIcon: menuBtn.glyph
             iconFontSize: root.s(root.isCompact ? 14 : 15)
             accentColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0

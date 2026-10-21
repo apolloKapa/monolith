@@ -44,7 +44,7 @@ Item {
                     Layout.preferredWidth: Scaler.s(70)
                     Layout.preferredHeight: Scaler.s(70)
                     size: Scaler.s(70)
-                    cornerRadius: ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(12)) : Scaler.s(12)
+                    cornerRadius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(12)) : Scaler.s(12))
                     imageRadius: ThemeBackend.minimalist ? 0 : (cornerRadius)
                     source: SystemInfo.avatarPath !== "" ? "file://" + SystemInfo.avatarPath : ""
                     backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.surface1 : "transparent"
@@ -67,7 +67,7 @@ Item {
                     ClickButton {
                         Layout.fillWidth: true
                         Layout.preferredHeight: Scaler.s(32)
-                        cornerRadius: ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8)
+                        cornerRadius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8))
                         horizontalPadding: Scaler.s(10)
                         contentAlignment: Qt.AlignLeft
                         buttonIcon: ""
@@ -83,7 +83,7 @@ Item {
                     ClickButton {
                         Layout.fillWidth: true
                         Layout.preferredHeight: Scaler.s(32)
-                        cornerRadius: ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8)
+                        cornerRadius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8))
                         horizontalPadding: Scaler.s(10)
                         contentAlignment: Qt.AlignLeft
                         buttonIcon: ""
@@ -117,7 +117,7 @@ Item {
                         id: actionCapsule
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        radius: ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8)
+                        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8))
                         clip: true
 
                         property real fillLevel: 0.0

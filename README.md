@@ -80,7 +80,7 @@ Everything from Serpantinum, plus Monolith's own changes.
 - On-screen display for volume, brightness and caps/num lock
 - Quick actions: calculator, notes, timer, drawing, system usage, dock
 
-**Wallpapers** (`Mod+Alt+W`): picker with transitions, video wallpapers, and online search (DuckDuckGo, only when you search).
+**Wallpapers** (`Mod+W`): picker with transitions, video wallpapers, and online search (DuckDuckGo, only when you search).
 
 **Desktop widgets**: clock, music, system usage, weather, battery, image, GitHub contributions, user, visualizer. There's a drag-and-drop widget editor.
 
@@ -163,7 +163,7 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `Mod+A` | bar autohide |
 | `Mod+Alt+C` | clipboard |
 | `Mod+Alt+M` | music |
-| `Mod+Alt+W` | wallpapers |
+| `Mod+W` / `Mod+Alt+W` | wallpapers |
 | `Mod+L` / `Mod+Alt+L` | lock |
 | `Mod+Ctrl+Alt+L` | swaylock |
 
@@ -187,7 +187,7 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `Mod+Shift+R` / `Mod+Ctrl+Shift+R` / `Mod+Ctrl+R` | preset widths back / preset heights / reset height |
 | `Mod+[` / `Mod+]` | consume or expel window left / right |
 | `Mod+,` / `Mod+.` | consume into column / expel from column |
-| `Mod+W` | tabbed column |
+| `Mod+Shift+W` | tabbed column |
 | `Mod+Shift+V` | switch focus floating ↔ tiling |
 | `Mod+Home` / `Mod+End` | first / last column (`+Ctrl` moves it) |
 

@@ -742,7 +742,7 @@ Item {
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius: Math.min(window.s(26), ThemeBackend.borderRadius * 1.75)
+                                radius: ThemeBackend.minimalist ? 0 : (Math.min(window.s(26), ThemeBackend.borderRadius * 1.75))
                                 color: hourGlass.active ? "transparent" : (isHighlighted ? window.textAccent : Qt.alpha(hrMa.containsMouse ? Qt.lighter(window.surface0, 1.12) : window.surface0, 1.0))
                                 border.color: isHighlighted ? Qt.lighter(window.textAccent, 1.1) : (hrMa.containsMouse ? Qt.alpha(window.surface2, 0.9) : Qt.alpha(window.surface1, 0.6))
                                 border.width: ThemeBackend.liquidGlass ? 0 : 1

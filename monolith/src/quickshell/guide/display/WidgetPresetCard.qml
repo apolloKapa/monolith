@@ -194,7 +194,7 @@ Rectangle {
             DeleteButton {
                 visible: presetCard.modelData.isCustom === true || presetCard.modelData.category === "user"
                 size: rootObj.s(22)
-                cornerRadius: Math.min(ThemeBackend.borderRadius, rootObj.s(6))
+                cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
                 iconFontSize: rootObj.s(11)
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: {

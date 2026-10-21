@@ -540,7 +540,7 @@ GuideTab {
 
                                         DeleteButton {
                                             size: dockTabRoot.rootObj.s(28)
-                                            cornerRadius: Math.min(ThemeBackend.borderRadius, dockTabRoot.rootObj.s(8))
+                                            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, dockTabRoot.rootObj.s(8)))
                                             iconFontSize: dockTabRoot.rootObj.s(14)
                                             Layout.alignment: Qt.AlignVCenter
                                             onClicked: {

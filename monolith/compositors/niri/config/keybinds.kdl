@@ -151,7 +151,8 @@ binds {
     Mod+Shift+Equal { set-window-height "+10%"; }
 
     Mod+Shift+V { switch-focus-between-floating-and-tiling; }
-    Mod+W { toggle-column-tabbed-display; }
+    Mod+W { spawn "monolith" "msg" "toggle" "wallpaper"; }
+    Mod+Shift+W { toggle-column-tabbed-display; }
 
     Mod+M repeat=false { quit; }
     Mod+Shift+E { quit; }

@@ -49,7 +49,7 @@ Item {
             y: dashboard.panelTop + (screenRoot.inputActive ? 0 : screenRoot.s(90))
             width: dashboard.shellWidth
             height: LockLayoutStore.panelH
-            radius: ThemeBackend.borderRadius * 1.5
+            radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius * 1.5)
             color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity * LockLayoutStore.panelOpacity)
             clip: true
 

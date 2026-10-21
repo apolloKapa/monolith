@@ -1139,7 +1139,7 @@ Variants {
                     anchors.centerIn: parent
                     width: (floatingWidget.activeEdge === "bottom" || floatingWidget.activeEdge === "top") ? floatingWidget.s(20) : floatingWidget.s(3.5)
                     height: (floatingWidget.activeEdge === "bottom" || floatingWidget.activeEdge === "top") ? floatingWidget.s(3.5) : floatingWidget.s(20)
-                    radius: Math.min(ThemeBackend.borderRadius, Math.min(width, height) / 2)
+                    radius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, Math.min(width, height) / 2))
                     color: ThemeBackend.liquidGlass ? Qt.alpha(ThemeBackend.text, 0.85) : Qt.darker(ThemeBackend.mauve, 1.8)
                 }
 
