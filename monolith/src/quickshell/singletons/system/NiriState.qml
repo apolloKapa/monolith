@@ -96,9 +96,25 @@ Item {
         let globalActiveIdx = -1;
         let firstIdx = -1;
 
+        // niri always keeps one empty workspace at the bottom of each monitor. Don't count it
+        // while it's empty, unnamed and not the one you're on (it showed up as an extra
+        // number after your last workspace).
+        let lastIdxByOutput = {};
+        for (let id in _workspaces) {
+            let w = _workspaces[id];
+            if (w && w.output && (lastIdxByOutput[w.output] === undefined || w.idx > lastIdxByOutput[w.output]))
+                lastIdxByOutput[w.output] = w.idx;
+        }
+        function isSpare(w) {
+            return w.output && w.idx === lastIdxByOutput[w.output] && !w.name
+                && !w.is_active && !w.is_focused
+                && (w.active_window_id === null || w.active_window_id === undefined) && !withWindows[w.id];
+        }
+
         for (let id in _workspaces) {
             let w = _workspaces[id];
             if (!w) continue;
+            if (isSpare(w)) continue;
             let idx = (w.idx !== undefined ? w.idx : (w.id !== undefined ? w.id : 1)) - 1;
             if (idx >= 0) {
                 existing[idx] = true;
