@@ -3,9 +3,24 @@ import os
 import re
 import sys
 import time
+import shutil
+import subprocess
 import urllib.request
 
+# where updates come from: written by the installer next to this install
 REPO = "kasc0b3r/dotfiles"
+BRANCH = "main"
+_source_env = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "install", "source.env")
+try:
+    for _line in open(_source_env):
+        _k, _, _v = _line.strip().partition("=")
+        _v = _v.strip().strip('"')
+        if _k == "REPO_SLUG" and _v:
+            REPO = _v
+        elif _k == "MONOLITH_BRANCH" and _v:
+            BRANCH = _v
+except OSError:
+    pass
 DEFAULT_VER = "1.0.0"
 
 state_dir = os.path.expanduser("~/.local/state/monolith")
@@ -88,16 +103,31 @@ except Exception:
 local_ver = get_local_ver()
 remote_ver = local_ver
 
-if not package_managed:
+def fetch_remote_ver():
+    """monolith/version.txt on the install's repo + branch: a plain download when the repo is
+    public, otherwise through the GitHub CLI's login (private repo)"""
+    path = "monolith/version.txt"
     try:
         req = urllib.request.Request(
-            f"https://raw.githubusercontent.com/{REPO}/master/version.txt",
-            headers={"User-Agent": "updater-script"}
+            f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{path}",
+            headers={"User-Agent": "monolith-updater"}
         )
-        res = urllib.request.urlopen(req, timeout=5)
-        remote_ver = res.read().decode("utf-8").strip()
+        return urllib.request.urlopen(req, timeout=5).read().decode("utf-8").strip()
     except Exception:
-        remote_ver = local_ver
+        pass
+    if shutil.which("gh"):
+        try:
+            out = subprocess.run(
+                ["gh", "api", f"repos/{REPO}/contents/{path}?ref={BRANCH}", "-H", "Accept: application/vnd.github.raw"],
+                capture_output=True, text=True, timeout=10)
+            if out.returncode == 0 and out.stdout.strip():
+                return out.stdout.strip()
+        except Exception:
+            pass
+    return None
+
+if not package_managed:
+    remote_ver = fetch_remote_ver() or local_ver
 
 has_update = parse_v(remote_ver) > parse_v(local_ver)
 

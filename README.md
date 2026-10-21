@@ -58,6 +58,26 @@ There's no telemetry in the installer or the shell.
 
 ---
 
+## Where to change things
+
+niri reloads its config as soon as you save, so keybind/monitor/layout edits apply right away. The files below are in `~/.config/niri/config/`; the repo copies are in `monolith/compositors/niri/config/` (edit those too if you want the change on every machine).
+
+| What | Where |
+|---|---|
+| **Keybinds** | `keybinds.kdl` (`Mod+Shift+/` lists them all) |
+| **Monitors**: resolution, refresh rate, position, scale, rotation, on/off | `output.kdl` (`niri msg outputs` shows names and modes). Settings → Display changes them live but doesn't save; `monolith installer` regenerates this file from your current setup |
+| **Workspaces** (and which monitor they live on) | `workspaces.kdl` |
+| **Keyboard layouts, mouse, touchpad, cursor** | `input.kdl` |
+| **Apps that start with niri** | `autostart.kdl` |
+| **Gaps, column widths, window borders, animations** | `layout.kdl`, or Settings → Theme → Windows / Animations |
+| **Window rules** (floating, sizes, rounded corners) | `rules.kdl` |
+| **Environment variables** | `env.kdl` |
+| **Shell look**: theme, style, font, bar, dock, launcher, notifications, idle | Settings (`Mod+S`), saved in `~/.config/monolith/settings.json` |
+| **Wallpapers** | `~/Pictures/Wallpapers`, pick with `Mod+W` |
+| **Helper scripts** (focuswin, snap, setwall, ...) | `~/.local/bin` (repo: `bin/`) |
+
+After editing a niri file, `niri validate` tells you if something's wrong.
+
 ## The shell
 
 Everything below is built in.
@@ -221,6 +241,7 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | Command | What it does |
 |---|---|
 | `monolith installer` | open the installer (update, reinstall, change options) |
+| `monolith installer --update` | update without the menu (what Settings → About → Update runs) |
 | `monolithd start` / `stop` / `status` | run / stop the shell |
 | `monolith restart` / `kill` | restart / stop the shell |
 | `monolith msg toggle <panel>` | open/close `launcher`, `system`, `guide`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `autohide` |
@@ -260,9 +281,17 @@ Installed files: shell in `~/.local/share/monolith`; settings in `~/.config/mono
 
 ## Updating the repo
 
-Shell or installer changes: edit them here, commit and push, then run `monolith installer` → Update on any machine.
+**Publishing a Monolith update** (shell or installer changes):
 
-niri config changes: edit `monolith/compositors/niri/config/*.kdl` (or copy them back from `~/.config/niri/config/`). Don't commit `output.kdl` or `workspaces.kdl`; they're generated per machine.
+1. edit the files under `monolith/` or `install/`
+2. bump the version in `monolith/version.txt` (e.g. `1.2.0` → `1.3.0`)
+3. commit and push to the branch your machines install from (`monolith` right now; it's in `~/.local/share/monolith/install/source.env`)
+
+Every machine checks once an hour. When the version on GitHub is newer, you get a notification and Settings → About shows **Update available**. **Update** opens a terminal and runs `monolith installer --update`: it refreshes the shell and scripts, installs any new dependencies, keeps your settings, niri config, login screen and wallpapers, and restarts the shell. You can also run `monolith installer --update` yourself any time.
+
+While the repo is private, the update check goes through the GitHub CLI (`gh auth login` once per machine).
+
+**Your own config changes**: niri files live in `monolith/compositors/niri/config/` (don't commit `output.kdl` / `workspaces.kdl`, they're generated per machine); helper scripts in `bin/`.
 
 ## Troubleshooting
 
