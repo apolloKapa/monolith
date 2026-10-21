@@ -579,7 +579,8 @@ Item {
             file: "theme/ThemeTab.qml",
             subtabs: [
                 { id: "ThemeAppearance", key: "theme_appearance", name: "Appearance", icon: "󰏘", file: "theme/ThemeTab.qml" },
-                { id: "ThemeAnimations", key: "theme_animations", name: "Animations", icon: "󰔡", file: "theme/ThemeAnimationsTab.qml" }
+                { id: "ThemeAnimations", key: "theme_animations", name: "Animations", icon: "󰔡", file: "theme/ThemeAnimationsTab.qml" },
+                { id: "ThemeWindows", key: "theme_windows", name: "Windows", icon: "󰖲", file: "theme/ThemeWindowsTab.qml" }
             ]
         },
         { 

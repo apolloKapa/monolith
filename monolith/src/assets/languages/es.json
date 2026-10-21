@@ -46,7 +46,8 @@
       "bar_side_modules": "Módulos laterales",
       "display_lockscreen": "Pantalla de bloqueo",
       "theme_appearance": "Appearance",
-      "theme_animations": "Animations"
+      "theme_animations": "Animations",
+      "theme_windows": "Windows"
     },
     "launcher": {
       "position": {

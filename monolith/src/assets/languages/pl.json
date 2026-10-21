@@ -767,7 +767,8 @@
       "bar_side_modules": "Moduły boczne",
       "display_lockscreen": "Ekran blokady",
       "theme_appearance": "Appearance",
-      "theme_animations": "Animations"
+      "theme_animations": "Animations",
+      "theme_windows": "Windows"
     },
     "launcher": {
       "position": {

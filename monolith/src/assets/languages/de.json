@@ -46,7 +46,8 @@
       "bar_side_modules": "Seitenmodule",
       "display_lockscreen": "Sperrbildschirm",
       "theme_appearance": "Appearance",
-      "theme_animations": "Animations"
+      "theme_animations": "Animations",
+      "theme_windows": "Windows"
     },
     "launcher": {
       "position": {

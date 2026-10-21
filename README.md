@@ -97,6 +97,7 @@ Everything below is built in.
 - Display: monitors, widgets, lock screen
 - Theme: 97 colour presets, colours from your wallpaper (matugen), fonts, corner radius, opacity, and the surface style **Blur / Liquid glass / Minimalist**
 - Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, and the same speed for niri's window animations
+- Theme → Windows: niri window borders on/off, width, colours for focused / other / attention windows (theme swatches or any hex), or follow the theme's colours automatically
 - Bar: general and modules
 - Launcher, Dock, On-screen display, Notifications
 - Wellbeing: screen-time stats
