@@ -1,16 +1,11 @@
 // Autostart
 // Part of Monolith's niri setup (included from ../config.kdl).
+// Only what Monolith needs: add your own apps below, e.g.
+//   spawn-at-startup "steam" "-silent"
 
-// ===================== Autostart =====================
-// Programs launched automatically once niri starts.
-// steam = game launcher, silent boot. (openrgb now autostarts via its own "Start with system" setting)
-// password prompts come from Monolith's own polkit agent
-spawn-at-startup "sh" "-c" "sleep 8 && steam -silent"
+// clipboard history (Monolith's clipboard panel reads it)
 spawn-at-startup "bash" "-c" "wl-paste --type text --watch cliphist store"
 spawn-at-startup "bash" "-c" "wl-paste --type image --watch cliphist store"
-spawn-at-startup "awww-daemon"
-spawn-at-startup "setwall"
 
-// Monolith shell + audio effects
-spawn-at-startup "systemctl" "--user" "enable" "--now" "easyeffects"
+// the shell
 spawn-at-startup "monolithd" "start"

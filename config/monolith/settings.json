@@ -112,6 +112,11 @@
       "teal": "#c0c0c0",
       "text": "#ffffff",
       "yellow": "#ffffff"
+    },
+    "animations": {
+      "enabled": true,
+      "speed": 2,
+      "niri": true
     }
   },
   "idle": {

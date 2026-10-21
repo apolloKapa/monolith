@@ -153,7 +153,7 @@ Modular config in `~/.config/niri/` (source: `monolith/compositors/niri/`):
 | `config/output.kdl` | **generated**: each monitor's current mode, position, scale, rotation; disabled monitors set to `off` |
 | `config/workspaces.kdl` | **generated**: workspaces 1 to 10 on the main monitor, `d2-1` to `d2-10` on a second one, each pinned to its monitor so they return there after it was off |
 | `config/layout.kdl` | 10px gaps, column presets, 2px white/grey borders, no focus ring, no hot corners, snappy spring animations |
-| `config/autostart.kdl` | Steam (silent), clipboard history, awww + setwall, EasyEffects, `monolithd start` |
+| `config/autostart.kdl` | only what Monolith needs: clipboard history + `monolithd start`. Add your own apps here; when the installer replaces the niri config it keeps the startup apps you had |
 | `config/keybinds.kdl` | the keybinds below |
 | `config/rules.kdl` | rounded window corners, windows open floating, Roblox Studio helper windows hidden, Steam toasts as notifications, kitty default size |
 
