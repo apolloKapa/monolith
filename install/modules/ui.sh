@@ -35,7 +35,8 @@ trap cleanup_terminal EXIT INT TERM
 read_key() {
     local key=""
     local rest=""
-    IFS= read -rsn1 key 2>/dev/null
+    # no more input (closed stdin): behave like Esc so menus exit instead of spinning
+    IFS= read -rsn1 key 2>/dev/null || { echo "ESC"; return; }
     if [[ "$key" == $'\x1b' ]]; then
         read -rsn2 -t 0.05 rest 2>/dev/null
         if [[ "$rest" == "[A" || "$rest" == "OA" ]]; then
