@@ -676,6 +676,10 @@
       "background": {
         "title": "رسم خلفية خلف التطبيقات",
         "desc": "إظهار لوحة الشريط خلف أيقونات التطبيقات"
+      },
+      "dodge_windows": {
+        "title": "Dodge windows",
+        "desc": "Stay visible with windows open; hide only when a window is over the dock, then come back from the screen edge"
       }
     },
     "file_picker": {
@@ -967,7 +971,8 @@
       "display_lockscreen": "شاشة القفل",
       "theme_appearance": "Appearance",
       "theme_animations": "Animations",
-      "theme_windows": "Windows"
+      "theme_windows": "Windows",
+      "screenshots": "Screenshots"
     },
     "theme": {
       "colors": {

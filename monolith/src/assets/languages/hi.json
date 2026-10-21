@@ -46,7 +46,8 @@
       "display_lockscreen": "लॉक स्क्रीन",
       "theme_appearance": "Appearance",
       "theme_animations": "Animations",
-      "theme_windows": "Windows"
+      "theme_windows": "Windows",
+      "screenshots": "Screenshots"
     },
     "launcher": {
       "position": {
@@ -924,6 +925,10 @@
       "background": {
         "title": "ऐप्स के पीछे पृष्ठभूमि बनाएं",
         "desc": "ऐप आइकन के पीछे डॉक पैनल दिखाएं"
+      },
+      "dodge_windows": {
+        "title": "Dodge windows",
+        "desc": "Stay visible with windows open; hide only when a window is over the dock, then come back from the screen edge"
       }
     },
     "lyrics_picker": {

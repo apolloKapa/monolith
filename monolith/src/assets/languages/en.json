@@ -46,7 +46,8 @@
       "display_lockscreen": "Lock screen",
       "theme_appearance": "Appearance",
       "theme_animations": "Animations",
-      "theme_windows": "Windows"
+      "theme_windows": "Windows",
+      "screenshots": "Screenshots"
     },
     "launcher": {
       "position": {
@@ -932,6 +933,10 @@
         "pin": "Pin to dock",
         "unpin": "Unpin from dock",
         "untitled": "Untitled"
+      },
+      "dodge_windows": {
+        "title": "Dodge windows",
+        "desc": "Stay visible with windows open; hide only when a window is over the dock, then come back from the screen edge"
       }
     },
     "lyrics_picker": {

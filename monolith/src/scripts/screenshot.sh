@@ -4,6 +4,7 @@ EDIT_MODE=false
 FULL_MODE=false
 RECORD_MODE=false
 SCAN_QR_MODE=false
+COPY_ONLY=false
 GEOMETRY=""
 SOURCE_IMG=""
 CROP_RECT=""
@@ -22,6 +23,7 @@ while [[ "$#" -gt 0 ]]; do
         --full) FULL_MODE=true; shift ;;
         --record) RECORD_MODE=true; shift ;;
         --scan-qr) SCAN_QR_MODE=true; shift ;;
+        --copy-only) COPY_ONLY=true; shift ;;
         --geometry) GEOMETRY="$2"; shift 2 ;;
         --source) SOURCE_IMG="$2"; shift 2 ;;
         --crop) CROP_RECT="$2"; shift 2 ;;
@@ -430,6 +432,18 @@ if [ "$FULL_MODE" = true ] || [ -n "$GEOMETRY" ]; then
         grim -o "$TARGET_MON" -l 0 "$TMP_SCREENSHOT" 2>/dev/null || grim -l 0 "$TMP_SCREENSHOT"
     else
         grim -l 0 "$TMP_SCREENSHOT"
+    fi
+
+    # copy only: straight to the clipboard, nothing saved to disk
+    if [ "$COPY_ONLY" = true ]; then
+        if [ -s "$TMP_SCREENSHOT" ]; then
+            wl-copy --type image/png < "$TMP_SCREENSHOT"
+            notify-send -a "$(t "screenshot.notifications.screenshot_app_name")" -i "$TMP_SCREENSHOT" \
+                -h "string:image-path:$TMP_SCREENSHOT" "Screenshot copied" "It's on your clipboard (not saved)"
+        fi
+        ( sleep 30; rm -f "$TMP_SCREENSHOT" ) &
+        [ -n "$SOURCE_IMG" ] && rm -f "$SOURCE_IMG"
+        exit 0
     fi
 
     if [ "$EDIT_MODE" = true ]; then

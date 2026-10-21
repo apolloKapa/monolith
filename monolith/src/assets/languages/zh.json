@@ -46,7 +46,8 @@
       "display_lockscreen": "锁屏",
       "theme_appearance": "Appearance",
       "theme_animations": "Animations",
-      "theme_windows": "Windows"
+      "theme_windows": "Windows",
+      "screenshots": "Screenshots"
     },
     "launcher": {
       "position": {
@@ -924,6 +925,10 @@
       "background": {
         "title": "在应用后绘制背景",
         "desc": "在应用图标后显示程序坞面板"
+      },
+      "dodge_windows": {
+        "title": "Dodge windows",
+        "desc": "Stay visible with windows open; hide only when a window is over the dock, then come back from the screen edge"
       }
     },
     "lyrics_picker": {

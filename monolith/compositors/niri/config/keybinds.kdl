@@ -10,8 +10,8 @@ binds {
     Mod+E { spawn "thunar"; }
     Mod+Escape { spawn "missioncenter"; }
 
-    Ctrl+Print { screenshot-screen; }
-    Alt+Print { screenshot-window; }
+    Ctrl+Print { spawn "monolith" "screenshot" "--full"; }
+    Alt+Print { spawn "monolith" "screenshot" "--full" "--edit"; }
 
     XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
     XF86AudioStop        allow-when-locked=true { spawn-sh "playerctl stop"; }
@@ -173,8 +173,10 @@ binds {
     XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
     XF86MonBrightnessDown { spawn "brightnessctl" "set" "5%-"; }
     XF86MonBrightnessUp   { spawn "brightnessctl" "set" "5%+"; }
-    Print { screenshot; }
-    Mod+Shift+S { spawn-sh "grim -g \"$(slurp)\" - | swappy -f -"; }
+    Print { spawn "monolith" "screenshot"; }
+    Shift+Print { spawn "monolith" "screenshot" "--edit"; }
+    Mod+Print { spawn "monolith" "screenshot" "--full"; }
+    Mod+Shift+S { spawn "monolith" "screenshot"; }
     Mod+Ctrl+Alt+L { spawn "swaylock"; }
     Mod+Alt+L { spawn "monolith" "lock"; }
 }
