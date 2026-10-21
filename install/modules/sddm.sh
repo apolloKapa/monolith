@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SDDM login screen: theme + display manager setup (from Serpantinum's installer).
+# SDDM login screen: theme + display manager setup.
 
 resolve_sddm_backend() {
     local requested_wayland="${1:-false}"
@@ -97,7 +97,7 @@ setup_sddm() {
         sudo rm -f /etc/sddm.conf
     fi
 
-    local sddm_theme_src="$project_root/monolith/sddm/themes/material-you"
+    local sddm_theme_src="$project_root/monolith/sddm/themes/monolith"
     local sddm_theme_dest="/usr/share/sddm/themes/monolith"
 
     if [ -d "$sddm_theme_src" ]; then

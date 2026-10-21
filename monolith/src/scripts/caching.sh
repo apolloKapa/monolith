@@ -53,7 +53,7 @@ if [ ! -f "$QS_STATE_DIR/version" ]; then
     elif [ -f "$(dirname "$MONOLITH_DIR")/version.txt" ]; then
         ver="$(cat "$(dirname "$MONOLITH_DIR")/version.txt" 2>/dev/null | xargs)"
     fi
-    [ -z "$ver" ] && ver="${MONOLITH_VERSION:-2.0.0}"
+    [ -z "$ver" ] && ver="${MONOLITH_VERSION:-1.0.0}"
     echo "MONOLITH_VERSION=\"$ver\"" > "$QS_STATE_DIR/version"
 fi
 

@@ -1103,14 +1103,6 @@
     }
   },
   "installer": {
-    "auth": {
-      "access_granted": "تم منح الإذن ({active}/{max})",
-      "enter_code": "أدخل رمز الوصول للتثبيت: ",
-      "error_default": "فشلت المصادقة",
-      "error_empty": "فشلت المصادقة: لا يمكن أن يكون رمز الوصول فارغًا.",
-      "error_failed": "فشلت المصادقة.",
-      "error_interactive": "المصادقة التفاعلية مطلوبة"
-    },
     "deploy": {
       "configuring_sddm": "جارٍ تكوين مدير الجلسات SDDM...",
       "disabling_dm": "جارٍ تعطيل مدير تسجيل الدخول السابق ({dm})...",
@@ -1130,66 +1122,18 @@
       "syncing": "جارٍ مزامنة وتحديث حزم النظام (pacman -Syyu)..."
     },
     "os": {
-      "default_os": "نظام لينكس",
       "error_not_found": "تعذر اكتشاف نظام التشغيل. لم يتم العثور على /etc/os-release.",
       "error_root": "خطأ: لا تقم بتشغيل هذا السكربت مباشرة بصلاحيات root/sudo. شغله كمستخدم عادي.",
-      "error_unsupported": "نظام التشغيل غير مدعوم: {os}",
-      "unknown_cpu": "معالج غير معروف",
-      "unknown_gpu": "كرت شاشة غير معروف / آلة افتراضية"
+      "error_unsupported": "نظام التشغيل غير مدعوم: {os}"
     },
     "ui": {
-      "ask_reboot": "هل ترغب في إعادة التشغيل الآن؟ [y/n] ",
-      "buy_coffee": "إذا أعجبك هذا المشروع، يُرجى التفكير في دعم المطور بشراء قهوة!",
-      "compositors_header": "مديرو النوافذ المتوافقون:",
-      "compositors_prompt": " إعداد مدير النوافذ > ",
-      "compositors_title": "=== اختر مديري النوافذ المستهدفين ===",
-      "cpu": "المعالج:",
-      "donate": "التبرع والدعم:",
-      "donate_sub": "(ادعم استمرار المشروع!)",
       "done": "تم",
-      "error_no_compositor": "يجب عليك اختيار مدير نوافذ مدعوم واحد على الأقل قبل المتابعة.",
-      "failed_packages": "واجهت الحزم التالية أخطاء أثناء التثبيت:",
-      "github": "جيت هاب:",
-      "gpu": "كرت الشاشة:",
-      "install_mode": "نمط التثبيت:",
-      "installed": " (مثبت)",
-      "installed_success": "تم تثبيت Monolith الإصدار {ver} ({commit}) بنجاح!",
-      "main_menu_header": " استخدم مفاتيح الأسهم للتنقل، وEnter للاختيار ",
-      "main_menu_prompt": " القائمة الرئيسية > ",
-      "menu_exit": "خروج",
-      "menu_install": "بدء التثبيت الكامل",
-      "menu_overview": "المهام المحددة: {count}",
-      "menu_reinstall": "إعادة التثبيت",
-      "menu_sddm": "إعداد SDDM",
-      "menu_update": "تحديث",
-      "menu_wallpapers": "حزمة الخلفيات",
-      "not_installed": " (غير مثبت)",
-      "os": "نظام التشغيل:",
-      "package_installed": "الحزمة {pkg} مثبتة بالفعل",
-      "package_missing": "الحزمة {pkg} مفقودة",
-      "packages_header": "حزم الاعتماديات المطلوبة:",
-      "packages_prompt": "تثبيت الحزم المفقودة الآن؟",
-      "reddit": "ريديت:",
-      "restart_prompt": "أعد تشغيل مدير النوافذ أو نفذ 'monolithd start' للبدء.",
       "sddm_detected_active": "تم اكتشاف مدير الجلسات النشط: {dm}",
       "sddm_detected_none": "مدير الجلسات المكتشف النشط/الممكن: لا يوجد",
-      "sddm_header": " بدّل الخيارات، ثم اختر تم ",
       "sddm_opt_disable": "تعطيل {dm} وتمكين SDDM",
       "sddm_opt_install": "تثبيت وتكوين SDDM (مظهر Material You)",
       "sddm_opt_wayland": "فرض الواجهة الخلفية لـ Wayland",
-      "sddm_prompt": " إعداد SDDM > ",
-      "sddm_title": "=== إعداد مدير تسجيل الدخول (SDDM) ===",
-      "support_creator": "دعم مطور المشروع:",
-      "tagline": "واجهة سطح مكتب صُممت خصيصًا لك",
-      "target_compositor_label": "مدير النوافذ المختار ({comps})",
-      "target_compositor_none": "مدير النوافذ [مطلوب - لم يتم التحديد]",
-      "target_compositor_req": "مدير النوافذ ({label}) [مطلوب]",
-      "target_compositor_selected": "مدير النوافذ المختار [{comps}]",
-      "target_version": "الإصدار المستهدف:",
-      "telegram": "تيليجرام:",
-      "twitter": "تويتر / X:",
-      "unsupported_compositor": "مدير نوافذ غير مدعوم",
-      "user": "المستخدم الحالي:"
+      "sddm_title": "=== إعداد مدير تسجيل الدخول (SDDM) ==="
     }
   },
   "lock": {

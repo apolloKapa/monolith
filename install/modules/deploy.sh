@@ -53,8 +53,7 @@ deploy_dotfiles_extras() {
     echo -e "  ${C_GREEN}scripts:${RESET} helper scripts copied to $BIN_DIR"
 }
 
-# settings.json: kept if you have one, carried over from Serpantinum if that's installed,
-# otherwise the repo's defaults with this machine's paths
+# settings.json: kept if you have one, otherwise the repo's defaults with this machine's paths
 init_settings() {
     local project_root="$1"
     local wallpaper_dir="$2"
@@ -62,10 +61,6 @@ init_settings() {
     mkdir -p "$(dirname "$SETTINGS_FILE")"
 
     local src="$project_root/config/monolith/settings.json" from="defaults"
-    if [ -s "$HOME/.config/serpantinum/settings.json" ]; then
-        src="$HOME/.config/serpantinum/settings.json"
-        from="your Serpantinum settings"
-    fi
 
     jq --arg home "$HOME" --arg user "$USER" --arg wp "$wallpaper_dir" '
         # nothing that identifies you by network: IP, ISP, postcode
@@ -74,7 +69,7 @@ init_settings() {
         | .wallpaperDir = $wp
         | (if .general.avatarPath then .general.avatarPath = "/var/lib/AccountsService/icons/\($user)" else . end)
     ' "$src" \
-        | sed -e "s|/home/[^/\"]*/|$HOME/|g" -e "s|/\.local/share/serpantinum/|/.local/share/monolith/|g" \
+        | sed -e "s|/home/[^/\"]*/|$HOME/|g" \
         > "$SETTINGS_FILE"
     echo -e "  ${C_GREEN}settings:${RESET} created from $from"
 }

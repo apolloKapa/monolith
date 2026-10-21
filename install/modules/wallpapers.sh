@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Wallpapers: copied from the public shell-wallpapers repo (by Serpantinum's author).
+# Wallpapers: copied from a wallpaper repo (default kasc0b3r/wallpapers, override with
+# WALLPAPER_REPO). Skipped quietly if the repo doesn't exist.
+
+# installer.sh provides gitx (no password prompts, gh login); plain git when used on its own
+declare -f gitx >/dev/null || gitx() { GIT_TERMINAL_PROMPT=0 git "$@"; }
 
 render_wallpaper_progress() {
     local current="$1"
@@ -47,14 +51,14 @@ install_wallpapers() {
     local full_pack="${1:-true}"
     local wallpaper_dir
     wallpaper_dir=$(get_wallpaper_dir)
-    local wallpaper_repo="https://github.com/ilyamiro/shell-wallpapers.git"
+    local wallpaper_repo="${WALLPAPER_REPO:-https://github.com/kasc0b3r/wallpapers.git}"
     local clone_dir="${XDG_CACHE_HOME:-"$HOME/.cache"}/monolith-wallpapers"
 
     mkdir -p "$wallpaper_dir"
 
     local sync_success=false
     if [ -d "$clone_dir/.git" ]; then
-        if git -C "$clone_dir" fetch --depth 1 origin 2>/dev/null; then
+        if gitx -C "$clone_dir" fetch --depth 1 origin 2>/dev/null; then
             if git -C "$clone_dir" reset --hard FETCH_HEAD 2>/dev/null || \
                git -C "$clone_dir" reset --hard origin/HEAD 2>/dev/null || \
                git -C "$clone_dir" reset --hard origin/main 2>/dev/null || \
@@ -67,7 +71,7 @@ install_wallpapers() {
     if [ "$sync_success" != true ]; then
         rm -rf "$clone_dir"
         echo -e "\n\e[36m[ INFO ]\e[0m Cloning wallpapers repository..."
-        git clone --depth 1 "$wallpaper_repo" "$clone_dir" 2>/dev/null || true
+        gitx clone --depth 1 "$wallpaper_repo" "$clone_dir" 2>/dev/null || true
     fi
 
     local src_dir="$clone_dir"

@@ -9,7 +9,7 @@ Item {
     property bool autoCheckEnabled: false
 
     property bool isChecking: false
-    property string localVersion: "2.0.0"
+    property string localVersion: "1.0.0"
     property string remoteVersion: ""
     property bool updateAvailable: false
     property string lastNotifiedVersion: ""
@@ -79,7 +79,7 @@ Item {
     }
 
     function sendNotification() {
-        let serpDir = (typeof Caching !== "undefined" && Caching.monolithDir) ? Caching.monolithDir : "";
+        let shellDir = (typeof Caching !== "undefined" && Caching.monolithDir) ? Caching.monolithDir : "";
         let guideDir = (typeof Caching !== "undefined") ? Caching.getCacheDir("guide") : "";
         let appName = I18n.t("updater.notification.app_name");
         let actionText = I18n.t("updater.notification.action_open_guide");
@@ -95,7 +95,7 @@ Item {
             '"' + notifBody.replace(/"/g, '\\"') + '"); ' +
             'if [ "$ACTION" = "default" ]; then ' +
             'echo "about" > "' + guideDir + '/last_tab.txt"; ' +
-            'DIR="' + serpDir + '"; ' +
+            'DIR="' + shellDir + '"; ' +
             'if [ -n "$DIR" ] && [ -f "$DIR/scripts/qs_manager.sh" ]; then ' +
             'bash "$DIR/scripts/qs_manager.sh" toggle guide; ' +
             'fi; fi; fi';

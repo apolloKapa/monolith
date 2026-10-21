@@ -420,7 +420,7 @@ PanelWindow {
                 }
 
                 TypewriterText {
-                    id: serpText
+                    id: titleText
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.verticalCenterOffset: window.s(120)
@@ -436,7 +436,7 @@ PanelWindow {
                 Text {
                     id: finalAuthorText
                     anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: serpText.bottom
+                    anchors.top: titleText.bottom
                     anchors.topMargin: window.s(12)
                     text: I18n.t("start.made_by", { "author": "kasc0b3r" })
                     font.family: ThemeBackend.fontFamily
