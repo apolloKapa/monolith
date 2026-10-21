@@ -136,6 +136,46 @@ DockWindowApps {
         function onHoveredChanged() { dockWindowRoot.checkHideTimer(); }
     }
 
+    // Dodge windows: is any window on this monitor's current workspace over (or touching) the
+    // spot where the dock sits when it's shown? Floating windows are checked by their rectangle;
+    // tiled windows always fill the screen's height, so they count as covering it.
+    dockCoveredByWindow: {
+        if (!dodgeWindows || !isNiri || !dockWindowRoot.screen) return false;
+        const wss = NiriState.workspacesMap;
+        const wins = NiriState.windowsMap;
+        let activeWs = -1;
+        for (let id in wss) {
+            const w = wss[id];
+            if (w && w.output === myOutput && w.is_active) activeWs = w.id;
+        }
+        if (activeWs < 0) return false;
+
+        // the dock's shown rectangle in output coordinates (the window may sit below the bar)
+        const ox = dockWindowRoot.screen.width - dockWindowRoot.width;
+        const oy = dockWindowRoot.screen.height - dockWindowRoot.height;
+        const ext = dockContainerItem.isAttached ? outerCornerRadius : 0;
+        const dx = dockContainerItem.x - (isVertical ? 0 : ext) + ox;
+        const dy = dockContainerItem.y - (isVertical ? ext : 0) + oy;
+        const dw = dockContainerItem.width + (isVertical ? 0 : ext * 2);
+        const dh = dockContainerItem.height + (isVertical ? ext * 2 : 0);
+        const touch = s(4);
+
+        for (let id in wins) {
+            const win = wins[id];
+            if (!win || win.workspace_id !== activeWs || !win.layout) continue;
+            const pos = win.layout.tile_pos_in_workspace_view;
+            if (!pos) {
+                if (!win.is_floating) return true;
+                continue;
+            }
+            const size = win.layout.tile_size || [0, 0];
+            if (pos[0] < dx + dw + touch && pos[0] + size[0] > dx - touch
+                    && pos[1] < dy + dh + touch && pos[1] + size[1] > dy - touch)
+                return true;
+        }
+        return false;
+    }
+
     property bool isRevealed: {
         if (isFullscreenActive) return false;
         if (editMode) return true;

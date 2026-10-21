@@ -35,6 +35,7 @@ PanelWindow {
         "exclusive": false,
         "autohide": false,
         "smartAutohide": true,
+        "dodgeWindows": false,
         "autohideTimeout": 1000,
         "editing": false,
         "apps": [],
@@ -130,6 +131,11 @@ PanelWindow {
         return Boolean(val);
     }
 
+    // "Dodge windows" (under smart auto-hide): stay up while windows are open and only get out of
+    // the way when a window is actually over the dock's spot; then only the edge brings it back
+    property bool dodgeWindows: rawDockSettings && rawDockSettings.dodgeWindows === true
+    property bool dockCoveredByWindow: false
+
     property bool isNiri: false
     property bool isSway: false
     property bool isHyprland: false
@@ -195,7 +201,9 @@ PanelWindow {
     }
 
     property bool autohide: rawDockSettings.autohide !== undefined ? rawDockSettings.autohide : false
-    readonly property bool effectiveAutohide: smartAutohide ? isWorkspaceBusy : autohide
+    readonly property bool effectiveAutohide: smartAutohide
+        ? ((dodgeWindows && isNiri) ? dockCoveredByWindow : isWorkspaceBusy)
+        : autohide
 
 
     property alias swayPoller: swayPoller
