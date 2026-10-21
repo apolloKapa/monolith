@@ -90,8 +90,29 @@ setup_niri_config() {
     generate_niri_workspaces "$json" > "$NIRI_DIR/config/workspaces.kdl"
 
     if command -v niri &>/dev/null && ! niri validate -c "$NIRI_DIR/config.kdl" >/dev/null 2>&1; then
-        echo -e "  ${C_RED}niri:${RESET} the generated config doesn't validate, run: niri validate"
-    else
-        echo -e "  ${C_GREEN}niri:${RESET} config written to $NIRI_DIR"
+        # older niri versions can't `include`: merge everything into one config.kdl
+        flatten_niri_config
+        if ! niri validate -c "$NIRI_DIR/config.kdl" >/dev/null 2>&1; then
+            echo -e "  ${C_RED}niri:${RESET} the generated config doesn't validate, run: niri validate"
+            return 0
+        fi
+        echo -e "  ${C_YELLOW}niri:${RESET} this niri can't split its config into files, so it's all in config.kdl"
     fi
+    echo -e "  ${C_GREEN}niri:${RESET} config written to $NIRI_DIR"
+}
+
+# replaces each `include "x"` line in config.kdl with the contents of x
+flatten_niri_config() {
+    local out="$NIRI_DIR/config.kdl.flat" line inc
+    : > "$out"
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^[[:space:]]*include[[:space:]]+\"([^\"]+)\" ]]; then
+            inc="${BASH_REMATCH[1]}"
+            printf '\n// ---- %s ----\n' "$inc" >> "$out"
+            cat "$NIRI_DIR/$inc" >> "$out" 2>/dev/null
+        else
+            printf '%s\n' "$line" >> "$out"
+        fi
+    done < "$NIRI_DIR/config.kdl"
+    mv "$out" "$NIRI_DIR/config.kdl"
 }
