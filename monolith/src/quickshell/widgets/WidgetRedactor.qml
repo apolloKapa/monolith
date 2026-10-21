@@ -948,7 +948,7 @@ Scope {
                                 property int currentZ: index
                                 z: (widgetProxy.isSelected ? 50000 : 0) + currentZ
                                 opacity: (redactorMode.selectedId === "" || widgetProxy.isSelected) ? 1.0 : 0.6
-                                Behavior on opacity { NumberAnimation { duration: 150 } }
+                                Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
 
                                 Component.onCompleted: {
                                     if (!redactorMode.isInitializing) {
@@ -1394,7 +1394,7 @@ Scope {
                                         anchors.margins: -widgetProxy.selectionGap
                                         opacity: widgetProxy.isSelected ? 1.0 : 0.0
                                         visible: opacity > 0
-                                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                                        Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
 
                                         property bool isAspectLocked: preview.item && preview.item.minAspect !== undefined && preview.item.maxAspect !== undefined && preview.item.minAspect === preview.item.maxAspect && preview.item.minAspect > 0
                                         readonly property bool isRotated90: Math.abs(Math.round(widgetProxy.wRotation || 0)) % 180 !== 0
@@ -1779,7 +1779,7 @@ Scope {
                                     z: 40
                                     opacity: (widgetProxy.isSelected && !baseSelectMa.pressed) ? 1.0 : 0.0
                                     visible: opacity > 0
-                                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                                    Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
                                     spacing: s(6)
 
                                     Component {
@@ -2351,7 +2351,7 @@ Scope {
                         opacity: (!redactorMode.activeWidgetsModel || redactorMode.activeWidgetsModel.count === 0 || redactorMode.selectedId === "" || !redactorMode.toolbarObscured) ? 1.0 : 0.0
                         visible: opacity > 0
                         enabled: opacity > 0
-                        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                        Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutQuad } }
 
                         Rectangle {
                             anchors.fill: parent

@@ -43,7 +43,9 @@
       "bar_general": "Generale",
       "bar_modules": "Moduli",
       "bar_side_modules": "Moduli laterali",
-      "display_lockscreen": "Schermata di blocco"
+      "display_lockscreen": "Schermata di blocco",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

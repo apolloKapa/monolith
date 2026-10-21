@@ -55,7 +55,7 @@ Item {
     property real lastCenterY: 0
 
     property real lift: (glass.active && moving) ? 1.0 : 0.0
-    Behavior on lift { NumberAnimation { duration: root.liftDuration; easing.type: Easing.OutCubic } }
+    Behavior on lift { NumberAnimation { duration: (root.liftDuration) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     function runEdge(anim, value) {
         anim.stop();
@@ -95,10 +95,10 @@ Item {
         }
         const cx = targetX + targetWidth / 2;
         const cy = targetY + targetHeight / 2;
-        if (cx > lastCenterX) { rightAnim.duration = fastDuration; leftAnim.duration = slowDuration; }
-        else if (cx < lastCenterX) { leftAnim.duration = fastDuration; rightAnim.duration = slowDuration; }
-        if (cy > lastCenterY) { bottomAnim.duration = fastDuration; topAnim.duration = slowDuration; }
-        else if (cy < lastCenterY) { topAnim.duration = fastDuration; bottomAnim.duration = slowDuration; }
+        if (cx > lastCenterX) { rightAnim.duration = (fastDuration) * ThemeBackend.animScale; leftAnim.duration = (slowDuration) * ThemeBackend.animScale; }
+        else if (cx < lastCenterX) { leftAnim.duration = (fastDuration) * ThemeBackend.animScale; rightAnim.duration = (slowDuration) * ThemeBackend.animScale; }
+        if (cy > lastCenterY) { bottomAnim.duration = (fastDuration) * ThemeBackend.animScale; topAnim.duration = (slowDuration) * ThemeBackend.animScale; }
+        else if (cy < lastCenterY) { topAnim.duration = (fastDuration) * ThemeBackend.animScale; bottomAnim.duration = (slowDuration) * ThemeBackend.animScale; }
         lastCenterX = cx;
         lastCenterY = cy;
         runEdge(leftAnim, targetX);
@@ -136,10 +136,10 @@ Item {
         onTriggered: root.settling = false
     }
 
-    NumberAnimation { id: leftAnim; target: root; property: "actualLeft"; duration: root.slowDuration; easing.type: Easing.OutExpo }
-    NumberAnimation { id: rightAnim; target: root; property: "actualRight"; duration: root.slowDuration; easing.type: Easing.OutExpo }
-    NumberAnimation { id: topAnim; target: root; property: "actualTop"; duration: root.slowDuration; easing.type: Easing.OutExpo }
-    NumberAnimation { id: bottomAnim; target: root; property: "actualBottom"; duration: root.slowDuration; easing.type: Easing.OutExpo }
+    NumberAnimation { id: leftAnim; target: root; property: "actualLeft"; duration: (root.slowDuration) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
+    NumberAnimation { id: rightAnim; target: root; property: "actualRight"; duration: (root.slowDuration) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
+    NumberAnimation { id: topAnim; target: root; property: "actualTop"; duration: (root.slowDuration) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
+    NumberAnimation { id: bottomAnim; target: root; property: "actualBottom"; duration: (root.slowDuration) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
 
     x: actualLeft
     y: actualTop
@@ -150,7 +150,7 @@ Item {
     onOpacityChanged: {
         if (opacity === 0 && !hasTarget) placed = false;
     }
-    Behavior on opacity { enabled: ThemeBackend.liquidGlass; NumberAnimation { duration: root.fadeDuration; easing.type: Easing.OutCubic } }
+    Behavior on opacity { enabled: ThemeBackend.liquidGlass; NumberAnimation { duration: (root.fadeDuration) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     transform: Scale {
         origin.x: root.width / 2

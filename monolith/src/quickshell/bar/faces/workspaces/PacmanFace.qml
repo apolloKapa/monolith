@@ -27,7 +27,7 @@ Item {
     property real currentPacmanPos: targetPacmanPos
 
     Behavior on currentPacmanPos {
-        NumberAnimation { duration: 320; easing.type: Easing.OutQuint }
+        NumberAnimation { duration: (320) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
 
     property real mouthAngle: 0.18
@@ -107,9 +107,9 @@ Item {
                     opacity: pelletSlot.isActive ? 0.0 : (pelletSlot.isHovered ? 1.0 : 0.85)
 
                     scale: pelletSlot.isActive ? 0.0 : (pelletMouse.pressed ? 0.88 : (pelletSlot.isHovered ? 1.2 : 1.0))
-                    Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack } }
-                    Behavior on opacity { NumberAnimation { duration: 180 } }
-                    Behavior on color { ColorAnimation { duration: 250 } }
+                    Behavior on scale { NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutBack } }
+                    Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
+                    Behavior on color { ColorAnimation { duration: (250) * ThemeBackend.animScale } }
                 }
 
                 Item {
@@ -124,11 +124,11 @@ Item {
 
                     Behavior on scale {
                         NumberAnimation {
-                            duration: pelletSlot.isActive ? 180 : 250
+                            duration: (pelletSlot.isActive ? 180 : 250) * ThemeBackend.animScale
                             easing.type: pelletSlot.isActive ? Easing.InBack : Easing.OutBack
                         }
                     }
-                    Behavior on opacity { NumberAnimation { duration: 180 } }
+                    Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
                     Canvas {
                         id: ghostCanvas
@@ -211,8 +211,8 @@ Item {
                 transform: Translate {
                     x: (!pacmanFaceRoot.isVertical || pelletSlot.initAnimTrigger) ? 0 : (widget ? widget.s(15) : 15)
                     y: (pacmanFaceRoot.isVertical || pelletSlot.initAnimTrigger) ? 0 : (widget ? widget.s(15) : 15)
-                    Behavior on x { NumberAnimation { duration: 650; easing.type: Easing.OutQuint } }
-                    Behavior on y { NumberAnimation { duration: 650; easing.type: Easing.OutQuint } }
+                    Behavior on x { NumberAnimation { duration: (650) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+                    Behavior on y { NumberAnimation { duration: (650) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 }
 
                 Component.onCompleted: {
@@ -231,7 +231,7 @@ Item {
                     onTriggered: pelletSlot.initAnimTrigger = true
                 }
 
-                Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 MouseArea {
                     id: pelletMouse
@@ -255,7 +255,7 @@ Item {
         height: pacmanFaceRoot.pacmanSize
         visible: widget && widget.workspaceCount > 0 && widget.activeIndex >= 0
         opacity: visible ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 180 } }
+        Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
         rotation: pacmanFaceRoot.isVertical ? pacmanFaceRoot.pacmanAngle : 0
 

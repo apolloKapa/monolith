@@ -572,19 +572,19 @@ Variants {
             property real expandedWidth: baseExpandedWidth
             property real expandedExtraLength: baseExpandedExtraLength
 
-            Behavior on expandedWidth { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
-            Behavior on expandedExtraLength { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
+            Behavior on expandedWidth { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutQuart } }
+            Behavior on expandedExtraLength { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutQuart } }
 
             property real expandProgress: isExpanded ? 1.0 : 0.0
             Behavior on expandProgress {
                 enabled: !floatingWidget.disableAnim
-                NumberAnimation { duration: 450; easing.type: Easing.OutQuart }
+                NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
             }
 
             property real visibleProgress: isSidebarVisible ? 1.0 : 0.0
             Behavior on visibleProgress {
                 enabled: !floatingWidget.disableAnim
-                NumberAnimation { duration: 380; easing.type: Easing.OutQuart }
+                NumberAnimation { duration: (380) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
             }
 
             property real currentExtraWidth: (expandedWidth + expandedPadding) * expandProgress
@@ -1093,7 +1093,7 @@ Variants {
                 opacity: 1.0
                 scale: floatingWidget.isPeekVisible ? 1.0 : 0.6
 
-                Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+                Behavior on scale { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutBack } }
 
                 property real visualDragOffset: {
                     if (!peekMouse.pressed) return 0;
@@ -1132,8 +1132,8 @@ Variants {
                     return 0;
                 }
 
-                Behavior on x { enabled: !floatingWidget.disableAnim && !peekMouse.pressed && floatingWidget.isPeekVisible; NumberAnimation { duration: 350; easing.type: Easing.OutExpo } }
-                Behavior on y { enabled: !floatingWidget.disableAnim && !peekMouse.pressed && floatingWidget.isPeekVisible; NumberAnimation { duration: 350; easing.type: Easing.OutExpo } }
+                Behavior on x { enabled: !floatingWidget.disableAnim && !peekMouse.pressed && floatingWidget.isPeekVisible; NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
+                Behavior on y { enabled: !floatingWidget.disableAnim && !peekMouse.pressed && floatingWidget.isPeekVisible; NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
                 Rectangle {
                     anchors.centerIn: parent
@@ -1205,19 +1205,19 @@ Variants {
 
                 transformOrigin: Item.Center
                 rotation: floatingWidget.targetRotation
-                Behavior on rotation { enabled: !floatingWidget.disableAnim && floatingWidget.isSidebarVisible; NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                Behavior on rotation { enabled: !floatingWidget.disableAnim && floatingWidget.isSidebarVisible; NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
                 x: floatingWidget.sidebarTargetX
                 y: floatingWidget.sidebarTargetY
 
                 Behavior on x {
                     enabled: !floatingWidget.disableAnim && floatingWidget.isSidebarVisible && (floatingWidget.activeEdge === "bottom" || floatingWidget.activeEdge === "top")
-                    NumberAnimation { duration: 350; easing.type: Easing.OutExpo }
+                    NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
                 }
 
                 Behavior on y {
                     enabled: !floatingWidget.disableAnim && floatingWidget.isSidebarVisible && (floatingWidget.activeEdge === "left" || floatingWidget.activeEdge === "right")
-                    NumberAnimation { duration: 350; easing.type: Easing.OutExpo }
+                    NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
                 }
 
                 Item {
@@ -1492,7 +1492,7 @@ Variants {
 
                                 Behavior on y {
                                     enabled: !floatingWidget.disableAnim
-                                    NumberAnimation { duration: 350; easing.type: Easing.OutExpo }
+                                    NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
                                 }
 
                                 Item {
@@ -1505,7 +1505,7 @@ Variants {
                                         : parent.height - height - floatingWidget.s(4)
 
                                     rotation: floatingWidget.isExpanded ? 180 : 0
-                                    Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+                                    Behavior on rotation { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutBack } }
 
                                     Item {
                                         anchors.fill: parent
@@ -1524,7 +1524,7 @@ Variants {
                                             color: parent.iconColor
                                             anchors.verticalCenter: parent.verticalCenter
                                             x: parent.pivotX - (width / 2)
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
                                         }
 
                                         Rectangle {
@@ -1536,7 +1536,7 @@ Variants {
                                             transformOrigin: Item.Left
                                             rotation: 42
                                             color: parent.iconColor
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
                                         }
 
                                         Rectangle {
@@ -1548,7 +1548,7 @@ Variants {
                                             transformOrigin: Item.Left
                                             rotation: -42
                                             color: parent.iconColor
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
                                         }
                                     }
 
@@ -1609,8 +1609,8 @@ Variants {
                                         ? ThemeBackend.mauve
                                         : Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.2)
 
-                                    Behavior on color { ColorAnimation { duration: 200 } }
-                                    Behavior on border.color { ColorAnimation { duration: 200 } }
+                                    Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
+                                    Behavior on border.color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
 
                                     MouseArea {
                                         id: pinMouse
@@ -1667,7 +1667,7 @@ Variants {
 
                                 readonly property bool isMoving: Math.abs(actualTop - targetTop) > 0.5 || Math.abs(actualBottom - targetBottom) > 0.5
                                 property real lift: (highlightGlass.active && isMoving) ? 1.0 : 0.0
-                                Behavior on lift { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+                                Behavior on lift { NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                 scale: 1.0 + 0.14 * lift
                                 transformOrigin: Item.Center
 
@@ -1675,8 +1675,8 @@ Variants {
                                 property int curIdx: floatingWidget.activeIndex
 
                                 onCurIdxChanged: {
-                                    if (curIdx > prevIdx) { bottomAnim.duration = 200; topAnim.duration = 350; }
-                                    else if (curIdx < prevIdx) { topAnim.duration = 200; bottomAnim.duration = 350; }
+                                    if (curIdx > prevIdx) { bottomAnim.duration = (200) * ThemeBackend.animScale; topAnim.duration = (350) * ThemeBackend.animScale; }
+                                    else if (curIdx < prevIdx) { topAnim.duration = (200) * ThemeBackend.animScale; bottomAnim.duration = (350) * ThemeBackend.animScale; }
                                     prevIdx = curIdx;
                                 }
 
@@ -1686,8 +1686,8 @@ Variants {
                                 property real actualTop: targetTop
                                 property real actualBottom: targetBottom
 
-                                Behavior on actualTop { enabled: !floatingWidget.disableAnim; NumberAnimation { id: topAnim; duration: 250; easing.type: Easing.OutExpo } }
-                                Behavior on actualBottom { enabled: !floatingWidget.disableAnim; NumberAnimation { id: bottomAnim; duration: 250; easing.type: Easing.OutExpo } }
+                                Behavior on actualTop { enabled: !floatingWidget.disableAnim; NumberAnimation { id: topAnim; duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
+                                Behavior on actualBottom { enabled: !floatingWidget.disableAnim; NumberAnimation { id: bottomAnim; duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
                                 y: actualTop
                                 height: actualBottom - actualTop
@@ -1707,16 +1707,16 @@ Variants {
                                     z: 1
 
                                     y: floatingWidget.barOffsetY + floatingWidget.getTargetY(index, floatingWidget.activeIndex)
-                                    Behavior on y { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: 350; easing.type: Easing.OutExpo } }
+                                    Behavior on y { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
                                     height: isActive ? floatingWidget.h_ac : width
-                                    Behavior on height { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: 350; easing.type: Easing.OutExpo } }
+                                    Behavior on height { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
                                     color: isActive ? "transparent" : (isPressed ? Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, 0.4) : (isHovered ? Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, 0.25) : Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.15)))
-                                    Behavior on color { ColorAnimation { duration: 250 } }
+                                    Behavior on color { ColorAnimation { duration: (250) * ThemeBackend.animScale } }
 
                                     scale: isActive ? 1.0 : (isPressed ? 0.95 : (isHovered ? 1.05 : 1.0))
-                                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                                    Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutBack } }
 
                                     Item {
                                         id: tabIconItem
@@ -1725,7 +1725,7 @@ Variants {
                                         height: parent.width
                                         visible: !barPill.isActive || opacity > 0.001
                                         opacity: barPill.isActive ? 0.0 : 1.0
-                                        Behavior on opacity { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: 200 } }
+                                        Behavior on opacity { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: (200) * ThemeBackend.animScale } }
 
                                         Text {
                                             anchors.centerIn: parent
@@ -1746,7 +1746,7 @@ Variants {
                                         visible: barPill.isActive || opacity > 0.001
                                         opacity: barPill.isActive ? 1.0 : 0.0
                                         clip: true
-                                        Behavior on opacity { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: 200 } }
+                                        Behavior on opacity { enabled: !floatingWidget.disableAnim; NumberAnimation { duration: (200) * ThemeBackend.animScale } }
 
                                         Text {
                                             anchors.centerIn: parent

@@ -207,7 +207,7 @@ GuideTab {
 
                 implicitHeight: shouldBeOpen ? dockAppsCard.implicitHeight : 0
                 Behavior on implicitHeight {
-                    NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                    NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                 }
 
                 Rectangle {
@@ -304,9 +304,9 @@ GuideTab {
 
                     SequentialAnimation {
                         id: dockAppsHighlightAnim
-                        NumberAnimation { target: dockAppsCard; property: "highlightFlash"; from: 0.0; to: 1.0; duration: 400; easing.type: Easing.OutCubic }
-                        PauseAnimation { duration: 1500 }
-                        NumberAnimation { target: dockAppsCard; property: "highlightFlash"; from: 1.0; to: 0.0; duration: 900; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: dockAppsCard; property: "highlightFlash"; from: 0.0; to: 1.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+                        PauseAnimation { duration: (1500) * ThemeBackend.animScale }
+                        NumberAnimation { target: dockAppsCard; property: "highlightFlash"; from: 1.0; to: 0.0; duration: (900) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                     }
 
                     function resolveTabInfo() {
@@ -578,7 +578,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? positionRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -661,7 +661,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? onTopRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -722,7 +722,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? floatingRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -783,7 +783,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? backgroundRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -844,7 +844,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? exclusiveRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -907,7 +907,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? elementSizeRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -986,7 +986,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? overrideBoundsRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -1047,7 +1047,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? scrollingGroup.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsGroup {
@@ -1176,7 +1176,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? hoverScaleRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -1255,7 +1255,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? cascadeScaleRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -1318,7 +1318,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? autohideGroup.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsGroup {
@@ -1447,7 +1447,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? smartAutohideRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -1510,7 +1510,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? focusRunningRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -1549,7 +1549,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? showIndicatorsRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -1588,7 +1588,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? showRunningAppsRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {
@@ -1627,7 +1627,7 @@ GuideTab {
                     visible: implicitHeight > 0.01
                     implicitHeight: shouldBeOpen ? runningScopeRow.implicitHeight : 0
                     Behavior on implicitHeight {
-                        NumberAnimation { duration: 250; easing.type: Easing.InOutCubic }
+                        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
                     }
 
                     SettingsRow {

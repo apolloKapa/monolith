@@ -571,7 +571,17 @@ Item {
                 { id: "DisplayLockscreen", key: "display_lockscreen", name: "Lock screen", icon: "󰌾", file: "display/DisplayLockscreenTab.qml" }
             ]
         },
-        { id: "Theme", key: "theme", name: "Theme", icon: "󰏘", file: "theme/ThemeTab.qml" },
+        {
+            id: "Theme",
+            key: "theme",
+            name: "Theme",
+            icon: "󰏘",
+            file: "theme/ThemeTab.qml",
+            subtabs: [
+                { id: "ThemeAppearance", key: "theme_appearance", name: "Appearance", icon: "󰏘", file: "theme/ThemeTab.qml" },
+                { id: "ThemeAnimations", key: "theme_animations", name: "Animations", icon: "󰔡", file: "theme/ThemeAnimationsTab.qml" }
+            ]
+        },
         { 
             id: "Bar", 
             key: "bar", 
@@ -982,39 +992,39 @@ Item {
             property: "introBase"
             from: 0.0
             to: 1.0
-            duration: 650
+            duration: (650) * ThemeBackend.animScale
             easing.type: Easing.OutExpo
         }
         SequentialAnimation {
-            PauseAnimation { duration: 60 }
+            PauseAnimation { duration: (60) * ThemeBackend.animScale }
             NumberAnimation {
                 target: root
                 property: "introSidebar"
                 from: 0.0
                 to: 1.0
-                duration: 400
+                duration: (400) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 100 }
+            PauseAnimation { duration: (100) * ThemeBackend.animScale }
             NumberAnimation {
                 target: root
                 property: "introTabs"
                 from: 0.0
                 to: 1.0
-                duration: 550
+                duration: (550) * ThemeBackend.animScale
                 easing.type: Easing.Linear
             }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 180 }
+            PauseAnimation { duration: (180) * ThemeBackend.animScale }
             NumberAnimation {
                 target: root
                 property: "introContent"
                 from: 0.0
                 to: 1.0
-                duration: 650
+                duration: (650) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }
@@ -1036,21 +1046,21 @@ Item {
                 target: root
                 property: "introContent"
                 to: 0.0
-                duration: 150
+                duration: (150) * ThemeBackend.animScale
                 easing.type: Easing.InExpo
             }
             NumberAnimation {
                 target: root
                 property: "introSidebar"
                 to: 0.0
-                duration: 150
+                duration: (150) * ThemeBackend.animScale
                 easing.type: Easing.InExpo
             }
             NumberAnimation {
                 target: root
                 property: "introTabs"
                 to: 0.0
-                duration: 120
+                duration: (120) * ThemeBackend.animScale
                 easing.type: Easing.InQuad
             }
         }
@@ -1058,7 +1068,7 @@ Item {
             target: root
             property: "introBase"
             to: 0.0
-            duration: 200
+            duration: (200) * ThemeBackend.animScale
             easing.type: Easing.InQuart
         }
         ScriptAction {

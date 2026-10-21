@@ -48,7 +48,7 @@ Item {
 
             Behavior on rotation {
                 RotationAnimation {
-                    duration: 1000
+                    duration: (1000) * ThemeBackend.animScale
                     direction: RotationAnimation.Clockwise
                     easing.type: Easing.Linear
                 }
@@ -67,7 +67,7 @@ Item {
 
             Behavior on rotation {
                 RotationAnimation {
-                    duration: 1000
+                    duration: (1000) * ThemeBackend.animScale
                     direction: RotationAnimation.Clockwise
                     easing.type: Easing.Linear
                 }
@@ -86,7 +86,7 @@ Item {
 
             Behavior on rotation {
                 RotationAnimation {
-                    duration: 1000
+                    duration: (1000) * ThemeBackend.animScale
                     direction: RotationAnimation.Clockwise
                     easing.type: Easing.Linear
                 }

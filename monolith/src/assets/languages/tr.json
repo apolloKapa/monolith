@@ -43,7 +43,9 @@
       "bar_general": "Genel",
       "bar_modules": "Modüller",
       "bar_side_modules": "Yan modüller",
-      "display_lockscreen": "Kilit ekranı"
+      "display_lockscreen": "Kilit ekranı",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

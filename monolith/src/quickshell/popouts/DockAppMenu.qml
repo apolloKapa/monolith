@@ -144,7 +144,7 @@ PanelWindow {
                 property: "animProgress"
                 from: menuContainer.animProgress > 0.8 ? 0.2 : 0.0
                 to: 1.0
-                duration: 180
+                duration: (180) * ThemeBackend.animScale
                 easing.type: Easing.OutBack
                 easing.overshoot: 1.05
             }
@@ -154,7 +154,7 @@ PanelWindow {
                 target: menuContainer
                 property: "animProgress"
                 to: 0.0
-                duration: 90
+                duration: (90) * ThemeBackend.animScale
                 easing.type: Easing.InCubic
                 onFinished: {
                     if (!dockAppMenuWindow.isVisible) {
@@ -363,7 +363,7 @@ PanelWindow {
                                     Layout.fillHeight: true
                                     clip: true
                                     Behavior on Layout.preferredWidth {
-                                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                        NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                                     }
 
                                     IconButton {
@@ -379,7 +379,7 @@ PanelWindow {
                                         iconFontSize: dockAppMenuWindow.s(13)
                                         opacity: rowHover.hovered ? 1.0 : 0.0
                                         Behavior on opacity {
-                                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                            NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                                         }
                                         onClicked: {
                                             if (typeof WindowTracker !== "undefined") {

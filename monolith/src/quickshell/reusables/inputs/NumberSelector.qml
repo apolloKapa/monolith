@@ -278,23 +278,23 @@ Item {
 
     SequentialAnimation {
         id: shakeAnim
-        NumberAnimation { target: shakeT; property: "x"; from: 0; to: -5; duration: 45 }
-        NumberAnimation { target: shakeT; property: "x"; from: -5; to: 5; duration: 45 }
-        NumberAnimation { target: shakeT; property: "x"; from: 5; to: -3; duration: 45 }
-        NumberAnimation { target: shakeT; property: "x"; from: -3; to: 3; duration: 45 }
-        NumberAnimation { target: shakeT; property: "x"; from: 3; to: 0; duration: 45 }
+        NumberAnimation { target: shakeT; property: "x"; from: 0; to: -5; duration: (45) * ThemeBackend.animScale }
+        NumberAnimation { target: shakeT; property: "x"; from: -5; to: 5; duration: (45) * ThemeBackend.animScale }
+        NumberAnimation { target: shakeT; property: "x"; from: 5; to: -3; duration: (45) * ThemeBackend.animScale }
+        NumberAnimation { target: shakeT; property: "x"; from: -3; to: 3; duration: (45) * ThemeBackend.animScale }
+        NumberAnimation { target: shakeT; property: "x"; from: 3; to: 0; duration: (45) * ThemeBackend.animScale }
     }
 
     SequentialAnimation {
         id: valueDropAnim
-        NumberAnimation { target: root; property: "valueDrop"; to: 1.0; duration: 90; easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "valueDrop"; to: 0.0; duration: 460; easing.type: Easing.OutQuint }
+        NumberAnimation { target: root; property: "valueDrop"; to: 1.0; duration: (90) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "valueDrop"; to: 0.0; duration: (460) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
 
     SequentialAnimation {
         id: focusPopAnim
-        NumberAnimation { target: root; property: "focusPop"; to: 1.03; duration: 110; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "focusPop"; to: 1.0; duration: 380; easing.type: Easing.OutQuint }
+        NumberAnimation { target: root; property: "focusPop"; to: 1.03; duration: (110) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "focusPop"; to: 1.0; duration: (380) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
 
     TextMetrics {
@@ -321,9 +321,9 @@ Item {
         color: glass.active ? "transparent" : (root.isHoveredOrHighlighted ? Qt.darker(root.baseColor, 1.14) : root.baseColor)
         opacity: root.enabled ? 1.0 : 0.5
 
-        Behavior on color { ColorAnimation { duration: 180 } }
-        Behavior on border.color { ColorAnimation { duration: 180 } }
-        Behavior on opacity { NumberAnimation { duration: 180 } }
+        Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
+        Behavior on border.color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
+        Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
         GlassFill {
             id: glass
@@ -331,13 +331,13 @@ Item {
             radius: ThemeBackend.minimalist ? 0 : (parent.radius)
             tintColor: root.baseColor
             press: root.isEditing ? 0.55 : (root.isHoveredOrHighlighted ? 0.2 : 0)
-            Behavior on press { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
             tintAmount: (root.isEditing ? 0.38 : (root.isHoveredOrHighlighted ? 0.3 : 0.22))
-            Behavior on tintAmount { NumberAnimation { duration: 180 } }
+            Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
         }
 
         scale: (root.isEditing ? 1.02 : 1.0) * root.focusPop
-        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+        Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
         transform: Translate { id: shakeT; x: 0 }
     }
 
@@ -386,7 +386,7 @@ Item {
                 anchors.fill: parent
                 radius: ThemeBackend.minimalist ? 0 : (Math.max(2, root.buttonCornerRadius - 2))
                 color: root.isEditing ? Qt.rgba(255, 255, 255, 0.05) : (centerMa.containsMouse ? Qt.rgba(255, 255, 255, 0.03) : "transparent")
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
             }
 
             Item {
@@ -424,7 +424,7 @@ Item {
                 elide: Text.ElideRight
                 width: Math.min(implicitWidth, parent.width - 4)
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
             }
 
             Item {
@@ -447,9 +447,9 @@ Item {
                     x: root.scrollOffset + (selMin * root.charSlotStep) - 2
                     width: hasSelection ? ((selMax - selMin) * root.charSlotStep - root.charSpacing + 4) : 0
 
-                    Behavior on opacity { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
-                    Behavior on x { NumberAnimation { duration: 60; easing.type: Easing.OutQuad } }
-                    Behavior on width { NumberAnimation { duration: 60; easing.type: Easing.OutQuad } }
+                    Behavior on opacity { NumberAnimation { duration: (110) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+                    Behavior on x { NumberAnimation { duration: (60) * ThemeBackend.animScale; easing.type: Easing.OutQuad } }
+                    Behavior on width { NumberAnimation { duration: (60) * ThemeBackend.animScale; easing.type: Easing.OutQuad } }
                 }
 
                 ListView {
@@ -470,26 +470,26 @@ Item {
                     property real entranceOvershoot: 3.2
                     property int exitDuration: 160
 
-                    Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
+                    Behavior on x { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutQuad } }
 
                     add: Transition {
                         ParallelAnimation {
-                            NumberAnimation { property: "scale"; from: 0.3; to: 1.0; duration: charRow.entranceDuration; easing.type: Easing.OutBack; easing.overshoot: charRow.entranceOvershoot }
-                            NumberAnimation { property: "y"; from: 10; to: 0; duration: charRow.entranceDuration; easing.type: Easing.OutBack; easing.overshoot: charRow.entranceOvershoot * 0.8 }
-                            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 140; easing.type: Easing.OutCubic }
+                            NumberAnimation { property: "scale"; from: 0.3; to: 1.0; duration: (charRow.entranceDuration) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: charRow.entranceOvershoot }
+                            NumberAnimation { property: "y"; from: 10; to: 0; duration: (charRow.entranceDuration) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: charRow.entranceOvershoot * 0.8 }
+                            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: (140) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                         }
                     }
 
                     remove: Transition {
                         ParallelAnimation {
-                            NumberAnimation { property: "scale"; to: 0.3; duration: charRow.exitDuration; easing.type: Easing.InBack }
-                            NumberAnimation { property: "y"; to: -8; duration: charRow.exitDuration; easing.type: Easing.InCubic }
-                            NumberAnimation { property: "opacity"; to: 0; duration: charRow.exitDuration * 0.9; easing.type: Easing.InCubic }
+                            NumberAnimation { property: "scale"; to: 0.3; duration: (charRow.exitDuration) * ThemeBackend.animScale; easing.type: Easing.InBack }
+                            NumberAnimation { property: "y"; to: -8; duration: (charRow.exitDuration) * ThemeBackend.animScale; easing.type: Easing.InCubic }
+                            NumberAnimation { property: "opacity"; to: 0; duration: (charRow.exitDuration * 0.9) * ThemeBackend.animScale; easing.type: Easing.InCubic }
                         }
                     }
 
                     displaced: Transition {
-                        NumberAnimation { properties: "x,y"; duration: 260; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
+                        NumberAnimation { properties: "x,y"; duration: (260) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
                     }
 
                     delegate: Item {
@@ -518,7 +518,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     x: root.scrollOffset + (innerInput.cursorPosition * root.charSlotStep)
 
-                    Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
+                    Behavior on x { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutQuad } }
 
                     SequentialAnimation on opacity {
                         running: root.isEditing

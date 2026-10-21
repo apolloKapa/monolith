@@ -294,7 +294,7 @@ FocusScope {
             target: lockScreenRoot
             property: "centerReveal"
             to: 1.0
-            duration: 180
+            duration: (180) * ThemeBackend.animScale
             easing.type: Easing.OutBack
             easing.overshoot: 1.2
         }
@@ -302,7 +302,7 @@ FocusScope {
             target: lockScreenRoot
             property: "wingsReveal"
             to: 1.0
-            duration: 220
+            duration: (220) * ThemeBackend.animScale
             easing.type: Easing.OutBack
             easing.overshoot: 1.12
         }
@@ -315,14 +315,14 @@ FocusScope {
             target: lockScreenRoot
             property: "wingsReveal"
             to: 0.0
-            duration: 110
+            duration: (110) * ThemeBackend.animScale
             easing.type: Easing.InQuad
         }
         NumberAnimation {
             target: lockScreenRoot
             property: "centerReveal"
             to: 0.0
-            duration: 100
+            duration: (100) * ThemeBackend.animScale
             easing.type: Easing.InQuad
         }
     }
@@ -342,7 +342,7 @@ FocusScope {
                 target: lockScreenRoot
                 property: "wingsReveal"
                 to: 0.0
-                duration: 130
+                duration: (130) * ThemeBackend.animScale
                 easing.type: Easing.InQuad
             }
         }
@@ -352,7 +352,7 @@ FocusScope {
                 target: lockScreenRoot
                 property: "foldScaleX"
                 to: 0.0
-                duration: 220
+                duration: (220) * ThemeBackend.animScale
                 easing.type: Easing.InBack
                 easing.overshoot: 1.3
             }
@@ -360,7 +360,7 @@ FocusScope {
                 target: lockScreenRoot
                 property: "foldScaleY"
                 to: 0.0
-                duration: 220
+                duration: (220) * ThemeBackend.animScale
                 easing.type: Easing.InBack
                 easing.overshoot: 1.3
             }
@@ -368,28 +368,28 @@ FocusScope {
                 target: lockScreenRoot
                 property: "centerReveal"
                 to: 0.0
-                duration: 200
+                duration: (200) * ThemeBackend.animScale
                 easing.type: Easing.InQuad
             }
             NumberAnimation {
                 target: lockScreenRoot
                 property: "contentReveal"
                 to: 0.0
-                duration: 220
+                duration: (220) * ThemeBackend.animScale
                 easing.type: Easing.InQuad
             }
             NumberAnimation {
                 target: lockScreenRoot
                 property: "panelReveal"
                 to: 0.0
-                duration: 250
+                duration: (250) * ThemeBackend.animScale
                 easing.type: Easing.InOutCubic
             }
             NumberAnimation {
                 target: lockScreenRoot
                 property: "mainOpacity"
                 to: 0.0
-                duration: 250
+                duration: (250) * ThemeBackend.animScale
                 easing.type: Easing.InQuad
             }
         }
@@ -451,24 +451,24 @@ FocusScope {
 
     property real rawCpu: isNaN(SysData.cpu) ? 0.0 : SysData.cpu / 100.0
     property real cpuUsage: rawCpu
-    Behavior on cpuUsage { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on cpuUsage { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property real rawTemp: isNaN(SysData.temp) ? 0.0 : SysData.temp
     property real tempC: rawTemp
-    Behavior on tempC { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on tempC { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property real rawRam: isNaN(SysData.ramPercent) ? 0.0 : SysData.ramPercent / 100.0
     property real ramUsage: rawRam
-    Behavior on ramUsage { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on ramUsage { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property real rawRamGb: isNaN(SysData.ramGb) ? 0.0 : SysData.ramGb
     property real ramUsedGb: rawRamGb
-    Behavior on ramUsedGb { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on ramUsedGb { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property real netRx: isNaN(SysData.netRx) ? 0 : SysData.netRx
-    Behavior on netRx { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: 1200; easing.type: Easing.OutCubic } }
+    Behavior on netRx { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: (1200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
     property real netTx: isNaN(SysData.netTx) ? 0 : SysData.netTx
-    Behavior on netTx { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: 1200; easing.type: Easing.OutCubic } }
+    Behavior on netTx { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: (1200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
     function formatBytes(bytes) {
         if (!(bytes >= 1)) return "0 B/s";
         let k = 1024, sizes = ["B/s", "KB/s", "MB/s", "GB/s"];
@@ -480,7 +480,7 @@ FocusScope {
 
     property real rawDisk: isNaN(SysData.diskPercent) ? 0.0 : SysData.diskPercent / 100.0
     property real diskUsagePercent: rawDisk
-    Behavior on diskUsagePercent { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on diskUsagePercent { enabled: lockScreenRoot.wingsReveal > 0.98; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property string diskUsedText: SysData.diskGb > 0 ? (SysData.diskGb.toFixed(1) + "G") : "..."
     property string diskTotalText: SysData.diskTotalGb > 0 ? (SysData.diskTotalGb.toFixed(1) + "G") : ""
@@ -572,18 +572,18 @@ FocusScope {
                 property: "panelReveal"
                 from: 0.0
                 to: 1.0
-                duration: 750
+                duration: (750) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
 
             SequentialAnimation {
-                PauseAnimation { duration: 200 }
+                PauseAnimation { duration: (200) * ThemeBackend.animScale }
                 NumberAnimation {
                     target: lockScreenRoot
                     property: "contentReveal"
                     from: 0.0
                     to: 1.0
-                    duration: 200
+                    duration: (200) * ThemeBackend.animScale
                     easing.type: Easing.OutCubic
                 }
             }

@@ -92,31 +92,31 @@ Item {
 
     property real rawCpu: isNaN(SysData.cpu) ? 0.0 : SysData.cpu / 100.0
     property real cpuUsage: rawCpu
-    Behavior on cpuUsage { enabled: root.widgetVisible; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on cpuUsage { enabled: root.widgetVisible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property real rawTemp: isNaN(SysData.temp) ? 0.0 : SysData.temp
     property real tempC: rawTemp
-    Behavior on tempC { enabled: root.widgetVisible; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on tempC { enabled: root.widgetVisible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property real rawRam: isNaN(SysData.ramPercent) ? 0.0 : SysData.ramPercent / 100.0
     property real ramUsage: rawRam
-    Behavior on ramUsage { enabled: root.widgetVisible; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on ramUsage { enabled: root.widgetVisible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property real rawRamGb: isNaN(SysData.ramGb) ? 0.0 : SysData.ramGb
     property real ramUsedGb: rawRamGb
-    Behavior on ramUsedGb { enabled: root.widgetVisible; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on ramUsedGb { enabled: root.widgetVisible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property real netRx: isNaN(SysData.netRx) ? 0 : SysData.netRx
-    Behavior on netRx { enabled: root.widgetVisible; NumberAnimation { duration: 1200; easing.type: Easing.OutCubic } }
+    Behavior on netRx { enabled: root.widgetVisible; NumberAnimation { duration: (1200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
     property real netTx: isNaN(SysData.netTx) ? 0 : SysData.netTx
-    Behavior on netTx { enabled: root.widgetVisible; NumberAnimation { duration: 1200; easing.type: Easing.OutCubic } }
+    Behavior on netTx { enabled: root.widgetVisible; NumberAnimation { duration: (1200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     property string rxSpeedStr: root.formatBytes(netRx)
     property string txSpeedStr: root.formatBytes(netTx)
 
     property real rawDisk: isNaN(SysData.diskPercent) ? 0.0 : SysData.diskPercent / 100.0
     property real diskUsagePercent: rawDisk
-    Behavior on diskUsagePercent { enabled: root.widgetVisible; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on diskUsagePercent { enabled: root.widgetVisible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property string diskUsedText: SysData.diskGb > 0 ? (SysData.diskGb.toFixed(1) + "G") : "..."
     property string diskTotalText: SysData.diskTotalGb > 0 ? (SysData.diskTotalGb.toFixed(1) + "G") : ""

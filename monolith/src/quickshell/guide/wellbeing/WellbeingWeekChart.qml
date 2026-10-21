@@ -112,11 +112,11 @@ Rectangle {
                                         scale: (chart && chart.tab && chart.tab.isWeekView) ? 1.0 : 0.5
                                         Behavior on scale {
                                             NumberAnimation {
-                                                duration: 400 + (dayIndex * 30) + (index * 10)
+                                                duration: (400 + (dayIndex * 30) + (index * 10)) * ThemeBackend.animScale
                                                 easing.type: Easing.OutBack
                                             }
                                         }
-                                        Behavior on color { ColorAnimation { duration: 600; easing.type: Easing.OutQuint } }
+                                        Behavior on color { ColorAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                                         MouseArea {
                                             anchors.fill: parent

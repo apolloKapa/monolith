@@ -90,7 +90,7 @@ Item {
     Behavior on animPosition {
         enabled: !root.isDragging
         NumberAnimation {
-            duration: 300
+            duration: (300) * ThemeBackend.animScale
             easing.type: Easing.OutCubic
         }
     }
@@ -107,7 +107,7 @@ Item {
 
     Behavior on targetScale {
         NumberAnimation {
-            duration: 150
+            duration: (150) * ThemeBackend.animScale
             easing.type: Easing.OutBack
         }
     }
@@ -183,10 +183,10 @@ Item {
             tintAmount: 0.1
         }
 
-        Behavior on color { ColorAnimation { duration: 150 } }
+        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
         Behavior on opacity {
             NumberAnimation {
-                duration: 150
+                duration: (150) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }
@@ -206,9 +206,9 @@ Item {
 
                 gradient: Gradient {
                     orientation: root.vertical ? Gradient.Vertical : Gradient.Horizontal
-                    GradientStop { position: 0.0; color: root.vertical ? root.gradColor3 : root.gradColor1; Behavior on color { ColorAnimation { duration: 150 } } }
-                    GradientStop { position: 0.5; color: root.gradColor2; Behavior on color { ColorAnimation { duration: 150 } } }
-                    GradientStop { position: 1.0; color: root.vertical ? root.gradColor1 : root.gradColor3; Behavior on color { ColorAnimation { duration: 150 } } }
+                    GradientStop { position: 0.0; color: root.vertical ? root.gradColor3 : root.gradColor1; Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } } }
+                    GradientStop { position: 0.5; color: root.gradColor2; Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } } }
+                    GradientStop { position: 1.0; color: root.vertical ? root.gradColor1 : root.gradColor3; Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } } }
                 }
             }
 
@@ -225,10 +225,10 @@ Item {
                 saturation: root.glassSaturation
                 thickness: Math.max(3, Math.min(14, Math.min(width, height) * 0.28)) * root.glassThickness
                 press: root.isDragging ? 0.5 : (root.isHoveredOrHighlighted ? 0.2 : 0)
-                Behavior on press { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                Behavior on press { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
             }
 
-            Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
         }
     }
 
@@ -268,7 +268,7 @@ Item {
             shadow: 1
             press: root.isDragging ? 1 : (root.isHoveredOrHighlighted ? 0.3 : 0)
             pulse: Math.min(1, handle.flashOpacity * 2.5)
-            Behavior on press { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            Behavior on press { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
         }
 
         property real popScale: 1.0
@@ -283,17 +283,17 @@ Item {
             yScale: root.vertical ? 1 + 0.45 * root.flow : 1 - 0.12 * root.flow
         }
 
-        Behavior on color { ColorAnimation { duration: 150 } }
-        Behavior on border.color { ColorAnimation { duration: 150 } }
+        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
+        Behavior on border.color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
         Behavior on width {
             NumberAnimation {
-                duration: 150
+                duration: (150) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on height {
             NumberAnimation {
-                duration: 150
+                duration: (150) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }
@@ -304,14 +304,14 @@ Item {
                 target: handle
                 property: "popScale"
                 to: 1.12
-                duration: 100
+                duration: (100) * ThemeBackend.animScale
                 easing.type: Easing.OutQuad
             }
             NumberAnimation {
                 target: handle
                 property: "popScale"
                 to: 1.0
-                duration: 200
+                duration: (200) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }
@@ -322,7 +322,7 @@ Item {
             color: "#ffffff"
             opacity: handle.flashOpacity
             visible: !handleGlass.active
-            PropertyAnimation on opacity { id: handleFlashAnim; to: 0; duration: 300; easing.type: Easing.OutCubic }
+            PropertyAnimation on opacity { id: handleFlashAnim; to: 0; duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
 
         Text {
@@ -350,13 +350,13 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 250
+                duration: (250) * ThemeBackend.animScale
                 easing.type: Easing.OutQuint
             }
         }
         Behavior on scale {
             NumberAnimation {
-                duration: 200
+                duration: (200) * ThemeBackend.animScale
                 easing.type: Easing.OutBack
             }
         }
@@ -380,14 +380,14 @@ Item {
         Behavior on x {
             enabled: !root.isDragging && !root.vertical
             NumberAnimation {
-                duration: 90
+                duration: (90) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on y {
             enabled: !root.isDragging && root.vertical
             NumberAnimation {
-                duration: 90
+                duration: (90) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }

@@ -119,13 +119,13 @@ PanelWindow {
     SequentialAnimation {
         id: itemsIntroSequence
         running: false
-        PauseAnimation { duration: 60 }
+        PauseAnimation { duration: (60) * ThemeBackend.animScale }
         NumberAnimation {
             target: launcherWindow
             property: "introItems"
             from: 0.0
             to: 1.0
-            duration: 520
+            duration: (520) * ThemeBackend.animScale
             easing.type: Easing.Linear
         }
     }
@@ -340,7 +340,7 @@ PanelWindow {
     property real animatedLauncherHeight: targetLauncherHeight
     Behavior on animatedLauncherHeight {
         NumberAnimation {
-            duration: 300
+            duration: (300) * ThemeBackend.animScale
             easing.type: Easing.OutCubic
         }
     }
@@ -1120,7 +1120,7 @@ PanelWindow {
         property real animProgress: launcherWindow.isVisible ? 1.0 : 0.0
         Behavior on animProgress {
             NumberAnimation {
-                duration: launcherWindow.isVisible ? (launcherWindow.isCentered ? 420 : 340) : (launcherWindow.isCentered ? 200 : 150)
+                duration: (launcherWindow.isVisible ? (launcherWindow.isCentered ? 420 : 340) : (launcherWindow.isCentered ? 200 : 150)) * ThemeBackend.animScale
                 easing.type: launcherWindow.isVisible ? Easing.OutBack : Easing.InQuad
                 easing.overshoot: launcherWindow.isVisible ? 1.28 : 1.0
             }
@@ -1444,7 +1444,7 @@ PanelWindow {
                         id: scrollAnim
                         target: appList
                         property: "contentY"
-                        duration: 260
+                        duration: (260) * ThemeBackend.animScale
                         easing.type: Easing.OutCubic
                     }
 
@@ -1459,7 +1459,7 @@ PanelWindow {
 
                         readonly property bool isMoving: Math.abs(morphHighlight.y - morphHighlight.targetY) > 0.5
                         property real lift: (highlightLayerGlass.active && isMoving) ? 1.0 : 0.0
-                        Behavior on lift { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+                        Behavior on lift { NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                         transform: Scale {
                             origin.x: highlightGlassLayer.width / 2
                             origin.y: highlightGlassLayer.height / 2
@@ -1624,7 +1624,7 @@ PanelWindow {
                             Behavior on opacity {
                                 enabled: !itemsIntroSequence.running
                                 NumberAnimation {
-                                    duration: 170
+                                    duration: (170) * ThemeBackend.animScale
                                     easing.type: Easing.OutCubic
                                 }
                             }
@@ -1646,7 +1646,7 @@ PanelWindow {
                             Behavior on y {
                                 enabled: launcherWindow.isKeyboardNav
                                 NumberAnimation {
-                                    duration: 260
+                                    duration: (260) * ThemeBackend.animScale
                                     easing.type: Easing.OutCubic
                                 }
                             }
@@ -1675,7 +1675,7 @@ PanelWindow {
                                 anchors.fill: parent
 
                                 scale: ma.pressed ? 0.98 : 1.0
-                                Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                                Behavior on scale { NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
                                 Rectangle {
                                     anchors.fill: parent
@@ -1692,7 +1692,7 @@ PanelWindow {
                                         tintAmount: 0.3
                                         press: ma.pressed ? 0.8 : 0.2
                                     }
-                                    Behavior on opacity { NumberAnimation { duration: 120; easing.type: Easing.OutSine } }
+                                    Behavior on opacity { NumberAnimation { duration: (120) * ThemeBackend.animScale; easing.type: Easing.OutSine } }
                                 }
 
                                 RowLayout {
@@ -1704,10 +1704,10 @@ PanelWindow {
                                     spacing: launcherWindow.s(10)
 
                                     Behavior on anchors.leftMargin {
-                                        NumberAnimation { duration: 220; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+                                        NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
                                     }
                                     Behavior on anchors.rightMargin {
-                                        NumberAnimation { duration: 220; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+                                        NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
                                     }
 
                                     Item {
@@ -1742,7 +1742,7 @@ PanelWindow {
                                                 tintAmount: delegateRoot.isSelected ? 0.1 : 0.3
                                             }
 
-                                            Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                         }
 
                                         Rectangle {
@@ -1808,7 +1808,7 @@ PanelWindow {
                                                 verticalAlignment: Text.AlignVCenter
                                                 horizontalAlignment: Text.AlignHCenter
 
-                                                Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                             }
                                         }
                                     }
@@ -1830,7 +1830,7 @@ PanelWindow {
                                             elide: Text.ElideRight
                                             verticalAlignment: Text.AlignVCenter
 
-                                            Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                         }
 
                                         Text {
@@ -1847,7 +1847,7 @@ PanelWindow {
                                             elide: Text.ElideRight
                                             verticalAlignment: Text.AlignVCenter
 
-                                            Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                         }
                                     }
                                 }
@@ -1965,7 +1965,7 @@ PanelWindow {
                             id: emojiScrollAnim
                             target: emojiGrid
                             property: "contentY"
-                            duration: 220
+                            duration: (220) * ThemeBackend.animScale
                             easing.type: Easing.OutCubic
                         }
 
@@ -1990,7 +1990,7 @@ PanelWindow {
 
                                 scale: emojiMa.pressed ? 0.92 : (emojiDelegateRoot.isSelected ? 1.04 : (emojiMa.containsMouse ? 1.02 : 1.0))
                                 Behavior on scale {
-                                    NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.25 }
+                                    NumberAnimation { duration: (160) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.25 }
                                 }
 
                                 Rectangle {
@@ -2016,7 +2016,7 @@ PanelWindow {
                                     border.color: emojiDelegateRoot.isSelected ? "transparent" : Qt.alpha(ThemeBackend.surface2, 0.3)
 
                                     Behavior on color {
-                                        ColorAnimation { duration: 140; easing.type: Easing.OutCubic }
+                                        ColorAnimation { duration: (140) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                                     }
                                 }
 
@@ -2046,7 +2046,7 @@ PanelWindow {
                                         maximumLineCount: 1
 
                                         Behavior on color {
-                                            ColorAnimation { duration: 140; easing.type: Easing.OutCubic }
+                                            ColorAnimation { duration: (140) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                                         }
                                     }
                                 }

@@ -41,7 +41,9 @@
       "display_general": "Загальні",
       "osd": "OSD",
       "dock": "Док",
-      "display_lockscreen": "Екран блокування"
+      "display_lockscreen": "Екран блокування",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

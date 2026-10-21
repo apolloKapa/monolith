@@ -368,14 +368,14 @@ Item {
     }
 
     property real hoverAmount: pointer.hovered ? 1.0 : 0.0
-    Behavior on hoverAmount { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+    Behavior on hoverAmount { NumberAnimation { duration: (260) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     property real cursorX: width / 2
     property real cursorY: height / 2
     // glide while inside; on entry jump straight to the cursor instead of sliding over from
     // wherever it last left
-    Behavior on cursorX { enabled: root.hoverAmount > 0.05; NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-    Behavior on cursorY { enabled: root.hoverAmount > 0.05; NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+    Behavior on cursorX { enabled: root.hoverAmount > 0.05; NumberAnimation { duration: (120) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+    Behavior on cursorY { enabled: root.hoverAmount > 0.05; NumberAnimation { duration: (120) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     Connections {
         target: pointer

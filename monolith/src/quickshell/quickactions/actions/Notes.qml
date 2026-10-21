@@ -118,7 +118,7 @@ Item {
     property bool isDraggingV: false
     Behavior on expandProgress {
         enabled: !root.isDraggingV
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     onExpandProgressChanged: {

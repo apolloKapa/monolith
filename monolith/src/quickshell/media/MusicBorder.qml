@@ -36,7 +36,7 @@ Item {
             id: chargeAnim
             from: 0
             to: maskRectOuter.perimeter
-            duration: 1200
+            duration: (1200) * ThemeBackend.animScale
             easing.type: Easing.OutCubic
             running: false
         }
@@ -95,10 +95,10 @@ Item {
             }
 
             gradient: Gradient {
-                GradientStop { position: 0.0; color: root.bc1; Behavior on color { ColorAnimation { duration: 800; easing.type: Easing.InOutQuad } } }
-                GradientStop { position: 0.33; color: root.bc2; Behavior on color { ColorAnimation { duration: 800; easing.type: Easing.InOutQuad } } }
-                GradientStop { position: 0.66; color: root.bc3; Behavior on color { ColorAnimation { duration: 800; easing.type: Easing.InOutQuad } } }
-                GradientStop { position: 1.0; color: root.bc4; Behavior on color { ColorAnimation { duration: 800; easing.type: Easing.InOutQuad } } }
+                GradientStop { position: 0.0; color: root.bc1; Behavior on color { ColorAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutQuad } } }
+                GradientStop { position: 0.33; color: root.bc2; Behavior on color { ColorAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutQuad } } }
+                GradientStop { position: 0.66; color: root.bc3; Behavior on color { ColorAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutQuad } } }
+                GradientStop { position: 1.0; color: root.bc4; Behavior on color { ColorAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutQuad } } }
             }
         }
     }

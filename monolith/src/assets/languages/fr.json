@@ -43,7 +43,9 @@
       "bar_general": "Général",
       "bar_modules": "Modules",
       "bar_side_modules": "Modules latéraux",
-      "display_lockscreen": "Écran de verrouillage"
+      "display_lockscreen": "Écran de verrouillage",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

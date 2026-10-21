@@ -53,17 +53,17 @@ RowLayout {
                 tintAmount: 0.3
                 press: (actionMa.pressed && !isDisabled) ? 0.6 + 0.4 * actionCapsule.fillLevel : ((actionMa.containsMouse && !isDisabled) ? 0.25 : 0)
                 pulse: Math.min(1, actionCapsule.flashOpacity * 2.5)
-                Behavior on press { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
             }
             Behavior on color {
                 enabled: panel.visible
-                ColorAnimation { duration: 200 }
+                ColorAnimation { duration: (200) * ThemeBackend.animScale }
             }
 
             scale: (actionMa.pressed && !isDisabled) ? (0.98 - (0.01 * weight)) : ((actionMa.containsMouse && !isDisabled) ? 1.02 : 1.0)
             Behavior on scale {
                 enabled: panel.visible
-                NumberAnimation { duration: 400; easing.type: Easing.OutQuart }
+                NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
             }
 
             property real fillLevel: 0.0
@@ -87,11 +87,11 @@ RowLayout {
 
             SequentialAnimation {
                 id: shakeAnim
-                NumberAnimation { target: shakeTranslate; property: "x"; to: -panel.s(3); duration: 50 }
-                NumberAnimation { target: shakeTranslate; property: "x"; to: panel.s(3); duration: 50 }
-                NumberAnimation { target: shakeTranslate; property: "x"; to: -panel.s(3); duration: 50 }
-                NumberAnimation { target: shakeTranslate; property: "x"; to: panel.s(3); duration: 50 }
-                NumberAnimation { target: shakeTranslate; property: "x"; to: 0; duration: 50 }
+                NumberAnimation { target: shakeTranslate; property: "x"; to: -panel.s(3); duration: (50) * ThemeBackend.animScale }
+                NumberAnimation { target: shakeTranslate; property: "x"; to: panel.s(3); duration: (50) * ThemeBackend.animScale }
+                NumberAnimation { target: shakeTranslate; property: "x"; to: -panel.s(3); duration: (50) * ThemeBackend.animScale }
+                NumberAnimation { target: shakeTranslate; property: "x"; to: panel.s(3); duration: (50) * ThemeBackend.animScale }
+                NumberAnimation { target: shakeTranslate; property: "x"; to: 0; duration: (50) * ThemeBackend.animScale }
                 onStarted: actionCapsule.showError = true
                 onStopped: actionCapsule.showError = false
             }
@@ -136,7 +136,7 @@ RowLayout {
                 bodyAlpha: 0.4
                 visible: capsuleGlass.active && actionCapsule.fillLevel > 0.001
                 property real lift: (actionCapsule.fillLevel > 0.001 && actionCapsule.fillLevel < 0.999) ? 1.0 : 0.0
-                Behavior on lift { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                Behavior on lift { NumberAnimation { duration: (260) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                 scale: 1.0 + 0.07 * lift
             }
 
@@ -144,7 +144,7 @@ RowLayout {
                 anchors.fill: parent; radius: actionCapsule.radius; color: "#ffffff"
                 opacity: actionCapsule.flashOpacity
                 visible: !capsuleGlass.active
-                PropertyAnimation on opacity { id: cardFlashAnim; to: 0; duration: 500; easing.type: Easing.OutExpo }
+                PropertyAnimation on opacity { id: cardFlashAnim; to: 0; duration: (500) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
             }
 
             Rectangle {
@@ -154,7 +154,7 @@ RowLayout {
                 radius: ThemeBackend.minimalist ? 0 : (actionCapsule.radius)
                 Behavior on opacity {
                     enabled: panel.visible
-                    NumberAnimation { duration: 200 }
+                    NumberAnimation { duration: (200) * ThemeBackend.animScale }
                 }
                 z: 4
             }
@@ -167,7 +167,7 @@ RowLayout {
                 text: icon
                 Behavior on color {
                     enabled: panel.visible
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation { duration: (150) * ThemeBackend.animScale }
                 }
             }
 
@@ -239,7 +239,7 @@ RowLayout {
 
             NumberAnimation {
                 id: fillAnim; target: actionCapsule; property: "fillLevel"; to: 1.0
-                duration: (550 * weight) * (1.0 - actionCapsule.fillLevel); easing.type: Easing.InSine
+                duration: ((550 * weight) * (1.0 - actionCapsule.fillLevel)) * ThemeBackend.animScale; easing.type: Easing.InSine
                 onFinished: {
                     actionCapsule.triggered = true;
                     actionCapsule.flashOpacity = 0.6;
@@ -259,7 +259,7 @@ RowLayout {
 
             NumberAnimation {
                 id: drainAnim; target: actionCapsule; property: "fillLevel"; to: 0.0
-                duration: 1500 * actionCapsule.fillLevel; easing.type: Easing.OutQuad
+                duration: (1500 * actionCapsule.fillLevel) * ThemeBackend.animScale; easing.type: Easing.OutQuad
             }
 
             Timer {

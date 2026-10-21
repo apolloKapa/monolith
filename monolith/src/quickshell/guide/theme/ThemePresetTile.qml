@@ -32,8 +32,8 @@ Rectangle {
 
     Component.onCompleted: opacity = 1.0
 
-    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutQuint } }
-    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutQuint } }
+    Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+    Behavior on scale { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     Loader {
         anchors.fill: parent
@@ -104,7 +104,7 @@ Rectangle {
         radius: ThemeBackend.borderRadius
         color: delegateContainer.textC
         opacity: delegateContainer.isSelected ? 0.15 : (delegateContainer.isHovered ? 0.08 : 0.0)
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
     }
 
     Rectangle {
@@ -112,7 +112,7 @@ Rectangle {
         radius: ThemeBackend.borderRadius
         color: "#ffffff"
         opacity: delegateContainer.flashOpacity
-        PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: 350; easing.type: Easing.OutExpo }
+        PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
     }
 
     Rectangle {
@@ -121,13 +121,13 @@ Rectangle {
         color: "transparent"
         border.color: delegateContainer.isSelected ? delegateContainer.textC : "transparent"
         border.width: delegateContainer.isSelected ? 2 : 0
-        Behavior on border.color { ColorAnimation { duration: 150 } }
+        Behavior on border.color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
     }
 
     SequentialAnimation {
         id: btnPopAnim
-        NumberAnimation { target: delegateContainer; property: "popScale"; to: 1.04; duration: 100; easing.type: Easing.OutQuad }
-        NumberAnimation { target: delegateContainer; property: "popScale"; to: 1.0; duration: 350; easing.type: Easing.OutQuint }
+        NumberAnimation { target: delegateContainer; property: "popScale"; to: 1.04; duration: (100) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+        NumberAnimation { target: delegateContainer; property: "popScale"; to: 1.0; duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
 
     MouseArea {
@@ -162,7 +162,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             elide: Text.ElideRight
-            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
         }
 
         Row {

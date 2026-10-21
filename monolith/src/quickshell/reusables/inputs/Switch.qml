@@ -19,6 +19,10 @@ Item {
 
     property int cornerRadius: 8
     property int smallRadius: 2
+    // inner corners of the selection: square-ish segments normally, but liquid glass draws the
+    // selection as a floating pill, where small inner corners looked square (and visibly
+    // rounded up when picking an end option)
+    readonly property int innerRadius: ThemeBackend.liquidGlass ? cornerRadius : smallRadius
     property int fontPixelSize: 11
     property int minFontPixelSize: 7
     property bool enabled: true
@@ -119,11 +123,11 @@ Item {
         clip: !baseGlass.active
         opacity: root.enabled ? 1.0 : 0.5
 
-        Behavior on color { ColorAnimation { duration: 180 } }
-        Behavior on opacity { NumberAnimation { duration: 180 } }
+        Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
+        Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
         scale: root.popScale
-        Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+        Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         GlassFill {
             id: baseGlass
@@ -139,8 +143,8 @@ Item {
             property int curIdx: root.currentIndex
 
             onCurIdxChanged: {
-                if (curIdx > prevIdx) { rightAnim.duration = 200; leftAnim.duration = 350; }
-                else if (curIdx < prevIdx) { leftAnim.duration = 200; rightAnim.duration = 350; }
+                if (curIdx > prevIdx) { rightAnim.duration = (200) * ThemeBackend.animScale; leftAnim.duration = (350) * ThemeBackend.animScale; }
+                else if (curIdx < prevIdx) { leftAnim.duration = (200) * ThemeBackend.animScale; rightAnim.duration = (350) * ThemeBackend.animScale; }
                 prevIdx = curIdx;
             }
 
@@ -153,15 +157,15 @@ Item {
 
             readonly property bool isMoving: Math.abs(actualLeft - targetLeft) > 0.5 || Math.abs(actualRight - targetRight) > 0.5
             property real lift: (baseGlass.active && isMoving) ? 1.0 : 0.0
-            Behavior on lift { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+            Behavior on lift { NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
             scale: 1.0 + 0.16 * lift
             transformOrigin: Item.Center
 
             property real actualLeft: targetLeft
             property real actualRight: targetRight
 
-            Behavior on actualLeft { NumberAnimation { id: leftAnim; duration: 250; easing.type: Easing.OutExpo } }
-            Behavior on actualRight { NumberAnimation { id: rightAnim; duration: 250; easing.type: Easing.OutExpo } }
+            Behavior on actualLeft { NumberAnimation { id: leftAnim; duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
+            Behavior on actualRight { NumberAnimation { id: rightAnim; duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
             y: 0
             height: bgShape.height
@@ -169,19 +173,19 @@ Item {
             width: Math.max(0, actualRight - actualLeft)
             z: highlightGlass.active ? 2 : 0
 
-            topLeftRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.smallRadius)
-            bottomLeftRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.smallRadius)
-            topRightRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.smallRadius)
-            bottomRightRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.smallRadius)
+            topLeftRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.innerRadius)
+            bottomLeftRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.innerRadius)
+            topRightRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.innerRadius)
+            bottomRightRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.innerRadius)
 
-            Behavior on topLeftRadius { NumberAnimation { duration: 180 } }
-            Behavior on bottomLeftRadius { NumberAnimation { duration: 180 } }
-            Behavior on topRightRadius { NumberAnimation { duration: 180 } }
-            Behavior on bottomRightRadius { NumberAnimation { duration: 180 } }
+            Behavior on topLeftRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
+            Behavior on bottomLeftRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
+            Behavior on topRightRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
+            Behavior on bottomRightRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
             color: ThemeBackend.liquidGlass ? "transparent" : root.accentColor
 
-            Behavior on color { ColorAnimation { duration: 180 } }
+            Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
 
             GlassFill {
                 id: highlightGlass
@@ -237,12 +241,12 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        topLeftRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === 0 ? root.cornerRadius : root.smallRadius)
-                        bottomLeftRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === 0 ? root.cornerRadius : root.smallRadius)
-                        topRightRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === root.options.length - 1 ? root.cornerRadius : root.smallRadius)
-                        bottomRightRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === root.options.length - 1 ? root.cornerRadius : root.smallRadius)
+                        topLeftRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === 0 ? root.cornerRadius : root.innerRadius)
+                        bottomLeftRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === 0 ? root.cornerRadius : root.innerRadius)
+                        topRightRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === root.options.length - 1 ? root.cornerRadius : root.innerRadius)
+                        bottomRightRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === root.options.length - 1 ? root.cornerRadius : root.innerRadius)
                         color: (root.currentIndex === optionItem.index || optionGlass.active) ? "transparent" : (optionMa.containsMouse ? "#1affffff" : "transparent")
-                        Behavior on color { ColorAnimation { duration: 200 } }
+                        Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
 
                         GlassFill {
                             id: optionGlass
@@ -272,7 +276,7 @@ Item {
                         fontSizeMode: Text.Fit
                         minimumPixelSize: root.minFontPixelSize
                         color: (root.currentIndex === optionItem.index && !ThemeBackend.liquidGlass) ? root.activeTextColor : root.textColor
-                        Behavior on color { ColorAnimation { duration: 200 } }
+                        Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
                     }
 
                     MouseArea {
@@ -309,13 +313,13 @@ Item {
             opacity: root.flashOpacity
             visible: !baseGlass.active
             z: 2
-            PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: 350; easing.type: Easing.OutExpo }
+            PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
         }
     }
 
     SequentialAnimation {
         id: btnPopAnim
-        NumberAnimation { target: root; property: "popScale"; to: 1.04; duration: 100; easing.type: Easing.OutQuad }
-        NumberAnimation { target: root; property: "popScale"; to: 1.0; duration: 350; easing.type: Easing.OutQuint }
+        NumberAnimation { target: root; property: "popScale"; to: 1.04; duration: (100) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+        NumberAnimation { target: root; property: "popScale"; to: 1.0; duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
 }

@@ -52,7 +52,7 @@ PanelWindow {
     property real panelReveal: 0.0
     property real introPhase: 0.0
     NumberAnimation on introPhase {
-        from: 0.0; to: 1.0; duration: 2500; easing.type: Easing.OutExpo; running: window.panelReveal > 0.5
+        from: 0.0; to: 1.0; duration: (2500) * ThemeBackend.animScale; easing.type: Easing.OutExpo; running: window.panelReveal > 0.5
     }
 
     property real orbBoost: 0.0
@@ -129,12 +129,12 @@ PanelWindow {
 
                 transform: Translate {
                     y: (shown ? 0 : window.s(10)) + (window.idleTextActive && shown ? Math.sin(window.idlePhase + (index * 0.3)) * window.s(1.2) : 0)
-                    Behavior on y { NumberAnimation { duration: 550; easing.type: Easing.OutQuint } }
+                    Behavior on y { NumberAnimation { duration: (550) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 }
 
-                Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutQuart } }
-                Behavior on scale { NumberAnimation { duration: 600; easing.type: Easing.OutQuint } }
-                Behavior on color { ColorAnimation { duration: 600; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart } }
+                Behavior on scale { NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+                Behavior on color { ColorAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
             }
         }
     }
@@ -152,58 +152,58 @@ PanelWindow {
         id: introChoreography
         ScriptAction { script: window.bgSoundHandle = Sounds.playUntilStopped("start/background.wav", 0.4, true) }
         ScriptAction { script: Sounds.playSfx("start/start.wav") }
-        PauseAnimation { duration: 100 }
+        PauseAnimation { duration: (100) * ThemeBackend.animScale }
 
-        NumberAnimation { target: window; property: "panelReveal"; from: 0.0; to: 1.0; duration: 2000; easing.type: Easing.InOutCubic }
-        PauseAnimation { duration: 140 }
+        NumberAnimation { target: window; property: "panelReveal"; from: 0.0; to: 1.0; duration: (2000) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
+        PauseAnimation { duration: (140) * ThemeBackend.animScale }
 
-        NumberAnimation { target: window; property: "welcomeReveal"; to: 1.0; duration: 850; easing.type: Easing.InOutSine }
-        PauseAnimation { duration: 800 }
-        NumberAnimation { target: window; property: "welcomeOpacity"; to: 0.0; duration: 400; easing.type: Easing.OutQuart }
+        NumberAnimation { target: window; property: "welcomeReveal"; to: 1.0; duration: (850) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+        PauseAnimation { duration: (800) * ThemeBackend.animScale }
+        NumberAnimation { target: window; property: "welcomeOpacity"; to: 0.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
         ScriptAction { script: Sounds.playSfx("start/transition_monolith.wav", 0.6) }
 
         ParallelAnimation {
             PropertyAction { target: window; property: "shellTextOpacity"; value: 1.0 }
-            NumberAnimation { target: window; property: "shellTextReveal"; to: 1.0; duration: 1600; easing.type: Easing.InOutSine }
-            NumberAnimation { target: window; property: "shellTextScale"; from: 0.94; to: 1.0; duration: 1600; easing.type: Easing.OutExpo }
+            NumberAnimation { target: window; property: "shellTextReveal"; to: 1.0; duration: (1600) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+            NumberAnimation { target: window; property: "shellTextScale"; from: 0.94; to: 1.0; duration: (1600) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
         }
-        PauseAnimation { duration: 140 }
+        PauseAnimation { duration: (140) * ThemeBackend.animScale }
         ParallelAnimation {
-            NumberAnimation { target: window; property: "authorOpacity"; to: 1.0; duration: 500; easing.type: Easing.OutQuint }
-            NumberAnimation { target: window; property: "authorScale"; to: 1.0; duration: 500; easing.type: Easing.OutQuint }
+            NumberAnimation { target: window; property: "authorOpacity"; to: 1.0; duration: (500) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
+            NumberAnimation { target: window; property: "authorScale"; to: 1.0; duration: (500) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
             ScriptAction { script: Sounds.playSfx("start/pop_author.wav") }
         }
 
-        PauseAnimation { duration: 1500 }
+        PauseAnimation { duration: (1500) * ThemeBackend.animScale }
 
         ParallelAnimation {
-            NumberAnimation { target: window; property: "shellTextOpacity"; to: 0.0; duration: 400; easing.type: Easing.OutQuart }
-            NumberAnimation { target: window; property: "authorOpacity"; to: 0.0; duration: 400; easing.type: Easing.OutQuart }
+            NumberAnimation { target: window; property: "shellTextOpacity"; to: 0.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
+            NumberAnimation { target: window; property: "authorOpacity"; to: 0.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
         }
         ScriptAction { script: Sounds.playSfx("start/transition_monolith.wav", 0.6) }
 
         ParallelAnimation {
             SequentialAnimation {
                 PropertyAction { target: window; property: "authorAbsolute"; value: true }
-                PauseAnimation { duration: 800 }
-                NumberAnimation { target: window; property: "finalAuthorOpacity"; to: 0.6; duration: 1000; easing.type: Easing.OutQuint }
+                PauseAnimation { duration: (800) * ThemeBackend.animScale }
+                NumberAnimation { target: window; property: "finalAuthorOpacity"; to: 0.6; duration: (1000) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
             }
 
             SequentialAnimation {
-                PauseAnimation { duration: 210 }
+                PauseAnimation { duration: (210) * ThemeBackend.animScale }
 
                 ParallelAnimation {
                     ParallelAnimation {
                         PropertyAction { target: window; property: "toSerpOpacity"; value: 1.0 }
-                        NumberAnimation { target: window; property: "toSerpReveal"; to: 1.0; duration: 1500; easing.type: Easing.InOutSine }
-                        NumberAnimation { target: window; property: "logoOpacity"; to: 1.0; duration: 1500; easing.type: Easing.OutQuart }
-                        NumberAnimation { target: window; property: "logoScale"; from: 0.94; to: 1.0; duration: 1800; easing.type: Easing.OutExpo }
+                        NumberAnimation { target: window; property: "toSerpReveal"; to: 1.0; duration: (1500) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: window; property: "logoOpacity"; to: 1.0; duration: (1500) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
+                        NumberAnimation { target: window; property: "logoScale"; from: 0.94; to: 1.0; duration: (1800) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
                     }
 
                     SequentialAnimation {
-                        PauseAnimation { duration: 1200 }
+                        PauseAnimation { duration: (1200) * ThemeBackend.animScale }
                         ParallelAnimation {
-                            NumberAnimation { target: window; property: "btnOpacity"; to: 1.0; duration: 600; easing.type: Easing.OutQuint }
+                            NumberAnimation { target: window; property: "btnOpacity"; to: 1.0; duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
                             ScriptAction { script: window.idleTextActive = true }
                         }
                     }
@@ -212,13 +212,13 @@ PanelWindow {
 
             SequentialAnimation {
                 ScriptAction { script: Sounds.playSfx("start/wave.wav", 0.2) }
-                PauseAnimation { duration: 300 }
+                PauseAnimation { duration: (300) * ThemeBackend.animScale }
 
                 ParallelAnimation {
-                    NumberAnimation { target: window; property: "orbBoost"; to: 1.0; duration: 3200; easing.type: Easing.OutSine }
+                    NumberAnimation { target: window; property: "orbBoost"; to: 1.0; duration: (3200) * ThemeBackend.animScale; easing.type: Easing.OutSine }
                     ScriptAction { script: window.colorizeActive = true }
-                    NumberAnimation { target: window; property: "logoFillLevel"; to: 1.5; duration: 4500; easing.type: Easing.OutSine }
-                    NumberAnimation { target: window; property: "monitorZoomProgress"; from: 0.0; to: 1.0; duration: 2800; easing.type: Easing.OutQuint }
+                    NumberAnimation { target: window; property: "logoFillLevel"; to: 1.5; duration: (4500) * ThemeBackend.animScale; easing.type: Easing.OutSine }
+                    NumberAnimation { target: window; property: "monitorZoomProgress"; from: 0.0; to: 1.0; duration: (2800) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
                 }
             }
         }
@@ -412,10 +412,10 @@ PanelWindow {
                         shadowOpacity: window.colorizeActive ? 0.3 : 0.6
                         shadowVerticalOffset: window.colorizeActive ? 0 : window.s(6)
 
-                        Behavior on shadowColor { ColorAnimation { duration: 800; easing.type: Easing.InOutCubic } }
-                        Behavior on shadowBlur { NumberAnimation { duration: 800; easing.type: Easing.InOutCubic } }
-                        Behavior on shadowOpacity { NumberAnimation { duration: 800; easing.type: Easing.InOutCubic } }
-                        Behavior on shadowVerticalOffset { NumberAnimation { duration: 800; easing.type: Easing.InOutCubic } }
+                        Behavior on shadowColor { ColorAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutCubic } }
+                        Behavior on shadowBlur { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutCubic } }
+                        Behavior on shadowOpacity { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutCubic } }
+                        Behavior on shadowVerticalOffset { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutCubic } }
                     }
                 }
 
@@ -590,10 +590,10 @@ PanelWindow {
         id: closeSequence
         ScriptAction { script: Sounds.playSfx("start/transition_monolith.wav", 0.6) }
         ScriptAction { script: window.exitSoundHandle = Sounds.playUntilStopped("start/exit.wav", 0.7, false) }
-        PauseAnimation { duration: 350 }
+        PauseAnimation { duration: (350) * ThemeBackend.animScale }
         ParallelAnimation {
-            NumberAnimation { target: window; property: "mainOpacity"; to: 0.0; duration: 400; easing.type: Easing.OutQuint }
-            NumberAnimation { target: window; property: "panelReveal"; to: 0.0; duration: 1760; easing.type: Easing.InOutCubic }
+            NumberAnimation { target: window; property: "mainOpacity"; to: 0.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
+            NumberAnimation { target: window; property: "panelReveal"; to: 0.0; duration: (1760) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
         }
         ScriptAction {
             script: {

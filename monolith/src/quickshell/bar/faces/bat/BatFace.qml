@@ -205,8 +205,8 @@ Item {
     transform: Translate {
         x: (root.isVertical || root.showLayout) ? 0 : s(60)
         y: (!root.isVertical || root.showLayout) ? 0 : s(60)
-        Behavior on x { NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
-        Behavior on y { NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+        Behavior on x { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+        Behavior on y { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
     }
 
     MouseArea {
@@ -227,7 +227,7 @@ Item {
         anchors.centerIn: parent
         spacing: root.isVertical ? s(root.isCompact ? 2 : 3) : (root.isDesktop ? 0 : s(root.isCompact ? 5 : 6))
         opacity: root.showLayout ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
         Item {
             visible: root.effectiveShowIcon
@@ -243,7 +243,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 color: textMouseArea.containsMouse ? Qt.lighter(root.batDynamicColor, 1.15) : root.batDynamicColor
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
             }
         }
 
@@ -254,7 +254,7 @@ Item {
             font.pixelSize: root.isVertical ? s(root.isCompact ? 9 : 10) : s(root.isCompact ? 11 : 12.6)
             font.bold: true
             color: textMouseArea.containsMouse ? Qt.lighter(ThemeBackend.text, 1.15) : ThemeBackend.text
-            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
         }
     }
 
@@ -305,7 +305,7 @@ Item {
 
                 property real value: root.isDesktop ? 0.0 : (root.isPreview ? 0.82 : (UPower.displayDevice.ready ? UPower.displayDevice.percentage : 0.0))
                 property real animValue: value
-                Behavior on animValue { NumberAnimation { duration: 600; easing.type: Easing.OutQuint } }
+                Behavior on animValue { NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                 property real fillRatio: Math.max(0.0, Math.min(1.0, isNaN(animValue) ? 0.0 : animValue))
                 property real fillWidth: width * fillRatio
@@ -344,18 +344,18 @@ Item {
                 height: root.pillHeight
                 property real targetWidth: root.isDesktop ? s(root.isCompact ? 30 : 32) : (root.effectiveShowPercent ? Math.max(fullWidthWithPercent, contentRow.implicitWidth + s(root.isCompact ? 16 : 18)) : fullWidthWithPercent)
                 width: targetWidth
-                Behavior on width { NumberAnimation { duration: 480; easing.type: Easing.OutQuint } }
+                Behavior on width { NumberAnimation { duration: (480) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                 scale: batMouseArea.pressed ? 0.94 : (batMouseArea.containsMouse ? 1.04 : 1.0)
-                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 radius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
                 property color baseColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                 color: batPillGlass.active ? "transparent" : (batMouseArea.pressed ? Qt.darker(baseColor, 1.15) : (batMouseArea.containsMouse ? Qt.lighter(baseColor, 1.08) : baseColor))
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                 property color baseBorderColor: root.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1
                 border.color: batMouseArea.containsMouse ? ThemeBackend.surface2 : baseBorderColor
-                Behavior on border.color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                 border.width: ThemeBackend.liquidGlass ? 0 : 1
 
                 GlassFill {
@@ -365,7 +365,7 @@ Item {
                     tintColor: parent.baseColor
                     tintAmount: 0.3
                     press: batMouseArea.pressed ? 1 : (batMouseArea.containsMouse ? 0.25 : 0)
-                    Behavior on press { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                    Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                 }
                 clip: true
 
@@ -378,9 +378,9 @@ Item {
                 opacity: initAnimTrigger ? 1.0 : 0.0
                 transform: Translate {
                     y: batPill.initAnimTrigger ? 0 : s(15)
-                    Behavior on y { NumberAnimation { duration: 620; easing.type: Easing.OutQuint } }
+                    Behavior on y { NumberAnimation { duration: (620) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 }
-                Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 FluidWave {
                     id: pillWave
@@ -514,13 +514,13 @@ Item {
                 id: batBtn
                 width: s(root.isCompact ? (root.isDesktop ? 28 : 26) : (root.isDesktop ? 30 : 28))
                 height: root.isDesktop ? width : s(root.isCompact ? 36 : 40)
-                Behavior on width { NumberAnimation { duration: 480; easing.type: Easing.OutQuint } }
-                Behavior on height { NumberAnimation { duration: 480; easing.type: Easing.OutQuint } }
+                Behavior on width { NumberAnimation { duration: (480) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+                Behavior on height { NumberAnimation { duration: (480) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                 radius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
                 property color baseColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                 color: batBtnGlass.active ? "transparent" : (sideBatMouseArea.pressed ? Qt.darker(baseColor, 1.15) : (sideBatMouseArea.containsMouse ? Qt.lighter(baseColor, 1.08) : baseColor))
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
                 GlassFill {
                     id: batBtnGlass
@@ -529,16 +529,16 @@ Item {
                     tintColor: parent.baseColor
                     tintAmount: 0.3
                     press: sideBatMouseArea.pressed ? 1 : (sideBatMouseArea.containsMouse ? 0.25 : 0)
-                    Behavior on press { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                    Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                 }
                 property color baseBorderColor: root.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1
                 border.color: sideBatMouseArea.containsMouse ? ThemeBackend.surface2 : baseBorderColor
-                Behavior on border.color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                 border.width: ThemeBackend.liquidGlass ? 0 : 1
                 clip: true
 
                 scale: sideBatMouseArea.pressed ? 0.94 : (sideBatMouseArea.containsMouse ? 1.04 : 1.0)
-                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 property real value: root.isDesktop ? 0.0 : (root.isPreview ? 0.82 : (UPower.displayDevice.ready ? UPower.displayDevice.percentage : 0.0))
                 property color baseAccentColor: root.batDynamicColor
@@ -546,7 +546,7 @@ Item {
                 property bool initAnimTrigger: root.isPreview
 
                 property real animValue: value
-                Behavior on animValue { NumberAnimation { duration: 600; easing.type: Easing.OutQuint } }
+                Behavior on animValue { NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                 property real fillRatio: Math.max(0.0, Math.min(1.0, isNaN(animValue) ? 0.0 : animValue))
                 property real fillY: height * (1.0 - fillRatio)
@@ -570,9 +570,9 @@ Item {
                 opacity: initAnimTrigger ? 1.0 : 0.0
                 transform: Translate {
                     x: batBtn.initAnimTrigger ? 0 : s(15)
-                    Behavior on x { NumberAnimation { duration: 620; easing.type: Easing.OutQuint } }
+                    Behavior on x { NumberAnimation { duration: (620) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 }
-                Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 FluidWave {
                     id: sideBatWave

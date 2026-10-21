@@ -355,7 +355,7 @@ Item {
             height: proxy.rot90 ? proxy.gW : proxy.gH
             z: (proxy.isSelected ? 50000 : 0) + index
             opacity: (scene.selectedId === "" || proxy.isSelected) ? 1.0 : 0.6
-            Behavior on opacity { NumberAnimation { duration: 150 } }
+            Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
 
             onIsSelectedChanged: {
                 if (proxy.isSelected) {
@@ -682,7 +682,7 @@ Item {
                     anchors.margins: -Scaler.s(8)
                     opacity: proxy.isSelected && scene.active ? 1.0 : 0.0
                     visible: opacity > 0
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                    Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
 
                     SelectionOutline {
                         anchors.fill: parent

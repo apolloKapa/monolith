@@ -283,7 +283,7 @@ PanelWindow {
         property real animProgress: osdWindow.isVisible ? 1.0 : 0.0
         Behavior on animProgress {
             NumberAnimation {
-                duration: osdWindow.isVisible ? 450 : 300
+                duration: (osdWindow.isVisible ? 450 : 300) * ThemeBackend.animScale
                 easing.type: osdWindow.isVisible ? Easing.OutQuint : Easing.InCubic
             }
         }

@@ -33,10 +33,10 @@ Item {
             transform: Translate { y: tabContentWrapper.animY }
 
             Behavior on opacity {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
             Behavior on animY {
-                NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
 
             Loader {
@@ -116,10 +116,10 @@ Item {
                     transform: Translate { y: subTabLoader.subAnimY }
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                     }
                     Behavior on subAnimY {
-                        NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                     }
 
                     function ensureLoaded() {

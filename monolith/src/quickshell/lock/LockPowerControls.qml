@@ -23,7 +23,7 @@ Item {
 
         opacity: screenRoot.inputActive ? 1.0 : 0.0
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
         WallpaperBlur {
             z: -1
@@ -88,14 +88,14 @@ Item {
 
         Behavior on height {
             NumberAnimation {
-                duration: 340
+                duration: (340) * ThemeBackend.animScale
                 easing.type: Easing.OutBack
                 easing.overshoot: 1.15
             }
         }
         Behavior on opacity {
             NumberAnimation {
-                duration: 220
+                duration: (220) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }

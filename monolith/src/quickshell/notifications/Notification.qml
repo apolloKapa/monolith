@@ -18,7 +18,7 @@ Rectangle {
     property real expandProgress: expanded ? 1.0 : 0.0
     Behavior on expandProgress {
         enabled: !cardHover.draggingV
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     property bool showIcon: true
@@ -148,7 +148,7 @@ Rectangle {
         property: "arrive"
         from: 1.0
         to: 0.0
-        duration: 900
+        duration: (900) * ThemeBackend.animScale
         easing.type: Easing.OutCubic
     }
 
@@ -197,7 +197,7 @@ Rectangle {
         property: "dragX"
         from: typeRoot.dragX
         to: 0
-        duration: 200
+        duration: (200) * ThemeBackend.animScale
         easing.type: Easing.OutCubic
     }
 
@@ -207,7 +207,7 @@ Rectangle {
         property: "dragY"
         from: typeRoot.dragY
         to: 0
-        duration: 200
+        duration: (200) * ThemeBackend.animScale
         easing.type: Easing.OutCubic
     }
 
@@ -216,7 +216,7 @@ Rectangle {
         target: typeRoot
         property: "dragX"
         from: typeRoot.dragX
-        duration: 200
+        duration: (200) * ThemeBackend.animScale
         easing.type: Easing.OutQuad
         onFinished: {
             doClose();
@@ -437,10 +437,10 @@ Rectangle {
 
         Behavior on implicitHeight {
             enabled: !cardHover.draggingV
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
         }
-        Behavior on color { enabled: !cardHover.draggingH && !cardHover.draggingV; ColorAnimation { duration: 150 } }
-        Behavior on scale { enabled: !cardHover.draggingH && !cardHover.draggingV; NumberAnimation { duration: 150; easing.type: Easing.OutQuint } }
+        Behavior on color { enabled: !cardHover.draggingH && !cardHover.draggingV; ColorAnimation { duration: (150) * ThemeBackend.animScale } }
+        Behavior on scale { enabled: !cardHover.draggingH && !cardHover.draggingV; NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         readonly property real dragFraction: Math.min(1.0, Math.abs(typeRoot.dragX) / Math.max(1, typeRoot.width * 0.75))
         transform: [
@@ -465,7 +465,7 @@ Rectangle {
 
             Behavior on opacity {
                 enabled: !pulseAnim.running
-                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
 
             property real pulseFactor: 1.0
@@ -587,7 +587,7 @@ Rectangle {
                         radius: ThemeBackend.minimalist ? 0 : (parent.boxRadius)
                         color: iconBoxGlass.active ? "transparent" : ThemeBackend.faded(typeRoot.urgency === 2 ? Qt.tint(ThemeBackend.surface2, Qt.rgba(urgencyGlow.deepRed.r, urgencyGlow.deepRed.g, urgencyGlow.deepRed.b, 0.12)) : ThemeBackend.surface2)
 
-                        Behavior on color { ColorAnimation { duration: 200 } }
+                        Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
 
                         GlassFill {
                             id: iconBoxGlass

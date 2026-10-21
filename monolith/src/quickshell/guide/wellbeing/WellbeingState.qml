@@ -68,20 +68,20 @@ GuideTab {
 
     property real animatedTotalSeconds: 0
     Behavior on animatedTotalSeconds {
-        NumberAnimation { duration: 850; easing.type: Easing.OutQuint }
+        NumberAnimation { duration: (850) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
     onTotalSecondsChanged: {
         animatedTotalSeconds = totalSeconds;
     }
 
     property real weekViewFocus: tabRoot.isWeekView && !tabRoot.isSettingsView ? 1.0 : 0.0
-    Behavior on weekViewFocus { NumberAnimation { duration: 550; easing.type: Easing.OutExpo } }
+    Behavior on weekViewFocus { NumberAnimation { duration: (550) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
     property real appViewFocus: tabRoot.selectedAppClass !== "" && !tabRoot.isSettingsView ? 1.0 : 0.0
-    Behavior on appViewFocus { NumberAnimation { duration: 550; easing.type: Easing.OutExpo } }
+    Behavior on appViewFocus { NumberAnimation { duration: (550) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
     property real settingsViewFocus: tabRoot.isSettingsView ? 1.0 : 0.0
-    Behavior on settingsViewFocus { NumberAnimation { duration: 550; easing.type: Easing.OutExpo } }
+    Behavior on settingsViewFocus { NumberAnimation { duration: (550) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
     property bool isFirstLoad: true
     readonly property bool isTodaySelected: getIsoDate(tabRoot.activeDate) === getIsoDate(new Date())
@@ -100,28 +100,28 @@ GuideTab {
         id: introAnim
 
         SequentialAnimation {
-            PauseAnimation { duration: 100 }
-            NumberAnimation { target: tabRoot; property: "introHeader"; from: 0; to: 1.0; duration: 800; easing.type: Easing.OutBack; easing.overshoot: 1.0 }
+            PauseAnimation { duration: (100) * ThemeBackend.animScale }
+            NumberAnimation { target: tabRoot; property: "introHeader"; from: 0; to: 1.0; duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.0 }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 250 }
-            NumberAnimation { target: tabRoot; property: "introStats"; from: 0; to: 1.0; duration: 900; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+            PauseAnimation { duration: (250) * ThemeBackend.animScale }
+            NumberAnimation { target: tabRoot; property: "introStats"; from: 0; to: 1.0; duration: (900) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 350 }
-            NumberAnimation { target: tabRoot; property: "introMidLeft"; from: 0; to: 1.0; duration: 850; easing.type: Easing.OutQuart }
+            PauseAnimation { duration: (350) * ThemeBackend.animScale }
+            NumberAnimation { target: tabRoot; property: "introMidLeft"; from: 0; to: 1.0; duration: (850) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 300 }
-            NumberAnimation { target: tabRoot; property: "introAppBars"; from: 0; to: 1.0; duration: 1300; easing.type: Easing.OutQuart }
+            PauseAnimation { duration: (300) * ThemeBackend.animScale }
+            NumberAnimation { target: tabRoot; property: "introAppBars"; from: 0; to: 1.0; duration: (1300) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 450 }
-            NumberAnimation { target: tabRoot; property: "introMidRight"; from: 0; to: 1.0; duration: 850; easing.type: Easing.OutQuart }
+            PauseAnimation { duration: (450) * ThemeBackend.animScale }
+            NumberAnimation { target: tabRoot; property: "introMidRight"; from: 0; to: 1.0; duration: (850) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 550 }
-            NumberAnimation { target: tabRoot; property: "introBottom"; from: 0; to: 1.0; duration: 1000; easing.type: Easing.OutExpo }
+            PauseAnimation { duration: (550) * ThemeBackend.animScale }
+            NumberAnimation { target: tabRoot; property: "introBottom"; from: 0; to: 1.0; duration: (1000) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
         }
     }
 

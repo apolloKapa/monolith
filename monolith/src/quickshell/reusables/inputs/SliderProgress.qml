@@ -58,7 +58,7 @@ Item {
 
     Behavior on animPosition {
         enabled: !root.isDragging
-        NumberAnimation { duration: 250; easing.type: Easing.OutQuint }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
     }
 
     Rectangle {
@@ -69,7 +69,7 @@ Item {
         opacity: root.enabled ? 1.0 : 0.5
         clip: true
 
-        Behavior on opacity { NumberAnimation { duration: 180 } }
+        Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
         GlassFill {
             id: glass
@@ -78,8 +78,8 @@ Item {
             tintColor: root.backgroundColor
             tintAmount: 0.22
             press: root.isDragging ? 0.35 : 0
-            Behavior on tintAmount { NumberAnimation { duration: 180 } }
-            Behavior on press { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
+            Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
         }
 
         Item {
@@ -91,7 +91,7 @@ Item {
             opacity: root.animPosition > 0.001 ? (glass.active ? 0.6 : 1.0) : 0.0
             clip: true
 
-            Behavior on opacity { NumberAnimation { duration: 180 } }
+            Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
             Rectangle {
                 width: root.width
@@ -100,9 +100,9 @@ Item {
 
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: root.gradColor1; Behavior on color { ColorAnimation { duration: 500 } } }
-                    GradientStop { position: 0.5; color: root.gradColor2; Behavior on color { ColorAnimation { duration: 500 } } }
-                    GradientStop { position: 1.0; color: root.gradColor3; Behavior on color { ColorAnimation { duration: 500 } } }
+                    GradientStop { position: 0.0; color: root.gradColor1; Behavior on color { ColorAnimation { duration: (500) * ThemeBackend.animScale } } }
+                    GradientStop { position: 0.5; color: root.gradColor2; Behavior on color { ColorAnimation { duration: (500) * ThemeBackend.animScale } } }
+                    GradientStop { position: 1.0; color: root.gradColor3; Behavior on color { ColorAnimation { duration: (500) * ThemeBackend.animScale } } }
                 }
             }
 
@@ -129,8 +129,8 @@ Item {
         shadow: 1
         press: root.isDragging ? 1 : 0
         scale: root.isDragging ? 1.2 : 1.0
-        Behavior on press { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack } }
+        Behavior on press { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutBack } }
         transform: Scale {
             origin.x: thumbGlass.width / 2
             origin.y: thumbGlass.height / 2

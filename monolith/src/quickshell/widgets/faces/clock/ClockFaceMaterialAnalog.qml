@@ -62,17 +62,17 @@ Item {
             id: headAnim
             target: root
             property: "secondHeadAngle"
-            duration: 320
+            duration: (320) * ThemeBackend.animScale
             easing.type: Easing.OutCubic
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 100 }
+            PauseAnimation { duration: (100) * ThemeBackend.animScale }
             NumberAnimation {
                 id: tailAnim
                 target: root
                 property: "secondTailAngle"
-                duration: 320
+                duration: (320) * ThemeBackend.animScale
                 easing.type: Easing.OutCubic
             }
         }
@@ -196,7 +196,7 @@ Item {
 
             Behavior on rotation {
                 RotationAnimation {
-                    duration: 350
+                    duration: (350) * ThemeBackend.animScale
                     direction: RotationAnimation.Clockwise
                     easing.type: Easing.OutCubic
                 }
@@ -222,7 +222,7 @@ Item {
 
             Behavior on rotation {
                 RotationAnimation {
-                    duration: 350
+                    duration: (350) * ThemeBackend.animScale
                     direction: RotationAnimation.Clockwise
                     easing.type: Easing.OutCubic
                 }

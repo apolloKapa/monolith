@@ -34,11 +34,11 @@ Item {
         onCurIdxChanged: {
             if (curIdx >= 0 && prevIdx >= 0) {
                 if (curIdx > prevIdx) {
-                    startAnim.duration = 400;
-                    endAnim.duration = 300;
+                    startAnim.duration = (400) * ThemeBackend.animScale;
+                    endAnim.duration = (300) * ThemeBackend.animScale;
                 } else if (curIdx < prevIdx) {
-                    startAnim.duration = 300;
-                    endAnim.duration = 400;
+                    startAnim.duration = (300) * ThemeBackend.animScale;
+                    endAnim.duration = (400) * ThemeBackend.animScale;
                 }
             }
             if (curIdx >= 0) {
@@ -74,12 +74,12 @@ Item {
         property real actualStart: targetStart
         property real actualEnd: targetEnd
 
-        Behavior on actualStart { NumberAnimation { id: startAnim; duration: 380; easing.type: Easing.OutQuint } }
-        Behavior on actualEnd { NumberAnimation { id: endAnim; duration: 380; easing.type: Easing.OutQuint } }
+        Behavior on actualStart { NumberAnimation { id: startAnim; duration: (380) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+        Behavior on actualEnd { NumberAnimation { id: endAnim; duration: (380) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         readonly property bool isMoving: Math.abs(actualStart - targetStart) > 0.5 || Math.abs(actualEnd - targetEnd) > 0.5
         property real lift: (pillsGlass.active && isMoving) ? 1.0 : 0.0
-        Behavior on lift { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+        Behavior on lift { NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
         scale: 1.0 + 0.14 * lift
         transformOrigin: Item.Center
 
@@ -90,7 +90,7 @@ Item {
         width: pillsFaceRoot.isVertical ? thickness : actualEnd - actualStart
         height: pillsFaceRoot.isVertical ? actualEnd - actualStart : thickness
         opacity: (widget && widget.workspaceCount > 0 && widget.activeIndex >= 0) ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: 180 } }
+        Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
     }
 
     AxisFlow {
@@ -124,11 +124,11 @@ Item {
 
                 Behavior on width {
                     enabled: !pillsFaceRoot.isVertical
-                    NumberAnimation { duration: 400; easing.type: Easing.OutQuint }
+                    NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
                 }
                 Behavior on height {
                     enabled: pillsFaceRoot.isVertical
-                    NumberAnimation { duration: 400; easing.type: Easing.OutQuint }
+                    NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
                 }
 
                 Rectangle {
@@ -148,18 +148,18 @@ Item {
                         press: wsPillMouse.pressed ? 0.8 : (wsPillMouse.containsMouse ? 0.25 : 0)
                     }
 
-                    Behavior on color { ColorAnimation { duration: 250 } }
+                    Behavior on color { ColorAnimation { duration: (250) * ThemeBackend.animScale } }
 
                     scale: wsPillMouse.pressed ? 0.88 : (wsPillMouse.containsMouse ? 1.08 : 1.0)
-                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                    Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 }
 
                 opacity: initAnimTrigger ? 1.0 : 0.0
                 transform: Translate {
                     x: (!pillsFaceRoot.isVertical || wsPill.initAnimTrigger) ? 0 : (widget ? widget.s(15) : 15)
                     y: (pillsFaceRoot.isVertical || wsPill.initAnimTrigger) ? 0 : (widget ? widget.s(15) : 15)
-                    Behavior on x { NumberAnimation { duration: 650; easing.type: Easing.OutQuint } }
-                    Behavior on y { NumberAnimation { duration: 650; easing.type: Easing.OutQuint } }
+                    Behavior on x { NumberAnimation { duration: (650) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+                    Behavior on y { NumberAnimation { duration: (650) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 }
 
                 Component.onCompleted: {
@@ -178,7 +178,7 @@ Item {
                     onTriggered: wsPill.initAnimTrigger = true
                 }
 
-                Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 MouseArea {
                     id: wsPillMouse

@@ -821,7 +821,9 @@
       "bar_general": "Ogólne",
       "bar_modules": "Moduły",
       "bar_side_modules": "Moduły boczne",
-      "display_lockscreen": "Ekran blokady"
+      "display_lockscreen": "Ekran blokady",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

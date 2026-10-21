@@ -96,7 +96,7 @@ Item {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 120
+                    duration: (120) * ThemeBackend.animScale
                     easing.type: Easing.OutQuad
                 }
             }
@@ -121,7 +121,7 @@ Item {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 40
+                    duration: (40) * ThemeBackend.animScale
                     easing.type: Easing.OutCubic
                 }
             }
@@ -202,7 +202,7 @@ Item {
                 color: ThemeBackend.surface1
                 border.width: discContainer.borderWidth
                 border.color: (root.isMediaActive && MprisController.isPlaying) ? (ThemeBackend.mauve || "#cba6f7") : (ThemeBackend.overlay0 || "#6c7086")
-                Behavior on border.color { ColorAnimation { duration: 500 } }
+                Behavior on border.color { ColorAnimation { duration: (500) * ThemeBackend.animScale } }
 
                 NumberAnimation on rotation {
                     from: 0
@@ -241,7 +241,7 @@ Item {
                         opacity: (root.isMediaActive && artImg.status === Image.Ready && MprisController.artUrl !== "") ? 1.0 : 0.0
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 600 }
+                            NumberAnimation { duration: (600) * ThemeBackend.animScale }
                         }
                     }
 
@@ -253,7 +253,7 @@ Item {
                         opacity: (root.isMediaActive && artImg.status === Image.Ready && MprisController.artUrl !== "") ? 0.0 : 1.0
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 400 }
+                            NumberAnimation { duration: (400) * ThemeBackend.animScale }
                         }
 
                         Text {
@@ -271,7 +271,7 @@ Item {
                         opacity: (root.isMediaActive && artImg.status === Image.Ready && MprisController.artUrl !== "") ? 1.0 : 0.0
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 600 }
+                            NumberAnimation { duration: (600) * ThemeBackend.animScale }
                         }
                     }
 

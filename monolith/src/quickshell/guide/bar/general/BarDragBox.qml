@@ -126,11 +126,11 @@ Rectangle {
 
                 SequentialAnimation {
                     id: shakeAnim
-                    NumberAnimation { target: floatWrapper; property: "x"; to: -2; duration: 50 }
-                    NumberAnimation { target: floatWrapper; property: "x"; to: 2; duration: 50 }
-                    NumberAnimation { target: floatWrapper; property: "x"; to: -2; duration: 50 }
-                    NumberAnimation { target: floatWrapper; property: "x"; to: 2; duration: 50 }
-                    NumberAnimation { target: floatWrapper; property: "x"; to: 0; duration: 50 }
+                    NumberAnimation { target: floatWrapper; property: "x"; to: -2; duration: (50) * ThemeBackend.animScale }
+                    NumberAnimation { target: floatWrapper; property: "x"; to: 2; duration: (50) * ThemeBackend.animScale }
+                    NumberAnimation { target: floatWrapper; property: "x"; to: -2; duration: (50) * ThemeBackend.animScale }
+                    NumberAnimation { target: floatWrapper; property: "x"; to: 2; duration: (50) * ThemeBackend.animScale }
+                    NumberAnimation { target: floatWrapper; property: "x"; to: 0; duration: (50) * ThemeBackend.animScale }
                     onStarted: delegateRoot.showError = true
                     onStopped: delegateRoot.showError = false
                 }
@@ -148,7 +148,7 @@ Rectangle {
 
                 Behavior on width {
                     enabled: !delegateRoot.isBeingDragged
-                    NumberAnimation { duration: 150; easing.type: Easing.OutQuint }
+                    NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
                 }
 
                 Rectangle {
@@ -248,7 +248,7 @@ Rectangle {
                         color: ThemeBackend.red
                         opacity: delegateRoot.showError ? 0.15 : 0.0
                         radius: ThemeBackend.borderRadius
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
+                        Behavior on opacity { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
                         z: 4
                     }
 
@@ -257,7 +257,7 @@ Rectangle {
                         color: ThemeBackend.mauve
                         opacity: dragBoxRoot.tab.pendingGroupModuleId === delegateRoot.moduleId ? 0.2 : 0.0
                         radius: ThemeBackend.borderRadius
-                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                        Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
                         z: 5
                     }
 

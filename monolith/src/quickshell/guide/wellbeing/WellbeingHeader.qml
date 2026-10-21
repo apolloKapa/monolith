@@ -43,7 +43,7 @@ RowLayout {
                 textColor: ThemeBackend.liquidGlass ? "#ffffff" : (isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay0)
                 opacity: (header.tab.selectedAppClass !== "" || header.tab.isWeekView || header.tab.isSettingsView) ? 1.0 : 0.0
                 visible: opacity > 0
-                Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutQuint } }
+                Behavior on opacity { NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 onClicked: {
                     if (header.tab.isSettingsView) {
                         header.tab.isSettingsView = false;
@@ -68,7 +68,7 @@ RowLayout {
                 textColor: ThemeBackend.liquidGlass ? "#ffffff" : (isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay0)
                 opacity: (header.tab.selectedAppClass === "" && !header.tab.isWeekView && !header.tab.isSettingsView) ? 1.0 : 0.0
                 visible: opacity > 0
-                Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutQuint } }
+                Behavior on opacity { NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 onClicked: header.tab.isWeekView = true
             }
         }
@@ -98,7 +98,7 @@ RowLayout {
         Image {
             property bool active: header.tab.selectedAppClass !== "" && header.tab.selectedAppIcon !== "" && !header.tab.isWeekView && !header.tab.isSettingsView
             property real animWidth: active ? rootObj.s(20) : 0
-            Behavior on animWidth { NumberAnimation { duration: 350; easing.type: Easing.OutQuint } }
+            Behavior on animWidth { NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
             source: (header.tab.selectedAppIcon && header.tab.selectedAppIcon !== "") ? (header.tab.selectedAppIcon.startsWith("/") ? "file://" + header.tab.selectedAppIcon : "image://icon/" + header.tab.selectedAppIcon) : ""
             sourceSize: Qt.size(rootObj.s(20), rootObj.s(20))

@@ -43,7 +43,9 @@
       "bar_general": "Ընդհանուր",
       "bar_modules": "Մոդուլներ",
       "bar_side_modules": "Կողային մոդուլներ",
-      "display_lockscreen": "Կողպման էկրան"
+      "display_lockscreen": "Կողպման էկրան",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

@@ -362,7 +362,7 @@ Variants {
                 }
                 transform: Translate {
                     x: verticalWrapper.hideOffsetX
-                    Behavior on x { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
+                    Behavior on x { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 }
             }
 

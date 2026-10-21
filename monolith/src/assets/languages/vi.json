@@ -43,7 +43,9 @@
       "bar_general": "Chung",
       "bar_modules": "Mô-đun",
       "bar_side_modules": "Mô-đun bên cạnh",
-      "display_lockscreen": "Màn hình khóa"
+      "display_lockscreen": "Màn hình khóa",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

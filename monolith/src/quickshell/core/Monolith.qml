@@ -50,8 +50,8 @@ PanelWindow {
 
         ParallelAnimation {
             id: entranceAnimation
-            NumberAnimation { target: windowContent; property: "opacity"; to: 1.0; duration: 500; easing.type: Easing.OutExpo }
-            NumberAnimation { target: windowContent; property: "scale"; to: 1.0; duration: 600; easing.type: Easing.OutExpo }
+            NumberAnimation { target: windowContent; property: "opacity"; to: 1.0; duration: (500) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
+            NumberAnimation { target: windowContent; property: "scale"; to: 1.0; duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
         }
 
         Item {

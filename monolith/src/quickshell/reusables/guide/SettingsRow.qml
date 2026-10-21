@@ -226,10 +226,10 @@ Rectangle {
     SequentialAnimation {
         id: highlightAnimation
         PropertyAction { target: root; property: "highlightFlash"; value: 0.0 }
-        PauseAnimation { duration: root.highlightLeadInMs }
-        NumberAnimation { target: root; property: "highlightFlash"; from: 0.0; to: 1.0; duration: 400; easing.type: Easing.OutCubic }
-        PauseAnimation { duration: 1500 }
-        NumberAnimation { target: root; property: "highlightFlash"; from: 1.0; to: 0.0; duration: 900; easing.type: Easing.InOutSine }
+        PauseAnimation { duration: (root.highlightLeadInMs) * ThemeBackend.animScale }
+        NumberAnimation { target: root; property: "highlightFlash"; from: 0.0; to: 1.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: (1500) * ThemeBackend.animScale }
+        NumberAnimation { target: root; property: "highlightFlash"; from: 1.0; to: 0.0; duration: (900) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
         ScriptAction { script: root.releaseRevealHolds() }
     }
 
@@ -442,11 +442,11 @@ Rectangle {
 
     implicitHeight: contentCol.implicitHeight + root.verticalPadding * 2
 
-    Behavior on color { ColorAnimation { duration: 180 } }
-    Behavior on border.color { ColorAnimation { duration: 180 } }
+    Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
+    Behavior on border.color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
     Behavior on implicitHeight {
         enabled: root.animateHeight
-        NumberAnimation { duration: root.animationDuration; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (root.animationDuration) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     GlassFill {
@@ -457,8 +457,8 @@ Rectangle {
         tintColor: ThemeBackend.surface0
         tintAmount: (root.clickable && cardMa.containsMouse ? 0.34 : 0.26) * (root.dimmed ? 0.5 : 1.0)
         press: root.clickable && cardMa.containsMouse ? 0.2 : 0
-        Behavior on press { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
-        Behavior on tintAmount { NumberAnimation { duration: 180 } }
+        Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+        Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
     }
 
     MouseArea {
@@ -488,7 +488,7 @@ Rectangle {
         spacing: root.innerSpacing
 
         opacity: root.dimmed ? 0.4 : 1.0
-        Behavior on opacity { NumberAnimation { duration: 180 } }
+        Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
         RowLayout {
             id: mainRow

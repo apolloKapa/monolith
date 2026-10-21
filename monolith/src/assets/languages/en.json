@@ -43,7 +43,9 @@
       "bar_general": "General",
       "bar_modules": "Modules",
       "bar_side_modules": "Side modules",
-      "display_lockscreen": "Lock screen"
+      "display_lockscreen": "Lock screen",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

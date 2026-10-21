@@ -43,7 +43,9 @@
       "bar_general": "Algemeen",
       "bar_modules": "Modules",
       "bar_side_modules": "Zijmodules",
-      "display_lockscreen": "Vergrendelscherm"
+      "display_lockscreen": "Vergrendelscherm",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

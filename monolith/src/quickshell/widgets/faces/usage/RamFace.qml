@@ -39,11 +39,11 @@ Item {
 
     property real rawRam: isNaN(SysData.ramPercent) ? 0.0 : SysData.ramPercent / 100.0
     property real ramUsage: rawRam
-    Behavior on ramUsage { enabled: root.visible; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on ramUsage { enabled: root.visible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     property real rawRamGb: isNaN(SysData.ramGb) ? 0.0 : SysData.ramGb
     property real ramUsedGb: rawRamGb
-    Behavior on ramUsedGb { enabled: root.visible; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on ramUsedGb { enabled: root.visible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
     SystemUsageCard {
         anchors.fill: parent

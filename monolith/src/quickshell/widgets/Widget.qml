@@ -61,14 +61,14 @@ PanelWindow {
     Behavior on animX {
         enabled: root.initialized && !root.isRedacting
         NumberAnimation {
-            duration: 400
+            duration: (400) * ThemeBackend.animScale
             easing.type: Easing.OutCubic
         }
     }
     Behavior on animY {
         enabled: root.initialized && !root.isRedacting
         NumberAnimation {
-            duration: 400
+            duration: (400) * ThemeBackend.animScale
             easing.type: Easing.OutCubic
         }
     }
@@ -168,8 +168,8 @@ PanelWindow {
         anchors.centerIn: parent
         rotation: root.wRotation || 0
         opacity: root.wOpacity
-        Behavior on opacity { NumberAnimation { duration: 150 } }
-        Behavior on rotation { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+        Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
+        Behavior on rotation { NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutQuad } }
         onLoaded: {
             if (item) {
                 try {
@@ -204,7 +204,7 @@ PanelWindow {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 150
+                duration: (150) * ThemeBackend.animScale
                 easing.type: Easing.OutQuad
             }
         }

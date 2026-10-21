@@ -43,7 +43,9 @@
       "bar_general": "عمومی",
       "bar_modules": "ماژول‌ها",
       "bar_side_modules": "ماژول‌های جانبی",
-      "display_lockscreen": "صفحه قفل"
+      "display_lockscreen": "صفحه قفل",
+      "theme_appearance": "Appearance",
+      "theme_animations": "Animations"
     },
     "launcher": {
       "position": {

@@ -17,7 +17,7 @@ Flickable {
     clip: true
     boundsBehavior: Flickable.StopAtBounds
 
-    Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+    Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     ScrollBar.vertical: ScrollBar {
         active: searchResultsFlickable.moving || searchResultsFlickable.movingVertically
@@ -77,7 +77,7 @@ Flickable {
                     z: 1
 
                     color: (searchTabHoverGlass.active || !tabHeaderItemMa.containsMouse) ? "transparent" : Qt.alpha(ThemeBackend.surface1, 0.5)
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
                     GlassFill {
                         id: searchTabHoverGlass
@@ -90,7 +90,7 @@ Flickable {
                     }
 
                     scale: tabHeaderItemMa.pressed ? 0.98 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                    Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                     RowLayout {
                         anchors.fill: parent
@@ -120,7 +120,7 @@ Flickable {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter
                             elide: Text.ElideRight
-                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                         }
                     }
 
@@ -201,7 +201,7 @@ Flickable {
                                     press: directItemMa.pressed ? 0.8 : (directItemMa.containsMouse ? 0.2 : 0)
                                 }
 
-                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
                                 MouseArea {
                                     id: directItemMa
@@ -219,7 +219,7 @@ Flickable {
                                     anchors.bottomMargin: popup.s(6)
                                     spacing: popup.s(8)
 
-                                    Behavior on anchors.leftMargin { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                                    Behavior on anchors.leftMargin { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                                     IconButton {
                                         enabled: false
@@ -248,7 +248,7 @@ Flickable {
                                             color: (directItemRow.isSelected && !ThemeBackend.liquidGlass) ? ThemeBackend.crust : ThemeBackend.text
                                             elide: Text.ElideRight
 
-                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                                         }
 
                                         Text {
@@ -260,7 +260,7 @@ Flickable {
                                             color: (directItemRow.isSelected && !ThemeBackend.liquidGlass) ? Qt.alpha(ThemeBackend.crust, 0.75) : ThemeBackend.subtext0
                                             elide: Text.ElideRight
 
-                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                                         }
                                     }
                                 }
@@ -287,7 +287,7 @@ Flickable {
                                     z: 1
 
                                     color: (searchSubHoverGlass.active || !subtabHeaderItemMa.containsMouse) ? "transparent" : Qt.alpha(ThemeBackend.surface1, 0.5)
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
                                     GlassFill {
                                         id: searchSubHoverGlass
@@ -300,7 +300,7 @@ Flickable {
                                     }
 
                                     scale: subtabHeaderItemMa.pressed ? 0.98 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                                    Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                                     RowLayout {
                                         anchors.fill: parent
@@ -330,7 +330,7 @@ Flickable {
                                             Layout.fillWidth: true
                                             Layout.alignment: Qt.AlignVCenter
                                             elide: Text.ElideRight
-                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                                         }
                                     }
 
@@ -411,7 +411,7 @@ Flickable {
                                                     press: subItemMa.pressed ? 0.8 : (subItemMa.containsMouse ? 0.2 : 0)
                                                 }
 
-                                                Behavior on color { ColorAnimation { duration: 150 } }
+                                                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
                                                 MouseArea {
                                                     id: subItemMa
@@ -429,7 +429,7 @@ Flickable {
                                                     anchors.bottomMargin: popup.s(6)
                                                     spacing: popup.s(8)
 
-                                                    Behavior on anchors.leftMargin { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                                                    Behavior on anchors.leftMargin { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                                                     IconButton {
                                                         enabled: false
@@ -458,7 +458,7 @@ Flickable {
                                                             color: (subItemRow.isSelected && !ThemeBackend.liquidGlass) ? ThemeBackend.crust : ThemeBackend.text
                                                             elide: Text.ElideRight
 
-                                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                                                         }
 
                                                         Text {
@@ -470,7 +470,7 @@ Flickable {
                                                             color: (subItemRow.isSelected && !ThemeBackend.liquidGlass) ? Qt.alpha(ThemeBackend.crust, 0.75) : ThemeBackend.subtext0
                                                             elide: Text.ElideRight
 
-                                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                                                         }
                                                     }
                                                 }

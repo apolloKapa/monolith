@@ -15,7 +15,7 @@ Item {
     Behavior on outerCornerProgress {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
         NumberAnimation {
-            duration: containerRoot.isAttached ? 240 : 320
+            duration: (containerRoot.isAttached ? 240 : 320) * ThemeBackend.animScale
             easing.type: containerRoot.isAttached ? Easing.OutQuad : Easing.InQuad
         }
     }
@@ -33,7 +33,7 @@ Item {
 
     Behavior on dynamicCornerRadius {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
-        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     readonly property int placeholderCount: 6
@@ -142,18 +142,18 @@ Item {
 
     Behavior on baseWidth {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
     Behavior on baseHeight {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
     property real revealProgress: dockWindow.isRevealed ? 1.0 : 0.0
     Behavior on revealProgress {
         enabled: dockWindow.initialized && !dockWindow.positionChanging
         NumberAnimation {
-            duration: dockWindow.isRevealed ? 240 : 180
+            duration: (dockWindow.isRevealed ? 240 : 180) * ThemeBackend.animScale
             easing.type: dockWindow.isRevealed ? Easing.OutCubic : Easing.InCubic
         }
     }
@@ -205,11 +205,11 @@ Item {
 
         Behavior on x {
             enabled: dockWindow.initialized && !dockWindow.positionChanging && !dockWindow.sameSideAsBar
-            NumberAnimation { duration: 280; easing.type: Easing.OutQuint }
+            NumberAnimation { duration: (280) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
         }
         Behavior on y {
             enabled: dockWindow.initialized && !dockWindow.positionChanging && !dockWindow.sameSideAsBar
-            NumberAnimation { duration: 280; easing.type: Easing.OutQuint }
+            NumberAnimation { duration: (280) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
         }
     }
 
@@ -384,11 +384,11 @@ Item {
 
                 Behavior on columnSpacing {
                     enabled: dockWindow.initialized && !dockWindow.positionChanging
-                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                 }
                 Behavior on rowSpacing {
                     enabled: dockWindow.initialized && !dockWindow.positionChanging
-                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                 }
 
                 x: {
@@ -413,11 +413,11 @@ Item {
 
                 Behavior on x {
                     enabled: dockWindow.initialized && dockWindow.enableScrolling && containerRoot.revealProgress >= 0.99 && !dockWindow.positionChanging
-                    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                 }
                 Behavior on y {
                     enabled: dockWindow.initialized && dockWindow.enableScrolling && containerRoot.revealProgress >= 0.99 && !dockWindow.positionChanging
-                    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                 }
 
                 Repeater {

@@ -18,7 +18,7 @@ Item {
     anchors.fill: parent
     opacity: window.currentPower ? 1.0 : 0.0
     visible: opacity > 0.01
-    Behavior on opacity { enabled: window.visible; NumberAnimation { duration: 600; easing.type: Easing.InOutQuad } }
+    Behavior on opacity { enabled: window.visible; NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.InOutQuad } }
 
     Repeater {
         id: orbitRepeater
@@ -32,10 +32,10 @@ Item {
             property bool isLoaded: false
             opacity: (isLoaded && window.currentPower) ? 1.0 : 0.0
             visible: opacity > 0.01
-            Behavior on opacity { enabled: window.visible; NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+            Behavior on opacity { enabled: window.visible; NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
             property real entryAnim: isLoaded ? 1.0 : 0.0
-            Behavior on entryAnim { enabled: window.visible; NumberAnimation { duration: 600; easing.type: Easing.OutBack } }
+            Behavior on entryAnim { enabled: window.visible; NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutBack } }
 
             Connections {
                 target: window
@@ -104,14 +104,14 @@ Item {
 
             property real targetSingleBaseAngle: (index / Math.max(1, window.orbitModel.count)) * Math.PI * 2
             property real singleBaseAngle: targetSingleBaseAngle
-            Behavior on singleBaseAngle { enabled: window.visible; NumberAnimation { duration: 800; easing.type: Easing.OutExpo } }
+            Behavior on singleBaseAngle { enabled: window.visible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
             property real singleLiveAngle: (window.globalOrbitAngle * 1.5) + singleBaseAngle
 
             property real arcSpread: Math.PI * 0.8
             property real targetNodeOffset: (siblingsCount > 1) ? ((localIndex / (siblingsCount - 1)) - 0.5) * arcSpread : 0
             property real nodeOffset: targetNodeOffset
-            Behavior on nodeOffset { enabled: window.visible; NumberAnimation { duration: 800; easing.type: Easing.OutExpo } }
+            Behavior on nodeOffset { enabled: window.visible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
             property real parentCoreAngle: (window.globalOrbitAngle * 1.5) + parentBaseAngle
             property real multiLiveAngle: myParentIdx === -1 ? singleLiveAngle : (parentCoreAngle + nodeOffset)
@@ -119,7 +119,7 @@ Item {
             property int ringIndex: (typeof isInfoNode !== "undefined" && isInfoNode) ? 0 : index % 2
             property real targetRingOffset: ringIndex * window.s(32)
             property real ringOffset: targetRingOffset
-            Behavior on ringOffset { enabled: window.visible; NumberAnimation { duration: 800; easing.type: Easing.OutExpo } }
+            Behavior on ringOffset { enabled: window.visible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
             property real singleRadX: (typeof isInfoNode !== "undefined" && isInfoNode) ? window.s(253) : window.s(260) + ringOffset
             property real singleRadY: (typeof isInfoNode !== "undefined" && isInfoNode) ? window.s(154) : window.s(160) + ringOffset
@@ -132,7 +132,7 @@ Item {
             property real currentAngle: (singleLiveAngle * (1 - unifiedRatio)) + (multiLiveAngle * unifiedRatio)
 
             property real pwrDrift: window.currentPower ? 0 : window.s(32)
-            Behavior on pwrDrift { enabled: window.visible; NumberAnimation { duration: 600; easing.type: Easing.OutQuint } }
+            Behavior on pwrDrift { enabled: window.visible; NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
             property real animRadX: (currentRadX + pwrDrift) * entryAnim
             property real animRadY: (currentRadY + pwrDrift) * entryAnim
@@ -162,7 +162,7 @@ Item {
             property real currentPopScale: isMyActionable ? fillBtn.popScale : clickBtn.popScale
 
             scale: (!isLoaded ? 0.0 : (isHoveredOrHighlighted ? dynamicScale * 1.025 : dynamicScale)) * currentPopScale
-            Behavior on scale { enabled: window.visible; NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+            Behavior on scale { enabled: window.visible; NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
             z: floatCardDelegateContainer.isCardHovered ? 10 : index
 
             HoverHandler {
@@ -356,7 +356,7 @@ Item {
                             font.pixelSize: window.s(18)
                             color: dynamicTextColor
                             anchors.verticalCenter: parent.verticalCenter
-                            Behavior on color { enabled: window.visible; ColorAnimation { duration: 200 } }
+                            Behavior on color { enabled: window.visible; ColorAnimation { duration: (200) * ThemeBackend.animScale } }
                         }
 
                         MarqueeText {
@@ -371,7 +371,7 @@ Item {
                             marqueeSpacing: window.s(30)
                             active: window.visible
 
-                            Behavior on color { enabled: window.visible; ColorAnimation { duration: 200 } }
+                            Behavior on color { enabled: window.visible; ColorAnimation { duration: (200) * ThemeBackend.animScale } }
                         }
                     }
                 }

@@ -22,7 +22,7 @@ SettingsBlob {
         showDivider: section.tab.isLocEditOpen
         dividerColor: Qt.alpha(ThemeBackend.surface1, 0.2)
         innerSpacing: section.tab.isLocEditOpen ? rootObj.s(12) : 0
-        Behavior on innerSpacing { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on innerSpacing { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
         animateHeight: true
         animationDuration: 300
 
@@ -66,7 +66,7 @@ SettingsBlob {
                 spacing: rootObj.s(12)
                 visible: section.tab.isLocEditOpen || opacity > 0.01
                 opacity: section.tab.isLocEditOpen ? 1.0 : 0.0
-                Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 Input {
                     id: latInput

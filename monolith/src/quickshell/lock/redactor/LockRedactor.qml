@@ -118,7 +118,7 @@ Scope {
                 readonly property bool panelMode: win.page === 1 && win.selProxy === null && panelStage.panelSelected
                 readonly property Item chromeTarget: win.selProxy ? win.selProxy : (win.panelMode ? panelStage.selectionItem : null)
 
-                Behavior on pageProgress { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+                Behavior on pageProgress { NumberAnimation { duration: (320) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 function go(delta) {
                     win.page = Math.max(0, Math.min(1, win.page + delta));
@@ -303,7 +303,7 @@ Scope {
                             textColor: ThemeBackend.text
                             opacity: win.page > 0 ? 1.0 : 0.0
                             enabled: win.page > 0
-                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                            Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
                             onClicked: win.go(-1)
                         }
 
@@ -319,7 +319,7 @@ Scope {
                             textColor: ThemeBackend.text
                             opacity: win.page < 1 ? 1.0 : 0.0
                             enabled: win.page < 1
-                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                            Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
                             onClicked: win.go(1)
                         }
                     }
@@ -330,7 +330,7 @@ Scope {
                         spacing: Scaler.s(6)
                         visible: win.chromeTarget !== null
                         opacity: win.chromeTarget !== null && !win.activeScene.dragging ? 1.0 : 0.0
-                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                        Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
 
                         readonly property bool hasProxy: win.selProxy !== null
                         readonly property string pType: chrome.hasProxy ? win.selProxy.pType : ""

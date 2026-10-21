@@ -42,7 +42,7 @@ Rectangle {
     Behavior on width {
         NumberAnimation {
             id: sidebarWidthAnim
-            duration: 240
+            duration: (240) * ThemeBackend.animScale
             easing.type: Easing.OutCubic
         }
     }
@@ -74,13 +74,13 @@ Rectangle {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 180
+                        duration: (180) * ThemeBackend.animScale
                         easing.type: Easing.OutCubic
                     }
                 }
                 Behavior on scale {
                     NumberAnimation {
-                        duration: 220
+                        duration: (220) * ThemeBackend.animScale
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -89,7 +89,7 @@ Rectangle {
             Item {
                 id: searchMorphBox
                 property real openProgress: popup.searchActive ? 1.0 : 0.0
-                Behavior on openProgress { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+                Behavior on openProgress { NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 x: I18n.rtl ? 0 : (parent.width - width)
                 anchors.verticalCenter: parent.verticalCenter
@@ -115,7 +115,7 @@ Rectangle {
 
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 180
+                            duration: (180) * ThemeBackend.animScale
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -163,7 +163,7 @@ Rectangle {
                     enabled: popup.searchActive
                     z: 3
 
-                    Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                     onClicked: popup.closeSearch()
                 }
@@ -187,7 +187,7 @@ Rectangle {
 
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 180
+                            duration: (180) * ThemeBackend.animScale
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -218,7 +218,7 @@ Rectangle {
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
 
-                Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 ScrollBar.vertical: ScrollBar {
                     active: tabsFlickable.moving || tabsFlickable.movingVertically
@@ -249,7 +249,7 @@ Rectangle {
 
                     readonly property bool isMoving: Math.abs(x - targetX) > 0.5 || Math.abs(y - targetY) > 0.5 || Math.abs(width - targetW) > 0.5 || Math.abs(height - targetH) > 0.5
                     property real lift: (activeGlass.active && isMoving) ? 1.0 : 0.0
-                    Behavior on lift { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+                    Behavior on lift { NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                     scale: 1.0 + 0.04 * lift
 
                     property Item activeGroupItem: (popup.currentTab >= 0 && tabsRepeater && popup.currentTab < tabsRepeater.count) ? tabsRepeater.itemAt(popup.currentTab) : null
@@ -274,10 +274,10 @@ Rectangle {
                     opacity: popup.getTabOpacity(popup.currentTab)
                     transform: Translate { x: (I18n.rtl ? popup.s(24) : popup.s(-24)) * (1.0 - popup.getTabProgress(popup.currentTab)) }
 
-                    Behavior on x { enabled: !sidebarWidthAnim.running; NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
-                    Behavior on y { enabled: !sidebarWidthAnim.running; NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
-                    Behavior on width { enabled: !sidebarWidthAnim.running; NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
-                    Behavior on height { enabled: !sidebarWidthAnim.running; NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                    Behavior on x { enabled: !sidebarWidthAnim.running; NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+                    Behavior on y { enabled: !sidebarWidthAnim.running; NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+                    Behavior on width { enabled: !sidebarWidthAnim.running; NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+                    Behavior on height { enabled: !sidebarWidthAnim.running; NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 }
 
                 GlassLens {
@@ -325,7 +325,7 @@ Rectangle {
                             property real expandProgress: isExpanded ? 1.0 : 0.0
 
                             Behavior on expandProgress {
-                                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                                NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                             }
 
                             Layout.fillWidth: true
@@ -355,7 +355,7 @@ Rectangle {
                                 }
 
                                 color: (tabHoverGlass.active || hoverLens.glassActive || !(tabHeaderMa.containsMouse && !isDirectActive)) ? "transparent" : Qt.alpha(ThemeBackend.surface1, 0.5)
-                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
                                 GlassFill {
                                     id: tabHoverGlass
@@ -368,7 +368,7 @@ Rectangle {
                                 }
 
                                 scale: tabHeaderMa.pressed ? 0.98 : 1.0
-                                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                                Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                                 RowLayout {
                                     layoutDirection: I18n.layoutDirection
@@ -377,8 +377,8 @@ Rectangle {
                                     anchors.rightMargin: I18n.rtl ? (popup.s(10) + (tabHeaderItem.isDirectActive ? popup.s(4) : 0)) : popup.s(14)
                                     spacing: popup.s(10)
 
-                                    Behavior on anchors.leftMargin { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
-                                    Behavior on anchors.rightMargin { NumberAnimation { duration: 400; easing.type: Easing.OutQuint } }
+                                    Behavior on anchors.leftMargin { NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+                                    Behavior on anchors.rightMargin { NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                                     IconButton {
                                         enabled: false
@@ -405,7 +405,7 @@ Rectangle {
                                         Layout.alignment: Qt.AlignVCenter
                                         horizontalAlignment: I18n.textAlignment
                                         elide: Text.ElideRight
-                                        Behavior on color { ColorAnimation { duration: 150 } }
+                                        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                                     }
 
                                     Text {
@@ -418,8 +418,8 @@ Rectangle {
                                             : (tabHeaderMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
                                         Layout.alignment: Qt.AlignVCenter
                                         rotation: tabDelegate.expandProgress * 180 - 180
-                                        Behavior on rotation { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                                        Behavior on color { ColorAnimation { duration: 150 } }
+                                        Behavior on rotation { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+                                        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                                     }
                                 }
 
@@ -513,7 +513,7 @@ Rectangle {
                                                 }
 
                                                 color: (subHoverGlass.active || hoverLens.glassActive || !(subtabMa.containsMouse && !isSubActive)) ? "transparent" : Qt.alpha(ThemeBackend.surface1, 0.5)
-                                                Behavior on color { ColorAnimation { duration: 150 } }
+                                                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
 
                                                 GlassFill {
                                                     id: subHoverGlass
@@ -526,7 +526,7 @@ Rectangle {
                                                 }
 
                                                 scale: subtabMa.pressed ? 0.98 : 1.0
-                                                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutQuint } }
+                                                Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                                                 RowLayout {
                                                     layoutDirection: I18n.layoutDirection
@@ -535,8 +535,8 @@ Rectangle {
                                                     anchors.rightMargin: I18n.rtl ? (popup.s(8) + (subtabItem.isSubActive ? popup.s(4) : 0)) : popup.s(10)
                                                     spacing: popup.s(8)
 
-                                                    Behavior on anchors.leftMargin { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
-                                                    Behavior on anchors.rightMargin { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
+                                                    Behavior on anchors.leftMargin { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+                                                    Behavior on anchors.rightMargin { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
                                                     IconButton {
                                                         enabled: false
@@ -561,7 +561,7 @@ Rectangle {
                                                         Layout.alignment: Qt.AlignVCenter
                                                         horizontalAlignment: I18n.textAlignment
                                                         elide: Text.ElideRight
-                                                        Behavior on color { ColorAnimation { duration: 150 } }
+                                                        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                                                     }
                                                 }
 
