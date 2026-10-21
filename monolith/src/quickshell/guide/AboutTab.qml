@@ -203,7 +203,7 @@ GuideTab {
                             fillDuration: 1200
 
                             onTriggered: {
-                                let cmd = "monolith installer";
+                                let cmd = "monolith installer --update";
                                 Quickshell.execDetached(["bash", "-c", cmd]);
                                 Quickshell.execDetached(["bash", rootObj.appPaths.monolithDir + "/scripts/qs_manager.sh", "close"]);
                             }

@@ -6,7 +6,8 @@ import "../../"
 
 Item {
     id: root
-    property bool autoCheckEnabled: false
+    // checks monolith/version.txt in the repo the installer came from (hourly; gh login for a private repo)
+    property bool autoCheckEnabled: true
 
     property bool isChecking: false
     property string localVersion: "1.0.0"
@@ -103,7 +104,6 @@ Item {
     }
 
     function checkUpdate() {
-        // Monolith lives in a private dotfiles repo, so there is nothing public to poll.
         if (!root.autoCheckEnabled) return;
         if (typeof SystemInfo !== "undefined" && SystemInfo.osName.toLowerCase().indexOf("nixos") !== -1) return;
         if (typeof Caching === "undefined" || !Caching.monolithDir) return;
@@ -113,7 +113,6 @@ Item {
     }
 
     function scheduleInitialCheck() {
-        // Monolith lives in a private dotfiles repo, so there is nothing public to poll.
         if (!root.autoCheckEnabled) return;
         if (typeof SystemInfo !== "undefined" && SystemInfo.osName.toLowerCase().indexOf("nixos") !== -1) return;
         if (typeof Caching === "undefined" || !Caching.monolithDir) return;

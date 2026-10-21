@@ -62,7 +62,12 @@ float smax(float a, float b, float k) {
 }
 
 float sdRoundBoxSmooth(vec2 p, vec2 b, vec4 r, float k) {
-    float rad = p.x > 0.0 ? (p.y > 0.0 ? r.z : r.y) : (p.y > 0.0 ? r.w : r.x);
+    // blend the four corner radii across the middle instead of switching per quadrant:
+    // with mixed radii (e.g. a dock rounded on top, square at the bottom) the switch put a
+    // crease in the lighting along the centre line
+    vec2 w = max(min(b, vec2(k)), vec2(1.0));
+    vec2 sw = smoothstep(-w, w, p);
+    float rad = mix(mix(r.x, r.y, sw.x), mix(r.w, r.z, sw.x), sw.y);
     rad = min(rad, min(b.x, b.y));
     vec2 q = abs(p) - b + rad;
     // smax overshoots max by up to k/4; shift it back so the inside never clamps flat at 0
@@ -189,8 +194,11 @@ void main() {
     float sigma = reach * 0.5;
     float bulgeH = hover * exp(-cd * cd / (2.0 * sigma * sigma)) * 0.35 * (1.0 + 1.4 * morph + 1.2 * motion) * thickness * (1.0 - 0.5 * nest);
     vec2 bulge = bulgeH * toCursor / (sigma * sigma);
-    vec3 normal = normalize(vec3(g * slope - bulge, 1.0));
-    float th = thickness * 1.35 * (1.0 + (0.12 + 0.3 * morph) * near + 0.74 * energy + 0.64 * motion);
+    // the cursor only changes how light hits the glass, not what you see through it: bending
+    // the refraction made the wallpaper swim under the pointer (and dragged colour fringes along)
+    vec3 normal = normalize(vec3(g * slope - bulge * morph, 1.0));
+    vec3 litNormal = normalize(vec3(g * slope - bulge * 0.6, 1.0));
+    float th = thickness * 1.35 * (1.0 + 0.3 * morph * near + 0.74 * energy + 0.64 * motion);
 
     float edgeFall = om * om;
     float wobble = sin(dot(p, vec2(0.11, 0.09)) + t * 0.35) * 0.5 + 0.5;
@@ -230,12 +238,14 @@ void main() {
     col *= 1.0 - (1.0 - nest) * 0.06 * exp(-t / 6.0) * clamp(g.y, 0.0, 1.0);
     col *= 1.0 - (1.0 - nest) * 0.025 * exp(-t / (bz * 0.45));
 
-    vec2 cursorDir = cd > 0.001 ? toCursor / cd : normalize(lightDir);
-    vec2 L = normalize(mix(normalize(lightDir), cursorDir, hover * 0.4));
+    vec2 L = normalize(lightDir);
     float facing = dot(g, L);
     float spec = pow(max(facing, 0.0), 1.6) + 0.55 * pow(max(-facing, 0.0), 2.2);
+    // pointer glint: the rim close to the cursor catches extra light, fading smoothly with distance
+    float glintR = max(36.0, min(itemSize.x, itemSize.y) * 0.45);
+    float glint = hover * exp(-cd * cd / (2.0 * glintR * glintR));
 
-    float fres = pow(1.0 - normal.z, 1.5) * (1.0 - 0.6 * nest);
+    float fres = pow(1.0 - litNormal.z, 1.5) * (1.0 - 0.6 * nest);
     if (fres > 0.001) {
         vec4 e = fetchLod4(p + g * (t + bz * 1.4), min(lod + 2.0, 6.0));
         vec3 env = e.a > 1e-3 ? e.rgb / e.a : col;
@@ -246,8 +256,8 @@ void main() {
     col *= 1.0 - INNER_SHADOW * counter * (1.0 - 0.7 * nest);
     float hair = exp(-t / 1.1);
     float wide = exp(-t / 5.0);
-    float edgeHi = (hair * (0.18 + 0.78 * spec) + wide * 0.10 * (0.30 + spec)) * rim * (1.0 + 0.5 * near + 0.9 * energy);
-    float broad = exp(-t / (bz * 0.45)) * pow(max(facing, 0.0), 2.0) * BROAD_SPEC * rim * (1.0 + 0.5 * near);
+    float edgeHi = (hair * (0.18 + 0.78 * spec) + wide * 0.10 * (0.30 + spec)) * rim * (1.0 + 1.3 * glint + 0.9 * energy);
+    float broad = exp(-t / (bz * 0.45)) * (pow(max(facing, 0.0), 2.0) + 0.8 * glint) * BROAD_SPEC * rim;
     float mx = (t - bz * 0.5) / (bz * 0.2 + 1.0);
     float men = exp(-mx * mx) * 0.07 * (0.35 + spec) * rim;
     vec3 fringe = vec3(0.0);
@@ -260,7 +270,9 @@ void main() {
     vec3 tcol = tintColor.rgb;
     float tA = clamp(tintAmount * (0.7 + 0.6 * l), 0.0, 1.0);
     float lensA = smoothstep(0.0, 1.0, length(dG) * 0.5);
-    vec3 light = vec3(edgeHi + men + broad + energy * 0.03) + fringe;
+    // soft sheen under the pointer
+    float sheen = hover * 0.03 * exp(-cd * cd / (2.0 * reach * reach)) * (1.0 - 0.6 * nest);
+    vec3 light = vec3(edgeHi + men + broad + sheen + energy * 0.03) + fringe;
     light += vec3(0.02 * clear * lensA);
 
     vec3 opaqueRgb = col * mix(vec3(1.0), tcol, tA);

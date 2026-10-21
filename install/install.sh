@@ -4,6 +4,13 @@
 
 setterm -blank 0 -powerdown 0 2>/dev/null || true
 
+# --update: no menu, just bring an existing install up to date (used by Settings -> About -> Update).
+# Keeps your niri config, login screen, wallpapers and settings; installs new dependencies.
+UPDATE_ONLY=false
+for arg in "$@"; do
+    [ "$arg" = "--update" ] && UPDATE_ONLY=true
+done
+
 INSTALL_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 [ -f "$INSTALL_DIR/source.env" ] && source "$INSTALL_DIR/source.env"
 REPO_SLUG="$(printf '%s' "${REPO_SLUG:-kasc0b3r/dotfiles}" | tr -cd 'a-zA-Z0-9_./-')"
@@ -69,7 +76,15 @@ export I18N_DIR="$MONOLITH_DIR/assets/languages"
 source "$MONOLITH_DIR/scripts/i18n.sh"
 
 
-run_installer_ui
+if [ "$UPDATE_ONLY" = true ]; then
+    NIRI_MODE=keep
+    OPT_SDDM=false
+    WALLPAPERS=none
+    IS_REINSTALL=false
+    printf "\n%sUpdating Monolith%s %s -> %s (%s)\n" "$BOLD" "$RESET" "${OLD_VERSION:-?}" "$TARGET_VERSION" "$TARGET_COMMIT"
+else
+    run_installer_ui
+fi
 
 # --- install ------------------------------------------------------------------------------------
 step "Packages"
@@ -110,4 +125,12 @@ if [ "$SHELL_WAS_RUNNING" = true ] && [ -n "$WAYLAND_DISPLAY" ]; then
     setsid monolithd start >/dev/null 2>&1 < /dev/null &
 fi
 
-draw_completion_screen
+if [ "$UPDATE_ONLY" = true ]; then
+    printf "\n%s%sMonolith is up to date (%s).%s\n" "$BOLD" "$C_GREEN" "$TARGET_VERSION" "$RESET"
+    if [ ${#FAILED_PKGS[@]} -gt 0 ]; then
+        printf "%sThese packages failed to install: %s%s\n" "$C_RED" "${FAILED_PKGS[*]}" "$RESET"
+    fi
+    { read -r -p "Press Enter to close. " _ < /dev/tty; } 2>/dev/null || true
+else
+    draw_completion_screen
+fi
