@@ -184,7 +184,7 @@ GuideTab {
                             accentColor: ThemeBackend.surface0
                             textColor: ThemeBackend.text
 
-                            onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/kasc0b3r/dotfiles/commits/main"])
+                            onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/kasc0b3r/monolith/commits/main"])
                         }
 
                         FillButton {
@@ -393,7 +393,7 @@ GuideTab {
                     accentColor: ThemeBackend.surface0
                     textColor: ThemeBackend.text
 
-                    onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/kasc0b3r/dotfiles"])
+                    onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/kasc0b3r/monolith"])
                 }
             }
         }

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # One-command install:
-#   curl -fsSL https://raw.githubusercontent.com/kasc0b3r/dotfiles/main/install/get.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/kasc0b3r/monolith/main/install/get.sh | bash
 # Downloads the installer and runs it with your terminal as input (so the menu works when piped).
 set -e
 
 main() {
-    local slug="${REPO_SLUG:-kasc0b3r/dotfiles}"
+    local slug="${REPO_SLUG:-kasc0b3r/monolith}"
     local branch="${MONOLITH_BRANCH:-main}"
     local dir
     dir="$(mktemp -d)"
