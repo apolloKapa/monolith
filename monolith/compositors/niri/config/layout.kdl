@@ -1,0 +1,55 @@
+// Layout, gaps, borders, animations
+// Part of Monolith's niri setup (included from ../config.kdl).
+
+// ===================== Layout =====================
+gestures {
+    hot-corners {
+        off
+    }
+}
+
+layout {
+    gaps 10
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+    }
+
+    default-column-width { proportion 0.5; }
+
+    focus-ring {
+        off
+    }
+
+    border {
+        width 2
+        active-color "#ffffff"
+        inactive-color "#555555"
+        urgent-color "#9b0000"
+    }
+}
+
+// ===================== Hotkey Overlay =====================
+hotkey-overlay {
+    skip-at-startup
+}
+
+// ===================== Screenshots =====================
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+// ===================== Animations =====================
+animations {
+    slowdown 0.6
+    workspace-switch { spring damping-ratio=1.0 stiffness=800 epsilon=0.0001; }
+    horizontal-view-movement { spring damping-ratio=1.0 stiffness=800 epsilon=0.0001; }
+    window-movement { spring damping-ratio=1.0 stiffness=800 epsilon=0.0001; }
+    window-resize { spring damping-ratio=1.0 stiffness=800 epsilon=0.0001; }
+    overview-open-close { spring damping-ratio=1.0 stiffness=800 epsilon=0.0001; }
+    window-open { duration-ms 180; curve "ease-out-expo"; }
+    window-close { duration-ms 140; curve "ease-out-quad"; }
+    config-notification-open-close { spring damping-ratio=0.6 stiffness=1000 epsilon=0.001; }
+    screenshot-ui-open { duration-ms 200; curve "ease-out-quad"; }
+    exit-confirmation-open-close { spring damping-ratio=0.6 stiffness=500 epsilon=0.01; }
+}

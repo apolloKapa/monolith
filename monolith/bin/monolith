@@ -85,6 +85,7 @@ show_help() {
     echo ""
     echo "$(t "cli.commands")"
     echo "  launch <target> [args...]   $(t "cli.launch_desc")"
+    echo "  installer                    open the Monolith installer (update, reinstall, options)"
     echo "  msg <action|workspace> ...  $(t "cli.msg_desc")"
     echo "  ipc ...                      $(t "cli.ipc_desc")"
     echo "  kill                         $(t "cli.kill_desc")"
@@ -239,6 +240,26 @@ stop_daemon() {
     rm -f "/tmp/monolithd.pid" 2>/dev/null
     rm -f "/tmp/monolithd.lock" 2>/dev/null
 }
+
+# monolith installer: update / reinstall / change install choices
+if [[ "$1" == "installer" ]]; then
+    shift
+    installer="$(dirname "$MONOLITH_DIR")/install/install.sh"
+    if [ ! -f "$installer" ]; then
+        echo "Installer not found at $installer. Reinstall with the one-command install from the README."
+        exit 1
+    fi
+    if [ -t 0 ] && [ -t 1 ]; then
+        exec bash "$installer" "$@"
+    fi
+    # started from a keybind/launcher: open it in a terminal
+    for term in "${TERMINAL:-}" kitty foot alacritty wezterm xterm; do
+        [ -n "$term" ] && command -v "$term" >/dev/null 2>&1 || continue
+        exec "$term" -e bash "$installer" "$@"
+    done
+    echo "No terminal found to run the installer in."
+    exit 1
+fi
 
 if [[ "$1" == "kill" ]]; then
     stop_daemon
