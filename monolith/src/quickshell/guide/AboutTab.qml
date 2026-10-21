@@ -134,7 +134,7 @@ GuideTab {
                             Text {
                                 text: I18n.t("guide.about.version_by", {
                                     version: (Updater.localVersion !== "..." ? Updater.localVersion : (rootObj.dotsVersion !== "Loading..." && rootObj.dotsVersion !== I18n.t("guide.about.loading") ? rootObj.dotsVersion : "1.0.0")),
-                                    author: "@kasc0b3r"
+                                    author: "@apolloKapa"
                                 })
                                 font.family: ThemeBackend.fontFamily
                                 font.pixelSize: rootObj.s(13)
@@ -184,7 +184,7 @@ GuideTab {
                             accentColor: ThemeBackend.surface0
                             textColor: ThemeBackend.text
 
-                            onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/kasc0b3r/monolith/commits/main"])
+                            onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/apolloKapa/monolith/commits/main"])
                         }
 
                         FillButton {
@@ -393,7 +393,7 @@ GuideTab {
                     accentColor: ThemeBackend.surface0
                     textColor: ThemeBackend.text
 
-                    onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/kasc0b3r/monolith"])
+                    onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/apolloKapa/monolith"])
                 }
             }
         }

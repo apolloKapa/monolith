@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Wallpapers: copied from a wallpaper repo (default kasc0b3r/wallpapers, override with
+# Wallpapers: copied from a wallpaper repo (default apolloKapa/wallpapers, override with
 # WALLPAPER_REPO). Skipped quietly if the repo doesn't exist.
 
 # installer.sh provides gitx (no password prompts, gh login); plain git when used on its own
@@ -51,7 +51,7 @@ install_wallpapers() {
     local full_pack="${1:-true}"
     local wallpaper_dir
     wallpaper_dir=$(get_wallpaper_dir)
-    local wallpaper_repo="${WALLPAPER_REPO:-https://github.com/kasc0b3r/wallpapers.git}"
+    local wallpaper_repo="${WALLPAPER_REPO:-https://github.com/apolloKapa/wallpapers.git}"
     local clone_dir="${XDG_CACHE_HOME:-"$HOME/.cache"}/monolith-wallpapers"
 
     mkdir -p "$wallpaper_dir"
