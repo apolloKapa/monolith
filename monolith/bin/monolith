@@ -252,10 +252,12 @@ if [[ "$1" == "installer" ]]; then
     if [ -t 0 ] && [ -t 1 ]; then
         exec bash "$installer" "$@"
     fi
-    # started from a keybind/launcher: open it in a terminal
+    # started from a keybind/launcher/the Update button: open it in a terminal, in its own
+    # session. Anything the shell launches sits in the shell's process group, and the installer
+    # stops the shell, which used to take the terminal (and the half-done update) down with it.
     for term in "${TERMINAL:-}" kitty foot alacritty wezterm xterm; do
         [ -n "$term" ] && command -v "$term" >/dev/null 2>&1 || continue
-        exec "$term" -e bash "$installer" "$@"
+        exec setsid -f "$term" -e bash "$installer" "$@"
     done
     echo "No terminal found to run the installer in."
     exit 1
