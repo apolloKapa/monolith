@@ -40,6 +40,13 @@ ShellRoot {
         function deactivate(): void {
             if (screenshotLoader.item) screenshotLoader.item.deactivate();
         }
+
+        // a niri keybind forwarded here (see scripts/screenshot_key.sh): "handled" when the open
+        // screenshot tool used it, empty otherwise (the bind then does its normal thing)
+        function key(seq: string): string {
+            let overlay = screenshotLoader.item;
+            return (overlay && overlay.handleKey(seq)) ? "handled" : "";
+        }
     }
 
     Main {}

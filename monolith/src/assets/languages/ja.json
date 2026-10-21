@@ -768,7 +768,8 @@
       "display_lockscreen": "ロック画面",
       "theme_appearance": "Appearance",
       "theme_animations": "Animations",
-      "theme_windows": "Windows"
+      "theme_windows": "Windows",
+      "screenshots": "Screenshots"
     },
     "launcher": {
       "position": {
@@ -1646,6 +1647,10 @@
       "background": {
         "title": "アプリの背面に背景を描画",
         "desc": "アプリアイコンの背面にドックパネルを表示"
+      },
+      "dodge_windows": {
+        "title": "Dodge windows",
+        "desc": "Stay visible with windows open; hide only when a window is over the dock, then come back from the screen edge"
       }
     },
     "lyrics_picker": {

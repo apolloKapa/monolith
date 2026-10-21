@@ -122,6 +122,7 @@ Everything below is built in.
 - Theme → Windows: niri window borders on/off, width, colours for focused / other / attention windows (theme swatches or any hex), or follow the theme's colours automatically
 - Bar: general and modules
 - Launcher, Dock, On-screen display, Notifications
+- Screenshots: the screenshot tool's keys (capture, copy, edit, cancel, photo/video, whole screen)
 - Wellbeing: screen-time stats
 - Idle
 - About: your system, update button
@@ -233,8 +234,11 @@ The installer reads displays from the running niri. If you install from a TTY, n
 
 | Key | Action |
 |---|---|
-| `Print` / `Ctrl+Print` / `Alt+Print` | screenshot region / screen / window |
-| `Mod+Shift+S` | region screenshot into swappy |
+| `Print` / `Mod+Shift+S` | screenshot: pick a region (or window) |
+| `Shift+Print` | screenshot a region and open it in the editor |
+| `Ctrl+Print` / `Mod+Print` | screenshot the whole screen |
+| `Alt+Print` | whole screen, then the editor |
+| inside the screenshot tool | `Enter` save + copy, **`Meta+C` copy only**, `Ctrl+E` edit, `Tab` photo/video, `F11` whole screen, `Esc` cancel (change them in Settings → Screenshots) |
 | media / volume / mic / brightness keys | work as labelled (also on the lock screen) |
 | `Mod+M`, `Mod+Shift+E`, `Ctrl+Alt+Delete` | quit niri |
 

@@ -46,7 +46,8 @@
       "display_lockscreen": "Schermata di blocco",
       "theme_appearance": "Appearance",
       "theme_animations": "Animations",
-      "theme_windows": "Windows"
+      "theme_windows": "Windows",
+      "screenshots": "Screenshots"
     },
     "launcher": {
       "position": {
@@ -923,6 +924,10 @@
       "background": {
         "title": "Disegna uno sfondo dietro le app",
         "desc": "Mostra il pannello del dock dietro le icone delle app"
+      },
+      "dodge_windows": {
+        "title": "Dodge windows",
+        "desc": "Stay visible with windows open; hide only when a window is over the dock, then come back from the screen edge"
       }
     },
     "lyrics_picker": {

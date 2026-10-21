@@ -62,7 +62,7 @@ REQUIRED_PKGS=(
 KEYBIND_PKGS=(
     "niri" "xwayland-satellite" "xdg-desktop-portal-gnome"
     "rofi" "jq" "cliphist" "wl-clipboard" "playerctl" "brightnessctl"
-    "grim" "slurp" "swappy" "swaylock" "wireplumber"
+    "grim" "slurp" "swaylock" "wireplumber"
     "thunar" "mission-center" "librewolf|librewolf-bin" "wooz" "awww" "steam"
     "ttf-jetbrains-mono" "noto-fonts-cjk" "breeze"
 )

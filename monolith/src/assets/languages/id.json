@@ -46,7 +46,8 @@
       "display_lockscreen": "Layar kunci",
       "theme_appearance": "Appearance",
       "theme_animations": "Animations",
-      "theme_windows": "Windows"
+      "theme_windows": "Windows",
+      "screenshots": "Screenshots"
     },
     "launcher": {
       "position": {
@@ -924,6 +925,10 @@
       "background": {
         "title": "Gambar latar di belakang aplikasi",
         "desc": "Tampilkan panel dock di belakang ikon aplikasi"
+      },
+      "dodge_windows": {
+        "title": "Dodge windows",
+        "desc": "Stay visible with windows open; hide only when a window is over the dock, then come back from the screen edge"
       }
     },
     "lyrics_picker": {

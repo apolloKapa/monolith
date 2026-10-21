@@ -241,6 +241,13 @@ stop_daemon() {
     rm -f "/tmp/monolithd.lock" 2>/dev/null
 }
 
+# monolith screenshot-key <niri key>: used by niri binds the screenshot tool shares (see
+# scripts/screenshot_key.sh)
+if [[ "$1" == "screenshot-key" ]]; then
+    shift
+    exec bash "$MONOLITH_DIR/scripts/screenshot_key.sh" "$@"
+fi
+
 # monolith installer: update / reinstall / change install choices
 if [[ "$1" == "installer" ]]; then
     shift

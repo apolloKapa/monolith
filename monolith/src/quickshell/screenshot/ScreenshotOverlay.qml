@@ -495,12 +495,50 @@ PanelWindow {
         root.saveCache();
     }
 
-    Shortcut { sequence: "Escape"; onActivated: root.deactivate() }
-    Shortcut { sequence: "Return"; onActivated: { if (root.hasSelection) root.executeCapture(root.isEditMode && !root.isVideoMode, root.isVideoMode) } }
-    Shortcut { sequence: "Tab"; onActivated: root.isVideoMode = !root.isVideoMode }
+    // Keys (Settings -> Screenshots). Meta combos that niri itself binds (like Meta+C) never reach
+    // this window; those niri binds are wrapped to call handleKey() over IPC instead.
+    readonly property var defaultKeys: ({
+        "capture": "Return", "copy": "Meta+C", "edit": "Ctrl+E",
+        "cancel": "Escape", "mode": "Tab", "maximize": "F11"
+    })
+    property var screenshotSettings: Config.getSetting("screenshot", {})
+    readonly property var keys: Object.assign({}, root.defaultKeys, (root.screenshotSettings && root.screenshotSettings.keys) || {})
+    Connections {
+        target: Config
+        function onRawSettingsChanged() { root.screenshotSettings = Config.getSetting("screenshot", {}); }
+    }
+
+    function runAction(name) {
+        switch (name) {
+        case "capture": if (root.hasSelection) root.executeCapture(root.isEditMode && !root.isVideoMode, root.isVideoMode); break;
+        case "copy": if (root.hasSelection && !root.isVideoMode) root.executeCapture(false, false, true); break;
+        case "edit": if (root.hasSelection && !root.isVideoMode) root.executeCapture(true, false); break;
+        case "cancel": root.deactivate(); break;
+        case "mode": root.isVideoMode = !root.isVideoMode; break;
+        case "maximize": root.toggleMaximize(); break;
+        default: return false;
+        }
+        return true;
+    }
+
+    // called through IPC by wrapped niri binds; true if the key belongs to an action here
+    function handleKey(seq) {
+        if (!root.isActive) return false;
+        const want = String(seq).toLowerCase().replace(/^mod\+/, "meta+");
+        for (const name in root.keys) {
+            if (String(root.keys[name]).toLowerCase() === want) return root.runAction(name);
+        }
+        return false;
+    }
+
+    Shortcut { sequence: root.keys.cancel; onActivated: root.runAction("cancel") }
+    Shortcut { sequence: root.keys.capture; onActivated: root.runAction("capture") }
+    Shortcut { sequence: root.keys.copy; onActivated: root.runAction("copy") }
+    Shortcut { sequence: root.keys.edit; onActivated: root.runAction("edit") }
+    Shortcut { sequence: root.keys.mode; onActivated: root.runAction("mode") }
+    Shortcut { sequence: root.keys.maximize; onActivated: root.runAction("maximize") }
     Shortcut { sequence: "Left"; onActivated: root.isVideoMode = false }
     Shortcut { sequence: "Right"; onActivated: root.isVideoMode = true }
-    Shortcut { sequence: "F11"; onActivated: root.toggleMaximize() }
 
     component AnimWrap: Item {
         property bool isShown: false
@@ -1637,8 +1675,9 @@ PanelWindow {
         return ` --source "${root.freezeImg}" --crop "${rect}" --logical-size "${Math.round(root.width)}x${Math.round(root.height)}"`;
     }
 
-    function executeCapture(openEditor, isRecord) {
+    function executeCapture(openEditor, isRecord, copyOnly) {
         let cmd = `bash ${Caching.monolithDir}/scripts/screenshot.sh --geometry "${root.geometryString}"`;
+        if (copyOnly) cmd += " --copy-only";
         let useFrozen = !isRecord && root.frozenSourceArgs() !== "";
         if (useFrozen) {
             cmd += root.frozenSourceArgs();

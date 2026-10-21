@@ -88,6 +88,45 @@ personal_startup_lines() {
         | awk '!seen[$0]++'
 }
 
+# switches the old screenshot binds (niri's built-in screenshots, grim + swappy) to Monolith's
+# screenshot tool, wherever they appear; leaves any other bind alone
+upgrade_screenshot_binds() {
+    local f="$1"
+    [ -f "$f" ] || return 0
+    python3 - "$f" <<'PY'
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
+new = {
+    "Print": 'spawn "monolith" "screenshot";',
+    "Ctrl+Print": 'spawn "monolith" "screenshot" "--full";',
+    "Alt+Print": 'spawn "monolith" "screenshot" "--full" "--edit";',
+    "Mod+Shift+S": 'spawn "monolith" "screenshot";',
+}
+old = {
+    "Print": r'screenshot;',
+    "Ctrl+Print": r'screenshot-screen;',
+    "Alt+Print": r'screenshot-window;',
+    "Mod+Shift+S": r'spawn-sh "grim -g \\"\$\(slurp\)\\" - \| swappy -f -";',
+}
+changed = 0
+for key, body in old.items():
+    pat = re.compile(r'^([ \t]*)' + re.escape(key) + r'(\s[^{\n]*)?\{\s*' + body + r'\s*\}[ \t]*$', re.M)
+    text, n = pat.subn(lambda m: f'{m.group(1)}{key}{m.group(2) or " "}{{ {new[key]} }}', text)
+    changed += n
+# extra combos, added next to Print if they aren't bound yet
+extra = [("Shift+Print", 'spawn "monolith" "screenshot" "--edit";'), ("Mod+Print", 'spawn "monolith" "screenshot" "--full";')]
+m = re.search(r'^([ \t]*)Print\s*\{[^\n]*\}[ \t]*$', text, re.M)
+if m:
+    add = "".join(f"\n{m.group(1)}{k} {{ {b} }}" for k, b in extra if not re.search(r'^\s*' + re.escape(k) + r'[\s{]', text, re.M))
+    if add:
+        text = text[:m.end()] + add + text[m.end():]
+        changed += add.count("\n")
+open(path, "w").write(text)
+print(changed)
+PY
+}
+
 setup_niri_config() {
     local project_root="$1"
     local mode="${2:-replace}"   # replace | keep
