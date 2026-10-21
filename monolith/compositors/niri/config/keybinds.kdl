@@ -133,14 +133,14 @@ binds {
     Mod+Comma  { consume-window-into-column; }
     Mod+Period { expel-window-from-column; }
 
-    Mod+R { switch-preset-column-width; }
+    Mod+R { toggle-window-floating; }
     Mod+Shift+R { switch-preset-column-width-back; }
     Mod+Ctrl+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R { reset-window-height; }
 
     Mod+F { fullscreen-window; }
     Mod+Shift+F { maximize-column; }
-    Mod+T { toggle-window-floating; }
+    Mod+T { spawn-sh "niri msg -j focused-window | jq -e .is_floating >/dev/null && niri msg action toggle-window-floating; niri msg action maximize-column"; }
 
     Mod+Ctrl+F { expand-column-to-available-width; }
     Mod+Ctrl+C { center-visible-columns; }
