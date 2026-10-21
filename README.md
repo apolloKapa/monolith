@@ -6,7 +6,7 @@ My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith
 
 > **INSPIRED BY SERPANTINUM BY [@ilyamiro](https://github.com/ilyamiro)**
 >
-> Monolith is a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) and keeps its licence (AGPL-3.0, see `monolith/LICENSE.md`).
+> Monolith is a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) and keeps its licence (AGPL-3.0, see [`LICENSE`](LICENSE)).
 
 ---
 
@@ -301,3 +301,7 @@ While the repo is private, the update check goes through the GitHub CLI (`gh aut
 - **Wrong monitor layout:** run `monolith installer` from inside niri, or edit `~/.config/niri/config/output.kdl`, then `niri validate`.
 - **Lock screen won't accept your password:** check `/etc/pam.d/monolith` exists (the installer adds it). If you're ever stuck, switch to a TTY (Ctrl+Alt+F3), log in, and run `monolithd stop`.
 - **Nvidia:** my desktop used the legacy GTX 1070 driver (`nvidia-dkms-580xx`). Drop GPU drivers that don't fit from `packages.txt` before choosing "All my apps".
+
+## Licence
+
+[GNU AGPL-3.0](LICENSE). Monolith is a fork of Serpantinum by @ilyamiro, which is AGPL-3.0 too. You can use, change and share it; if you share a modified version (or run it for others over a network), share its source under the same licence.
