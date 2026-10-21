@@ -6,11 +6,6 @@ window-rule {
     clip-to-geometry true
 }
 
-// Every window opens floating (DE style): Mod+left-drag moves, Mod+right-drag resizes.
-window-rule {
-    open-floating true
-}
-
 // Roblox Studio (in Wine) makes three tiny hidden helper windows titled just
 // "RobloxStudio": on Windows you never see them; here they'd open as black windows.
 // Kept small, floating, invisible and out of the way (the real Studio window's title
@@ -43,11 +38,4 @@ window-rule {
     border { off; }
     focus-ring { off; }
     shadow { off; }
-}
-
-// Terminal default size
-window-rule {
-    match app-id="kitty"
-    default-column-width { fixed 1100; }
-    default-window-height { fixed 700; }
 }
