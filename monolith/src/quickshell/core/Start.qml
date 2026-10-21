@@ -438,7 +438,7 @@ PanelWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: titleText.bottom
                     anchors.topMargin: window.s(12)
-                    text: I18n.t("start.made_by", { "author": "kasc0b3r" })
+                    text: I18n.t("start.made_by", { "author": "apolloKapa" })
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: window.s(15)
                     scale: 0.88
@@ -537,7 +537,7 @@ PanelWindow {
 
                     Text {
                         id: introAuthorText
-                        text: I18n.t("start.made_by", { "author": "kasc0b3r" })
+                        text: I18n.t("start.made_by", { "author": "apolloKapa" })
                         font.family: ThemeBackend.fontFamily
                         font.pixelSize: window.s(14)
                         color: window.subtext0

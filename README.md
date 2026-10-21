@@ -15,17 +15,17 @@ My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith
 One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...), as your normal user:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/kasc0b3r/monolith/main/install/get.sh | bash
+curl -fsSL https://raw.githubusercontent.com/apolloKapa/monolith/main/install/get.sh | bash
 ```
 
 While the repo is **private**, that URL needs a login, so use the GitHub CLI instead:
 
 ```sh
 gh auth login   # once
-gh api "repos/kasc0b3r/monolith/contents/install/get.sh?ref=main" -H "Accept: application/vnd.github.raw" | bash
+gh api "repos/apolloKapa/monolith/contents/install/get.sh?ref=main" -H "Accept: application/vnd.github.raw" | bash
 ```
 
-Or from a clone: `git clone https://github.com/kasc0b3r/monolith && ./monolith/install.sh`.
+Or from a clone: `git clone https://github.com/apolloKapa/monolith && ./monolith/install.sh`.
 
 Once it's installed, **`monolith installer`** opens the installer again to update, reinstall or change options. Settings → About → Update does the same.
 
@@ -40,7 +40,7 @@ It opens a menu (arrow keys or j/k, Enter, q to quit):
 | All my apps | OFF | everything in `packages.txt` and `packages-aur.txt` |
 | niri config | Monolith config | writes the niri config below (your old one is backed up to `~/.config/niri_backup/`); or "keep mine" |
 | Login screen | ON | SDDM theme, with options to replace your current display manager and use Wayland for SDDM |
-| Wallpapers | 3 random | 3 random / full pack / none, from my [wallpapers](https://github.com/kasc0b3r/wallpapers) repo (skipped if it doesn't exist; `WALLPAPER_REPO=` to use another) |
+| Wallpapers | 3 random | 3 random / full pack / none, from my [wallpapers](https://github.com/apolloKapa/wallpapers) repo (skipped if it doesn't exist; `WALLPAPER_REPO=` to use another) |
 | Install / Update / Reinstall | | Update keeps your settings; Reinstall starts them fresh |
 
 Then it:

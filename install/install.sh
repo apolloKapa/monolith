@@ -13,7 +13,9 @@ done
 
 INSTALL_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
 [ -f "$INSTALL_DIR/source.env" ] && source "$INSTALL_DIR/source.env"
-REPO_SLUG="$(printf '%s' "${REPO_SLUG:-kasc0b3r/monolith}" | tr -cd 'a-zA-Z0-9_./-')"
+REPO_SLUG="$(printf '%s' "${REPO_SLUG:-apolloKapa/monolith}" | tr -cd 'a-zA-Z0-9_./-')"
+# older installs remember the repo under its earlier names
+case "$REPO_SLUG" in kasc0b3r/monolith|kasc0b3r/dotfiles) REPO_SLUG="apolloKapa/monolith" ;; esac
 MONOLITH_BRANCH="$(printf '%s' "${MONOLITH_BRANCH:-main}" | tr -cd 'a-zA-Z0-9_./-')"
 CACHE_REPO="${XDG_CACHE_HOME:-$HOME/.cache}/monolith-installer"
 export REPO_SLUG MONOLITH_BRANCH

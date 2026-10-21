@@ -8,7 +8,7 @@ import subprocess
 import urllib.request
 
 # where updates come from: written by the installer next to this install
-REPO = "kasc0b3r/monolith"
+REPO = "apolloKapa/monolith"
 BRANCH = "main"
 _source_env = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "install", "source.env")
 try:
@@ -21,6 +21,9 @@ try:
             BRANCH = _v
 except OSError:
     pass
+# older installs remember the repo under its earlier names
+if REPO in ("kasc0b3r/monolith", "kasc0b3r/dotfiles"):
+    REPO = "apolloKapa/monolith"
 DEFAULT_VER = "1.0.0"
 
 state_dir = os.path.expanduser("~/.local/state/monolith")
