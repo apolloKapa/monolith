@@ -11,7 +11,15 @@ main() {
     dir="$(mktemp -d)"
     trap 'rm -rf "$dir"' EXIT
     mkdir -p "$dir/install"
-    curl -fsSL "https://raw.githubusercontent.com/${slug}/${branch}/install/install.sh" -o "$dir/install/install.sh"
+    # public repo: plain download; private repo: through the GitHub CLI login (gh auth login)
+    if ! curl -fsSL "https://raw.githubusercontent.com/${slug}/${branch}/install/install.sh" -o "$dir/install/install.sh" 2>/dev/null; then
+        if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
+            gh api "repos/${slug}/contents/install/install.sh?ref=${branch}" -H "Accept: application/vnd.github.raw" > "$dir/install/install.sh"
+        else
+            echo "Couldn't download the installer. If the repo is private, install github-cli and run 'gh auth login' first." >&2
+            exit 1
+        fi
+    fi
     export REPO_SLUG="$slug" MONOLITH_BRANCH="$branch"
     if [ -t 0 ]; then
         bash "$dir/install/install.sh" "$@"
