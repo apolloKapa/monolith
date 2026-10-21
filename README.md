@@ -203,8 +203,8 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `Mod+Shift+Arrows` | focus monitor |
 | `Mod+Ctrl+Arrows` | move column left/right, window up/down |
 | `Mod+Ctrl+H/J/K/L` | move column / window |
-| `Mod+R` | cycle column width (⅓ / ½ / ⅔) |
-| `Mod+T` | float / tile the focused window |
+| `Mod+R` | float / tile the focused window |
+| `Mod+T` | maximize (fills the screen, keeps border and gaps; press again to restore) |
 | `Mod+F` / `Mod+Shift+F` | fullscreen / maximize column |
 | `Mod+Ctrl+F` | expand column to available width |
 | `Mod+Ctrl+C` | center visible columns |
