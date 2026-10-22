@@ -397,7 +397,8 @@
         "desc": "Pilih antara tampilan bilah modular, padat, atau terisi",
         "modular": "Modular",
         "solid": "Padat",
-        "fill": "Terisi"
+        "fill": "Terisi",
+        "island": "Island"
       },
       "time": {
         "title": "Format waktu",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

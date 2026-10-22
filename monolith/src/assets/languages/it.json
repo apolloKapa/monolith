@@ -396,7 +396,8 @@
         "desc": "Scegli tra modulare, solida o una barra piena",
         "modular": "Modulare",
         "solid": "Solida",
-        "fill": "Piena"
+        "fill": "Piena",
+        "island": "Island"
       },
       "time": {
         "title": "Formato ora",
@@ -1796,5 +1797,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

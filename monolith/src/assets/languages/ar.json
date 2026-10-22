@@ -338,7 +338,8 @@
         "fill": "ممتلئ",
         "modular": "مجزأ",
         "solid": "مصمت",
-        "title": "نمط الشريط"
+        "title": "نمط الشريط",
+        "island": "Island"
       },
       "sysmon": {
         "cpu": {
@@ -1843,5 +1844,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

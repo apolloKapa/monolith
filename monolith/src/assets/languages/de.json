@@ -398,7 +398,8 @@
         "desc": "Zwischen modularer, durchgehender oder ausgefüllter Leiste wählen",
         "modular": "Modular",
         "solid": "Durchgehend",
-        "fill": "Ausgefüllt"
+        "fill": "Ausgefüllt",
+        "island": "Island"
       },
       "time": {
         "title": "Zeitformat",
@@ -1844,5 +1845,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

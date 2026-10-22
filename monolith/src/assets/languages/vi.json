@@ -397,7 +397,8 @@
         "desc": "Chọn giữa kiểu mô-đun, đặc hoặc đầy đủ",
         "modular": "Mô-đun",
         "solid": "Đặc",
-        "fill": "Đầy"
+        "fill": "Đầy",
+        "island": "Island"
       },
       "time": {
         "title": "Định dạng thời gian",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

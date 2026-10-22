@@ -397,7 +397,8 @@
         "desc": "انتخاب بین ظاهر ماژولار، یکپارچه یا نوار پُر",
         "modular": "ماژولار",
         "solid": "یکپارچه",
-        "fill": "پُر"
+        "fill": "پُر",
+        "island": "Island"
       },
       "time": {
         "title": "قالب زمان",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

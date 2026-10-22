@@ -395,7 +395,8 @@
         "desc": "Hissələrə bölünmüş, bütöv və ya doldurulmuş zolaq görünüşünü seçin",
         "modular": "Hissələrə bölünmüş",
         "solid": "Bütöv",
-        "fill": "Doldurulmuş"
+        "fill": "Doldurulmuş",
+        "island": "Island"
       },
       "time": {
         "title": "Vaxt formatı",
@@ -1791,5 +1792,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

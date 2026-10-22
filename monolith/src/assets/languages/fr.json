@@ -397,7 +397,8 @@
         "desc": "Choisir entre un style modulaire, solide ou rempli",
         "modular": "Modulaire",
         "solid": "Solide",
-        "fill": "Rempli"
+        "fill": "Rempli",
+        "island": "Island"
       },
       "time": {
         "title": "Format de l'heure",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

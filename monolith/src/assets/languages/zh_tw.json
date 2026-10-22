@@ -397,7 +397,8 @@
         "desc": "在模組化、實心或填滿狀態列外觀之間選擇",
         "modular": "模組化",
         "solid": "實心",
-        "fill": "填滿"
+        "fill": "填滿",
+        "island": "Island"
       },
       "time": {
         "title": "時間格式",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

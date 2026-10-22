@@ -397,7 +397,8 @@
         "desc": "모듈형, 단색, 채움 스타일 중에서 선택합니다",
         "modular": "모듈형",
         "solid": "단색",
-        "fill": "채움"
+        "fill": "채움",
+        "island": "Island"
       },
       "time": {
         "title": "시간 형식",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

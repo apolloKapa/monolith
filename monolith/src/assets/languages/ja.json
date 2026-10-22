@@ -1168,7 +1168,8 @@
         "desc": "モジュラー、ソリッド、または塗りつぶし (Fill) から外観を選択します",
         "modular": "モジュラー",
         "solid": "ソリッド",
-        "fill": "塗りつぶし"
+        "fill": "塗りつぶし",
+        "island": "Island"
       },
       "time": {
         "title": "時刻フォーマット",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

@@ -381,7 +381,8 @@
         "desc": "Оберіть між модульним, суцільним або заповненим виглядом панелі",
         "modular": "Модульний",
         "solid": "Суцільний",
-        "fill": "Заповнений"
+        "fill": "Заповнений",
+        "island": "Island"
       },
       "time": {
         "title": "Формат часу",
@@ -1822,5 +1823,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

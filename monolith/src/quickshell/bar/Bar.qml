@@ -14,7 +14,8 @@ Variants {
     delegate: Component {
         PanelWindow {
             id: barWindowRoot
-            visible: barConfigReady && !shouldHideForRedact
+            // the Island style replaces the bar (island/Island.qml)
+            visible: barConfigReady && !shouldHideForRedact && barStyle !== "island"
 
             property bool pendingReload: false
             property bool startupFilesReady: false

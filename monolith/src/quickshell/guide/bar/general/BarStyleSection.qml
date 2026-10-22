@@ -18,10 +18,10 @@ SettingsBlob {
 
         Switch {
             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-            implicitWidth: rootObj.s(210)
+            implicitWidth: rootObj.s(280)
             implicitHeight: rootObj.s(32)
-            options: [I18n.t("guide.bar.style.modular"), I18n.t("guide.bar.style.solid"), I18n.t("guide.bar.style.fill")]
-            currentIndex: section.tab.barStyle === "fill" ? 2 : (section.tab.barStyle === "solid" ? 1 : 0)
+            options: [I18n.t("guide.bar.style.modular"), I18n.t("guide.bar.style.solid"), I18n.t("guide.bar.style.fill"), I18n.t("guide.bar.style.island")]
+            currentIndex: section.tab.barStyle === "island" ? 3 : (section.tab.barStyle === "fill" ? 2 : (section.tab.barStyle === "solid" ? 1 : 0))
             accentColor: ThemeBackend.mauve
             baseColor: ThemeBackend.surface0
             textColor: ThemeBackend.subtext0
@@ -33,6 +33,7 @@ SettingsBlob {
                 if (index === 0) section.tab.barStyle = "modular";
                 else if (index === 1) section.tab.barStyle = "solid";
                 else if (index === 2) section.tab.barStyle = "fill";
+                else if (index === 3) section.tab.barStyle = "island";
                 section.tab.updateBarSettings();
             }
         }

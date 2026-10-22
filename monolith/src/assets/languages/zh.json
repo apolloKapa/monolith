@@ -397,7 +397,8 @@
         "desc": "在模块化、纯色或充满样式之间选择",
         "modular": "模块化",
         "solid": "纯色",
-        "fill": "充满"
+        "fill": "充满",
+        "island": "Island"
       },
       "time": {
         "title": "时间格式",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

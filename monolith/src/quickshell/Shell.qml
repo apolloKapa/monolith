@@ -51,6 +51,7 @@ ShellRoot {
 
     Main {}
     Bar {}
+    Island {}
     Lock {}
     WidgetRedactor {}
     LockRedactor {}
