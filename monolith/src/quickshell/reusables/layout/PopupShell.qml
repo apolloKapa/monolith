@@ -16,12 +16,19 @@ Item {
     property color backgroundColor: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
     property real padding: s(18)
     property real intro: 0
+    // what gets keyboard focus when the panel opens (e.g. its search field); the panel itself if unset
+    property Item focusTarget: null
     default property alias content: inner.data
     // called each time the panel opens (reset search fields, refresh data...)
     signal opened()
 
     function s(val) {
         return Scaler.s(val);
+    }
+
+    function takeFocus() {
+        if (shell.focusTarget) shell.focusTarget.forceActiveFocus();
+        else shell.forceActiveFocus();
     }
 
     function close() {
@@ -40,9 +47,9 @@ Item {
             exitAnim.stop();
             shell.intro = 0;
             introAnim.restart();
-            forceActiveFocus();
-            focusTimer.restart();
             shell.opened();
+            shell.takeFocus();
+            focusTimer.restart();
         } else {
             introAnim.stop();
             exitAnim.stop();
@@ -53,7 +60,7 @@ Item {
     Timer {
         id: focusTimer
         interval: 50
-        onTriggered: shell.forceActiveFocus()
+        onTriggered: shell.takeFocus()
     }
 
     NumberAnimation {

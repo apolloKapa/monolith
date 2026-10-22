@@ -146,6 +146,10 @@ function getLayout(name, mx, my, mw, mh, userScale, barPosition) {
             w: 1000, h: 260, comp: "switcher/WindowSwitcher.qml",
             pos: { "top": { anchor: "center" }, "bottom": { anchor: "center" }, "left": { anchor: "center" }, "right": { anchor: "center" } }
         },
+        "overview": {
+            w: "fill", h: "fill", comp: "overview/WorkspaceOverview.qml",
+            pos: { "top": { anchor: "fill" }, "bottom": { anchor: "fill" }, "left": { anchor: "fill" }, "right": { anchor: "fill" } }
+        },
         "session": {
             w: "fill", h: "fill", comp: "session/SessionScreen.qml",
             pos: { "top": { anchor: "fill" }, "bottom": { anchor: "fill" }, "left": { anchor: "fill" }, "right": { anchor: "fill" } }
