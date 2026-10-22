@@ -156,7 +156,7 @@ Modular config in `~/.config/niri/` (source: `monolith/compositors/niri/`):
 | `config/layout.kdl` | 10px gaps, column presets, 2px white/grey borders, no focus ring, no hot corners, snappy spring animations |
 | `config/autostart.kdl` | only what Monolith needs: clipboard history + `monolithd start`. Add your own apps here; when the installer replaces the niri config it keeps the startup apps you had |
 | `config/keybinds.kdl` | the keybinds below |
-| `config/rules.kdl` | rounded window corners, Roblox Studio helper windows hidden, Steam toasts as notifications |
+| `config/rules.kdl` | rounded window corners, Steam toasts as notifications |
 
 The installer reads displays from the running niri. If you install from a TTY, nothing is pinned and niri picks each monitor's preferred mode; run `monolith installer` from inside niri later to pin the layout. The Display page in Settings can also change monitors live.
 
@@ -267,7 +267,6 @@ Helper scripts in `bin/` (installed to `~/.local/bin`):
 - `focuswin`, `swapwin`, `snap`, `tilehalf`, `maxtoggle`: desktop-style window focus, swapping, half-screen snapping and maximizing for floating windows (not bound by default since Monolith uses normal niri tiling; bind them in `keybinds.kdl` if you want them)
 - `setwall`: wallpaper via awww (`setwall pick` = rofi chooser)
 - `launcher`, `favlauncher`, `rofi-apps`, `rofi-favs`: rofi launcher with favourites (Ctrl+S stars an app)
-- `gparted-dark`, `osu-wine`, `cosu-launch.sh`, `roblox-studio-mcp`: app launchers
 
 ## Repo layout
 

@@ -203,76 +203,22 @@
     "editing": false,
     "apps": [
       {
+        "name": "Kitty",
+        "comment": "Fast, feature-rich, GPU based terminal",
+        "desktop_id": "kitty",
+        "icon": "kitty"
+      },
+      {
+        "name": "Thunar",
+        "comment": "Browse the filesystem with the file manager",
+        "desktop_id": "thunar",
+        "icon": "org.xfce.thunar"
+      },
+      {
         "name": "LibreWolf",
         "comment": "Browse the World Wide Web",
         "desktop_id": "librewolf",
         "icon": "librewolf"
-      },
-      {
-        "name": "Brave Origin",
-        "comment": "Access the Internet",
-        "desktop_id": "brave-origin",
-        "icon": "brave-origin"
-      },
-      {
-        "name": "Steam",
-        "comment": "Application for managing and playing games on Steam",
-        "desktop_id": "steam",
-        "icon": "steam"
-      },
-      {
-        "name": "Heroic Games Launcher",
-        "comment": "An Open Source Launcher for GOG, Epic Games and Amazon Games",
-        "desktop_id": "heroic",
-        "icon": "heroic"
-      },
-      {
-        "name": "itch",
-        "comment": "The itch.io desktop app",
-        "desktop_id": "itch",
-        "icon": "itch"
-      },
-      {
-        "name": "osu! (stable)",
-        "comment": "osu! stable - Rhythm is just a *click* away!",
-        "desktop_id": "osu-wine",
-        "icon": "/home/apollo/.local/share/icons/osu-wine.png"
-      },
-      {
-        "name": "osu!lazer",
-        "comment": "Open source free-to-win rhythm game",
-        "desktop_id": "osu-lazer",
-        "icon": "osu-lazer"
-      },
-      {
-        "name": "Sober",
-        "comment": "Play, chat & explore on Roblox",
-        "desktop_id": "org.vinegarhq.Sober",
-        "icon": "org.vinegarhq.Sober"
-      },
-      {
-        "name": "Roblox Studio",
-        "comment": "Roblox Studio (in Bottles)",
-        "desktop_id": "roblox-studio-bottles",
-        "icon": "roblox-studio"
-      },
-      {
-        "name": "Obsidian",
-        "comment": "Obsidian",
-        "desktop_id": "obsidian",
-        "icon": "obsidian"
-      },
-      {
-        "name": "VSCodium",
-        "comment": "Code Editing. Redefined.",
-        "desktop_id": "codium",
-        "icon": "vscodium"
-      },
-      {
-        "name": "OBS Studio",
-        "comment": "Free and Open Source Streaming/Recording Software",
-        "desktop_id": "com.obsproject.Studio",
-        "icon": "com.obsproject.Studio"
       }
     ],
     "overrideBoundsCorrection": false,

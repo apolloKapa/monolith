@@ -6,27 +6,6 @@ window-rule {
     clip-to-geometry true
 }
 
-// Roblox Studio (in Wine) makes three tiny hidden helper windows titled just
-// "RobloxStudio": on Windows you never see them; here they'd open as black windows.
-// Kept small, floating, invisible and out of the way (the real Studio window's title
-// has the place name in it, so it isn't matched).
-window-rule {
-    match title="^RobloxStudio$"
-    open-maximized false
-    open-floating true
-    open-focused false
-    opacity 0.0
-    default-column-width { fixed 1; }
-    default-window-height { fixed 1; }
-    // (no frame round them either, or the frame shows as a dot)
-    focus-ring { off; }
-    border { off; }
-    shadow { off; }
-    geometry-corner-radius 0
-    default-floating-position x=0 y=0 relative-to="bottom-right"
-}
-
-
 // Steam's friend/game toasts ("X is playing ...") are real windows (titled notificationtoasts_N_desktop).
 // Make them behave like notifications: top-right where mako puts its popups, never take focus,
 // no frame of their own.
