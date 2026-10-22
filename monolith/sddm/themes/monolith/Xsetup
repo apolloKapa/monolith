@@ -1,0 +1,28 @@
+#!/bin/sh
+# Xsetup - run as root before the login dialog appears (SDDM's DisplayCommand).
+# Monolith: show the login screen on one monitor only, the 2560x1440 one (falling back to
+# the biggest screen), and switch the others off until you've logged in. niri sets up all
+# monitors again for the desktop.
+
+command -v xrandr >/dev/null 2>&1 || exit 0
+
+# connected outputs, each with the modes it supports
+outputs=$(xrandr --query | awk '/ connected/ {print $1}')
+[ -n "$outputs" ] || exit 0
+
+main=$(xrandr --query | awk '/ connected/ {o=$1} /^ +2560x1440/ && o {print o; exit}')
+if [ -z "$main" ]; then
+    # no 1440p screen: the one with the most pixels
+    main=$(xrandr --query | awk '/ connected/ {o=$1; getline; split($1, r, "x"); if (r[1]*r[2] > best) {best=r[1]*r[2]; m=o}} END {print m}')
+fi
+[ -n "$main" ] || exit 0
+
+if xrandr --query | awk -v o="$main" '$1==o {f=1; next} / connected| disconnected/ {f=0} f && /^ +2560x1440/ {found=1} END {exit !found}'; then
+    xrandr --output "$main" --mode 2560x1440 --primary --pos 0x0
+else
+    xrandr --output "$main" --auto --primary --pos 0x0
+fi
+for o in $outputs; do
+    [ "$o" = "$main" ] || xrandr --output "$o" --off
+done
+exit 0

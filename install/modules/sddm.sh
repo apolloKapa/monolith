@@ -136,6 +136,10 @@ ThemeDir=/usr/share/sddm/themes
 [General]
 DisplayServer=x11
 InputMethod=
+
+[X11]
+# the login screen on one monitor only (the 1440p one, else the biggest): see the theme's Xsetup
+DisplayCommand=$sddm_theme_dest/Xsetup
 EOF
     fi
 
