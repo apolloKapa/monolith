@@ -71,7 +71,7 @@ Item {
             if (Config.rawSettings.bar.workspacesStyle) return Config.rawSettings.bar.workspacesStyle;
             if (Config.rawSettings.bar.workspaces && Config.rawSettings.bar.workspaces.style) return Config.rawSettings.bar.workspaces.style;
         }
-        return "pills";
+        return "slabs";
     }
 
     property int baseWorkspaceCount: {

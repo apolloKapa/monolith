@@ -64,7 +64,7 @@
       "g_kb": "#514060"
     },
     "menuStyle": "icon",
-    "workspacesStyle": "numbers",
+    "workspacesStyle": "slabs",
     "timeStyle": "material",
     "visAlignment": "center",
     "visContinuous": false,

@@ -346,8 +346,10 @@
             "name": {
               "pills": "Capsules",
               "numbers": "Nummers",
-              "pacman": "Pacman"
-            }
+              "pacman": "Pacman",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "Werkbladen"
         },

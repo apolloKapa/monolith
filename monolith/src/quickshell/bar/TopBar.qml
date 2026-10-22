@@ -795,7 +795,9 @@ Item {
                 ? Qt.alpha(Qt.darker(ThemeBackend.surface0, 1.15), (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
                 : Qt.alpha(ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0))
             radius: ThemeBackend.borderRadius
-            border.width: 0
+            // hairline edge (outlined styles draw their own line)
+            border.width: ThemeBackend.outlined ? 0 : 1
+            border.color: Qt.alpha(ThemeBackend.text, 0.08)
             property Item blurSurface: groupBlur
 
             WallpaperBlur {

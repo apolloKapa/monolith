@@ -1117,8 +1117,10 @@
             "name": {
               "pills": "Pigułki",
               "numbers": "Numery",
-              "pacman": "Pacman"
-            }
+              "pacman": "Pacman",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "Obszary robocze"
         },

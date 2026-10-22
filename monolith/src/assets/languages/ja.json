@@ -1117,8 +1117,10 @@
             "name": {
               "pills": "ピル",
               "numbers": "数字",
-              "pacman": "パックマン"
-            }
+              "pacman": "パックマン",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "ワークスペース"
         },

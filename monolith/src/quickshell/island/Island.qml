@@ -205,7 +205,7 @@ Variants {
                         Layout.fillWidth: false
                         Layout.alignment: Qt.AlignTop
                         spacing: win.s(8)
-                        Label { text: I18n.t("island.workspaces", "Workspaces"); color: ThemeBackend.subtext0; font.pixelSize: win.s(11); font.weight: Font.Bold }
+                        Caption { text: I18n.t("island.workspaces", "Workspaces") }
                         GridLayout {
                             columns: 5
                             rowSpacing: win.s(6)

@@ -321,8 +321,10 @@
             "name": {
               "numbers": "أرقام",
               "pacman": "باكمان",
-              "pills": "حبات"
-            }
+              "pills": "حبات",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           }
         }
       },

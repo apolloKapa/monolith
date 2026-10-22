@@ -53,13 +53,9 @@ PopupShell {
                 font.family: ThemeBackend.iconFont
                 font.pixelSize: root.s(15)
             }
-            Text {
+            Caption {
                 Layout.fillWidth: true
                 text: card.title
-                color: ThemeBackend.subtext1
-                font.family: ThemeBackend.fontFamily
-                font.pixelSize: root.s(13)
-                font.weight: Font.Bold
             }
         }
         Item {

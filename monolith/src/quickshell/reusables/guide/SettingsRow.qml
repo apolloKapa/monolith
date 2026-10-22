@@ -387,7 +387,7 @@ Rectangle {
     property int iconFontSize: 16
     property real iconCornerRadius: ThemeBackend.borderRadius
     property color iconAccentColor: "transparent"
-    property color iconTextColor: ThemeBackend.subtext0
+    property color iconTextColor: Qt.alpha(ThemeBackend.mauve, 0.85)
     property bool iconInteractive: false
 
     property string title: ""

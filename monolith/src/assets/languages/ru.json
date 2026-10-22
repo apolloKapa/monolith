@@ -347,8 +347,10 @@
             "name": {
               "pills": "Пилюли",
               "numbers": "Номера",
-              "pacman": "Pacman"
-            }
+              "pacman": "Pacman",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "Рабочие пространства"
         },

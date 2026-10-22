@@ -346,8 +346,10 @@
             "name": {
               "pills": "알약",
               "numbers": "숫자",
-              "pacman": "팩맨"
-            }
+              "pacman": "팩맨",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "작업 공간"
         },
