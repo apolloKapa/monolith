@@ -1768,5 +1768,8 @@
     "source": "from ~/.config/niri/config/keybinds.kdl",
     "search": "Search keys or actions…",
     "none": "No keybind matches"
+  },
+  "switcher": {
+    "title": "Windows"
   }
 }
