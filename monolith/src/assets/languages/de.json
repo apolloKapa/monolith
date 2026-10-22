@@ -1810,5 +1810,11 @@
     "poweroff": "Shut down",
     "confirm": "Again to confirm",
     "hint": "←/→ to move · Enter or the first letter to pick · Esc to close"
+  },
+  "cheatsheet": {
+    "title": "Keybinds",
+    "source": "from ~/.config/niri/config/keybinds.kdl",
+    "search": "Search keys or actions…",
+    "none": "No keybind matches"
   }
 }
