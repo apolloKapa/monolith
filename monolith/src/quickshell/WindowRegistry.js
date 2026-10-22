@@ -138,6 +138,10 @@ function getLayout(name, mx, my, mw, mh, userScale, barPosition) {
                 "right": { anchor: "left" } 
             } 
         },
+        "cheatsheet": {
+            w: 1240, h: 780, comp: "cheatsheet/Cheatsheet.qml",
+            pos: { "top": { anchor: "center" }, "bottom": { anchor: "center" }, "left": { anchor: "center" }, "right": { anchor: "center" } }
+        },
         "session": {
             w: "fill", h: "fill", comp: "session/SessionScreen.qml",
             pos: { "top": { anchor: "fill" }, "bottom": { anchor: "fill" }, "left": { anchor: "fill" }, "right": { anchor: "fill" } }
