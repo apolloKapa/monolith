@@ -1753,5 +1753,15 @@
   },
   "datetime": {
     "full_date": "dddd, d MMMM"
+  },
+  "session": {
+    "lock": "Lock",
+    "logout": "Log out",
+    "suspend": "Suspend",
+    "hibernate": "Hibernate",
+    "reboot": "Reboot",
+    "poweroff": "Shut down",
+    "confirm": "Again to confirm",
+    "hint": "←/→ to move · Enter or the first letter to pick · Esc to close"
   }
 }

@@ -1753,5 +1753,15 @@
         "loading": "言語を読み込み中..."
       }
     }
+  },
+  "session": {
+    "lock": "Lock",
+    "logout": "Log out",
+    "suspend": "Suspend",
+    "hibernate": "Hibernate",
+    "reboot": "Reboot",
+    "poweroff": "Shut down",
+    "confirm": "Again to confirm",
+    "hint": "←/→ to move · Enter or the first letter to pick · Esc to close"
   }
 }

@@ -138,6 +138,10 @@ function getLayout(name, mx, my, mw, mh, userScale, barPosition) {
                 "right": { anchor: "left" } 
             } 
         },
+        "session": {
+            w: "fill", h: "fill", comp: "session/SessionScreen.qml",
+            pos: { "top": { anchor: "fill" }, "bottom": { anchor: "fill" }, "left": { anchor: "fill" }, "right": { anchor: "fill" } }
+        },
         "hidden": { 
             w: 1, h: 1, comp: "", 
             pos: { 
