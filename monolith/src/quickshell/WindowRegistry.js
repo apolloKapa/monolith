@@ -150,6 +150,10 @@ function getLayout(name, mx, my, mw, mh, userScale, barPosition) {
             w: "fill", h: "fill", comp: "overview/WorkspaceOverview.qml",
             pos: { "top": { anchor: "fill" }, "bottom": { anchor: "fill" }, "left": { anchor: "fill" }, "right": { anchor: "fill" } }
         },
+        "dashboard": {
+            w: 1280, h: 760, comp: "dashboard/Dashboard.qml",
+            pos: { "top": { anchor: "center" }, "bottom": { anchor: "center" }, "left": { anchor: "center" }, "right": { anchor: "center" } }
+        },
         "session": {
             w: "fill", h: "fill", comp: "session/SessionScreen.qml",
             pos: { "top": { anchor: "fill" }, "bottom": { anchor: "fill" }, "left": { anchor: "fill" }, "right": { anchor: "fill" } }

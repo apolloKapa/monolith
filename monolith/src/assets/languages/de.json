@@ -1825,5 +1825,23 @@
     "window": "window",
     "app": "open",
     "empty": "Empty"
+  },
+  "dashboard": {
+    "no_weather": "no weather (set a location in Settings → General)",
+    "nothing_playing": "Nothing playing",
+    "notifications": "Notifications",
+    "no_notifications": "All caught up",
+    "todo": "Todo",
+    "todo_add": "Add a task and press Enter",
+    "todo_empty": "Nothing to do",
+    "todo_clear": "Clear done"
+  },
+  "pomodoro": {
+    "focus": "Focus",
+    "short": "Short break",
+    "long": "Long break",
+    "done": "done",
+    "back_to_work": "Break's over, back to focus",
+    "take_break": "Time for a break"
   }
 }

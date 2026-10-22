@@ -57,6 +57,8 @@ singleton MangoState 1.0 singletons/system/MangoState.qml
 singleton NiriState 1.0 singletons/system/NiriState.qml
 singleton SysNotif 1.0 singletons/system/SysNotif.qml
 singleton TimerState 1.0 singletons/system/TimerState.qml
+singleton Todo 1.0 singletons/system/Todo.qml
+singleton Pomodoro 1.0 singletons/system/Pomodoro.qml
 singleton Updater 1.0 singletons/system/Updater.qml
 singleton WindowTracker 1.0 singletons/system/WindowTracker.qml
 
