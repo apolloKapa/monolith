@@ -4,3 +4,4 @@ GeneralProfileSection 1.0 GeneralProfileSection.qml
 GeneralAudioSection 1.0 GeneralAudioSection.qml
 GeneralBehaviorSection 1.0 GeneralBehaviorSection.qml
 GeneralLocationSection 1.0 GeneralLocationSection.qml
+GeneralOnlineSection 1.0 GeneralOnlineSection.qml

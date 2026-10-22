@@ -253,6 +253,16 @@
       "screenshot_on_release": {
         "title": "Capturer la zone au relâchement de la souris",
         "desc": "Prendre la capture dès la fin de la sélection, sans cliquer sur le déclencheur"
+      },
+      "online": {
+        "song": {
+          "title": "Song recognition",
+          "desc": "\"What's this song?\" in the dashboard: records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (needs songrec)"
+        },
+        "wallhaven": {
+          "title": "Wallhaven",
+          "desc": "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven"
+        }
       }
     },
     "display": {
@@ -1801,5 +1811,17 @@
   },
   "island": {
     "workspaces": "Workspaces"
+  },
+  "wallhaven": {
+    "search": "Search wallhaven.cc (empty = popular)",
+    "top": "Top",
+    "latest": "Latest",
+    "random": "Random",
+    "offline": "Browsing Wallhaven talks to wallhaven.cc (searches and image downloads), so it's off until you turn it on. Only safe-for-work wallpapers are shown.",
+    "enable": "Turn on Wallhaven",
+    "downloading": "Downloading…",
+    "loading": "Loading…",
+    "failed": "Couldn't reach wallhaven.cc",
+    "none": "No wallpapers found"
   }
 }
