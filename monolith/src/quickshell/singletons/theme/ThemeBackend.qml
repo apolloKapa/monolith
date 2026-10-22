@@ -107,6 +107,8 @@ Item {
     property var effects: ({})
     readonly property bool fxGrain: effects.grain !== false && !gameModeActive
     readonly property bool fxEdge: effects.edge !== false && !gameModeActive
+    // corner marks inside panel corners: "off" (default), "square" brackets or "round" arcs
+    readonly property string fxMarks: gameModeActive ? "off" : ((effects.marks === "square" || effects.marks === "round") ? effects.marks : "off")
     readonly property bool fxUnfold: effects.unfold !== false
     readonly property bool gameModeActive: gameModeEnabled && ToplevelManager.activeToplevel !== null
         && ToplevelManager.activeToplevel.fullscreen === true

@@ -1,8 +1,8 @@
 import QtQuick
 import "../../"
 
-// Monolith's surface effects, laid over a panel's background (under its content): grain and
-// an edge light (Theme -> Effects). WallpaperBlur creates one next to
+// Monolith's surface effects, laid over a panel's background (under its content): grain,
+// an edge light and (optional) corner marks (Theme -> Effects). WallpaperBlur creates one next to
 // itself for every outer panel, so the bar, dock, launcher, popups, notifications and
 // widgets all get them.
 Item {
@@ -44,4 +44,55 @@ Item {
         }
     }
 
+
+    // ── corner marks (Theme -> Effects): square brackets or round arcs inside the corners ──
+    Repeater {
+        model: ThemeBackend.fxMarks !== "off" && fx.width > Scaler.s(140) && fx.height > Scaler.s(70) ? 4 : 0
+        Item {
+            id: mark
+            required property int index
+            readonly property bool atRight: index === 1 || index === 3
+            readonly property bool atBottom: index >= 2
+            readonly property real inset: Math.max(Scaler.s(6), fx.r * 0.42)
+            readonly property real len: Scaler.s(12)
+            readonly property real th: Math.max(1, Scaler.s(1.5))
+            readonly property bool round: ThemeBackend.fxMarks === "round"
+            x: atRight ? fx.width - inset - len : inset
+            y: atBottom ? fx.height - inset - len : inset
+            width: len
+            height: len
+            opacity: 0.9
+            clip: round
+
+            // square: an L of two bars
+            Rectangle {
+                visible: !mark.round
+                x: 0
+                y: mark.atBottom ? mark.len - mark.th : 0
+                width: mark.len
+                height: mark.th
+                color: ThemeBackend.mauve
+            }
+            Rectangle {
+                visible: !mark.round
+                x: mark.atRight ? mark.len - mark.th : 0
+                y: 0
+                width: mark.th
+                height: mark.len
+                color: ThemeBackend.mauve
+            }
+            // round: the matching quarter of a ring
+            Rectangle {
+                visible: mark.round
+                width: mark.len * 2
+                height: mark.len * 2
+                x: mark.atRight ? -mark.len : 0
+                y: mark.atBottom ? -mark.len : 0
+                radius: mark.len
+                color: "transparent"
+                border.width: mark.th
+                border.color: ThemeBackend.mauve
+            }
+        }
+    }
 }
