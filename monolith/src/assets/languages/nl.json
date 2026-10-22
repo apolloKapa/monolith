@@ -412,7 +412,8 @@
         "modular": "Modulair",
         "solid": "Effen",
         "fill": "Gevuld",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Tijdsnotatie",

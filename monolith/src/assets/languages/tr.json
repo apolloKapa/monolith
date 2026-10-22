@@ -412,7 +412,8 @@
         "modular": "Modüler",
         "solid": "Düz",
         "fill": "Dolgulu",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Saat biçimi",

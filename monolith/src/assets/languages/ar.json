@@ -342,7 +342,8 @@
         "modular": "مجزأ",
         "solid": "مصمت",
         "title": "نمط الشريط",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "sysmon": {
         "cpu": {

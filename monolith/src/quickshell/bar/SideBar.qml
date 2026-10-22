@@ -27,8 +27,10 @@ Item {
         }
         return "modular";
     }
-    property bool isFill: barStyle === "fill"
-    property bool isSolid: barStyle === "solid" || barStyle === "fill"
+    // Frame (frame/ScreenFrame.qml) is a full-width solid bar that runs into the screen frame
+    property bool isFrame: barStyle === "frame"
+    property bool isFill: barStyle === "fill" || barStyle === "frame"
+    property bool isSolid: barStyle === "solid" || barStyle === "fill" || barStyle === "frame"
     property bool distinctPills: barWindow ? (barWindow.distinctPills !== undefined ? barWindow.distinctPills : false) : false
     property real cornerRadius: barWindow ? barWindow.cornerRadius : 12
     property bool barAtRight: !!barWindow && barWindow.barPosition === "right"

@@ -410,7 +410,8 @@
         "modular": "Hissələrə bölünmüş",
         "solid": "Bütöv",
         "fill": "Doldurulmuş",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Vaxt formatı",

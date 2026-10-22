@@ -412,7 +412,8 @@
         "modular": "ماژولار",
         "solid": "یکپارچه",
         "fill": "پُر",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "قالب زمان",

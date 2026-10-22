@@ -525,6 +525,17 @@ PanelWindow {
         }
     }
 
+    // Frame bar style: popups are drawers pulled out of the frame (frame/FrameDrawer.qml)
+    FrameDrawer {
+        id: frameDrawer
+        popupX: masterWindow._animX
+        popupY: masterWindow._animY
+        popupW: masterWindow._animW
+        popupH: masterWindow._animH
+        progress: contentStage.unfold
+        active: masterWindow.isVisible || contentStage.unfold > 0.001
+    }
+
     Item {
         id: animContainer
         x: masterWindow._animX
@@ -578,11 +589,14 @@ PanelWindow {
                     easing.type: masterWindow.isVisible ? Easing.OutQuart : Easing.InCubic
                 }
             }
+            // in a frame drawer the panel slides out of the edge it hangs from instead
+            readonly property bool inDrawer: frameDrawer.frameStyle && frameDrawer.attached
+            readonly property bool drawerVertical: frameDrawer.from === "top" || frameDrawer.from === "bottom"
             transform: Scale {
-                origin.x: contentStage.width / 2
-                origin.y: contentStage.height / 2
-                yScale: ThemeBackend.fxUnfold ? Math.max(0.012, contentStage.unfold) : 1.0
-                xScale: ThemeBackend.fxUnfold ? (0.985 + 0.015 * contentStage.unfold) : 1.0
+                origin.x: contentStage.inDrawer ? (frameDrawer.from === "left" ? 0 : (frameDrawer.from === "right" ? contentStage.width : contentStage.width / 2)) : contentStage.width / 2
+                origin.y: contentStage.inDrawer ? (frameDrawer.from === "top" ? 0 : (frameDrawer.from === "bottom" ? contentStage.height : contentStage.height / 2)) : contentStage.height / 2
+                yScale: (contentStage.inDrawer ? contentStage.drawerVertical : ThemeBackend.fxUnfold) ? Math.max(0.012, contentStage.unfold) : 1.0
+                xScale: contentStage.inDrawer ? (contentStage.drawerVertical ? 1.0 : Math.max(0.012, contentStage.unfold)) : (ThemeBackend.fxUnfold ? (0.985 + 0.015 * contentStage.unfold) : 1.0)
             }
 
             scale: (ThemeBackend.fxUnfold || masterWindow.isVisible) ? 1.0 : 0.96
@@ -607,7 +621,7 @@ PanelWindow {
             // the bright line a panel unfolds from
             Rectangle {
                 z: 100
-                visible: ThemeBackend.fxUnfold && contentStage.unfold < 0.98
+                visible: ThemeBackend.fxUnfold && !contentStage.inDrawer && contentStage.unfold < 0.98
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width * (0.4 + 0.6 * Math.min(1, contentStage.unfold * 3))

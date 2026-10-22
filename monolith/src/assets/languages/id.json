@@ -412,7 +412,8 @@
         "modular": "Modular",
         "solid": "Padat",
         "fill": "Terisi",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Format waktu",

@@ -412,7 +412,8 @@
         "modular": "Модулен",
         "solid": "Плътен",
         "fill": "Запълване",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Формат на часа",
