@@ -5,3 +5,8 @@ monolith/compositors/niri/config/workspaces.kdl
 # my personal package lists (kept local, not shared)
 packages.txt
 packages-aur.txt
+# personal launch scripts (kept local)
+bin/osu-wine
+bin/cosu-launch.sh
+bin/roblox-studio-mcp
+bin/gparted-dark

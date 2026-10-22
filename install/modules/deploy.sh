@@ -44,7 +44,12 @@ deploy_dotfiles_extras() {
     local project_root="$1"
     mkdir -p "$BIN_DIR" "$HOME/.config"
     cp -a "$project_root/bin/." "$BIN_DIR/"
-    [ -d "$project_root/config/rofi" ] && cp -r "$project_root/config/rofi" "$HOME/.config/"
+    if [ -d "$project_root/config/rofi" ]; then
+        mkdir -p "$HOME/.config/rofi"
+        cp "$project_root/config/rofi/config.rasi" "$HOME/.config/rofi/"
+        # your favourites are yours: only a starting list when you have none
+        [ -f "$HOME/.config/rofi/favorites" ] || cp "$project_root/config/rofi/favorites" "$HOME/.config/rofi/"
+    fi
     [ -f "$HOME/.config/wallpaper" ] || cp "$project_root/config/wallpaper" "$HOME/.config/wallpaper" 2>/dev/null || true
     case ":$PATH:" in
         *":$BIN_DIR:"*) ;;

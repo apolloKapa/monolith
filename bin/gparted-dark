@@ -1,3 +1,0 @@
-#!/bin/sh
-xhost +SI:localuser:root >/dev/null 2>&1
-exec pkexec env GTK_THEME=Adwaita:dark GTK_ICON_THEME=Adwaita GDK_BACKEND=x11 gparted "$@"
