@@ -18,8 +18,6 @@ One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...), as you
 curl -fsSL https://raw.githubusercontent.com/apolloKapa/monolith/main/install/get.sh | bash
 ```
 
-Or from a clone: `git clone https://github.com/apolloKapa/monolith && ./monolith/install.sh`.
-
 Once it's installed, **`monolith installer`** opens the installer again to update, reinstall or change options. Settings → About → Update does the same.
 
 ### What the installer does
