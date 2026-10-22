@@ -106,6 +106,11 @@ Scope {
                     LockLayoutStore.setReference(win.screenW, win.screenH);
                     LockLayoutStore.beginHistory();
                 }
+                // the screen is often only known after the editor opens (screenW starts at the
+                // 1920 fallback): keep the layout's reference size in step with the real screen,
+                // or edits get saved in screen pixels under the wrong reference and end up off-centre
+                onScreenWChanged: LockLayoutStore.setReference(win.screenW, win.screenH)
+                onScreenHChanged: LockLayoutStore.setReference(win.screenW, win.screenH)
 
                 Component.onDestruction: LockLayoutStore.endHistory()
                 property real pageProgress: win.page

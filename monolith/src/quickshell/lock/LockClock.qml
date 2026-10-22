@@ -8,7 +8,8 @@ Item {
 
     property var currentTime: new Date()
     readonly property bool concealed: screenRoot.inputActive || screenRoot.centerReveal > 0.02
-    readonly property real fit: Math.min(width / LockLayoutStore.refW, height / LockLayoutStore.refH)
+    // Shrink on screens smaller than the layout, never stretch (stretching pixelates and oversizes)
+    readonly property real fit: Math.min(1, width / LockLayoutStore.refW, height / LockLayoutStore.refH)
 
     anchors.fill: parent
     opacity: clockModule.concealed ? 0.0 : 1.0
@@ -19,8 +20,8 @@ Item {
     Behavior on scale { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     Item {
-        width: LockLayoutStore.refW
-        height: LockLayoutStore.refH
+        width: clockModule.width / clockModule.fit
+        height: clockModule.height / clockModule.fit
         anchors.centerIn: parent
         scale: clockModule.fit
 
@@ -28,6 +29,8 @@ Item {
             anchors.fill: parent
             scope: "screen"
             ctx: clockModule.screenRoot
+            spreadX: width / LockLayoutStore.refW
+            spreadY: height / LockLayoutStore.refH
         }
     }
 }

@@ -151,6 +151,9 @@ QtObject {
                 m.setProperty(i, "ih", e.ih * f);
             }
         }
+        // a placed panel moves with the rest (its size stays: the lock screen scales it already)
+        if (root.panelX >= 0) root.panelX = (root.panelX + root.panelW / 2) * fx - root.panelW / 2;
+        if (root.panelY >= 0) root.panelY = (root.panelY + root.panelH / 2) * fy - root.panelH / 2;
         root.refW = w;
         root.refH = h;
         root.touch();
