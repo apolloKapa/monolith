@@ -7,6 +7,8 @@ My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith
 > **INSPIRED BY SERPANTINUM BY [@ilyamiro](https://github.com/ilyamiro)**
 >
 > Monolith is a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) and keeps its licence (AGPL-3.0, see [`LICENSE`](LICENSE)).
+>
+> Some features are inspired by [iNiR](https://github.com/snowarch/inir) by snowarch (the overview, dashboard, cheatsheet, switcher, session screen, island, GameMode, app theming and the extra styles), rebuilt for Monolith.
 
 ---
 
@@ -74,7 +76,7 @@ After editing a niri file, `niri validate` tells you if something's wrong.
 
 Everything below is built in.
 
-**Bar**: top or side, fill / floating / pill styles, autohide. Modules: workspaces, media, time & date, weather, system info, tray, Wi-Fi, Bluetooth, volume, battery, keyboard layout, system monitor (CPU/RAM/temp/disk), audio visualizer, current window, quick buttons. Editable in Settings → Bar.
+**Bar**: top or side, modular / solid / fill styles, or the **Island**: one pill at the top of each screen with workspaces, the time, what's playing and unread notifications, which unfolds on hover into workspace buttons, the player, the date and shortcuts. Autohide. Modules: workspaces, media, time & date, weather, system info, tray, Wi-Fi, Bluetooth, volume, battery, keyboard layout, system monitor (CPU/RAM/temp/disk), audio visualizer, current window, quick buttons. Editable in Settings → Bar.
 
 **Dock**: pinned and running apps, any edge. Auto-hide, smart auto-hide (hides while windows are open), or smart auto-hide with **Dodge windows**: stays up with windows open and only hides when a window is over it; while covered, push the cursor to that screen edge to bring it back.
 
@@ -91,6 +93,13 @@ Everything below is built in.
 - Calendar
 - On-screen display for volume, brightness and caps/num lock
 - Quick actions: calculator, notes, timer, drawing, system usage, dock
+- Workspace overview (`monolith msg toggle overview`): every monitor's workspaces with their windows drawn to scale in niri's columns; click to jump, type to search windows and apps
+- Dashboard (`monolith msg toggle dashboard`): clock, weather, month, what's playing, recent notifications, a pomodoro timer and a todo list
+- Window switcher (`monolith msg toggle switcher`): windows on every workspace, most recent first; Tab / arrows, Enter (or let go of Alt when bound to an Alt combo)
+- Keybind cheatsheet (`monolith msg toggle cheatsheet`): every keybind in your niri config, grouped and searchable
+- Session screen (`monolith msg toggle session`): lock, log out, suspend, hibernate, reboot, shut down (the last ones ask twice)
+
+None of these have keybinds by default, so your niri config stays as it is; bind them in `keybinds.kdl`, e.g. `Mod+Tab { spawn "monolith" "msg" "toggle" "switcher"; }`.
 
 **Wallpapers** (`Mod+W`): picker with transitions, video wallpapers, and online search (DuckDuckGo, only when you search).
 
@@ -105,10 +114,19 @@ Everything below is built in.
 **Settings** (`Mod+S`, or *Monolith Settings* in the app launcher) opens in its own window, with search and full keyboard navigation (Tab, arrows, Enter):
 
 - Welcome
-- General: language, location, weather units, sounds
+- General: language, location, weather units, sounds, and **Online** features (all off until you switch them on): song recognition and the Wallhaven browser
 - Display: monitors, widgets, lock screen
-- Theme: 97 colour presets, colours from your wallpaper (matugen), fonts, corner radius, opacity, and the surface style **Blur / Liquid glass / Minimalist**
-- Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, and the same speed for niri's window animations
+- Theme: 97 colour presets, colours from your wallpaper (matugen), fonts, corner radius, opacity, and the **style**, picked from a preview grid:
+  - **Blur**, **Liquid glass**: see-through, your colours
+  - **Minimalist**: flat, square, grey outlines (my old Quickshell look)
+  - **Terminal**: phosphor green on black, monospace, thin accent frames
+  - **Brutal**: cream, thick ink outlines, hard shadows, Space Grotesk
+  - **Luxe**: black chassis, ivory text, gold detail
+  - **Poster**: carbon plates, signal yellow, bold square frames
+  - **Bubbly**: extra-round corners, keeps your colours
+  - **Paper**: ink on paper, serif type (Lora), fine rules
+- Theme → Apps: GTK, Qt, foot, alacritty, btop and rofi can follow Monolith's colours; switching one off puts its config back exactly as it was
+- Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, the same speed for niri's window animations, and **GameMode** (no animations, blur or glass while a fullscreen window has focus)
 - Theme → Windows: niri window borders on/off, width, colours for focused / other / attention windows (theme swatches or any hex), or follow the theme's colours automatically
 - Bar: general and modules
 - Launcher, Dock, On-screen display, Notifications
@@ -124,6 +142,7 @@ Everything below is built in.
 - **Private**:
   - no telemetry
   - no IP geolocation and no reverse geocoding; weather uses the location you set in Settings → General and only sends those coordinates to open-meteo
+  - online extras are off until you turn them on (Settings → General → Online): **song recognition** records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (through `songrec`); **Wallhaven** searches and downloads from wallhaven.cc (safe-for-work as rated by Wallhaven, so some anime art can be borderline)
   - lyrics only from lrclib (NetEase removed)
   - things that still go online only do so when you use them: lyrics, YouTube cover art, the GitHub widget, wallpaper search, the Wi-Fi login-page button
 - **Its own look and voice**: Monolith logo, horizon intro ("really good desktop :3"), Lith the sleepy slab mascot (replaces the Pusheen GIFs), own name and paths
@@ -243,7 +262,9 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `monolith restart` / `kill` | restart / stop the shell |
 | `monolith settings [tab]` | open the settings window (on a tab, e.g. `monolith settings about`) |
 | `monolith config get\|set\|dump\|edit` | read or change settings from the terminal |
-| `monolith msg toggle <panel>` | open/close `launcher`, `system`, `settings`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `autohide` |
+| `monolith msg toggle <panel>` | open/close `launcher`, `system`, `settings`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `overview`, `dashboard`, `switcher`, `cheatsheet`, `session`, `wallhaven`, `autohide` |
+| `monolith recognize` | what's this song? (when song recognition is on) |
+| `monolith ipc call island toggle` | unfold / fold the island (Island bar style) |
 | `monolith msg workspace <n> [move]` | go to / move to workspace |
 | `monolith lock` | lock screen |
 | `monolith screenshot [--full] [--edit] [--ocr]` | screenshot (`--ocr` copies the text in it) |
@@ -301,4 +322,4 @@ While the repo is private, the update check goes through the GitHub CLI (`gh aut
 
 Copyright (C) 2026 apolloKapa
 
-Monolith is based on Serpantinum, copyright (C) its author [@ilyamiro](https://github.com/ilyamiro), and is licensed under the [GNU AGPL-3.0](LICENSE), like Serpantinum. You can use, change and share it; if you share a modified version (or run it for others over a network), share its source under the same licence.
+Monolith is based on Serpantinum, copyright (C) its author [@ilyamiro](https://github.com/ilyamiro), and is licensed under the [GNU AGPL-3.0](LICENSE), like Serpantinum. Several features are inspired by [iNiR](https://github.com/snowarch/inir) by snowarch (GPL-3.0); they were written anew for Monolith, and iNiR's names, logos and mascot aren't used. You can use, change and share it; if you share a modified version (or run it for others over a network), share its source under the same licence.

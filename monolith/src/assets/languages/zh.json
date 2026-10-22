@@ -21,7 +21,8 @@
         "uptime": "运行时间",
         "default_os": "Linux"
       },
-      "github_repo": "apolloKapa/monolith"
+      "github_repo": "apolloKapa/monolith",
+      "credits": "Based on Serpantinum by @ilyamiro · features inspired by iNiR by snowarch"
     },
     "tabs": {
       "welcome": "欢迎",
