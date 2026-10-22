@@ -274,6 +274,13 @@ PopupShell {
                             RoundButton { glyph: "󰒮"; onClicked: { let p = MprisController.activePlayer; if (p && p.canGoPrevious) p.previous(); } }
                             RoundButton { glyph: MprisController.isPlaying ? "󰏤" : "󰐊"; primary: true; onClicked: { let p = MprisController.activePlayer; if (p && p.canTogglePlaying) p.togglePlaying(); } }
                             RoundButton { glyph: "󰒭"; onClicked: { let p = MprisController.activePlayer; if (p && p.canGoNext) p.next(); } }
+                            Item { Layout.fillWidth: true }
+                            // "what's this song?" (off until switched on in Settings -> General -> Online)
+                            RoundButton {
+                                visible: (Config.getSetting("online", {}) || {}).songRecognition === true
+                                glyph: "󰎈"
+                                onClicked: Quickshell.execDetached(["bash", Caching.monolithDir + "/scripts/recognize_song.sh"])
+                            }
                         }
                     }
                 }

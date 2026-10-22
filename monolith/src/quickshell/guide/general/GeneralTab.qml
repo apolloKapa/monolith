@@ -156,6 +156,8 @@ GuideTab {
 
             GeneralLocationSection { id: locationSection; tab: generalTabRoot }
 
+            GeneralOnlineSection { tab: generalTabRoot }
+
             SettingsRow {
                 rootObj: generalTabRoot.rootObj
                 icon: "󰆏"

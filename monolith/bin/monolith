@@ -668,6 +668,11 @@ if [[ "$1" == "launch" ]]; then
     fi
 fi
 
+# monolith recognize: "what's this song?" (Settings -> General -> Online -> Song recognition)
+if [[ "$1" == "recognize" ]]; then
+    exec bash "$MONOLITH_DIR/scripts/recognize_song.sh"
+fi
+
 if [[ "$1" == "settings" ]]; then
     shift
     exec "$MONOLITH_DIR/scripts/settings.sh" "$@"
