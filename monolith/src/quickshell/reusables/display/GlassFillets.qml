@@ -25,10 +25,10 @@ WallpaperBlur {
     width: card.width + leftMargin + rightMargin
     height: card.height + topMargin + bottomMargin
 
-    topLeftRadius: ThemeBackend.minimalist ? 0 : (card.topLeftRadius)
-    topRightRadius: ThemeBackend.minimalist ? 0 : (card.topRightRadius)
-    bottomLeftRadius: ThemeBackend.minimalist ? 0 : (card.bottomLeftRadius)
-    bottomRightRadius: ThemeBackend.minimalist ? 0 : (card.bottomRightRadius)
+    topLeftRadius: ThemeBackend.rad(card.topLeftRadius)
+    topRightRadius: ThemeBackend.rad(card.topRightRadius)
+    bottomLeftRadius: ThemeBackend.rad(card.bottomLeftRadius)
+    bottomRightRadius: ThemeBackend.rad(card.bottomRightRadius)
     boxRect: Qt.rect(leftMargin, topMargin, card.width, card.height)
     bezelSize: Math.max(5, Math.min(26, Math.min(card.width, card.height) * 0.36))
 

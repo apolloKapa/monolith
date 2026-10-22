@@ -154,7 +154,7 @@ Item {
                         anchors.centerIn: parent
                         width: parent.width * 0.92
                         height: width
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: numDelegate.activeColor
                         opacity: numDelegate.intensity * 0.24
                         antialiasing: true
@@ -182,7 +182,7 @@ Item {
             Rectangle {
                 width: root.handWidth
                 height: Math.min(root.width, root.height) * 0.22
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: root.hourHandColor
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.top
@@ -200,7 +200,7 @@ Item {
             Rectangle {
                 width: root.handWidth
                 height: Math.min(root.width, root.height) * 0.32
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: root.minuteHandColor
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.top
@@ -219,7 +219,7 @@ Item {
             Rectangle {
                 width: root.secondHandWidth
                 height: Math.min(root.width, root.height) * 0.38
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: root.secondHandColor
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.top

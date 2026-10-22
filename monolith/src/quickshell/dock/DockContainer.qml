@@ -248,7 +248,7 @@ Item {
         card: dockBg
         surfaceEnabled: dockWindow.dockBackground && filletRadius > 0.5
         opacity: (dockWindow.sameSideAsBar ? containerRoot.revealProgress : 1.0) * (ThemeBackend.liquidGlass ? 1.0 : containerRoot.outerCornerProgress)
-        filletRadius: ThemeBackend.minimalist ? 0 : (!containerRoot.fanFillets ? 0 : (ThemeBackend.liquidGlass ? dockWindow.outerCornerRadius * containerRoot.outerCornerProgress : (containerRoot.outerCornerProgress > 0.001 ? dockWindow.outerCornerRadius : 0)))
+        filletRadius: ThemeBackend.rad(!containerRoot.fanFillets ? 0 : (ThemeBackend.liquidGlass ? dockWindow.outerCornerRadius * containerRoot.outerCornerProgress : (containerRoot.outerCornerProgress > 0.001 ? dockWindow.outerCornerRadius : 0)))
         filletDir: dockWindow.dockPosition === "bottom" ? Qt.vector2d(0, 1)
                  : dockWindow.dockPosition === "top" ? Qt.vector2d(0, -1)
                  : dockWindow.dockPosition === "left" ? Qt.vector2d(-1, 0)
@@ -261,12 +261,12 @@ Item {
 
         WallpaperBlur {
             anchors.fill: parent
-            topLeftRadius: ThemeBackend.minimalist ? 0 : (containerRoot.topLeftCorner)
-            topRightRadius: ThemeBackend.minimalist ? 0 : (containerRoot.topRightCorner)
-            bottomLeftRadius: ThemeBackend.minimalist ? 0 : (containerRoot.bottomLeftCorner)
-            bottomRightRadius: ThemeBackend.minimalist ? 0 : (containerRoot.bottomRightCorner)
+            topLeftRadius: ThemeBackend.rad(containerRoot.topLeftCorner)
+            topRightRadius: ThemeBackend.rad(containerRoot.topRightCorner)
+            bottomLeftRadius: ThemeBackend.rad(containerRoot.bottomLeftCorner)
+            bottomRightRadius: ThemeBackend.rad(containerRoot.bottomRightCorner)
             surfaceEnabled: dockWindow.dockBackground
-            filletRadius: ThemeBackend.minimalist ? 0 : (dockFillets.filletRadius)
+            filletRadius: ThemeBackend.rad(dockFillets.filletRadius)
             filletDir: dockFillets.filletDir
         }
     }
@@ -291,11 +291,11 @@ Item {
         Rectangle {
             id: dockBg
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (containerRoot.dynamicCornerRadius)
-            topLeftRadius: ThemeBackend.minimalist ? 0 : (containerRoot.topLeftCorner)
-            topRightRadius: ThemeBackend.minimalist ? 0 : (containerRoot.topRightCorner)
-            bottomLeftRadius: ThemeBackend.minimalist ? 0 : (containerRoot.bottomLeftCorner)
-            bottomRightRadius: ThemeBackend.minimalist ? 0 : (containerRoot.bottomRightCorner)
+            radius: ThemeBackend.rad(containerRoot.dynamicCornerRadius)
+            topLeftRadius: ThemeBackend.rad(containerRoot.topLeftCorner)
+            topRightRadius: ThemeBackend.rad(containerRoot.topRightCorner)
+            bottomLeftRadius: ThemeBackend.rad(containerRoot.bottomLeftCorner)
+            bottomRightRadius: ThemeBackend.rad(containerRoot.bottomRightCorner)
             color: ThemeBackend.liquidGlass ? "transparent" : ThemeBackend.base
             border.width: (!ThemeBackend.liquidGlass && (dockWindow.dockFloating || dockWindow.editMode || containerRoot.outerCornerProgress < 0.99)) ? 1 : 0
             border.color: (dockWindow.dockFloating || dockWindow.editMode || containerRoot.outerCornerProgress < 0.99) ? Qt.alpha(ThemeBackend.surface1, 0.4 * (1.0 - containerRoot.outerCornerProgress * 0.5)) : "transparent"
@@ -442,7 +442,7 @@ Item {
                         anchors.centerIn: parent
                         width: dockWindow.isVertical ? Math.round(dockWindow.s(dockWindow.dockElementSize) * 0.5) : 1
                         height: dockWindow.isVertical ? 1 : Math.round(dockWindow.s(dockWindow.dockElementSize) * 0.5)
-                        radius: ThemeBackend.minimalist ? 0 : (1)
+                        radius: ThemeBackend.rad(1)
                         color: Qt.alpha(ThemeBackend.surface2, 0.7)
                     }
                 }

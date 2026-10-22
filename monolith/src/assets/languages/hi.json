@@ -48,7 +48,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "\u0938\u094d\u0915\u094d\u0930\u0940\u0928\u0936\u0949\u091f",
+      "screenshot": "स्क्रीनशॉट",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -656,6 +656,10 @@
       "element_opacity": {
         "title": "तत्वों की अपारदर्शिता",
         "desc": "बार, डॉक, विजेट और शेल के अन्य सभी तत्वों की अपारदर्शिता"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "धुंधली वॉलपेपर पृष्ठभूमि जोड़ें",

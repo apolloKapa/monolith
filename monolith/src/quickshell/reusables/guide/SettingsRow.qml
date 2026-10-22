@@ -418,7 +418,7 @@ Rectangle {
     default property alias content: controlRow.data
     property alias bottomContent: bottomCol.data
 
-    radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+    radius: ThemeBackend.rad(root.cornerRadius)
     readonly property color stateColor: {
         let base = (root.clickable && cardMa.containsMouse) ? root.hoverColor : root.baseColor;
         if (root.dimmed) base = Qt.alpha(base, base.a * 0.5);
@@ -449,7 +449,7 @@ Rectangle {
         id: rowGlass
         anchors.fill: parent
         allowed: !root.inBlob || root.blobPlacement.nested
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         tintColor: ThemeBackend.surface0
         tintAmount: (root.clickable && cardMa.containsMouse ? 0.34 : 0.26) * (root.dimmed ? 0.5 : 1.0)
         press: root.clickable && cardMa.containsMouse ? 0.2 : 0
@@ -502,7 +502,7 @@ Rectangle {
                 Layout.preferredWidth: visible ? root.s(root.iconSize) : 0
                 Layout.preferredHeight: visible ? root.s(root.iconSize) : 0
                 Layout.alignment: Qt.AlignVCenter
-                cornerRadius: ThemeBackend.minimalist ? 0 : (root.iconCornerRadius)
+                cornerRadius: ThemeBackend.rad(root.iconCornerRadius)
                 buttonIcon: root.icon
                 iconFontSize: root.s(root.iconFontSize)
                 accentColor: root.dimmed ? ThemeBackend.surface1 : root.iconAccentColor

@@ -181,7 +181,7 @@ Item {
             GlassFill {
                 id: gf1
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: ThemeBackend.surface0
                 tintAmount: 0.25
             }
@@ -236,7 +236,7 @@ Item {
         visible: wpPreviewContainer.tab.isWallpaperVideo
         anchors.centerIn: parent
         size: rootObj.s(50)
-        cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(16))
+        cornerRadius: ThemeBackend.rad(rootObj.s(16))
         iconFontSize: rootObj.s(20)
         buttonIcon: "󰐊"
         accentColor: ThemeBackend.surface0

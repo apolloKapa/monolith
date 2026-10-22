@@ -17,7 +17,7 @@ Item {
         id: qaBtn
         Layout.fillWidth: true
         Layout.fillHeight: true
-        radius: ThemeBackend.minimalist ? 0 : (view.panel.cardRadius)
+        radius: ThemeBackend.rad(view.panel.cardRadius)
 
         property bool isActive: false
         property string iconText: ""
@@ -46,7 +46,7 @@ Item {
         GlassFill {
             id: qaGlass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: qaBtn.isActive ? qaBtn.activeColor : (qaMa.containsMouse ? ThemeBackend.surface1 : ThemeBackend.surface0)
             tintAmount: qaBtn.isActive ? 0.6 : 0.3
             shadow: 1

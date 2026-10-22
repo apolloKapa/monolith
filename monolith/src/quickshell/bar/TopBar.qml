@@ -561,26 +561,26 @@ Item {
         height: barWindow ? barWindow.barHeight : 0
         y: barWindow ? barWindow.baseOffsetY : 0
         color: Qt.alpha(ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
-        radius: ThemeBackend.minimalist ? 0 : (isFill ? 0 : ThemeBackend.borderRadius)
-        topLeftRadius: ThemeBackend.minimalist ? 0 : (isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
-        topRightRadius: ThemeBackend.minimalist ? 0 : (isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
-        bottomLeftRadius: ThemeBackend.minimalist ? 0 : (isFill ? (contentWrapper.barAtBottom ? 0 : contentWrapper.fillFarRadius) : radius)
-        bottomRightRadius: ThemeBackend.minimalist ? 0 : (isFill ? (contentWrapper.barAtBottom ? 0 : contentWrapper.fillFarRadius) : radius)
-        border.width: (ThemeBackend.minimalist && !isFill) ? ThemeBackend.minimalistOuterBorder : ((isSolid || isFill) ? 0 : 1)
-        border.color: (ThemeBackend.minimalist && !isFill) ? ThemeBackend.minimalistBorderColor : ((isSolid || isFill) ? "transparent" : Qt.alpha(ThemeBackend.surface0, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0))
+        radius: ThemeBackend.rad(isFill ? 0 : ThemeBackend.borderRadius)
+        topLeftRadius: ThemeBackend.rad(isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
+        topRightRadius: ThemeBackend.rad(isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
+        bottomLeftRadius: ThemeBackend.rad(isFill ? (contentWrapper.barAtBottom ? 0 : contentWrapper.fillFarRadius) : radius)
+        bottomRightRadius: ThemeBackend.rad(isFill ? (contentWrapper.barAtBottom ? 0 : contentWrapper.fillFarRadius) : radius)
+        border.width: (ThemeBackend.outlined && !isFill) ? ThemeBackend.outlineOuter : ((isSolid || isFill) ? 0 : 1)
+        border.color: (ThemeBackend.outlined && !isFill) ? ThemeBackend.outlineColor : ((isSolid || isFill) ? "transparent" : Qt.alpha(ThemeBackend.surface0, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0))
         visible: (isSolid || isFill) && (barWindow ? !barWindow.positionChanging : true)
         opacity: visible ? 1.0 : 0.0
 
 
         // Minimalist + fill: a single line on the edge that faces the windows
         Rectangle {
-            visible: ThemeBackend.minimalist && isFill
+            visible: ThemeBackend.outlined && isFill
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: contentWrapper.barAtBottom ? undefined : parent.bottom
             anchors.top: contentWrapper.barAtBottom ? parent.top : undefined
-            height: ThemeBackend.minimalistOuterBorder
-            color: ThemeBackend.minimalistBorderColor
+            height: ThemeBackend.outlineOuter
+            color: ThemeBackend.outlineColor
         }
 
         WallpaperBlur {
@@ -588,10 +588,10 @@ Item {
             z: -1
             anchors.fill: parent
             rim: (ThemeBackend.liquidGlass && contentWrapper.isFill) ? 0 : 0.45
-            topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-            topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-            bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-            bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
+            topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+            topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+            bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+            bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
         }
 
         Behavior on x {
@@ -719,7 +719,7 @@ Item {
             card: outerCornerCard
             filletDir: Qt.vector2d(modelData, 0)
             rim: 0
-            filletRadius: ThemeBackend.minimalist ? 0 : ((ThemeBackend.liquidGlass && contentWrapper.outerCornersReady) ? contentWrapper.cornerRadius : 0)
+            filletRadius: ThemeBackend.rad((ThemeBackend.liquidGlass && contentWrapper.outerCornersReady) ? contentWrapper.cornerRadius : 0)
             visible: filletRadius > 0.5 && (barWindow ? !barWindow.positionChanging : true)
             opacity: (visible && (!barWindow || barWindow.isRevealed)) ? 1.0 : 0.0
             z: 0
@@ -802,7 +802,7 @@ Item {
                 id: groupBlur
                 z: -1
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 surfaceEnabled: !contentWrapper || !contentWrapper.isSolid
                 standalone: true
             }
@@ -811,7 +811,7 @@ Item {
                 id: groupGlass
                 anchors.fill: parent
                 z: -1
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 allowed: !!contentWrapper && contentWrapper.isSolid && contentWrapper.distinctPills
                 tintColor: ThemeBackend.surface0
                 tintAmount: 0.3

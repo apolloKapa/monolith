@@ -42,7 +42,7 @@ Flickable {
         Rectangle {
             Layout.preferredWidth: view.rootObj.s(32)
             Layout.preferredHeight: view.rootObj.s(32)
-            radius: ThemeBackend.minimalist ? 0 : (Math.round(view.rootObj.s(32) * 0.28))
+            radius: ThemeBackend.rad(Math.round(view.rootObj.s(32) * 0.28))
             color: ThemeBackend.surface0
 
             Image {

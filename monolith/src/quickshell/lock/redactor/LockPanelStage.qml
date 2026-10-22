@@ -90,7 +90,7 @@ Item {
         height: LockLayoutStore.panelH
         x: stage.panelLeft
         y: stage.panelTop
-        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius * 1.5)
+        radius: ThemeBackend.rad(ThemeBackend.borderRadius * 1.5)
         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity * LockLayoutStore.panelOpacity)
         border.width: stage.unit
         border.color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.12)

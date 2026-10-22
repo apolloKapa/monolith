@@ -141,7 +141,7 @@ Item {
                                     GlassFill {
                                         id: trackGlass
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         tintColor: ThemeBackend.surface0
                                         tintAmount: 0.3
                                     }
@@ -161,7 +161,7 @@ Item {
                                         anchors.centerIn: parent
                                         width: parent.width + root.s(17) + sliderDelegate.ringPulse * root.s(34)
                                         height: parent.height + root.s(17) + sliderDelegate.ringPulse * root.s(51)
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius + root.s(8) + sliderDelegate.ringPulse * root.s(17))
+                                        radius: ThemeBackend.rad(parent.radius + root.s(8) + sliderDelegate.ringPulse * root.s(17))
                                         color: "transparent"
                                         border.color: root.eqAccentColor
                                         border.width: root.s(2) + sliderDelegate.ringPulse * root.s(4)
@@ -248,7 +248,7 @@ Item {
                                     implicitWidth: root.s(16)
                                     implicitHeight: root.s(16)
                                     width: root.s(16); height: root.s(16)
-                                    radius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                    radius: ThemeBackend.rad(root.s(8))
 
                                     property color handleColor: ThemeBackend.text || "#cdd6f4"
                                     property color handleHoverColor: Qt.lighter(root.eqAccentColor, 1.15)
@@ -259,7 +259,7 @@ Item {
                                     GlassFill {
                                         id: eqHandleGlass
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         tintColor: parent.handleColor
                                         tintAmount: 0.4
                                         shadow: 1
@@ -315,7 +315,7 @@ Item {
                                         anchors.centerIn: parent
                                         width: parent.width + root.s(31) * sliderDelegate.hitPulse
                                         height: width
-                                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                                        radius: ThemeBackend.rad(width / 2)
                                         color: (parent.catColors && parent.catColors.length > 0) ? (parent.catColors[(typeof index !== "undefined" ? index : 0) % parent.catColors.length] || root.eqAccentColor) : root.eqAccentColor
                                         opacity: sliderDelegate.hitPulse * (1.0 - root.eqLightningFade)
                                         layer.enabled: true
@@ -324,7 +324,7 @@ Item {
 
                                     Rectangle {
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         color: "#ffffff"
                                         opacity: eqHandle.flashOpacity
                                         PropertyAnimation on opacity { id: eqHandleFlashAnim; to: 0; duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic }

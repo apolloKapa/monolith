@@ -1093,7 +1093,7 @@ Variants {
                 id: peekBar
                 width: (floatingWidget.activeEdge === "bottom" || floatingWidget.activeEdge === "top") ? peekBarLength : floatingWidget.s(11)
                 height: (floatingWidget.activeEdge === "bottom" || floatingWidget.activeEdge === "top") ? floatingWidget.s(11) : peekBarLength
-                radius: ThemeBackend.minimalist ? 0 : (Math.min(floatingWidget.containerRadius, Math.min(width, height) / 2))
+                radius: ThemeBackend.rad(Math.min(floatingWidget.containerRadius, Math.min(width, height) / 2))
 
                 color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
                 border.width: 0
@@ -1101,7 +1101,7 @@ Variants {
                 WallpaperBlur {
                     z: -1
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                 }
 
                 opacity: 1.0
@@ -1153,7 +1153,7 @@ Variants {
                     anchors.centerIn: parent
                     width: (floatingWidget.activeEdge === "bottom" || floatingWidget.activeEdge === "top") ? floatingWidget.s(20) : floatingWidget.s(3.5)
                     height: (floatingWidget.activeEdge === "bottom" || floatingWidget.activeEdge === "top") ? floatingWidget.s(3.5) : floatingWidget.s(20)
-                    radius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, Math.min(width, height) / 2))
+                    radius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, Math.min(width, height) / 2))
                     color: ThemeBackend.liquidGlass ? Qt.alpha(ThemeBackend.text, 0.85) : Qt.darker(ThemeBackend.mauve, 1.8)
                 }
 
@@ -1257,7 +1257,7 @@ Variants {
                     GlassFillets {
                         id: sidebarFillets
                         card: morphingBackground
-                        filletRadius: ThemeBackend.minimalist ? 0 : (floatingWidget.outerCornerRadius > 0.5 ? floatingWidget.outerCornerRadius : 0)
+                        filletRadius: ThemeBackend.rad(floatingWidget.outerCornerRadius > 0.5 ? floatingWidget.outerCornerRadius : 0)
                         filletDir: Qt.vector2d(-1, 0)
                         filletInset: floatingWidget.edgeBleed
                     }
@@ -1291,11 +1291,11 @@ Variants {
                         y: 0
                         width: parent.width + floatingWidget.edgeBleed
                         height: parent.height
-                        radius: ThemeBackend.minimalist ? 0 : (floatingWidget.containerRadius)
+                        radius: ThemeBackend.rad(floatingWidget.containerRadius)
                         topLeftRadius: 0
                         bottomLeftRadius: 0
-                        topRightRadius: ThemeBackend.minimalist ? 0 : (floatingWidget.containerRadius)
-                        bottomRightRadius: ThemeBackend.minimalist ? 0 : (floatingWidget.containerRadius)
+                        topRightRadius: ThemeBackend.rad(floatingWidget.containerRadius)
+                        bottomRightRadius: ThemeBackend.rad(floatingWidget.containerRadius)
                         color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
                         border.width: 0
 
@@ -1303,11 +1303,11 @@ Variants {
                             z: -1
                             anchors.fill: parent
                             anchors.leftMargin: floatingWidget.edgeBleed
-                            topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                            topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                            bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                            bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
-                            filletRadius: ThemeBackend.minimalist ? 0 : (sidebarFillets.filletRadius)
+                            topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                            topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                            bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                            bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
+                            filletRadius: ThemeBackend.rad(sidebarFillets.filletRadius)
                             filletDir: sidebarFillets.filletDir
                         }
 
@@ -1369,7 +1369,7 @@ Variants {
                         clip: true
 
                         component EmptyBlock : Rectangle {
-                            radius: ThemeBackend.minimalist ? 0 : (Math.min(floatingWidget.s(10), Math.min(width, height) / 2))
+                            radius: ThemeBackend.rad(Math.min(floatingWidget.s(10), Math.min(width, height) / 2))
                             color: blockGlass.active ? "transparent" : Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.05)
                             border.width: 0
                             border.color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.08)
@@ -1378,7 +1378,7 @@ Variants {
                             GlassFill {
                                 id: blockGlass
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                radius: ThemeBackend.rad(parent.radius)
                                 tintColor: ThemeBackend.surface0
                                 tintAmount: 0.25
                             }
@@ -1534,7 +1534,7 @@ Variants {
                                         Rectangle {
                                             width: floatingWidget.s(4)
                                             height: floatingWidget.s(4)
-                                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                                            radius: ThemeBackend.rad(width / 2)
                                             color: parent.iconColor
                                             anchors.verticalCenter: parent.verticalCenter
                                             x: parent.pivotX - (width / 2)
@@ -1546,7 +1546,7 @@ Variants {
                                             anchors.verticalCenter: parent.verticalCenter
                                             width: floatingWidget.s(10)
                                             height: floatingWidget.s(3.5)
-                                            radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                                            radius: ThemeBackend.rad(height / 2)
                                             transformOrigin: Item.Left
                                             rotation: 42
                                             color: parent.iconColor
@@ -1558,7 +1558,7 @@ Variants {
                                             anchors.verticalCenter: parent.verticalCenter
                                             width: floatingWidget.s(10)
                                             height: floatingWidget.s(3.5)
-                                            radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                                            radius: ThemeBackend.rad(height / 2)
                                             transformOrigin: Item.Left
                                             rotation: -42
                                             color: parent.iconColor
@@ -1605,7 +1605,7 @@ Variants {
                                     id: pinButton
                                     width: floatingWidget.buttonSize
                                     height: floatingWidget.buttonSize
-                                    radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                                    radius: ThemeBackend.rad(width / 2)
                                     x: (parent.width - width) / 2
                                     y: floatingWidget.activeEdge === "left"
                                         ? expandButton.y + expandButton.height + floatingWidget.s(6)
@@ -1666,13 +1666,13 @@ Variants {
                                 x: 0
                                 width: parent.width
                                 z: 0
-                                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                                radius: ThemeBackend.rad(width / 2)
                                 color: highlightGlass.active ? "transparent" : ThemeBackend.mauve
 
                                 GlassFill {
                                     id: highlightGlass
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                    radius: ThemeBackend.rad(parent.radius)
                                     tintColor: ThemeBackend.mauve
                                     tintAmount: 0.5
                                     shadow: 1
@@ -1717,7 +1717,7 @@ Variants {
 
                                     x: 0
                                     width: parent.width
-                                    radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                                    radius: ThemeBackend.rad(width / 2)
                                     z: 1
 
                                     y: floatingWidget.barOffsetY + floatingWidget.getTargetY(index, floatingWidget.activeIndex)

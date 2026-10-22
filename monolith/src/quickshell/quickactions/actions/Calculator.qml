@@ -777,7 +777,7 @@ Item {
                 GlassFill {
                     id: convGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: ThemeBackend.surface0
                     tintAmount: 0.3
                 }
@@ -979,7 +979,7 @@ Item {
                 GlassFill {
                     id: displayGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: ThemeBackend.surface0
                     tintAmount: 0.3
                 }
@@ -1020,7 +1020,7 @@ Item {
                             width: root.s(4)
                             contentItem: Rectangle {
                                 implicitWidth: root.s(4)
-                                radius: ThemeBackend.minimalist ? 0 : (root.s(2))
+                                radius: ThemeBackend.rad(root.s(2))
                                 color: ThemeBackend.surface2
                             }
                         }
@@ -1198,7 +1198,7 @@ Item {
                                     cellWidth: keypad.unitW
                                     cellHeight: keypad.unitH
                                     keyMargin: Math.round(root.s(2))
-                                    cornerRadius: ThemeBackend.minimalist ? 0 : (Math.round(root.s(10)))
+                                    cornerRadius: ThemeBackend.rad(Math.round(root.s(10)))
                                     textFontSize: Math.round(root.s(13))
                                     buttonText: root.sciLabel(modelData)
                                     kind: modelData === "angle" ? "operator" : "normal"
@@ -1227,7 +1227,7 @@ Item {
                             cellWidth: keypad.unitW
                             cellHeight: keypad.unitH
                             keyMargin: Math.round(root.s(2))
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.round(root.s(10)))
+                            cornerRadius: ThemeBackend.rad(Math.round(root.s(10)))
                             textFontSize: Math.round(root.s(17))
                             iconFontSize: Math.round(root.s(16))
                             buttonText: modelData.label !== undefined ? modelData.label : ""

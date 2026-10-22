@@ -232,7 +232,7 @@ Popup {
 
     background: Rectangle {
         color: ThemeBackend.base
-        radius: ThemeBackend.minimalist ? 0 : (pickerRoot.crLarge)
+        radius: ThemeBackend.rad(pickerRoot.crLarge)
         border.color: ThemeBackend.surface0
         border.width: 1
         layer.enabled: true
@@ -260,7 +260,7 @@ Popup {
             CloseButton {
                 Layout.preferredWidth: pickerRoot.toolbarHeight
                 Layout.preferredHeight: pickerRoot.toolbarHeight
-                cornerRadius: ThemeBackend.minimalist ? 0 : (pickerRoot.crSmall)
+                cornerRadius: ThemeBackend.rad(pickerRoot.crSmall)
                 iconFontSize: Scaler.s(14)
                 accentColor: ThemeBackend.surface1
                 textColor: ThemeBackend.text
@@ -291,7 +291,7 @@ Popup {
                             id: activeHighlight
                             width: parent.width
                             height: Scaler.s(34)
-                            radius: ThemeBackend.minimalist ? 0 : (pickerRoot.crSmall)
+                            radius: ThemeBackend.rad(pickerRoot.crSmall)
                             color: ThemeBackend.mauve
                             z: 0
                             visible: pickerRoot.currentPlaceIndex !== -1
@@ -320,7 +320,7 @@ Popup {
                                 Rectangle {
                                     width: parent.width
                                     height: Scaler.s(34)
-                                    radius: ThemeBackend.minimalist ? 0 : (pickerRoot.crSmall)
+                                    radius: ThemeBackend.rad(pickerRoot.crSmall)
                                     z: 1
 
                                     property bool isActive: pickerRoot.currentPlaceIndex === index
@@ -412,7 +412,7 @@ Popup {
                         Layout.preferredHeight: pickerRoot.toolbarHeight
                         Layout.minimumWidth: pickerRoot.toolbarHeight
                         Layout.maximumWidth: pickerRoot.toolbarHeight
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (pickerRoot.crSmall)
+                        cornerRadius: ThemeBackend.rad(pickerRoot.crSmall)
                         buttonIcon: "󰁍"
                         iconFontSize: Scaler.s(16)
                         accentColor: ThemeBackend.surface1
@@ -428,7 +428,7 @@ Popup {
                         Layout.fillWidth: true
                         Layout.minimumWidth: Scaler.s(50)
                         Layout.preferredHeight: pickerRoot.toolbarHeight
-                        radius: ThemeBackend.minimalist ? 0 : (pickerRoot.crSmall)
+                        radius: ThemeBackend.rad(pickerRoot.crSmall)
                         color: ThemeBackend.surface0
                         clip: true
 
@@ -491,7 +491,7 @@ Popup {
                                             property bool isCurrent: index === breadcrumbRepeater.count - 1
                                             height: pickerRoot.toolbarHeight - Scaler.s(6)
                                             width: bcTxt.implicitWidth + Scaler.s(14)
-                                            radius: ThemeBackend.minimalist ? 0 : (Scaler.s(6))
+                                            radius: ThemeBackend.rad(Scaler.s(6))
                                             color: isCurrent ? ThemeBackend.surface1 : (bcMa.containsMouse ? ThemeBackend.surface0 : "transparent")
                                             anchors.verticalCenter: parent.verticalCenter
 
@@ -523,7 +523,7 @@ Popup {
                         Layout.preferredHeight: pickerRoot.toolbarHeight
                         Layout.minimumWidth: Scaler.s(84)
                         Layout.maximumWidth: Scaler.s(84)
-                        radius: ThemeBackend.minimalist ? 0 : (pickerRoot.crSmall)
+                        radius: ThemeBackend.rad(pickerRoot.crSmall)
                         color: ThemeBackend.surface0
                         clip: true
 
@@ -565,7 +565,7 @@ Popup {
                         textColor: ThemeBackend.text
                         subTextColor: ThemeBackend.subtext0
                         borderColor: "transparent"
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (pickerRoot.crSmall)
+                        cornerRadius: ThemeBackend.rad(pickerRoot.crSmall)
                         horizontalPadding: Scaler.s(10)
                         verticalPadding: Scaler.s(4)
                         fontPixelSize: Scaler.s(12)
@@ -585,7 +585,7 @@ Popup {
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: 0
                     color: ThemeBackend.surface0
-                    radius: ThemeBackend.minimalist ? 0 : (pickerRoot.crMedium)
+                    radius: ThemeBackend.rad(pickerRoot.crMedium)
                     clip: true
 
                     Text {
@@ -626,7 +626,7 @@ Popup {
                             width: listView.width
                             height: matchesSearch ? Scaler.s(32) : 0
                             visible: matchesSearch
-                            radius: ThemeBackend.minimalist ? 0 : (pickerRoot.crSmall)
+                            radius: ThemeBackend.rad(pickerRoot.crSmall)
                             color: (pickerRoot.selectedFilePath === pickerRoot.getAbsolutePath(filePath)) ? Qt.alpha(ThemeBackend.mauve, 0.15) : (delegateMa.containsMouse ? ThemeBackend.surface1 : "transparent")
 
                             RowLayout {
@@ -723,7 +723,7 @@ Popup {
                 Layout.preferredHeight: pickerRoot.actionHeight
                 implicitHeight: pickerRoot.actionHeight
                 horizontalPadding: Scaler.s(18)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (pickerRoot.crMedium)
+                cornerRadius: ThemeBackend.rad(pickerRoot.crMedium)
                 buttonText: pickerRoot.doneButtonText
                 textFontSize: Scaler.s(13)
                 accentColor: pickerRoot.selectedFilePath !== "" ? ThemeBackend.mauve : ThemeBackend.surface0

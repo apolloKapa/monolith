@@ -347,7 +347,7 @@ PanelWindow {
         GlassFillets {
             id: osdFillets
             card: osdBox
-            filletRadius: ThemeBackend.minimalist ? 0 : ((osdWindow.isAttached && osdContainer.dynamicCornerRadius > 0.5) ? osdContainer.dynamicCornerRadius : 0)
+            filletRadius: ThemeBackend.rad((osdWindow.isAttached && osdContainer.dynamicCornerRadius > 0.5) ? osdContainer.dynamicCornerRadius : 0)
             filletDir: osdWindow.isSideBar
                 ? (osdWindow.isRightBar ? Qt.vector2d(1, 0) : Qt.vector2d(-1, 0))
                 : (osdWindow.isBottomBar ? Qt.vector2d(0, 1) : Qt.vector2d(0, -1))
@@ -410,15 +410,15 @@ PanelWindow {
             id: osdBox
             anchors.fill: parent
             color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-            radius: ThemeBackend.minimalist ? 0 : (osdWindow.cornerRadius)
+            radius: ThemeBackend.rad(osdWindow.cornerRadius)
             readonly property bool flatTop: osdWindow.isAttached && !osdWindow.isSideBar && !osdWindow.isBottomBar
             readonly property bool flatBottom: osdWindow.isAttached && !osdWindow.isSideBar && osdWindow.isBottomBar
             readonly property bool flatLeft: osdWindow.isAttached && osdWindow.isSideBar && !osdWindow.isRightBar
             readonly property bool flatRight: osdWindow.isAttached && osdWindow.isSideBar && osdWindow.isRightBar
-            topLeftRadius: ThemeBackend.minimalist ? 0 : ((flatTop || flatLeft) ? 0 : osdWindow.cornerRadius)
-            topRightRadius: ThemeBackend.minimalist ? 0 : ((flatTop || flatRight) ? 0 : osdWindow.cornerRadius)
-            bottomLeftRadius: ThemeBackend.minimalist ? 0 : ((flatBottom || flatLeft) ? 0 : osdWindow.cornerRadius)
-            bottomRightRadius: ThemeBackend.minimalist ? 0 : ((flatBottom || flatRight) ? 0 : osdWindow.cornerRadius)
+            topLeftRadius: ThemeBackend.rad((flatTop || flatLeft) ? 0 : osdWindow.cornerRadius)
+            topRightRadius: ThemeBackend.rad((flatTop || flatRight) ? 0 : osdWindow.cornerRadius)
+            bottomLeftRadius: ThemeBackend.rad((flatBottom || flatLeft) ? 0 : osdWindow.cornerRadius)
+            bottomRightRadius: ThemeBackend.rad((flatBottom || flatRight) ? 0 : osdWindow.cornerRadius)
             border.width: 0
             border.color: "transparent"
             clip: true
@@ -426,11 +426,11 @@ PanelWindow {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
-                filletRadius: ThemeBackend.minimalist ? 0 : (osdFillets.filletRadius)
+                topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
+                filletRadius: ThemeBackend.rad(osdFillets.filletRadius)
                 filletDir: osdFillets.filletDir
             }
 
@@ -458,7 +458,7 @@ PanelWindow {
                 IconButton {
                     Layout.alignment: Qt.AlignHCenter
                     size: osdWindow.s(26)
-                    cornerRadius: ThemeBackend.minimalist ? 0 : (osdWindow.s(8))
+                    cornerRadius: ThemeBackend.rad(osdWindow.s(8))
                     buttonIcon: {
                         if (osdWindow.kind === "volume") {
                             return osdWindow.isMuted || osdWindow.volVal === 0 ? "󰖁" : (osdWindow.volVal > 50 ? "󰕾" : "󰖀");
@@ -521,7 +521,7 @@ PanelWindow {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: osdWindow.s(28)
                     Layout.preferredHeight: osdWindow.s(22)
-                    radius: ThemeBackend.minimalist ? 0 : (osdWindow.s(6))
+                    radius: ThemeBackend.rad(osdWindow.s(6))
                     color: osdWindow.isToggleActive ? Qt.rgba(osdWindow.toggleActiveColor.r, osdWindow.toggleActiveColor.g, osdWindow.toggleActiveColor.b, 0.2) : ThemeBackend.surface1
                     border.width: 1
                     border.color: osdWindow.isToggleActive ? osdWindow.toggleActiveColor : "transparent"
@@ -562,7 +562,7 @@ PanelWindow {
                     gradColor1: activeColor
                     gradColor2: Qt.lighter(activeColor, 1.05)
                     gradColor3: Qt.lighter(activeColor, 1.10)
-                    cornerRadius: ThemeBackend.minimalist ? 0 : (osdWindow.s(5))
+                    cornerRadius: ThemeBackend.rad(osdWindow.s(5))
                     handleSize: osdWindow.s(22)
                     showValueBubble: false
 
@@ -628,7 +628,7 @@ PanelWindow {
                     IconButton {
                         anchors.centerIn: parent
                         size: osdWindow.s(30)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (osdWindow.s(8))
+                        cornerRadius: ThemeBackend.rad(osdWindow.s(8))
                         buttonIcon: {
                             if (osdWindow.kind === "volume") {
                                 return osdWindow.isMuted || osdWindow.volVal === 0 ? "󰖁" : (osdWindow.volVal > 50 ? "󰕾" : "󰖀");
@@ -713,7 +713,7 @@ PanelWindow {
                         Layout.preferredHeight: osdWindow.s(24)
                         Layout.preferredWidth: implicitWidth
                         height: osdWindow.s(24)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (osdWindow.s(6))
+                        cornerRadius: ThemeBackend.rad(osdWindow.s(6))
                         horizontalPadding: osdWindow.s(10)
                         buttonText: osdWindow.toggleStatus
                         textFontSize: osdWindow.s(11)
@@ -767,7 +767,7 @@ PanelWindow {
                     gradColor1: activeColor
                     gradColor2: Qt.lighter(activeColor, 1.05)
                     gradColor3: Qt.lighter(activeColor, 1.10)
-                    cornerRadius: ThemeBackend.minimalist ? 0 : (osdWindow.s(5))
+                    cornerRadius: ThemeBackend.rad(osdWindow.s(5))
                     handleSize: osdWindow.s(22)
 
                     handleColor: (osdWindow.isMutedState) ? ThemeBackend.overlay0 : Qt.lighter(activeColor, 1.15)

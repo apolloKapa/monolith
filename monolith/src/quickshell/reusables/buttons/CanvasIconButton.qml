@@ -40,7 +40,7 @@ Item {
     Rectangle {
         id: btnShape
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         clip: !glass.active
         color: glass.active ? "transparent" : root.withBgOpacity(!root.enabled ? root.accentColor : (btnMa.pressed ? Qt.darker(root.accentColor, 1.12) : (root.isHoveredOrHighlighted ? Qt.lighter(root.accentColor, 1.12) : root.accentColor)))
         opacity: root.enabled ? 1.0 : 0.5
@@ -55,7 +55,7 @@ Item {
             press: btnMa.pressed ? 1 : (root.isHoveredOrHighlighted ? 0.25 : 0)
             pulse: Math.min(1, root.flashOpacity * 2.5)
             Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+            radius: ThemeBackend.rad(root.cornerRadius)
             tintColor: root.accentColor
             tintAmount: (btnMa.pressed ? 0.55 : (root.isHoveredOrHighlighted ? 0.42 : 0.3)) * root.bgOpacity
             Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -93,7 +93,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+            radius: ThemeBackend.rad(root.cornerRadius)
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !glass.active

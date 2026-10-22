@@ -34,7 +34,7 @@ Notification {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: Qt.alpha(ThemeBackend.green, 0.15)
             }
 

@@ -340,7 +340,7 @@ PanelWindow {
             id: menuBox
             anchors.fill: parent
             color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-            radius: ThemeBackend.minimalist ? 0 : (sideMusicPopout.cornerRadius)
+            radius: ThemeBackend.rad(sideMusicPopout.cornerRadius)
             border.width: 0
             border.color: "transparent"
             clip: true
@@ -349,10 +349,10 @@ PanelWindow {
                 z: -1
                 anchors.fill: parent
                 rim: 0
-                topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
+                topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
             }
 
             Rectangle {

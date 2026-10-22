@@ -25,7 +25,7 @@ QtObject {
                 GlassFill {
                     id: showTextGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: ThemeBackend.surface0
                     tintAmount: 0.3
                 }

@@ -45,11 +45,11 @@ FilePicker {
                 GlassFill {
                     id: gf1
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: ThemeBackend.surface0
                     tintAmount: 0.25
                 }
-                radius: ThemeBackend.minimalist ? 0 : (soundPickerRoot.crMedium)
+                radius: ThemeBackend.rad(soundPickerRoot.crMedium)
                 clip: true
 
                 ColumnLayout {
@@ -61,13 +61,13 @@ FilePicker {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.preferredWidth: soundPickerRoot.s(80)
                         Layout.preferredHeight: soundPickerRoot.s(80)
-                        radius: ThemeBackend.minimalist ? 0 : (soundPickerRoot.crLarge)
+                        radius: ThemeBackend.rad(soundPickerRoot.crLarge)
                         color: gf2.active ? "transparent" : ThemeBackend.surface1
 
                         GlassFill {
                             id: gf2
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: ThemeBackend.surface1
                             tintAmount: 0.25
                         }
@@ -125,7 +125,7 @@ FilePicker {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.preferredWidth: soundPickerRoot.s(44)
                         Layout.preferredHeight: soundPickerRoot.s(44)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (soundPickerRoot.s(12))
+                        cornerRadius: ThemeBackend.rad(soundPickerRoot.s(12))
                         buttonIcon: "󰐊"
                         iconFontSize: soundPickerRoot.s(22)
                         accentColor: ThemeBackend.surface1

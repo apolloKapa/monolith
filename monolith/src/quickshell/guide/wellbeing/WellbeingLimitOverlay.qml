@@ -111,7 +111,7 @@ Scope {
                 width: 360
                 implicitHeight: cardColumn.implicitHeight + 56
                 height: implicitHeight
-                radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 1.5 : 24)
+                radius: ThemeBackend.rad(ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 1.5 : 24)
                 color: ThemeBackend.base
                 border.color: ThemeBackend.surface0
                 border.width: 1
@@ -138,7 +138,7 @@ Scope {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.preferredWidth: 72
                         Layout.preferredHeight: 72
-                        radius: ThemeBackend.minimalist ? 0 : (Math.round(72 * 0.28))
+                        radius: ThemeBackend.rad(Math.round(72 * 0.28))
                         color: ThemeBackend.surface0
 
                         Image {

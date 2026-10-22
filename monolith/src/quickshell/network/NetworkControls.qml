@@ -112,7 +112,7 @@ Item {
             anchors.fill: parent
             anchors.topMargin: window.s(2)
             anchors.bottomMargin: -window.s(2)
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
             color: Qt.rgba(0, 0, 0, 0.16)
             visible: !powerGlass.active
             z: -1
@@ -121,7 +121,7 @@ Item {
         Rectangle {
             id: powerBtnRect
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
     
             scale: pwrMa.pressed ? 0.95 : (pwrMa.containsMouse ? 1.05 : 1.0)
             Behavior on scale { enabled: window.visible; NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
@@ -136,7 +136,7 @@ Item {
             GlassFill {
                 id: powerGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 shadow: 1
                 tintColor: window.currentPower ? window.activeColor : ThemeBackend.surface0
                 tintAmount: window.currentPower ? 0.45 : 0.3
@@ -147,7 +147,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 visible: !powerGlass.active
                 opacity: window.currentPower ? ThemeBackend.elementOpacity : 0.0
                 Behavior on opacity { enabled: window.powerAnimAllowed && window.visible; NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutQuint } }

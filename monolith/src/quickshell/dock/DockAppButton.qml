@@ -114,7 +114,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         visible: dockButton.isBeingDragged
-        radius: ThemeBackend.minimalist ? 0 : (dockButton.cornerRadius)
+        radius: ThemeBackend.rad(dockButton.cornerRadius)
         color: Qt.alpha(ThemeBackend.surface0, 0.25)
         border.color: Qt.alpha(ThemeBackend.mauve, 0.5)
         border.width: 1
@@ -124,7 +124,7 @@ Item {
         id: dropIndicator
         anchors.fill: parent
         anchors.margins: -dockWindow.s(3)
-        radius: ThemeBackend.minimalist ? 0 : (dockButton.cornerRadius + dockWindow.s(3))
+        radius: ThemeBackend.rad(dockButton.cornerRadius + dockWindow.s(3))
         color: "transparent"
         border.color: ThemeBackend.mauve
         border.width: 2
@@ -169,7 +169,7 @@ Item {
         Rectangle {
             id: btnShape
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (dockButton.cornerRadius)
+            radius: ThemeBackend.rad(dockButton.cornerRadius)
             clip: true
             color: dockBtnGlass.active ? "transparent" : Qt.alpha(btnMa.pressed ? Qt.darker(dockButton.btnColor, 1.12) : (btnMa.containsMouse ? Qt.lighter(dockButton.btnColor, 1.12) : dockButton.btnColor), ThemeBackend.elementOpacity)
 
@@ -180,7 +180,7 @@ Item {
             GlassFill {
                 id: dockBtnGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: dockButton.btnColor
                 tintAmount: 0.3
                 press: btnMa.pressed ? 1 : Math.max(btnMa.containsMouse ? 0.3 : 0, 0.3 * Math.max(0, Math.min(1, (dockButton.baseHoverScale - 1.0) / Math.max(0.01, dockButton.hoverScaleDelta))))
@@ -238,7 +238,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (dockButton.cornerRadius)
+                radius: ThemeBackend.rad(dockButton.cornerRadius)
                 color: "#ffffff"
                 opacity: dockButton.flashOpacity
                 PropertyAnimation on opacity {
@@ -280,7 +280,7 @@ Item {
                 anchors.centerIn: parent
                 width: dockWindow.s(4)
                 height: dockWindow.s(4)
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: "transparent"
                 border.width: 1
                 border.color: ThemeBackend.overlay0
@@ -292,7 +292,7 @@ Item {
                 anchors.centerIn: parent
                 width: dockWindow.isVertical ? dockWindow.s(3.5) : dockWindow.s(14)
                 height: dockWindow.isVertical ? dockWindow.s(14) : dockWindow.s(3.5)
-                radius: ThemeBackend.minimalist ? 0 : (dockWindow.s(2))
+                radius: ThemeBackend.rad(dockWindow.s(2))
                 color: ThemeBackend.mauve
 
                 Behavior on width { NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
@@ -310,7 +310,7 @@ Item {
                     delegate: Rectangle {
                         width: dockWindow.s(3.5)
                         height: dockWindow.s(3.5)
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: (index === 0 && dockButton.isAppFocused) ? ThemeBackend.mauve : (index === 0 ? ThemeBackend.subtext0 : ThemeBackend.surface2)
                     }
                 }
@@ -327,7 +327,7 @@ Item {
                     delegate: Rectangle {
                         width: dockWindow.s(3.5)
                         height: dockWindow.s(3.5)
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: (index === 0 && dockButton.isAppFocused) ? ThemeBackend.mauve : (index === 0 ? ThemeBackend.subtext0 : ThemeBackend.surface2)
                     }
                 }

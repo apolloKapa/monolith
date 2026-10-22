@@ -326,7 +326,7 @@ FocusScope {
     Rectangle {
         id: bgShape
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         clip: true
         opacity: root.enabled ? 1.0 : 0.5
         color: glass.active ? "transparent" : root.withBgOpacity(root.isHoveredOrHighlighted ? Qt.darker(root.baseColor, 1.14) : root.baseColor)
@@ -335,7 +335,7 @@ FocusScope {
         GlassFill {
             id: glass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: root.baseColor
             press: root.hasFocus ? 0.55 : (root.isHoveredOrHighlighted ? 0.2 : 0)
             Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
@@ -394,7 +394,7 @@ FocusScope {
 
                 anchors.verticalCenter: parent.verticalCenter
                 height: Math.min(parent.height - 4, root.fontPixelSize * 1.7)
-                radius: ThemeBackend.minimalist ? 0 : (4)
+                radius: ThemeBackend.rad(4)
                 color: root.activeSignalColor
                 opacity: hasSelection ? 0.28 : 0.0
 
@@ -580,7 +580,7 @@ FocusScope {
                     policy: ScrollBar.AsNeeded
                     contentItem: Rectangle {
                         implicitWidth: 4
-                        radius: ThemeBackend.minimalist ? 0 : (2)
+                        radius: ThemeBackend.rad(2)
                         color: ThemeBackend.surface2
                     }
                 }
@@ -714,7 +714,7 @@ FocusScope {
                 anchors.centerIn: parent
                 width: parent.width
                 height: width
-                radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius - 2)
+                radius: ThemeBackend.rad(root.cornerRadius - 2)
                 color: root.textColor
                 opacity: trailingMa.pressed ? 0.12 : (trailingMa.containsMouse ? 0.06 : 0.0)
                 Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }

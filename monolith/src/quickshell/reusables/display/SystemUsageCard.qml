@@ -115,21 +115,21 @@ Item {
         anchors.fill: parent
         anchors.topMargin: root.s(2)
         anchors.bottomMargin: -root.s(2)
-        radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+        radius: ThemeBackend.rad(root.cardRadius)
         color: root.shadowColor
         visible: root.hasShadow
     }
 
     Rectangle {
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+        radius: ThemeBackend.rad(root.cardRadius)
         color: cardGlass.active ? "transparent" : Qt.alpha(root.colorBase, root.bgOpacity)
 
         GlassFill {
             id: cardGlass
             anchors.fill: parent
             allowed: !root.blurred
-            radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+            radius: ThemeBackend.rad(root.cardRadius)
             tintColor: root.colorBase
             tintAmount: 0.3 * root.bgOpacity
         }
@@ -139,7 +139,7 @@ Item {
             anchors.fill: parent
             active: root.blurred
             sourceComponent: WallpaperBlur {
-                radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+                radius: ThemeBackend.rad(root.cardRadius)
                 standalone: true
             }
         }
@@ -147,7 +147,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+        radius: ThemeBackend.rad(root.cardRadius)
         color: "transparent"
         border.width: 1
         border.color: root.borderColor
@@ -156,7 +156,7 @@ Item {
     FluidWave {
         id: fluidWave
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+        radius: ThemeBackend.rad(root.cardRadius)
         fillLevel: root.fillRatio
         waveAmp: root.waveAmp
         phase: root.wavePhase
@@ -177,7 +177,7 @@ Item {
             anchors.top: parent.top
             anchors.left: parent.left
             size: Math.round(root.iconSize)
-            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.round(root.iconCornerRadius))
+            cornerRadius: ThemeBackend.rad(Math.round(root.iconCornerRadius))
             accentColor: root.iconAccentColor
             bgOpacity: root.bgOpacity
             textColor: root.iconTextColor
@@ -255,7 +255,7 @@ Item {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 size: Math.round(root.iconSize)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (Math.round(root.iconCornerRadius))
+                cornerRadius: ThemeBackend.rad(Math.round(root.iconCornerRadius))
                 accentColor: root.filledIconAccentColor
                 textColor: root.effFilledTextColor
                 buttonIcon: root.icon

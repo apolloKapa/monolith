@@ -657,6 +657,10 @@
         "title": "Elementdekking",
         "desc": "Dekking van de balk, dock, widgets en alle andere shell-elementen"
       },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
+      },
       "blur_background": {
         "title": "Een vervaagde achtergrond van het bureaublad toevoegen",
         "desc": "Vervaagt de achtergrond achter elk element dat transparantie gebruikt",

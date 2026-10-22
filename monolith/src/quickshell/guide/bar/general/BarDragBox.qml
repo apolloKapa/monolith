@@ -12,14 +12,14 @@ Rectangle {
     Layout.fillHeight: lName !== "available"
     implicitHeight: Math.max(rootObj.s(lName === "available" ? 68 : 90), titleText.implicitHeight + (flowList.childrenRect.height > 0 ? flowList.childrenRect.height : flowList.implicitHeight) + rootObj.s(30))
     color: dragGlass.active ? "transparent" : Qt.alpha(ThemeBackend.base, 0.7)
-    radius: ThemeBackend.minimalist ? 0 : (dragBoxRoot.tab.cardRadius)
+    radius: ThemeBackend.rad(dragBoxRoot.tab.cardRadius)
     border.width: 0
     clip: true
 
     GlassFill {
         id: dragGlass
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: ThemeBackend.base
         tintAmount: 0.25
     }

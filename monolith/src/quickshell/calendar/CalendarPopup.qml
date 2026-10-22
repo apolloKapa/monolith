@@ -471,10 +471,10 @@ Item {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
+                topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
             }
 
             Rectangle {
@@ -745,7 +745,7 @@ Item {
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (Math.min(window.s(26), ThemeBackend.borderRadius * 1.75))
+                                radius: ThemeBackend.rad(Math.min(window.s(26), ThemeBackend.borderRadius * 1.75))
                                 color: hourGlass.active ? "transparent" : (isHighlighted ? window.textAccent : Qt.alpha(hrMa.containsMouse ? Qt.lighter(window.surface0, 1.12) : window.surface0, 1.0))
                                 border.color: isHighlighted ? Qt.lighter(window.textAccent, 1.1) : (hrMa.containsMouse ? Qt.alpha(window.surface2, 0.9) : Qt.alpha(window.surface1, 0.6))
                                 border.width: ThemeBackend.liquidGlass ? 0 : 1
@@ -753,7 +753,7 @@ Item {
                                 GlassFill {
                                     id: hourGlass
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                    radius: ThemeBackend.rad(parent.radius)
                                     forceClear: true
                                     tintColor: window ? (isHighlighted ? window.textAccent : window.surface0) : ThemeBackend.surface0
                                     tintAmount: isHighlighted ? 0.4 : 0.2
@@ -819,7 +819,7 @@ Item {
                 GlassFill {
                     id: calendarGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: window.surface0
                     tintAmount: 0.25
                 }
@@ -846,7 +846,7 @@ Item {
                             Layout.preferredWidth: window.s(28)
                             Layout.preferredHeight: window.s(28)
                             size: window.s(28)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(8))
+                            cornerRadius: ThemeBackend.rad(window.s(8))
                             buttonIcon: "󰃭"
                             iconFontSize: window.s(14)
                             accentColor: window.surface0
@@ -861,7 +861,7 @@ Item {
                             Layout.preferredWidth: window.s(28)
                             Layout.preferredHeight: window.s(28)
                             size: window.s(28)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(8))
+                            cornerRadius: ThemeBackend.rad(window.s(8))
                             buttonIcon: I18n.rtl ? "" : ""
                             iconFontSize: window.s(14)
                             accentColor: window.surface0
@@ -888,7 +888,7 @@ Item {
                             Layout.preferredWidth: window.s(28)
                             Layout.preferredHeight: window.s(28)
                             size: window.s(28)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(8))
+                            cornerRadius: ThemeBackend.rad(window.s(8))
                             buttonIcon: I18n.rtl ? "" : ""
                             iconFontSize: window.s(14)
                             accentColor: window.surface0
@@ -935,7 +935,7 @@ Item {
                                 enabled: false
                                 buttonText: dayNum
                                 textFontSize: window.s(11.5)
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(5))
+                                cornerRadius: ThemeBackend.rad(window.s(5))
                                 horizontalPadding: 0
                                 accentColor: isToday ? window.textAccent : ((ThemeBackend.liquidGlass && !isCurrentMonth) ? window.surface0 : "transparent")
                                 glassTintScale: isToday ? 2.6 : 1.0
@@ -972,7 +972,7 @@ Item {
                             Layout.preferredWidth: window.s(28)
                             Layout.preferredHeight: window.s(28)
                             size: window.s(28)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(8))
+                            cornerRadius: ThemeBackend.rad(window.s(8))
                             buttonIcon: I18n.rtl ? "" : ""
                             iconFontSize: window.s(12)
                             accentColor: window.surface0
@@ -996,7 +996,7 @@ Item {
                             Layout.preferredWidth: window.s(28)
                             Layout.preferredHeight: window.s(28)
                             size: window.s(28)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(8))
+                            cornerRadius: ThemeBackend.rad(window.s(8))
                             buttonIcon: I18n.rtl ? "" : ""
                             iconFontSize: window.s(12)
                             accentColor: window.surface0
@@ -1069,7 +1069,7 @@ Item {
                             ClickButton {
                                 Layout.preferredWidth: window.s(118)
                                 Layout.preferredHeight: window.s(42)
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(9))
+                                cornerRadius: ThemeBackend.rad(window.s(9))
                                 horizontalPadding: window.s(8)
 
                                 property var forecast: window.weatherData && window.weatherData.forecast[window.targetWeatherView] ? window.weatherData.forecast[window.targetWeatherView] : null

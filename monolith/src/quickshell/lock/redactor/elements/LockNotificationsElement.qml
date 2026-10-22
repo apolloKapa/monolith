@@ -19,8 +19,8 @@ Item {
         blurScreen: el.ctx ? el.ctx.surface.screen : null
         borderWidth: el.plain ? 0 : 1
         borderColor: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.06)
-        cornerRadius: ThemeBackend.minimalist ? 0 : (Scaler.s(16))
-        cardRadius: ThemeBackend.minimalist ? 0 : (Scaler.s(14))
+        cornerRadius: ThemeBackend.rad(Scaler.s(16))
+        cardRadius: ThemeBackend.rad(Scaler.s(14))
         emptyGraphicSize: Math.min(Scaler.s(110), el.height * 0.4)
         rootContext: el.ctx
     }

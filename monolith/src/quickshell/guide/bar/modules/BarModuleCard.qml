@@ -41,7 +41,7 @@ Rectangle {
     GlassFill {
         anchors.fill: parent
         allowed: card.tab.inView(parent)
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
         tintAmount: 0.25
     }

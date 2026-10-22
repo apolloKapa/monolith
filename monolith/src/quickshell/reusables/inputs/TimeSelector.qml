@@ -162,7 +162,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.s(8))
+            radius: ThemeBackend.rad(root.s(8))
             color: "#ffffff"
             opacity: flashOpacity
             visible: !pillGlass.active
@@ -267,7 +267,7 @@ Item {
     Rectangle {
         id: bgShape
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: glass.active ? "transparent" : root.baseColor
         border.color: root.borderColor
         border.width: 1
@@ -280,7 +280,7 @@ Item {
         GlassFill {
             id: glass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: root.baseColor
             tintAmount: 0.22
             Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -299,14 +299,14 @@ Item {
             height: activeSegItem.height
             x: targetX
             y: mainRow.y + activeSegItem.y
-            radius: ThemeBackend.minimalist ? 0 : (root.s(8))
+            radius: ThemeBackend.rad(root.s(8))
             z: pillGlass.active ? 2 : 0
             color: pillGlass.active ? "transparent" : root.accentColor
 
             GlassFill {
                 id: pillGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: root.accentColor
                 tintAmount: 0.4
                 shadow: 1

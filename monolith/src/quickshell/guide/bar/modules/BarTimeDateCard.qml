@@ -78,7 +78,7 @@ BarModuleCard {
                     Layout.alignment: Qt.AlignHCenter
                     width: rootObj.s(14)
                     height: 2
-                    radius: ThemeBackend.minimalist ? 0 : (1)
+                    radius: ThemeBackend.rad(1)
                     color: ThemeBackend.surface1
                 }
 

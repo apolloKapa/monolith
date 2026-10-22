@@ -27,13 +27,13 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+        radius: ThemeBackend.rad(width / 2)
         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
 
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
         }
 
         Rectangle {
@@ -44,7 +44,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             transformOrigin: Item.Bottom
             rotation: (root.currentTime.getHours() % 12) * 30 + root.currentTime.getMinutes() * 0.5 + root.currentTime.getSeconds() * (0.5 / 60)
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
 
             Behavior on rotation {
                 RotationAnimation {
@@ -63,7 +63,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             transformOrigin: Item.Bottom
             rotation: root.currentTime.getMinutes() * 6 + root.currentTime.getSeconds() * 0.1
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
 
             Behavior on rotation {
                 RotationAnimation {
@@ -82,7 +82,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             transformOrigin: Item.Bottom
             rotation: root.currentTime.getSeconds() * 6
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
 
             Behavior on rotation {
                 RotationAnimation {
@@ -98,7 +98,7 @@ Item {
             height: width
             color: ThemeBackend.mauve
             anchors.centerIn: parent
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
         }
     }
 }

@@ -72,7 +72,7 @@ PanelWindow {
                     anchors.centerIn: parent
                     width: parent.width + (index * 45) + 25
                     height: width
-                    radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                    radius: ThemeBackend.rad(width / 2)
 
                     color: index === 0 ? Qt.rgba(ThemeBackend.surface1.r, ThemeBackend.surface1.g, ThemeBackend.surface1.b, 0.6) : Qt.rgba(ThemeBackend.surface0.r, ThemeBackend.surface0.g, ThemeBackend.surface0.b, 0.4)
                     border.width: 1
@@ -91,7 +91,7 @@ PanelWindow {
             anchors.centerIn: parent
             width: 290
             height: 290
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
             color: windowContent.currentAccentLavender
             opacity: windowContent.popShockwave * 0.15
             scale: 1.0 + (windowContent.popShockwave * 0.8)
@@ -136,7 +136,7 @@ PanelWindow {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: Qt.rgba(ThemeBackend.base.r, ThemeBackend.base.g, ThemeBackend.base.b, 0.75)
                         border.width: 1
                         border.color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.08)
@@ -146,7 +146,7 @@ PanelWindow {
                     Rectangle {
                         id: fluidGradientLayer
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         antialiasing: true
                         opacity: 0.85
 
@@ -175,7 +175,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             width: parent.width * 0.6
                             height: width
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             color: windowContent.currentAccentLavender
                             opacity: 0.5
                             layer.enabled: true
@@ -185,7 +185,7 @@ PanelWindow {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         antialiasing: true
                         opacity: 0.6
 
@@ -221,7 +221,7 @@ PanelWindow {
                                 y: (parent.height / 2) + Math.sin(angle) * dist - height/2
                                 width: (index % 3) + 2
                                 height: width
-                                radius: ThemeBackend.minimalist ? 0 : (width/2)
+                                radius: ThemeBackend.rad(width/2)
                                 color: ThemeBackend.text
                                 rotation: windowContent.time * 10 * (index % 2 === 0 ? 1 : -1)
                             }
@@ -231,7 +231,7 @@ PanelWindow {
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 1
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: "transparent"
                         border.width: 2.0
                         border.color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.15)

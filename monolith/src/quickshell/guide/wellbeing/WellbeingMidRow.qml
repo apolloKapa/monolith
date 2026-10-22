@@ -23,7 +23,7 @@ RowLayout {
         GlassFill {
             id: gf4
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
             tintAmount: 0.25
         }
@@ -82,7 +82,7 @@ RowLayout {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (rootObj.s(3))
+                            radius: ThemeBackend.rad(rootObj.s(3))
                             color: ThemeBackend.surface2
                             visible: !model.isTarget && !weekBarGlass.active
                             opacity: barMa.containsMouse ? 0.7 : 1.0
@@ -91,7 +91,7 @@ RowLayout {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (rootObj.s(3))
+                            radius: ThemeBackend.rad(rootObj.s(3))
                             visible: model.isTarget && !weekBarGlass.active
                             opacity: barMa.containsMouse ? 0.7 : 1.0
                             gradient: Gradient {
@@ -115,7 +115,7 @@ RowLayout {
                         GlassFill {
                             id: weekBarGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (rootObj.s(3))
+                            radius: ThemeBackend.rad(rootObj.s(3))
                             forceClear: model.isTarget
                             tintColor: model.isTarget ? ThemeBackend.mauve : ThemeBackend.surface2
                             tintAmount: model.isTarget ? 0.6 : 0.22
@@ -151,7 +151,7 @@ RowLayout {
         GlassFill {
             id: gf5
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
             tintAmount: 0.25
         }
@@ -190,7 +190,7 @@ RowLayout {
                     delegate: Rectangle {
                         width: rootObj.s(22)
                         height: rootObj.s(22)
-                        radius: ThemeBackend.minimalist ? 0 : (rootObj.s(3))
+                        radius: ThemeBackend.rad(rootObj.s(3))
                         property real intensity: Math.min(1.0, 0.3 + 0.7 * (model.total / middleSection.tab.maxMonthTotal))
                         color: monthGlass.active || model.total === -1 ? "transparent" : (model.total === 0 ? ThemeBackend.surface2 : Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, intensity))
                         Behavior on color { ColorAnimation { duration: (700) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
@@ -202,7 +202,7 @@ RowLayout {
                         GlassFill {
                             id: monthGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             forceClear: model.total > 0
                             tintColor: model.total > 0 ? ThemeBackend.mauve : ThemeBackend.surface2
                             tintAmount: model.total > 0 ? 0.25 + 0.45 * parent.intensity : 0.22
@@ -211,7 +211,7 @@ RowLayout {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             color: "transparent"
                             border.color: middleSection.tab.textMain
                             border.width: model.isTarget && monthGlass.active ? 1 : 0

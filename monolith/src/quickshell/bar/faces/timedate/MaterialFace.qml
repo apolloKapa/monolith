@@ -231,7 +231,7 @@ Item {
                 visible: widget ? widget.showDate : true
                 width: widget ? widget.s(widget.isCompact ? 1.5 : 2) : 2
                 height: widget ? widget.s(widget.isCompact ? 14 : 16) : 16
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 anchors.verticalCenter: parent.verticalCenter
                 color: Qt.alpha(ThemeBackend.surface2, 0.7)
             }
@@ -415,7 +415,7 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: widget ? widget.s(widget.isCompact ? 13 : 16) : 16
                 height: widget ? widget.s(widget.isCompact ? 1.5 : 2) : 2
-                radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                radius: ThemeBackend.rad(height / 2)
                 color: Qt.alpha(ThemeBackend.surface2, 0.7)
             }
 

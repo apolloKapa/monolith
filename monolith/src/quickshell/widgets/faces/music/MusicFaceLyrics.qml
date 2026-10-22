@@ -240,19 +240,19 @@ Item {
         id: bgContainer
         anchors.fill: parent
         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
-        radius: ThemeBackend.minimalist ? 0 : (root.widgetRadius)
+        radius: ThemeBackend.rad(root.widgetRadius)
         clip: true
 
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
         }
 
         Rectangle {
             id: bgMask
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.widgetRadius)
+            radius: ThemeBackend.rad(root.widgetRadius)
             color: "#ffffff"
             visible: false
             layer.enabled: true
@@ -346,7 +346,7 @@ Item {
                 visible: Lyrics.isMediaActive && !Lyrics.loading
                 implicitHeight: Scaler.s(28)
                 horizontalPadding: Scaler.s(14)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (Scaler.s(8))
+                cornerRadius: ThemeBackend.rad(Scaler.s(8))
                 buttonIcon: "󰈔"
                 buttonText: typeof I18n !== "undefined" ? I18n.t("music.select_local_file", "Select a local file") : "Select a local file"
                 iconFontSize: Scaler.s(14)

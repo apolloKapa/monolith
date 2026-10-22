@@ -125,7 +125,7 @@ Item {
             anchors.centerIn: parent
             width: fp.glyphSize * 1.28
             height: width
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
             visible: fp.look === "classic"
             color: Qt.rgba(fp.shownAccent.r, fp.shownAccent.g, fp.shownAccent.b, fp.halted ? 0.04 : 0.07)
         }
@@ -135,7 +135,7 @@ Item {
             anchors.centerIn: parent
             width: restRing.width
             height: width
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
             color: fp.shownAccent
             opacity: 0
             scale: 1
@@ -158,7 +158,7 @@ Item {
             anchors.centerIn: parent
             width: restRing.width
             height: width
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
             color: ThemeBackend.red
             opacity: 0
             visible: fp.look !== "scanner"
@@ -240,7 +240,7 @@ Item {
                 anchors.centerIn: parent
                 width: fp.glyphSize * 1.1
                 height: width
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: "transparent"
                 border.width: Math.max(1, fp.glyphSize * 0.035)
                 border.color: fp.shownAccent
@@ -319,7 +319,7 @@ Item {
             Rectangle {
                 width: parent.width * 0.78
                 height: Math.max(2, fp.glyphSize * 0.045)
-                radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                radius: ThemeBackend.rad(height / 2)
                 x: (parent.width - width) / 2
                 y: parent.height * 0.12 + fp.scanPos * (parent.height * 0.76 - height)
                 color: fp.shownAccent
@@ -449,7 +449,7 @@ Item {
                 readonly property bool used: index < fp.attempts
                 width: fp.glyphSize * 0.1
                 height: width
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: used ? ThemeBackend.red : ThemeBackend.surface2
                 opacity: used ? 1.0 : 0.55
                 scale: used ? 1.0 : 0.8

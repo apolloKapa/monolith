@@ -195,7 +195,7 @@ Item {
                                 visible: root.showIcon
                                 width: barWindow ? barWindow.cs(root.isCompact ? 26 : 28) : (root.isCompact ? 26 : 28)
                                 height: barWindow ? barWindow.cs(root.isCompact ? 26 : 28) : (root.isCompact ? 26 : 28)
-                                radius: ThemeBackend.minimalist ? 0 : (barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
+                                radius: ThemeBackend.rad(barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
                                 color: mediaThumbGlass.active ? "transparent" : (root.isCompact ? Qt.lighter(ThemeBackend.surface1, 1.1) : ThemeBackend.surface1)
                                 border.width: mediaThumbGlass.active && !root.isPlaying ? 0 : 1
                                 border.color: root.isPlaying ? ThemeBackend.mauve : (root.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1)
@@ -205,7 +205,7 @@ Item {
                                 GlassFill {
                                     id: mediaThumbGlass
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                    radius: ThemeBackend.rad(parent.radius)
                                     tintColor: ThemeBackend.surface1
                                     tintAmount: 0.3
                                 }
@@ -243,14 +243,14 @@ Item {
 
                                     Rectangle {
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (mediaThumbBox.radius)
+                                        radius: ThemeBackend.rad(mediaThumbBox.radius)
                                         color: "black"
                                     }
                                 }
 
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                    radius: ThemeBackend.rad(parent.radius)
                                     color: ThemeBackend.surface0
                                     opacity: 0.15
                                     visible: root.hasArt && mediaArtImg.status === Image.Ready
@@ -300,7 +300,7 @@ Item {
                             id: prevMediaButton
                             height: barWindow ? barWindow.cs(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
                             width: barWindow ? barWindow.cs(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
+                            cornerRadius: ThemeBackend.rad(barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
                             buttonIcon: "󰒮"
                             iconFontSize: barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8)
                             accentColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
@@ -314,7 +314,7 @@ Item {
                             id: playMediaButton
                             height: barWindow ? barWindow.cs(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
                             width: barWindow ? barWindow.cs(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
+                            cornerRadius: ThemeBackend.rad(barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
                             buttonIcon: root.isPlaying ? "󰏤" : "󰐊"
                             iconFontSize: barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10)
                             accentColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
@@ -328,7 +328,7 @@ Item {
                             id: nextMediaButton
                             height: barWindow ? barWindow.cs(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
                             width: barWindow ? barWindow.cs(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
+                            cornerRadius: ThemeBackend.rad(barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
                             buttonIcon: "󰒭"
                             iconFontSize: barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8)
                             accentColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
@@ -382,7 +382,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: barWindow ? barWindow.cs(root.isCompact ? 26 : 28) : (root.isCompact ? 26 : 28)
                     height: barWindow ? barWindow.cs(root.isCompact ? 26 : 28) : (root.isCompact ? 26 : 28)
-                    radius: ThemeBackend.minimalist ? 0 : (barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8))
+                    radius: ThemeBackend.rad(barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8))
                     color: sideThumbGlass.active ? "transparent" : (root.isCompact ? Qt.lighter(ThemeBackend.surface1, 1.1) : ThemeBackend.surface1)
                     border.width: sideThumbGlass.active && !(isMediaActive && isPlaying) ? 0 : 1
                     border.color: (isMediaActive && isPlaying) ? ThemeBackend.mauve : (root.isCompact ? ThemeBackend.surface2 : ThemeBackend.surface1)
@@ -391,7 +391,7 @@ Item {
                     GlassFill {
                         id: sideThumbGlass
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         tintColor: ThemeBackend.surface1
                         tintAmount: 0.3
                     }
@@ -429,14 +429,14 @@ Item {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (thumbBox.radius)
+                            radius: ThemeBackend.rad(thumbBox.radius)
                             color: "black"
                         }
                     }
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         color: ThemeBackend.surface0
                         opacity: 0.15
                         visible: isMediaActive && root.activeArtUrl !== "" && sideArtImg.status === Image.Ready
@@ -461,7 +461,7 @@ Item {
                     IconButton {
                         width: barWindow ? barWindow.cs(root.isCompact ? 24 : 26) : (root.isCompact ? 24 : 26)
                         height: barWindow ? barWindow.cs(root.isCompact ? 24 : 26) : (root.isCompact ? 24 : 26)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8))
+                        cornerRadius: ThemeBackend.rad(barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8))
                         buttonIcon: "󰒮"
                         iconFontSize: barWindow ? barWindow.cs(root.isCompact ? 6 : 7) : (root.isCompact ? 6 : 7)
                         accentColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
@@ -474,7 +474,7 @@ Item {
                     IconButton {
                         width: barWindow ? barWindow.cs(root.isCompact ? 26 : 28) : (root.isCompact ? 26 : 28)
                         height: barWindow ? barWindow.cs(root.isCompact ? 26 : 28) : (root.isCompact ? 26 : 28)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8))
+                        cornerRadius: ThemeBackend.rad(barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8))
                         buttonIcon: (isMediaActive && isPlaying) ? "󰏤" : "󰐊"
                         iconFontSize: barWindow ? barWindow.cs(root.isCompact ? 8 : 9) : (root.isCompact ? 8 : 9)
                         accentColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
@@ -487,7 +487,7 @@ Item {
                     IconButton {
                         width: barWindow ? barWindow.cs(root.isCompact ? 24 : 26) : (root.isCompact ? 24 : 26)
                         height: barWindow ? barWindow.cs(root.isCompact ? 24 : 26) : (root.isCompact ? 24 : 26)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8))
+                        cornerRadius: ThemeBackend.rad(barWindow ? barWindow.cs(root.isCompact ? 7 : 8) : (root.isCompact ? 7 : 8))
                         buttonIcon: "󰒭"
                         iconFontSize: barWindow ? barWindow.cs(root.isCompact ? 6 : 7) : (root.isCompact ? 6 : 7)
                         accentColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0

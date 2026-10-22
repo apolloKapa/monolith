@@ -43,7 +43,7 @@ FilePicker {
                 height: side
                 anchors.centerIn: parent
                 color: ThemeBackend.surface0
-                radius: ThemeBackend.minimalist ? 0 : (imagePickerRoot.showCircleMask ? (side / 2) : imagePickerRoot.crMedium)
+                radius: ThemeBackend.rad(imagePickerRoot.showCircleMask ? (side / 2) : imagePickerRoot.crMedium)
                 clip: true
 
                 AnimatedImage {

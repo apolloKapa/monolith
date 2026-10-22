@@ -657,6 +657,10 @@
         "title": "Opasitas elemen",
         "desc": "Opasitas bilah, dock, widget, dan semua elemen shell lainnya"
       },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
+      },
       "blur_background": {
         "title": "Tambahkan latar belakang wallpaper yang diburamkan",
         "desc": "Memburamkan wallpaper di belakang setiap elemen yang menggunakan transparansi",

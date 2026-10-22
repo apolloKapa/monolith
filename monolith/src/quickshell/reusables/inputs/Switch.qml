@@ -118,7 +118,7 @@ Item {
     Rectangle {
         id: bgShape
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: ThemeBackend.liquidGlass ? "transparent" : root.withBgOpacity(root.baseColor)
         clip: !baseGlass.active
         opacity: root.enabled ? 1.0 : 0.5
@@ -132,7 +132,7 @@ Item {
         GlassFill {
             id: baseGlass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+            radius: ThemeBackend.rad(root.cornerRadius)
             tintColor: root.baseColor
             tintAmount: 0.22 * root.bgOpacity
         }
@@ -173,10 +173,10 @@ Item {
             width: Math.max(0, actualRight - actualLeft)
             z: highlightGlass.active ? 2 : 0
 
-            topLeftRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.innerRadius)
-            bottomLeftRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.innerRadius)
-            topRightRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.innerRadius)
-            bottomRightRadius: ThemeBackend.minimalist ? 0 : ((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.innerRadius)
+            topLeftRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.innerRadius)
+            bottomLeftRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.innerRadius)
+            topRightRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.innerRadius)
+            bottomRightRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.innerRadius)
 
             Behavior on topLeftRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
             Behavior on bottomLeftRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -190,10 +190,10 @@ Item {
             GlassFill {
                 id: highlightGlass
                 anchors.fill: parent
-                topLeftRadius: ThemeBackend.minimalist ? 0 : (activeTabHighlight.topLeftRadius)
-                topRightRadius: ThemeBackend.minimalist ? 0 : (activeTabHighlight.topRightRadius)
-                bottomLeftRadius: ThemeBackend.minimalist ? 0 : (activeTabHighlight.bottomLeftRadius)
-                bottomRightRadius: ThemeBackend.minimalist ? 0 : (activeTabHighlight.bottomRightRadius)
+                topLeftRadius: ThemeBackend.rad(activeTabHighlight.topLeftRadius)
+                topRightRadius: ThemeBackend.rad(activeTabHighlight.topRightRadius)
+                bottomLeftRadius: ThemeBackend.rad(activeTabHighlight.bottomLeftRadius)
+                bottomRightRadius: ThemeBackend.rad(activeTabHighlight.bottomRightRadius)
                 tintColor: root.accentColor
                 tintAmount: 0.4
                 shadow: 1
@@ -241,20 +241,20 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        topLeftRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === 0 ? root.cornerRadius : root.innerRadius)
-                        bottomLeftRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === 0 ? root.cornerRadius : root.innerRadius)
-                        topRightRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === root.options.length - 1 ? root.cornerRadius : root.innerRadius)
-                        bottomRightRadius: ThemeBackend.minimalist ? 0 : (optionItem.index === root.options.length - 1 ? root.cornerRadius : root.innerRadius)
+                        topLeftRadius: ThemeBackend.rad(optionItem.index === 0 ? root.cornerRadius : root.innerRadius)
+                        bottomLeftRadius: ThemeBackend.rad(optionItem.index === 0 ? root.cornerRadius : root.innerRadius)
+                        topRightRadius: ThemeBackend.rad(optionItem.index === root.options.length - 1 ? root.cornerRadius : root.innerRadius)
+                        bottomRightRadius: ThemeBackend.rad(optionItem.index === root.options.length - 1 ? root.cornerRadius : root.innerRadius)
                         color: (root.currentIndex === optionItem.index || optionGlass.active) ? "transparent" : (optionMa.containsMouse ? "#1affffff" : "transparent")
                         Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
 
                         GlassFill {
                             id: optionGlass
                             anchors.fill: parent
-                            topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                            topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                            bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                            bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
+                            topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                            topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                            bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                            bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
                             allowed: !!root && optionMa.containsMouse && root.enabled && root.currentIndex !== optionItem.index
                             tintColor: root ? root.textColor : "transparent"
                             tintAmount: 0.12
@@ -308,7 +308,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+            radius: ThemeBackend.rad(root.cornerRadius)
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !baseGlass.active

@@ -89,7 +89,7 @@ Item {
             anchors.verticalCenterOffset: discContainer.anchors.verticalCenterOffset * 0.5
             width: (root.artRadius * 2) + (root.maxBarHeight * 2.0)
             height: width
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
             color: ThemeBackend.mauve
             opacity: (root.isMediaActive && MprisController.isPlaying) ? (0.005 + (root.bassLevel * 0.035)) : 0.0
             scale: 0.985 + (root.bassLevel * 0.0375)
@@ -114,7 +114,7 @@ Item {
             anchors.verticalCenterOffset: discContainer.anchors.verticalCenterOffset * 0.8
             width: (root.artRadius * 2) + (root.maxBarHeight * 1.35)
             height: width
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
             color: ThemeBackend.mauve
             opacity: (root.isMediaActive && MprisController.isPlaying) ? (0.01 + (root.kickLevel * 0.055)) : 0.0
             scale: 0.992 + (root.kickLevel * 0.02625)
@@ -147,7 +147,7 @@ Item {
             gamma: root.continuous ? 1.25 : 1.08
             rise: root.continuous ? 0.5 : 0.55
             fall: root.continuous ? 0.3 : 0.55
-            ringRadius: ThemeBackend.minimalist ? 0 : (root.artRadius)
+            ringRadius: ThemeBackend.rad(root.artRadius)
             ringBarWidth: root.barWidth
             maxLength: root.maxBarHeight
             minLength: 2.5
@@ -198,7 +198,7 @@ Item {
             Rectangle {
                 id: vinylBase
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: ThemeBackend.surface1
                 border.width: discContainer.borderWidth
                 border.color: (root.isMediaActive && MprisController.isPlaying) ? (ThemeBackend.mauve || "#cba6f7") : (ThemeBackend.overlay0 || "#6c7086")
@@ -228,7 +228,7 @@ Item {
                     Rectangle {
                         id: maskRect
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         visible: false
                         layer.enabled: true
                     }
@@ -248,7 +248,7 @@ Item {
                     Rectangle {
                         id: fallbackPlaceholder
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: ThemeBackend.mantle
                         opacity: (root.isMediaActive && artImg.status === Image.Ready && MprisController.artUrl !== "") ? 0.0 : 1.0
 
@@ -266,7 +266,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, 0.08 + (root.kickLevel * 0.08))
                         opacity: (root.isMediaActive && artImg.status === Image.Ready && MprisController.artUrl !== "") ? 1.0 : 0.0
 
@@ -281,7 +281,7 @@ Item {
                             anchors.centerIn: parent
                             width: parent.width * modelData
                             height: width
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             color: "transparent"
                             border.color: index % 2 === 0 ? "#ffffff" : "#000000"
                             border.width: 1
@@ -294,7 +294,7 @@ Item {
                         anchors.centerIn: parent
                         width: parent.width * 0.28
                         height: width
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: ThemeBackend.crust
                         opacity: 0.96
                         scale: 1.0 + (root.kickLevel * 0.0135)
@@ -313,7 +313,7 @@ Item {
                             anchors.centerIn: parent
                             width: parent.width * 0.68
                             height: width
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             color: ThemeBackend.surface2
                             border.width: 1
                             border.color: Qt.rgba(1, 1, 1, 0.18)
@@ -322,7 +322,7 @@ Item {
                                 anchors.centerIn: parent
                                 width: parent.width * 0.38
                                 height: width
-                                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                                radius: ThemeBackend.rad(width / 2)
                                 color: "#0d0e15"
                             }
                         }

@@ -27,7 +27,7 @@ GuideTab {
     property string currentFontFamily: themeSettings.fontFamily !== undefined ? themeSettings.fontFamily : ThemeBackend.fontFamily
     property int currentBorderRadius: themeSettings.borderRadius !== undefined ? themeSettings.borderRadius : ThemeBackend.borderRadius
     property int currentElementOpacity: themeSettings.elementOpacity !== undefined ? Number(themeSettings.elementOpacity) : 100
-    property string currentBlurStyle: (themeSettings.blurStyle === "liquid" || themeSettings.blurStyle === "minimalist") ? themeSettings.blurStyle : "blur"
+    property string currentBlurStyle: ThemeBackend.styles[themeSettings.blurStyle] ? themeSettings.blurStyle : "blur"
     property bool currentBlurBackground: themeSettings.blurBackground !== undefined ? Boolean(themeSettings.blurBackground) : false
     property string currentPreset: themeSettings.activePreset !== undefined ? themeSettings.activePreset : "Matugen"
     property bool useMatugen: themeSettings.matugen !== undefined ? themeSettings.matugen : true
@@ -506,7 +506,7 @@ GuideTab {
             themeTabRoot.currentBorderRadius = ts.borderRadius !== undefined ? ts.borderRadius : ThemeBackend.borderRadius;
             themeTabRoot.currentElementOpacity = ts.elementOpacity !== undefined ? Number(ts.elementOpacity) : 100;
             themeTabRoot.currentBlurBackground = ts.blurBackground !== undefined ? Boolean(ts.blurBackground) : false;
-            themeTabRoot.currentBlurStyle = (ts.blurStyle === "liquid" || ts.blurStyle === "minimalist") ? ts.blurStyle : "blur";
+            themeTabRoot.currentBlurStyle = ThemeBackend.styles[ts.blurStyle] ? ts.blurStyle : "blur";
             themeTabRoot.currentPreset = ts.activePreset !== undefined ? ts.activePreset : "Matugen";
             themeTabRoot.useMatugen = ts.matugen !== undefined ? ts.matugen : true;
             themeTabRoot.themeSettings = ts;
@@ -557,19 +557,27 @@ GuideTab {
         Config.setSetting("theme", current);
     }
 
-    // Minimalist is a whole look, not just a backdrop: switching to it also loads the
-    // matching colours and font. Both can still be changed afterwards.
-    function applyMinimalistStyle() {
+    // Picking a style (Theme -> Style). The opaque styles are whole looks: they also load their
+    // colours and font, which can still be changed afterwards. Blur, Liquid glass and Bubbly keep
+    // the current colours; the see-through ones switch the blurred background on.
+    function applyStyle(id) {
+        let st = ThemeBackend.styles[id];
+        if (!st) return;
         let current = Config.getSetting("theme", themeTabRoot.defaultThemeSettings);
-        current.blurStyle = "minimalist";
-        current.fontFamily = ThemeBackend.minimalistFont;
+        current.blurStyle = id;
+        if (id === "blur" || id === "liquid") current.blurBackground = true;
+        if (st.font) current.fontFamily = st.font;
         Config.setSetting("theme", current);
-        themeTabRoot.currentBlurStyle = "minimalist";
-        themeTabRoot.currentFontFamily = ThemeBackend.minimalistFont;
-        themeTabRoot.applyPreset({ "name": "Minimalist", "colors": ThemeBackend.minimalistColors });
-        if (typeof ThemeBackend !== "undefined") {
-            ThemeBackend.reloadColors();
-        }
+        themeTabRoot.currentBlurStyle = id;
+        if (id === "blur" || id === "liquid") themeTabRoot.currentBlurBackground = true;
+        if (st.font) themeTabRoot.currentFontFamily = st.font;
+        let colors = st.colors || (id === "minimalist" ? ThemeBackend.minimalistColors : null);
+        if (colors) themeTabRoot.applyPreset({ "name": st.name, "colors": colors });
+        ThemeBackend.reloadColors();
+    }
+
+    function applyMinimalistStyle() {
+        themeTabRoot.applyStyle("minimalist");
     }
 
     function applyPreset(modelData) {

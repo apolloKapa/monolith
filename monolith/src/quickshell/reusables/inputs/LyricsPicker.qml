@@ -90,7 +90,7 @@ PanelWindow {
                 Rectangle {
                     anchors.fill: parent
                     color: ThemeBackend.surface0
-                    radius: ThemeBackend.minimalist ? 0 : (filePicker.crMedium)
+                    radius: ThemeBackend.rad(filePicker.crMedium)
                     clip: true
 
                     ColumnLayout {
@@ -102,7 +102,7 @@ PanelWindow {
                             Layout.alignment: Qt.AlignHCenter
                             Layout.preferredWidth: Scaler.s(80)
                             Layout.preferredHeight: Scaler.s(80)
-                            radius: ThemeBackend.minimalist ? 0 : (filePicker.crLarge)
+                            radius: ThemeBackend.rad(filePicker.crLarge)
                             color: ThemeBackend.surface1
                             border.width: 1
                             border.color: filePicker.selectedFilePath !== "" ? ThemeBackend.mauve : ThemeBackend.surface1

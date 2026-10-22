@@ -657,6 +657,10 @@
         "title": "Opacidade dos elementos",
         "desc": "Opacidade da barra, do dock, dos widgets e de todos os outros elementos do shell"
       },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
+      },
       "blur_background": {
         "title": "Adicionar um fundo de papel de parede desfocado",
         "desc": "Desfoca o papel de parede atrás de cada elemento que usa transparência",

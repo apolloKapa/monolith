@@ -103,7 +103,7 @@ PanelWindow {
         width: s(520)
         implicitHeight: cardLayout.implicitHeight + (polkitWindow.s(18) * 2)
         color: ThemeBackend.base
-        radius: ThemeBackend.minimalist ? 0 : (polkitWindow.crLarge)
+        radius: ThemeBackend.rad(polkitWindow.crLarge)
         border.color: ThemeBackend.surface0
         border.width: 1
 
@@ -135,7 +135,7 @@ PanelWindow {
                     Layout.preferredWidth: polkitWindow.s(44)
                     Layout.preferredHeight: polkitWindow.s(44)
                     Layout.alignment: Qt.AlignTop
-                    radius: ThemeBackend.minimalist ? 0 : (polkitWindow.crMedium)
+                    radius: ThemeBackend.rad(polkitWindow.crMedium)
                     color: ThemeBackend.surface0
 
                     Text {
@@ -192,7 +192,7 @@ PanelWindow {
                     Layout.preferredWidth: polkitWindow.toolbarHeight
                     Layout.preferredHeight: polkitWindow.toolbarHeight
                     Layout.alignment: Qt.AlignTop
-                    cornerRadius: ThemeBackend.minimalist ? 0 : (polkitWindow.crSmall)
+                    cornerRadius: ThemeBackend.rad(polkitWindow.crSmall)
                     iconFontSize: polkitWindow.s(14)
                     accentColor: ThemeBackend.surface1
                     onClicked: PolkitService.cancel()
@@ -202,7 +202,7 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: errorText.implicitHeight + polkitWindow.s(12)
-                radius: ThemeBackend.minimalist ? 0 : (polkitWindow.crSmall)
+                radius: ThemeBackend.rad(polkitWindow.crSmall)
                 color: Qt.alpha(ThemeBackend.red, 0.12)
                 border.color: Qt.alpha(ThemeBackend.red, 0.4)
                 border.width: 1
@@ -248,7 +248,7 @@ PanelWindow {
                 errorColor: ThemeBackend.red
                 busyColor: ThemeBackend.peach
 
-                cornerRadius: ThemeBackend.minimalist ? 0 : (polkitWindow.crSmall)
+                cornerRadius: ThemeBackend.rad(polkitWindow.crSmall)
                 horizontalPadding: polkitWindow.s(10)
                 verticalPadding: polkitWindow.s(4)
 

@@ -16,13 +16,13 @@ Item {
     Rectangle {
         id: activeHighlight
         z: 3
-        radius: ThemeBackend.minimalist ? 0 : (widget ? widget.s(widget.isCompact ? 7 : 8) : 8)
+        radius: ThemeBackend.rad(widget ? widget.s(widget.isCompact ? 7 : 8) : 8)
         color: pillsGlass.active ? "transparent" : ((widget && widget.isCompact) ? Qt.lighter(ThemeBackend.mauve, 1.05) : ThemeBackend.mauve)
 
         GlassFill {
             id: pillsGlass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: ThemeBackend.mauve
             tintAmount: 0.5
             press: 0.3 + 0.7 * activeHighlight.lift
@@ -134,14 +134,14 @@ Item {
                 Rectangle {
                     id: wsVisualShape
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (widget ? widget.s(widget.isCompact ? 8 : 10) : 10)
+                    radius: ThemeBackend.rad(widget ? widget.s(widget.isCompact ? 8 : 10) : 10)
                     color: (wsPill.isActive || pillsShapeGlass.active) ? "transparent" : Qt.alpha(wsPill.isOccupied ? ThemeBackend.surface2 : ((widget && widget.isCompact) ? ThemeBackend.surface1 : ThemeBackend.surface0), ThemeBackend.elementOpacity)
                     border.width: 0
 
                     GlassFill {
                         id: pillsShapeGlass
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         allowed: !wsPill.isActive
                         tintColor: wsPill.isOccupied ? ThemeBackend.surface2 : ThemeBackend.surface0
                         tintAmount: 0.3

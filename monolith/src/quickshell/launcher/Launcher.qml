@@ -1229,7 +1229,7 @@ PanelWindow {
         GlassFillets {
             id: launcherFillets
             card: bgCard
-            filletRadius: ThemeBackend.minimalist ? 0 : (launcherWindow.isCentered ? 0 : container.dynamicCornerRadius)
+            filletRadius: ThemeBackend.rad(launcherWindow.isCentered ? 0 : container.dynamicCornerRadius)
             filletDir: launcherWindow.attachEdge === "top" ? Qt.vector2d(0, -1)
                      : launcherWindow.attachEdge === "bottom" ? Qt.vector2d(0, 1)
                      : launcherWindow.attachEdge === "left" ? Qt.vector2d(-1, 0)
@@ -1289,12 +1289,12 @@ PanelWindow {
         Rectangle {
             id: bgCard
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (container.dynamicCornerRadius)
+            radius: ThemeBackend.rad(container.dynamicCornerRadius)
             readonly property bool flatCorners: !launcherWindow.isCentered
-            topLeftRadius: ThemeBackend.minimalist ? 0 : ((flatCorners && (launcherWindow.attachEdge === "top" || launcherWindow.attachEdge === "left")) ? 0 : container.dynamicCornerRadius)
-            topRightRadius: ThemeBackend.minimalist ? 0 : ((flatCorners && (launcherWindow.attachEdge === "top" || launcherWindow.attachEdge === "right")) ? 0 : container.dynamicCornerRadius)
-            bottomLeftRadius: ThemeBackend.minimalist ? 0 : ((flatCorners && (launcherWindow.attachEdge === "bottom" || launcherWindow.attachEdge === "left")) ? 0 : container.dynamicCornerRadius)
-            bottomRightRadius: ThemeBackend.minimalist ? 0 : ((flatCorners && (launcherWindow.attachEdge === "bottom" || launcherWindow.attachEdge === "right")) ? 0 : container.dynamicCornerRadius)
+            topLeftRadius: ThemeBackend.rad((flatCorners && (launcherWindow.attachEdge === "top" || launcherWindow.attachEdge === "left")) ? 0 : container.dynamicCornerRadius)
+            topRightRadius: ThemeBackend.rad((flatCorners && (launcherWindow.attachEdge === "top" || launcherWindow.attachEdge === "right")) ? 0 : container.dynamicCornerRadius)
+            bottomLeftRadius: ThemeBackend.rad((flatCorners && (launcherWindow.attachEdge === "bottom" || launcherWindow.attachEdge === "left")) ? 0 : container.dynamicCornerRadius)
+            bottomRightRadius: ThemeBackend.rad((flatCorners && (launcherWindow.attachEdge === "bottom" || launcherWindow.attachEdge === "right")) ? 0 : container.dynamicCornerRadius)
             color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
             border.width: 0
             border.color: launcherWindow.isCentered ? Qt.alpha(ThemeBackend.surface2, 0.6) : "transparent"
@@ -1303,11 +1303,11 @@ PanelWindow {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
-                filletRadius: ThemeBackend.minimalist ? 0 : (launcherFillets.filletRadius)
+                topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
+                filletRadius: ThemeBackend.rad(launcherFillets.filletRadius)
                 filletDir: launcherFillets.filletDir
             }
 
@@ -1524,7 +1524,7 @@ PanelWindow {
                         GlassFill {
                             id: highlightLayerGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (morphHighlight.radius)
+                            radius: ThemeBackend.rad(morphHighlight.radius)
                             forceOpaque: true
                             tintColor: ThemeBackend.text
                             tintAmount: 0
@@ -1740,7 +1740,7 @@ PanelWindow {
                                     GlassFill {
                                         id: rowHoverGlass
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         allowed: ma.containsMouse && !delegateRoot.isSelected && !rowHoverLens.glassActive
                                         tintColor: ThemeBackend.surface0
                                         tintAmount: 0.3
@@ -1777,20 +1777,20 @@ PanelWindow {
                                             anchors.fill: parent
                                             anchors.topMargin: launcherWindow.s(1.5)
                                             anchors.bottomMargin: -launcherWindow.s(1.5)
-                                            radius: ThemeBackend.minimalist ? 0 : (parent.boxRadius)
+                                            radius: ThemeBackend.rad(parent.boxRadius)
                                             color: Qt.rgba(0, 0, 0, 0.12)
                                             visible: !iconBoxGlass.active
                                         }
 
                                         Rectangle {
                                             anchors.fill: parent
-                                            radius: ThemeBackend.minimalist ? 0 : (parent.boxRadius)
+                                            radius: ThemeBackend.rad(parent.boxRadius)
                                             color: iconBoxGlass.active ? "transparent" : (delegateRoot.isSelected ? Qt.tint(ThemeBackend.surface2, Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, 0.2)) : ThemeBackend.surface2)
 
                                             GlassFill {
                                                 id: iconBoxGlass
                                                 anchors.fill: parent
-                                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                radius: ThemeBackend.rad(parent.radius)
                                                 forceClear: delegateRoot.isSelected
                                                 tintColor: delegateRoot.isSelected ? ThemeBackend.text : ThemeBackend.surface2
                                                 tintAmount: delegateRoot.isSelected ? 0.1 : 0.3
@@ -1803,7 +1803,7 @@ PanelWindow {
                                             id: iconContainer
                                             anchors.fill: parent
                                             anchors.margins: parent.boxPadding
-                                            radius: ThemeBackend.minimalist ? 0 : (Math.max(0, parent.boxRadius - parent.boxPadding))
+                                            radius: ThemeBackend.rad(Math.max(0, parent.boxRadius - parent.boxPadding))
                                             color: "transparent"
                                             clip: true
 
@@ -2059,7 +2059,7 @@ PanelWindow {
                                     GlassFill {
                                         id: emojiGlass
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         allowed: !emojiDelegateRoot.lensHandled
                                         forceOpaque: emojiDelegateRoot.isSelected
                                         tintColor: emojiDelegateRoot.isSelected ? ThemeBackend.text : ThemeBackend.surface0

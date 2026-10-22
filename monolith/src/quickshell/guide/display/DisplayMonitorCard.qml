@@ -32,7 +32,7 @@ Rectangle {
     GlassFill {
         id: monDelegateGlass
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: monDelegate.cardTint
         tintAmount: 0.25
     }

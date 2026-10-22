@@ -131,7 +131,7 @@ Item {
 
                                 width: badgeFaceRoot.dotSize
                                 height: badgeFaceRoot.dotSize
-                                radius: ThemeBackend.minimalist ? 0 : (badgeFaceRoot.dotSize / 2)
+                                radius: ThemeBackend.rad(badgeFaceRoot.dotSize / 2)
                                 color: isLit ? charGrid.activeColor : Qt.alpha(charGrid.activeColor, 0.1)
                             }
                         }
@@ -153,7 +153,7 @@ Item {
                     Rectangle {
                         width: badgeFaceRoot.dotSize
                         height: badgeFaceRoot.dotSize
-                        radius: ThemeBackend.minimalist ? 0 : (badgeFaceRoot.dotSize / 2)
+                        radius: ThemeBackend.rad(badgeFaceRoot.dotSize / 2)
                         color: (index === 1 || index === 3)
                             ? Qt.alpha(ThemeBackend.surface2, 0.8)
                             : Qt.alpha(ThemeBackend.surface2, 0.15)
@@ -198,7 +198,7 @@ Item {
 
                                 width: badgeFaceRoot.dotSize
                                 height: badgeFaceRoot.dotSize
-                                radius: ThemeBackend.minimalist ? 0 : (badgeFaceRoot.dotSize / 2)
+                                radius: ThemeBackend.rad(badgeFaceRoot.dotSize / 2)
                                 color: isLit ? dateCharGrid.activeColor : Qt.alpha(dateCharGrid.activeColor, 0.1)
                             }
                         }
@@ -279,7 +279,7 @@ Item {
 
                                         width: badgeFaceRoot.dotSize
                                         height: badgeFaceRoot.dotSize
-                                        radius: ThemeBackend.minimalist ? 0 : (badgeFaceRoot.dotSize / 2)
+                                        radius: ThemeBackend.rad(badgeFaceRoot.dotSize / 2)
                                         color: isLit ? sideCharGrid.activeColor : Qt.alpha(sideCharGrid.activeColor, 0.1)
                                     }
                                 }
@@ -301,7 +301,7 @@ Item {
                     Rectangle {
                         width: badgeFaceRoot.dotSize
                         height: badgeFaceRoot.dotSize
-                        radius: ThemeBackend.minimalist ? 0 : (badgeFaceRoot.dotSize / 2)
+                        radius: ThemeBackend.rad(badgeFaceRoot.dotSize / 2)
                         color: index === 1
                             ? Qt.alpha(ThemeBackend.surface2, 0.8)
                             : Qt.alpha(ThemeBackend.surface2, 0.15)
@@ -343,7 +343,7 @@ Item {
 
                                     width: badgeFaceRoot.dotSize
                                     height: badgeFaceRoot.dotSize
-                                    radius: ThemeBackend.minimalist ? 0 : (badgeFaceRoot.dotSize / 2)
+                                    radius: ThemeBackend.rad(badgeFaceRoot.dotSize / 2)
                                     color: isLit ? dayGrid.activeColor : Qt.alpha(dayGrid.activeColor, 0.1)
                                 }
                             }

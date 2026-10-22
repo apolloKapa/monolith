@@ -170,7 +170,7 @@ Item {
                     id: recDot
                     width: barWindow ? barWindow.cs(root.isCompact ? 8 : 10) : (root.isCompact ? 8 : 10)
                     height: barWindow ? barWindow.cs(root.isCompact ? 8 : 10) : (root.isCompact ? 8 : 10)
-                    radius: ThemeBackend.minimalist ? 0 : (width * 0.5)
+                    radius: ThemeBackend.rad(width * 0.5)
                     color: root.isCompact ? Qt.lighter(ThemeBackend.red, 1.08) : ThemeBackend.red
 
                     SequentialAnimation on opacity {

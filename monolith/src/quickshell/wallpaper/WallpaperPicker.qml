@@ -1760,14 +1760,14 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (delegateRoot.dynamicRadius)
+                        radius: ThemeBackend.rad(delegateRoot.dynamicRadius)
                         color: delegateRoot.isFailed ? "transparent" : ThemeBackend.surface0
                     }
 
                     Rectangle {
                         id: paperMask
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (delegateRoot.dynamicRadius)
+                        radius: ThemeBackend.rad(delegateRoot.dynamicRadius)
                         visible: false
                         layer.enabled: true
                     }
@@ -1839,7 +1839,7 @@ Item {
                             visible: delegateRoot.isVideo
                             anchors.centerIn: parent ? parent : undefined
                             size: window.s(50)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(16))
+                            cornerRadius: ThemeBackend.rad(window.s(16))
                             iconFontSize: window.s(20)
                             buttonIcon: delegateRoot.isPlayingVideo && globalPreviewPlayer.playbackState === MediaPlayer.PlayingState ? "󰏤" : "󰐊"
                             accentColor: Qt.rgba(ThemeBackend.surface0.r, ThemeBackend.surface0.g, ThemeBackend.surface0.b, 0.65)
@@ -1854,7 +1854,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (delegateRoot.dynamicRadius)
+                        radius: ThemeBackend.rad(delegateRoot.dynamicRadius)
                         color: "transparent"
                         border.width: 0
                         border.color: "transparent"
@@ -1876,7 +1876,7 @@ Item {
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
         }
 
         Row {
@@ -1929,7 +1929,7 @@ Item {
                     glassShadow: 0
                     id: monitorToggleBtn
                     size: window.s(34)
-                    cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(10))
+                    cornerRadius: ThemeBackend.rad(window.s(10))
                     iconSize: window.s(14)
                     accentColor: "transparent"
                     bgOpacity: ThemeBackend.elementOpacity
@@ -1959,7 +1959,7 @@ Item {
                         model: monitorModel
                         delegate: ClickButton {
                             height: window.s(26)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(6))
+                            cornerRadius: ThemeBackend.rad(window.s(6))
                             horizontalPadding: window.s(8)
                             buttonText: model.name
                             textFontSize: window.s(10)
@@ -1994,7 +1994,7 @@ Item {
                         visible: modelData.name === "All"
                         anchors.fill: parent
                         size: window.s(34)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(10))
+                        cornerRadius: ThemeBackend.rad(window.s(10))
                         iconSize: window.s(14)
                         accentColor: window.currentFilter === modelData.name ? ThemeBackend.surface2 : ThemeBackend.surface0
                         bgOpacity: ThemeBackend.elementOpacity
@@ -2016,7 +2016,7 @@ Item {
                         visible: modelData.name === "History"
                         anchors.fill: parent
                         size: window.s(34)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(10))
+                        cornerRadius: ThemeBackend.rad(window.s(10))
                         iconSize: window.s(14)
                         accentColor: window.currentFilter === modelData.name ? ThemeBackend.surface2 : ThemeBackend.surface0
                         bgOpacity: ThemeBackend.elementOpacity
@@ -2044,7 +2044,7 @@ Item {
                         visible: modelData.name === "Video"
                         anchors.fill: parent
                         size: window.s(34)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(10))
+                        cornerRadius: ThemeBackend.rad(window.s(10))
                         iconSize: window.s(12)
                         accentColor: window.currentFilter === modelData.name ? ThemeBackend.surface2 : ThemeBackend.surface0
                         bgOpacity: ThemeBackend.elementOpacity
@@ -2130,7 +2130,7 @@ Item {
                     id: searchControlBtn
                     anchors.centerIn: parent
                     size: window.s(34)
-                    cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(10))
+                    cornerRadius: ThemeBackend.rad(window.s(10))
                     iconSize: window.s(34)
                     accentColor: window.isSearchPaused ? ThemeBackend.surface2 : ThemeBackend.surface0
                     bgOpacity: ThemeBackend.elementOpacity
@@ -2174,7 +2174,7 @@ Item {
                     glassShadow: 0
                     id: searchToggleBtn
                     size: window.s(34)
-                    cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(10))
+                    cornerRadius: ThemeBackend.rad(window.s(10))
                     iconSize: window.s(14)
                     accentColor: searchContainer.isSearchOpen ? ThemeBackend.surface2 : ThemeBackend.surface0
                     bgOpacity: ThemeBackend.elementOpacity

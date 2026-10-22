@@ -105,7 +105,7 @@ Item {
         y: bar.cy - height / 2
         width: bar.handleSize
         height: bar.handleSize
-        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+        radius: ThemeBackend.rad(width / 2)
         color: bar.isDragging ? bar.handleHoverColor : (mouseArea.containsMouse ? bar.handleHoverColor : bar.waveColor)
         opacity: 1.0
         scale: bar.isDragging ? 1.25 : (mouseArea.containsMouse ? 1.15 : 1.0)

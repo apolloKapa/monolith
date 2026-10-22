@@ -71,13 +71,13 @@ Popup {
     }
 
     background: Rectangle {
-        radius: ThemeBackend.minimalist ? 0 : (locationInfoRoot.cr)
+        radius: ThemeBackend.rad(locationInfoRoot.cr)
         color: gf1.active ? "transparent" : ThemeBackend.base
 
         GlassFill {
             id: gf1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: ThemeBackend.base
             tintAmount: 0.25
         }
@@ -100,7 +100,7 @@ Popup {
             CloseButton {
                 Layout.preferredWidth: locationInfoRoot.toolbarHeight
                 Layout.preferredHeight: locationInfoRoot.toolbarHeight
-                cornerRadius: ThemeBackend.minimalist ? 0 : (locationInfoRoot.cr)
+                cornerRadius: ThemeBackend.rad(locationInfoRoot.cr)
                 iconFontSize: locationInfoRoot.s(14)
                 onClicked: locationInfoRoot.close()
             }
@@ -114,11 +114,11 @@ Popup {
             GlassFill {
                 id: gf2
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: Qt.alpha(ThemeBackend.surface0, 0.55)
                 tintAmount: 0.25
             }
-            radius: ThemeBackend.minimalist ? 0 : (locationInfoRoot.cr)
+            radius: ThemeBackend.rad(locationInfoRoot.cr)
             border.width: 0
 
             Flickable {

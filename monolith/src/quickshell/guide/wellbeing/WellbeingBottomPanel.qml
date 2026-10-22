@@ -60,7 +60,7 @@ Item {
                 GlassFill {
                     id: gfRow
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
                     tintAmount: 0.25
                     press: rowMa.pressed ? 0.8 : (rowMa.containsMouse ? 0.25 : 0)
@@ -94,13 +94,13 @@ Item {
                         Layout.preferredWidth: rootObj.s(32)
                         Layout.preferredHeight: rootObj.s(32)
                         Layout.alignment: Qt.AlignVCenter
-                        radius: ThemeBackend.minimalist ? 0 : (Math.round(rootObj.s(32) * 0.28))
+                        radius: ThemeBackend.rad(Math.round(rootObj.s(32) * 0.28))
                         color: gf6.active ? "transparent" : ThemeBackend.surface0
 
                         GlassFill {
                             id: gf6
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: ThemeBackend.surface0
                             tintAmount: 0.25
                         }
@@ -158,13 +158,13 @@ Item {
                                 height: rootObj.s(10)
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (rootObj.s(5))
+                                    radius: ThemeBackend.rad(rootObj.s(5))
                                     color: pbTrack1.active ? "transparent" : ThemeBackend.surface1
 
                                     GlassFill {
                                         id: pbTrack1
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         tintColor: ThemeBackend.surface1
                                         tintAmount: 0.22
                                     }
@@ -179,7 +179,7 @@ Item {
 
                                     Rectangle {
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (rootObj.s(5))
+                                        radius: ThemeBackend.rad(rootObj.s(5))
                                         color: ThemeBackend.mauve
                                         visible: !pbFill1.active
                                     }
@@ -187,7 +187,7 @@ Item {
                                     GlassFill {
                                         id: pbFill1
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (rootObj.s(5))
+                                        radius: ThemeBackend.rad(rootObj.s(5))
                                         forceClear: true
                                         tintColor: ThemeBackend.mauve
                                         tintAmount: 0.6
@@ -201,7 +201,7 @@ Item {
                                 Layout.alignment: Qt.AlignVCenter
                                 Layout.preferredHeight: rootObj.s(25)
                                 horizontalPadding: rootObj.s(8)
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
+                                cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
                                 textFontSize: rootObj.s(13)
                                 accentColor: Qt.alpha(ThemeBackend.surface1, 0.7)
                                 textColor: bottomPanel.tab.textSub
@@ -223,7 +223,7 @@ Item {
         GlassFill {
             id: gf7
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
             tintAmount: 0.25
         }
@@ -280,7 +280,7 @@ Item {
                             anchors.bottom: parent.bottom
                             width: parent.width
                             height: Math.max(rootObj.s(4), parent.height * fill)
-                            radius: ThemeBackend.minimalist ? 0 : (rootObj.s(2))
+                            radius: ThemeBackend.rad(rootObj.s(2))
                             readonly property real hourValue: (bottomPanel && bottomPanel.tab) ? (bottomPanel.tab.hourlyData[index] || 0) : 0
                             property real fill: (bottomPanel && bottomPanel.tab) ? (hourValue / Math.max(bottomPanel.tab.maxHourlyTotal, 1)) * bottomPanel.tab.introAppBars : 0
                             color: hourGlass.active ? "transparent" : (hourValue > 0 ? ThemeBackend.blue : ThemeBackend.surface1)
@@ -288,7 +288,7 @@ Item {
                             GlassFill {
                                 id: hourGlass
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                radius: ThemeBackend.rad(parent.radius)
                                 forceClear: parent.hourValue > 0
                                 tintColor: parent.hourValue > 0 ? ThemeBackend.blue : ThemeBackend.surface1
                                 tintAmount: parent.hourValue > 0 ? 0.6 : 0.22

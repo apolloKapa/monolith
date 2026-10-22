@@ -44,7 +44,7 @@ SettingsRow {
         GlassFill {
             id: gf1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: ThemeBackend.surface0
             tintAmount: 0.25
         }
@@ -150,7 +150,7 @@ SettingsRow {
                 GlassFill {
                     id: gf2
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: Qt.alpha(ThemeBackend.surface1, 0.35)
                     tintAmount: 0.25
                 }
@@ -172,7 +172,7 @@ SettingsRow {
                             enabled: false
                             Layout.preferredWidth: rootObj.s(140)
                             implicitHeight: rootObj.s(26)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+                            cornerRadius: ThemeBackend.rad(rootObj.s(6))
                             horizontalPadding: rootObj.s(6)
                             textFontSize: rootObj.s(11)
                             accentColor: ThemeBackend.surface1
@@ -182,7 +182,7 @@ SettingsRow {
 
                         IconButton {
                             size: rootObj.s(26)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+                            cornerRadius: ThemeBackend.rad(rootObj.s(6))
                             buttonIcon: "󰕰"
                             iconFontSize: rootObj.s(13)
                             accentColor: row.tab.gridEnabled ? ThemeBackend.mauve : ThemeBackend.surface1
@@ -194,7 +194,7 @@ SettingsRow {
 
                         IconButton {
                             size: rootObj.s(26)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+                            cornerRadius: ThemeBackend.rad(rootObj.s(6))
                             buttonIcon: "󰑐"
                             iconFontSize: rootObj.s(13)
                             accentColor: ThemeBackend.surface1
@@ -269,7 +269,7 @@ SettingsRow {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (rootObj.s(8))
+                            radius: ThemeBackend.rad(rootObj.s(8))
                             color: notifPreviewGlass.active ? "transparent" : ThemeBackend.base
                             border.width: ThemeBackend.liquidGlass ? 0 : 1
                             border.color: ThemeBackend.surface0
@@ -278,7 +278,7 @@ SettingsRow {
                             GlassFill {
                                 id: notifPreviewGlass
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                radius: ThemeBackend.rad(parent.radius)
                                 tintColor: ThemeBackend.base
                                 tintAmount: 0.35
                                 shadow: 1
@@ -293,13 +293,13 @@ SettingsRow {
                                     Layout.preferredWidth: parent.height
                                     Layout.preferredHeight: parent.height
                                     Layout.alignment: Qt.AlignVCenter
-                                    radius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+                                    radius: ThemeBackend.rad(rootObj.s(6))
                                     color: notifIconGlass.active ? "transparent" : ThemeBackend.surface1
 
                                     GlassFill {
                                         id: notifIconGlass
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         tintColor: ThemeBackend.surface1
                                         tintAmount: 0.3
                                     }
@@ -322,7 +322,7 @@ SettingsRow {
                                         Layout.fillWidth: true
                                         Layout.maximumWidth: rootObj.s(80)
                                         height: rootObj.s(6)
-                                        radius: ThemeBackend.minimalist ? 0 : (rootObj.s(3))
+                                        radius: ThemeBackend.rad(rootObj.s(3))
                                         color: ThemeBackend.text
                                     }
 
@@ -330,7 +330,7 @@ SettingsRow {
                                         Layout.fillWidth: true
                                         Layout.maximumWidth: rootObj.s(110)
                                         height: rootObj.s(5)
-                                        radius: ThemeBackend.minimalist ? 0 : (rootObj.s(2.5))
+                                        radius: ThemeBackend.rad(rootObj.s(2.5))
                                         color: ThemeBackend.subtext0
                                     }
                                 }

@@ -127,7 +127,7 @@ Item {
                         required property int index
                         width: Math.max(1, root.stroke * 1.1 - (root.stroke - glyphs.strokeW))
                         height: width
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: glyphs.col
                         x: (cell.width - width) / 2
                         y: cell.height * (index === 0 ? 0.35 : 0.65) - height / 2

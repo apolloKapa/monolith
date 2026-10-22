@@ -144,7 +144,7 @@ Item {
                     anchors.centerIn: parent
                     width: parent.width
                     height: 2
-                    radius: ThemeBackend.minimalist ? 0 : (1)
+                    radius: ThemeBackend.rad(1)
                     color: ThemeBackend.surface1
                 }
             }

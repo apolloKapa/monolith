@@ -189,7 +189,7 @@ GuideTab {
                         GlassFill {
                             id: gf1
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: ThemeBackend.surface0
                             tintAmount: 0.25
                         }
@@ -299,7 +299,7 @@ GuideTab {
                                 GlassFill {
                                     id: gf2
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                    radius: ThemeBackend.rad(parent.radius)
                                     tintColor: Qt.alpha(ThemeBackend.surface1, 0.35)
                                     tintAmount: 0.25
                                 }
@@ -321,7 +321,7 @@ GuideTab {
                                             enabled: false
                                             Layout.preferredWidth: rootObj.s(140)
                                             implicitHeight: rootObj.s(26)
-                                            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+                                            cornerRadius: ThemeBackend.rad(rootObj.s(6))
                                             horizontalPadding: rootObj.s(6)
                                             textFontSize: rootObj.s(11)
                                             accentColor: ThemeBackend.surface1
@@ -331,7 +331,7 @@ GuideTab {
 
                                         IconButton {
                                             size: rootObj.s(26)
-                                            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+                                            cornerRadius: ThemeBackend.rad(rootObj.s(6))
                                             buttonIcon: "󰕰"
                                             iconFontSize: rootObj.s(13)
                                             accentColor: osdTabRoot.gridEnabled ? ThemeBackend.mauve : ThemeBackend.surface1
@@ -343,7 +343,7 @@ GuideTab {
 
                                         IconButton {
                                             size: rootObj.s(26)
-                                            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+                                            cornerRadius: ThemeBackend.rad(rootObj.s(6))
                                             buttonIcon: "󰑐"
                                             iconFontSize: rootObj.s(13)
                                             accentColor: ThemeBackend.surface1
@@ -357,7 +357,7 @@ GuideTab {
                                             Layout.alignment: Qt.AlignVCenter
                                             implicitWidth: rootObj.s(160)
                                             implicitHeight: rootObj.s(26)
-                                            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+                                            cornerRadius: ThemeBackend.rad(rootObj.s(6))
                                             fontPixelSize: rootObj.s(11)
                                             options: [I18n.t("guide.osd.orientation.horizontal", "Horizontal"), I18n.t("guide.osd.orientation.vertical", "Vertical")]
                                             currentIndex: osdTabRoot.orientation === "vertical" ? 1 : 0
@@ -429,7 +429,7 @@ GuideTab {
 
                                         Rectangle {
                                             anchors.fill: parent
-                                            radius: ThemeBackend.minimalist ? 0 : (rootObj.s(11))
+                                            radius: ThemeBackend.rad(rootObj.s(11))
                                             color: osdPreviewGlass.active ? "transparent" : ThemeBackend.base
                                             border.width: ThemeBackend.liquidGlass ? 0 : 1
                                             border.color: ThemeBackend.surface0
@@ -438,7 +438,7 @@ GuideTab {
                                             GlassFill {
                                                 id: osdPreviewGlass
                                                 anchors.fill: parent
-                                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                radius: ThemeBackend.rad(parent.radius)
                                                 tintColor: ThemeBackend.base
                                                 tintAmount: 0.35
                                                 shadow: 1
@@ -455,13 +455,13 @@ GuideTab {
                                                     Layout.preferredWidth: parent.height - rootObj.s(10)
                                                     Layout.preferredHeight: parent.height - rootObj.s(10)
                                                     Layout.alignment: Qt.AlignVCenter
-                                                    radius: ThemeBackend.minimalist ? 0 : (rootObj.s(7))
+                                                    radius: ThemeBackend.rad(rootObj.s(7))
                                                     color: osdIconGlassH.active ? "transparent" : ThemeBackend.surface1
 
                                                     GlassFill {
                                                         id: osdIconGlassH
                                                         anchors.fill: parent
-                                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                        radius: ThemeBackend.rad(parent.radius)
                                                         tintColor: ThemeBackend.surface1
                                                         tintAmount: 0.3
                                                     }
@@ -487,7 +487,7 @@ GuideTab {
                                                     gradColor1: accentColor
                                                     gradColor2: Qt.lighter(accentColor, 1.05)
                                                     gradColor3: Qt.lighter(accentColor, 1.10)
-                                                    cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(5))
+                                                    cornerRadius: ThemeBackend.rad(rootObj.s(5))
                                                     handleSize: rootObj.s(16)
                                                     handleColor: Qt.lighter(accentColor, 1.3)
                                                 }
@@ -504,13 +504,13 @@ GuideTab {
                                                     Layout.preferredWidth: parent.width - rootObj.s(10)
                                                     Layout.preferredHeight: parent.width - rootObj.s(10)
                                                     Layout.alignment: Qt.AlignHCenter
-                                                    radius: ThemeBackend.minimalist ? 0 : (rootObj.s(7))
+                                                    radius: ThemeBackend.rad(rootObj.s(7))
                                                     color: osdIconGlassV.active ? "transparent" : ThemeBackend.surface1
 
                                                     GlassFill {
                                                         id: osdIconGlassV
                                                         anchors.fill: parent
-                                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                        radius: ThemeBackend.rad(parent.radius)
                                                         tintColor: ThemeBackend.surface1
                                                         tintAmount: 0.3
                                                     }
@@ -537,7 +537,7 @@ GuideTab {
                                                     gradColor1: accentColor
                                                     gradColor2: Qt.lighter(accentColor, 1.05)
                                                     gradColor3: Qt.lighter(accentColor, 1.10)
-                                                    cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(5))
+                                                    cornerRadius: ThemeBackend.rad(rootObj.s(5))
                                                     handleSize: rootObj.s(16)
                                                     handleColor: Qt.lighter(accentColor, 1.3)
                                                 }

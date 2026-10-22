@@ -658,6 +658,10 @@
         "title": "Elementdeckkraft",
         "desc": "Deckkraft von Leiste, Dock, Widgets und allen anderen Shell-Elementen"
       },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
+      },
       "blur_background": {
         "title": "Unscharfen Hintergrundbild-Hintergrund hinzufügen",
         "desc": "Weichzeichnet das Hintergrundbild hinter jedem Element mit Transparenz",

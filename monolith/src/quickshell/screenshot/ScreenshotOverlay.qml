@@ -814,10 +814,10 @@ PanelWindow {
                     z: -1
                     anchors.fill: parent
                     surfaceEnabled: ThemeBackend.liquidGlass
-                    topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    topRightRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    topLeftRadius: ThemeBackend.rad(parent.radius)
+                    topRightRadius: ThemeBackend.rad(parent.radius)
+                    bottomLeftRadius: ThemeBackend.rad(parent.radius)
+                    bottomRightRadius: ThemeBackend.rad(parent.radius)
                 }
 
                 MouseArea {
@@ -860,10 +860,10 @@ PanelWindow {
                     z: -1
                     anchors.fill: parent
                     surfaceEnabled: ThemeBackend.liquidGlass
-                    topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    topRightRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    topLeftRadius: ThemeBackend.rad(parent.radius)
+                    topRightRadius: ThemeBackend.rad(parent.radius)
+                    bottomLeftRadius: ThemeBackend.rad(parent.radius)
+                    bottomRightRadius: ThemeBackend.rad(parent.radius)
                 }
 
                 ListView {
@@ -881,7 +881,7 @@ PanelWindow {
                         GlassFill {
                             id: backendItemGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             allowed: maBackendItem.containsMouse
                             tintColor: ThemeBackend.text
                             tintAmount: 0.14
@@ -972,10 +972,10 @@ PanelWindow {
                     z: -1
                     anchors.fill: parent
                     surfaceEnabled: ThemeBackend.liquidGlass
-                    topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    topRightRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    topLeftRadius: ThemeBackend.rad(parent.radius)
+                    topRightRadius: ThemeBackend.rad(parent.radius)
+                    bottomLeftRadius: ThemeBackend.rad(parent.radius)
+                    bottomRightRadius: ThemeBackend.rad(parent.radius)
                 }
 
                 Text {
@@ -1002,7 +1002,7 @@ PanelWindow {
                         GlassFill {
                             id: micItemGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             allowed: maList.containsMouse
                             tintColor: ThemeBackend.text
                             tintAmount: 0.14
@@ -1141,7 +1141,7 @@ PanelWindow {
                             gradColor1: audioCtrl.mutedValue ? ThemeBackend.surface2 : ThemeBackend.mauve
                             gradColor2: audioCtrl.mutedValue ? ThemeBackend.surface2 : Qt.lighter(ThemeBackend.mauve, 1.05)
                             gradColor3: audioCtrl.mutedValue ? ThemeBackend.surface2 : Qt.lighter(ThemeBackend.mauve, 1.10)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (s(6))
+                            cornerRadius: ThemeBackend.rad(s(6))
                             handleSize: s(22)
                             handleColor: audioCtrl.mutedValue ? ThemeBackend.overlay0 : Qt.lighter(ThemeBackend.mauve, 1.15)
                             handleHoverColor: audioCtrl.mutedValue ? ThemeBackend.subtext0 : Qt.lighter(ThemeBackend.mauve, 1.3)
@@ -1229,7 +1229,7 @@ PanelWindow {
                         GlassFill {
                             id: backendBtnGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: ThemeBackend.surface1
                             tintAmount: 0.3
                             shadow: 1
@@ -1364,7 +1364,7 @@ PanelWindow {
                 Rectangle {
                     id: leftLineBase
                     height: s(4)
-                    radius: ThemeBackend.minimalist ? 0 : (s(2))
+                    radius: ThemeBackend.rad(s(2))
                     color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.1)
                     anchors.left: parent.left
                     anchors.leftMargin: s(24)
@@ -1378,7 +1378,7 @@ PanelWindow {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         width: actionArea.containsMouse ? parent.width : 0
-                        radius: ThemeBackend.minimalist ? 0 : (s(2))
+                        radius: ThemeBackend.rad(s(2))
                         Behavior on width { enabled: root.animateChanges && !root.isRefreezing; NumberAnimation { duration: (500) * ThemeBackend.animScale; easing.type: Easing.InOutExpo } }
 
                         gradient: Gradient {
@@ -1398,7 +1398,7 @@ PanelWindow {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: "transparent"
                         border.color: root.isVideoMode ? Qt.alpha(ThemeBackend.red, 0.4) : Qt.alpha(ThemeBackend.surface1, 0.8)
                         border.width: s(2)
@@ -1408,7 +1408,7 @@ PanelWindow {
                     Rectangle {
                         width: actionArea.pressed ? s(32) : (actionArea.containsMouse ? s(40) : s(36))
                         height: width
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         anchors.centerIn: parent
                         color: root.isVideoMode ? ThemeBackend.red : ThemeBackend.mauve
                         Behavior on color { enabled: root.animateChanges && !root.isRefreezing; ColorAnimation { duration: (250) * ThemeBackend.animScale } }
@@ -1427,7 +1427,7 @@ PanelWindow {
                 Rectangle {
                     id: rightLineBase
                     height: s(4)
-                    radius: ThemeBackend.minimalist ? 0 : (s(2))
+                    radius: ThemeBackend.rad(s(2))
                     color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.1)
                     anchors.right: parent.right
                     anchors.rightMargin: s(24)
@@ -1441,7 +1441,7 @@ PanelWindow {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         width: actionArea.containsMouse ? parent.width : 0
-                        radius: ThemeBackend.minimalist ? 0 : (s(2))
+                        radius: ThemeBackend.rad(s(2))
                         Behavior on width { enabled: root.animateChanges && !root.isRefreezing; NumberAnimation { duration: (500) * ThemeBackend.animScale; easing.type: Easing.InOutExpo } }
 
                         gradient: Gradient {
@@ -1474,10 +1474,10 @@ PanelWindow {
                     z: -1
                     anchors.fill: parent
                     surfaceEnabled: ThemeBackend.liquidGlass
-                    topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    topRightRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
-                    bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    topLeftRadius: ThemeBackend.rad(parent.radius)
+                    topRightRadius: ThemeBackend.rad(parent.radius)
+                    bottomLeftRadius: ThemeBackend.rad(parent.radius)
+                    bottomRightRadius: ThemeBackend.rad(parent.radius)
                 }
 
                 property bool isHovered: maHover.containsMouse

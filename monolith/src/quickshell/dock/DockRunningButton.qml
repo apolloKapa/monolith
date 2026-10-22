@@ -116,14 +116,14 @@ Item {
         Rectangle {
             id: runningBtnShape
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (runningDockButton.cornerRadius)
+            radius: ThemeBackend.rad(runningDockButton.cornerRadius)
             clip: true
             color: runningBtnGlass.active ? "transparent" : Qt.alpha(runningBtnMa.pressed ? Qt.darker(runningDockButton.btnColor, 1.12) : (runningBtnMa.containsMouse ? Qt.lighter(runningDockButton.btnColor, 1.12) : runningDockButton.btnColor), ThemeBackend.elementOpacity)
 
             GlassFill {
                 id: runningBtnGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: runningDockButton.btnColor
                 tintAmount: 0.3
                 press: runningBtnMa.pressed ? 1 : Math.max(runningBtnMa.containsMouse ? 0.3 : 0, 0.3 * Math.max(0, Math.min(1, (runningDockButton.baseHoverScale - 1.0) / Math.max(0.01, runningDockButton.hoverScaleDelta))))
@@ -171,7 +171,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (runningDockButton.cornerRadius)
+                radius: ThemeBackend.rad(runningDockButton.cornerRadius)
                 color: "#ffffff"
                 opacity: runningDockButton.flashOpacity
                 PropertyAnimation on opacity {
@@ -209,7 +209,7 @@ Item {
                 anchors.centerIn: parent
                 width: dockWindow.s(4)
                 height: dockWindow.s(4)
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: "transparent"
                 border.width: 1
                 border.color: ThemeBackend.overlay0
@@ -221,7 +221,7 @@ Item {
                 anchors.centerIn: parent
                 width: dockWindow.isVertical ? dockWindow.s(3.5) : dockWindow.s(14)
                 height: dockWindow.isVertical ? dockWindow.s(14) : dockWindow.s(3.5)
-                radius: ThemeBackend.minimalist ? 0 : (dockWindow.s(2))
+                radius: ThemeBackend.rad(dockWindow.s(2))
                 color: ThemeBackend.mauve
             }
 
@@ -236,7 +236,7 @@ Item {
                     delegate: Rectangle {
                         width: dockWindow.s(3.5)
                         height: dockWindow.s(3.5)
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: (index === 0 && runningDockButton.isAppFocused) ? ThemeBackend.mauve : (index === 0 ? ThemeBackend.subtext0 : ThemeBackend.surface2)
                     }
                 }
@@ -253,7 +253,7 @@ Item {
                     delegate: Rectangle {
                         width: dockWindow.s(3.5)
                         height: dockWindow.s(3.5)
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: (index === 0 && runningDockButton.isAppFocused) ? ThemeBackend.mauve : (index === 0 ? ThemeBackend.subtext0 : ThemeBackend.surface2)
                     }
                 }

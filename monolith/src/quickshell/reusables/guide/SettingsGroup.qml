@@ -95,7 +95,7 @@ Item {
         icon: root.icon
         iconSize: root.iconSize
         iconFontSize: root.iconFontSize
-        iconCornerRadius: ThemeBackend.minimalist ? 0 : (root.iconCornerRadius)
+        iconCornerRadius: ThemeBackend.rad(root.iconCornerRadius)
         iconAccentColor: root.iconAccentColor
         iconTextColor: root.iconTextColor
 
@@ -148,7 +148,7 @@ Item {
                     anchors.topMargin: root.s(2)
                     anchors.bottomMargin: root.s(2)
                     width: Math.max(1, root.s(2))
-                    radius: ThemeBackend.minimalist ? 0 : (root.s(1))
+                    radius: ThemeBackend.rad(root.s(1))
                     color: Qt.rgba(ThemeBackend.surface2.r, ThemeBackend.surface2.g, ThemeBackend.surface2.b, 0.7)
                 }
             }

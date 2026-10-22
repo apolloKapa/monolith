@@ -124,7 +124,7 @@ Item {
         anchors.fill: parent
         anchors.topMargin: root.s(2)
         anchors.bottomMargin: -root.s(2)
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: root.shadowColor
         visible: root.hasShadow && !ThemeBackend.glassActive
     }
@@ -132,14 +132,14 @@ Item {
     Rectangle {
         id: bgRect
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: bgGlass.active ? "transparent" : root.baseColor
         clip: true
 
         GlassFill {
             id: bgGlass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: ThemeBackend.surface0
             tintAmount: 0.3
         }
@@ -147,7 +147,7 @@ Item {
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             standalone: true
             surfaceEnabled: root.standaloneBlur
             screenOverride: root.blurScreen
@@ -157,7 +157,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: "transparent"
         border.color: root.borderColor
         border.width: root.borderWidth
@@ -193,7 +193,7 @@ Item {
                 Layout.preferredWidth: root.s(80)
                 Layout.preferredHeight: root.s(32)
                 horizontalPadding: root.s(10)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(10))
+                cornerRadius: ThemeBackend.rad(root.s(10))
                 buttonText: I18n.t("syspanel.notifications.clear")
                 textFontSize: root.s(11)
                 buttonIcon: "󰅖"
@@ -213,7 +213,7 @@ Item {
                 Layout.preferredWidth: root.s(86)
                 Layout.preferredHeight: root.s(32)
                 horizontalPadding: root.s(10)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(10))
+                cornerRadius: ThemeBackend.rad(root.s(10))
                 buttonText: root.dndEnabled ? I18n.t("syspanel.notifications.silent") : I18n.t("syspanel.notifications.mute")
                 textFontSize: root.s(11)
                 buttonIcon: root.dndEnabled ? "󰂛" : "󰂚"
@@ -251,8 +251,8 @@ Item {
                         id: mascotImg
                         anchors.fill: parent
                         size: root.emptyGraphicSize
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(0))
-                        imageRadius: ThemeBackend.minimalist ? 0 : (root.s(0))
+                        cornerRadius: ThemeBackend.rad(root.s(0))
+                        imageRadius: ThemeBackend.rad(root.s(0))
                         source: Caching.monolithDir ? ("file://" + Caching.monolithDir + "/assets/lith_sleep.gif") : Qt.resolvedUrl("../../assets/lith_sleep.gif")
                         isGif: true
                         playing: true
@@ -510,7 +510,7 @@ Item {
                                     anchors.fill: groupHeaderCard
                                     anchors.topMargin: root.s(1.5)
                                     anchors.bottomMargin: -root.s(1.5)
-                                    radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+                                    radius: ThemeBackend.rad(root.cardRadius)
                                     color: Qt.rgba(0, 0, 0, 0.15)
                                     z: -2
                                     opacity: Math.max(0.0, 1.0 - groupWrapper.groupExpandProgress * 2.0)
@@ -526,7 +526,7 @@ Item {
                                     anchors.rightMargin: root.s(4)
                                     anchors.topMargin: root.s(4)
                                     height: groupHeaderCard.height
-                                    radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+                                    radius: ThemeBackend.rad(root.cardRadius)
                                     color: stackGlass.active ? "transparent" : ThemeBackend.faded(Qt.darker(ThemeBackend.surface1, 1.08))
                                     z: -1
                                     opacity: Math.max(0.0, 1.0 - groupWrapper.groupExpandProgress * 2.0)
@@ -534,7 +534,7 @@ Item {
                                     GlassFill {
                                         id: stackGlass
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         tintColor: ThemeBackend.surface1
                                         tintAmount: 0.3
                                         press: 0.1
@@ -546,7 +546,7 @@ Item {
                                     anchors.fill: groupHeaderCard
                                     anchors.topMargin: Math.max(0, groupWrapper.dragY * 0.4)
                                     anchors.bottomMargin: -Math.max(0, groupWrapper.dragY * 0.4)
-                                    radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+                                    radius: ThemeBackend.rad(root.cardRadius)
                                     color: Qt.rgba(0, 0, 0, Math.min(0.18, Math.max(0, groupWrapper.dragY / root.s(3.5)) * 0.18))
                                     visible: groupWrapper.dragY > 0 && !ThemeBackend.glassActive
                                     z: -1
@@ -555,7 +555,7 @@ Item {
                                 Rectangle {
                                     id: groupHeaderCard
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+                                    radius: ThemeBackend.rad(root.cardRadius)
                                     property color baseColor: (typeof unreadCount !== "undefined" && unreadCount > 0) ? Qt.lighter(ThemeBackend.surface1, 1.05) : ThemeBackend.surface1
                                     color: headerGlass.active ? "transparent" : ThemeBackend.faded((groupHeaderMa.pressed && !groupHeaderMa.draggingH && !groupHeaderMa.draggingV) ? Qt.darker(baseColor, 1.1) : (groupHeaderMa.containsMouse && !groupHeaderMa.draggingH && !groupHeaderMa.draggingV ? Qt.lighter(baseColor, 1.05) : baseColor))
                                     scale: (groupHeaderMa.pressed && !groupHeaderMa.draggingH && !groupHeaderMa.draggingV) ? 0.98 : 1.0
@@ -566,7 +566,7 @@ Item {
                                     GlassFill {
                                         id: headerGlass
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         tintColor: parent.baseColor
                                         tintAmount: 0.3
                                         press: groupHeaderMa.pressed ? 0.8 : (groupHeaderMa.containsMouse ? 0.2 : 0)
@@ -687,13 +687,13 @@ Item {
 
                                             Rectangle {
                                                 anchors.fill: parent
-                                                radius: ThemeBackend.minimalist ? 0 : (root.s(10))
+                                                radius: ThemeBackend.rad(root.s(10))
                                                 color: groupIconGlass.active ? "transparent" : ThemeBackend.faded(ThemeBackend.surface2)
 
                                                 GlassFill {
                                                     id: groupIconGlass
                                                     anchors.fill: parent
-                                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                    radius: ThemeBackend.rad(parent.radius)
                                                     tintColor: ThemeBackend.surface2
                                                     tintAmount: 0.35
                                                     tintStrength: 1.0
@@ -703,7 +703,7 @@ Item {
                                             Rectangle {
                                                 anchors.fill: parent
                                                 anchors.margins: root.s(5)
-                                                radius: ThemeBackend.minimalist ? 0 : (root.s(5))
+                                                radius: ThemeBackend.rad(root.s(5))
                                                 color: "transparent"
                                                 clip: true
 
@@ -855,13 +855,13 @@ Item {
 
                                                 Rectangle {
                                                     anchors.fill: parent
-                                                    radius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                                    radius: ThemeBackend.rad(root.s(8))
                                                     color: countGlass.active ? "transparent" : ThemeBackend.faded(ThemeBackend.surface2)
 
                                                     GlassFill {
                                                         id: countGlass
                                                         anchors.fill: parent
-                                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                        radius: ThemeBackend.rad(parent.radius)
                                                         tintColor: ThemeBackend.surface2
                                                         tintAmount: 0.35
                                                         tintStrength: 1.0
@@ -881,7 +881,7 @@ Item {
                                                 Rectangle {
                                                     width: root.s(8)
                                                     height: root.s(8)
-                                                    radius: ThemeBackend.minimalist ? 0 : (root.s(4))
+                                                    radius: ThemeBackend.rad(root.s(4))
                                                     color: ThemeBackend.red
                                                     anchors.top: parent.top
                                                     anchors.right: parent.right
@@ -896,7 +896,7 @@ Item {
                                                 Layout.preferredWidth: size
                                                 Layout.preferredHeight: size
                                                 size: root.s(30)
-                                                cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                                cornerRadius: ThemeBackend.rad(root.s(8))
                                                 accentColor: ThemeBackend.surface2
                                                 iconColor: (isHoveredOrHighlighted || ThemeBackend.liquidGlass) ? ThemeBackend.text : ThemeBackend.subtext1
                                                 autoToggle: false
@@ -941,7 +941,7 @@ Item {
                                             anchors.bottom: parent.bottom
                                             anchors.bottomMargin: root.s(8)
                                             width: Math.max(1, root.s(2))
-                                            radius: ThemeBackend.minimalist ? 0 : (root.s(1))
+                                            radius: ThemeBackend.rad(root.s(1))
                                             color: ThemeBackend.liquidGlass ? Qt.alpha(ThemeBackend.text, 0.35) : Qt.rgba(ThemeBackend.surface2.r, ThemeBackend.surface2.g, ThemeBackend.surface2.b, 0.7)
                                         }
                                     }

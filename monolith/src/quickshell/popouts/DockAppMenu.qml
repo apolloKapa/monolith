@@ -229,13 +229,13 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: dockAppMenuWindow.s(32) + dockAppMenuWindow.s(8)
                     color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-                    radius: ThemeBackend.minimalist ? 0 : (dockAppMenuWindow.cornerRadius)
+                    radius: ThemeBackend.rad(dockAppMenuWindow.cornerRadius)
                     clip: true
 
                     WallpaperBlur {
                         z: -1
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                     }
 
                     Item {
@@ -244,7 +244,7 @@ PanelWindow {
 
                         ClickButton {
                             anchors.fill: parent
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (dockAppMenuWindow.s(8))
+                            cornerRadius: ThemeBackend.rad(dockAppMenuWindow.s(8))
                             contentAlignment: Qt.AlignLeft
                             horizontalPadding: dockAppMenuWindow.s(40)
                             textFontSize: dockAppMenuWindow.s(12)
@@ -285,7 +285,7 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: Math.max(height, badgeText.implicitWidth + dockAppMenuWindow.s(10))
                             height: dockAppMenuWindow.s(18)
-                            radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                            radius: ThemeBackend.rad(height / 2)
                             color: Qt.alpha(ThemeBackend.base, 0.6)
 
                             Text {
@@ -305,13 +305,13 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: windowsCol.implicitHeight + dockAppMenuWindow.s(8)
                     color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-                    radius: ThemeBackend.minimalist ? 0 : (dockAppMenuWindow.cornerRadius)
+                    radius: ThemeBackend.rad(dockAppMenuWindow.cornerRadius)
                     clip: true
 
                     WallpaperBlur {
                         z: -1
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                     }
 
                     ColumnLayout {
@@ -336,7 +336,7 @@ PanelWindow {
                                 ClickButton {
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    cornerRadius: ThemeBackend.minimalist ? 0 : (dockAppMenuWindow.s(7))
+                                    cornerRadius: ThemeBackend.rad(dockAppMenuWindow.s(7))
                                     contentAlignment: Qt.AlignLeft
                                     horizontalPadding: dockAppMenuWindow.s(8)
                                     buttonIcon: "󰖲"
@@ -371,7 +371,7 @@ PanelWindow {
                                         width: dockAppMenuWindow.s(30)
                                         height: dockAppMenuWindow.s(30)
                                         size: dockAppMenuWindow.s(30)
-                                        cornerRadius: ThemeBackend.minimalist ? 0 : (dockAppMenuWindow.s(7))
+                                        cornerRadius: ThemeBackend.rad(dockAppMenuWindow.s(7))
                                         accentColor: ThemeBackend.surface0
                                         bgOpacity: ThemeBackend.elementOpacity
                                         textColor: ThemeBackend.red
@@ -397,13 +397,13 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: actionsCol.implicitHeight + dockAppMenuWindow.s(8)
                     color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-                    radius: ThemeBackend.minimalist ? 0 : (dockAppMenuWindow.cornerRadius)
+                    radius: ThemeBackend.rad(dockAppMenuWindow.cornerRadius)
                     clip: true
 
                     WallpaperBlur {
                         z: -1
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                     }
 
                     ColumnLayout {
@@ -417,7 +417,7 @@ PanelWindow {
                         ClickButton {
                             Layout.fillWidth: true
                             Layout.preferredHeight: dockAppMenuWindow.s(29)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (dockAppMenuWindow.s(8))
+                            cornerRadius: ThemeBackend.rad(dockAppMenuWindow.s(8))
                             contentAlignment: Qt.AlignLeft
                             horizontalPadding: dockAppMenuWindow.s(8)
                             buttonIcon: "󰐕"
@@ -439,7 +439,7 @@ PanelWindow {
                         ClickButton {
                             Layout.fillWidth: true
                             Layout.preferredHeight: dockAppMenuWindow.s(29)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (dockAppMenuWindow.s(8))
+                            cornerRadius: ThemeBackend.rad(dockAppMenuWindow.s(8))
                             contentAlignment: Qt.AlignLeft
                             horizontalPadding: dockAppMenuWindow.s(8)
                             buttonIcon: DockAppMenuController.isPinned ? "󰤰" : "󰤱"

@@ -366,7 +366,7 @@ Rectangle {
         anchors.fill: parent
         anchors.topMargin: s(1.5) + Math.max(0, typeRoot.dragY * 0.4)
         anchors.bottomMargin: -(s(1.5) + Math.max(0, typeRoot.dragY * 0.4))
-        radius: ThemeBackend.minimalist ? 0 : (visualItem.radius)
+        radius: ThemeBackend.rad(visualItem.radius)
         color: Qt.rgba(0, 0, 0, 0.12 + Math.min(0.06, Math.max(0, typeRoot.dragY / s(3.5)) * 0.06))
         visible: !ThemeBackend.glassActive
         scale: visualItem.scale
@@ -429,7 +429,7 @@ Rectangle {
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (visualItem.radius)
+            radius: ThemeBackend.rad(visualItem.radius)
             standalone: true
             screenOverride: (typeRoot.root && typeRoot.root.glassScreen) ? typeRoot.root.glassScreen : null
             useSnapshot: !!(typeRoot.root && typeRoot.root.glassScreen)
@@ -486,7 +486,7 @@ Rectangle {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (visualItem.radius)
+                radius: ThemeBackend.rad(visualItem.radius)
                 color: Qt.rgba(urgencyGlow.deepRed.r, urgencyGlow.deepRed.g, urgencyGlow.deepRed.b, 0.025)
             }
 
@@ -495,7 +495,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: parent.height * 0.55
-                radius: ThemeBackend.minimalist ? 0 : (visualItem.radius)
+                radius: ThemeBackend.rad(visualItem.radius)
                 color: "transparent"
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: Qt.rgba(urgencyGlow.deepRed.r, urgencyGlow.deepRed.g, urgencyGlow.deepRed.b, 0.11) }
@@ -508,7 +508,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: parent.height * 0.55
-                radius: ThemeBackend.minimalist ? 0 : (visualItem.radius)
+                radius: ThemeBackend.rad(visualItem.radius)
                 color: "transparent"
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: "transparent" }
@@ -521,7 +521,7 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 width: parent.width * 0.35
-                radius: ThemeBackend.minimalist ? 0 : (visualItem.radius)
+                radius: ThemeBackend.rad(visualItem.radius)
                 color: "transparent"
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
@@ -535,7 +535,7 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
                 width: parent.width * 0.35
-                radius: ThemeBackend.minimalist ? 0 : (visualItem.radius)
+                radius: ThemeBackend.rad(visualItem.radius)
                 color: "transparent"
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
@@ -577,14 +577,14 @@ Rectangle {
                         anchors.fill: parent
                         anchors.topMargin: s(1.5)
                         anchors.bottomMargin: -s(1.5)
-                        radius: ThemeBackend.minimalist ? 0 : (parent.boxRadius)
+                        radius: ThemeBackend.rad(parent.boxRadius)
                         color: Qt.rgba(0, 0, 0, 0.12)
                         visible: !ThemeBackend.glassActive
                     }
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.boxRadius)
+                        radius: ThemeBackend.rad(parent.boxRadius)
                         color: iconBoxGlass.active ? "transparent" : ThemeBackend.faded(typeRoot.urgency === 2 ? Qt.tint(ThemeBackend.surface2, Qt.rgba(urgencyGlow.deepRed.r, urgencyGlow.deepRed.g, urgencyGlow.deepRed.b, 0.12)) : ThemeBackend.surface2)
 
                         Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
@@ -592,7 +592,7 @@ Rectangle {
                         GlassFill {
                             id: iconBoxGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: typeRoot.urgency === 2 ? ThemeBackend.red : ThemeBackend.surface2
                             tintAmount: typeRoot.urgency === 2 ? 0.3 : 0.35
                             tintStrength: 1.0
@@ -604,7 +604,7 @@ Rectangle {
                         id: iconContainer
                         anchors.fill: parent
                         anchors.margins: parent.boxPadding
-                        radius: ThemeBackend.minimalist ? 0 : (Math.max(0, parent.boxRadius - parent.boxPadding))
+                        radius: ThemeBackend.rad(Math.max(0, parent.boxRadius - parent.boxPadding))
                         color: "transparent"
                         clip: true
                     }
@@ -744,7 +744,7 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: typeRoot.canExpand
                             size: s(28)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (s(7))
+                            cornerRadius: ThemeBackend.rad(s(7))
                             accentColor: ThemeBackend.surface2
                             iconColor: isHoveredOrHighlighted ? ThemeBackend.text : typeRoot.mutedText
                             autoToggle: false
@@ -868,7 +868,7 @@ Rectangle {
                                     readonly property bool isPrimary: index === 0
                                     Layout.minimumWidth: s(84)
                                     Layout.preferredHeight: s(28)
-                                    cornerRadius: ThemeBackend.minimalist ? 0 : (s(6))
+                                    cornerRadius: ThemeBackend.rad(s(6))
                                     horizontalPadding: s(12)
                                     buttonText: modelData.text || I18n.t("notifications.types.default.action")
                                     textFontSize: typeRoot.isPopup ? s(12) : s(11)

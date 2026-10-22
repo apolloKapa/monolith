@@ -48,7 +48,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "\u0537\u056f\u0580\u0561\u0576\u056b \u0576\u056f\u0561\u0580",
+      "screenshot": "Էկրանի նկար",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -656,6 +656,10 @@
       "element_opacity": {
         "title": "Տարրերի թափանցիկություն",
         "desc": "Վահանակի, դոկի, վիջեթների և թաղանթի մյուս բոլոր տարրերի թափանցիկությունը"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "Ավելացնել պաստառի լղոզված ֆոն",

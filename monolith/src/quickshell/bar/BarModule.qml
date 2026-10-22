@@ -101,7 +101,7 @@ Rectangle {
         id: ownBlur
         z: -1
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.radius)
+        radius: ThemeBackend.rad(root.radius)
         surfaceEnabled: !root.isGrouped && !root.isSolid
         standalone: true
     }
@@ -110,7 +110,7 @@ Rectangle {
         id: pillGlass
         anchors.fill: parent
         z: -1
-        radius: ThemeBackend.minimalist ? 0 : (root.radius)
+        radius: ThemeBackend.rad(root.radius)
         allowed: !root.isGrouped && root.isSolid && root.distinctPills
         tintColor: ThemeBackend.surface0
         tintAmount: 0.3

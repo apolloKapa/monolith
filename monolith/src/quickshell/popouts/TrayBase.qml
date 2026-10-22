@@ -350,7 +350,7 @@ PanelWindow {
             GlassFillets {
                 id: rootFillets
                 card: menuBox
-                filletRadius: ThemeBackend.minimalist ? 0 : ((trayMenuWindow.isSolid && menuContainer.dynamicCornerRadius > 0.5) ? menuContainer.dynamicCornerRadius : 0)
+                filletRadius: ThemeBackend.rad((trayMenuWindow.isSolid && menuContainer.dynamicCornerRadius > 0.5) ? menuContainer.dynamicCornerRadius : 0)
                 filletDir: trayMenuWindow.isSideBar
                     ? (trayMenuWindow.alignRight ? Qt.vector2d(1, 0) : Qt.vector2d(-1, 0))
                     : (trayMenuWindow.alignBottom ? Qt.vector2d(0, 1) : Qt.vector2d(0, -1))
@@ -414,12 +414,12 @@ PanelWindow {
                 id: menuBox
                 anchors.fill: parent
                 color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-                radius: ThemeBackend.minimalist ? 0 : (trayMenuWindow.cornerRadius)
+                radius: ThemeBackend.rad(trayMenuWindow.cornerRadius)
                 readonly property bool flatCorners: trayMenuWindow.isSolid
-                topLeftRadius: ThemeBackend.minimalist ? 0 : ((flatCorners && (trayMenuWindow.isSideBar ? !trayMenuWindow.alignRight : !trayMenuWindow.alignBottom)) ? 0 : trayMenuWindow.cornerRadius)
-                topRightRadius: ThemeBackend.minimalist ? 0 : ((flatCorners && (trayMenuWindow.isSideBar ? trayMenuWindow.alignRight : !trayMenuWindow.alignBottom)) ? 0 : trayMenuWindow.cornerRadius)
-                bottomLeftRadius: ThemeBackend.minimalist ? 0 : ((flatCorners && (trayMenuWindow.isSideBar ? !trayMenuWindow.alignRight : trayMenuWindow.alignBottom)) ? 0 : trayMenuWindow.cornerRadius)
-                bottomRightRadius: ThemeBackend.minimalist ? 0 : ((flatCorners && (trayMenuWindow.isSideBar ? trayMenuWindow.alignRight : trayMenuWindow.alignBottom)) ? 0 : trayMenuWindow.cornerRadius)
+                topLeftRadius: ThemeBackend.rad((flatCorners && (trayMenuWindow.isSideBar ? !trayMenuWindow.alignRight : !trayMenuWindow.alignBottom)) ? 0 : trayMenuWindow.cornerRadius)
+                topRightRadius: ThemeBackend.rad((flatCorners && (trayMenuWindow.isSideBar ? trayMenuWindow.alignRight : !trayMenuWindow.alignBottom)) ? 0 : trayMenuWindow.cornerRadius)
+                bottomLeftRadius: ThemeBackend.rad((flatCorners && (trayMenuWindow.isSideBar ? !trayMenuWindow.alignRight : trayMenuWindow.alignBottom)) ? 0 : trayMenuWindow.cornerRadius)
+                bottomRightRadius: ThemeBackend.rad((flatCorners && (trayMenuWindow.isSideBar ? trayMenuWindow.alignRight : trayMenuWindow.alignBottom)) ? 0 : trayMenuWindow.cornerRadius)
                 border.width: 0
                 border.color: "transparent"
                 clip: true
@@ -427,11 +427,11 @@ PanelWindow {
                 WallpaperBlur {
                     z: -1
                     anchors.fill: parent
-                    topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                    topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                    bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                    bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
-                    filletRadius: ThemeBackend.minimalist ? 0 : (rootFillets.filletRadius)
+                    topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                    topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                    bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                    bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
+                    filletRadius: ThemeBackend.rad(rootFillets.filletRadius)
                     filletDir: rootFillets.filletDir
                 }
 
@@ -470,7 +470,7 @@ PanelWindow {
                         targetY: menuList.hoverItem ? menuList.hoverItem.y : 0
                         targetWidth: menuList.hoverItem ? menuList.hoverItem.width : 0
                         targetHeight: menuList.hoverItem ? menuList.hoverItem.height : 0
-                        radius: ThemeBackend.minimalist ? 0 : (trayMenuWindow.s(4))
+                        radius: ThemeBackend.rad(trayMenuWindow.s(4))
                         tintColor: ThemeBackend.surface0
                         tintAmount: 0.3
                         shadow: 0
@@ -500,14 +500,14 @@ PanelWindow {
                         Rectangle {
                             anchors.fill: parent
                             visible: !rootItemDelegate.isSep
-                            radius: ThemeBackend.minimalist ? 0 : (trayMenuWindow.s(4))
+                            radius: ThemeBackend.rad(trayMenuWindow.s(4))
                             color: (rootHoverGlass.active || rootHoverLens.glassActive) ? "transparent" : (itemMouse.containsMouse ? ThemeBackend.surface0 : "transparent")
                             opacity: (modelData && modelData.enabled) ? 1.0 : 0.4
 
                             GlassFill {
                                 id: rootHoverGlass
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                radius: ThemeBackend.rad(parent.radius)
                                 allowed: itemMouse.containsMouse && !rootHoverLens.glassActive
                                 tintColor: ThemeBackend.surface0
                                 tintAmount: 0.3
@@ -685,7 +685,7 @@ PanelWindow {
                 GlassFillets {
                     id: subFillets
                     card: subMenuBox
-                    filletRadius: ThemeBackend.minimalist ? 0 : (submenuPopout.subCornerRadius > 0.5 ? submenuPopout.subCornerRadius : 0)
+                    filletRadius: ThemeBackend.rad(submenuPopout.subCornerRadius > 0.5 ? submenuPopout.subCornerRadius : 0)
                     filletDir: submenuPopout.expandRight ? Qt.vector2d(-1, 0) : Qt.vector2d(1, 0)
                 }
 
@@ -717,11 +717,11 @@ PanelWindow {
                     id: subMenuBox
                     anchors.fill: parent
                     color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-                    radius: ThemeBackend.minimalist ? 0 : (trayMenuWindow.cornerRadius)
-                    topLeftRadius: ThemeBackend.minimalist ? 0 : (submenuPopout.expandRight ? 0 : trayMenuWindow.cornerRadius)
-                    bottomLeftRadius: ThemeBackend.minimalist ? 0 : (submenuPopout.expandRight ? 0 : trayMenuWindow.cornerRadius)
-                    topRightRadius: ThemeBackend.minimalist ? 0 : (!submenuPopout.expandRight ? 0 : trayMenuWindow.cornerRadius)
-                    bottomRightRadius: ThemeBackend.minimalist ? 0 : (!submenuPopout.expandRight ? 0 : trayMenuWindow.cornerRadius)
+                    radius: ThemeBackend.rad(trayMenuWindow.cornerRadius)
+                    topLeftRadius: ThemeBackend.rad(submenuPopout.expandRight ? 0 : trayMenuWindow.cornerRadius)
+                    bottomLeftRadius: ThemeBackend.rad(submenuPopout.expandRight ? 0 : trayMenuWindow.cornerRadius)
+                    topRightRadius: ThemeBackend.rad(!submenuPopout.expandRight ? 0 : trayMenuWindow.cornerRadius)
+                    bottomRightRadius: ThemeBackend.rad(!submenuPopout.expandRight ? 0 : trayMenuWindow.cornerRadius)
                     border.width: 0
                     border.color: "transparent"
                     clip: true
@@ -729,11 +729,11 @@ PanelWindow {
                     WallpaperBlur {
                         z: -1
                         anchors.fill: parent
-                        topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                        topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                        bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                        bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
-                        filletRadius: ThemeBackend.minimalist ? 0 : (subFillets.filletRadius)
+                        topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                        topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                        bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                        bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
+                        filletRadius: ThemeBackend.rad(subFillets.filletRadius)
                         filletDir: subFillets.filletDir
                     }
 
@@ -772,7 +772,7 @@ PanelWindow {
                             targetY: subListView.hoverItem ? subListView.hoverItem.y : 0
                             targetWidth: subListView.hoverItem ? subListView.hoverItem.width : 0
                             targetHeight: subListView.hoverItem ? subListView.hoverItem.height : 0
-                            radius: ThemeBackend.minimalist ? 0 : (trayMenuWindow.s(4))
+                            radius: ThemeBackend.rad(trayMenuWindow.s(4))
                             tintColor: ThemeBackend.surface0
                             tintAmount: 0.3
                             shadow: 0
@@ -802,14 +802,14 @@ PanelWindow {
                             Rectangle {
                                 anchors.fill: parent
                                 visible: !subItemDelegate.isSep
-                                radius: ThemeBackend.minimalist ? 0 : (trayMenuWindow.s(4))
+                                radius: ThemeBackend.rad(trayMenuWindow.s(4))
                                 color: (subHoverGlass.active || subHoverLens.glassActive) ? "transparent" : (subItemMouse.containsMouse ? ThemeBackend.surface0 : "transparent")
                                 opacity: (modelData && modelData.enabled) ? 1.0 : 0.4
 
                                 GlassFill {
                                     id: subHoverGlass
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                    radius: ThemeBackend.rad(parent.radius)
                                     allowed: subItemMouse.containsMouse && !subHoverLens.glassActive
                                     tintColor: ThemeBackend.surface0
                                     tintAmount: 0.3

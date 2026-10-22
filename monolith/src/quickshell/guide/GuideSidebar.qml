@@ -24,20 +24,20 @@ Rectangle {
     width: popup.compact ? popup.s(64) : popup.s(232)
     color: sidebarGlass.active ? "transparent" : Qt.alpha(ThemeBackend.surface0, 0.4)
 
-    topLeftRadius: ThemeBackend.minimalist ? 0 : (!I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
-    bottomLeftRadius: ThemeBackend.minimalist ? 0 : (!I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
-    topRightRadius: ThemeBackend.minimalist ? 0 : (I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
-    bottomRightRadius: ThemeBackend.minimalist ? 0 : (I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
+    topLeftRadius: ThemeBackend.rad(!I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
+    bottomLeftRadius: ThemeBackend.rad(!I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
+    topRightRadius: ThemeBackend.rad(I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
+    bottomRightRadius: ThemeBackend.rad(I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
 
     Behavior on width { NumberAnimation { duration: (160) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
     GlassFill {
         id: sidebarGlass
         anchors.fill: parent
-        topLeftRadius: ThemeBackend.minimalist ? 0 : (sidebar.topLeftRadius)
-        topRightRadius: ThemeBackend.minimalist ? 0 : (sidebar.topRightRadius)
-        bottomLeftRadius: ThemeBackend.minimalist ? 0 : (sidebar.bottomLeftRadius)
-        bottomRightRadius: ThemeBackend.minimalist ? 0 : (sidebar.bottomRightRadius)
+        topLeftRadius: ThemeBackend.rad(sidebar.topLeftRadius)
+        topRightRadius: ThemeBackend.rad(sidebar.topRightRadius)
+        bottomLeftRadius: ThemeBackend.rad(sidebar.bottomLeftRadius)
+        bottomRightRadius: ThemeBackend.rad(sidebar.bottomRightRadius)
         tintColor: ThemeBackend.surface0
         tintAmount: 0.2
     }
@@ -106,7 +106,7 @@ Rectangle {
                 GlassFill {
                     id: activeGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: ThemeBackend.mauve
                     tintAmount: 0.5
                     press: 0.3 + 0.7 * activeHighlight.lift
@@ -186,7 +186,7 @@ Rectangle {
                             GlassFill {
                                 id: headerHoverGlass
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                radius: ThemeBackend.rad(parent.radius)
                                 allowed: headerMa.containsMouse && !header.active
                                 tintColor: ThemeBackend.surface1
                                 tintAmount: 0.25
@@ -305,7 +305,7 @@ Rectangle {
                                         anchors.topMargin: popup.s(2)
                                         anchors.bottomMargin: popup.s(2)
                                         width: Math.max(1, popup.s(2))
-                                        radius: ThemeBackend.minimalist ? 0 : (popup.s(1))
+                                        radius: ThemeBackend.rad(popup.s(1))
                                         color: Qt.rgba(ThemeBackend.surface2.r, ThemeBackend.surface2.g, ThemeBackend.surface2.b, 0.7)
                                     }
                                 }
@@ -336,7 +336,7 @@ Rectangle {
                                             GlassFill {
                                                 id: subHoverGlass
                                                 anchors.fill: parent
-                                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                radius: ThemeBackend.rad(parent.radius)
                                                 allowed: subMa.containsMouse && !sub.isCurrent
                                                 tintColor: ThemeBackend.surface1
                                                 tintAmount: 0.25

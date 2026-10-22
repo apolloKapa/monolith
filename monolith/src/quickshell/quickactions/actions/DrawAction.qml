@@ -566,7 +566,7 @@ Item {
                 WallpaperBlur {
                     z: -1
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                 }
 
                 Row {
@@ -674,7 +674,7 @@ Item {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
             }
             
             anchors.bottom: toolbar.top
@@ -701,19 +701,19 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     height: s(6)
-                    radius: ThemeBackend.minimalist ? 0 : (s(3))
+                    radius: ThemeBackend.rad(s(3))
                     color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.1)
                     
                     Rectangle {
                         width: parent.width * root.currentSizeRatio
                         height: parent.height
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         color: ThemeBackend.mauve
                     }
 
                     Rectangle {
                         width: s(18); height: s(18)
-                        radius: ThemeBackend.minimalist ? 0 : (width/2)
+                        radius: ThemeBackend.rad(width/2)
                         color: ThemeBackend.mauve
                         x: (parent.width * root.currentSizeRatio) - (width/2)
                         anchors.verticalCenter: parent.verticalCenter
@@ -791,7 +791,7 @@ Item {
                         }
 
                         height: width
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: root.currentTool === "eraser" ? "transparent" : root.currentColor
                         border.width: 1
                         border.color: Qt.rgba(root.baseTextColor.r, root.baseTextColor.g, root.baseTextColor.b, 0.2)
@@ -813,7 +813,7 @@ Item {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
             }
             
             anchors.bottom: toolbar.top
@@ -841,7 +841,7 @@ Item {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             border.width: 0
                             gradient: Gradient {
                                 orientation: Gradient.Horizontal
@@ -851,7 +851,7 @@ Item {
                         }
                         Rectangle {
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             border.width: 0
                             gradient: Gradient {
                                 orientation: Gradient.Vertical
@@ -862,7 +862,7 @@ Item {
 
                         Rectangle {
                             width: s(14); height: s(14)
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             border.width: s(2); border.color: "white"
                             color: "transparent"
                             x: ((root.activeColorSlot === 0 ? root.primaryHSV.s : root.secondaryHSV.s) * parent.width) - (width/2)
@@ -903,7 +903,7 @@ Item {
 
                         Rectangle {
                             width: parent.width; height: s(8)
-                            radius: ThemeBackend.minimalist ? 0 : (s(4))
+                            radius: ThemeBackend.rad(s(4))
                             border.width: 1; border.color: "black"
                             color: "white"
                             y: ((root.activeColorSlot === 0 ? root.primaryHSV.h : root.secondaryHSV.h) * parent.height) - (height/2)
@@ -967,7 +967,7 @@ Item {
                         Rectangle {
                             width: s(20)
                             height: s(20)
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             color: modelData
                             
                             border.width: root.currentColor.toString() === color.toString() ? s(2) : 0
@@ -1047,7 +1047,7 @@ Item {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
             }
 
             Row {
@@ -1182,7 +1182,7 @@ Item {
                         Rectangle {
                             width: s(26)
                             height: s(26)
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             color: root.primaryColor
                             border.width: root.activeColorSlot === 0 ? s(2) : 1
                             border.color: root.activeColorSlot === 0 ? root.baseTextColor : Qt.rgba(root.baseTextColor.r, root.baseTextColor.g, root.baseTextColor.b, 0.4)
@@ -1221,7 +1221,7 @@ Item {
                         Rectangle {
                             width: s(26)
                             height: s(26)
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             color: root.secondaryColor
                             border.width: root.activeColorSlot === 1 ? s(2) : 1
                             border.color: root.activeColorSlot === 1 ? root.baseTextColor : Qt.rgba(root.baseTextColor.r, root.baseTextColor.g, root.baseTextColor.b, 0.4)
