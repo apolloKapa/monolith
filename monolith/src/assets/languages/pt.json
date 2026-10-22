@@ -397,7 +397,8 @@
         "desc": "Escolha entre visual modular, sólido ou preenchido",
         "modular": "Modular",
         "solid": "Sólido",
-        "fill": "Preenchido"
+        "fill": "Preenchido",
+        "island": "Island"
       },
       "time": {
         "title": "Formato de hora",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

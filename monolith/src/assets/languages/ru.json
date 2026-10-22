@@ -398,7 +398,8 @@
         "desc": "Выберите между модульным, сплошным или заполненным видом панели",
         "modular": "Модульный",
         "solid": "Сплошной",
-        "fill": "Заполненный"
+        "fill": "Заполненный",
+        "island": "Island"
       },
       "time": {
         "title": "Формат времени",
@@ -1847,5 +1848,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

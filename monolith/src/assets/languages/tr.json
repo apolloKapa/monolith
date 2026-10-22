@@ -397,7 +397,8 @@
         "desc": "Modüler, düz veya dolgulu çubuk görünümü arasında seçim yapın",
         "modular": "Modüler",
         "solid": "Düz",
-        "fill": "Dolgulu"
+        "fill": "Dolgulu",
+        "island": "Island"
       },
       "time": {
         "title": "Saat biçimi",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

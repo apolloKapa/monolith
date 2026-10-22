@@ -397,7 +397,8 @@
         "desc": "Изберете между модулен, плътен или запълнен вид на лентата",
         "modular": "Модулен",
         "solid": "Плътен",
-        "fill": "Запълване"
+        "fill": "Запълване",
+        "island": "Island"
       },
       "time": {
         "title": "Формат на часа",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

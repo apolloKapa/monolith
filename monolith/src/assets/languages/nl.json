@@ -397,7 +397,8 @@
         "desc": "Kies tussen een modulair, effen of gevuld uiterlijk van de balk",
         "modular": "Modulair",
         "solid": "Effen",
-        "fill": "Gevuld"
+        "fill": "Gevuld",
+        "island": "Island"
       },
       "time": {
         "title": "Tijdsnotatie",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

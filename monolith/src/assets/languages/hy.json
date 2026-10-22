@@ -397,7 +397,8 @@
         "desc": "Ընտրեք մոդուլային, հոծ կամ լցված տեսքը",
         "modular": "Մոդուլային",
         "solid": "Հոծ",
-        "fill": "Լցված"
+        "fill": "Լցված",
+        "island": "Island"
       },
       "time": {
         "title": "Ժամի ձևաչափ",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

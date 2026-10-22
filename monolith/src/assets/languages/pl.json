@@ -1168,7 +1168,8 @@
         "desc": "Wybierz między wyglądem modułowym, jednolitym lub wypełnionym",
         "modular": "Modułowy",
         "solid": "Jednolity",
-        "fill": "Wypełniony"
+        "fill": "Wypełniony",
+        "island": "Island"
       },
       "time": {
         "title": "Format czasu",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

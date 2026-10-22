@@ -397,7 +397,8 @@
         "desc": "मॉड्यूलर, सॉलिड या भरे हुए बार लुक में से चुनें",
         "modular": "मॉड्यूलर",
         "solid": "सॉलिड",
-        "fill": "भरी हुई"
+        "fill": "भरी हुई",
+        "island": "Island"
       },
       "time": {
         "title": "समय प्रारूप",
@@ -1797,5 +1798,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

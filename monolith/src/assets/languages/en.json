@@ -400,7 +400,8 @@
         "desc": "Choose between modular, solid or a filled bar look",
         "modular": "Modular",
         "solid": "Solid",
-        "fill": "Fill"
+        "fill": "Fill",
+        "island": "Island"
       },
       "time": {
         "title": "Time format",
@@ -1838,5 +1839,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

@@ -398,7 +398,8 @@
         "desc": "Elegir entre aspecto modular, sólido o relleno",
         "modular": "Modular",
         "solid": "Sólido",
-        "fill": "Relleno"
+        "fill": "Relleno",
+        "island": "Island"
       },
       "time": {
         "title": "Formato de hora",
@@ -1841,5 +1842,8 @@
     "done": "done",
     "back_to_work": "Break's over, back to focus",
     "take_break": "Time for a break"
+  },
+  "island": {
+    "workspaces": "Workspaces"
   }
 }

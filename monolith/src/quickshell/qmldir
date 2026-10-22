@@ -3,6 +3,7 @@ Dim 1.0 Dim.qml
 Main 1.0 Main.qml
 
 Bar 1.0 bar/Bar.qml
+Island 1.0 island/Island.qml
 Floating 1.0 quickactions/Floating.qml
 Clipboard 1.0 clipboard/Clipboard.qml
 Launcher 1.0 launcher/Launcher.qml
