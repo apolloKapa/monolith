@@ -51,6 +51,32 @@ GuideTab {
 
             SettingsBlob {
                 Layout.fillWidth: true
+
+                SettingsRow {
+                    Layout.fillWidth: true
+                    rootObj: fxTab.rootObj
+                    settingId: "effect_marks"
+                    icon: "󰆾"
+                    title: "Corner marks"
+                    description: "Accent marks inside the corners of panels, popups and the settings window"
+                    searchKeywords: "effects corner marks brackets round square arcs"
+
+                    Switch {
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        implicitWidth: rootObj.s(240)
+                        implicitHeight: rootObj.s(32)
+                        options: ["Off", "Square", "Round"]
+                        currentIndex: fxTab.fx.marks === "round" ? 2 : (fxTab.fx.marks === "square" ? 1 : 0)
+                        accentColor: ThemeBackend.mauve
+                        baseColor: ThemeBackend.surface0
+                        textColor: ThemeBackend.subtext0
+                        activeTextColor: ThemeBackend.crust
+                        cornerRadius: ThemeBackend.borderRadius
+                        fontPixelSize: rootObj.s(11)
+                        onToggled: function(index) { fxTab.setFx("marks", ["off", "square", "round"][index]); }
+                    }
+                }
+
                 Repeater {
                     model: fxTab.items
                     SettingsRow {
