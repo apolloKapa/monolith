@@ -18,13 +18,6 @@ One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...), as you
 curl -fsSL https://raw.githubusercontent.com/apolloKapa/monolith/main/install/get.sh | bash
 ```
 
-While the repo is **private**, that URL needs a login, so use the GitHub CLI instead:
-
-```sh
-gh auth login   # once
-gh api "repos/apolloKapa/monolith/contents/install/get.sh?ref=main" -H "Accept: application/vnd.github.raw" | bash
-```
-
 Or from a clone: `git clone https://github.com/apolloKapa/monolith && ./monolith/install.sh`.
 
 Once it's installed, **`monolith installer`** opens the installer again to update, reinstall or change options. Settings → About → Update does the same.
