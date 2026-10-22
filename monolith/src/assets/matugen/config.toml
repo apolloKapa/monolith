@@ -16,3 +16,29 @@ output_path = "~/.config/kitty/colors.conf"
 [templates.cava]
 input_path = "templates/cava-colors.ini.template"
 output_path = "~/.config/cava/config"
+
+# app theming (Settings -> Theme -> Apps): colour files only; scripts/app_theming.sh hooks
+# them into the apps you switch on
+[templates.app_gtk]
+input_path = "templates/gtk-colors.css.template"
+output_path = "~/.local/state/monolith/apps/gtk.css"
+
+[templates.app_qt]
+input_path = "templates/qt-colors.conf.template"
+output_path = "~/.local/state/monolith/apps/qt.conf"
+
+[templates.app_foot]
+input_path = "templates/foot-colors.ini.template"
+output_path = "~/.local/state/monolith/apps/foot.ini"
+
+[templates.app_alacritty]
+input_path = "templates/alacritty-colors.toml.template"
+output_path = "~/.local/state/monolith/apps/alacritty.toml"
+
+[templates.app_btop]
+input_path = "templates/btop.theme.template"
+output_path = "~/.local/state/monolith/apps/btop.theme"
+
+[templates.app_rofi]
+input_path = "templates/rofi-colors.rasi.template"
+output_path = "~/.local/state/monolith/apps/rofi.rasi"

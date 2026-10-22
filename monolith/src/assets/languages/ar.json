@@ -999,7 +999,8 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "لقطة الشاشة"
+      "screenshot": "لقطة الشاشة",
+      "theme_apps": "Apps"
     },
     "theme": {
       "colors": {
