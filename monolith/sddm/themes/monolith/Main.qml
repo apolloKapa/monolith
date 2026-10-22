@@ -159,7 +159,7 @@ Rectangle {
                     font.family: root.sansFont
                     font.pixelSize: 140 * s
                     font.weight: Font.Bold
-                    color: "#0F3C2C"
+                    color: "#313131"
                 }
                 
                 Text {
@@ -168,7 +168,7 @@ Rectangle {
                     font.family: root.sansFont
                     font.pixelSize: 140 * s
                     font.weight: Font.Bold
-                    color: "#1E4F3E"
+                    color: "#434343"
                 }
             }
 
@@ -176,7 +176,7 @@ Rectangle {
                 width: dateChipText.implicitWidth + 32 * s
                 height: 44 * s
                 radius: 22 * s
-                color: "#BEE8C7"
+                color: "#dddddd"
                 
                 Text {
                     id: dateChipText
@@ -186,7 +186,7 @@ Rectangle {
                     font.pixelSize: 11 * s
                     font.bold: true
                     font.letterSpacing: 1 * s
-                    color: "#0F3C2C"
+                    color: "#313131"
                 }
             }
         }
@@ -201,7 +201,7 @@ Rectangle {
                 font.pixelSize: 11 * s
                 font.bold: true
                 font.letterSpacing: 1.5 * s
-                color: "#8ca090"
+                color: "#9b9b9b"
             }
 
             Grid {
@@ -211,7 +211,7 @@ Rectangle {
                 Rectangle {
                     id: powerTile
                     width: 180 * s; height: 76 * s; radius: 38 * s
-                    color: powerMouse.pressed ? "#0A281D" : (powerMouse.containsMouse ? "#0F3C2C" : "#E9F3EB")
+                    color: powerMouse.pressed ? "#212121" : (powerMouse.containsMouse ? "#313131" : "#f0f0f0")
                     scale: powerMouse.pressed ? 0.95 : (powerMouse.containsMouse ? 1.03 : 1.0)
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
@@ -224,7 +224,7 @@ Rectangle {
                         
                         Rectangle {
                             width: 48 * s; height: 48 * s; radius: 24 * s
-                            color: "#BEE8C7"
+                            color: "#dddddd"
                             anchors.verticalCenter: parent.verticalCenter
                             
                             Image {
@@ -240,7 +240,7 @@ Rectangle {
                             ColorOverlay {
                                 anchors.fill: powerIcon
                                 source: powerIcon
-                                color: "#0F3C2C"
+                                color: "#313131"
                             }
                         }
                         
@@ -253,14 +253,14 @@ Rectangle {
                                 font.family: root.sansFont
                                 font.pixelSize: 12 * s
                                 font.bold: true
-                                color: powerMouse.containsMouse ? "#BEE8C7" : "#0F3C2C"
+                                color: powerMouse.containsMouse ? "#dddddd" : "#313131"
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                             Text {
                                 text: "SHUT DOWN"
                                 font.family: root.sansFont
                                 font.pixelSize: 9 * s
-                                color: powerMouse.containsMouse ? "#E9F3EB" : "#1E4F3E"
+                                color: powerMouse.containsMouse ? "#f0f0f0" : "#434343"
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                         }
@@ -278,7 +278,7 @@ Rectangle {
                 Rectangle {
                     id: sessionTile
                     width: 180 * s; height: 76 * s; radius: 38 * s
-                    color: sessionMouse.pressed ? "#0A281D" : (sessionMouse.containsMouse ? "#0F3C2C" : "#E9F3EB")
+                    color: sessionMouse.pressed ? "#212121" : (sessionMouse.containsMouse ? "#313131" : "#f0f0f0")
                     scale: sessionMouse.pressed ? 0.95 : (sessionMouse.containsMouse ? 1.03 : 1.0)
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
@@ -291,7 +291,7 @@ Rectangle {
                         
                         Rectangle {
                             width: 48 * s; height: 48 * s; radius: 24 * s
-                            color: "#BEE8C7"
+                            color: "#dddddd"
                             anchors.verticalCenter: parent.verticalCenter
                             
                             Image {
@@ -307,7 +307,7 @@ Rectangle {
                             ColorOverlay {
                                 anchors.fill: sessionIcon
                                 source: sessionIcon
-                                color: "#0F3C2C"
+                                color: "#313131"
                             }
                         }
                         
@@ -320,14 +320,14 @@ Rectangle {
                                 font.family: root.sansFont
                                 font.pixelSize: 12 * s
                                 font.bold: true
-                                color: sessionMouse.containsMouse ? "#BEE8C7" : "#0F3C2C"
+                                color: sessionMouse.containsMouse ? "#dddddd" : "#313131"
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                             Text {
                                 text: ((sessionHelper.currentItem && sessionHelper.currentItem.sName) ? sessionHelper.currentItem.sName : "PLASMA").toUpperCase()
                                 font.family: root.sansFont
                                 font.pixelSize: 9 * s
-                                color: sessionMouse.containsMouse ? "#E9F3EB" : "#1E4F3E"
+                                color: sessionMouse.containsMouse ? "#f0f0f0" : "#434343"
                                 Behavior on color { ColorAnimation { duration: 150 } }
                                 elide: Text.ElideRight
                                 width: 90 * s
@@ -351,7 +351,7 @@ Rectangle {
                 Rectangle {
                     id: rebootTile
                     width: 180 * s; height: 76 * s; radius: 38 * s
-                    color: rebootMouse.pressed ? "#0A281D" : (rebootMouse.containsMouse ? "#0F3C2C" : "#E9F3EB")
+                    color: rebootMouse.pressed ? "#212121" : (rebootMouse.containsMouse ? "#313131" : "#f0f0f0")
                     scale: rebootMouse.pressed ? 0.95 : (rebootMouse.containsMouse ? 1.03 : 1.0)
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
@@ -364,7 +364,7 @@ Rectangle {
                         
                         Rectangle {
                             width: 48 * s; height: 48 * s; radius: 24 * s
-                            color: "#BEE8C7"
+                            color: "#dddddd"
                             anchors.verticalCenter: parent.verticalCenter
                             
                             Image {
@@ -380,7 +380,7 @@ Rectangle {
                             ColorOverlay {
                                 anchors.fill: rebootIcon
                                 source: rebootIcon
-                                color: "#0F3C2C"
+                                color: "#313131"
                             }
                         }
                         
@@ -393,14 +393,14 @@ Rectangle {
                                 font.family: root.sansFont
                                 font.pixelSize: 12 * s
                                 font.bold: true
-                                color: rebootMouse.containsMouse ? "#BEE8C7" : "#0F3C2C"
+                                color: rebootMouse.containsMouse ? "#dddddd" : "#313131"
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                             Text {
                                 text: "RESTART"
                                 font.family: root.sansFont
                                 font.pixelSize: 9 * s
-                                color: rebootMouse.containsMouse ? "#E9F3EB" : "#1E4F3E"
+                                color: rebootMouse.containsMouse ? "#f0f0f0" : "#434343"
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                         }
@@ -418,7 +418,7 @@ Rectangle {
                 Rectangle {
                     id: suspendTile
                     width: 180 * s; height: 76 * s; radius: 38 * s
-                    color: suspendMouse.pressed ? "#0A281D" : (suspendMouse.containsMouse ? "#0F3C2C" : "#E9F3EB")
+                    color: suspendMouse.pressed ? "#212121" : (suspendMouse.containsMouse ? "#313131" : "#f0f0f0")
                     scale: suspendMouse.pressed ? 0.95 : (suspendMouse.containsMouse ? 1.03 : 1.0)
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
@@ -431,7 +431,7 @@ Rectangle {
                         
                         Rectangle {
                             width: 48 * s; height: 48 * s; radius: 24 * s
-                            color: "#BEE8C7"
+                            color: "#dddddd"
                             anchors.verticalCenter: parent.verticalCenter
                             
                             Image {
@@ -447,7 +447,7 @@ Rectangle {
                             ColorOverlay {
                                 anchors.fill: suspendIcon
                                 source: suspendIcon
-                                color: "#0F3C2C"
+                                color: "#313131"
                             }
                         }
                         
@@ -460,14 +460,14 @@ Rectangle {
                                 font.family: root.sansFont
                                 font.pixelSize: 12 * s
                                 font.bold: true
-                                color: suspendMouse.containsMouse ? "#BEE8C7" : "#0F3C2C"
+                                color: suspendMouse.containsMouse ? "#dddddd" : "#313131"
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                             Text {
                                 text: "SUSPEND"
                                 font.family: root.sansFont
                                 font.pixelSize: 9 * s
-                                color: suspendMouse.containsMouse ? "#E9F3EB" : "#1E4F3E"
+                                color: suspendMouse.containsMouse ? "#f0f0f0" : "#434343"
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
                         }
@@ -488,7 +488,7 @@ Rectangle {
                 width: 376 * s
                 height: 180 * s
                 radius: 32 * s
-                color: "#E9F3EB"
+                color: "#f0f0f0"
                 transform: Translate { id: shakeTranslate }
                 
                 Column {
@@ -515,7 +515,7 @@ Rectangle {
                             ColorOverlay {
                                 anchors.fill: lockIcon
                                 source: lockIcon
-                                color: "#8ca090"
+                                color: "#9b9b9b"
                             }
                         }
                         Text {
@@ -524,14 +524,14 @@ Rectangle {
                             font.pixelSize: 10 * s
                             font.bold: true
                             font.letterSpacing: 1 * s
-                            color: "#8ca090"
+                            color: "#9b9b9b"
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
                             text: "•  now"
                             font.family: root.sansFont
                             font.pixelSize: 10 * s
-                            color: "#8ca090"
+                            color: "#9b9b9b"
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
@@ -540,8 +540,8 @@ Rectangle {
                         width: parent.width
                         height: 52 * s
                         radius: 26 * s
-                        color: "#D0EADB"
-                        border.color: root.errorMessage !== "" ? "#ea1821" : (pwd.activeFocus ? "#0F3C2C" : "transparent")
+                        color: "#e3e3e3"
+                        border.color: root.errorMessage !== "" ? "#ea1821" : (pwd.activeFocus ? "#313131" : "transparent")
                         border.width: pwd.activeFocus ? 2 * s : 0
                         Behavior on border.color { ColorAnimation { duration: 150 } }
                         
@@ -647,7 +647,7 @@ Rectangle {
                                     width: 12 * s
                                     height: 12 * s
                                     radius: Math.round(width * 0.24)
-                                    color: "#1d3c34"
+                                    color: "#353535"
                                     antialiasing: true
 
                                     property real dotPop: 1.0
@@ -707,7 +707,7 @@ Rectangle {
                                 font.pixelSize: 11 * s
                                 font.bold: true
                                 font.letterSpacing: 1.5 * s
-                                color: root.errorMessage !== "" ? "#ea1821" : "#8ca090"
+                                color: root.errorMessage !== "" ? "#ea1821" : "#9b9b9b"
                                 opacity: pwd.text === "" && (!pwd.activeFocus || (!pwd.wasClicked && pwd.text.length === 0)) ? 1 : 0
                                 Behavior on opacity { NumberAnimation { duration: 150 } }
                             }
@@ -738,7 +738,7 @@ Rectangle {
                             width: userText.implicitWidth + 32 * s
                             height: 38 * s
                             radius: 19 * s
-                            color: userMouse.pressed ? "#cbe8cc" : (userMouse.containsMouse ? "#d2ebd4" : "#eef6f0")
+                            color: userMouse.pressed ? "#e0e0e0" : (userMouse.containsMouse ? "#e4e4e4" : "#f4f4f4")
                             scale: userMouse.pressed ? 0.95 : (userMouse.containsMouse ? 1.02 : 1.0)
                             Behavior on color { ColorAnimation { duration: 150 } }
                             Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
@@ -751,7 +751,7 @@ Rectangle {
                                 font.pixelSize: 10 * s
                                 font.bold: true
                                 font.letterSpacing: 1 * s
-                                color: "#1d3c34"
+                                color: "#353535"
                             }
                             
                             MouseArea {
@@ -776,7 +776,7 @@ Rectangle {
                                 width: parent.width
                                 height: 38 * s
                                 radius: 19 * s
-                                color: loginMouse.pressed ? "#0A281D" : (loginMouse.containsMouse ? "#1E4F3E" : "#0F3C2C")
+                                color: loginMouse.pressed ? "#212121" : (loginMouse.containsMouse ? "#434343" : "#313131")
                                 scale: loginMouse.pressed ? 0.95 : (loginMouse.containsMouse ? 1.02 : 1.0)
                                 Behavior on color { ColorAnimation { duration: 150 } }
                                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
@@ -791,14 +791,14 @@ Rectangle {
                                         font.pixelSize: 10 * s
                                         font.bold: true
                                         font.letterSpacing: 1.5 * s
-                                        color: "#BEE8C7"
+                                        color: "#dddddd"
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
                                         text: "➔"
                                         font.family: root.sansFont
                                         font.pixelSize: 11 * s
-                                        color: "#BEE8C7"
+                                        color: "#dddddd"
                                         anchors.verticalCenter: parent.verticalCenter
                                         transform: Translate {
                                             x: loginMouse.containsMouse ? 3 * s : 0

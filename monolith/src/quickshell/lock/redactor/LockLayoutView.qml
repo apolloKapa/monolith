@@ -11,6 +11,9 @@ Item {
     property real reveal: 1
     property real coreLeft: 0
     property real coreRight: 1e9
+    // Spread positions across a canvas bigger than the layout's reference, keeping element sizes native
+    property real spreadX: 1
+    property real spreadY: 1
     readonly property var passwordInput: view.passwordItem ? view.passwordItem.input : null
     readonly property var itemsModel: LockLayoutStore.modelFor(view.scope)
 
@@ -43,8 +46,8 @@ Item {
 
             opacity: slot.inCore ? 1.0 : view.reveal
 
-            x: slot.auto ? slot.gX - slot.bw / 2 : slot.gX
-            y: slot.auto ? slot.gY - slot.bh / 2 : slot.gY
+            x: (slot.auto ? slot.gX : slot.gX + slot.bw / 2) * view.spreadX - slot.width / 2
+            y: (slot.auto ? slot.gY : slot.gY + slot.bh / 2) * view.spreadY - slot.height / 2
             width: slot.rot90 ? slot.bh : slot.bw
             height: slot.rot90 ? slot.bw : slot.bh
 

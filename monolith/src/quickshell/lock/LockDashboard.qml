@@ -10,7 +10,8 @@ Item {
     required property var screenRoot
     readonly property var passwordInput: panelView.passwordInput ? panelView.passwordInput : (fallbackPassword.item ? fallbackPassword.item.input : null)
 
-    readonly property real fit: Math.min(width / LockLayoutStore.refW, height / LockLayoutStore.refH)
+    // Shrink on screens smaller than the layout, never stretch (stretching pixelates and oversizes)
+    readonly property real fit: Math.min(1, width / LockLayoutStore.refW, height / LockLayoutStore.refH)
     readonly property real coreWidth: Math.min(LockLayoutStore.panelW, screenRoot.s(440))
     readonly property real shellWidth: dashboard.coreWidth + screenRoot.wingsReveal * (LockLayoutStore.panelW - dashboard.coreWidth)
     readonly property real panelLeft: LockLayoutStore.panelX >= 0 ? LockLayoutStore.panelX : (LockLayoutStore.refW - LockLayoutStore.panelW) / 2
@@ -19,10 +20,14 @@ Item {
     anchors.fill: parent
 
     Item {
-        width: LockLayoutStore.refW
-        height: LockLayoutStore.refH
+        id: canvas
+        width: dashboard.width / dashboard.fit
+        height: dashboard.height / dashboard.fit
         anchors.centerIn: parent
         scale: dashboard.fit
+
+        readonly property real panelCenterX: (dashboard.panelLeft + LockLayoutStore.panelW / 2) * width / LockLayoutStore.refW
+        readonly property real panelCenterY: (dashboard.panelTop + LockLayoutStore.panelH / 2) * height / LockLayoutStore.refH
 
         Rectangle {
             id: mainDashboardShellShadow
@@ -45,8 +50,8 @@ Item {
 
         Rectangle {
             id: mainDashboardShell
-            x: dashboard.panelLeft + (LockLayoutStore.panelW - dashboard.shellWidth) / 2
-            y: dashboard.panelTop + (screenRoot.inputActive ? 0 : screenRoot.s(90))
+            x: canvas.panelCenterX - dashboard.shellWidth / 2
+            y: canvas.panelCenterY - LockLayoutStore.panelH / 2 + (screenRoot.inputActive ? 0 : screenRoot.s(90))
             width: dashboard.shellWidth
             height: LockLayoutStore.panelH
             radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius * 1.5)
