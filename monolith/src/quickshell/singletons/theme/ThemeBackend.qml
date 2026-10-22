@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import "../../"
 
 Item {
@@ -94,9 +95,15 @@ Item {
     // animations (spinners, waves) keep their own speed.
     property bool animationsEnabled: true
     property real animationSpeed: 1.0
-    readonly property real animScale: animationsEnabled ? 1.0 / Math.max(0.25, animationSpeed) : 0
-    readonly property bool glassActive: blurBackground && !opaqueStyle && elementOpacity < 0.999
-    readonly property bool liquidGlass: blurBackground && blurStyle === "liquid"
+    readonly property real animScale: (animationsEnabled && !gameModeActive) ? 1.0 / Math.max(0.25, animationSpeed) : 0
+
+    // GameMode (Theme -> Animations): while a fullscreen window has focus (games, videos),
+    // animations, blur and liquid glass are off so the shell costs the GPU nothing.
+    property bool gameModeEnabled: true
+    readonly property bool gameModeActive: gameModeEnabled && ToplevelManager.activeToplevel !== null
+        && ToplevelManager.activeToplevel.fullscreen === true
+    readonly property bool glassActive: blurBackground && !opaqueStyle && elementOpacity < 0.999 && !gameModeActive
+    readonly property bool liquidGlass: blurBackground && blurStyle === "liquid" && !gameModeActive
 
     // Minimalist: flat, opaque, square, outlined. Outer surfaces get the thick line, nested ones the thin one.
     readonly property int minimalistOuterBorder: outlineOuter
@@ -291,6 +298,11 @@ Item {
         function reloadColors() {
             root.reloadColors();
         }
+
+        // for scripts and debugging: the current style and whether GameMode is holding effects off
+        function state(): string {
+            return JSON.stringify({ "style": root.blurStyle, "gameMode": root.gameModeActive, "animScale": root.animScale, "glass": root.glassActive || root.liquidGlass });
+        }
     }
 
     IpcHandler {
@@ -340,6 +352,7 @@ Item {
         root.blurStyle = root.styles[themeConfig.blurStyle] ? themeConfig.blurStyle : "blur";
         const anim = themeConfig.animations || {};
         root.animationsEnabled = anim.enabled !== false;
+        root.gameModeEnabled = themeConfig.gameMode !== false;
         const speed = Number(anim.speed);
         root.animationSpeed = isNaN(speed) ? 1.0 : Math.max(0.25, Math.min(3.0, speed));
         root.elementOpacity = (root.opaqueStyle || Caching.isStandalone) ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));

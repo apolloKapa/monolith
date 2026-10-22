@@ -251,6 +251,29 @@ GuideTab {
                         }
                     }
                 }
+
+                SettingsRow {
+                    rootObj: animTab.rootObj
+                    settingId: "game_mode"
+                    icon: "󰊴"
+                    title: "GameMode"
+                    description: "While a fullscreen app has focus (games, videos), turn off animations, blur and liquid glass so the shell costs nothing"
+                    searchKeywords: "game mode gaming fullscreen performance fps effects blur glass animations battery"
+
+                    Toggle {
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        checked: Config.getSetting("theme", {}).gameMode !== false
+                        accentColor: ThemeBackend.mauve
+                        baseColor: ThemeBackend.surface1
+                        handleColor: ThemeBackend.crust
+                        handleOffColor: ThemeBackend.text
+                        onToggled: function(val) {
+                            let theme = Config.getSetting("theme", {});
+                            theme.gameMode = val;
+                            Config.setSetting("theme", theme);
+                        }
+                    }
+                }
             }
         }
     }
