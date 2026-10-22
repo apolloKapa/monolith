@@ -10,7 +10,7 @@ source "$SCRIPT_DIR/caching.sh" 2>/dev/null || true
 
 ACTION="open"
 case "$1" in
-    open|toggle|close) ACTION="$1"; shift ;;
+    open|toggle|close|prewarm) ACTION="$1"; shift ;;
 esac
 TAB="$1"
 SUBTAB="$2"
@@ -65,16 +65,23 @@ if [[ "$ACTION" == "close" ]]; then
     exit 0
 fi
 
+# the settings app keeps running hidden after it's closed (and is started hidden at login),
+# so opening it just shows the window again
 if is_running; then
-    if [[ "$ACTION" == "toggle" ]]; then
+    [[ "$ACTION" == "prewarm" ]] && exit 0
+    if [[ "$ACTION" == "toggle" ]] && [[ "$(quickshell -p "$SETTINGS_QML" ipc call settings isOpen 2>/dev/null)" == "true" ]]; then
         settings_ipc close
         exit 0
     fi
     write_tab
     [[ -n "$TAB" ]] && settings_ipc goto "$TAB" "$SUBTAB"
+    settings_ipc open
     focus_window
     exit 0
 fi
 
+if [[ "$ACTION" == "prewarm" ]]; then
+    MONOLITH_SETTINGS_HIDDEN=1 exec setsid quickshell -n -p "$SETTINGS_QML" >/dev/null 2>&1 < /dev/null
+fi
 write_tab
 exec setsid quickshell -n -p "$SETTINGS_QML"
