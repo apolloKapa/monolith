@@ -1014,7 +1014,8 @@
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
       "screenshot": "لقطة الشاشة",
-      "theme_apps": "Apps"
+      "theme_apps": "Apps",
+      "theme_effects": "Effects"
     },
     "theme": {
       "colors": {

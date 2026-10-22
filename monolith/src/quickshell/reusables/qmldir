@@ -49,3 +49,4 @@ SettingsBlob 1.0 guide/SettingsBlob.qml
 PopupShell 1.0 layout/PopupShell.qml
 SearchBox 1.0 inputs/SearchBox.qml
 Caption 1.0 display/Caption.qml
+SurfaceEffects 1.0 display/SurfaceEffects.qml

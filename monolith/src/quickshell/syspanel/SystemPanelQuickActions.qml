@@ -41,14 +41,14 @@ Item {
         signal leftClicked()
         signal rightClicked()
 
-        color: qaGlass.active ? "transparent" : (isActive ? activeColor : ThemeBackend.faded(qaMa.containsMouse ? ThemeBackend.surface1 : Qt.darker(ThemeBackend.surface0, 1.04)))
+        color: qaGlass.active ? "transparent" : (isActive ? Qt.alpha(activeColor, 0.18) : ThemeBackend.faded(qaMa.containsMouse ? ThemeBackend.surface1 : Qt.darker(ThemeBackend.surface0, 1.04)))
 
         GlassFill {
             id: qaGlass
             anchors.fill: parent
             radius: ThemeBackend.rad(parent.radius)
             tintColor: qaBtn.isActive ? qaBtn.activeColor : (qaMa.containsMouse ? ThemeBackend.surface1 : ThemeBackend.surface0)
-            tintAmount: qaBtn.isActive ? 0.6 : 0.3
+            tintAmount: qaBtn.isActive ? 0.35 : 0.3
             shadow: 1
             press: qaMa.pressed ? 1 : (qaMa.containsMouse ? 0.25 : 0)
             pulse: qaBtn.togglePulse
@@ -71,12 +71,24 @@ Item {
             font.family: qaBtn.customFontFamily !== "" ? qaBtn.customFontFamily : ThemeBackend.iconFont
             font.pixelSize: qaBtn.customFontSize > 0 ? qaBtn.customFontSize : view.panel.s(18)
             font.weight: qaBtn.customFontSize > 0 ? Font.Bold : Font.Normal
-            color: (qaBtn.isActive && !qaGlass.active) ? ThemeBackend.crust : ((qaBtn.isActive || qaMa.containsMouse) ? ThemeBackend.text : ThemeBackend.subtext0)
+            color: qaBtn.isActive ? qaBtn.activeColor : (qaMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
             text: qaBtn.iconText
             Behavior on color {
                 enabled: view.panel.visible
                 ColorAnimation { duration: (150) * ThemeBackend.animScale }
             }
+        }
+
+        // on: a slab along the bottom (Monolith's selection mark)
+        Rectangle {
+            visible: qaBtn.isActive
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: view.panel.s(5)
+            width: parent.width * 0.38
+            height: view.panel.s(3)
+            radius: ThemeBackend.rad(height / 2)
+            color: qaBtn.activeColor
         }
 
         MouseArea {

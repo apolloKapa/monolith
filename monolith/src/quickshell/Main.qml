@@ -569,7 +569,23 @@ PanelWindow {
             y: (animContainer.height - height) / 2
             transformOrigin: Item.Center
 
-            scale: masterWindow.isVisible ? 1.0 : 0.96
+            // Unfold (Theme -> Effects): panels open from a thin line through their middle, like
+            // an old screen switching on, and fold back into it; otherwise a small zoom
+            property real unfold: masterWindow.isVisible ? 1.0 : 0.0
+            Behavior on unfold {
+                NumberAnimation {
+                    duration: (masterWindow.isVisible ? 300 : 170) * ThemeBackend.animScale
+                    easing.type: masterWindow.isVisible ? Easing.OutQuart : Easing.InCubic
+                }
+            }
+            transform: Scale {
+                origin.x: contentStage.width / 2
+                origin.y: contentStage.height / 2
+                yScale: ThemeBackend.fxUnfold ? Math.max(0.012, contentStage.unfold) : 1.0
+                xScale: ThemeBackend.fxUnfold ? (0.985 + 0.015 * contentStage.unfold) : 1.0
+            }
+
+            scale: (ThemeBackend.fxUnfold || masterWindow.isVisible) ? 1.0 : 0.96
             Behavior on scale {
                 NumberAnimation {
                     duration: (masterWindow.isVisible ? 280 : 160) * ThemeBackend.animScale
@@ -587,6 +603,19 @@ PanelWindow {
             }
 
             MouseArea { anchors.fill: parent }
+
+            // the bright line a panel unfolds from
+            Rectangle {
+                z: 100
+                visible: ThemeBackend.fxUnfold && contentStage.unfold < 0.98
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width * (0.4 + 0.6 * Math.min(1, contentStage.unfold * 3))
+                height: Math.max(2, 3 / Math.max(0.05, contentStage.unfold))
+                radius: height / 2
+                color: ThemeBackend.mauve
+                opacity: 1.0 - contentStage.unfold
+            }
 
             StackView {
                 id: widgetStack
