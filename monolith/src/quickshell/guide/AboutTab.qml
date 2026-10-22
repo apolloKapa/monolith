@@ -124,6 +124,15 @@ GuideTab {
                                 color: ThemeBackend.subtext0
                                 Layout.alignment: Qt.AlignHCenter
                             }
+
+                            // credits (AGPL-3.0 / GPL-3.0 notices: see README and LICENSE)
+                            Text {
+                                text: I18n.t("guide.about.credits", "Based on Serpantinum by @ilyamiro · features inspired by iNiR by snowarch")
+                                font.family: ThemeBackend.fontFamily
+                                font.pixelSize: rootObj.s(10)
+                                color: Qt.alpha(ThemeBackend.subtext0, 0.8)
+                                Layout.alignment: Qt.AlignHCenter
+                            }
                         }
                     }
                 }
