@@ -501,10 +501,10 @@ PanelWindow {
                         } else if (osdWindow.kind === "airplane") {
                             if (osdWindow.isToggleActive) {
                                 Networking.wifiEnabled = true;
-                                if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = true;
+                                BtPower.setEnabled(true);
                             } else {
                                 Networking.wifiEnabled = false;
-                                if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = false;
+                                BtPower.setEnabled(false);
                             }
                         } else if (osdWindow.kind === "brightness") {
                             briCmdThrottle.stop();
@@ -671,10 +671,10 @@ PanelWindow {
                             } else if (osdWindow.kind === "airplane") {
                                 if (osdWindow.isToggleActive) {
                                     Networking.wifiEnabled = true;
-                                    if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = true;
+                                    BtPower.setEnabled(true);
                                 } else {
                                     Networking.wifiEnabled = false;
-                                    if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = false;
+                                    BtPower.setEnabled(false);
                                 }
                             } else if (osdWindow.kind === "brightness") {
                                 briCmdThrottle.stop();
@@ -725,10 +725,10 @@ PanelWindow {
                             if (osdWindow.kind === "airplane") {
                                 if (osdWindow.isToggleActive) {
                                     Networking.wifiEnabled = true;
-                                    if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = true;
+                                    BtPower.setEnabled(true);
                                 } else {
                                     Networking.wifiEnabled = false;
-                                    if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = false;
+                                    BtPower.setEnabled(false);
                                 }
                             }
                         }

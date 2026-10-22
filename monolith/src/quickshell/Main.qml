@@ -127,10 +127,10 @@ PanelWindow {
                 let isAirplane = !Networking.wifiEnabled && !(Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled);
                 if (isAirplane) {
                     Networking.wifiEnabled = true;
-                    if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = true;
+                    BtPower.setEnabled(true);
                 } else {
                     Networking.wifiEnabled = false;
-                    if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = false;
+                    BtPower.setEnabled(false);
                 }
                 return;
             }
