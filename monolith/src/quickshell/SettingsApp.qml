@@ -35,6 +35,14 @@ ShellRoot {
             popup.closePopup();
         }
 
+        function open(): void {
+            window.visible = true;
+        }
+
+        function isOpen(): bool {
+            return window.visible;
+        }
+
         function focus(): void {
             let list = ToplevelManager.toplevels.values;
             for (let i = 0; i < list.length; i++) {
@@ -58,16 +66,16 @@ ShellRoot {
         implicitWidth: Math.round(1200 * app.uiScale)
         implicitHeight: Math.round(750 * app.uiScale)
         minimumSize: Qt.size(Math.round(480 * app.uiScale), Math.round(400 * app.uiScale))
-        visible: true
-
-        onVisibleChanged: if (!visible) Qt.quit()
+        // started hidden at login (settings.sh prewarm) and kept running after it's closed,
+        // so opening settings only shows the window instead of starting a new quickshell
+        visible: Quickshell.env("MONOLITH_SETTINGS_HIDDEN") !== "1"
 
         GuidePopup {
             id: popup
             anchors.fill: parent
             standalone: true
             visible: window.visible
-            onExitRequested: Qt.quit()
+            onExitRequested: window.visible = false
         }
     }
 }

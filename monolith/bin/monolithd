@@ -152,6 +152,8 @@ if [ "$COMMAND" == "stop" ]; then
         pkill -KILL -f "quickshell.*$MAIN_QML" 2>/dev/null
     fi
     pkill -TERM -f "wl-paste --watch echo 1" 2>/dev/null
+    # the settings window (kept running hidden), so it doesn't keep showing old code after an update
+    pkill -TERM -f "quickshell -n -p .*/SettingsApp.qml" 2>/dev/null
 
     rm -f "/tmp/monolithd.pid" 2>/dev/null
     rm -f "/tmp/monolithd.lock" 2>/dev/null
@@ -217,6 +219,7 @@ if [ "$COMMAND" == "start" ]; then
             [ -n "$group" ] && kill -TERM -- "-$group" 2>/dev/null
         done
         pkill -TERM -f "focus_daemon.py" 2>/dev/null
+        pkill -TERM -f "quickshell -n -p .*/SettingsApp.qml" 2>/dev/null
 
         local count=0
         while [ "$count" -lt 20 ]; do
@@ -247,6 +250,9 @@ if [ "$COMMAND" == "start" ]; then
 
     setsid quickshell -p "$MAIN_QML" 9>&- &
     QS_PID=$!
+
+    # load the settings window in the background once the shell is up, so it opens instantly
+    (sleep 8; bash "$MONOLITH_DIR/scripts/settings.sh" prewarm) 9>&- >/dev/null 2>&1 &
 
     while kill -0 "$QS_PID" 2>/dev/null; do
         wait "$QS_PID" 2>/dev/null
