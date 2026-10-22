@@ -13,7 +13,6 @@ GuideTab {
 
     readonly property var items: [
         { id: "unfold", icon: "󰡏", title: "Unfold", desc: "Panels open by unfolding from a thin line through their middle, and fold back into it" },
-        { id: "marks", icon: "󰆾", title: "Corner marks", desc: "Small accent brackets inside the corners of panels, the bar's groups and the dock" },
         { id: "edge", icon: "󰹞", title: "Edge light", desc: "A soft light along the top edge of every panel" },
         { id: "grain", icon: "󰟾", title: "Grain", desc: "A faint film grain over panels, so flat colours look less digital" }
     ]
@@ -63,7 +62,7 @@ GuideTab {
                         icon: modelData.icon
                         title: modelData.title
                         description: modelData.desc
-                        searchKeywords: "effects effect unfold animation corner marks brackets edge light grain noise film " + modelData.id
+                        searchKeywords: "effects effect unfold animation edge light grain noise film " + modelData.id
                         Toggle {
                             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                             checked: fxTab.fx[row.modelData.id] !== false

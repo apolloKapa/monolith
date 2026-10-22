@@ -415,7 +415,8 @@
         "modular": "Modular",
         "solid": "Solid",
         "fill": "Fill",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Time format",

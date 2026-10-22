@@ -412,7 +412,8 @@
         "modular": "Mô-đun",
         "solid": "Đặc",
         "fill": "Đầy",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Định dạng thời gian",

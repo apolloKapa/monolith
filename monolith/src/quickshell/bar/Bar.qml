@@ -87,8 +87,10 @@ Variants {
                 }
                 return "modular";
             }
-            property bool isFill: barStyle === "fill"
-            property bool isSolid: barStyle === "solid" || barStyle === "fill"
+            // Frame (frame/ScreenFrame.qml) is a full-width solid bar that runs into the screen frame
+            property bool isFrame: barStyle === "frame"
+            property bool isFill: barStyle === "fill" || barStyle === "frame"
+            property bool isSolid: barStyle === "solid" || barStyle === "fill" || barStyle === "frame"
             property bool distinctPills: {
                 let dummy = configRevision;
                 return (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar && Config.rawSettings.bar.distinctPills !== undefined) ? Config.rawSettings.bar.distinctPills : false;
@@ -113,7 +115,8 @@ Variants {
                 let dummy = configRevision;
                 return (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar && Config.rawSettings.bar.autohideTimeout !== undefined) ? Config.rawSettings.bar.autohideTimeout : 1000;
             }
-            property real barOpacity: ThemeBackend.elementOpacity
+            // the Frame style is solid (it is the edge of the screen)
+            property real barOpacity: isFrame ? 1.0 : ThemeBackend.elementOpacity
 
             HoverHandler {
                 id: barHover

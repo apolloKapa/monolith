@@ -412,7 +412,8 @@
         "modular": "모듈형",
         "solid": "단색",
         "fill": "채움",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "시간 형식",

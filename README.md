@@ -76,7 +76,7 @@ After editing a niri file, `niri validate` tells you if something's wrong.
 
 Everything below is built in.
 
-**Bar**: top or side, modular / solid / fill styles, or the **Island**: one pill at the top of each screen with workspaces, the time, what's playing and unread notifications, which unfolds on hover into workspace buttons, the player, the date and shortcuts. Autohide. Modules: workspaces, media, time & date, weather, system info, tray, Wi-Fi, Bluetooth, volume, battery, keyboard layout, system monitor (CPU/RAM/temp/disk), audio visualizer, current window, quick buttons. Editable in Settings → Bar.
+**Bar**: top or side. The default style is **Frame**: the bar runs into a solid frame around the whole screen with rounded inner corners, windows tile inside it, and popups open as drawers pulled out of the frame (attached to the bar and the screen edge, sliding out of it; an attached dock becomes part of the frame too). Other styles: modular / solid / fill, or the **Island**: one pill at the top of each screen with workspaces, the time, what's playing and unread notifications, which unfolds on hover into workspace buttons, the player, the date and shortcuts. Autohide. Modules: workspaces, media, time & date, weather, system info, tray, Wi-Fi, Bluetooth, volume, battery, keyboard layout, system monitor (CPU/RAM/temp/disk), audio visualizer, current window, quick buttons. Editable in Settings → Bar.
 
 **Dock**: pinned and running apps, any edge. Auto-hide, smart auto-hide (hides while windows are open), or smart auto-hide with **Dodge windows**: stays up with windows open and only hides when a window is over it; while covered, push the cursor to that screen edge to bring it back.
 
@@ -126,6 +126,7 @@ None of these have keybinds by default, so your niri config stays as it is; bind
   - **Bubbly**: extra-round corners, keeps your colours
   - **Paper**: ink on paper, serif type (Lora), fine rules
 - Theme → Apps: GTK, Qt, foot, alacritty, btop and rofi can follow Monolith's colours; switching one off puts its config back exactly as it was
+- Theme → Effects: **Unfold** (popups open from a thin line, like an old screen switching on), **Edge light** (a soft light along each panel's top) and **Grain** (faint film grain on panels), all on by default
 - Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, the same speed for niri's window animations, and **GameMode** (no animations, blur or glass while a fullscreen window has focus)
 - Theme → Windows: niri window borders on/off, width, colours for focused / other / attention windows (theme swatches or any hex), or follow the theme's colours automatically
 - Bar: general and modules

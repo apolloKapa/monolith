@@ -411,7 +411,8 @@
         "modular": "Modulare",
         "solid": "Solida",
         "fill": "Piena",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Formato ora",

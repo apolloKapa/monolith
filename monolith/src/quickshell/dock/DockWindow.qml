@@ -68,7 +68,9 @@ DockWindowApps {
     property bool rawDockFloating: rawDockSettings.floating !== undefined ? rawDockSettings.floating : false
     property bool dockFloating: rawDockFloating || (sameSideAsBar && !isBarSolid)
     readonly property bool dockBackground: rawDockSettings.background !== undefined ? Boolean(rawDockSettings.background) : true
-    readonly property real dockOpacity: dockBackground ? ThemeBackend.elementOpacity : 0.0
+    // with the Frame bar style an attached dock is part of the frame: solid
+    readonly property bool frameStyle: (Config.getSetting("bar", {}) || {}).style === "frame"
+    readonly property real dockOpacity: dockBackground ? ((frameStyle && !dockFloating) ? 1.0 : ThemeBackend.elementOpacity) : 0.0
     property real floatingMargin: dockFloating ? s(8) : 0
     Behavior on floatingMargin {
         enabled: dockWindowRoot.initialized && !dockWindowRoot.positionChanging

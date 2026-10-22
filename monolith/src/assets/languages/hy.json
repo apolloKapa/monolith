@@ -412,7 +412,8 @@
         "modular": "Մոդուլային",
         "solid": "Հոծ",
         "fill": "Լցված",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Ժամի ձևաչափ",

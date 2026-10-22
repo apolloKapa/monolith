@@ -412,7 +412,8 @@
         "modular": "Modulaire",
         "solid": "Solide",
         "fill": "Rempli",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Format de l'heure",

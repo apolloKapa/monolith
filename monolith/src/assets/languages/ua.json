@@ -400,7 +400,8 @@
         "modular": "Модульний",
         "solid": "Суцільний",
         "fill": "Заповнений",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Формат часу",

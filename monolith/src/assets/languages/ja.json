@@ -1183,7 +1183,8 @@
         "modular": "モジュラー",
         "solid": "ソリッド",
         "fill": "塗りつぶし",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "時刻フォーマット",

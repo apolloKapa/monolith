@@ -27,8 +27,10 @@ Item {
         }
         return "modular";
     }
-    property bool isFill: barStyle === "fill"
-    property bool isSolid: barStyle === "solid" || barStyle === "fill"
+    // Frame (frame/ScreenFrame.qml) is a full-width solid bar that runs into the screen frame
+    property bool isFrame: barStyle === "frame"
+    property bool isFill: barStyle === "fill" || barStyle === "frame"
+    property bool isSolid: barStyle === "solid" || barStyle === "fill" || barStyle === "frame"
     property bool distinctPills: barWindow ? (barWindow.distinctPills !== undefined ? barWindow.distinctPills : false) : false
     property real cornerRadius: barWindow ? barWindow.cornerRadius : 12
     property bool barAtBottom: !!barWindow && barWindow.barPosition === "bottom"
@@ -616,7 +618,8 @@ Item {
         y: barWindow ? (barWindow.barPosition === "bottom" ? (barWindow.baseOffsetY - height) : (barWindow.baseOffsetY + barWindow.barHeight)) : 0
         width: contentWrapper.cornerRadius
         height: contentWrapper.cornerRadius
-        visible: !ThemeBackend.liquidGlass && contentWrapper.outerCornersReady && (barWindow ? !barWindow.positionChanging : true)
+        // with Frame, the frame draws the inner corners further in
+        visible: !ThemeBackend.liquidGlass && !contentWrapper.isFrame && contentWrapper.outerCornersReady && (barWindow ? !barWindow.positionChanging : true)
         opacity: (visible && (!barWindow || barWindow.isRevealed)) ? 1.0 : 0.0
         z: 0
 
@@ -638,7 +641,8 @@ Item {
         y: barWindow ? (barWindow.barPosition === "bottom" ? (barWindow.baseOffsetY - height) : (barWindow.baseOffsetY + barWindow.barHeight)) : 0
         width: contentWrapper.cornerRadius
         height: contentWrapper.cornerRadius
-        visible: !ThemeBackend.liquidGlass && contentWrapper.outerCornersReady && (barWindow ? !barWindow.positionChanging : true)
+        // with Frame, the frame draws the inner corners further in
+        visible: !ThemeBackend.liquidGlass && !contentWrapper.isFrame && contentWrapper.outerCornersReady && (barWindow ? !barWindow.positionChanging : true)
         opacity: (visible && (!barWindow || barWindow.isRevealed)) ? 1.0 : 0.0
         z: 0
 
@@ -720,7 +724,7 @@ Item {
             filletDir: Qt.vector2d(modelData, 0)
             rim: 0
             filletRadius: ThemeBackend.rad((ThemeBackend.liquidGlass && contentWrapper.outerCornersReady) ? contentWrapper.cornerRadius : 0)
-            visible: filletRadius > 0.5 && (barWindow ? !barWindow.positionChanging : true)
+            visible: filletRadius > 0.5 && !contentWrapper.isFrame && (barWindow ? !barWindow.positionChanging : true)
             opacity: (visible && (!barWindow || barWindow.isRevealed)) ? 1.0 : 0.0
             z: 0
 
@@ -738,7 +742,7 @@ Item {
         filletRadius: ThemeBackend.liquidGlass && contentWrapper.isFill
             ? Math.min(contentWrapper.cornerRadius, Math.max(0, solidBackground.x), Math.max(0, contentWrapper.width - solidBackground.x - solidBackground.width)) * contentWrapper.fillAttachProgress
             : 0
-        visible: filletRadius > 0.5 && (barWindow ? !barWindow.positionChanging : true)
+        visible: filletRadius > 0.5 && !contentWrapper.isFrame && (barWindow ? !barWindow.positionChanging : true)
         opacity: (visible && (!barWindow || barWindow.isRevealed)) ? 1.0 : 0.0
         z: 0
 

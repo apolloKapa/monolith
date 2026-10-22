@@ -1183,7 +1183,8 @@
         "modular": "Modułowy",
         "solid": "Jednolity",
         "fill": "Wypełniony",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "Format czasu",

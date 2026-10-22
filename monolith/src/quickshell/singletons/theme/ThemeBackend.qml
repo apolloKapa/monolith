@@ -102,11 +102,10 @@ Item {
     property bool gameModeEnabled: true
 
     // Monolith's surface effects (Theme -> Effects), all on by default; GameMode turns them off.
-    //   grain:  faint film grain on panels      marks:  accent corner brackets on outer panels
-    //   edge:   a light along each panel's top  unfold: panels open by unfolding from a line
+    //   grain:  faint film grain on panels      edge:   a light along each panel's top
+    //   unfold: panels open by unfolding from a line
     property var effects: ({})
     readonly property bool fxGrain: effects.grain !== false && !gameModeActive
-    readonly property bool fxMarks: effects.marks !== false && !gameModeActive
     readonly property bool fxEdge: effects.edge !== false && !gameModeActive
     readonly property bool fxUnfold: effects.unfold !== false
     readonly property bool gameModeActive: gameModeEnabled && ToplevelManager.activeToplevel !== null

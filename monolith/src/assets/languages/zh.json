@@ -412,7 +412,8 @@
         "modular": "模块化",
         "solid": "纯色",
         "fill": "充满",
-        "island": "Island"
+        "island": "Island",
+        "frame": "Frame"
       },
       "time": {
         "title": "时间格式",

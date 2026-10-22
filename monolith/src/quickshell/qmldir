@@ -4,6 +4,8 @@ Main 1.0 Main.qml
 
 Bar 1.0 bar/Bar.qml
 Island 1.0 island/Island.qml
+ScreenFrame 1.0 frame/ScreenFrame.qml
+FrameDrawer 1.0 frame/FrameDrawer.qml
 Floating 1.0 quickactions/Floating.qml
 Clipboard 1.0 clipboard/Clipboard.qml
 Launcher 1.0 launcher/Launcher.qml

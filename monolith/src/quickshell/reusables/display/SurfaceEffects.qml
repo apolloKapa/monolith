@@ -1,8 +1,8 @@
 import QtQuick
 import "../../"
 
-// Monolith's surface effects, laid over a panel's background (under its content): grain,
-// corner marks and an edge light (Theme -> Effects). WallpaperBlur creates one next to
+// Monolith's surface effects, laid over a panel's background (under its content): grain and
+// an edge light (Theme -> Effects). WallpaperBlur creates one next to
 // itself for every outer panel, so the bar, dock, launcher, popups, notifications and
 // widgets all get them.
 Item {
@@ -44,35 +44,4 @@ Item {
         }
     }
 
-    // ── marks: accent brackets just inside the four corners ──
-    Repeater {
-        model: ThemeBackend.fxMarks && fx.width > Scaler.s(140) && fx.height > Scaler.s(70) ? 4 : 0
-        Item {
-            required property int index
-            readonly property bool atRight: index === 1 || index === 3
-            readonly property bool atBottom: index >= 2
-            readonly property real inset: Math.max(Scaler.s(6), fx.r * 0.42)
-            readonly property real len: Scaler.s(9)
-            readonly property real th: Math.max(1, Scaler.s(1.5))
-            x: atRight ? fx.width - inset - len : inset
-            y: atBottom ? fx.height - inset - len : inset
-            width: len
-            height: len
-            opacity: 0.85
-            Rectangle {
-                x: 0
-                y: parent.atBottom ? parent.len - parent.th : 0
-                width: parent.len
-                height: parent.th
-                color: ThemeBackend.mauve
-            }
-            Rectangle {
-                x: parent.atRight ? parent.len - parent.th : 0
-                y: 0
-                width: parent.th
-                height: parent.len
-                color: ThemeBackend.mauve
-            }
-        }
-    }
 }
