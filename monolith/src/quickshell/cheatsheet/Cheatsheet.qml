@@ -27,9 +27,10 @@ PopupShell {
         return out;
     }
 
+    focusTarget: search.field
+
     onOpened: {
         search.clear();
-        search.focusField();
         loader.running = true;
     }
 

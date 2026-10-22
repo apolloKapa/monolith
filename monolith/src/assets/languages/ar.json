@@ -1818,5 +1818,11 @@
   },
   "switcher": {
     "title": "Windows"
+  },
+  "overview": {
+    "search": "Search windows and apps…",
+    "window": "window",
+    "app": "open",
+    "empty": "Empty"
   }
 }

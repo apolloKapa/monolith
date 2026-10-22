@@ -6,6 +6,7 @@ import "../../"
 Rectangle {
     id: root
     property alias text: field.text
+    readonly property alias field: field
     property string placeholderText: ""
     property string icon: "󰍉"
     signal navigate(int step)
