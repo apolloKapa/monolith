@@ -39,7 +39,15 @@ Item {
     Component.onCompleted: {
         inheritedOwner = findInheritedOwner();
         nestLevel = (standalone || inheritedOwner !== null) ? 0 : Nesting.nestLevel(root, null, true);
+        // Monolith's surface effects (grain, marks, edge light) sit next to the blur, behind the
+        // panel's content; they show whether or not the blur itself is on
+        if (root.parent && !root.surfaceEffects) {
+            let c = Qt.createComponent("SurfaceEffects.qml");
+            if (c.status === Component.Ready) root.surfaceEffects = c.createObject(root.parent, { "target": root });
+        }
     }
+    property Item surfaceEffects: null
+    Component.onDestruction: if (root.surfaceEffects) root.surfaceEffects.destroy()
     readonly property bool transitioning: engine ? (engine.transitionProgress > 0.0 && engine.transitionProgress < 1.0) : false
     property int frame: 0
 

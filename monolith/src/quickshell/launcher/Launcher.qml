@@ -1686,7 +1686,17 @@ PanelWindow {
                             width: appList.width
                             height: launcherWindow.s(44)
                             radius: ThemeBackend.borderRadius
-                            color: ThemeBackend.liquidGlass ? "transparent" : ThemeBackend.mauve
+                            color: ThemeBackend.liquidGlass ? "transparent" : Qt.alpha(ThemeBackend.mauve, 0.16)
+
+                            // Monolith's selection spine
+                            Rectangle {
+                                x: I18n.rtl ? parent.width - width - launcherWindow.s(4) : launcherWindow.s(4)
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: launcherWindow.s(3)
+                                height: parent.height * 0.56
+                                radius: ThemeBackend.rad(width / 2)
+                                color: ThemeBackend.mauve
+                            }
 
                             property real targetY: (appList.currentIndex >= 0 && appModel.count > 0)
                                                    ? appList.getItemY(appList.currentIndex)
@@ -1879,7 +1889,7 @@ PanelWindow {
                                             font.family: ThemeBackend.fontFamily
                                             font.pixelSize: launcherWindow.s(12)
                                             font.weight: delegateRoot.isSelected ? Font.Bold : Font.Medium
-                                            color: delegateRoot.isSelected ? (ThemeBackend.liquidGlass ? ThemeBackend.text : ThemeBackend.crust) : ThemeBackend.text
+                                            color: ThemeBackend.text
                                             horizontalAlignment: I18n.textAlignment
                                             elide: Text.ElideRight
                                             verticalAlignment: Text.AlignVCenter
@@ -1895,7 +1905,7 @@ PanelWindow {
                                             font.family: ThemeBackend.fontFamily
                                             font.pixelSize: launcherWindow.s(10)
                                             font.weight: Font.Normal
-                                            color: delegateRoot.isSelected ? (ThemeBackend.liquidGlass ? ThemeBackend.text : ThemeBackend.crust) : ThemeBackend.subtext0
+                                            color: delegateRoot.isSelected ? ThemeBackend.subtext1 : ThemeBackend.subtext0
                                             horizontalAlignment: I18n.textAlignment
                                             opacity: delegateRoot.isSelected ? 0.9 : 0.85
                                             elide: Text.ElideRight

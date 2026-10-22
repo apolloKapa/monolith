@@ -435,6 +435,18 @@ Rectangle {
             useSnapshot: !!(typeRoot.root && typeRoot.root.glassScreen)
         }
 
+        // Monolith's spine down the left edge: accent, or red for urgent notifications
+        Rectangle {
+            z: 5
+            x: s(5)
+            anchors.verticalCenter: parent.verticalCenter
+            width: s(3)
+            height: Math.max(s(16), parent.height - s(22))
+            radius: ThemeBackend.rad(width / 2)
+            color: typeRoot.urgency === 2 ? ThemeBackend.red : ThemeBackend.mauve
+            opacity: typeRoot.readState === false ? 1.0 : 0.45
+        }
+
         Behavior on implicitHeight {
             enabled: !cardHover.draggingV
             NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic }

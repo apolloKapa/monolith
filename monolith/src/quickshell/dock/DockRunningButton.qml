@@ -219,9 +219,9 @@ Item {
                 id: runningSinglePill
                 visible: !runningDockButton.isOnlyElsewhere && runningDockButton.appWindowCount === 1 && runningDockButton.isAppFocused
                 anchors.centerIn: parent
-                width: dockWindow.isVertical ? dockWindow.s(3.5) : dockWindow.s(14)
-                height: dockWindow.isVertical ? dockWindow.s(14) : dockWindow.s(3.5)
-                radius: ThemeBackend.rad(dockWindow.s(2))
+                width: dockWindow.isVertical ? dockWindow.s(2.5) : dockWindow.s(18)
+                height: dockWindow.isVertical ? dockWindow.s(18) : dockWindow.s(2.5)
+                radius: ThemeBackend.rad(dockWindow.s(1))
                 color: ThemeBackend.mauve
             }
 
@@ -234,9 +234,10 @@ Item {
                 Repeater {
                     model: Math.min(3, Math.max(1, runningDockButton.appWindowCount))
                     delegate: Rectangle {
-                        width: dockWindow.s(3.5)
-                        height: dockWindow.s(3.5)
-                        radius: ThemeBackend.rad(width / 2)
+                        // dashes, not dots (Monolith's slab look)
+                        width: dockWindow.isVertical ? dockWindow.s(2.5) : dockWindow.s(7)
+                        height: dockWindow.isVertical ? dockWindow.s(7) : dockWindow.s(2.5)
+                        radius: ThemeBackend.rad(dockWindow.s(1))
                         color: (index === 0 && runningDockButton.isAppFocused) ? ThemeBackend.mauve : (index === 0 ? ThemeBackend.subtext0 : ThemeBackend.surface2)
                     }
                 }
@@ -251,9 +252,10 @@ Item {
                 Repeater {
                     model: Math.min(3, Math.max(1, runningDockButton.appWindowCount))
                     delegate: Rectangle {
-                        width: dockWindow.s(3.5)
-                        height: dockWindow.s(3.5)
-                        radius: ThemeBackend.rad(width / 2)
+                        // dashes, not dots (Monolith's slab look)
+                        width: dockWindow.isVertical ? dockWindow.s(2.5) : dockWindow.s(7)
+                        height: dockWindow.isVertical ? dockWindow.s(7) : dockWindow.s(2.5)
+                        radius: ThemeBackend.rad(dockWindow.s(1))
                         color: (index === 0 && runningDockButton.isAppFocused) ? ThemeBackend.mauve : (index === 0 ? ThemeBackend.subtext0 : ThemeBackend.surface2)
                     }
                 }

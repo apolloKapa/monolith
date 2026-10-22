@@ -100,6 +100,15 @@ Item {
     // GameMode (Theme -> Animations): while a fullscreen window has focus (games, videos),
     // animations, blur and liquid glass are off so the shell costs the GPU nothing.
     property bool gameModeEnabled: true
+
+    // Monolith's surface effects (Theme -> Effects), all on by default; GameMode turns them off.
+    //   grain:  faint film grain on panels      marks:  accent corner brackets on outer panels
+    //   edge:   a light along each panel's top  unfold: panels open by unfolding from a line
+    property var effects: ({})
+    readonly property bool fxGrain: effects.grain !== false && !gameModeActive
+    readonly property bool fxMarks: effects.marks !== false && !gameModeActive
+    readonly property bool fxEdge: effects.edge !== false && !gameModeActive
+    readonly property bool fxUnfold: effects.unfold !== false
     readonly property bool gameModeActive: gameModeEnabled && ToplevelManager.activeToplevel !== null
         && ToplevelManager.activeToplevel.fullscreen === true
     readonly property bool glassActive: blurBackground && !opaqueStyle && elementOpacity < 0.999 && !gameModeActive
@@ -353,6 +362,7 @@ Item {
         const anim = themeConfig.animations || {};
         root.animationsEnabled = anim.enabled !== false;
         root.gameModeEnabled = themeConfig.gameMode !== false;
+        root.effects = themeConfig.effects || {};
         const speed = Number(anim.speed);
         root.animationSpeed = isNaN(speed) ? 1.0 : Math.max(0.25, Math.min(3.0, speed));
         root.elementOpacity = (root.opaqueStyle || Caching.isStandalone) ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));

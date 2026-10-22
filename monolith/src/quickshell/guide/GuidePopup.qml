@@ -580,6 +580,7 @@ Item {
             subtabs: [
                 { id: "ThemeAppearance", key: "theme_appearance", name: "Appearance", icon: "󰏘", file: "theme/ThemeTab.qml" },
                 { id: "ThemeAnimations", key: "theme_animations", name: "Animations", icon: "󰔡", file: "theme/ThemeAnimationsTab.qml" },
+                { id: "ThemeEffects", key: "theme_effects", name: "Effects", icon: "󰫢", file: "theme/ThemeEffectsTab.qml" },
                 { id: "ThemeWindows", key: "theme_windows", name: "Windows", icon: "󰖲", file: "theme/ThemeWindowsTab.qml" },
                 { id: "ThemeApps", key: "theme_apps", name: "Apps", icon: "󰏘", file: "theme/ThemeAppsTab.qml" }
             ]
