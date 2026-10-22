@@ -45,6 +45,7 @@ singleton Location 1.0 singletons/environment/Location.qml
 singleton Weather 1.0 singletons/environment/Weather.qml
 
 singleton AppMatcher 1.0 singletons/system/AppMatcher.qml
+singleton BtPower 1.0 singletons/system/BtPower.qml
 singleton Caching 1.0 singletons/system/Caching.qml
 singleton Config 1.0 singletons/system/Config.qml
 singleton CurrentFocus 1.0 singletons/system/CurrentFocus.qml

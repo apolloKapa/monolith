@@ -385,7 +385,7 @@ Item {
             onLeftClicked: {
                 Sounds.playSfx("system/quick_click.wav");
                 if (Bluetooth.defaultAdapter) {
-                    Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter.enabled;
+                    BtPower.toggle();
                 }
             }
             onRightClicked: {
@@ -405,7 +405,7 @@ Item {
                     view.panel.btStateBeforeAirplane = view.panel.btRadioEnabled;
                     view.panel.wifiStateBeforeAirplane = view.panel.wifiRadioEnabled;
                     Networking.wifiEnabled = false;
-                    if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = false;
+                    BtPower.setEnabled(false);
                 } else {
                     let restoreWifi = view.panel.wifiStateBeforeAirplane;
                     let restoreBt = view.panel.btStateBeforeAirplane;
@@ -413,7 +413,7 @@ Item {
                         restoreWifi = true;
                     }
                     Networking.wifiEnabled = restoreWifi;
-                    if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = restoreBt;
+                    BtPower.setEnabled(restoreBt);
                 }
             }
         }
