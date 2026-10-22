@@ -47,7 +47,8 @@
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
       "screenshot": "Знімок екрана",
-      "screenshot_keys": "Keys"
+      "screenshot_keys": "Keys",
+      "theme_apps": "Apps"
     },
     "launcher": {
       "position": {

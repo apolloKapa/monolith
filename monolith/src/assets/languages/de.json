@@ -50,7 +50,8 @@
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
       "screenshot": "Screenshot",
-      "screenshot_keys": "Keys"
+      "screenshot_keys": "Keys",
+      "theme_apps": "Apps"
     },
     "launcher": {
       "position": {

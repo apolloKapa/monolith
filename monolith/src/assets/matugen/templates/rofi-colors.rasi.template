@@ -1,0 +1,9 @@
+/* Monolith colours for rofi: the names Monolith's rofi theme uses */
+* {
+    bg:      {{colors.surface.default.hex}};
+    bg-alt:  {{colors.surface_container_low.default.hex}};
+    fg:      {{colors.on_surface.default.hex}};
+    dim:     {{colors.on_surface_variant.default.hex}};
+    border:  {{colors.outline.default.hex}};
+    accent:  {{colors.primary.default.hex}};
+}

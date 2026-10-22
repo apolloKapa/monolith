@@ -1,0 +1,7 @@
+# Monolith colours for foot
+[colors]
+foreground={{colors.on_surface.default.hex_stripped}}
+background={{colors.surface_container.default.hex_stripped}}
+selection-foreground={{colors.on_secondary_container.default.hex_stripped}}
+selection-background={{colors.secondary_container.default.hex_stripped}}
+urls={{colors.tertiary.default.hex_stripped}}

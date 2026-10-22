@@ -115,7 +115,12 @@ Item {
             on_surface:               colorsObj.text,
             on_surface_variant:       colorsObj.subtext0,
             outline:                  colorsObj.subtext1,
+            outline_variant:          colorsObj.surface2,
             inverse_surface:          colorsObj.overlay0,
+            surface_dim:              colorsObj.crust,
+            surface_bright:           colorsObj.surface1,
+            shadow:                   "#000000",
+            scrim:                    "#000000",
 
             primary:             colorsObj.blue,
             primary_container:   colorsObj.sapphire,
@@ -297,6 +302,9 @@ Item {
                 } else {
                     Quickshell.execDetached(["bash", "-c", "killall -USR1 .kitty-wrapped 2>/dev/null || pkill -SIGUSR1 kitty 2>/dev/null || true"]);
                 }
+                // apps switched on in Settings -> Theme -> Apps pick up the new colours
+                if (typeof Caching !== "undefined" && Caching.monolithDir)
+                    Quickshell.execDetached(["python3", Caching.monolithDir + "/scripts/app_theming.py", "sync"]);
             }
 
             root._currentReqType = "";
