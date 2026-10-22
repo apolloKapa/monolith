@@ -110,9 +110,9 @@ Everything below is built in.
 
 **Idle**: dim, screen off, lock and suspend timers, with media/inhibitor awareness.
 
-**Other**: screenshots (region / window / full, with editing), polkit password prompts, blue-light filter, brightness (incl. external monitors via ddcutil), first-launch intro and tutorial, 23 languages.
+**Other**: screenshots (region / window / full, with editing, copy text out of them with OCR), polkit password prompts, blue-light filter, brightness (incl. external monitors via ddcutil), first-launch intro and tutorial, 23 languages.
 
-**Settings** (`Mod+S`):
+**Settings** (`Mod+S`, or *Monolith Settings* in the app launcher) opens in its own window, with search and full keyboard navigation (Tab, arrows, Enter):
 
 - Welcome
 - General: language, location, weather units, sounds
@@ -122,8 +122,9 @@ Everything below is built in.
 - Theme → Windows: niri window borders on/off, width, colours for focused / other / attention windows (theme swatches or any hex), or follow the theme's colours automatically
 - Bar: general and modules
 - Launcher, Dock, On-screen display, Notifications
-- Screenshots: the screenshot tool's keys (capture, copy, edit, cancel, photo/video, whole screen)
-- Wellbeing: screen-time stats
+- Screenshots → Capture: capture as soon as you let go of the mouse, OCR languages (downloaded only when you install one)
+- Screenshots → Keys: the screenshot tool's keys (capture, copy, edit, cancel, photo/video, whole screen)
+- Wellbeing: screen-time stats, and daily time limits per app (a reminder when you hit one)
 - Idle
 - About: your system, update button
 
@@ -250,10 +251,12 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `monolith installer --update` | update without the menu (what Settings → About → Update runs) |
 | `monolithd start` / `stop` / `status` | run / stop the shell |
 | `monolith restart` / `kill` | restart / stop the shell |
-| `monolith msg toggle <panel>` | open/close `launcher`, `system`, `guide`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `autohide` |
+| `monolith settings [tab]` | open the settings window (on a tab, e.g. `monolith settings about`) |
+| `monolith config get\|set\|dump\|edit` | read or change settings from the terminal |
+| `monolith msg toggle <panel>` | open/close `launcher`, `system`, `settings`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `autohide` |
 | `monolith msg workspace <n> [move]` | go to / move to workspace |
 | `monolith lock` | lock screen |
-| `monolith screenshot [--full] [--edit]` | screenshot |
+| `monolith screenshot [--full] [--edit] [--ocr]` | screenshot (`--ocr` copies the text in it) |
 | `monolith volume raise\|lower\|mute-toggle\|mic-toggle` | volume with on-screen display |
 | `monolith brightness raise\|lower` | brightness with on-screen display |
 | `monolith reload` | reload the shell |

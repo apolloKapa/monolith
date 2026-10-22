@@ -108,6 +108,7 @@ SHELL_WAS_RUNNING=false
 monolithd status >/dev/null 2>&1 && SHELL_WAS_RUNNING=true
 monolithd stop >/dev/null 2>&1 || true
 deploy_shell "$PROJECT_ROOT"
+install_desktop_entry "$PROJECT_ROOT"
 deploy_dotfiles_extras "$PROJECT_ROOT"
 setup_pam_service
 

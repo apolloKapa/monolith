@@ -59,6 +59,7 @@ ShellRoot {
     Clipboard {}    
 
     Polkit {}
+    WellbeingLimitOverlay {}
     PopoutManager {}
 
     Loader {

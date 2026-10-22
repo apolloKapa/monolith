@@ -60,8 +60,8 @@ PanelWindow {
         id: filePicker
         rootObj: lyricsPickerWindow
 
-        width: Scaler.s(960)
-        height: Scaler.s(640)
+        preferredWidth: Scaler.s(960)
+        preferredHeight: Scaler.s(640)
         previewWidth: Scaler.s(340)
         titleText: typeof I18n !== "undefined" ? I18n.t("guide.lyrics_picker.title", "Select lyrics file") : "Select lyrics file"
         nameFilters: ["*.lrc", "*.txt", "*.yrc"]

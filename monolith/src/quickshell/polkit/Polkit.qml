@@ -188,15 +188,13 @@ PanelWindow {
                     }
                 }
 
-                IconButton {
+                CloseButton {
                     Layout.preferredWidth: polkitWindow.toolbarHeight
                     Layout.preferredHeight: polkitWindow.toolbarHeight
                     Layout.alignment: Qt.AlignTop
                     cornerRadius: ThemeBackend.minimalist ? 0 : (polkitWindow.crSmall)
-                    buttonIcon: "󰅖"
                     iconFontSize: polkitWindow.s(14)
                     accentColor: ThemeBackend.surface1
-                    textColor: ThemeBackend.text
                     onClicked: PolkitService.cancel()
                 }
             }

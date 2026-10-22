@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.5
+Type=Application
+Name=Monolith Settings
+GenericName=Settings
+Comment=Configure the Monolith desktop shell
+Exec=monolith settings
+Icon=monolith-settings
+Terminal=false
+Categories=Settings;DesktopSettings;
+Keywords=monolith;settings;preferences;theme;shell;
+StartupWMClass=monolith-settings

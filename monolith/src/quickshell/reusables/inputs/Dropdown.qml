@@ -9,6 +9,14 @@ import "../"
 
 Item {
     id: root
+
+    activeFocusOnTab: root.enabled
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            if (!root.isOpen) root.openPopup();
+            event.accepted = true;
+        }
+    }
     implicitWidth: 160
     implicitHeight: 32
 
@@ -469,10 +477,10 @@ Item {
                         SequentialAnimation on opacity {
                             running: root.isEditing && (innerInput.activeFocus || root.action_highlight)
                             loops: Animation.Infinite
-                            NumberAnimation { to: 0; duration: 100; easing.type: Easing.InQuad }
-                            PauseAnimation { duration: 400 }
-                            NumberAnimation { to: 1; duration: 100; easing.type: Easing.OutQuad }
-                            PauseAnimation { duration: 400 }
+                            NumberAnimation { to: 0; duration: (100) * ThemeBackend.animScale; easing.type: Easing.InQuad }
+                            PauseAnimation { duration: (400) * ThemeBackend.animScale }
+                            NumberAnimation { to: 1; duration: (100) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+                            PauseAnimation { duration: (400) * ThemeBackend.animScale }
                         }
                     }
 
@@ -943,5 +951,16 @@ Item {
                 }
             }
         }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: -2
+        radius: ThemeBackend.minimalist ? 0 : ((typeof root.cornerRadius === "number" ? root.cornerRadius : 10) + 2)
+        color: "transparent"
+        border.width: 2
+        border.color: Qt.alpha(ThemeBackend.mauve, 0.8)
+        visible: root.activeFocus
+        z: 100
     }
 }

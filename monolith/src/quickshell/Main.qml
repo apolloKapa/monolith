@@ -97,6 +97,19 @@ PanelWindow {
                 return;
             }
 
+            let isSettingsCmd = cmd === "settings" || targetWidget === "settings";
+            let isGuideCmd = cmd === "guide" || targetWidget === "guide";
+            if (isSettingsCmd || isGuideCmd) {
+                if (isGuideCmd) {
+                    console.warn("'guide' is deprecated, use 'settings' instead");
+                }
+                let settingsAction = cmd === "close" ? "close" : (cmd === "open" ? "open" : "toggle");
+                let settingsTab = (cmd === "settings" || cmd === "guide") ? targetWidget : arg;
+                if (settingsTab === "settings" || settingsTab === "guide") settingsTab = "";
+                Quickshell.execDetached(["bash", Caching.monolithDir + "/scripts/settings.sh", settingsAction, settingsTab]);
+                return;
+            }
+
             if (cmd === "launcher" || targetWidget === "launcher") {
                 if (cmd === "close") {
                     LauncherController.hide();
@@ -219,7 +232,7 @@ PanelWindow {
     readonly property bool screenReady: masterWindow.width >= 100 && masterWindow.height >= 100
     readonly property bool isCurrentDraggable: {
         let t = getLayout(masterWindow.currentActive);
-        return Boolean(t && t.draggable) || masterWindow.currentActive === "guide";
+        return Boolean(t && t.draggable);
     }
 
     Item {
@@ -339,8 +352,6 @@ PanelWindow {
         reportWidgetState();
         Qt.callLater(function() {
             if (masterWindow.currentActive === "hidden") {
-                let t = masterWindow.getLayout("guide");
-                if (t) masterWindow.ensureWidgetItem("guide", t);
                 let w = masterWindow.getLayout("wallpaper");
                 if (w) masterWindow.ensureWidgetItem("wallpaper", w);
             }
@@ -430,7 +441,7 @@ PanelWindow {
         if (!result) return null;
 
         let scale = masterWindow.globalUiScale || 1.0;
-        let isFixed = (name === "guide" || name === "wallpaper" || name === "notifications" || name === "system" || name === "hidden");
+        let isFixed = (name === "wallpaper" || name === "notifications" || name === "system" || name === "hidden");
 
         if (effHidden && !isFixed) {
             let offsetAdjustment = Math.round(46 * scale);
@@ -623,9 +634,7 @@ PanelWindow {
         let gen = masterWindow.switchGeneration;
         masterWindow.targetActive = newWidget;
 
-        if (newWidget !== "guide") {
-            masterWindow.userMoved = false;
-        }
+        masterWindow.userMoved = false;
 
         if (delayedClear.running) {
             delayedClear.stop();

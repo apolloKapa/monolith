@@ -134,8 +134,6 @@ Item {
         anchors.fill: parent
         radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
         color: bgGlass.active ? "transparent" : root.baseColor
-        border.color: root.borderColor
-        border.width: root.borderWidth
         clip: true
 
         GlassFill {
@@ -155,6 +153,15 @@ Item {
             screenOverride: root.blurScreen
             useSnapshot: root.blurScreen !== null
         }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        color: "transparent"
+        border.color: root.borderColor
+        border.width: root.borderWidth
+        visible: root.borderWidth > 0
     }
 
     ColumnLayout {

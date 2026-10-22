@@ -37,6 +37,14 @@ Item {
     property color accentColor: ThemeBackend.surface0
     property color textColor: ThemeBackend.text
 
+    activeFocusOnTab: root.enabled
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            btnMa.clicked({ button: Qt.LeftButton });
+            event.accepted = true;
+        }
+    }
+
     property bool action_highlight: false
     property string clickSound: "reusables/clickbutton/click.wav"
     property int acceptedButtons: Qt.LeftButton
@@ -154,6 +162,16 @@ Item {
             visible: !glass.active
             PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
         }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: -2
+        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius + 2)
+        color: "transparent"
+        border.width: 2
+        border.color: Qt.alpha(ThemeBackend.mauve, 0.8)
+        visible: root.activeFocus
     }
 
     MouseArea {
