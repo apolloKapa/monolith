@@ -68,7 +68,6 @@ KEYBIND_PKGS=(
 )
 
 OPT_KEYBIND_APPS=true
-OPT_ALL_MY_APPS=false
 
 FAILED_PKGS=()
 
@@ -94,10 +93,6 @@ target_packages() {
         for p in "${KEYBIND_PKGS[@]}"; do resolve_pkg "$p"; done
     else
         echo niri
-    fi
-    if [ "$OPT_ALL_MY_APPS" = true ]; then
-        read_pkg_list "$project_root/packages.txt"
-        read_pkg_list "$project_root/packages-aur.txt"
     fi
     if [ "$OPT_SDDM" = true ]; then sddm_packages; fi
     for p in "${PM_EXTRA_PKGS[@]}"; do echo "$p"; done

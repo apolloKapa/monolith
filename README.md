@@ -37,7 +37,6 @@ It opens a menu (arrow keys or j/k, Enter, q to quit):
 |---|---|---|
 | Packages overview | | everything it's about to install, and what you already have |
 | Apps for the keybinds | ON | what the keybinds/autostart call: librewolf, thunar, mission-center, rofi, steam, wooz, awww, swaylock, swappy, grim/slurp, cliphist, playerctl, brightnessctl, fonts, ... |
-| All my apps | OFF | everything in `packages.txt` and `packages-aur.txt` |
 | niri config | Monolith config | writes the niri config below (your old one is backed up to `~/.config/niri_backup/`); or "keep mine" |
 | Login screen | ON | SDDM theme, with options to replace your current display manager and use Wayland for SDDM |
 | Wallpapers | 3 random | 3 random / full pack / none, from my [wallpapers](https://github.com/apolloKapa/wallpapers) repo (skipped if it doesn't exist; `WALLPAPER_REPO=` to use another) |
@@ -283,7 +282,6 @@ Helper scripts in `bin/` (installed to `~/.local/bin`):
 | `config/monolith/settings.json` | default shell settings |
 | `config/rofi/`, `config/wallpaper` | rofi theme + favourites, setwall state |
 | `bin/` | helper scripts |
-| `packages.txt`, `packages-aur.txt` | all my apps (the installer's "All my apps" option) |
 
 Installed files: shell in `~/.local/share/monolith`; settings in `~/.config/monolith`; state, cache and logs in `~/.local/state/monolith`, `~/.cache/monolith` and `$XDG_RUNTIME_DIR/monolith`.
 
@@ -308,7 +306,6 @@ While the repo is private, the update check goes through the GitHub CLI (`gh aut
 - **No weather:** set your location in Settings → General. Monolith never detects it automatically.
 - **Wrong monitor layout:** run `monolith installer` from inside niri, or edit `~/.config/niri/config/output.kdl`, then `niri validate`.
 - **Lock screen won't accept your password:** check `/etc/pam.d/monolith` exists (the installer adds it). If you're ever stuck, switch to a TTY (Ctrl+Alt+F3), log in, and run `monolithd stop`.
-- **Nvidia:** my desktop used the legacy GTX 1070 driver (`nvidia-dkms-580xx`). Drop GPU drivers that don't fit from `packages.txt` before choosing "All my apps".
 
 ## Licence
 
