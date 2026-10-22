@@ -4,10 +4,9 @@
 // ===================== Input =====================
 // Keyboard layout, touchpad/mouse behavior, and focus-follows-mouse.
 input {
-    // focus whatever window the mouse moves into, scrolling the view (up to one screen) when
-    // it's only partly visible; without the limit only fully visible windows got focused, so a
-    // wide column hanging off the right edge never did
-    focus-follows-mouse max-scroll-amount="100%"
+    // hovering focuses only windows that are fully on screen; one peeking in from the edge
+    // stays put until clicked (focusing it would slide it into view and push the others off)
+    focus-follows-mouse max-scroll-amount="0%"
     keyboard {
         xkb {
             layout "us,gr"
