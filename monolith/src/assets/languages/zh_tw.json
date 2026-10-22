@@ -346,8 +346,10 @@
             "name": {
               "pills": "膠囊",
               "numbers": "數字",
-              "pacman": "小精靈"
-            }
+              "pacman": "小精靈",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "工作區"
         },

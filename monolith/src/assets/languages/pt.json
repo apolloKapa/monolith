@@ -346,8 +346,10 @@
             "name": {
               "pills": "Pílulas",
               "numbers": "Números",
-              "pacman": "Pacman"
-            }
+              "pacman": "Pacman",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "Espaços de trabalho"
         },

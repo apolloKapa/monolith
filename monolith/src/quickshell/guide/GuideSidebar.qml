@@ -53,16 +53,24 @@ Rectangle {
             Layout.preferredHeight: popup.s(40)
             spacing: popup.s(8)
 
-            Text {
+            ColumnLayout {
                 visible: !popup.compact
                 Layout.fillWidth: true
                 Layout.leftMargin: popup.s(10)
-                horizontalAlignment: I18n.textAlignment
-                text: I18n.t("guide.settings", "Settings")
-                font.family: ThemeBackend.fontFamily
-                font.pixelSize: popup.s(15)
-                font.bold: true
-                color: ThemeBackend.text
+                spacing: 0
+                Caption {
+                    text: "Monolith"
+                    Layout.fillWidth: true
+                }
+                Text {
+                    Layout.fillWidth: true
+                    horizontalAlignment: I18n.textAlignment
+                    text: I18n.t("guide.settings", "Settings")
+                    font.family: ThemeBackend.fontFamily
+                    font.pixelSize: popup.s(16)
+                    font.bold: true
+                    color: ThemeBackend.text
+                }
             }
 
             Item { visible: popup.compact; Layout.fillWidth: true }
@@ -98,8 +106,19 @@ Rectangle {
                 id: activeHighlight
                 z: -1
                 radius: ThemeBackend.borderRadius
-                color: activeGlass.active ? "transparent" : ThemeBackend.mauve
+                color: activeGlass.active ? "transparent" : Qt.alpha(ThemeBackend.mauve, 0.14)
                 visible: activeDelegate !== null
+
+                // the spine: Monolith's selection mark (a slab, like the logo)
+                Rectangle {
+                    z: 2
+                    x: I18n.rtl ? parent.width - width : 0
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: popup.s(3)
+                    height: parent.height * 0.62
+                    radius: ThemeBackend.rad(width / 2)
+                    color: ThemeBackend.mauve
+                }
                 property bool ready: false
                 Timer { interval: 500; running: true; onTriggered: activeHighlight.ready = true }
 
@@ -107,8 +126,8 @@ Rectangle {
                     id: activeGlass
                     anchors.fill: parent
                     radius: ThemeBackend.rad(parent.radius)
-                    tintColor: ThemeBackend.mauve
-                    tintAmount: 0.5
+                    tintColor: Qt.alpha(ThemeBackend.mauve, 0.35)
+                    tintAmount: 0.3
                     press: 0.3 + 0.7 * activeHighlight.lift
                 }
 
@@ -210,8 +229,8 @@ Rectangle {
                                     buttonIcon: tabDelegate.modelData.icon || "󰒓"
                                     bgOpacity: 2.0
                                     iconFontSize: popup.s(15)
-                                    accentColor: ThemeBackend.surface0
-                                    textColor: "#ffffff"
+                                    accentColor: "transparent"
+                                    textColor: header.active ? ThemeBackend.mauve : (headerMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
                                 }
 
                                 Text {
@@ -221,7 +240,7 @@ Rectangle {
                                     font.weight: header.active ? Font.Bold : Font.Medium
                                     font.pixelSize: popup.s(13)
                                     color: header.active
-                                        ? (activeGlass.active ? ThemeBackend.text : ThemeBackend.crust)
+                                        ? ThemeBackend.text
                                         : (headerMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
                                     Layout.fillWidth: true
                                     Layout.alignment: Qt.AlignVCenter
@@ -231,12 +250,21 @@ Rectangle {
                                 }
 
                                 Text {
+                                    visible: !popup.compact
+                                    text: String(tabDelegate.tabIndex + 1).padStart(2, "0")
+                                    font.family: "JetBrains Mono"
+                                    font.pixelSize: popup.s(10)
+                                    color: header.active ? ThemeBackend.mauve : Qt.alpha(ThemeBackend.subtext0, 0.55)
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
                                     visible: tabDelegate.hasSubtabs && !popup.compact
                                     text: "󰅀"
                                     font.family: ThemeBackend.iconFont
                                     font.pixelSize: popup.s(14)
                                     color: header.active
-                                        ? (activeGlass.active ? ThemeBackend.text : ThemeBackend.crust)
+                                        ? ThemeBackend.text
                                         : (headerMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
                                     Layout.alignment: Qt.AlignVCenter
                                     rotation: tabDelegate.expandProgress * 180 - 180
@@ -360,8 +388,8 @@ Rectangle {
                                                     buttonIcon: sub.modelData.icon || "󰒓"
                                                     bgOpacity: 2.0
                                                     iconFontSize: popup.s(12)
-                                                    accentColor: ThemeBackend.surface0
-                                                    textColor: "#ffffff"
+                                                    accentColor: "transparent"
+                                                    textColor: sub.isCurrent ? ThemeBackend.mauve : ThemeBackend.subtext0
                                                 }
 
                                                 Text {
@@ -370,7 +398,7 @@ Rectangle {
                                                     font.family: ThemeBackend.fontFamily
                                                     font.weight: sub.isCurrent ? Font.Bold : Font.Medium
                                                     font.pixelSize: popup.s(12)
-                                                    color: sub.isCurrent ? (activeGlass.active ? ThemeBackend.text : ThemeBackend.crust) : ThemeBackend.subtext0
+                                                    color: sub.isCurrent ? ThemeBackend.text : ThemeBackend.subtext0
                                                     Layout.fillWidth: true
                                                     Layout.alignment: Qt.AlignVCenter
                                                     horizontalAlignment: I18n.textAlignment

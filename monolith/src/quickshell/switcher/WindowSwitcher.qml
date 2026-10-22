@@ -84,12 +84,8 @@ PopupShell {
         anchors.fill: parent
         spacing: root.s(12)
 
-        Text {
+        Caption {
             text: I18n.t("switcher.title", "Windows")
-            color: ThemeBackend.subtext0
-            font.family: ThemeBackend.fontFamily
-            font.pixelSize: root.s(12)
-            font.weight: Font.DemiBold
         }
 
         ListView {

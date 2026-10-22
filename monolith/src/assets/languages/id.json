@@ -346,8 +346,10 @@
             "name": {
               "pills": "Kapsul",
               "numbers": "Angka",
-              "pacman": "Pacman"
-            }
+              "pacman": "Pacman",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "Ruang kerja"
         },

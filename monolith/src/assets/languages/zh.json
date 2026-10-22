@@ -346,8 +346,10 @@
             "name": {
               "pills": "胶囊",
               "numbers": "数字",
-              "pacman": "吃豆人"
-            }
+              "pacman": "吃豆人",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "工作区"
         },

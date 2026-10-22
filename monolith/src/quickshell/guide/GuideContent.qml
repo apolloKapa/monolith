@@ -13,9 +13,40 @@ Item {
 
     readonly property real searchHeaderHeight: popup.s(64)
 
+    // breadcrumb over every page: "THEME / APPEARANCE", with a hairline under it
+    Item {
+        id: crumb
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.leftMargin: popup.s(18)
+        anchors.rightMargin: popup.s(18)
+        height: popup.s(36)
+
+        function tabName(t) {
+            return t ? I18n.t("guide.tabs." + (t.key || t.id).toLowerCase(), t.name || t.id) : "";
+        }
+        readonly property var tab: popup.currentTabModel
+        readonly property var sub: (tab && tab.subtabs && popup.currentSubTab >= 0) ? tab.subtabs[popup.currentSubTab] : null
+
+        Row {
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: popup.s(8)
+            Caption { text: crumb.tabName(crumb.tab) }
+            Caption { visible: crumb.sub !== null; text: "/"; color: Qt.alpha(ThemeBackend.subtext0, 0.45) }
+            Caption { visible: crumb.sub !== null; text: crumb.tabName(crumb.sub); accent: true }
+        }
+        Rectangle {
+            anchors.bottom: parent.bottom
+            width: parent.width
+            height: 1
+            color: Qt.alpha(ThemeBackend.text, 0.07)
+        }
+    }
+
     Item {
         id: body
-        anchors.top: parent.top
+        anchors.top: crumb.bottom
         anchors.topMargin: popup.s(4)
         anchors.bottom: parent.bottom
         anchors.left: parent.left

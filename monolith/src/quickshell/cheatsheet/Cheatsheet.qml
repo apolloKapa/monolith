@@ -134,12 +134,9 @@ PopupShell {
                                     anchors.margins: root.s(12)
                                     spacing: root.s(6)
 
-                                    Text {
+                                    Caption {
                                         text: card.modelData.name
-                                        color: ThemeBackend.mauve
-                                        font.family: ThemeBackend.fontFamily
-                                        font.pixelSize: root.s(13)
-                                        font.weight: Font.Bold
+                                        accent: true
                                         Layout.bottomMargin: root.s(2)
                                     }
 

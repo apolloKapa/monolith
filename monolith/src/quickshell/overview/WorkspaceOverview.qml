@@ -231,14 +231,11 @@ PopupShell {
 
                         MouseArea { anchors.fill: parent; onClicked: root.focusWorkspace(wsRow.modelData) }
 
-                        Text {
+                        Caption {
                             id: wsLabel
-                            x: root.s(14); y: root.s(10)
-                            text: (wsRow.modelData.name || wsRow.modelData.idx) + "   " + (wsRow.modelData.output || "")
-                            color: wsRow.modelData.is_active ? ThemeBackend.mauve : ThemeBackend.subtext0
-                            font.family: ThemeBackend.fontFamily
-                            font.pixelSize: root.s(12)
-                            font.weight: Font.Bold
+                            x: root.s(14); y: root.s(12)
+                            text: (wsRow.modelData.name || wsRow.modelData.idx) + "  /  " + (wsRow.modelData.output || "")
+                            accent: wsRow.modelData.is_active
                         }
 
                         Flickable {

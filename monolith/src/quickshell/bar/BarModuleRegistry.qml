@@ -44,9 +44,16 @@ QtObject {
         "workspaces": {
             name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.workspaces.name", "Workspaces") : "Workspaces",
             icon: "󰮯",
-            defaultVariant: "pills",
+            defaultVariant: "slabs",
             face: "faces/workspaces/WorkspacesFace.qml",
             variants: {
+                "slabs": {
+                    id: "slabs",
+                    name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.workspaces.style.name.slabs", "Slabs") : "Slabs",
+                    desc: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.workspaces.style.slabs", "Upright bars, the current one tallest") : "Upright bars, the current one tallest",
+                    icon: "󰕮",
+                    face: "faces/workspaces/SlabsFace.qml"
+                },
                 "pills": {
                     id: "pills",
                     name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.workspaces.style.name.pills", "Pills") : "Pills",

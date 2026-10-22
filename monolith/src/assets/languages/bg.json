@@ -346,8 +346,10 @@
             "name": {
               "pills": "Хапчета",
               "numbers": "Числа",
-              "pacman": "Пакман"
-            }
+              "pacman": "Пакман",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "Работни пространства"
         },

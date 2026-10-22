@@ -346,8 +346,10 @@
             "name": {
               "pills": "قرصی",
               "numbers": "اعداد",
-              "pacman": "پک‌من"
-            }
+              "pacman": "پک‌من",
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
           },
           "name": "فضاهای کاری"
         },

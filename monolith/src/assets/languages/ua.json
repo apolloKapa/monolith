@@ -340,7 +340,13 @@
         "vis": "Візуалізатор (cava)",
         "actions": "Дії",
         "workspaces": {
-          "name": "Робочі простори"
+          "name": "Робочі простори",
+          "style": {
+            "name": {
+              "slabs": "Slabs"
+            },
+            "slabs": "Upright bars, the current one tallest"
+          }
         },
         "media": "Медіа",
         "tray": "Трей",
