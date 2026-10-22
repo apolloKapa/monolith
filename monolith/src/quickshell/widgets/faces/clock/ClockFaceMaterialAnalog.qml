@@ -205,7 +205,7 @@ Item {
             Rectangle {
                 width: Math.min(root.width, root.height) * 0.076
                 height: Math.min(root.width, root.height) * 0.24
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: root.hourHandColor
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.top
@@ -231,7 +231,7 @@ Item {
             Rectangle {
                 width: Math.min(root.width, root.height) * 0.082
                 height: Math.min(root.width, root.height) * 0.36
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: root.minuteHandColor
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.top

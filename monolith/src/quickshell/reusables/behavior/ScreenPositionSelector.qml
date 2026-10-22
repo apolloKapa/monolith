@@ -100,7 +100,7 @@ Item {
     Rectangle {
         id: screenFrame
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: screenGlass.active ? "transparent" : root.baseColor
         border.width: ThemeBackend.liquidGlass ? 0 : 1
         border.color: root.borderColor
@@ -109,7 +109,7 @@ Item {
         GlassFill {
             id: screenGlass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: ThemeBackend.crust
             tintAmount: 0.3
         }
@@ -124,12 +124,12 @@ Item {
             color: barGlass.active ? "transparent" : ThemeBackend.surface0
             border.width: ThemeBackend.liquidGlass ? 0 : 1
             border.color: ThemeBackend.surface1
-            radius: ThemeBackend.minimalist ? 0 : ((root.rawBarSettings && root.rawBarSettings.style === "modular") ? root.s(3) : 0)
+            radius: ThemeBackend.rad((root.rawBarSettings && root.rawBarSettings.style === "modular") ? root.s(3) : 0)
 
             GlassFill {
                 id: barGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: ThemeBackend.surface0
                 tintAmount: 0.3
             }

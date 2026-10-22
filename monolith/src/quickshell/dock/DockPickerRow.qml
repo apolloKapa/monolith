@@ -39,7 +39,7 @@ Rectangle {
     GlassFill {
         id: pickerRowGlass
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         allowed: pickerDelegate.isAdded || (pickerMa.containsMouse && !pickerLens.glassActive)
         forceClear: pickerDelegate.isAdded
         tintColor: pickerDelegate.isAdded ? ThemeBackend.text : ThemeBackend.surface0
@@ -58,14 +58,14 @@ Rectangle {
             implicitWidth: dockWindow.s(28)
             implicitHeight: dockWindow.s(28)
             Layout.alignment: Qt.AlignVCenter
-            radius: ThemeBackend.minimalist ? 0 : (Math.round(dockWindow.s(28) * 0.28))
+            radius: ThemeBackend.rad(Math.round(dockWindow.s(28) * 0.28))
             color: pickerIconGlass.active ? "transparent" : (pickerDelegate.isAdded ? Qt.tint(ThemeBackend.surface0, Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, 0.2)) : ThemeBackend.surface0)
             clip: true
 
             GlassFill {
                 id: pickerIconGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 forceClear: pickerDelegate.isAdded
                 tintColor: pickerDelegate.isAdded ? ThemeBackend.text : ThemeBackend.surface2
                 tintAmount: pickerDelegate.isAdded ? 0.1 : 0.3

@@ -323,7 +323,7 @@ Item {
     Rectangle {
         id: bgShape
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         clip: true
         color: glass.active ? "transparent" : (root.isHoveredOrHighlighted ? Qt.darker(root.baseColor, 1.14) : root.baseColor)
         opacity: root.enabled ? 1.0 : 0.5
@@ -335,7 +335,7 @@ Item {
         GlassFill {
             id: glass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: root.baseColor
             press: root.isEditing ? 0.55 : (root.isHoveredOrHighlighted ? 0.2 : 0)
             Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
@@ -359,7 +359,7 @@ Item {
         IconButton {
             id: decBtn
             size: root.buttonSize
-            cornerRadius: ThemeBackend.minimalist ? 0 : (root.buttonCornerRadius)
+            cornerRadius: ThemeBackend.rad(root.buttonCornerRadius)
             buttonIcon: root.leftIcon
             iconFontSize: root.iconFontSize
             accentColor: root.buttonColor
@@ -391,7 +391,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (Math.max(2, root.buttonCornerRadius - 2))
+                radius: ThemeBackend.rad(Math.max(2, root.buttonCornerRadius - 2))
                 color: root.isEditing ? Qt.rgba(255, 255, 255, 0.05) : (centerMa.containsMouse ? Qt.rgba(255, 255, 255, 0.03) : "transparent")
                 Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
             }
@@ -407,7 +407,7 @@ Item {
 
                 GlassFill {
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                    radius: ThemeBackend.rad(height / 2)
                     tintColor: root.textColor
                     tintAmount: 0.14
                     tintStrength: 1.0
@@ -447,7 +447,7 @@ Item {
 
                     anchors.verticalCenter: parent.verticalCenter
                     height: Math.min(parent.height - 4, root.fontPixelSize * 1.7)
-                    radius: ThemeBackend.minimalist ? 0 : (4)
+                    radius: ThemeBackend.rad(4)
                     color: root.accentColor
                     opacity: hasSelection ? 0.28 : 0.0
 
@@ -629,7 +629,7 @@ Item {
         IconButton {
             id: incBtn
             size: root.buttonSize
-            cornerRadius: ThemeBackend.minimalist ? 0 : (root.buttonCornerRadius)
+            cornerRadius: ThemeBackend.rad(root.buttonCornerRadius)
             buttonIcon: root.rightIcon
             iconFontSize: root.iconFontSize
             accentColor: root.buttonColor
@@ -656,7 +656,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         anchors.margins: -2
-        radius: ThemeBackend.minimalist ? 0 : ((typeof root.cornerRadius === "number" ? root.cornerRadius : 10) + 2)
+        radius: ThemeBackend.rad((typeof root.cornerRadius === "number" ? root.cornerRadius : 10) + 2)
         color: "transparent"
         border.width: 2
         border.color: Qt.alpha(ThemeBackend.mauve, 0.8)

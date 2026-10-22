@@ -22,7 +22,7 @@ Flickable {
         policy: ScrollBar.AsNeeded
         contentItem: Rectangle {
             implicitWidth: popup.s(4)
-            radius: ThemeBackend.minimalist ? 0 : (popup.s(2))
+            radius: ThemeBackend.rad(popup.s(2))
             color: ThemeBackend.surface2
         }
     }
@@ -79,7 +79,7 @@ Flickable {
                     GlassFill {
                         id: searchTabHoverGlass
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         allowed: tabHeaderItemMa.containsMouse
                         tintColor: ThemeBackend.surface1
                         tintAmount: 0.25
@@ -150,7 +150,7 @@ Flickable {
                             anchors.topMargin: popup.s(2)
                             anchors.bottomMargin: popup.s(2)
                             width: Math.max(1, popup.s(2))
-                            radius: ThemeBackend.minimalist ? 0 : (popup.s(1))
+                            radius: ThemeBackend.rad(popup.s(1))
                             color: Qt.rgba(ThemeBackend.surface2.r, ThemeBackend.surface2.g, ThemeBackend.surface2.b, 0.7)
                         }
                     }
@@ -195,7 +195,7 @@ Flickable {
                                     sourceComponent: GlassFill {
                                     id: directItemRowGlass
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                    radius: ThemeBackend.rad(parent.radius)
                                     tintColor: directItemRow.isSelected ? ThemeBackend.mauve : ThemeBackend.surface0
                                     tintAmount: directItemRow.isSelected ? 0.85 : 0.25
                                     tintStrength: directItemRow.isSelected ? 1.0 : 0.5
@@ -227,7 +227,7 @@ Flickable {
                                         Layout.preferredWidth: popup.s(28)
                                         Layout.preferredHeight: popup.s(28)
                                         Layout.alignment: Qt.AlignVCenter
-                                        radius: ThemeBackend.minimalist ? 0 : (popup.s(6))
+                                        radius: ThemeBackend.rad(popup.s(6))
                                         color: ThemeBackend.surface0
                                         Text {
                                             anchors.centerIn: parent
@@ -296,7 +296,7 @@ Flickable {
                                     GlassFill {
                                         id: searchSubHoverGlass
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         allowed: subtabHeaderItemMa.containsMouse
                                         tintColor: ThemeBackend.surface1
                                         tintAmount: 0.25
@@ -367,7 +367,7 @@ Flickable {
                                             anchors.topMargin: popup.s(2)
                                             anchors.bottomMargin: popup.s(2)
                                             width: Math.max(1, popup.s(2))
-                                            radius: ThemeBackend.minimalist ? 0 : (popup.s(1))
+                                            radius: ThemeBackend.rad(popup.s(1))
                                             color: Qt.rgba(ThemeBackend.surface2.r, ThemeBackend.surface2.g, ThemeBackend.surface2.b, 0.7)
                                         }
                                     }
@@ -412,7 +412,7 @@ Flickable {
                                     sourceComponent: GlassFill {
                                                     id: subItemRowGlass
                                                     anchors.fill: parent
-                                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                    radius: ThemeBackend.rad(parent.radius)
                                                     tintColor: subItemRow.isSelected ? ThemeBackend.mauve : ThemeBackend.surface0
                                                     tintAmount: subItemRow.isSelected ? 0.85 : 0.25
                                                     tintStrength: subItemRow.isSelected ? 1.0 : 0.5
@@ -444,7 +444,7 @@ Flickable {
                                         Layout.preferredWidth: popup.s(28)
                                         Layout.preferredHeight: popup.s(28)
                                         Layout.alignment: Qt.AlignVCenter
-                                        radius: ThemeBackend.minimalist ? 0 : (popup.s(6))
+                                        radius: ThemeBackend.rad(popup.s(6))
                                         color: ThemeBackend.surface0
                                         Text {
                                             anchors.centerIn: parent

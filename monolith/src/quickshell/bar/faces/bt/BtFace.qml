@@ -320,7 +320,7 @@ Item {
             height: s(root.isCompact ? 28 : 30)
             maxWidth: s(root.isCompact ? 156 : 160)
             visible: targetWidth > 0
-            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
+            cornerRadius: ThemeBackend.rad(Math.max(0, ThemeBackend.borderRadius - s(2)))
             horizontalPadding: s(root.isCompact ? 10 : 12)
             buttonIcon: root.showIcon ? root.btIcon : ""
             iconFontSize: s(root.isCompact ? 14 : 15)
@@ -347,7 +347,7 @@ Item {
         ClickButton {
             width: s(root.isCompact ? 28 : 30)
             height: (root.showIcon || root.showName) ? s(root.isCompact ? 28 : 30) : 0
-            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
+            cornerRadius: ThemeBackend.rad(Math.max(0, ThemeBackend.borderRadius - s(2)))
             horizontalPadding: 0
             buttonIcon: root.showIcon ? root.btIcon : ""
             iconFontSize: s(root.isCompact ? 14 : 15)

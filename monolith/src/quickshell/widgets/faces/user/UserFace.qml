@@ -20,13 +20,13 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
-        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.clampedBorderRadius)
+        radius: ThemeBackend.rad(ThemeBackend.clampedBorderRadius)
         clip: true
 
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
         }
 
         ColumnLayout {
@@ -44,8 +44,8 @@ Item {
                     Layout.preferredWidth: Scaler.s(70)
                     Layout.preferredHeight: Scaler.s(70)
                     size: Scaler.s(70)
-                    cornerRadius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(12)) : Scaler.s(12))
-                    imageRadius: ThemeBackend.minimalist ? 0 : (cornerRadius)
+                    cornerRadius: ThemeBackend.rad(ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(12)) : Scaler.s(12))
+                    imageRadius: ThemeBackend.rad(cornerRadius)
                     source: SystemInfo.avatarPath !== "" ? "file://" + SystemInfo.avatarPath : ""
                     backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.surface1 : "transparent"
 
@@ -67,7 +67,7 @@ Item {
                     ClickButton {
                         Layout.fillWidth: true
                         Layout.preferredHeight: Scaler.s(32)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8))
+                        cornerRadius: ThemeBackend.rad(ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8))
                         horizontalPadding: Scaler.s(10)
                         contentAlignment: Qt.AlignLeft
                         buttonIcon: ""
@@ -83,7 +83,7 @@ Item {
                     ClickButton {
                         Layout.fillWidth: true
                         Layout.preferredHeight: Scaler.s(32)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8))
+                        cornerRadius: ThemeBackend.rad(ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8))
                         horizontalPadding: Scaler.s(10)
                         contentAlignment: Qt.AlignLeft
                         buttonIcon: ""
@@ -117,7 +117,7 @@ Item {
                         id: actionCapsule
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8))
+                        radius: ThemeBackend.rad(ThemeBackend.borderRadius > 0 ? Math.min(ThemeBackend.borderRadius, Scaler.s(8)) : Scaler.s(8))
                         clip: true
 
                         property real fillLevel: 0.0
@@ -153,7 +153,7 @@ Item {
                                 duration: (800) * ThemeBackend.animScale
                             }
 
-                            radius: ThemeBackend.minimalist ? 0 : (actionCapsule.radius)
+                            radius: ThemeBackend.rad(actionCapsule.radius)
                             fillLevel: actionCapsule.fillLevel
                             waveAmp: actionCapsule.fillLevel < 0.99 ? (Scaler.s(8) * Math.sin(actionCapsule.fillLevel * Math.PI)) : 0
                             phase: wavePhase
@@ -164,7 +164,7 @@ Item {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (actionCapsule.radius)
+                            radius: ThemeBackend.rad(actionCapsule.radius)
                             color: "#ffffff"
                             opacity: actionCapsule.flashOpacity
                             PropertyAnimation on opacity {

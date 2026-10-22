@@ -258,7 +258,7 @@ Item {
         anchors.fill: parent
         anchors.topMargin: 2
         anchors.bottomMargin: -2
-        radius: ThemeBackend.minimalist ? 0 : (root.effectiveRadius)
+        radius: ThemeBackend.rad(root.effectiveRadius)
         color: Qt.rgba(0, 0, 0, 0.14)
         scale: btnShape.scale
         opacity: root.isTriggered ? 0.06 : (root.isHoveredOrHighlighted ? 0.24 : 0.14)
@@ -271,7 +271,7 @@ Item {
         anchors.fill: parent
         anchors.topMargin: 2
         anchors.bottomMargin: -2
-        radius: ThemeBackend.minimalist ? 0 : (Math.min(root.effectiveRadius + 2, Math.min(width, height) / 2))
+        radius: ThemeBackend.rad(Math.min(root.effectiveRadius + 2, Math.min(width, height) / 2))
         color: root.accentColor
         scale: btnShape.scale
         opacity: root.isHoveredOrHighlighted && !root.isTriggered ? 0.18 : 0.0
@@ -282,7 +282,7 @@ Item {
     Rectangle {
         id: btnShape
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.effectiveRadius)
+        radius: ThemeBackend.rad(root.effectiveRadius)
         clip: !glass.active
         color: glass.active ? "transparent" : Qt.alpha(root.isHoveredOrHighlighted ? root.hoverColor : root.baseColor, Math.min(1, root.bgOpacity * (root.isHoveredOrHighlighted ? root.hoverColor.a : root.baseColor.a)))
 
@@ -295,7 +295,7 @@ Item {
             press: (btnMa.pressed && !root.isTriggered) ? 0.6 + 0.4 * root.fillLevel : (root.isHoveredOrHighlighted ? 0.25 : 0)
             pulse: Math.min(1, root.flashOpacity * 2.5)
             Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-            radius: ThemeBackend.minimalist ? 0 : (root.effectiveRadius)
+            radius: ThemeBackend.rad(root.effectiveRadius)
             tintColor: root.isHoveredOrHighlighted ? root.hoverColor : root.baseColor
             tintAmount: (root.isHoveredOrHighlighted ? 0.4 : 0.28) * root.bgOpacity
             Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -320,7 +320,7 @@ Item {
                 from: 0; to: Math.PI * 2; duration: 800
             }
 
-            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+            radius: ThemeBackend.rad(root.cornerRadius)
             fillLevel: root.fillLevel
             waveAmp: root.fillLevel < 0.99 ? (Math.min(10, Math.min(width * root.fillLevel, width - width * root.fillLevel)) * Math.sin(root.fillLevel * Math.PI)) : 0
             phase: wavePhase
@@ -333,7 +333,7 @@ Item {
         LiquidFill {
             id: liquidFill
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.effectiveRadius)
+            radius: ThemeBackend.rad(root.effectiveRadius)
             fillLevel: root.fillLevel
             waveAmp: waveCanvas.waveAmp
             phase: waveCanvas.wavePhase
@@ -349,7 +349,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.effectiveRadius)
+            radius: ThemeBackend.rad(root.effectiveRadius)
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !glass.active

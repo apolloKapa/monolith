@@ -46,7 +46,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "\u0417\u043d\u0456\u043c\u043e\u043a \u0435\u043a\u0440\u0430\u043d\u0430",
+      "screenshot": "Знімок екрана",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -640,6 +640,10 @@
       "element_opacity": {
         "title": "Непрозорість елементів",
         "desc": "Непрозорість панелі, дока, віджетів та всіх інших елементів оболонки"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "Додати розмите тло з шпалер",

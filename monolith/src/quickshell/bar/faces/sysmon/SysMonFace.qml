@@ -144,7 +144,7 @@ Item {
         implicitHeight: root.circleSize
         width: implicitWidth
         height: implicitHeight
-        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+        radius: ThemeBackend.rad(width / 2)
         color: "transparent"
         border.width: 0
 

@@ -1029,6 +1029,10 @@
         "title": "شفافية العناصر",
         "desc": "شفافية الشريط واللوحة والأدوات وكل عنصر آخر في الواجهة"
       },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
+      },
       "blur_background": {
         "title": "إضافة خلفية ضبابية لورق الجدران",
         "desc": "تمويه ورق الجدران خلف كل عنصر يستخدم الشفافية",

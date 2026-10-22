@@ -78,7 +78,7 @@ Item {
     Rectangle {
         id: bgTrack
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: glass.active ? "transparent" : root.backgroundColor
         opacity: root.enabled ? 1.0 : 0.5
         clip: true
@@ -88,7 +88,7 @@ Item {
         GlassFill {
             id: glass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: root.backgroundColor
             tintAmount: 0.22
             press: root.isDragging ? 0.35 : 0
@@ -110,7 +110,7 @@ Item {
             Rectangle {
                 width: root.width
                 height: parent.height
-                radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+                radius: ThemeBackend.rad(root.cornerRadius)
 
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
@@ -122,7 +122,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+                radius: ThemeBackend.rad(root.cornerRadius)
                 color: root.glowColor
                 opacity: root.glowOpacity * 0.2
                 visible: root.glowOpacity > 0
@@ -137,7 +137,7 @@ Item {
         height: thumb
         x: Math.max(-4, Math.min(root.width - thumb + 4, root.width * root.animPosition - thumb / 2))
         anchors.verticalCenter: parent.verticalCenter
-        radius: ThemeBackend.minimalist ? 0 : (thumb / 2)
+        radius: ThemeBackend.rad(thumb / 2)
         tintColor: root.gradColor1
         tintAmount: 0.3
         shadow: 1
@@ -155,7 +155,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: "transparent"
         border.color: Qt.rgba(1, 1, 1, 0.06)
         border.width: 1
@@ -164,7 +164,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         anchors.margins: -3
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius + 3)
+        radius: ThemeBackend.rad(root.cornerRadius + 3)
         color: "transparent"
         border.width: 2
         border.color: Qt.alpha(ThemeBackend.mauve, 0.8)

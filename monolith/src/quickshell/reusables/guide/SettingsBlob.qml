@@ -14,7 +14,7 @@ Rectangle {
 
     default property alias content: blobCol.data
 
-    radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+    radius: ThemeBackend.rad(root.cornerRadius)
     color: blobGlass.active ? "transparent" : root.baseColor
     clip: true
 
@@ -24,7 +24,7 @@ Rectangle {
     GlassFill {
         id: blobGlass
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         tintColor: ThemeBackend.surface0
         tintAmount: 0.26
     }

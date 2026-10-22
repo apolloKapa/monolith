@@ -133,13 +133,13 @@ Popup {
     }
 
     background: Rectangle {
-        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.clampedBorderRadius)
+        radius: ThemeBackend.rad(ThemeBackend.clampedBorderRadius)
         color: gf1.active ? "transparent" : ThemeBackend.base
 
         GlassFill {
             id: gf1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: ThemeBackend.base
             tintAmount: 0.25
         }
@@ -167,7 +167,7 @@ Popup {
 
             CloseButton {
                 size: rootObj ? rootObj.s(30) : 30
-                cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj ? rootObj.s(8) : 8)
+                cornerRadius: ThemeBackend.rad(rootObj ? rootObj.s(8) : 8)
                 iconFontSize: rootObj ? rootObj.s(14) : 14
                 onClicked: themeEditorPopup.close()
             }
@@ -223,7 +223,7 @@ Popup {
                 policy: ScrollBar.AsNeeded
 
                 contentItem: Rectangle {
-                    radius: ThemeBackend.minimalist ? 0 : (rootObj ? rootObj.s(2) : 2)
+                    radius: ThemeBackend.rad(rootObj ? rootObj.s(2) : 2)
                     color: ThemeBackend.surface2
                 }
             }
@@ -245,7 +245,7 @@ Popup {
                         Rectangle {
                             Layout.preferredWidth: rootObj ? rootObj.s(28) : 28
                             Layout.preferredHeight: rootObj ? rootObj.s(28) : 28
-                            radius: ThemeBackend.minimalist ? 0 : (rootObj ? rootObj.s(6) : 6)
+                            radius: ThemeBackend.rad(rootObj ? rootObj.s(6) : 6)
                             color: themeEditorPopup.currentColors[modelData] || "#000000"
                             border.width: 1
                             border.color: Qt.alpha(ThemeBackend.surface2, 0.6)
@@ -269,7 +269,7 @@ Popup {
                             textColor: ThemeBackend.text
                             subTextColor: ThemeBackend.subtext0
                             borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj ? rootObj.s(6) : 6)
+                            cornerRadius: ThemeBackend.rad(rootObj ? rootObj.s(6) : 6)
                             fontPixelSize: rootObj ? rootObj.s(11) : 11
 
                             onTextEdited: newText => {

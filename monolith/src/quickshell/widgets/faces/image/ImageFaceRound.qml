@@ -22,7 +22,7 @@ Item {
         id: bgRect
         anchors.fill: parent
         color: (root.imagePath === "" || srcImage.status !== Image.Ready) ? ThemeBackend.surface0 : "transparent"
-        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+        radius: ThemeBackend.rad(width / 2)
         antialiasing: true
 
         Item {
@@ -40,7 +40,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: "white"
                 antialiasing: true
             }

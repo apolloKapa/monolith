@@ -35,7 +35,7 @@ Rectangle {
     WallpaperBlur {
         z: -1
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         standalone: true
         surfaceEnabled: !ThemeBackend.liquidGlass && tab.inView(parent)
     }
@@ -43,7 +43,7 @@ Rectangle {
     GlassFill {
         z: -1
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         allowed: tab.inView(parent)
         tintColor: ThemeBackend.base
     }

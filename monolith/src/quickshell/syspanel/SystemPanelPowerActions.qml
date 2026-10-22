@@ -29,7 +29,7 @@ RowLayout {
             id: actionCapsule
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: ThemeBackend.minimalist ? 0 : (panel.boxRadius)
+            radius: ThemeBackend.rad(panel.boxRadius)
             clip: !capsuleGlass.active
 
             property bool isHibernate: cmd === "hibernate"
@@ -48,7 +48,7 @@ RowLayout {
             GlassFill {
                 id: capsuleGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: (actionMa.containsMouse && !isDisabled) ? ThemeBackend.surface1 : ThemeBackend.surface0
                 tintAmount: 0.3
                 press: (actionMa.pressed && !isDisabled) ? 0.6 + 0.4 * actionCapsule.fillLevel : ((actionMa.containsMouse && !isDisabled) ? 0.25 : 0)
@@ -113,7 +113,7 @@ RowLayout {
                     from: 0; to: Math.PI * 2; duration: 800
                 }
 
-                radius: ThemeBackend.minimalist ? 0 : (actionCapsule.radius)
+                radius: ThemeBackend.rad(actionCapsule.radius)
                 fillLevel: actionCapsule.fillLevel
                 waveAmp: actionCapsule.fillLevel < 0.99 ? (panel.s(10) * Math.sin(actionCapsule.fillLevel * Math.PI)) : 0
                 phase: wavePhase
@@ -127,7 +127,7 @@ RowLayout {
                 width: parent.height
                 height: parent.width
                 rotation: -90
-                radius: ThemeBackend.minimalist ? 0 : (actionCapsule.radius)
+                radius: ThemeBackend.rad(actionCapsule.radius)
                 fillLevel: actionCapsule.fillLevel
                 waveAmp: actionWaveCanvas.waveAmp
                 phase: actionWaveCanvas.wavePhase
@@ -151,7 +151,7 @@ RowLayout {
                 anchors.fill: parent
                 color: ThemeBackend.red
                 opacity: actionCapsule.showError ? 0.15 : 0.0
-                radius: ThemeBackend.minimalist ? 0 : (actionCapsule.radius)
+                radius: ThemeBackend.rad(actionCapsule.radius)
                 Behavior on opacity {
                     enabled: panel.visible
                     NumberAnimation { duration: (200) * ThemeBackend.animScale }

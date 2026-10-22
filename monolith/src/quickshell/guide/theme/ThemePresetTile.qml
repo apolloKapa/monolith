@@ -174,7 +174,7 @@ Rectangle {
                 Rectangle {
                     width: rootObj.s(8)
                     height: rootObj.s(8)
-                    radius: ThemeBackend.minimalist ? 0 : (rootObj.s(4))
+                    radius: ThemeBackend.rad(rootObj.s(4))
                     color: modelData
                 }
             }
@@ -186,7 +186,7 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
             sourceComponent: DeleteButton {
                 size: rootObj.s(24)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
+                cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
                 iconFontSize: rootObj.s(12)
                 onClicked: {
                     delegateContainer.tab.deleteCustomTheme(delegateContainer.modelData.name);

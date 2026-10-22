@@ -39,7 +39,7 @@ Rectangle {
     GlassFill {
         id: gf8
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
         tintAmount: 0.25
     }
@@ -106,7 +106,7 @@ Rectangle {
                             y: dayIdx * (gridArea.cellH + chart.gap)
                             width: gridArea.cellW
                             height: gridArea.cellH
-                            radius: ThemeBackend.minimalist ? 0 : (Math.min(width, height) * 0.32)
+                            radius: ThemeBackend.rad(Math.min(width, height) * 0.32)
                             color: chart.cellColor(val)
                             border.width: hovered ? 1 : 0
                             border.color: chart.tab.textMain
@@ -144,7 +144,7 @@ Rectangle {
                         z: 5
                         width: tipText.implicitWidth + rootObj.s(20)
                         height: tipText.implicitHeight + rootObj.s(12)
-                        radius: ThemeBackend.minimalist ? 0 : (rootObj.s(8))
+                        radius: ThemeBackend.rad(rootObj.s(8))
                         color: ThemeBackend.base
                         border.color: Qt.alpha(ThemeBackend.surface2, 0.7)
                         border.width: 1
@@ -210,7 +210,7 @@ Rectangle {
                     delegate: Rectangle {
                         width: rootObj.s(10)
                         height: rootObj.s(10)
-                        radius: ThemeBackend.minimalist ? 0 : (rootObj.s(3))
+                        radius: ThemeBackend.rad(rootObj.s(3))
                         color: modelData === 0 ? Qt.alpha(ThemeBackend.surface1, 0.55) : Qt.alpha(ThemeBackend.mauve, 0.22 + 0.78 * Math.pow(modelData, 0.6))
                     }
                 }
@@ -248,7 +248,7 @@ Rectangle {
                     GlassFill {
                         id: tileGlass
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         tintColor: Qt.alpha(ThemeBackend.surface1, 0.35)
                         tintAmount: 0.25
                     }

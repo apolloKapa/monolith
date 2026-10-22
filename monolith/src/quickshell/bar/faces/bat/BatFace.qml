@@ -278,7 +278,7 @@ Item {
                 id: batButton
                 height: root.pillHeight
                 width: root.isVertical ? height : Math.max(s(root.isCompact ? 32 : 36), implicitWidth)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (root.lockLook ? ThemeBackend.borderRadius : Math.max(0, ThemeBackend.borderRadius - s(2)))
+                cornerRadius: ThemeBackend.rad(root.lockLook ? ThemeBackend.borderRadius : Math.max(0, ThemeBackend.borderRadius - s(2)))
                 horizontalPadding: s(root.isCompact ? 10 : 12)
                 buttonIcon: root.effectiveShowIcon ? root.batIcon : ""
                 iconFontSize: s(root.isCompact ? 14 : 15)
@@ -349,7 +349,7 @@ Item {
                 scale: batMouseArea.pressed ? 0.94 : (batMouseArea.containsMouse ? 1.04 : 1.0)
                 Behavior on scale { NumberAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
-                radius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
+                radius: ThemeBackend.rad(Math.max(0, ThemeBackend.borderRadius - s(2)))
                 property color baseColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                 color: batPillGlass.active ? "transparent" : (batMouseArea.pressed ? Qt.darker(baseColor, 1.15) : (batMouseArea.containsMouse ? Qt.lighter(baseColor, 1.08) : baseColor))
                 Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
@@ -361,7 +361,7 @@ Item {
                 GlassFill {
                     id: batPillGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: parent.baseColor
                     tintAmount: 0.3
                     press: batMouseArea.pressed ? 1 : (batMouseArea.containsMouse ? 0.25 : 0)
@@ -386,7 +386,7 @@ Item {
                     id: pillWave
                     anchors.fill: parent
                     visible: !root.isDesktop && batPill.fillRatio > 0.001
-                    radius: ThemeBackend.minimalist ? 0 : (batPill.radius)
+                    radius: ThemeBackend.rad(batPill.radius)
                     fillLevel: batPill.fillRatio
                     waveAmp: (batPill.fillRatio < 0.99 && batPill.waveAmp > 0) ? Math.min(batPill.waveAmp, Math.min(width * batPill.fillRatio, width * (1.0 - batPill.fillRatio))) : 0
                     phase: root.wavePhase
@@ -479,7 +479,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: s(root.isCompact ? 3 : 4)
                     height: Math.round(root.pillHeight * 0.38)
-                    radius: ThemeBackend.minimalist ? 0 : (s(1.5))
+                    radius: ThemeBackend.rad(s(1.5))
                     color: batPill.border.color
                 }
             }
@@ -505,7 +505,7 @@ Item {
                     anchors.bottom: parent.bottom
                     width: Math.round(batBtn.width * 0.38)
                     height: s(root.isCompact ? 2.5 : 3)
-                    radius: ThemeBackend.minimalist ? 0 : (s(1))
+                    radius: ThemeBackend.rad(s(1))
                     color: batBtn.border.color
                 }
             }
@@ -517,7 +517,7 @@ Item {
                 Behavior on width { NumberAnimation { duration: (480) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                 Behavior on height { NumberAnimation { duration: (480) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
-                radius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
+                radius: ThemeBackend.rad(Math.max(0, ThemeBackend.borderRadius - s(2)))
                 property color baseColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ThemeBackend.surface0
                 color: batBtnGlass.active ? "transparent" : (sideBatMouseArea.pressed ? Qt.darker(baseColor, 1.15) : (sideBatMouseArea.containsMouse ? Qt.lighter(baseColor, 1.08) : baseColor))
                 Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
@@ -525,7 +525,7 @@ Item {
                 GlassFill {
                     id: batBtnGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: parent.baseColor
                     tintAmount: 0.3
                     press: sideBatMouseArea.pressed ? 1 : (sideBatMouseArea.containsMouse ? 0.25 : 0)
@@ -578,7 +578,7 @@ Item {
                     id: sideBatWave
                     anchors.fill: parent
                     visible: !root.isDesktop && batBtn.fillRatio > 0.001
-                    radius: ThemeBackend.minimalist ? 0 : (batBtn.radius)
+                    radius: ThemeBackend.rad(batBtn.radius)
                     fillLevel: batBtn.fillRatio
                     waveAmp: (batBtn.fillRatio < 0.99 && batBtn.waveAmp > 0) ? Math.min(batBtn.waveAmp, Math.min(height * batBtn.fillRatio, height * (1.0 - batBtn.fillRatio))) : 0
                     phase: root.wavePhase

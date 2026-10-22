@@ -192,10 +192,10 @@ Item {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
+                topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
             }
 
             ColumnLayout {
@@ -282,7 +282,7 @@ Item {
                             GlassFill {
                                 id: coreGlass
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                radius: ThemeBackend.rad(parent.radius)
                                 tintColor: ThemeBackend.surface0
                                 tintAmount: 0.3
                                 shadow: 1
@@ -321,7 +321,7 @@ Item {
                                 width: parent.height
                                 height: parent.width
                                 rotation: -90
-                                radius: ThemeBackend.minimalist ? 0 : (centralCore.radius)
+                                radius: ThemeBackend.rad(centralCore.radius)
                                 fillLevel: orbWave.fillLevel
                                 waveAmp: orbWave.waveAmp
                                 phase: orbWave.wavePhase
@@ -433,7 +433,7 @@ Item {
                             IconButton {
                                 Layout.alignment: Qt.AlignVCenter
                                 size: window.s(26)
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(8))
+                                cornerRadius: ThemeBackend.rad(window.s(8))
                                 buttonIcon: window.activeMute || window.activeVol === 0 ? "󰖁" : (window.activeVol > 50 ? "󰕾" : "󰖀")
                                 iconFontSize: window.s(15)
                                 accentColor: ThemeBackend.surface1
@@ -453,7 +453,7 @@ Item {
                                 gradColor1: window.activeMute ? ThemeBackend.surface2 : window.tabColor
                                 gradColor2: window.activeMute ? ThemeBackend.surface2 : Qt.lighter(window.tabColor, 1.05)
                                 gradColor3: window.activeMute ? ThemeBackend.surface2 : Qt.lighter(window.tabColor, 1.10)
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(5))
+                                cornerRadius: ThemeBackend.rad(window.s(5))
                                 handleSize: window.s(18)
 
                                 handleColor: window.activeMute ? ThemeBackend.overlay0 : Qt.lighter(window.tabColor, 1.15)
@@ -593,7 +593,7 @@ Item {
                             GlassFill {
                                 id: delegateGlass
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                radius: ThemeBackend.rad(parent.radius)
                                 tintColor: delegateRoot.isActiveNode ? window.tabColor : ThemeBackend.surface0
                                 tintAmount: delegateRoot.isActiveNode ? 0.55 : 0.3
                                 press: delegateRoot.isHovered ? 0.25 : 0
@@ -667,7 +667,7 @@ Item {
                                     IconButton {
                                         Layout.alignment: Qt.AlignVCenter
                                         size: window.s(24)
-                                        cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(8))
+                                        cornerRadius: ThemeBackend.rad(window.s(8))
                                         buttonIcon: delegateRoot.nodeMute || delegateRoot.nodeVol === 0 ? "󰖁" : (delegateRoot.nodeVol > 50 ? "󰕾" : "󰖀")
                                         iconFontSize: window.s(14)
                                         accentColor: ThemeBackend.surface1
@@ -687,7 +687,7 @@ Item {
                                         gradColor1: delegateRoot.nodeMute ? ThemeBackend.surface2 : window.tabColor
                                         gradColor2: delegateRoot.nodeMute ? ThemeBackend.surface2 : Qt.lighter(window.tabColor, 1.05)
                                         gradColor3: delegateRoot.nodeMute ? ThemeBackend.surface2 : Qt.lighter(window.tabColor, 1.10)
-                                        cornerRadius: ThemeBackend.minimalist ? 0 : (window.s(5))
+                                        cornerRadius: ThemeBackend.rad(window.s(5))
                                         handleSize: window.s(18)
 
                                         handleColor: delegateRoot.nodeMute ? ThemeBackend.overlay0 : Qt.lighter(window.tabColor, 1.15)

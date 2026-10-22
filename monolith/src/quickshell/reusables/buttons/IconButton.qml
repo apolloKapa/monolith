@@ -20,7 +20,14 @@ Item {
     property color textColor: ThemeBackend.crust
     property real bgOpacity: 1.0
     property real glassShadow: 1
-    readonly property color displayTextColor: (ThemeBackend.liquidGlass && (0.2126 * textColor.r + 0.7152 * textColor.g + 0.0722 * textColor.b) < 0.5) ? ThemeBackend.text : textColor
+    function _lum(c) { return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; }
+    // icons keep their colour unless it would vanish into the button (e.g. a white icon on a
+    // light style's badge): then the theme's text or crust, whichever stands out more
+    readonly property color displayTextColor: {
+        if (ThemeBackend.liquidGlass) return _lum(textColor) < 0.5 ? ThemeBackend.text : textColor;
+        if (accentColor.a < 0.3 || Math.abs(_lum(textColor) - _lum(accentColor)) >= 0.3) return textColor;
+        return Math.abs(_lum(ThemeBackend.text) - _lum(accentColor)) >= Math.abs(_lum(ThemeBackend.crust) - _lum(accentColor)) ? ThemeBackend.text : ThemeBackend.crust;
+    }
 
     activeFocusOnTab: root.enabled
     Keys.onPressed: (event) => {
@@ -61,7 +68,7 @@ Item {
         Rectangle {
             id: btnShape
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+            radius: ThemeBackend.rad(root.cornerRadius)
             clip: !glass.active
             color: ThemeBackend.liquidGlass ? "transparent" : (!root.enabled ? root.accentColor : (btnMa.pressed ? Qt.darker(root.accentColor, 1.12) : (root.isHoveredOrHighlighted ? Qt.lighter(root.accentColor, 1.12) : root.accentColor)))
             opacity: (root.enabled ? 1.0 : 0.5) * root.bgOpacity
@@ -76,7 +83,7 @@ Item {
                 press: btnMa.pressed ? 1 : (root.isHoveredOrHighlighted ? 0.25 : 0)
                 pulse: Math.min(1, root.flashOpacity * 2.5)
                 Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-                radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+                radius: ThemeBackend.rad(root.cornerRadius)
                 tintColor: root.accentColor
                 tintAmount: btnMa.pressed ? 0.55 : (root.isHoveredOrHighlighted ? 0.42 : 0.3)
                 Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -96,7 +103,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+            radius: ThemeBackend.rad(root.cornerRadius)
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !glass.active
@@ -132,7 +139,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         anchors.margins: -2
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius + 2)
+        radius: ThemeBackend.rad(root.cornerRadius + 2)
         color: "transparent"
         border.width: 2
         border.color: Qt.alpha(ThemeBackend.mauve, 0.8)

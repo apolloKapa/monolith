@@ -49,7 +49,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "\u0421\u043a\u0440\u0438\u043d\u0448\u043e\u0442",
+      "screenshot": "Скриншот",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -657,6 +657,10 @@
       "element_opacity": {
         "title": "Непрозрачность элементов",
         "desc": "Непрозрачность панели, дока, виджетов и всех остальных элементов оболочки"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "Добавить размытый фон из обоев",

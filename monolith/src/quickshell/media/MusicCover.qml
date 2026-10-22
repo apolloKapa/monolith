@@ -64,7 +64,7 @@ Item {
             anchors.centerIn: parent
             width: (coverHost.artRadius * 2) + (coverHost.maxBarHeight * 2.2)
             height: width
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
             color: ThemeBackend.mauve || "#cba6f7"
             opacity: (root.targetPlayer && root.targetPlayer.isPlaying) ? (0.005 + (root.bassLevel * 0.035)) : 0.0
             scale: 0.985 + (root.bassLevel * 0.0375)
@@ -88,7 +88,7 @@ Item {
             anchors.centerIn: parent
             width: (coverHost.artRadius * 2) + (coverHost.maxBarHeight * 1.5)
             height: width
-            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+            radius: ThemeBackend.rad(width / 2)
             color: ThemeBackend.mauve || "#cba6f7"
             opacity: (root.targetPlayer && root.targetPlayer.isPlaying) ? (0.01 + (root.kickLevel * 0.055)) : 0.0
             scale: 0.992 + (root.kickLevel * 0.02625)
@@ -121,7 +121,7 @@ Item {
             gamma: 1.08
             rise: 0.55
             fall: 0.55
-            ringRadius: ThemeBackend.minimalist ? 0 : (coverHost.artRadius)
+            ringRadius: ThemeBackend.rad(coverHost.artRadius)
             ringBarWidth: coverHost.barWidth
             maxLength: coverHost.maxBarHeight * 1.4
             minLength: root.s(2)
@@ -141,7 +141,7 @@ Item {
                 anchors.centerIn: parent
                 width: parent.width + root.s(12)
                 height: parent.height + root.s(12)
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: ThemeBackend.mauve || "#cba6f7"
                 opacity: (root.targetPlayer && root.targetPlayer.isPlaying) ? (0.35 + root.kickLevel * 0.25) : 0.0
                 Behavior on opacity { NumberAnimation { duration: (500) * ThemeBackend.animScale } }
@@ -156,7 +156,7 @@ Item {
             Rectangle {
                 id: vinylBase
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
                 color: ThemeBackend.surface1 || "#45475a"
                 border.width: discContainer.borderWidth
                 border.color: (root.targetPlayer && root.targetPlayer.isPlaying) ? (ThemeBackend.mauve || "#cba6f7") : (ThemeBackend.overlay0 || "#6c7086")
@@ -176,7 +176,7 @@ Item {
                     Rectangle {
                         id: maskRect
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         visible: false
                         layer.enabled: true 
                     }
@@ -239,7 +239,7 @@ Item {
                     Rectangle {
                         id: fallbackPlaceholder
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: ThemeBackend.mantle || "#1e1e2e"
                         opacity: (root.hasTargetPlayer && root.activeArtUrl) ? 0.0 : 1.0
                         Behavior on opacity { NumberAnimation { duration: (400) * ThemeBackend.animScale } }
@@ -255,7 +255,7 @@ Item {
                     Rectangle {
                         id: discTinter
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: {
                             let m = ThemeBackend.mauve || Qt.rgba(0.8, 0.6, 0.9, 1);
                             return Qt.rgba(m.r, m.g, m.b, 0.08 + (root.kickLevel * 0.08));
@@ -270,7 +270,7 @@ Item {
                             anchors.centerIn: parent
                             width: parent.width * modelData
                             height: width
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             color: "transparent"
                             border.color: index % 2 === 0 ? "#ffffff" : "#000000"
                             border.width: 1
@@ -283,7 +283,7 @@ Item {
                         anchors.centerIn: parent
                         width: parent.width * 0.28
                         height: width
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: ThemeBackend.crust || "#11111b"
                         opacity: 0.96
                         scale: 1.0 + (root.kickLevel * 0.0135)
@@ -305,7 +305,7 @@ Item {
                             anchors.centerIn: parent
                             width: parent.width * 0.68
                             height: width
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             color: ThemeBackend.surface2 || "#585b70"
                             border.width: 1
                             border.color: Qt.rgba(1, 1, 1, 0.18)
@@ -314,7 +314,7 @@ Item {
                                 anchors.centerIn: parent
                                 width: parent.width * 0.38
                                 height: width
-                                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                                radius: ThemeBackend.rad(width / 2)
                                 color: "#0d0e15"
                             }
                         }

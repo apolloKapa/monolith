@@ -50,7 +50,7 @@ Item {
             id: focusIconButton
             width: barWindow ? barWindow.cs(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
             height: barWindow ? barWindow.cs(root.isCompact ? 28 : 30) : (root.isCompact ? 28 : 30)
-            cornerRadius: ThemeBackend.minimalist ? 0 : (barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
+            cornerRadius: ThemeBackend.rad(barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10))
             buttonIcon: "✦"
             iconFontSize: barWindow ? barWindow.cs(root.isCompact ? 14 : 15) : (root.isCompact ? 14 : 15)
             accentColor: root.isCompact ? Qt.lighter(ThemeBackend.surface0, 1.18) : ((root.isVertical && isSolid && !distinctPills) ? "transparent" : ThemeBackend.surface0)

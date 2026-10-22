@@ -17,7 +17,7 @@ Rectangle {
     GlassFill {
         id: gf2
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
         tintAmount: 0.25
     }
@@ -49,7 +49,7 @@ Rectangle {
                 size: rootObj.s(32)
                 Layout.preferredWidth: rootObj.s(32)
                 Layout.preferredHeight: rootObj.s(32)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(8))
+                cornerRadius: ThemeBackend.rad(rootObj.s(8))
                 buttonIcon: "󰐕"
                 iconFontSize: rootObj.s(14)
                 accentColor: ThemeBackend.surface0

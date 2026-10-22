@@ -155,13 +155,13 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
-        radius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+        radius: ThemeBackend.rad(root.cardRadius)
         clip: true
 
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
         }
 
         LoaderIcon {

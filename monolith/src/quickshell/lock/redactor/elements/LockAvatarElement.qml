@@ -18,8 +18,8 @@ Item {
     ImageBox {
         anchors.centerIn: parent
         size: Math.round(el.side)
-        cornerRadius: ThemeBackend.minimalist ? 0 : (el.variant === "rounded" ? Math.round(ThemeBackend.borderRadius * 1.5) : Math.round(el.side / 2))
-        imageRadius: ThemeBackend.minimalist ? 0 : (cornerRadius)
+        cornerRadius: ThemeBackend.rad(el.variant === "rounded" ? Math.round(ThemeBackend.borderRadius * 1.5) : Math.round(el.side / 2))
+        imageRadius: ThemeBackend.rad(cornerRadius)
         source: el.avatarSource
         backgroundColor: el.avatarSource === "" ? ThemeBackend.surface1 : "transparent"
 

@@ -177,13 +177,13 @@ Popup {
     }
 
     background: Rectangle {
-        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.clampedBorderRadius)
+        radius: ThemeBackend.rad(ThemeBackend.clampedBorderRadius)
         color: gf1.active ? "transparent" : ThemeBackend.base
 
         GlassFill {
             id: gf1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: ThemeBackend.base
             tintAmount: 0.25
         }
@@ -208,7 +208,7 @@ Popup {
 
             CloseButton {
                 size: rootObj ? rootObj.s(30) : 30
-                cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj ? rootObj.s(8) : 8)
+                cornerRadius: ThemeBackend.rad(rootObj ? rootObj.s(8) : 8)
                 iconFontSize: rootObj ? rootObj.s(14) : 14
                 onClicked: savePresetPopup.close()
             }

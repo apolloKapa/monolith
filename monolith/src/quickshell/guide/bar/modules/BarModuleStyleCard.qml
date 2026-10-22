@@ -36,7 +36,7 @@ Rectangle {
         id: glass
         anchors.fill: parent
         allowed: tab.inView(parent)
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: ThemeBackend.surface0
         tintAmount: styleCard.selected ? 0.45 : 0.25
         press: mouse.pressed ? 0.8 : (hover.hovered ? 0.25 : 0)
@@ -61,7 +61,7 @@ Rectangle {
 
     Rectangle {
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         color: "#ffffff"
         opacity: styleCard.flashOpacity
         visible: !glass.active

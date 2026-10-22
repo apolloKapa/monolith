@@ -241,7 +241,7 @@ Variants {
             }
 
             property int barHeight: s(thicknessSetting)
-            property real cornerRadius: ThemeBackend.minimalist ? 0 : s(12)
+            property real cornerRadius: ThemeBackend.rad(s(12))
 
             property real baseOffsetY: {
                 if (barPosition === "bottom") {

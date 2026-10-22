@@ -244,7 +244,7 @@ GuideTab {
                 Layout.preferredWidth: rootObj.s(130)
                 Layout.preferredHeight: rootObj.s(48)
                 horizontalPadding: rootObj.s(12)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(12))
+                cornerRadius: ThemeBackend.rad(rootObj.s(12))
                 buttonText: I18n.t("guide.welcome.about")
                 textFontSize: rootObj.s(14)
                 buttonIcon: ""

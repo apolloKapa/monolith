@@ -28,7 +28,7 @@ Rectangle {
     GlassFill {
         id: presetGlass
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: presetCard.accentColor
         tintAmount: presetMouse.pressed ? 0.55 : (presetHover.hovered ? 0.42 : 0.3)
         press: presetMouse.pressed ? 1 : (presetHover.hovered ? 0.25 : 0)
@@ -194,7 +194,7 @@ Rectangle {
             DeleteButton {
                 visible: presetCard.modelData.isCustom === true || presetCard.modelData.category === "user"
                 size: rootObj.s(22)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
+                cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
                 iconFontSize: rootObj.s(11)
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: {

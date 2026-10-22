@@ -570,7 +570,7 @@ Item {
                                     GlassFill {
                                         id: lapGlass
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         tintColor: ThemeBackend.surface0
                                         tintAmount: 0.3
                                     }
@@ -723,7 +723,7 @@ Item {
                         GlassFill {
                             id: pomoGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: ThemeBackend.surface0
                             tintAmount: 0.3
                         }

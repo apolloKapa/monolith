@@ -149,7 +149,7 @@ QtObject {
                 buttonColor: (typeof ThemeBackend !== "undefined" && ThemeBackend.surface1) ? ThemeBackend.surface1 : "#45475a"
                 textColor: (typeof ThemeBackend !== "undefined" && ThemeBackend.text) ? ThemeBackend.text : "#cdd6f4"
                 buttonTextColor: (typeof ThemeBackend !== "undefined" && ThemeBackend.subtext1) ? ThemeBackend.subtext1 : "#bac2de"
-                cornerRadius: ThemeBackend.minimalist ? 0 : ((typeof ThemeBackend !== "undefined" && ThemeBackend.borderRadius !== undefined) ? ThemeBackend.borderRadius : 10)
+                cornerRadius: ThemeBackend.rad((typeof ThemeBackend !== "undefined" && ThemeBackend.borderRadius !== undefined) ? ThemeBackend.borderRadius : 10)
 
                 onTriggered: {
                     let w = settingRoot.targetWidget;
@@ -253,7 +253,7 @@ QtObject {
                 baseColor: (typeof ThemeBackend !== "undefined" && ThemeBackend.surface0) ? ThemeBackend.surface0 : "#313244"
                 textColor: (typeof ThemeBackend !== "undefined" && ThemeBackend.text) ? ThemeBackend.text : "#cdd6f4"
                 activeTextColor: (typeof ThemeBackend !== "undefined" && ThemeBackend.crust) ? ThemeBackend.crust : "#11111b"
-                cornerRadius: ThemeBackend.minimalist ? 0 : ((typeof ThemeBackend !== "undefined" && ThemeBackend.borderRadius !== undefined) ? ThemeBackend.borderRadius : 10)
+                cornerRadius: ThemeBackend.rad((typeof ThemeBackend !== "undefined" && ThemeBackend.borderRadius !== undefined) ? ThemeBackend.borderRadius : 10)
                 fontPixelSize: Scaler.s(11)
                 options: alignOptions.map(o => o.label || o.id)
 
@@ -322,7 +322,7 @@ QtObject {
                 GlassFill {
                     id: noLyricsGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: ThemeBackend.surface0
                     tintAmount: 0.3
                 }

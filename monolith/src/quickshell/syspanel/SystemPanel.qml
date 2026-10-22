@@ -404,11 +404,11 @@ Item {
         id: sidebarPanel
         anchors.fill: parent
         color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-        radius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, root.s(28)))
-        topLeftRadius: ThemeBackend.minimalist ? 0 : (root.isLeftAnchored ? 0 : radius)
-        bottomLeftRadius: ThemeBackend.minimalist ? 0 : (root.isLeftAnchored ? 0 : radius)
-        topRightRadius: ThemeBackend.minimalist ? 0 : (root.isLeftAnchored ? radius : 0)
-        bottomRightRadius: ThemeBackend.minimalist ? 0 : (root.isLeftAnchored ? radius : 0)
+        radius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, root.s(28)))
+        topLeftRadius: ThemeBackend.rad(root.isLeftAnchored ? 0 : radius)
+        bottomLeftRadius: ThemeBackend.rad(root.isLeftAnchored ? 0 : radius)
+        topRightRadius: ThemeBackend.rad(root.isLeftAnchored ? radius : 0)
+        bottomRightRadius: ThemeBackend.rad(root.isLeftAnchored ? radius : 0)
         border.width: 0
         clip: true
         opacity: root.introContent
@@ -416,10 +416,10 @@ Item {
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-            topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-            bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-            bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
+            topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+            topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+            bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+            bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
         }
         transform: Translate { x: (root.isLeftAnchored ? -root.slideDistance : root.slideDistance) * (1.0 - root.introContent) }
 
@@ -436,7 +436,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.s(54)
                     Layout.maximumHeight: root.s(54)
-                    radius: ThemeBackend.minimalist ? 0 : (root.boxRadius)
+                    radius: ThemeBackend.rad(root.boxRadius)
                     color: userGlass.active ? "transparent" : ThemeBackend.faded(Qt.darker(ThemeBackend.surface0, 1.04))
                     opacity: root.introTop
                     transform: Translate { x: (root.isLeftAnchored ? -root.rowSlideDistance : root.rowSlideDistance) * (1.0 - root.introTop) }
@@ -444,7 +444,7 @@ Item {
                     GlassFill {
                         id: userGlass
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         tintColor: ThemeBackend.surface0
                         tintAmount: 0.3
                     }
@@ -459,8 +459,8 @@ Item {
                             Layout.preferredWidth: root.s(34)
                             Layout.preferredHeight: root.s(34)
                             size: root.s(34)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
-                            imageRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                            cornerRadius: ThemeBackend.rad(root.s(8))
+                            imageRadius: ThemeBackend.rad(root.s(8))
                             source: SystemInfo.avatarPath !== "" ? "file://" + SystemInfo.avatarPath : ""
                             backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.surface1 : "transparent"
 
@@ -503,7 +503,7 @@ Item {
                             Layout.preferredWidth: root.s(92)
                             Layout.preferredHeight: root.s(34)
                             horizontalPadding: root.s(10)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(12))
+                            cornerRadius: ThemeBackend.rad(root.s(12))
                             buttonText: I18n.t("syspanel.user.logout")
                             textFontSize: root.s(11)
                             buttonIcon: "󰍃"
@@ -543,8 +543,8 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.minimumHeight: root.s(68)
-                    cornerRadius: ThemeBackend.minimalist ? 0 : (root.boxRadius)
-                    cardRadius: ThemeBackend.minimalist ? 0 : (root.cardRadius)
+                    cornerRadius: ThemeBackend.rad(root.boxRadius)
+                    cardRadius: ThemeBackend.rad(root.cardRadius)
                     baseColor: ThemeBackend.faded(Qt.darker(ThemeBackend.surface0, 1.04))
                     rootContext: root
                     opacity: root.introNotifs
@@ -560,7 +560,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.isDesktop ? root.s(52) : root.s(72)
                     Layout.maximumHeight: Layout.preferredHeight
-                    radius: ThemeBackend.minimalist ? 0 : (root.isDesktop ? root.s(15) : root.boxRadius)
+                    radius: ThemeBackend.rad(root.isDesktop ? root.s(15) : root.boxRadius)
                     color: (root.isDesktop || batteryGlass.active) ? "transparent" : ThemeBackend.faded(Qt.darker(ThemeBackend.surface0, 1.04))
                     clip: true
                     opacity: root.introCore
@@ -574,7 +574,7 @@ Item {
                         id: batteryGlass
                         anchors.fill: parent
                         allowed: !root.isDesktop
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         tintColor: ThemeBackend.surface0
                         tintAmount: 0.3
                     }
@@ -591,7 +591,7 @@ Item {
                             from: 0; to: Math.PI * 2; duration: root.isCharging ? 1200 : 2200
                         }
 
-                        radius: ThemeBackend.minimalist ? 0 : (batteryBox.radius)
+                        radius: ThemeBackend.rad(batteryBox.radius)
                         fillLevel: batteryBox.fillLevel
                         waveAmp: (batteryBox.fillLevel < 0.99 && batteryBox.waveAmp > 0) ? Math.min(batteryBox.waveAmp, Math.min(width * batteryBox.fillLevel, width * (1.0 - batteryBox.fillLevel))) : 0
                         phase: wavePhase
@@ -603,7 +603,7 @@ Item {
                     LiquidFill {
                         anchors.fill: parent
                         visible: batteryGlass.active && root.visible && !root.isDesktop && batteryBox.fillLevel > 0.001
-                        radius: ThemeBackend.minimalist ? 0 : (batteryBox.radius)
+                        radius: ThemeBackend.rad(batteryBox.radius)
                         fillLevel: batteryBox.fillLevel
                         waveAmp: waveCanvas.waveAmp
                         phase: waveCanvas.wavePhase
@@ -656,7 +656,7 @@ Item {
                             anchors.fill: parent
                             anchors.topMargin: root.s(1.5)
                             anchors.bottomMargin: -root.s(1.5)
-                            radius: ThemeBackend.minimalist ? 0 : (profileSwitch.cornerRadius)
+                            radius: ThemeBackend.rad(profileSwitch.cornerRadius)
                             color: Qt.rgba(0, 0, 0, 0.25)
                         }
 
@@ -665,7 +665,7 @@ Item {
                             anchors.fill: parent
                             implicitWidth: root.isDesktop ? parent.width : (PowerProfiles.hasPerformanceProfile ? root.s(240) : root.s(162))
                             implicitHeight: root.isDesktop ? root.s(48) : root.s(52)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(15))
+                            cornerRadius: ThemeBackend.rad(root.s(15))
                             fontPixelSize: root.isDesktop ? root.s(14) : root.s(22)
                             options: {
                                 if (root.isDesktop) {

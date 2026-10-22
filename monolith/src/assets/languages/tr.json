@@ -48,7 +48,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "Ekran g\u00f6r\u00fcnt\u00fcs\u00fc",
+      "screenshot": "Ekran görüntüsü",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -656,6 +656,10 @@
       "element_opacity": {
         "title": "Öğe opaklığı",
         "desc": "Çubuğun, dock'un, widget'ların ve diğer tüm kabuk öğelerinin opaklığı"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "Bulanık duvar kağıdı arka planı ekle",

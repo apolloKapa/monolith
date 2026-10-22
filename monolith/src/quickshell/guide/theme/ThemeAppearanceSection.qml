@@ -23,7 +23,7 @@ SettingsBlob {
             Layout.preferredWidth: rootObj.s(32)
             Layout.preferredHeight: rootObj.s(32)
             Layout.alignment: Qt.AlignVCenter
-            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+            cornerRadius: ThemeBackend.rad(rootObj.s(6))
             buttonIcon: "󰉋"
             iconFontSize: rootObj.s(14)
             accentColor: ThemeBackend.surface0
@@ -39,7 +39,7 @@ SettingsBlob {
             Layout.preferredWidth: rootObj.s(32)
             Layout.preferredHeight: rootObj.s(32)
             Layout.alignment: Qt.AlignVCenter
-            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+            cornerRadius: ThemeBackend.rad(rootObj.s(6))
             buttonIcon: "󰐕"
             iconFontSize: rootObj.s(14)
             accentColor: ThemeBackend.surface0
@@ -79,7 +79,7 @@ SettingsBlob {
     SettingsRow {
         rootObj: section.tab.rootObj
         settingId: "border_radius"
-        visible: section.tab.currentBlurStyle !== "minimalist"
+        visible: !ThemeBackend.styles[section.tab.currentBlurStyle].square
         icon: "󰞁"
         title: I18n.t("guide.theme.radius.title")
         description: I18n.t("guide.theme.radius.desc")
@@ -126,7 +126,7 @@ SettingsBlob {
     SettingsRow {
         rootObj: section.tab.rootObj
         settingId: "element_opacity"
-        visible: !(section.tab.currentBlurBackground && section.tab.currentBlurStyle === "liquid") && section.tab.currentBlurStyle !== "minimalist"
+        visible: !(section.tab.currentBlurBackground && section.tab.currentBlurStyle === "liquid") && ThemeBackend.styles[section.tab.currentBlurStyle].opaque !== true
         icon: "󰃟"
         title: I18n.t("guide.theme.element_opacity.title", "Element opacity")
         description: I18n.t("guide.theme.element_opacity.desc", "Opacity of the bar, dock, widgets and every other shell element")
@@ -166,41 +166,14 @@ SettingsBlob {
     SettingsRow {
         rootObj: section.tab.rootObj
         settingId: "blur_background"
+        visible: ThemeBackend.styles[section.tab.currentBlurStyle].opaque !== true
         icon: "󰂵"
         title: I18n.t("guide.theme.blur_background.title", "Add a blurred wallpaper background")
         description: I18n.t("guide.theme.blur_background.desc", "Blur the wallpaper behind every element that uses transparency")
-        searchKeywords: "blur blurred wallpaper background frosted glass liquid glass apple transparency opacity minimalist minimal mono flat square outline"
-
-        Switch {
-            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-            implicitWidth: rootObj.s(300)
-            implicitHeight: rootObj.s(32)
-            cornerRadius: ThemeBackend.borderRadius
-            fontPixelSize: rootObj.s(11)
-            enabled: section.tab.currentBlurBackground || section.tab.currentBlurStyle === "minimalist"
-            options: [
-                I18n.t("guide.theme.blur_background.style.blur", "Blur"),
-                I18n.t("guide.theme.blur_background.style.liquid", "Liquid glass"),
-                I18n.t("guide.theme.blur_background.style.minimalist", "Minimalist")
-            ]
-            currentIndex: section.tab.currentBlurStyle === "minimalist" ? 2 : (section.tab.currentBlurStyle === "liquid" ? 1 : 0)
-            accentColor: ThemeBackend.mauve
-            baseColor: ThemeBackend.surface1
-            textColor: ThemeBackend.text
-            activeTextColor: ThemeBackend.crust
-            onValueChanged: function(index, value) {
-                if (index === 2) {
-                    section.tab.applyMinimalistStyle();
-                    return;
-                }
-                section.tab.updateBlurStyleSetting(index === 1 ? "liquid" : "blur");
-                if (!section.tab.currentBlurBackground) section.tab.updateBlurBackgroundSetting(true);
-            }
-        }
+        searchKeywords: "blur blurred wallpaper background frosted glass liquid glass apple transparency opacity"
 
         Toggle {
             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-            visible: section.tab.currentBlurStyle !== "minimalist"
             checked: section.tab.currentBlurBackground
             accentColor: ThemeBackend.mauve
             baseColor: ThemeBackend.surface1

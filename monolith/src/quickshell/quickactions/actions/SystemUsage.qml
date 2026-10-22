@@ -224,13 +224,13 @@ Item {
                 Rectangle {
                     Layout.preferredHeight: root.s(28)
                     Layout.preferredWidth: root.s(125)
-                    radius: ThemeBackend.minimalist ? 0 : (root.s(14))
+                    radius: ThemeBackend.rad(root.s(14))
                     color: barGlassA.active ? "transparent" : root.alpha(root.cSurface1, 0.5 * ThemeBackend.elementOpacity)
 
                     GlassFill {
                         id: barGlassA
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         tintColor: root.cSurface1
                         tintAmount: 0.3
                     }
@@ -242,7 +242,7 @@ Item {
 
                         IconButton {
                             size: Math.round(root.s(22))
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.round(root.s(11)))
+                            cornerRadius: ThemeBackend.rad(Math.round(root.s(11)))
                             buttonIcon: "\uF063"
                             iconFontSize: Math.round(root.s(12))
                             accentColor: root.alpha(root.cGreen, 0.2)
@@ -265,13 +265,13 @@ Item {
                 Rectangle {
                     Layout.preferredHeight: root.s(28)
                     Layout.preferredWidth: root.s(125)
-                    radius: ThemeBackend.minimalist ? 0 : (root.s(14))
+                    radius: ThemeBackend.rad(root.s(14))
                     color: barGlassB.active ? "transparent" : root.alpha(root.cSurface1, 0.5 * ThemeBackend.elementOpacity)
 
                     GlassFill {
                         id: barGlassB
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         tintColor: root.cSurface1
                         tintAmount: 0.3
                     }
@@ -283,7 +283,7 @@ Item {
 
                         IconButton {
                             size: Math.round(root.s(22))
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.round(root.s(11)))
+                            cornerRadius: ThemeBackend.rad(Math.round(root.s(11)))
                             buttonIcon: "\uF062"
                             iconFontSize: Math.round(root.s(12))
                             accentColor: root.alpha(root.cPeach, 0.2)

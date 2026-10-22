@@ -51,7 +51,7 @@ Item {
         anchors.centerIn: parent
         width: root.pillWidth
         height: root.pillLength
-        radius: ThemeBackend.minimalist ? 0 : (root.pillRadius)
+        radius: ThemeBackend.rad(root.pillRadius)
         rotation: 45
         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
         antialiasing: true
@@ -59,7 +59,7 @@ Item {
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
         }
 
         Item {

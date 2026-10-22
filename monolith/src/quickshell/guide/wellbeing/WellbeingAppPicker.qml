@@ -58,7 +58,7 @@ Item {
         anchors.centerIn: parent
         width: Math.min(parent.width - rootObj.s(32), rootObj.s(480))
         height: Math.min(parent.height - rootObj.s(32), rootObj.s(70) + rootObj.s(48) * 6 + rootObj.s(56))
-        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 1.5 : 24)
+        radius: ThemeBackend.rad(ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 1.5 : 24)
         color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
         border.width: ThemeBackend.liquidGlass ? 0 : 1
         border.color: Qt.alpha(ThemeBackend.surface1, 0.45)
@@ -137,7 +137,7 @@ Item {
                             Layout.preferredWidth: rootObj.s(28)
                             Layout.preferredHeight: rootObj.s(28)
                             Layout.alignment: Qt.AlignVCenter
-                            radius: ThemeBackend.minimalist ? 0 : (Math.round(rootObj.s(28) * 0.28))
+                            radius: ThemeBackend.rad(Math.round(rootObj.s(28) * 0.28))
                             color: row.isSelected ? Qt.tint(ThemeBackend.surface0, Qt.alpha(ThemeBackend.mauve, 0.2)) : ThemeBackend.surface0
                             clip: true
 

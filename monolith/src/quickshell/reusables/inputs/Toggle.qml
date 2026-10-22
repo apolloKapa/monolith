@@ -86,7 +86,7 @@ Item {
             id: track
             implicitWidth: 44
             implicitHeight: 24
-            radius: ThemeBackend.minimalist ? 0 : (Math.min(height / 2, root.cornerRadius))
+            radius: ThemeBackend.rad(Math.min(height / 2, root.cornerRadius))
             color: trackGlass.active ? "transparent" : (root.checked ? root.accentColor : (root.isHoveredOrHighlighted ? Qt.lighter(root.baseColor, 1.2) : root.baseColor))
             opacity: root.enabled ? 1.0 : 0.5
             Layout.alignment: Qt.AlignVCenter
@@ -97,7 +97,7 @@ Item {
             GlassFill {
                 id: trackGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: root.checked ? root.accentColor : root.baseColor
                 tintAmount: root.checked ? 0.7 : (root.isHoveredOrHighlighted ? 0.4 : 0.3)
                 Behavior on tintAmount { NumberAnimation { duration: (200) * ThemeBackend.animScale } }
@@ -110,7 +110,7 @@ Item {
                 id: handle
                 width: parent.height - 6 + (handleGlass.active && btnMa.pressed ? 8 : 0) + (handleGlass.active ? 10 * root.stretch : 0)
                 height: parent.height - 6
-                radius: ThemeBackend.minimalist ? 0 : (Math.min(height / 2, Math.max(0, root.cornerRadius - 3)))
+                radius: ThemeBackend.rad(Math.min(height / 2, Math.max(0, root.cornerRadius - 3)))
                 anchors.verticalCenter: parent.verticalCenter
                 x: root.checked ? parent.width - width - 3 : 3
                 color: handleGlass.active ? "transparent" : (root.checked ? root.handleColor : root.handleOffColor)
@@ -118,7 +118,7 @@ Item {
                 GlassFill {
                     id: handleGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: root.checked ? root.handleColor : root.handleOffColor
                     tintAmount: 0.45
                     shadow: 1
@@ -135,7 +135,7 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: -3
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius + 3)
+                radius: ThemeBackend.rad(parent.radius + 3)
                 color: "transparent"
                 border.width: 2
                 border.color: Qt.alpha(ThemeBackend.mauve, 0.8)
@@ -144,7 +144,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 color: "#ffffff"
                 opacity: root.flashOpacity
                 visible: !trackGlass.active

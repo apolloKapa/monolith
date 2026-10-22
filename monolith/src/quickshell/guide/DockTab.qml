@@ -172,7 +172,7 @@ GuideTab {
             policy: ScrollBar.AsNeeded
             contentItem: Rectangle {
                 implicitWidth: rootObj.s(4)
-                radius: ThemeBackend.minimalist ? 0 : (rootObj.s(2))
+                radius: ThemeBackend.rad(rootObj.s(2))
                 color: ThemeBackend.surface2
             }
         }
@@ -235,7 +235,7 @@ GuideTab {
                     GlassFill {
                         id: dockAppsGlass
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         tintColor: ThemeBackend.surface0
                         tintAmount: 0.25
                     }
@@ -454,7 +454,7 @@ GuideTab {
                                     GlassFill {
                                         id: appCardGlass1
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         tintColor: Qt.alpha(ThemeBackend.surface1, 0.3)
                                         tintAmount: 0.25
                                     }
@@ -472,13 +472,13 @@ GuideTab {
                                             implicitWidth: dockTabRoot.rootObj.s(32)
                                             implicitHeight: dockTabRoot.rootObj.s(32)
                                             Layout.alignment: Qt.AlignVCenter
-                                            radius: ThemeBackend.minimalist ? 0 : (Math.round(dockTabRoot.rootObj.s(32) * 0.28))
+                                            radius: ThemeBackend.rad(Math.round(dockTabRoot.rootObj.s(32) * 0.28))
                                             color: gf1.active ? "transparent" : ThemeBackend.surface0
 
                                             GlassFill {
                                                 id: gf1
                                                 anchors.fill: parent
-                                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                radius: ThemeBackend.rad(parent.radius)
                                                 tintColor: ThemeBackend.surface0
                                                 tintAmount: 0.25
                                             }
@@ -546,7 +546,7 @@ GuideTab {
 
                                         DeleteButton {
                                             size: dockTabRoot.rootObj.s(28)
-                                            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, dockTabRoot.rootObj.s(8)))
+                                            cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, dockTabRoot.rootObj.s(8)))
                                             iconFontSize: dockTabRoot.rootObj.s(14)
                                             Layout.alignment: Qt.AlignVCenter
                                             onClicked: {

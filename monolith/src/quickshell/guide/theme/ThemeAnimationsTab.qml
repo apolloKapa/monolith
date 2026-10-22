@@ -93,10 +93,10 @@ GuideTab {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.margins: rootObj.s(20)
                         height: rootObj.s(44)
-                        radius: ThemeBackend.minimalist ? 0 : height / 2
+                        radius: ThemeBackend.rad(height / 2)
                         color: Qt.alpha(ThemeBackend.surface1, 0.6)
-                        border.width: ThemeBackend.minimalist ? ThemeBackend.minimalistInnerBorder : 0
-                        border.color: ThemeBackend.minimalistBorderColor
+                        border.width: ThemeBackend.outlineInner
+                        border.color: ThemeBackend.outlineColor
 
                         Rectangle {
                             id: pill
@@ -104,7 +104,7 @@ GuideTab {
                             height: parent.height - rootObj.s(8)
                             anchors.verticalCenter: parent.verticalCenter
                             x: rootObj.s(4)
-                            radius: ThemeBackend.minimalist ? 0 : height / 2
+                            radius: ThemeBackend.rad(height / 2)
                             color: ThemeBackend.mauve
                             scale: 1.0
 

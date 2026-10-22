@@ -395,7 +395,7 @@ MusicEqualizerState {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
             }
 
             Rectangle {
@@ -446,7 +446,7 @@ MusicEqualizerState {
                     Layout.topMargin: popupRoot.s(16)
                     Layout.bottomMargin: popupRoot.s(16)
                     color: "#1AFFFFFF"
-                    radius: ThemeBackend.minimalist ? 0 : (popupRoot.s(1))
+                    radius: ThemeBackend.rad(popupRoot.s(1))
 
                     opacity: popupRoot.introSeparator
                     transform: Translate { y: popupRoot.s(12) * (1 - popupRoot.introSeparator) }

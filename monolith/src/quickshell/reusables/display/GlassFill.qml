@@ -300,10 +300,10 @@ Item {
                     energy: Math.min(1, root.press + root.pulse)
                     motion: root.motion
                     src: root.backdrop ? root.backdrop.texture : null
-                    topLeftRadius: ThemeBackend.minimalist ? 0 : (root.cornerRadius(0))
-                    topRightRadius: ThemeBackend.minimalist ? 0 : (root.cornerRadius(1))
-                    bottomRightRadius: ThemeBackend.minimalist ? 0 : (root.cornerRadius(2))
-                    bottomLeftRadius: ThemeBackend.minimalist ? 0 : (root.cornerRadius(3))
+                    topLeftRadius: ThemeBackend.rad(root.cornerRadius(0))
+                    topRightRadius: ThemeBackend.rad(root.cornerRadius(1))
+                    bottomRightRadius: ThemeBackend.rad(root.cornerRadius(2))
+                    bottomLeftRadius: ThemeBackend.rad(root.cornerRadius(3))
                     tintColor: root.tintColor
                     tintAmount: root.tintAmount * root.tintStrength * (1 - 0.5 * root.nest)
                     frost: root.nestLevel >= 1 ? Math.min(root.frost, 1.0) : root.frost
@@ -319,13 +319,32 @@ Item {
         }
     }
 
-    // Minimalist style: square outline instead of glass/blur.
+    // Outlined styles (Minimalist, Terminal, Brutal, Luxe, Poster, Paper): a line instead of
+    // glass/blur, following the surface's corners. Brutal also gets a hard offset shadow; only
+    // the part that shows is drawn (a child can't draw behind its own surface).
+    Rectangle {
+        x: parent.width
+        y: ThemeBackend.hardShadow
+        width: ThemeBackend.hardShadow
+        height: parent.height
+        visible: ThemeBackend.hardShadow > 0 && root.nestLevel === 0 && root.allowed && root.tintColor.a > 0.02
+        color: ThemeBackend.outlineColor
+    }
+    Rectangle {
+        x: ThemeBackend.hardShadow
+        y: parent.height
+        width: parent.width
+        height: ThemeBackend.hardShadow
+        visible: ThemeBackend.hardShadow > 0 && root.nestLevel === 0 && root.allowed && root.tintColor.a > 0.02
+        color: ThemeBackend.outlineColor
+    }
+
     Rectangle {
         anchors.fill: parent
-        visible: ThemeBackend.minimalist && root.allowed && root.tintColor.a > 0.02
+        visible: ThemeBackend.outlined && root.allowed && root.tintColor.a > 0.02
         color: "transparent"
-        radius: 0
-        border.width: root.nestLevel === 0 ? ThemeBackend.minimalistOuterBorder : ThemeBackend.minimalistInnerBorder
-        border.color: ThemeBackend.minimalistBorderColor
+        radius: root.radius
+        border.width: root.nestLevel === 0 ? ThemeBackend.outlineOuter : ThemeBackend.outlineInner
+        border.color: ThemeBackend.outlineColor
     }
 }

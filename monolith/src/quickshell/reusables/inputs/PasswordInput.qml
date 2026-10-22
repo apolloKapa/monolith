@@ -363,7 +363,7 @@ FocusScope {
         Rectangle {
             id: bgShape
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+            radius: ThemeBackend.rad(root.cornerRadius)
             clip: true
             opacity: root.enabled ? 1.0 : 0.5
             readonly property color stateColor: {
@@ -378,7 +378,7 @@ FocusScope {
             GlassFill {
                 id: glass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: bgShape.stateColor
                 tintAmount: root.hasFocus ? 0.38 : 0.26
                 press: root.hasFocus ? 0.55 : (root.isHoveredOrHighlighted ? 0.2 : 0)
@@ -395,7 +395,7 @@ FocusScope {
             anchors.verticalCenter: parent.verticalCenter
             size: root.lockButtonSize
             iconSize: Math.round(root.lockButtonSize * 0.72)
-            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(4, root.cornerRadius - 4))
+            cornerRadius: ThemeBackend.rad(Math.max(4, root.cornerRadius - 4))
 
             property real busyRotation: 0.0
             property real spinBlur: 0.0
@@ -597,7 +597,7 @@ FocusScope {
             Rectangle {
                 id: submitBtnShape
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (submitButton.cornerRadius)
+                radius: ThemeBackend.rad(submitButton.cornerRadius)
                 clip: true
                 color: !root.enabled || root.isBusy
                     ? submitButton.currentAccent
@@ -652,7 +652,7 @@ FocusScope {
                             anchors.centerIn: parent
                             width: chevronWrapper.dotSize
                             height: chevronWrapper.dotSize
-                            radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                            radius: ThemeBackend.rad(width / 2)
                             color: root.baseColor
                             antialiasing: true
                             Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -663,7 +663,7 @@ FocusScope {
                             y: -chevronWrapper.armThickness / 2
                             width: chevronWrapper.armLength
                             height: chevronWrapper.armThickness
-                            radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                            radius: ThemeBackend.rad(height / 2)
                             transformOrigin: Item.Left
                             rotation: 40
                             color: root.baseColor
@@ -676,7 +676,7 @@ FocusScope {
                             y: -chevronWrapper.armThickness / 2
                             width: chevronWrapper.armLength
                             height: chevronWrapper.armThickness
-                            radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                            radius: ThemeBackend.rad(height / 2)
                             transformOrigin: Item.Left
                             rotation: -40
                             color: root.baseColor
@@ -688,7 +688,7 @@ FocusScope {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (submitButton.cornerRadius)
+                    radius: ThemeBackend.rad(submitButton.cornerRadius)
                     color: "#ffffff"
                     opacity: submitButton.flashOpacity
                     PropertyAnimation on opacity { id: submitFlashAnim; to: 0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
@@ -744,7 +744,7 @@ FocusScope {
 
                 anchors.verticalCenter: parent.verticalCenter
                 height: Math.min(parent.height - 6, root.fontPixelSize * 1.6)
-                radius: ThemeBackend.minimalist ? 0 : (4)
+                radius: ThemeBackend.rad(4)
                 color: root.activeSignalColor
                 opacity: hasSelection ? 0.28 : 0.0
 
@@ -864,7 +864,7 @@ FocusScope {
                         anchors.centerIn: parent
                         width: root.dotSize
                         height: width
-                        radius: ThemeBackend.minimalist ? 0 : (Math.round(width * 0.24))
+                        radius: ThemeBackend.rad(Math.round(width * 0.24))
 
                         color: root.textColor
                         antialiasing: true

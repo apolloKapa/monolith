@@ -35,7 +35,7 @@ Item {
             y: mainDashboardShell.y + screenRoot.s(1.5)
             width: mainDashboardShell.width
             height: mainDashboardShell.height
-            radius: ThemeBackend.minimalist ? 0 : (mainDashboardShell.radius)
+            radius: ThemeBackend.rad(mainDashboardShell.radius)
             color: Qt.rgba(0, 0, 0, 0.14 * LockLayoutStore.panelOpacity)
             opacity: mainDashboardShell.opacity
             scale: mainDashboardShell.scale
@@ -54,7 +54,7 @@ Item {
             y: canvas.panelCenterY - LockLayoutStore.panelH / 2 + (screenRoot.inputActive ? 0 : screenRoot.s(90))
             width: dashboard.shellWidth
             height: LockLayoutStore.panelH
-            radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius * 1.5)
+            radius: ThemeBackend.rad(ThemeBackend.borderRadius * 1.5)
             color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity * LockLayoutStore.panelOpacity)
             clip: true
 
@@ -74,7 +74,7 @@ Item {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (mainDashboardShell.radius)
+                radius: ThemeBackend.rad(mainDashboardShell.radius)
                 opacity: LockLayoutStore.panelOpacity
                 screenOverride: screenRoot.surface.screen
                 useSnapshot: true

@@ -224,7 +224,7 @@ Item {
 
             height: s(root.isCompact ? 28 : 30)
             maxWidth: s(root.isCompact ? 96 : 100)
-            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
+            cornerRadius: ThemeBackend.rad(Math.max(0, ThemeBackend.borderRadius - s(2)))
             horizontalPadding: s(root.isCompact ? 10 : 12)
             buttonIcon: root.showIcon ? root.volIcon : ""
             iconFontSize: s(root.isCompact ? 14 : 15)
@@ -276,7 +276,7 @@ Item {
         IconButton {
             width: s(root.isCompact ? 28 : 30)
             height: (root.showIcon || root.showPercent) ? s(root.isCompact ? 28 : 30) : 0
-            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(0, ThemeBackend.borderRadius - s(2)))
+            cornerRadius: ThemeBackend.rad(Math.max(0, ThemeBackend.borderRadius - s(2)))
             buttonIcon: root.showIcon ? root.volIcon : ""
             iconFontSize: s(root.isCompact ? 14 : 15)
             accentColor: root.isSoundActive ? (root.isCompact ? Qt.lighter(ThemeBackend.mauve, 1.08) : ThemeBackend.mauve) : (root.isCompact ? Qt.lighter(ThemeBackend.surface1, 1.12) : ThemeBackend.surface1)

@@ -1503,10 +1503,10 @@ Item {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
+                topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
             }
             layer.enabled: popupWindowRoot.visible && popupWindowRoot.introState > 0.001 && popupWindowRoot.introState < 0.999
             layer.smooth: true
@@ -1573,7 +1573,7 @@ Item {
                         anchors.centerIn: parent
                         width: popupWindowRoot.s(220) + (index * popupWindowRoot.s(130))
                         height: width
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: "transparent"
 
                         border.color: Object.keys(popupWindowRoot.disconnectingDevices).length > 0 ? ThemeBackend.red : popupWindowRoot.activeColor

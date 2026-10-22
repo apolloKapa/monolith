@@ -95,7 +95,7 @@ Item {
             GlassFill {
                 id: dockGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: root.cSurface0
                 tintAmount: 0.3
                 shadow: 1
@@ -124,7 +124,7 @@ Item {
                         GlassFill {
                             id: itemGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: root.cSurface1
                             tintAmount: 0.2
                             allowed: itemMouseArea.containsMouse

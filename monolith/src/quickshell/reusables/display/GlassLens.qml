@@ -163,10 +163,10 @@ Item {
         id: glass
         anchors.fill: parent
         allowed: root.allowed
-        topLeftRadius: ThemeBackend.minimalist ? 0 : (root.topLeftRadius)
-        topRightRadius: ThemeBackend.minimalist ? 0 : (root.topRightRadius)
-        bottomLeftRadius: ThemeBackend.minimalist ? 0 : (root.bottomLeftRadius)
-        bottomRightRadius: ThemeBackend.minimalist ? 0 : (root.bottomRightRadius)
+        topLeftRadius: ThemeBackend.rad(root.topLeftRadius)
+        topRightRadius: ThemeBackend.rad(root.topRightRadius)
+        bottomLeftRadius: ThemeBackend.rad(root.bottomLeftRadius)
+        bottomRightRadius: ThemeBackend.rad(root.bottomRightRadius)
         tintColor: root.tintColor
         tintAmount: root.tintAmount
         tintStrength: root.tintStrength

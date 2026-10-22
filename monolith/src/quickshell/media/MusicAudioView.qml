@@ -42,7 +42,7 @@ Item {
             GlassFill {
                 id: balanceCardGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: ThemeBackend.surface0
                 tintAmount: 0.3
             }
@@ -67,7 +67,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         width: root.s(index === 4 ? 3 : 2)
                         height: root.s(index === 4 ? 33 : (index % 2 === 0 ? 25 : 18))
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: ThemeBackend.subtext1 || "#bac2de"
                         opacity: index === 4 ? 0.7 : 0.32
                     }
@@ -102,7 +102,7 @@ Item {
                         y: balanceSlider.topPadding + balanceSlider.availableHeight / 2 - height / 2
                         width: balanceSlider.availableWidth
                         height: balanceSlider.trackHeight
-                        radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                        radius: ThemeBackend.rad(height / 2)
                         color: balanceTrackGlass.active ? "transparent" : Qt.alpha(ThemeBackend.surface2 || "#585b70", ThemeBackend.elementOpacity)
                         border.width: 1
                         border.color: Qt.rgba(1, 1, 1, 0.06)
@@ -111,7 +111,7 @@ Item {
                         GlassFill {
                             id: balanceTrackGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: ThemeBackend.surface2
                             tintAmount: 0.3
                         }
@@ -130,7 +130,7 @@ Item {
                                 x: balanceFillRect.x
                                 width: balanceFillRect.width
                                 height: balanceFillRect.height
-                                radius: ThemeBackend.minimalist ? 0 : (balanceFillRect.radius)
+                                radius: ThemeBackend.rad(balanceFillRect.radius)
                                 forceClear: true
                                 tintColor: ThemeBackend.mauve
                                 tintAmount: 0.6
@@ -145,7 +145,7 @@ Item {
                                 x: balanceSlider.value < 0 ? 0 : -height / 2
                                 width: parent.width + height / 2
                                 height: parent.height
-                                radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                                radius: ThemeBackend.rad(height / 2)
 
                                 gradient: Gradient {
                                     orientation: Gradient.Horizontal
@@ -163,7 +163,7 @@ Item {
                         y: balanceSlider.topPadding + balanceSlider.availableHeight / 2 - height / 2
                         width: balanceSlider.handleSize
                         height: balanceSlider.handleSize
-                        radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                        radius: ThemeBackend.rad(height / 2)
                         color: balanceHandleGlass.active ? "transparent" : (balanceSlider.pressed
                             ? Qt.lighter(ThemeBackend.mauve || "#cba6f7", 1.30)
                             : (balanceSlider.hovered ? Qt.lighter(ThemeBackend.mauve || "#cba6f7", 1.15) : (ThemeBackend.mauve || "#cba6f7")))
@@ -171,7 +171,7 @@ Item {
                         GlassFill {
                             id: balanceHandleGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: ThemeBackend.mauve
                             tintAmount: 0.45
                             shadow: 1

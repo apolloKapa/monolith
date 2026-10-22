@@ -122,14 +122,14 @@ Item {
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
         }
 
         FluidWave {
             id: waveCanvas
             anchors.fill: parent
             visible: root.visible && root.hasBattery && root.fillLevel > 0.001
-            radius: ThemeBackend.minimalist ? 0 : (bgContainer.radius)
+            radius: ThemeBackend.rad(bgContainer.radius)
             fillLevel: root.fillLevel
             waveAmp: (root.fillLevel < 0.99 && root.waveAmp > 0) ? Math.min(root.waveAmp, Math.min(width * root.fillLevel, width * (1.0 - root.fillLevel))) : 0
             phase: root.wavePhase

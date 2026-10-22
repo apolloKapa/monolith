@@ -48,7 +48,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "\u0415\u043a\u0440\u0430\u043d\u043d\u0430 \u0441\u043d\u0438\u043c\u043a\u0430",
+      "screenshot": "Екранна снимка",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -656,6 +656,10 @@
       "element_opacity": {
         "title": "Прозрачност на елементите",
         "desc": "Прозрачност на лентата, дока, уиджетите и всеки друг елемент на обвивката"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "Добавяне на размит фон от тапета",

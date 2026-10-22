@@ -102,7 +102,7 @@ Item {
                         ? (widget ? widget.s(widget.isCompact ? 10 : 12) : 12)
                         : (widget ? widget.s(widget.isCompact ? 7 : 9) : 9)
                     height: width
-                    radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                    radius: ThemeBackend.rad(width / 2)
                     color: Qt.alpha((widget && widget.isCompact) ? ThemeBackend.surface1 : ThemeBackend.surface0, ThemeBackend.elementOpacity)
                     opacity: pelletSlot.isActive ? 0.0 : (pelletSlot.isHovered ? 1.0 : 0.85)
 

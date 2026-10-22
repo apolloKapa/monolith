@@ -595,7 +595,7 @@ PanelWindow {
         GlassFillets {
             id: clipboardFillets
             card: bgCard
-            filletRadius: ThemeBackend.minimalist ? 0 : (container.dynamicCornerRadius)
+            filletRadius: ThemeBackend.rad(container.dynamicCornerRadius)
             filletDir: clipboardWindow.attachEdge === "top" ? Qt.vector2d(0, -1)
                      : clipboardWindow.attachEdge === "bottom" ? Qt.vector2d(0, 1)
                      : clipboardWindow.attachEdge === "left" ? Qt.vector2d(-1, 0)
@@ -654,11 +654,11 @@ PanelWindow {
         Rectangle {
             id: bgCard
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (clipboardWindow.cornerRadius)
-            topLeftRadius: ThemeBackend.minimalist ? 0 : ((clipboardWindow.attachEdge === "top" || clipboardWindow.attachEdge === "left") ? 0 : clipboardWindow.cornerRadius)
-            topRightRadius: ThemeBackend.minimalist ? 0 : ((clipboardWindow.attachEdge === "top" || clipboardWindow.attachEdge === "right") ? 0 : clipboardWindow.cornerRadius)
-            bottomLeftRadius: ThemeBackend.minimalist ? 0 : ((clipboardWindow.attachEdge === "bottom" || clipboardWindow.attachEdge === "left") ? 0 : clipboardWindow.cornerRadius)
-            bottomRightRadius: ThemeBackend.minimalist ? 0 : ((clipboardWindow.attachEdge === "bottom" || clipboardWindow.attachEdge === "right") ? 0 : clipboardWindow.cornerRadius)
+            radius: ThemeBackend.rad(clipboardWindow.cornerRadius)
+            topLeftRadius: ThemeBackend.rad((clipboardWindow.attachEdge === "top" || clipboardWindow.attachEdge === "left") ? 0 : clipboardWindow.cornerRadius)
+            topRightRadius: ThemeBackend.rad((clipboardWindow.attachEdge === "top" || clipboardWindow.attachEdge === "right") ? 0 : clipboardWindow.cornerRadius)
+            bottomLeftRadius: ThemeBackend.rad((clipboardWindow.attachEdge === "bottom" || clipboardWindow.attachEdge === "left") ? 0 : clipboardWindow.cornerRadius)
+            bottomRightRadius: ThemeBackend.rad((clipboardWindow.attachEdge === "bottom" || clipboardWindow.attachEdge === "right") ? 0 : clipboardWindow.cornerRadius)
             color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
             border.width: 0
             border.color: "transparent"
@@ -667,11 +667,11 @@ PanelWindow {
             WallpaperBlur {
                 z: -1
                 anchors.fill: parent
-                topLeftRadius: ThemeBackend.minimalist ? 0 : (parent.topLeftRadius)
-                topRightRadius: ThemeBackend.minimalist ? 0 : (parent.topRightRadius)
-                bottomLeftRadius: ThemeBackend.minimalist ? 0 : (parent.bottomLeftRadius)
-                bottomRightRadius: ThemeBackend.minimalist ? 0 : (parent.bottomRightRadius)
-                filletRadius: ThemeBackend.minimalist ? 0 : (clipboardFillets.filletRadius)
+                topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
+                topRightRadius: ThemeBackend.rad(parent.topRightRadius)
+                bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
+                bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
+                filletRadius: ThemeBackend.rad(clipboardFillets.filletRadius)
                 filletDir: clipboardFillets.filletDir
             }
 
@@ -706,7 +706,7 @@ PanelWindow {
                         textColor: ThemeBackend.text
                         subTextColor: ThemeBackend.subtext0
                         borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, clipboardWindow.s(10)))
+                        cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, clipboardWindow.s(10)))
                         fontPixelSize: clipboardWindow.s(12)
                         charSpacing: 1
 
@@ -773,7 +773,7 @@ PanelWindow {
                         Layout.preferredWidth: clipboardWindow.s(80)
                         Layout.preferredHeight: clipboardWindow.s(36)
                         horizontalPadding: clipboardWindow.s(10)
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, clipboardWindow.s(10)))
+                        cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, clipboardWindow.s(10)))
                         buttonText: typeof I18n !== "undefined" ? (I18n.t("clipboard.clear") || "Clear") : "Clear"
                         textFontSize: clipboardWindow.s(11)
                         buttonIcon: "󰆴"
@@ -1130,7 +1130,7 @@ PanelWindow {
                                 id: cardMask
                                 width: clipDelegateCard.width
                                 height: clipDelegateCard.height
-                                radius: ThemeBackend.minimalist ? 0 : (clipDelegateCard.radius)
+                                radius: ThemeBackend.rad(clipDelegateCard.radius)
                                 visible: false
                                 layer.enabled: clipDelegateCard.isImage
                             }
@@ -1164,7 +1164,7 @@ PanelWindow {
                                 transform: Translate { x: clipDelegateWrapper.dragX }
                                 opacity: Math.max(0.0, 1.0 - (Math.abs(clipDelegateWrapper.dragX) / (clipDelegateCard.width * 0.75)))
 
-                                radius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, clipboardWindow.s(12)))
+                                radius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, clipboardWindow.s(12)))
                                 readonly property bool glassRow: !isImage && ThemeBackend.liquidGlass
                                 color: {
                                     if (glassRow) return "transparent";
@@ -1180,7 +1180,7 @@ PanelWindow {
                                 GlassFill {
                                     id: rowGlass
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                    radius: ThemeBackend.rad(parent.radius)
                                     allowed: !clipDelegateCard.isImage
                                     forceClear: clipDelegateWrapper.isSelected
                                     tintColor: clipDelegateWrapper.isSelected ? ThemeBackend.text : ThemeBackend.surface1
@@ -1219,7 +1219,7 @@ PanelWindow {
 
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (clipDelegateCard.radius)
+                                    radius: ThemeBackend.rad(clipDelegateCard.radius)
                                     color: Qt.rgba(0, 0, 0, clipCardMa.containsMouse ? 0.15 : 0.0)
                                     visible: clipDelegateCard.isImage
                                     Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
@@ -1228,7 +1228,7 @@ PanelWindow {
                                 Rectangle {
                                     id: imageSelectionBorder
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (clipDelegateCard.radius)
+                                    radius: ThemeBackend.rad(clipDelegateCard.radius)
                                     color: "transparent"
                                     border.width: (clipDelegateWrapper.isSelected && clipDelegateCard.isImage) ? clipboardWindow.s(2) : 0
                                     border.color: (clipDelegateWrapper.isSelected && clipDelegateCard.isImage) ? ThemeBackend.mauve : "transparent"
@@ -1349,7 +1349,7 @@ PanelWindow {
                                     y: clipboardWindow.s(11)
                                     width: clipboardWindow.s(30)
                                     height: clipboardWindow.s(30)
-                                    radius: ThemeBackend.minimalist ? 0 : (clipboardWindow.s(8))
+                                    radius: ThemeBackend.rad(clipboardWindow.s(8))
                                     color: clipDelegateCard.glassRow ? "transparent" : ((!clipDelegateCard.isImage && clipDelegateWrapper.isSelected) ? Qt.rgba(0, 0, 0, 0.15) : ThemeBackend.surface2)
                                     clip: true
                                     z: 3
@@ -1360,7 +1360,7 @@ PanelWindow {
 
                                     GlassFill {
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                        radius: ThemeBackend.rad(parent.radius)
                                         allowed: clipDelegateCard.glassRow
                                         forceClear: clipDelegateWrapper.isSelected
                                         tintColor: clipDelegateWrapper.isSelected ? ThemeBackend.text : ThemeBackend.surface2
@@ -1400,7 +1400,7 @@ PanelWindow {
                                     x: I18n.rtl ? clipboardWindow.s(8) : (parent.width - width - clipboardWindow.s(8))
                                     y: clipboardWindow.s(12.8)
                                     size: clipboardWindow.s(26.4)
-                                    cornerRadius: ThemeBackend.minimalist ? 0 : (clipboardWindow.s(6.6))
+                                    cornerRadius: ThemeBackend.rad(clipboardWindow.s(6.6))
                                     accentColor: (!clipDelegateCard.isImage && clipDelegateWrapper.isSelected && !ThemeBackend.liquidGlass) ? Qt.rgba(0, 0, 0, 0.15) : ThemeBackend.surface2
                                     iconColor: (!clipDelegateCard.isImage && clipDelegateWrapper.isSelected && !ThemeBackend.liquidGlass) ? (isHoveredOrHighlighted ? ThemeBackend.base : ThemeBackend.crust) : (isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.subtext1)
                                     autoToggle: false

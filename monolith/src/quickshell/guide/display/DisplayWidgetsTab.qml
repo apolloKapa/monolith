@@ -26,7 +26,7 @@ DisplayWidgetsState {
             policy: ScrollBar.AsNeeded
             contentItem: Rectangle {
                 implicitWidth: rootObj.s(4)
-                radius: ThemeBackend.minimalist ? 0 : (rootObj.s(2))
+                radius: ThemeBackend.rad(rootObj.s(2))
                 color: ThemeBackend.surface2
             }
         }

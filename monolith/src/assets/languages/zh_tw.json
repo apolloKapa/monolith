@@ -48,7 +48,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "\u87a2\u5e55\u622a\u5716",
+      "screenshot": "螢幕截圖",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -656,6 +656,10 @@
       "element_opacity": {
         "title": "元素不透明度",
         "desc": "狀態列、Dock、小工具及所有其他介面元素的不透明度"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "新增模糊的桌布背景",

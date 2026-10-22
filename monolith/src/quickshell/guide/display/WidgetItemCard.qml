@@ -21,7 +21,7 @@ Rectangle {
     GlassFill {
         id: widgetCardGlass2
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: Qt.alpha(ThemeBackend.surface1, 0.3)
         tintAmount: 0.25
     }
@@ -75,7 +75,7 @@ Rectangle {
 
         DeleteButton {
             size: rootObj.s(28)
-            cornerRadius: ThemeBackend.minimalist ? 0 : (Math.min(ThemeBackend.borderRadius, rootObj.s(8)))
+            cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, rootObj.s(8)))
             iconFontSize: rootObj.s(14)
             Layout.alignment: Qt.AlignVCenter
             onClicked: {

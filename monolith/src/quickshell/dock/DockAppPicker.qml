@@ -66,7 +66,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 1.5 : 24)
+        radius: ThemeBackend.rad(ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 1.5 : 24)
         color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
         border.width: ThemeBackend.liquidGlass ? 0 : 1
         border.color: Qt.alpha(ThemeBackend.surface1, 0.45)
@@ -75,7 +75,7 @@ Item {
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             standalone: true
         }
 
@@ -187,7 +187,7 @@ Item {
                         policy: ScrollBar.AsNeeded
                         contentItem: Rectangle {
                             implicitWidth: dockWindow.s(4)
-                            radius: ThemeBackend.minimalist ? 0 : (dockWindow.s(2))
+                            radius: ThemeBackend.rad(dockWindow.s(2))
                             color: ThemeBackend.surface2
                         }
                     }

@@ -48,7 +48,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "\uc2a4\ud06c\ub9b0\uc0f7",
+      "screenshot": "스크린샷",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -656,6 +656,10 @@
       "element_opacity": {
         "title": "요소 불투명도",
         "desc": "바, 독, 위젯 및 기타 모든 셸 요소의 불투명도"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "흐린 배경화면 배경 추가",

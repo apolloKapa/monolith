@@ -325,10 +325,10 @@ Item {
                         anchors.fill: parent
                         visible: root.liquid
                         src: content
-                        topLeftRadius: ThemeBackend.minimalist ? 0 : (root.topLeftRadius)
-                        topRightRadius: ThemeBackend.minimalist ? 0 : (root.topRightRadius)
-                        bottomLeftRadius: ThemeBackend.minimalist ? 0 : (root.bottomLeftRadius)
-                        bottomRightRadius: ThemeBackend.minimalist ? 0 : (root.bottomRightRadius)
+                        topLeftRadius: ThemeBackend.rad(root.topLeftRadius)
+                        topRightRadius: ThemeBackend.rad(root.topRightRadius)
+                        bottomLeftRadius: ThemeBackend.rad(root.bottomLeftRadius)
+                        bottomRightRadius: ThemeBackend.rad(root.bottomRightRadius)
                         tintColor: ThemeBackend.base
                         tintAmount: Math.max(root.tint, 0.12) * (1 - 0.5 * root.nest)
                         frost: Math.max(0.5, root.blurStrength * 2.5) * 1.08 * (1 - 0.5 * root.nest)
@@ -336,7 +336,7 @@ Item {
                         nest: root.nest
                         bezel: root.bezelSize
                         filletDir: root.filletDir
-                        filletRadius: ThemeBackend.minimalist ? 0 : (root.filletRadius)
+                        filletRadius: ThemeBackend.rad(root.filletRadius)
                         filletInset: root.filletInset
                         earsOnly: root.earsOnly
                         boxRect: root.boxRect
@@ -387,13 +387,32 @@ Item {
         }
     }
 
-    // Minimalist style: square outline instead of glass/blur.
+    // Outlined styles (Minimalist, Terminal, Brutal, Luxe, Poster, Paper): a line instead of
+    // glass/blur, following the surface's corners. Brutal also gets a hard offset shadow; only
+    // the part that shows is drawn (a child can't draw behind its own surface).
+    Rectangle {
+        x: parent.width
+        y: ThemeBackend.hardShadow
+        width: ThemeBackend.hardShadow
+        height: parent.height
+        visible: ThemeBackend.hardShadow > 0 && root.nestLevel === 0 && root.surfaceEnabled && !root.earsOnly && root.parentVisible
+        color: ThemeBackend.outlineColor
+    }
+    Rectangle {
+        x: ThemeBackend.hardShadow
+        y: parent.height
+        width: parent.width
+        height: ThemeBackend.hardShadow
+        visible: ThemeBackend.hardShadow > 0 && root.nestLevel === 0 && root.surfaceEnabled && !root.earsOnly && root.parentVisible
+        color: ThemeBackend.outlineColor
+    }
+
     Rectangle {
         anchors.fill: parent
-        visible: ThemeBackend.minimalist && root.surfaceEnabled && !root.earsOnly && root.parentVisible
+        visible: ThemeBackend.outlined && root.surfaceEnabled && !root.earsOnly && root.parentVisible
         color: "transparent"
-        radius: 0
-        border.width: root.nestLevel === 0 ? ThemeBackend.minimalistOuterBorder : ThemeBackend.minimalistInnerBorder
-        border.color: ThemeBackend.minimalistBorderColor
+        radius: root.radius
+        border.width: root.nestLevel === 0 ? ThemeBackend.outlineOuter : ThemeBackend.outlineInner
+        border.color: ThemeBackend.outlineColor
     }
 }

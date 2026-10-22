@@ -42,7 +42,7 @@ SettingsBlob {
             Layout.preferredWidth: rootObj.s(32)
             Layout.preferredHeight: rootObj.s(32)
             Layout.alignment: Qt.AlignVCenter
-            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+            cornerRadius: ThemeBackend.rad(rootObj.s(6))
             buttonIcon: "󰉋"
             iconFontSize: rootObj.s(14)
             accentColor: ThemeBackend.surface0
@@ -58,7 +58,7 @@ SettingsBlob {
             Layout.preferredWidth: rootObj.s(32)
             Layout.preferredHeight: rootObj.s(32)
             Layout.alignment: Qt.AlignVCenter
-            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(6))
+            cornerRadius: ThemeBackend.rad(rootObj.s(6))
             buttonIcon: "󰐕"
             iconFontSize: rootObj.s(14)
             accentColor: ThemeBackend.surface0

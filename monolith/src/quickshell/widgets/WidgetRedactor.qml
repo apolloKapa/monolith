@@ -1875,7 +1875,7 @@ Scope {
                                             GlassFill {
                                                 id: pxGlass
                                                 anchors.fill: parent
-                                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                radius: ThemeBackend.rad(parent.radius)
                                                 tintColor: ThemeBackend.surface0
                                                 tintAmount: 0.3
                                             }
@@ -1901,7 +1901,7 @@ Scope {
                                             GlassFill {
                                                 id: arGlass
                                                 anchors.fill: parent
-                                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                radius: ThemeBackend.rad(parent.radius)
                                                 tintColor: ThemeBackend.surface0
                                                 tintAmount: 0.3
                                             }
@@ -1927,7 +1927,7 @@ Scope {
                                             GlassFill {
                                                 id: pctGlass
                                                 anchors.fill: parent
-                                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                radius: ThemeBackend.rad(parent.radius)
                                                 tintColor: ThemeBackend.surface0
                                                 tintAmount: 0.3
                                             }
@@ -2153,7 +2153,7 @@ Scope {
                                             GlassFill {
                                                 id: opacityGlass
                                                 anchors.fill: parent
-                                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                                radius: ThemeBackend.rad(parent.radius)
                                                 tintColor: ThemeBackend.surface0
                                                 tintAmount: 0.3
                                             }
@@ -2362,7 +2362,7 @@ Scope {
                                 id: toolbarBlur
                                 z: -1
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                radius: ThemeBackend.rad(parent.radius)
                                 standalone: true
                             }
                         }

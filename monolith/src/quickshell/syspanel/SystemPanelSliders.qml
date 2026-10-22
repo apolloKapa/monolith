@@ -31,7 +31,7 @@ Rectangle {
     Layout.fillWidth: true
     Layout.preferredHeight: slidersCol.implicitHeight + panel.s(20)
     Layout.maximumHeight: slidersCol.implicitHeight + panel.s(20)
-    radius: ThemeBackend.minimalist ? 0 : (panel.boxRadius)
+    radius: ThemeBackend.rad(panel.boxRadius)
     color: slidersGlass.active ? "transparent" : ThemeBackend.faded(Qt.darker(ThemeBackend.surface0, 1.04))
     opacity: panel.introSliders
     transform: Translate { x: (panel.isLeftAnchored ? -panel.rowSlideDistance : panel.rowSlideDistance) * (1.0 - panel.introSliders) }
@@ -39,7 +39,7 @@ Rectangle {
     GlassFill {
         id: slidersGlass
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: ThemeBackend.surface0
         tintAmount: 0.3
     }
@@ -57,7 +57,7 @@ Rectangle {
             IconButton {
                 Layout.alignment: Qt.AlignVCenter
                 size: panel.s(26)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (panel.s(8))
+                cornerRadius: ThemeBackend.rad(panel.s(8))
                 buttonIcon: panel.sysMuted || panel.sysVolume === 0 ? "󰖁" : (panel.sysVolume > 50 ? "󰕾" : "󰖀")
                 iconFontSize: panel.s(15)
                 accentColor: ThemeBackend.surface1
@@ -103,7 +103,7 @@ Rectangle {
                 gradColor1: panel.sysMuted ? ThemeBackend.surface2 : panel.volColor
                 gradColor2: panel.sysMuted ? ThemeBackend.surface2 : Qt.lighter(panel.volColor, 1.05)
                 gradColor3: panel.sysMuted ? ThemeBackend.surface2 : Qt.lighter(panel.volColor, 1.10)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (panel.s(6))
+                cornerRadius: ThemeBackend.rad(panel.s(6))
                 handleSize: panel.s(22)
 
                 handleColor: panel.sysMuted ? ThemeBackend.overlay0 : Qt.lighter(panel.volColor, 1.15)
@@ -146,7 +146,7 @@ Rectangle {
             IconButton {
                 Layout.alignment: Qt.AlignVCenter
                 size: panel.s(26)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (panel.s(8))
+                cornerRadius: ThemeBackend.rad(panel.s(8))
                 buttonIcon: panel.sysBrightness > 66 ? "󰃠" : (panel.sysBrightness > 33 ? "󰃟" : "󰃞")
                 iconFontSize: panel.s(15)
                 accentColor: ThemeBackend.surface1
@@ -187,7 +187,7 @@ Rectangle {
                 gradColor1: panel.briColor
                 gradColor2: Qt.lighter(panel.briColor, 1.05)
                 gradColor3: Qt.lighter(panel.briColor, 1.10)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (panel.s(6))
+                cornerRadius: ThemeBackend.rad(panel.s(6))
                 handleSize: panel.s(22)
 
                 handleColor: Qt.lighter(panel.briColor, 1.15)

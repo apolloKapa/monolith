@@ -9,7 +9,7 @@ Item {
 
     property string fontFamily: "Adwaita Mono"
     property int _borderRadius: 8
-    readonly property int borderRadius: minimalist ? 0 : _borderRadius
+    readonly property int borderRadius: square ? 0 : Math.round(_borderRadius * radiusScale)
     property int clampedBorderRadius: {
         const r = borderRadius;
         return Math.floor(
@@ -25,19 +25,83 @@ Item {
     readonly property real liquidGlassOpacity: 0.1
     readonly property bool minimalist: blurStyle === "minimalist"
 
+    // Styles (Settings -> Theme -> Style). Blur and Liquid glass are see-through; every other
+    // style is a whole look: opaque surfaces, its own corners/outlines, and a palette + font
+    // that load when it's picked (both can be changed afterwards). Components ask for tokens
+    // (square, rad(), outlined, outline*, hardShadow) instead of checking a style by name.
+    readonly property var styles: ({
+        "blur":       { "name": "Blur",         "opaque": false },
+        "liquid":     { "name": "Liquid glass", "opaque": false },
+        "minimalist": { "name": "Minimalist", "opaque": true, "square": true, "outline": [2, 1], "font": "JetBrains Mono",
+                        "desc": "Flat, square, grey outlines" },
+        "terminal":   { "name": "Terminal", "opaque": true, "square": true, "outline": [1, 1], "outlineRole": "accent", "font": "JetBrains Mono",
+                        "desc": "Phosphor on black, thin accent frames",
+                        "colors": { "base": "#0b0d0b", "mantle": "#070907", "crust": "#000000", "surface0": "#141914", "surface1": "#1c241c", "surface2": "#2a362a",
+                                    "overlay0": "#3d4d3d", "overlay1": "#557055", "overlay2": "#6f906f", "text": "#c9f5c4", "subtext0": "#86b383", "subtext1": "#a6d4a2",
+                                    "blue": "#7cf29a", "sapphire": "#7cf29a", "teal": "#7cf2d6", "mauve": "#7cf29a", "pink": "#f2c97c", "green": "#7cf29a",
+                                    "yellow": "#f2e27c", "peach": "#f2b27c", "red": "#f27c7c", "maroon": "#d46a6a" } },
+        "brutal":     { "name": "Brutal", "opaque": true, "square": false, "radiusScale": 0.5, "outline": [3, 2], "outlineRole": "ink", "hardShadow": 5, "font": "Space Grotesk",
+                        "desc": "Cream, thick ink lines, hard shadows",
+                        "colors": { "base": "#fff4dc", "mantle": "#f7e9c6", "crust": "#141414", "surface0": "#ffe08a", "surface1": "#ffd25c", "surface2": "#141414",
+                                    "overlay0": "#5a5246", "overlay1": "#3d372e", "overlay2": "#2a261f", "text": "#141414", "subtext0": "#3d372e", "subtext1": "#2a261f",
+                                    "blue": "#3a7bff", "sapphire": "#3a7bff", "teal": "#1fb8a6", "mauve": "#ff5c3a", "pink": "#ff7eb6", "green": "#2bb24c",
+                                    "yellow": "#ffd23f", "peach": "#ff8a3a", "red": "#e5262b", "maroon": "#b3191e" } },
+        "luxe":       { "name": "Luxe", "opaque": true, "radiusScale": 0.6, "outline": [1, 1], "outlineRole": "accentSoft", "font": "SF Pro Display",
+                        "desc": "Black chassis, ivory ink, gold detail",
+                        "colors": { "base": "#0e0d0c", "mantle": "#090807", "crust": "#050404", "surface0": "#191715", "surface1": "#24211d", "surface2": "#3a342c",
+                                    "overlay0": "#5b5246", "overlay1": "#7a6f60", "overlay2": "#9b8e7c", "text": "#efe6d4", "subtext0": "#b3a892", "subtext1": "#d0c5ae",
+                                    "blue": "#c9a96e", "sapphire": "#c9a96e", "teal": "#a8b89a", "mauve": "#c9a96e", "pink": "#c98a7a", "green": "#a8b89a",
+                                    "yellow": "#d9c08a", "peach": "#d4a373", "red": "#8e2f2a", "maroon": "#6e2420" } },
+        "poster":     { "name": "Poster", "opaque": true, "square": true, "outline": [3, 2], "outlineRole": "text", "font": "SF Pro Display",
+                        "desc": "Carbon plates, signal yellow, bold frames",
+                        "colors": { "base": "#111111", "mantle": "#0a0a0a", "crust": "#000000", "surface0": "#1d1d1d", "surface1": "#2a2a2a", "surface2": "#3b3b3b",
+                                    "overlay0": "#5c5c5c", "overlay1": "#7a7a7a", "overlay2": "#9a9a9a", "text": "#f5f5f0", "subtext0": "#b0b0a8", "subtext1": "#d6d6ce",
+                                    "blue": "#ffd400", "sapphire": "#ffd400", "teal": "#00e0c6", "mauve": "#ffd400", "pink": "#ff4f8b", "green": "#3ddc84",
+                                    "yellow": "#ffd400", "peach": "#ff8a00", "red": "#ff3b30", "maroon": "#c42b22" } },
+        "bubbly":     { "name": "Bubbly", "opaque": false, "radiusScale": 2.2,
+                        "desc": "Extra round, keeps your colours" },
+        "paper":      { "name": "Paper", "opaque": true, "radiusScale": 0.35, "outline": [1, 1], "outlineRole": "rule", "font": "Lora",
+                        "desc": "Ink on paper, serif type, fine rules",
+                        "colors": { "base": "#f5f2eb", "mantle": "#ece7dc", "crust": "#f9f7f2", "surface0": "#e8e2d4", "surface1": "#ddd5c4", "surface2": "#c9bfab",
+                                    "overlay0": "#a39a88", "overlay1": "#857c6b", "overlay2": "#6b6355", "text": "#242321", "subtext0": "#5e584e", "subtext1": "#45403a",
+                                    "blue": "#2f5d8a", "sapphire": "#2f5d8a", "teal": "#3d7a6e", "mauve": "#8a3b2e", "pink": "#a85a6e", "green": "#4a7a3d",
+                                    "yellow": "#b08a2e", "peach": "#b8662e", "red": "#a8322e", "maroon": "#7a2420" } }
+    })
+    readonly property var styleOrder: ["blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper"]
+    readonly property var style: styles[blurStyle] || styles["blur"]
+    readonly property bool opaqueStyle: style.opaque === true
+    readonly property bool square: style.square === true
+    readonly property real radiusScale: style.radiusScale !== undefined ? style.radiusScale : 1.0
+    // a corner radius in this style: rad(r) for any rounded thing (0 when square)
+    function rad(r) { return square ? 0 : r * radiusScale; }
+    readonly property bool outlined: style.outline !== undefined
+    readonly property int outlineOuter: outlined ? style.outline[0] : 0
+    readonly property int outlineInner: outlined ? style.outline[1] : 0
+    readonly property color outlineColor: {
+        switch (style.outlineRole) {
+            case "accent": return Qt.alpha(mauve, 0.55);
+            case "accentSoft": return Qt.alpha(mauve, 0.35);
+            case "ink": return crust;
+            case "text": return text;
+            case "rule": return surface2;
+            default: return surface2;
+        }
+    }
+    readonly property int hardShadow: style.hardShadow !== undefined ? style.hardShadow : 0
+
     // Animations (Settings -> Theme -> Animations). Every animation duration in the shell is
     // multiplied by animScale: 0 = off (instant), <1 faster, >1 slower. Looping/ambient
     // animations (spinners, waves) keep their own speed.
     property bool animationsEnabled: true
     property real animationSpeed: 1.0
     readonly property real animScale: animationsEnabled ? 1.0 / Math.max(0.25, animationSpeed) : 0
-    readonly property bool glassActive: blurBackground && !minimalist && elementOpacity < 0.999
+    readonly property bool glassActive: blurBackground && !opaqueStyle && elementOpacity < 0.999
     readonly property bool liquidGlass: blurBackground && blurStyle === "liquid"
 
     // Minimalist: flat, opaque, square, outlined. Outer surfaces get the thick line, nested ones the thin one.
-    readonly property int minimalistOuterBorder: 2
-    readonly property int minimalistInnerBorder: 1
-    readonly property color minimalistBorderColor: surface2
+    readonly property int minimalistOuterBorder: outlineOuter
+    readonly property int minimalistInnerBorder: outlineInner
+    readonly property color minimalistBorderColor: outlineColor
     readonly property string minimalistFont: "JetBrains Mono"
     readonly property var minimalistColors: ({
         "base": "#1a1a1a", "mantle": "#111111", "crust": "#000000",
@@ -273,12 +337,12 @@ Item {
         const themeConfig = Config.getSetting("theme", {});
         const pct = themeConfig.elementOpacity !== undefined ? Number(themeConfig.elementOpacity) : 100;
         root.blurBackground = !Caching.isStandalone && (themeConfig.blurBackground !== undefined ? Boolean(themeConfig.blurBackground) : false);
-        root.blurStyle = (themeConfig.blurStyle === "liquid" || themeConfig.blurStyle === "minimalist") ? themeConfig.blurStyle : "blur";
+        root.blurStyle = root.styles[themeConfig.blurStyle] ? themeConfig.blurStyle : "blur";
         const anim = themeConfig.animations || {};
         root.animationsEnabled = anim.enabled !== false;
         const speed = Number(anim.speed);
         root.animationSpeed = isNaN(speed) ? 1.0 : Math.max(0.25, Math.min(3.0, speed));
-        root.elementOpacity = (root.minimalist || Caching.isStandalone) ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));
+        root.elementOpacity = (root.opaqueStyle || Caching.isStandalone) ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));
     }
 
     function updateColors() {

@@ -156,13 +156,13 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
-        radius: ThemeBackend.minimalist ? 0 : (ThemeBackend.clampedBorderRadius)
+        radius: ThemeBackend.rad(ThemeBackend.clampedBorderRadius)
         clip: true
 
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
         }
 
         Item {
@@ -205,7 +205,7 @@ Item {
                         IconButton {
                             anchors.fill: parent
                             size: Scaler.s(32)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (Scaler.s(8))
+                            cornerRadius: ThemeBackend.rad(Scaler.s(8))
                             iconFont: root.nerdFont
                             buttonIcon: "󰐕"
                             iconFontSize: Scaler.s(15)
@@ -217,7 +217,7 @@ Item {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (Scaler.s(8))
+                            radius: ThemeBackend.rad(Scaler.s(8))
                             color: ThemeBackend.red
                             opacity: root.showError ? 0.15 : 0.0
                             z: 4
@@ -272,7 +272,7 @@ Item {
                     policy: listHover.hovered ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
                     contentItem: Rectangle {
                         implicitWidth: Scaler.s(4)
-                        radius: ThemeBackend.minimalist ? 0 : (Scaler.s(2))
+                        radius: ThemeBackend.rad(Scaler.s(2))
                         color: ThemeBackend.surface2
                     }
                 }
@@ -299,7 +299,7 @@ Item {
                         GlassFill {
                             id: noteGlass
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                             tintColor: ThemeBackend.surface1
                             tintAmount: 0.3
                             press: itemMouseArea.pressed ? 0.8 : (itemMouseArea.containsMouse ? 0.2 : 0)
@@ -321,7 +321,7 @@ Item {
 
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: ThemeBackend.minimalist ? 0 : (Scaler.s(8))
+                                    radius: ThemeBackend.rad(Scaler.s(8))
                                     color: Qt.alpha(ThemeBackend.surface2, ThemeBackend.elementOpacity)
 
                                     Text {
@@ -380,7 +380,7 @@ Item {
 
                                 FlipIcon {
                                     size: Scaler.s(26)
-                                    cornerRadius: ThemeBackend.minimalist ? 0 : (Scaler.s(6))
+                                    cornerRadius: ThemeBackend.rad(Scaler.s(6))
                                     accentColor: ThemeBackend.surface2
                                     bgOpacity: ThemeBackend.elementOpacity
                                     iconColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.subtext1
@@ -496,7 +496,7 @@ Item {
                 GlassFill {
                     id: viewerGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: ThemeBackend.surface1
                     tintAmount: 0.3
                 }
@@ -516,7 +516,7 @@ Item {
 
                             CloseButton {
                                 size: Scaler.s(32)
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (Scaler.s(8))
+                                cornerRadius: ThemeBackend.rad(Scaler.s(8))
                                 iconFont: root.nerdFont
                                 iconFontSize: Scaler.s(15)
                                 textColor: ThemeBackend.text
@@ -593,7 +593,7 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: Scaler.s(34)
-                        radius: ThemeBackend.minimalist ? 0 : (Scaler.s(8))
+                        radius: ThemeBackend.rad(Scaler.s(8))
                         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
 
                         Text {
@@ -614,7 +614,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
-                        radius: ThemeBackend.minimalist ? 0 : (Scaler.s(8))
+                        radius: ThemeBackend.rad(Scaler.s(8))
 
                         Flickable {
                             id: previewFlickable
@@ -635,7 +635,7 @@ Item {
                                 policy: previewHover.hovered ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
                                 contentItem: Rectangle {
                                     implicitWidth: Scaler.s(4)
-                                    radius: ThemeBackend.minimalist ? 0 : (Scaler.s(2))
+                                    radius: ThemeBackend.rad(Scaler.s(2))
                                     color: ThemeBackend.surface2
                                 }
                             }

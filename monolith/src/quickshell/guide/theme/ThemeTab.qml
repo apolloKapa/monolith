@@ -49,6 +49,8 @@ ThemeTabState {
 
             ThemeWallpaperDirRow { id: wallpaperDirRow; tab: themeTabRoot }
 
+            ThemeStyleSection { tab: themeTabRoot }
+
             ThemeAppearanceSection { id: appearanceSection; tab: themeTabRoot }
 
             ThemePresetsSection { tab: themeTabRoot }

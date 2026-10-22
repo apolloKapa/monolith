@@ -85,7 +85,7 @@ Item {
             Rectangle {
                 id: centralCore
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                radius: ThemeBackend.rad(width / 2)
 
                 property real disconnectFill: 0.0
                 property bool disconnectTriggered: false
@@ -139,7 +139,7 @@ Item {
                 GlassFill {
                     id: coreGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: ThemeBackend.surface0
                     tintAmount: 0.3
                     shadow: 1
@@ -151,7 +151,7 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     color: "#ffffff"
                     visible: !coreGlass.active
                     opacity: centralCore.flashOpacity
@@ -171,7 +171,7 @@ Item {
                         from: 0; to: Math.PI * 2; duration: 800
                     }
 
-                    radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                    radius: ThemeBackend.rad(width / 2)
                     fillLevel: centralCore.disconnectFill
                     waveAmp: centralCore.disconnectFill < 0.99 ? (window.s(10) * Math.sin(centralCore.disconnectFill * Math.PI)) : 0
                     phase: wavePhase
@@ -185,7 +185,7 @@ Item {
                     width: parent.height
                     height: parent.width
                     rotation: -90
-                    radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                    radius: ThemeBackend.rad(width / 2)
                     fillLevel: centralCore.disconnectFill
                     waveAmp: coreWave.waveAmp
                     phase: coreWave.wavePhase
@@ -202,7 +202,7 @@ Item {
                     anchors.centerIn: parent
                     width: parent.width + window.s(30)
                     height: width
-                    radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                    radius: ThemeBackend.rad(width / 2)
                     color: centralCore.isDangerState && window.currentConn && !showPassword ? ThemeBackend.red : window.activeColor
                     opacity: coreGlass.active ? 0.0 : ((window.currentConn || showPassword) && !isMyDisconnecting ? (centralCore.isDangerState && !showPassword ? 0.45 : 0.15) : 0.0)
                     z: -1
@@ -220,7 +220,7 @@ Item {
                     anchors.centerIn: parent
                     width: parent.width + window.s(12)
                     height: width
-                    radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                    radius: ThemeBackend.rad(width / 2)
                     color: "transparent"
                     border.color: centralCore.isDangerState && !showPassword ? ThemeBackend.red : window.activeColor
                     border.width: window.s(2)

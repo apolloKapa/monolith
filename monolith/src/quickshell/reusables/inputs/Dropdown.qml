@@ -323,7 +323,7 @@ Item {
     Rectangle {
         id: mainBtn
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: glass.active ? "transparent" : ((root.isOpen || root.isHoveredOrHighlighted) ? root.hoverColor : root.baseColor)
         opacity: root.enabled ? 1.0 : 0.5
 
@@ -333,7 +333,7 @@ Item {
         GlassFill {
             id: glass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: (root.isOpen || root.isHoveredOrHighlighted) ? root.hoverColor : root.baseColor
             tintAmount: (root.isOpen || root.isHoveredOrHighlighted) ? 0.36 : 0.26
             press: btnMa.pressed ? 1 : (root.isOpen ? 0.5 : (root.isHoveredOrHighlighted ? 0.2 : 0))
@@ -395,7 +395,7 @@ Item {
 
                         anchors.verticalCenter: parent.verticalCenter
                         height: Math.min(parent.height - 4, root.fontPixelSize * 1.7)
-                        radius: ThemeBackend.minimalist ? 0 : (4)
+                        radius: ThemeBackend.rad(4)
                         color: root.accentColor
                         opacity: hasSelection ? 0.28 : 0.0
 
@@ -592,7 +592,7 @@ Item {
                         anchors.centerIn: parent
                         width: chevronWrapper.dotSize
                         height: chevronWrapper.dotSize
-                        radius: ThemeBackend.minimalist ? 0 : (width / 2)
+                        radius: ThemeBackend.rad(width / 2)
                         color: root.iconColor
                         antialiasing: true
                         Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -603,7 +603,7 @@ Item {
                         y: -chevronWrapper.armThickness / 2
                         width: chevronWrapper.armLength
                         height: chevronWrapper.armThickness
-                        radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                        radius: ThemeBackend.rad(height / 2)
                         transformOrigin: Item.Left
                         rotation: 40
                         color: root.iconColor
@@ -616,7 +616,7 @@ Item {
                         y: -chevronWrapper.armThickness / 2
                         width: chevronWrapper.armLength
                         height: chevronWrapper.armThickness
-                        radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                        radius: ThemeBackend.rad(height / 2)
                         transformOrigin: Item.Left
                         rotation: -40
                         color: root.iconColor
@@ -630,7 +630,7 @@ Item {
         Rectangle {
             id: flashRect
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             color: "#ffffff"
             visible: !glass.active
             opacity: root.flashOpacity
@@ -697,7 +697,7 @@ Item {
 
         background: Rectangle {
             id: popupBg
-            radius: ThemeBackend.minimalist ? 0 : (Math.min(root.cornerRadius, 16))
+            radius: ThemeBackend.rad(Math.min(root.cornerRadius, 16))
             color: popupGlass.active ? "transparent" : root.dropdownColor
             layer.enabled: !ThemeBackend.liquidGlass
             property var glassBackdropItem: root.glassBackdrop
@@ -705,7 +705,7 @@ Item {
             GlassFill {
                 id: popupGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 backdropOverride: root.glassBackdrop
                 followBackdropHover: false
                 tintColor: root.dropdownColor
@@ -770,7 +770,7 @@ Item {
                 targetY: listView.hoverItem ? listView.hoverItem.y : 0
                 targetWidth: listView.hoverItem ? listView.hoverItem.width : 0
                 targetHeight: listView.hoverItem ? listView.hoverItem.height : 0
-                radius: ThemeBackend.minimalist ? 0 : (Math.max(2, Math.min(root.cornerRadius - 4, 16)))
+                radius: ThemeBackend.rad(Math.max(2, Math.min(root.cornerRadius - 4, 16)))
                 backdropOverride: root.glassBackdrop
                 followBackdropHover: false
                 forceClear: true
@@ -796,7 +796,7 @@ Item {
                 Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
 
                 contentItem: Rectangle {
-                    radius: ThemeBackend.minimalist ? 0 : (2)
+                    radius: ThemeBackend.rad(2)
                     color: ThemeBackend.liquidGlass ? Qt.alpha(root.textColor, (vScrollBar.pressed || vScrollBar.hovered) ? 0.6 : 0.3) : ((vScrollBar.pressed || vScrollBar.hovered) ? root.accentColor : root.borderColor)
                     Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
                 }
@@ -810,7 +810,7 @@ Item {
                 id: delegateRect
                 width: listView.width
                 height: 32
-                radius: ThemeBackend.minimalist ? 0 : (Math.max(2, Math.min(root.cornerRadius - 4, 16)))
+                radius: ThemeBackend.rad(Math.max(2, Math.min(root.cornerRadius - 4, 16)))
 
                 property int realIndex: root.options.indexOf(modelData)
                 readonly property bool pressed: itemMa.pressed
@@ -890,7 +890,7 @@ Item {
                 GlassFill {
                     id: delegateGlass
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     allowed: delegateRect.isSelected || (itemMa.containsMouse && !hoverLens.glassActive)
                     forceClear: true
                     backdropOverride: delegateRect.glassBackdropItem
@@ -905,7 +905,7 @@ Item {
                 Rectangle {
                     id: itemFlashAnimRect
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     color: "#ffffff"
                     visible: !delegateGlass.active
                     opacity: delegateRect.flashOpacity
@@ -956,7 +956,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         anchors.margins: -2
-        radius: ThemeBackend.minimalist ? 0 : ((typeof root.cornerRadius === "number" ? root.cornerRadius : 10) + 2)
+        radius: ThemeBackend.rad((typeof root.cornerRadius === "number" ? root.cornerRadius : 10) + 2)
         color: "transparent"
         border.width: 2
         border.color: Qt.alpha(ThemeBackend.mauve, 0.8)

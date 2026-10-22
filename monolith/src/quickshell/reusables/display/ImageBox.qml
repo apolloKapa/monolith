@@ -40,7 +40,7 @@ Item {
     Rectangle {
         id: container
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: glass.active ? "transparent" : root.backgroundColor
         border.color: root.borderColor
         border.width: root.borderWidth
@@ -49,7 +49,7 @@ Item {
         GlassFill {
             id: glass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: root.backgroundColor
             tintAmount: 0.3
             shadow: root.interactive ? 1 : 0
@@ -68,7 +68,7 @@ Item {
             Rectangle {
                 id: maskRect
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (root.imageRadius >= 0 ? root.imageRadius : Math.max(0, root.cornerRadius - root.borderWidth))
+                radius: ThemeBackend.rad(root.imageRadius >= 0 ? root.imageRadius : Math.max(0, root.cornerRadius - root.borderWidth))
                 color: "black"
                 visible: false
                 layer.enabled: true
@@ -117,7 +117,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             anchors.margins: root.borderWidth
-            radius: ThemeBackend.minimalist ? 0 : (root.imageRadius >= 0 ? root.imageRadius : Math.max(0, root.cornerRadius - root.borderWidth))
+            radius: ThemeBackend.rad(root.imageRadius >= 0 ? root.imageRadius : Math.max(0, root.cornerRadius - root.borderWidth))
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !glass.active

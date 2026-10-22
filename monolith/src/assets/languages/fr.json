@@ -48,7 +48,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "Capture d'\u00e9cran",
+      "screenshot": "Capture d'écran",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -656,6 +656,10 @@
       "element_opacity": {
         "title": "Opacité des éléments",
         "desc": "Opacité de la barre, du dock, des widgets et de tous les autres éléments du shell"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "Ajouter un arrière-plan de fond d'écran flouté",

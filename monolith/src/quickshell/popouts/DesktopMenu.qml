@@ -447,13 +447,13 @@ PanelWindow {
                         Layout.preferredWidth: iconRow.implicitWidth + desktopMenuWindow.s(8)
                         Layout.preferredHeight: iconRow.implicitHeight + desktopMenuWindow.s(8)
                         color: Qt.alpha(desktopMenuWindow.menuBackgroundColor, ThemeBackend.elementOpacity)
-                        radius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.cornerRadius)
+                        radius: ThemeBackend.rad(desktopMenuWindow.cornerRadius)
                         clip: true
 
                         WallpaperBlur {
                             z: -1
                             anchors.fill: parent
-                            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                            radius: ThemeBackend.rad(parent.radius)
                         }
 
                         Row {
@@ -466,7 +466,7 @@ PanelWindow {
                                 width: desktopMenuWindow.s(36)
                                 height: desktopMenuWindow.s(36)
                                 size: height
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                                cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                                 accentColor: desktopMenuWindow.primaryButtonColor
                                 bgOpacity: ThemeBackend.elementOpacity
                                 textColor: desktopMenuWindow.primaryTextColor
@@ -482,7 +482,7 @@ PanelWindow {
                                 width: desktopMenuWindow.s(36)
                                 height: desktopMenuWindow.s(36)
                                 size: height
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                                cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                                 accentColor: desktopMenuWindow.primaryButtonColor
                                 bgOpacity: ThemeBackend.elementOpacity
                                 textColor: desktopMenuWindow.primaryTextColor
@@ -500,7 +500,7 @@ PanelWindow {
                                 width: desktopMenuWindow.s(36)
                                 height: desktopMenuWindow.s(36)
                                 size: height
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                                cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                                 accentColor: desktopMenuWindow.isNightLightActive ? ((typeof ThemeBackend !== "undefined" && ThemeBackend.peach) ? ThemeBackend.peach : "#fab387") : desktopMenuWindow.buttonColor
                                 bgOpacity: ThemeBackend.elementOpacity
                                 textColor: desktopMenuWindow.isNightLightActive ? ((typeof ThemeBackend !== "undefined" && ThemeBackend.crust) ? ThemeBackend.crust : ((typeof ThemeBackend !== "undefined" && ThemeBackend.base) ? ThemeBackend.base : "#1e1e2e")) : ((typeof ThemeBackend !== "undefined" && ThemeBackend.text) ? ThemeBackend.text : "#cdd6f4")
@@ -517,7 +517,7 @@ PanelWindow {
                                 width: desktopMenuWindow.s(36)
                                 height: desktopMenuWindow.s(36)
                                 size: height
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                                cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                                 accentColor: desktopMenuWindow.buttonColor
                                 bgOpacity: ThemeBackend.elementOpacity
                                 textColor: ThemeBackend.text
@@ -535,7 +535,7 @@ PanelWindow {
                                 width: desktopMenuWindow.s(36)
                                 height: desktopMenuWindow.s(36)
                                 size: height
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                                cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                                 accentColor: desktopMenuWindow.buttonColor
                                 bgOpacity: ThemeBackend.elementOpacity
                                 textColor: ThemeBackend.text
@@ -551,7 +551,7 @@ PanelWindow {
                                 width: desktopMenuWindow.s(36)
                                 height: desktopMenuWindow.s(36)
                                 size: height
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                                cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                                 accentColor: (typeof ThemeBackend !== "undefined" && ThemeBackend.red) ? Qt.rgba(ThemeBackend.red.r, ThemeBackend.red.g, ThemeBackend.red.b, 0.22) : "#452026"
                                 bgOpacity: ThemeBackend.elementOpacity
                                 textColor: (typeof ThemeBackend !== "undefined" && ThemeBackend.red) ? ThemeBackend.red : "#f38ba8"
@@ -585,13 +585,13 @@ PanelWindow {
                     width: parent.width
                     height: clickButtonsCol.implicitHeight + desktopMenuWindow.s(8)
                     color: Qt.alpha(desktopMenuWindow.menuBackgroundColor, ThemeBackend.elementOpacity)
-                    radius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.cornerRadius)
+                    radius: ThemeBackend.rad(desktopMenuWindow.cornerRadius)
                     clip: true
 
                     WallpaperBlur {
                         z: -1
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                     }
 
                     Column {
@@ -606,7 +606,7 @@ PanelWindow {
                             visible: desktopMenuWindow.isWidgetMode
                             width: parent.width
                             height: desktopMenuWindow.s(29)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                            cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                             contentAlignment: Qt.AlignLeft
                             horizontalPadding: desktopMenuWindow.s(10)
                             buttonIcon: "󰕰"
@@ -632,7 +632,7 @@ PanelWindow {
                             visible: !desktopMenuWindow.isWidgetMode
                             width: parent.width
                             height: desktopMenuWindow.s(29)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                            cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                             contentAlignment: Qt.AlignLeft
                             horizontalPadding: desktopMenuWindow.s(10)
                             buttonIcon: "󰸉"
@@ -664,7 +664,7 @@ PanelWindow {
                             visible: !desktopMenuWindow.isWidgetMode
                             width: parent.width
                             height: desktopMenuWindow.s(29)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                            cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                             contentAlignment: Qt.AlignLeft
                             horizontalPadding: desktopMenuWindow.s(10)
                             buttonIcon: "󰕰"
@@ -690,7 +690,7 @@ PanelWindow {
                             visible: !desktopMenuWindow.isWidgetMode
                             width: parent.width
                             height: desktopMenuWindow.s(29)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                            cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                             contentAlignment: Qt.AlignLeft
                             horizontalPadding: desktopMenuWindow.s(10)
                             buttonIcon: "󰏘"
@@ -719,13 +719,13 @@ PanelWindow {
                     width: parent.width
                     height: settingsCol.implicitHeight + desktopMenuWindow.s(8)
                     color: Qt.alpha(desktopMenuWindow.menuBackgroundColor, ThemeBackend.elementOpacity)
-                    radius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.cornerRadius)
+                    radius: ThemeBackend.rad(desktopMenuWindow.cornerRadius)
                     clip: true
 
                     WallpaperBlur {
                         z: -1
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                     }
 
                     Column {
@@ -738,7 +738,7 @@ PanelWindow {
                         ClickButton {
                             width: parent.width
                             height: desktopMenuWindow.s(29)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (desktopMenuWindow.s(8))
+                            cornerRadius: ThemeBackend.rad(desktopMenuWindow.s(8))
                             contentAlignment: Qt.AlignLeft
                             horizontalPadding: desktopMenuWindow.s(10)
                             buttonIcon: "󰒓"

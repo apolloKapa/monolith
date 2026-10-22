@@ -51,13 +51,13 @@ Item {
         y: numbersFaceRoot.isVertical ? actualStart : wsLayout.y + (wsLayout.height - height) / 2
         width: numbersFaceRoot.isVertical ? numbersFaceRoot.pillSize : actualEnd - actualStart
         height: numbersFaceRoot.isVertical ? actualEnd - actualStart : numbersFaceRoot.pillSize
-        radius: ThemeBackend.minimalist ? 0 : (numbersFaceRoot.pillRadius)
+        radius: ThemeBackend.rad(numbersFaceRoot.pillRadius)
         color: numbersGlass.active ? "transparent" : ((widget && widget.isCompact) ? Qt.lighter(ThemeBackend.mauve, 1.05) : ThemeBackend.mauve)
 
         GlassFill {
             id: numbersGlass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: ThemeBackend.mauve
             tintAmount: 0.5
             press: 0.3 + 0.7 * activeHighlight.lift
@@ -142,7 +142,7 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (numbersFaceRoot.pillRadius)
+                    radius: ThemeBackend.rad(numbersFaceRoot.pillRadius)
                     color: numbersHoverGlass.active ? "transparent" : wsPill.isHovered
                         ? Qt.alpha(ThemeBackend.text, 0.1)
                         : (wsPill.isActive ? "transparent" : (wsPill.isOccupied ? Qt.alpha(ThemeBackend.text, 0.15) : "transparent"))
@@ -155,7 +155,7 @@ Item {
                     GlassFill {
                         id: numbersHoverGlass
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         allowed: wsPill.isHovered && !wsPill.isActive
                         tintColor: ThemeBackend.text
                         tintAmount: 0.15

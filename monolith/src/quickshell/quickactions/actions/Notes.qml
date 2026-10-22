@@ -365,7 +365,7 @@ Item {
                             accentColor: ThemeBackend.surface0
                             bgOpacity: ThemeBackend.elementOpacity
                             textColor: ThemeBackend.text
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(10))
+                            cornerRadius: ThemeBackend.rad(root.s(10))
                             implicitHeight: root.s(32)
                             onClicked: root.createNewNote()
                         }
@@ -388,7 +388,7 @@ Item {
                         IconButton {
                             visible: root.selectedCount > 0
                             size: root.s(32)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                            cornerRadius: ThemeBackend.rad(root.s(8))
                             iconFont: root.nerdFont
                             iconFontSize: root.s(15)
                             buttonIcon: "󰐃"
@@ -402,7 +402,7 @@ Item {
                         CloseButton {
                             visible: root.selectedCount > 0
                             size: root.s(32)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                            cornerRadius: ThemeBackend.rad(root.s(8))
                             iconFont: root.nerdFont
                             iconFontSize: root.s(15)
                             textColor: ThemeBackend.subtext0
@@ -415,7 +415,7 @@ Item {
                         IconButton {
                             visible: root.selectedCount > 0
                             size: root.s(32)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                            cornerRadius: ThemeBackend.rad(root.s(8))
                             iconFont: root.nerdFont
                             iconFontSize: root.s(15)
                             buttonIcon: "󰆴"
@@ -469,7 +469,7 @@ Item {
                         policy: ScrollBar.AsNeeded
                         contentItem: Rectangle {
                             implicitWidth: root.s(4)
-                            radius: ThemeBackend.minimalist ? 0 : (root.s(2))
+                            radius: ThemeBackend.rad(root.s(2))
                             color: ThemeBackend.surface2
                         }
                     }
@@ -503,7 +503,7 @@ Item {
                             GlassFill {
                                 id: noteGlass
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                                radius: ThemeBackend.rad(parent.radius)
                                 tintColor: noteDelegateWrapper.isSelected ? ThemeBackend.mauve : ThemeBackend.surface1
                                 tintAmount: noteDelegateWrapper.isSelected ? 0.5 : 0.3
                                 press: itemMouseArea.pressed ? 0.8 : (itemMouseArea.containsMouse ? 0.2 : 0)
@@ -526,7 +526,7 @@ Item {
 
                                     Rectangle {
                                         anchors.fill: parent
-                                        radius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                        radius: ThemeBackend.rad(root.s(8))
                                         color: noteDelegateWrapper.isSelected
                                             ? Qt.rgba(0, 0, 0, 0.15)
                                             : Qt.alpha(ThemeBackend.surface2, ThemeBackend.elementOpacity)
@@ -595,7 +595,7 @@ Item {
                                     FlipIcon {
                                         id: noteExpandBtn
                                         size: root.s(26)
-                                        cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(6))
+                                        cornerRadius: ThemeBackend.rad(root.s(6))
                                         accentColor: ThemeBackend.surface2
                                         bgOpacity: ThemeBackend.elementOpacity
                                         iconColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.subtext1
@@ -740,7 +740,7 @@ Item {
                     GlassFill {
                         id: editorGlass
                         anchors.fill: parent
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         tintColor: ThemeBackend.surface1
                         tintAmount: 0.3
                     }
@@ -762,7 +762,7 @@ Item {
                                 CloseButton {
                                     id: closeBtn
                                     size: root.s(32)
-                                    cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                    cornerRadius: ThemeBackend.rad(root.s(8))
                                     iconFont: root.nerdFont
                                     iconFontSize: root.s(15)
                                     textColor: ThemeBackend.text
@@ -863,7 +863,7 @@ Item {
                                 IconButton {
                                     id: pinBtn
                                     size: root.s(32)
-                                    cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                    cornerRadius: ThemeBackend.rad(root.s(8))
                                     iconFont: root.nerdFont
                                     iconFontSize: root.s(15)
                                     buttonIcon: "󰐃"
@@ -877,7 +877,7 @@ Item {
                                 IconButton {
                                     id: markdownPreviewBtn
                                     size: root.s(32)
-                                    cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                    cornerRadius: ThemeBackend.rad(root.s(8))
                                     iconFont: root.nerdFont
                                     iconFontSize: root.s(15)
                                     buttonIcon: root.isMarkdownPreview ? "󰈙" : "󰂺"
@@ -898,7 +898,7 @@ Item {
                                     accentColor: ThemeBackend.mauve
                                     bgOpacity: ThemeBackend.elementOpacity
                                     textColor: ThemeBackend.base
-                                    cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                    cornerRadius: ThemeBackend.rad(root.s(8))
                                     implicitHeight: root.s(32)
                                     Layout.alignment: Qt.AlignVCenter
                                     onClicked: root.saveCurrentNote()
@@ -918,7 +918,7 @@ Item {
                                 bgOpacity: ThemeBackend.elementOpacity
                                 textColor: ThemeBackend.text
                                 placeholderText: I18n.t("quickactions.notes.title_placeholder")
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                cornerRadius: ThemeBackend.rad(root.s(8))
                                 fontPixelSize: root.s(12)
                                 leadingIcon: ""
                                 showClearButton: true
@@ -928,7 +928,7 @@ Item {
                             Rectangle {
                                 id: previewTitleBar
                                 anchors.fill: parent
-                                radius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                radius: ThemeBackend.rad(root.s(8))
                                 color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
                                 visible: root.isMarkdownPreview
 
@@ -971,7 +971,7 @@ Item {
                                 bgOpacity: ThemeBackend.elementOpacity
                                 textColor: ThemeBackend.text
                                 placeholderText: I18n.t("quickactions.notes.content_placeholder")
-                                cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                cornerRadius: ThemeBackend.rad(root.s(8))
                                 fontPixelSize: root.s(12)
                                 multiLine: true
                                 leadingIcon: ""
@@ -982,7 +982,7 @@ Item {
                                 id: previewContainer
                                 anchors.fill: parent
                                 color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
-                                radius: ThemeBackend.minimalist ? 0 : (root.s(8))
+                                radius: ThemeBackend.rad(root.s(8))
                                 visible: root.isMarkdownPreview
 
                                 Flickable {
@@ -1000,7 +1000,7 @@ Item {
                                         policy: ScrollBar.AsNeeded
                                         contentItem: Rectangle {
                                             implicitWidth: root.s(4)
-                                            radius: ThemeBackend.minimalist ? 0 : (root.s(2))
+                                            radius: ThemeBackend.rad(root.s(2))
                                             color: ThemeBackend.surface2
                                         }
                                     }

@@ -656,6 +656,10 @@
         "title": "Opacità degli elementi",
         "desc": "Opacità di barra, dock, widget e di ogni altro elemento della shell"
       },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
+      },
       "blur_background": {
         "title": "Aggiungi uno sfondo sfocato del wallpaper",
         "desc": "Sfoca il wallpaper dietro ogni elemento che usa la trasparenza",

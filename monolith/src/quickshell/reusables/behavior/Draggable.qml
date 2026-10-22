@@ -170,7 +170,7 @@ Item {
     Rectangle {
         id: bgTrack
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: trackGlass.active ? "transparent" : root.backgroundColor
         opacity: root.enabled ? 1.0 : 0.5
         clip: true
@@ -178,7 +178,7 @@ Item {
         GlassFill {
             id: trackGlass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+            radius: ThemeBackend.rad(root.cornerRadius)
             tintColor: root.backgroundColor
             tintAmount: 0.1
         }
@@ -201,7 +201,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+                radius: ThemeBackend.rad(root.cornerRadius)
                 visible: !fillGlass.active
 
                 gradient: Gradient {
@@ -215,7 +215,7 @@ Item {
             GlassFill {
                 id: fillGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+                radius: ThemeBackend.rad(root.cornerRadius)
                 forceClear: true
                 tintColor: root.accentColor
                 tintAmount: root.glassTint
@@ -234,7 +234,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius)
+        radius: ThemeBackend.rad(root.cornerRadius)
         color: "transparent"
         border.color: Qt.rgba(1, 1, 1, 0.06)
         border.width: 1
@@ -248,7 +248,7 @@ Item {
 
         width: root.showValueBubble ? Math.max(root.handleSize, Math.round(handleText.contentWidth + textPadding)) : root.handleSize
         height: root.handleSize
-        radius: ThemeBackend.minimalist ? 0 : (Math.min(width, height) / 2)
+        radius: ThemeBackend.rad(Math.min(width, height) / 2)
         x: root.vertical ? (root.width - width) / 2 : root.animPosition * (root.width - width)
         y: root.vertical ? (1.0 - root.animPosition) * (root.height - height) : (root.height - height) / 2
         color: handleGlass.active ? "transparent" : (root.isDragging ? root.handleDragColor : (root.isHoveredOrHighlighted ? root.handleHoverColor : root.handleColor))
@@ -258,7 +258,7 @@ Item {
         GlassFill {
             id: handleGlass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: root.handleColor
             tintAmount: root.glassTint * 0.8
             frost: root.glassFrost
@@ -318,7 +318,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             color: "#ffffff"
             opacity: handle.flashOpacity
             visible: !handleGlass.active
@@ -363,7 +363,7 @@ Item {
 
         width: bubbleText.contentWidth + 16
         height: 22
-        radius: ThemeBackend.minimalist ? 0 : (8)
+        radius: ThemeBackend.rad(8)
         color: root.accentColor
 
         property real targetCenter: root.vertical

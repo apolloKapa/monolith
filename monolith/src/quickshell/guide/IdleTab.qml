@@ -412,7 +412,7 @@ GuideTab {
                     visible: !actionCard.isPipelineValid && actionCard.actEnabled
                     implicitWidth: invalidBadgeText.implicitWidth + rootObj.s(8)
                     implicitHeight: rootObj.s(18)
-                    radius: ThemeBackend.minimalist ? 0 : (rootObj.s(4))
+                    radius: ThemeBackend.rad(rootObj.s(4))
                     color: Qt.alpha(ThemeBackend.red, 0.15)
                     border.color: Qt.alpha(ThemeBackend.red, 0.4)
                     border.width: 1
@@ -495,7 +495,7 @@ GuideTab {
                 visible: actionCard.isCustomAct
                 Layout.alignment: Qt.AlignVCenter
                 size: rootObj.s(28)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(8))
+                cornerRadius: ThemeBackend.rad(rootObj.s(8))
                 iconFontSize: rootObj.s(14)
                 onClicked: {
                     idleTabRoot.deleteCustomAction(actionCard.actId);
@@ -505,7 +505,7 @@ GuideTab {
             FlipIcon {
                 Layout.alignment: Qt.AlignVCenter
                 size: rootObj.s(28)
-                cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(8))
+                cornerRadius: ThemeBackend.rad(rootObj.s(8))
                 accentColor: ThemeBackend.surface0
                 iconColor: isHoveredOrHighlighted ? ThemeBackend.text : ThemeBackend.overlay2
                 autoToggle: false
@@ -815,7 +815,7 @@ GuideTab {
                 GlassFill {
                     id: gf1
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                    radius: ThemeBackend.rad(parent.radius)
                     tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
                     tintAmount: 0.25
                 }
@@ -877,7 +877,7 @@ GuideTab {
                             size: rootObj.s(32)
                             Layout.preferredWidth: rootObj.s(32)
                             Layout.preferredHeight: rootObj.s(32)
-                            cornerRadius: ThemeBackend.minimalist ? 0 : (rootObj.s(8))
+                            cornerRadius: ThemeBackend.rad(rootObj.s(8))
                             buttonIcon: "󰐕"
                             iconFontSize: rootObj.s(14)
                             accentColor: ThemeBackend.surface0

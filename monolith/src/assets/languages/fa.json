@@ -48,7 +48,7 @@
       "theme_animations": "Animations",
       "theme_windows": "Windows",
       "screenshots": "Screenshots",
-      "screenshot": "\u0639\u06a9\u0633 \u0635\u0641\u062d\u0647",
+      "screenshot": "عکس صفحه",
       "screenshot_keys": "Keys"
     },
     "launcher": {
@@ -656,6 +656,10 @@
       "element_opacity": {
         "title": "شفافیت عناصر",
         "desc": "شفافیت نوار، داک، ویجت‌ها و هر عنصر دیگر پوسته"
+      },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
       },
       "blur_background": {
         "title": "افزودن پس‌زمینه تاری از تصویر زمینه",

@@ -125,7 +125,7 @@ GuideTab {
                     width: rootObj.s(20)
                     height: rootObj.s(20)
                     anchors.verticalCenter: parent.verticalCenter
-                    radius: ThemeBackend.minimalist ? 0 : width / 2
+                    radius: ThemeBackend.rad(width / 2)
                     color: modelData
                     border.width: winTab.shownColor(colorRow.which).toLowerCase() === modelData.toLowerCase() ? 2 : 1
                     border.color: winTab.shownColor(colorRow.which).toLowerCase() === modelData.toLowerCase() ? ThemeBackend.text : Qt.alpha(ThemeBackend.surface2, 0.8)
@@ -190,7 +190,7 @@ GuideTab {
                                 width: rootObj.s(170)
                                 height: rootObj.s(90)
                                 color: ThemeBackend.surface0
-                                radius: ThemeBackend.minimalist ? 0 : rootObj.s(8)
+                                radius: ThemeBackend.rad(rootObj.s(8))
                                 border.width: winTab.bordersOn ? Math.max(1, winTab.borderWidth) : 0
                                 border.color: winTab.shownColor(modelData)
                                 Behavior on border.color { ColorAnimation { duration: 150 * ThemeBackend.animScale } }

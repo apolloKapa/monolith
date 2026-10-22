@@ -1428,6 +1428,10 @@
         "title": "Przezroczystość elementów",
         "desc": "Przezroczystość paska, docka, widżetów i wszystkich innych elementów powłoki"
       },
+      "style": {
+        "title": "Style",
+        "desc": "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below"
+      },
       "blur_background": {
         "title": "Dodaj rozmyte tło z tapety",
         "desc": "Rozmywa tapetę za każdym elementem używającym przezroczystości",

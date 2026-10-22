@@ -100,13 +100,13 @@ Item {
         WallpaperBlur {
             z: -1
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
         }
 
         Rectangle {
             id: bgMask
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (bgContainer.radius)
+            radius: ThemeBackend.rad(bgContainer.radius)
             visible: false
             layer.enabled: true
         }
@@ -166,7 +166,7 @@ Item {
                 Rectangle {
                     id: artMask
                     anchors.fill: parent
-                    radius: ThemeBackend.minimalist ? 0 : (artRect.radius)
+                    radius: ThemeBackend.rad(artRect.radius)
                     visible: false
                     layer.enabled: true
                 }
@@ -239,7 +239,7 @@ Item {
                         Layout.preferredHeight: root.btnSize
                         Layout.minimumWidth: 0
                         Layout.minimumHeight: 0
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(4, root.btnSize * 0.2))
+                        cornerRadius: ThemeBackend.rad(Math.max(4, root.btnSize * 0.2))
                         buttonIcon: "󰒮"
                         iconFontSize: root.iconSize
                         accentColor: ThemeBackend.surface1
@@ -253,7 +253,7 @@ Item {
                         Layout.preferredHeight: root.btnSize
                         Layout.minimumWidth: 0
                         Layout.minimumHeight: 0
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(4, root.btnSize * 0.2))
+                        cornerRadius: ThemeBackend.rad(Math.max(4, root.btnSize * 0.2))
                         buttonIcon: (root.isMediaActive && MprisController.isPlaying) ? "󰏤" : "󰐊"
                         iconFontSize: root.iconSize
                         accentColor: ThemeBackend.surface1
@@ -267,7 +267,7 @@ Item {
                         Layout.preferredHeight: root.btnSize
                         Layout.minimumWidth: 0
                         Layout.minimumHeight: 0
-                        cornerRadius: ThemeBackend.minimalist ? 0 : (Math.max(4, root.btnSize * 0.2))
+                        cornerRadius: ThemeBackend.rad(Math.max(4, root.btnSize * 0.2))
                         buttonIcon: "󰒭"
                         iconFontSize: root.iconSize
                         accentColor: ThemeBackend.surface1

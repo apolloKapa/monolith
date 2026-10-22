@@ -35,7 +35,7 @@ RowLayout {
         GlassFill {
             id: timeGlass
             anchors.fill: parent
-            radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+            radius: ThemeBackend.rad(parent.radius)
             tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
             tintAmount: 0.25
         }
@@ -94,13 +94,13 @@ RowLayout {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: rootObj.s(6)
-                    radius: ThemeBackend.minimalist ? 0 : (height / 2)
+                    radius: ThemeBackend.rad(height / 2)
                     color: ThemeBackend.surface1
 
                     Rectangle {
                         height: parent.height
                         width: parent.width * Math.min(1, stats.tab.totalSeconds / Math.max(1, stats.limit))
-                        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                        radius: ThemeBackend.rad(parent.radius)
                         color: stats.overLimit ? ThemeBackend.red : ThemeBackend.mauve
                         Behavior on width { NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
                     }
@@ -145,7 +145,7 @@ RowLayout {
             GlassFill {
                 id: cardGlass
                 anchors.fill: parent
-                radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+                radius: ThemeBackend.rad(parent.radius)
                 tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
                 tintAmount: 0.25
             }

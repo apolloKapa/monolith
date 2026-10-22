@@ -18,7 +18,7 @@ Rectangle {
     GlassFill {
         id: widgetCardGlass1
         anchors.fill: parent
-        radius: ThemeBackend.minimalist ? 0 : (parent.radius)
+        radius: ThemeBackend.rad(parent.radius)
         tintColor: Qt.alpha(ThemeBackend.surface0, 0.4)
         tintAmount: 0.25
     }

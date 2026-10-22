@@ -50,7 +50,7 @@ BarModuleCard {
                         height: variantId === "pills" ? rootObj.s(8) : rootObj.s(18)
                         Layout.preferredWidth: width
                         Layout.preferredHeight: height
-                        radius: ThemeBackend.minimalist ? 0 : (variantId === "pills" ? height / 2 : rootObj.s(4))
+                        radius: ThemeBackend.rad(variantId === "pills" ? height / 2 : rootObj.s(4))
                         color: isActive ? ThemeBackend.mauve : Qt.alpha(ThemeBackend.surface2, 0.7)
 
                         Text {
@@ -92,7 +92,7 @@ BarModuleCard {
                             : rootObj.s(18)
                         Layout.preferredWidth: width
                         Layout.preferredHeight: height
-                        radius: ThemeBackend.minimalist ? 0 : (variantId === "pills" ? width / 2 : rootObj.s(4))
+                        radius: ThemeBackend.rad(variantId === "pills" ? width / 2 : rootObj.s(4))
                         color: isActive ? ThemeBackend.mauve : Qt.alpha(ThemeBackend.surface2, 0.7)
 
                         Text {
