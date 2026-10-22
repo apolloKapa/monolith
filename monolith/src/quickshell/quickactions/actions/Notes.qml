@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import "../../reusables"
 import "../../"
+import "NotesFormat.js" as NotesFormat
 
 Item {
     id: root
@@ -137,56 +138,12 @@ Item {
     }
 
     function formatRelativeTime(timestamp) {
-        if (!timestamp) return "";
-        let now = new Date();
-        let notifDate = new Date(timestamp);
-        let diffSec = Math.floor((now.getTime() - notifDate.getTime()) / 1000);
-
         let fmt = (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar && Config.rawSettings.bar.time && Config.rawSettings.bar.time.format !== undefined) ? Config.rawSettings.bar.time.format : "HH:mm";
-        let timePart = "HH:mm";
-        if (fmt.indexOf("hh:") !== -1) {
-            timePart = Qt.formatDateTime(notifDate, "hh:mm AP");
-        } else {
-            timePart = Qt.formatDateTime(notifDate, "HH:mm");
-        }
-
-        if (diffSec < 60) {
-            return I18n.t("datetime.just_now");
-        }
-
-        let diffMin = Math.floor(diffSec / 60);
-        if (diffMin < 60) {
-            return I18n.t("datetime.minutes_ago", { mins: diffMin });
-        }
-
-        let isSameDay = now.getFullYear() === notifDate.getFullYear() &&
-                        now.getMonth() === notifDate.getMonth() &&
-                        now.getDate() === notifDate.getDate();
-
-        let yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        let isYesterday = yesterday.getFullYear() === notifDate.getFullYear() &&
-                          yesterday.getMonth() === notifDate.getMonth() &&
-                          yesterday.getDate() === notifDate.getDate();
-
-        let diffDays = Math.floor(diffSec / 86400);
-
-        if (isSameDay) {
-            return timePart;
-        } else if (isYesterday) {
-            return I18n.t("datetime.yesterday", { time: timePart });
-        } else if (diffDays < 7) {
-            let dayName = Qt.formatDateTime(notifDate, "dddd");
-            return dayName + " " + timePart;
-        } else {
-            return Qt.formatDateTime(notifDate, "yyyy-MM-dd ") + timePart;
-        }
+        return NotesFormat.formatRelativeTime(timestamp, I18n, fmt);
     }
 
     function formatPreciseTime(timestamp) {
-        if (!timestamp) return "";
-        let d = new Date(timestamp);
-        return Qt.formatDateTime(d, "yyyy-MM-dd HH:mm:ss");
+        return NotesFormat.formatPreciseTime(timestamp);
     }
 
     Process {
@@ -361,65 +318,8 @@ Item {
         root.expandProgress = 0.0;
     }
 
-    function formatInlineMarkdown(text) {
-        if (!text) return "";
-        let s = text;
-        s = s.replace(/`([^`]+)`/g, "<font color=\"#fab387\" face=\"monospace\"><b>$1</b></font>");
-        s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
-        s = s.replace(/__([^_]+)__/g, "<b>$1</b>");
-        s = s.replace(/\*([^*]+)\*/g, "<i>$1</i>");
-        s = s.replace(/_([^_]+)_/g, "<i>$1</i>");
-        s = s.replace(/~~([^~]+)~~/g, "<s>$1</s>");
-        return s;
-    }
-
     function markdownToHtml(md) {
-        if (!md) return "";
-        let lines = md.split("\n");
-        let out = [];
-        let inCode = false;
-        let codeLines = [];
-        for (let i = 0; i < lines.length; i++) {
-            let line = lines[i];
-            if (line.trim().indexOf("```") === 0) {
-                if (inCode) {
-                    out.push("<pre style=\"background-color:#181825;color:#cdd6f4;\"><code>" + codeLines.join("<br/>") + "</code></pre>");
-                    codeLines = [];
-                    inCode = false;
-                } else {
-                    inCode = true;
-                    codeLines = [];
-                }
-                continue;
-            }
-            if (inCode) {
-                let esc = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                codeLines.push(esc);
-                continue;
-            }
-            let esc = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            if (esc.indexOf("### ") === 0) {
-                out.push("<b><font size=\"+1\">" + formatInlineMarkdown(esc.substring(4)) + "</font></b>");
-            } else if (esc.indexOf("## ") === 0) {
-                out.push("<b><font size=\"+2\">" + formatInlineMarkdown(esc.substring(3)) + "</font></b>");
-            } else if (esc.indexOf("# ") === 0) {
-                out.push("<b><font size=\"+3\">" + formatInlineMarkdown(esc.substring(2)) + "</font></b>");
-            } else if (/^\s*[-*+]\s+/.test(esc)) {
-                let item = esc.replace(/^\s*[-*+]\s+/, "");
-                out.push("&nbsp;&nbsp;• " + formatInlineMarkdown(item));
-            } else if (/^\s*\d+\.\s+/.test(esc)) {
-                let m = esc.match(/^(\s*\d+\.)\s+(.*)$/);
-                out.push("&nbsp;&nbsp;" + (m ? m[1] + " " + formatInlineMarkdown(m[2]) : esc));
-            } else if (esc.indexOf("> ") === 0) {
-                out.push("<i><font color=\"#a6adc8\">│ " + formatInlineMarkdown(esc.substring(2)) + "</font></i>");
-            } else {
-                out.push(formatInlineMarkdown(esc));
-            }
-        }
-        if (inCode && codeLines.length > 0) {
-            out.push("<pre style=\"background-color:#181825;color:#cdd6f4;\"><code>" + codeLines.join("<br/>") + "</code></pre>");
-        }
-        return out.join("<br/>");
+        return NotesFormat.markdownToHtml(md);
     }
 
     Item {
@@ -499,13 +399,12 @@ Item {
                             onClicked: root.togglePinSelectedNotes()
                         }
 
-                        IconButton {
+                        CloseButton {
                             visible: root.selectedCount > 0
                             size: root.s(32)
                             cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
                             iconFont: root.nerdFont
                             iconFontSize: root.s(15)
-                            buttonIcon: "󰅖"
                             textColor: ThemeBackend.subtext0
                             accentColor: ThemeBackend.surface0
                             bgOpacity: ThemeBackend.elementOpacity
@@ -586,7 +485,7 @@ Item {
                         height: isTargetNote ? (root.s(54) + (root.s(130) - root.s(54)) * root.expandProgress) : root.s(54)
 
                         scale: itemMouseArea.pressed ? 0.98 : 1.0
-                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                        Behavior on scale { NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
                         Rectangle {
                             id: noteItemCard
@@ -608,10 +507,10 @@ Item {
                                 tintColor: noteDelegateWrapper.isSelected ? ThemeBackend.mauve : ThemeBackend.surface1
                                 tintAmount: noteDelegateWrapper.isSelected ? 0.5 : 0.3
                                 press: itemMouseArea.pressed ? 0.8 : (itemMouseArea.containsMouse ? 0.2 : 0)
-                                Behavior on press { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                                Behavior on press { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                             }
 
-                            Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                            Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                             RowLayout {
                                 anchors.fill: parent
@@ -632,7 +531,7 @@ Item {
                                             ? Qt.rgba(0, 0, 0, 0.15)
                                             : Qt.alpha(ThemeBackend.surface2, ThemeBackend.elementOpacity)
 
-                                        Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                                         Text {
                                             anchors.centerIn: parent
@@ -641,7 +540,7 @@ Item {
                                             color: (noteDelegateWrapper.isSelected && !noteGlass.active) ? ThemeBackend.crust : (noteDelegateWrapper.isSelected ? ThemeBackend.text : ThemeBackend.subtext0)
                                             text: "󰈙"
 
-                                            Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                         }
                                     }
                                 }
@@ -660,7 +559,7 @@ Item {
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
 
-                                        Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                     }
 
                                     Text {
@@ -676,7 +575,7 @@ Item {
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
 
-                                        Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                     }
                                 }
 
@@ -690,7 +589,7 @@ Item {
                                         font.family: ThemeBackend.fontFamily
                                         font.pixelSize: root.s(10)
 
-                                        Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                        Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                     }
 
                                     FlipIcon {
@@ -860,13 +759,12 @@ Item {
                                 anchors.fill: parent
                                 spacing: root.s(8)
 
-                                IconButton {
+                                CloseButton {
                                     id: closeBtn
                                     size: root.s(32)
                                     cornerRadius: ThemeBackend.minimalist ? 0 : (root.s(8))
                                     iconFont: root.nerdFont
                                     iconFontSize: root.s(15)
-                                    buttonIcon: "󰅖"
                                     textColor: ThemeBackend.text
                                     accentColor: ThemeBackend.surface2
                                     bgOpacity: ThemeBackend.elementOpacity

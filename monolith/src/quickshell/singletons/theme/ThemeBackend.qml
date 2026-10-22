@@ -272,13 +272,13 @@ Item {
     function syncElementOpacity() {
         const themeConfig = Config.getSetting("theme", {});
         const pct = themeConfig.elementOpacity !== undefined ? Number(themeConfig.elementOpacity) : 100;
-        root.blurBackground = themeConfig.blurBackground !== undefined ? Boolean(themeConfig.blurBackground) : false;
+        root.blurBackground = !Caching.isStandalone && (themeConfig.blurBackground !== undefined ? Boolean(themeConfig.blurBackground) : false);
         root.blurStyle = (themeConfig.blurStyle === "liquid" || themeConfig.blurStyle === "minimalist") ? themeConfig.blurStyle : "blur";
         const anim = themeConfig.animations || {};
         root.animationsEnabled = anim.enabled !== false;
         const speed = Number(anim.speed);
         root.animationSpeed = isNaN(speed) ? 1.0 : Math.max(0.25, Math.min(3.0, speed));
-        root.elementOpacity = root.minimalist ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));
+        root.elementOpacity = (root.minimalist || Caching.isStandalone) ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));
     }
 
     function updateColors() {
@@ -297,7 +297,7 @@ Item {
         if (root.isMatugenTheme()) {
             root.applyMatugenColors();
             let wp = themeConfig.wallpaper || Config.getSetting("wallpaper", "");
-            if (typeof Matugen !== "undefined" && typeof Matugen.generate === "function") {
+            if (!Caching.isStandalone && typeof Matugen !== "undefined" && typeof Matugen.generate === "function") {
                 Matugen.generate(wp, themeConfig.mode, themeConfig.schemeType);
             }
             root._readInProgress = false;
@@ -305,7 +305,7 @@ Item {
             root._readInProgress = false;
             if (customColors) {
                 root.applyColorObject(customColors);
-                if (typeof Matugen !== "undefined" && typeof Matugen.generateFromStatic === "function") {
+                if (!Caching.isStandalone && typeof Matugen !== "undefined" && typeof Matugen.generateFromStatic === "function") {
                     Matugen.generateFromStatic(customColors, themeConfig.mode);
                 }
             } else {

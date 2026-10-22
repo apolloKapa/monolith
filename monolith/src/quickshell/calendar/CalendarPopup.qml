@@ -219,12 +219,12 @@ Item {
 
     property real globalOrbitOffset: 0
     NumberAnimation on globalOrbitOffset {
-        from: 0; to: -360; duration: 60000; loops: Animation.Infinite; running: window.visible
+        from: 0; to: -360; duration: (60000) * ThemeBackend.animScale; loops: Animation.Infinite; running: window.visible
     }
 
     property real globalOscPhase: 0
     NumberAnimation on globalOscPhase {
-        from: 0; to: Math.PI * 2; duration: 9000; loops: Animation.Infinite; running: window.visible
+        from: 0; to: Math.PI * 2; duration: (9000) * ThemeBackend.animScale; loops: Animation.Infinite; running: window.visible
     }
 
     property var currentTime: DateTime.now
@@ -418,7 +418,10 @@ Item {
         let isRealCurrentMonth = (actualToday.getMonth() === targetMonth && actualToday.getFullYear() === targetYear);
         let todayDate = actualToday.getDate();
 
-        window.targetMonthName = d.toLocaleDateString(Qt.locale(I18n.currentLang), "MMMM yyyy");
+        let monthLoc = Qt.locale(I18n.qtLocaleName);
+        // standalone month name, so Ukrainian reads "Жовтень 2026" and not "жовтня 2026"
+        let monthName = monthLoc.standaloneMonthName(d.getMonth(), Locale.LongFormat);
+        window.targetMonthName = monthName.charAt(0).toUpperCase() + monthName.slice(1) + " " + d.getFullYear();
 
         let firstDay = new Date(targetYear, targetMonth, 1).getDay();
         firstDay = (firstDay === 0) ? 6 : firstDay - 1;
@@ -486,15 +489,15 @@ Item {
                     SequentialAnimation on x {
                         loops: Animation.Infinite
                         running: window.visible
-                        NumberAnimation { from: window.s(350); to: -window.s(350); duration: 30000; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: -window.s(350); to: window.s(350); duration: 30000; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: window.s(350); to: -window.s(350); duration: (30000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: -window.s(350); to: window.s(350); duration: (30000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                     }
                     SequentialAnimation on y {
                         loops: Animation.Infinite
                         running: window.visible
-                        NumberAnimation { from: 0; to: window.s(200); duration: 15000; easing.type: Easing.OutSine }
-                        NumberAnimation { from: window.s(200); to: -window.s(200); duration: 30000; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: -window.s(200); to: 0; duration: 15000; easing.type: Easing.InSine }
+                        NumberAnimation { from: 0; to: window.s(200); duration: (15000) * ThemeBackend.animScale; easing.type: Easing.OutSine }
+                        NumberAnimation { from: window.s(200); to: -window.s(200); duration: (30000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: -window.s(200); to: 0; duration: (15000) * ThemeBackend.animScale; easing.type: Easing.InSine }
                     }
                 }
             }
@@ -511,15 +514,15 @@ Item {
                     SequentialAnimation on x {
                         loops: Animation.Infinite
                         running: window.visible
-                        NumberAnimation { from: 0; to: -window.s(300); duration: 18750; easing.type: Easing.OutSine }
-                        NumberAnimation { from: -window.s(300); to: window.s(300); duration: 37500; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: window.s(300); to: 0; duration: 18750; easing.type: Easing.InSine }
+                        NumberAnimation { from: 0; to: -window.s(300); duration: (18750) * ThemeBackend.animScale; easing.type: Easing.OutSine }
+                        NumberAnimation { from: -window.s(300); to: window.s(300); duration: (37500) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: window.s(300); to: 0; duration: (18750) * ThemeBackend.animScale; easing.type: Easing.InSine }
                     }
                     SequentialAnimation on y {
                         loops: Animation.Infinite
                         running: window.visible
-                        NumberAnimation { from: -window.s(250); to: window.s(250); duration: 37500; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: window.s(250); to: -window.s(250); duration: 37500; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: -window.s(250); to: window.s(250); duration: (37500) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: window.s(250); to: -window.s(250); duration: (37500) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                     }
                 }
             }
@@ -536,15 +539,15 @@ Item {
                     SequentialAnimation on x {
                         loops: Animation.Infinite
                         running: window.visible
-                        NumberAnimation { from: window.s(400); to: -window.s(400); duration: 25000; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: -window.s(400); to: window.s(400); duration: 25000; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: window.s(400); to: -window.s(400); duration: (25000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: -window.s(400); to: window.s(400); duration: (25000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                     }
                     SequentialAnimation on y {
                         loops: Animation.Infinite
                         running: window.visible
-                        NumberAnimation { from: 0; to: -window.s(350); duration: 12500; easing.type: Easing.OutSine }
-                        NumberAnimation { from: -window.s(350); to: window.s(350); duration: 25000; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: window.s(350); to: 0; duration: 12500; easing.type: Easing.InSine }
+                        NumberAnimation { from: 0; to: -window.s(350); duration: (12500) * ThemeBackend.animScale; easing.type: Easing.OutSine }
+                        NumberAnimation { from: -window.s(350); to: window.s(350); duration: (25000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: window.s(350); to: 0; duration: (12500) * ThemeBackend.animScale; easing.type: Easing.InSine }
                     }
                 }
             }
@@ -573,9 +576,9 @@ Item {
                     SequentialAnimation on opacity {
                         loops: Animation.Infinite
                         running: window.visible
-                        NumberAnimation { from: 0.015; to: 0.018; duration: 5625; easing.type: Easing.OutSine }
-                        NumberAnimation { from: 0.018; to: 0.012; duration: 11250; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: 0.012; to: 0.015; duration: 5625; easing.type: Easing.InSine }
+                        NumberAnimation { from: 0.015; to: 0.018; duration: (5625) * ThemeBackend.animScale; easing.type: Easing.OutSine }
+                        NumberAnimation { from: 0.018; to: 0.012; duration: (11250) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.012; to: 0.015; duration: (5625) * ThemeBackend.animScale; easing.type: Easing.InSine }
                     }
 
                     transform: [
@@ -583,8 +586,8 @@ Item {
                             SequentialAnimation on y {
                                 loops: Animation.Infinite
                                 running: window.visible
-                                NumberAnimation { to: -window.s(8); duration: 6000; easing.type: Easing.InOutSine }
-                                NumberAnimation { to: 0; duration: 6000; easing.type: Easing.InOutSine }
+                                NumberAnimation { to: -window.s(8); duration: (6000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                                NumberAnimation { to: 0; duration: (6000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                             }
                         },
                         Translate { x: window.weatherContentOffset * 2 }
@@ -609,32 +612,32 @@ Item {
                         SequentialAnimation on y {
                             loops: Animation.Infinite
                             running: window.visible
-                            NumberAnimation { to: -window.s(6); duration: 4500; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: 0; duration: 4500; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: -window.s(6); duration: (4500) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: 0; duration: (4500) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                         }
                     },
                     Rotation {
                         axis { x: 1; y: 0; z: 0 }
                         SequentialAnimation on angle {
                             loops: Animation.Infinite; running: window.visible
-                            NumberAnimation { to: 1.5; duration: 4800; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: -1.5; duration: 4800; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: 1.5; duration: (4800) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: -1.5; duration: (4800) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                         }
                     },
                     Rotation {
                         axis { x: 0; y: 1; z: 0 }
                         SequentialAnimation on angle {
                             loops: Animation.Infinite; running: window.visible
-                            NumberAnimation { to: 1.2; duration: 5500; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: -1.2; duration: 5500; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: 1.2; duration: (5500) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: -1.2; duration: (5500) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                         }
                     },
                     Rotation {
                         axis { x: 0; y: 0; z: 1 }
                         SequentialAnimation on angle {
                             loops: Animation.Infinite; running: window.visible
-                            NumberAnimation { to: 0.8; duration: 6200; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: -0.8; duration: 6200; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: 0.8; duration: (6200) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: -0.8; duration: (6200) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                         }
                     }
                 ]
@@ -658,8 +661,8 @@ Item {
                     SequentialAnimation on scale {
                         loops: Animation.Infinite
                         running: window.visible
-                        NumberAnimation { to: 1.012; duration: 4000; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: 1.0; duration: 4000; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 1.012; duration: (4000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 1.0; duration: (4000) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
                     }
 
                     Behavior on opacity { NumberAnimation { duration: (1500) * ThemeBackend.animScale } }

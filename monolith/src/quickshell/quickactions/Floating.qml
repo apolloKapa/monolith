@@ -360,6 +360,12 @@ Variants {
                         floatingWidget.showSystemUsage();
                     }
                 }
+
+                function onShowNotesRequested(screen) {
+                    if (floatingWidget.matchesScreen(screen)) {
+                        floatingWidget.showNotes();
+                    }
+                }
             }
 
             function matchesScreen(targetScreen) {
@@ -375,14 +381,22 @@ Variants {
             }
 
             function showSystemUsage() {
-                let sysIndex = 1;
+                floatingWidget.showTab("SystemUsage", 1);
+            }
+
+            function showNotes() {
+                floatingWidget.showTab("Notes", 3);
+            }
+
+            function showTab(key, fallbackIndex) {
+                let tabIndex = fallbackIndex;
                 for (let i = 0; i < floatingWidget.tabModules.length; i++) {
-                    if (floatingWidget.tabModules[i].indexOf("SystemUsage") !== -1) {
-                        sysIndex = i;
+                    if (floatingWidget.tabModules[i].indexOf(key) !== -1) {
+                        tabIndex = i;
                         break;
                     }
                 }
-                floatingWidget.activeIndex = sysIndex;
+                floatingWidget.activeIndex = tabIndex;
                 let sideEdge = (floatingWidget.barPosition === "left") ? "right" : "left";
                 let centerPos = floatingWidget.height / 2;
                 floatingWidget.useGraceTimer = true;

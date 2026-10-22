@@ -24,6 +24,14 @@ Item {
     property color handleOffColor: ThemeBackend.text
     property color textColor: ThemeBackend.text
 
+    activeFocusOnTab: root.enabled
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            btnMa.clicked(null);
+            event.accepted = true;
+        }
+    }
+
     property bool action_highlight: false
     property string toggleSound: "reusables/toggle/sfx.wav"
 
@@ -122,6 +130,16 @@ Item {
                 Behavior on width { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.3 } }
                 Behavior on x { NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
                 Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -3
+                radius: ThemeBackend.minimalist ? 0 : (parent.radius + 3)
+                color: "transparent"
+                border.width: 2
+                border.color: Qt.alpha(ThemeBackend.mauve, 0.8)
+                visible: root.activeFocus
             }
 
             Rectangle {

@@ -8,16 +8,25 @@ import "../reusables/buttons"
 Item {
     id: contentArea
     required property var popup
-    opacity: popup.introContent
-    scale: 0.95 + (0.05 * popup.introContent)
-    transform: Translate { y: popup.s(20) * (1.0 - popup.introContent) }
+    property alias searchInput: searchField
+    property alias searchResults: resultsList
 
+    readonly property real searchHeaderHeight: popup.s(64)
+
+    Item {
+        id: body
+        anchors.top: parent.top
+        anchors.topMargin: popup.s(4)
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
     Repeater {
         id: contentRepeater
         model: popup.tabsModel
         delegate: Item {
             id: tabContentWrapper
-            anchors.fill: parent
+            x: 0
+            y: 0
 
             property int parentTabIndex: index
             property int tabIndex: parentTabIndex
@@ -29,14 +38,23 @@ Item {
             property bool isCurrent: popup.currentTab === parentTabIndex
             visible: isCurrent || opacity > 0.001
             opacity: isCurrent ? 1.0 : 0.0
-            property real animY: isCurrent ? 0 : popup.s(10)
-            transform: Translate { y: tabContentWrapper.animY }
 
             Behavior on opacity {
-                NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: (140) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
             }
-            Behavior on animY {
-                NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+
+            Binding {
+                target: tabContentWrapper
+                property: "width"
+                value: body.width
+                when: tabContentWrapper.visible
+            }
+
+            Binding {
+                target: tabContentWrapper
+                property: "height"
+                value: body.height
+                when: tabContentWrapper.visible
             }
 
             Loader {
@@ -71,7 +89,7 @@ Item {
                 }
 
                 Component.onCompleted: {
-                    if (popup.currentTab === tabContentWrapper.parentTabIndex) ensureLoaded();
+                    if (popup.standalone || popup.currentTab === tabContentWrapper.parentTabIndex) ensureLoaded();
                 }
 
                 Connections {
@@ -112,14 +130,9 @@ Item {
                     property bool isSubCurrent: popup.currentTab === tabContentWrapper.parentTabIndex && popup.currentSubTab === subIndex
                     visible: isSubCurrent || opacity > 0.001
                     opacity: isSubCurrent ? 1.0 : 0.0
-                    property real subAnimY: isSubCurrent ? 0 : popup.s(10)
-                    transform: Translate { y: subTabLoader.subAnimY }
 
                     Behavior on opacity {
-                        NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
-                    }
-                    Behavior on subAnimY {
-                        NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: (140) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
                     }
 
                     function ensureLoaded() {
@@ -151,7 +164,7 @@ Item {
                     }
 
                     Component.onCompleted: {
-                        if (isSubCurrent) ensureLoaded();
+                        if (popup.standalone || isSubCurrent) ensureLoaded();
                     }
 
                     Connections {
@@ -179,6 +192,78 @@ Item {
                     }
                 }
             }
+        }
+    }
+    }
+
+    Rectangle {
+        id: searchOverlay
+        anchors.fill: parent
+        color: ThemeBackend.base
+        visible: popup.searchActive
+        z: 10
+
+        Item {
+            id: header
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: contentArea.searchHeaderHeight
+
+            Input {
+                id: searchField
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: popup.s(20)
+                anchors.rightMargin: popup.s(20)
+                implicitHeight: popup.s(38)
+                height: popup.s(38)
+                placeholderText: I18n.t("guide.search.placeholder", "Search settings...")
+                showClearButton: true
+                fontPixelSize: popup.s(12)
+                baseColor: Qt.alpha(ThemeBackend.surface0, 0.6)
+                accentColor: ThemeBackend.mauve
+                textColor: ThemeBackend.text
+                subTextColor: ThemeBackend.subtext0
+                borderColor: Qt.alpha(ThemeBackend.surface2, 0.4)
+                cornerRadius: ThemeBackend.borderRadius
+
+                onTextEdited: (txt) => {
+                    popup.searchQuery = txt;
+                    popup.searchSelectedIndex = 0;
+                }
+                onCleared: {
+                    popup.searchQuery = "";
+                    popup.searchSelectedIndex = 0;
+                }
+
+                Keys.onEscapePressed: (event) => {
+                    if (popup.searchQuery !== "") {
+                        searchField.text = "";
+                        popup.searchQuery = "";
+                    } else {
+                        popup.closeSearch();
+                    }
+                    event.accepted = true;
+                }
+                Keys.onDownPressed: (event) => { popup.navigateSearch(1); event.accepted = true; }
+                Keys.onUpPressed: (event) => { popup.navigateSearch(-1); event.accepted = true; }
+                Keys.onReturnPressed: (event) => { popup.activateSelectedSearch(); event.accepted = true; }
+                Keys.onEnterPressed: (event) => { popup.activateSelectedSearch(); event.accepted = true; }
+            }
+        }
+
+        GuideSearchResults {
+            id: resultsList
+            popup: contentArea.popup
+            anchors.top: header.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: popup.s(16)
+            anchors.rightMargin: popup.s(16)
+            anchors.bottomMargin: popup.s(8)
         }
     }
 }

@@ -354,9 +354,9 @@ PanelWindow {
         DesktopMenuController.hide();
         let targetTab = tab !== undefined ? String(tab).trim() : "";
         let dir = (typeof Caching !== "undefined" && Caching.monolithDir) ? Caching.monolithDir : "";
-        let args = "toggle guide" + (targetTab ? (" " + targetTab) : "");
+        let args = "open settings" + (targetTab ? (" " + targetTab) : "");
         let cmd = (dir ? ("if [ -f '" + dir + "/scripts/qs_manager.sh' ]; then bash '" + dir + "/scripts/qs_manager.sh' " + args + "; else ") : "")
-            + "if command -v monolith >/dev/null 2>&1; then monolith " + args + "; elif command -v qs_manager.sh >/dev/null 2>&1; then qs_manager. " + args + "; fi"
+            + "if command -v monolith >/dev/null 2>&1; then monolith msg " + args + "; elif command -v qs_manager.sh >/dev/null 2>&1; then qs_manager.sh " + args + "; fi"
             + (dir ? "; fi" : "");
         Quickshell.execDetached(["bash", "-c", cmd]);
     }

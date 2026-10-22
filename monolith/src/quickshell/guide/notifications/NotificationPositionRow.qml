@@ -131,10 +131,11 @@ SettingsRow {
             clip: true
             visible: implicitHeight > 0
             opacity: isOpen ? 1.0 : 0.0
-            implicitHeight: isOpen ? selectorBox.implicitHeight : 0
+            property real openProgress: isOpen ? 1 : 0
+            implicitHeight: selectorBox.implicitHeight * openProgress
 
             Behavior on opacity { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-            Behavior on implicitHeight { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+            Behavior on openProgress { NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
             Rectangle {
                 id: selectorBox

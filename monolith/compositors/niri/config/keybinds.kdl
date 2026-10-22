@@ -73,14 +73,14 @@ binds {
     Mod+Page_Up        { focus-workspace-up; }
     Mod+U              { focus-workspace-down; }
     Mod+D { spawn "monolith" "msg" "toggle" "system"; }
-    Mod+S { spawn "monolith" "msg" "toggle" "guide"; }
+    Mod+S { spawn "monolith" "msg" "toggle" "settings"; }
     Mod+N { spawn "monolith" "msg" "toggle" "network"; }
     Mod+V { spawn "monolith" "msg" "toggle" "volume"; }
     Mod+A { spawn "monolith" "msg" "toggle" "autohide"; }
     Mod+Alt+C { spawn "monolith" "msg" "toggle" "clipboard"; }
     Mod+Alt+M { spawn "monolith" "msg" "toggle" "music"; }
     Mod+Alt+W { spawn "monolith" "msg" "toggle" "wallpaper"; }
-    Mod+Alt+H { spawn "monolith" "msg" "toggle" "guide"; }
+    Mod+Alt+H { spawn "monolith" "msg" "toggle" "settings"; }
     Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
     Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
     Mod+Ctrl+U         { move-column-to-workspace-down; }

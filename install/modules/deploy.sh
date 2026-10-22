@@ -88,3 +88,18 @@ MONOLITH_COMMIT="$(repo_commit "$project_root")"
 SELECTED_COMPOSITORS="niri"
 EOF
 }
+
+# "Monolith Settings" in the app launcher: opens the settings window on its own
+install_desktop_entry() {
+    local project_root="$1"
+    local src_dir="$project_root/monolith/packaging/desktop"
+    local data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+    local apps_dir="$data_home/applications"
+    local icons_dir="$data_home/icons/hicolor/scalable/apps"
+    [ -f "$src_dir/monolith-settings.desktop" ] || return 0
+    mkdir -p "$apps_dir" "$icons_dir"
+    sed "s|^Exec=.*|Exec=\"$BIN_DIR/monolith\" settings|" "$src_dir/monolith-settings.desktop" > "$apps_dir/monolith-settings.desktop"
+    [ -f "$src_dir/monolith-settings.svg" ] && cp "$src_dir/monolith-settings.svg" "$icons_dir/monolith-settings.svg"
+    command -v update-desktop-database >/dev/null && update-desktop-database "$apps_dir" >/dev/null 2>&1
+    return 0
+}

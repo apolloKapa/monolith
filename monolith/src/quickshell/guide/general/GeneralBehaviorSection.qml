@@ -26,23 +26,4 @@ SettingsBlob {
             }
         }
     }
-
-    SettingsRow {
-        rootObj: section.tab.rootObj
-        icon: "󰹑"
-        title: I18n.t("guide.general.screenshot_on_release.title") || "Capture region on mouse release"
-        description: I18n.t("guide.general.screenshot_on_release.desc") || "Take the screenshot as soon as you finish dragging, without clicking the shutter"
-
-        Toggle {
-            checked: section.tab.screenshotCaptureOnRelease
-            accentColor: ThemeBackend.mauve
-            baseColor: ThemeBackend.surface1
-            handleColor: ThemeBackend.crust
-            handleOffColor: ThemeBackend.text
-            onToggled: function(c) {
-                section.tab.screenshotCaptureOnRelease = c;
-                section.tab.updateGeneralSettings();
-            }
-        }
-    }
 }

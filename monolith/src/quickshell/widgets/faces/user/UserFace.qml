@@ -77,7 +77,7 @@ Item {
                         accentColor: ThemeBackend.surface1
                         bgOpacity: ThemeBackend.elementOpacity
                         textColor: ThemeBackend.text
-                        onClicked: Quickshell.execDetached(["bash", "-c", Caching.monolithDir + "/scripts/qs_manager.sh toggle guide"])
+                        onClicked: Quickshell.execDetached(["bash", "-c", Caching.monolithDir + "/scripts/qs_manager.sh open settings"])
                     }
 
                     ClickButton {
@@ -150,7 +150,7 @@ Item {
                                 loops: Animation.Infinite
                                 from: 0
                                 to: Math.PI * 2
-                                duration: 800
+                                duration: (800) * ThemeBackend.animScale
                             }
 
                             radius: ThemeBackend.minimalist ? 0 : (actionCapsule.radius)

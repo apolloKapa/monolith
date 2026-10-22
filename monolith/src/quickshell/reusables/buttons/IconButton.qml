@@ -22,6 +22,14 @@ Item {
     property real glassShadow: 1
     readonly property color displayTextColor: (ThemeBackend.liquidGlass && (0.2126 * textColor.r + 0.7152 * textColor.g + 0.0722 * textColor.b) < 0.5) ? ThemeBackend.text : textColor
 
+    activeFocusOnTab: root.enabled
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            btnMa.clicked({ button: Qt.LeftButton });
+            event.accepted = true;
+        }
+    }
+
     property bool action_highlight: false
     property string clickSound: "reusables/iconbutton/click.wav"
     property int acceptedButtons: Qt.LeftButton
@@ -119,5 +127,16 @@ Item {
                 root.triggered();
             }
         }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: -2
+        radius: ThemeBackend.minimalist ? 0 : (root.cornerRadius + 2)
+        color: "transparent"
+        border.width: 2
+        border.color: Qt.alpha(ThemeBackend.mauve, 0.8)
+        visible: root.activeFocus
+        z: 100
     }
 }
