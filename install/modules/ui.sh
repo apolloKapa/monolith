@@ -242,12 +242,11 @@ run_installer_ui() {
         local labels=(
             "Packages overview"
             "Apps for the keybinds (librewolf, thunar, rofi, steam...) $(on_off "$OPT_KEYBIND_APPS")"
-            "All my apps (packages.txt + packages-aur.txt) $(on_off "$OPT_ALL_MY_APPS")"
             "niri config (keybinds, displays, workspaces) $niri_label"
             "Login screen (SDDM theme) $(on_off "$OPT_SDDM")"
             "Wallpapers $wp_label"
         )
-        local actions=(packages keybind_apps all_apps niri sddm wallpapers)
+        local actions=(packages keybind_apps niri sddm wallpapers)
         if [ "$INSTALL_STATE" = current ]; then
             labels+=("${BOLD}${C_GREEN}Update${RESET}" "${BOLD}${C_YELLOW}Reinstall (fresh settings)${RESET}" "${DIM}Exit${RESET}")
             actions+=(install reinstall exit)
@@ -284,7 +283,6 @@ run_installer_ui() {
         case "$chosen" in
             packages) show_package_overview ;;
             keybind_apps) OPT_KEYBIND_APPS=$([ "$OPT_KEYBIND_APPS" = true ] && echo false || echo true) ;;
-            all_apps) OPT_ALL_MY_APPS=$([ "$OPT_ALL_MY_APPS" = true ] && echo false || echo true) ;;
             niri) NIRI_MODE=$([ "$NIRI_MODE" = replace ] && echo keep || echo replace) ;;
             sddm) manage_sddm_menu ;;
             wallpapers)
