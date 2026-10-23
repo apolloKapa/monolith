@@ -51,7 +51,10 @@ ColumnLayout {
                 Layout.preferredHeight: root.s(24)
                 cornerRadius: root.s(12)
                 horizontalPadding: root.s(10)
-                buttonText: (root.activeDeviceIcon || "󰓃") + " " + (root.activeDeviceName || I18n.t("music.speaker"))
+                // the device glyph goes in the icon slot (icon font), not in the text
+                buttonIcon: root.activeDeviceIcon || "󰓃"
+                iconFontSize: root.s(12)
+                buttonText: root.activeDeviceName || I18n.t("music.speaker")
                 textFontSize: root.s(11.5)
                 accentColor: ThemeBackend.surface0 || "#313244"
                 bgOpacity: ThemeBackend.elementOpacity
@@ -152,8 +155,8 @@ ColumnLayout {
                 text: root.formatTime(root.currentLivePosition); 
                 color: root.dynamicTextColor; 
                 font.family: ThemeBackend.fontFamily; 
-                font.bold: true; 
-                font.pixelSize: root.s(12); 
+                font.pixelSize: root.s(11); 
+                opacity: 0.7; 
                 Behavior on color { ColorAnimation { duration: (600) * ThemeBackend.animScale } }
             }
             Item { Layout.fillWidth: true }
@@ -161,8 +164,8 @@ ColumnLayout {
                 text: root.formatTime(root.targetPlayer ? root.targetPlayer.length : 0); 
                 color: root.dynamicTextColor; 
                 font.family: ThemeBackend.fontFamily; 
-                font.bold: true; 
-                font.pixelSize: root.s(12); 
+                font.pixelSize: root.s(11); 
+                opacity: 0.7; 
                 Behavior on color { ColorAnimation { duration: (600) * ThemeBackend.animScale } }
             }
         }

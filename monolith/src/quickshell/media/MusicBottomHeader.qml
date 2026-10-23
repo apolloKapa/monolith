@@ -16,11 +16,11 @@ RowLayout {
 
     Switch {
         id: bottomSectionSwitch
-        Layout.preferredHeight: root.s(26)
+        Layout.preferredHeight: root.s(32)
         Layout.preferredWidth: root.s(224)
         Layout.minimumWidth: root.s(168)
         Layout.maximumWidth: root.s(224)
-        implicitHeight: root.s(26)
+        implicitHeight: root.s(32)
         implicitWidth: root.s(224)
         options: [
             typeof I18n !== "undefined" ? I18n.t("music.equalizer", "Equalizer") : "Equalizer",
@@ -31,9 +31,11 @@ RowLayout {
         accentColor: ThemeBackend.mauve || "#cba6f7"
         baseColor: Qt.alpha(ThemeBackend.surface0 || "#313244", ThemeBackend.elementOpacity)
         textColor: ThemeBackend.subtext0 || "#a6adc8"
-        activeTextColor: ThemeBackend.base || "#1e1e2e"
-        cornerRadius: ThemeBackend.borderRadius
-        fontPixelSize: root.s(11.5)
+        activeTextColor: ThemeBackend.onPrimary
+        // a pill with the pick floating inside it
+        floating: true
+        cornerRadius: ThemeBackend.square ? 0 : root.s(16)
+        fontPixelSize: root.s(12)
         onCurrentIndexChanged: {
             if (currentIndex !== 1 && root.audioTestRunning) {
                 root.toggleAudioTest();
@@ -66,14 +68,14 @@ RowLayout {
 
     ClickButton {
         id: audioTestBtn
-        Layout.preferredHeight: root.s(26)
+        Layout.preferredHeight: root.s(28)
         Layout.preferredWidth: root.audioTestBtnWidth * root.audioHeaderProgress
         implicitWidth: Layout.preferredWidth
         visible: root.audioHeaderProgress > 0.01
         opacity: root.audioHeaderProgress
         clip: true
-        cornerRadius: ThemeBackend.borderRadius
-        horizontalPadding: root.s(8)
+        cornerRadius: ThemeBackend.square ? 0 : root.s(14)
+        horizontalPadding: root.s(10)
         buttonIcon: root.audioTestRunning ? "󰓛" : "󰋋"
         buttonText: root.audioTestRunning
             ? (typeof I18n !== "undefined" ? I18n.t("music.audio.stop_test", "Stop") : "Stop")
@@ -92,10 +94,10 @@ RowLayout {
 
     ClickButton {
         id: actionBtn
-        Layout.preferredHeight: root.s(26)
+        Layout.preferredHeight: root.s(28)
         Layout.preferredWidth: root.actionBtnCurrentWidth
         implicitWidth: root.actionBtnCurrentWidth
-        cornerRadius: ThemeBackend.borderRadius
+        cornerRadius: ThemeBackend.square ? 0 : root.s(14)
         horizontalPadding: root.s(12)
         buttonIcon: bottomSectionSwitch.currentIndex === 2
             ? "󰈔"
@@ -157,6 +159,8 @@ RowLayout {
 
     Item {
         id: presetTextContainer
+        // the preset chips already show which one is on
+        Layout.maximumWidth: 0
         Layout.preferredHeight: root.s(26)
         Layout.preferredWidth: (presetLabelText.implicitWidth + root.s(12)) * Math.max(0.0, 1.0 - root.presetSlideProgress)
         implicitWidth: Layout.preferredWidth

@@ -250,7 +250,7 @@ Item {
                                     width: root.s(14); height: root.s(4)
                                     radius: root.s(2)
 
-                                    property color handleColor: ThemeBackend.base || "#1e1e2e"
+                                    property color handleColor: ThemeBackend.onPrimary
                                     property color handleHoverColor: Qt.lighter(root.eqAccentColor, 1.15)
                                     property color handleDragColor: Qt.lighter(root.eqAccentColor, 1.30)
 
@@ -397,7 +397,7 @@ Item {
             opacity: root.introPresets
             transform: Translate { y: root.s(18) * (1 - root.introPresets) }
 
-            Flow {
+            RowLayout {
                 Layout.fillWidth: true
                 spacing: root.s(6)
                 Repeater {

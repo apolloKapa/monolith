@@ -10,6 +10,8 @@ ClickButton {
     // a chip: outlined, filled when it's the preset in use
     bgOpacity: ThemeBackend.elementOpacity
     implicitHeight: root.s(30)
+    Layout.fillWidth: true
+    Layout.preferredWidth: 1
     cornerRadius: ThemeBackend.square ? 0 : root.s(15)
     buttonText: I18n.t("music.presets." + name.toLowerCase())
     textFontSize: root.s(12)

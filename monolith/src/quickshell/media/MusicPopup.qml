@@ -443,8 +443,8 @@ MusicEqualizerState {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: popupRoot.s(2)
-                    Layout.topMargin: popupRoot.s(16)
-                    Layout.bottomMargin: popupRoot.s(16)
+                    Layout.topMargin: popupRoot.s(4)
+                    Layout.bottomMargin: popupRoot.s(8)
                     // no rule between the player and the tabs any more, just space
                     color: "transparent"
                     radius: ThemeBackend.rad(popupRoot.s(1))
