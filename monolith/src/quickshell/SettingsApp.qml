@@ -77,6 +77,8 @@ ShellRoot {
         popup.visible = false;
         popup.parent = holder;
         w.destroy();
+        // nothing stays loaded in the background: the whole app quits (starts again on open)
+        Qt.callLater(Qt.quit);
     }
 
     Component.onCompleted: if (Quickshell.env("MONOLITH_SETTINGS_HIDDEN") !== "1") openWindow()
