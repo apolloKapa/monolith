@@ -145,7 +145,10 @@ Item {
         }
     }
 
+    // no hairline of its own: the style draws the card's outline (Minimalist, Terminal...) and
+    // takes it away again when you switch to a style without one
     Rectangle {
+        visible: false
         anchors.fill: parent
         radius: ThemeBackend.rad(root.cardRadius)
         color: "transparent"

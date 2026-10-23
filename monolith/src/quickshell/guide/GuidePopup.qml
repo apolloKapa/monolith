@@ -599,6 +599,7 @@ Item {
         },
         { id: "Dock", key: "dock", name: "Dock", icon: "󰮯", file: "DockTab.qml", desc: "The app dock at the edge of the screen: which apps it holds, where it sits and when it hides" },
         { id: "Launcher", key: "launcher", name: "Launcher", icon: "󰵆", file: "LauncherTab.qml", desc: "The app launcher (search apps, files, emojis). The preview shows the layout you pick" },
+        { id: "Quick actions", key: "quickactions", name: "Quick actions", icon: "󰀻", file: "QuickActionsTab.qml", desc: "The panel that slides out from a screen edge: which tools it has, where and when it opens, and how fast" },
         { id: "On-Screen Display", key: "osd", name: "On-Screen Display", icon: "󰕾", file: "OnScreenDisplayTab.qml", desc: "The little pop-ups for volume, brightness and keyboard layout" },
         {
             id: "Screenshots",

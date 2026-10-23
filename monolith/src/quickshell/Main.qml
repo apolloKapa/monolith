@@ -614,12 +614,10 @@ PanelWindow {
             // in a frame drawer the panel slides out of the edge it hangs from instead
             readonly property bool inDrawer: frameDrawer.frameStyle && frameDrawer.attached
             readonly property bool drawerVertical: frameDrawer.from === "top" || frameDrawer.from === "bottom"
-            transform: Scale {
-                origin.x: contentStage.inDrawer ? (frameDrawer.from === "left" ? 0 : (frameDrawer.from === "right" ? contentStage.width : contentStage.width / 2)) : contentStage.width / 2
-                origin.y: contentStage.inDrawer ? (frameDrawer.from === "top" ? 0 : (frameDrawer.from === "bottom" ? contentStage.height : contentStage.height / 2)) : contentStage.height / 2
-                yScale: (contentStage.inDrawer ? contentStage.drawerVertical : ThemeBackend.fxUnfold) ? Math.max(0.012, contentStage.unfold) : 1.0
-                xScale: contentStage.inDrawer ? (contentStage.drawerVertical ? 1.0 : Math.max(0.012, contentStage.unfold)) : (ThemeBackend.fxUnfold ? (0.985 + 0.015 * contentStage.unfold) : 1.0)
-            }
+            // the reveal (see unfoldMask below): nothing is squashed any more, the panel stays its
+            // real size and a window opens over it, so its background, blur and glass stay right
+            readonly property real revealU: (contentStage.inDrawer || ThemeBackend.fxUnfold) ? Math.max(0, Math.min(1, contentStage.unfold)) : 1.0
+            readonly property string revealFrom: contentStage.inDrawer ? frameDrawer.from : "center"
 
             scale: (ThemeBackend.fxUnfold || masterWindow.isVisible) ? 1.0 : 0.96
             Behavior on scale {
@@ -647,31 +645,54 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width * (0.4 + 0.6 * Math.min(1, contentStage.unfold * 3))
-                height: Math.max(2, 3 / Math.max(0.05, contentStage.unfold))
+                height: 2
                 radius: height / 2
                 color: ThemeBackend.mauve
                 opacity: 1.0 - contentStage.unfold
             }
 
-            StackView {
-                id: widgetStack
-                anchors.fill: parent
-                focus: true
+            // Unfold (Theme -> Effects): opens from a line through the middle; in a Frame drawer it
+            // slides out of the edge it hangs from. A clip that grows, with the panel inside it
+            // either staying put (centre) or riding the moving edge (drawer).
+            Item {
+                id: unfoldMask
+                readonly property real u: contentStage.revealU
+                readonly property string from: contentStage.revealFrom
+                readonly property bool vertical: from === "center" || from === "top" || from === "bottom"
+                width: vertical ? parent.width : parent.width * u
+                height: vertical ? parent.height * u : parent.height
+                x: from === "right" ? parent.width - width : 0
+                y: from === "center" ? (parent.height - height) / 2 : (from === "bottom" ? parent.height - height : 0)
+                clip: u < 0.999
 
-                replaceEnter: null
-                replaceExit: null
-                pushEnter: null
-                pushExit: null
-                popEnter: null
-                popExit: null
+                Item {
+                    id: unfoldInner
+                    width: contentStage.width
+                    height: contentStage.height
+                    x: unfoldMask.from === "left" ? unfoldMask.width - width : 0
+                    y: unfoldMask.from === "center" ? -unfoldMask.y : (unfoldMask.from === "top" ? unfoldMask.height - height : 0)
 
-                Keys.onEscapePressed: (event) => {
-                    switchWidget("hidden", "");
-                    event.accepted = true;
-                }
+                    StackView {
+                        id: widgetStack
+                        anchors.fill: parent
+                        focus: true
 
-                onCurrentItemChanged: {
-                    if (currentItem) currentItem.forceActiveFocus();
+                        replaceEnter: null
+                        replaceExit: null
+                        pushEnter: null
+                        pushExit: null
+                        popEnter: null
+                        popExit: null
+
+                        Keys.onEscapePressed: (event) => {
+                            switchWidget("hidden", "");
+                            event.accepted = true;
+                        }
+
+                        onCurrentItemChanged: {
+                            if (currentItem) currentItem.forceActiveFocus();
+                        }
+                    }
                 }
             }
         }

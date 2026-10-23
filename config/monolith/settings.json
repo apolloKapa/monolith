@@ -26,7 +26,7 @@
     "clipState": 1
   },
   "bar": {
-    "position": "top",
+    "position": "left",
     "width": 100,
     "height": 40,
     "opacity": 100,
