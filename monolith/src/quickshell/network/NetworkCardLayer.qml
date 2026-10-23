@@ -155,8 +155,15 @@ Item {
                 ? Math.sin(window.globalOrbitAngle * 6) * window.s(10) * (1 - unifiedRatio)
                 : 0
 
-            x: targetX
-            y: targetY + liveBob
+            // Monolith: networks and devices in a tidy grid under the connections (they used to orbit)
+            readonly property real gridGap: window.s(10)
+            readonly property int gridCols: Math.max(1, Math.floor((orbitContainer.width + gridGap) / (width + gridGap)))
+            readonly property real gridTop: window.s(14) + window.s(150) + window.s(26)
+            readonly property real gridStart: (orbitContainer.width - (gridCols * width + (gridCols - 1) * gridGap)) / 2
+            x: gridStart + (index % gridCols) * (width + gridGap)
+            y: gridTop + Math.floor(index / gridCols) * (height + gridGap)
+            Behavior on x { enabled: window.visible; NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+            Behavior on y { enabled: window.visible; NumberAnimation { duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
             property bool isHoveredOrHighlighted: isMyActionable ? fillBtn.isHoveredOrHighlighted : clickBtn.isHoveredOrHighlighted
             property real currentPopScale: isMyActionable ? fillBtn.popScale : clickBtn.popScale

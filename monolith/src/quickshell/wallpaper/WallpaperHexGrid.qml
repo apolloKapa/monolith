@@ -221,7 +221,8 @@ Flickable {
                     anchors.fill: parent
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
-                    cache: true
+                    // big images: no second copy in the image cache (the GPU texture is enough)
+                    cache: false
                     sourceSize.width: Math.round(grid.hexW * 1.6)
                     source: tile.everNear ? (tile.isVideo ? tile.posterUrl : tile.fileUrl) : ""
                     opacity: status === Image.Ready ? 1 : 0

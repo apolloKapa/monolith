@@ -579,7 +579,8 @@ ShellRoot {
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             visible: !barWindow.isVideoA && barWindow.pathA !== ""
-                            cache: true
+                            // big images: no second copy in the image cache (the GPU texture is enough)
+                            cache: false
                             sourceSize.width: parent.width > 0 ? Math.ceil(parent.width * (Screen.devicePixelRatio || 1)) : 0
                             sourceSize.height: parent.height > 0 ? Math.ceil(parent.height * (Screen.devicePixelRatio || 1)) : 0
                         }
@@ -646,7 +647,8 @@ ShellRoot {
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             visible: !barWindow.isVideoB && barWindow.pathB !== ""
-                            cache: true
+                            // big images: no second copy in the image cache (the GPU texture is enough)
+                            cache: false
                             sourceSize.width: parent.width > 0 ? Math.ceil(parent.width * (Screen.devicePixelRatio || 1)) : 0
                             sourceSize.height: parent.height > 0 ? Math.ceil(parent.height * (Screen.devicePixelRatio || 1)) : 0
                         }

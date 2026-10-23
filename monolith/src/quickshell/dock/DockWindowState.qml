@@ -137,6 +137,10 @@ PanelWindow {
     // "Dodge windows" (under smart auto-hide): stay up while windows are open and only get out of
     // the way when a window is actually over the dock's spot; then only the edge brings it back
     property bool dodgeWindows: rawDockSettings && rawDockSettings.dodgeWindows === true
+    // launch bounce, scroll over the dock to switch workspace, a launcher button at the end
+    property bool launchBounce: !(rawDockSettings && rawDockSettings.launchBounce === false)
+    property bool scrollWorkspaces: !!(rawDockSettings && rawDockSettings.scrollWorkspaces === true)
+    property bool showLauncherButton: !!(rawDockSettings && rawDockSettings.showLauncher === true)
     property bool dockCoveredByWindow: false
 
     property bool isNiri: false

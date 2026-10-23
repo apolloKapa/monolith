@@ -19,6 +19,16 @@ Item {
 
     property int itemIndex: index
     property real popScale: 1.0
+    // launch bounce: the icon hops while the app starts, until its window shows up (max ~4 s)
+    property real bounce: 0
+    SequentialAnimation {
+        id: bounceAnim
+        loops: 4
+        NumberAnimation { target: dockButton; property: "bounce"; to: 1; duration: (260) * ThemeBackend.animScale; easing.type: Easing.OutQuad }
+        NumberAnimation { target: dockButton; property: "bounce"; to: 0; duration: (260) * ThemeBackend.animScale; easing.type: Easing.InQuad }
+    }
+    onIsAppRunningChanged: if (isAppRunning && bounceAnim.running) { bounceAnim.stop(); bounce = 0; }
+    readonly property real bounceDist: dockWindow.s(dockWindow.dockElementSize) * 0.3 * bounce
     property real flashOpacity: 0.0
     property color btnColor: ThemeBackend.surface0
     property int cornerRadius: Math.round(dockWindow.s(dockWindow.dockElementSize) * 0.28)
@@ -142,8 +152,9 @@ Item {
 
         transform: Translate {
             id: buttonTransform
-            x: dockButton.currentOffsetX
-            y: dockButton.currentOffsetY
+            // (+ the launch bounce, away from the screen edge the dock sits on)
+            x: dockButton.currentOffsetX + (dockWindow.dockPosition === "left" ? dockButton.bounceDist : (dockWindow.dockPosition === "right" ? -dockButton.bounceDist : 0))
+            y: dockButton.currentOffsetY + (dockWindow.dockPosition === "bottom" ? -dockButton.bounceDist : (dockWindow.dockPosition === "top" ? dockButton.bounceDist : 0))
         }
 
         Drag.active: btnMa.drag.active
@@ -510,6 +521,8 @@ Item {
                     dockButton.flashOpacity = 0.4;
                     btnFlashAnim.start();
                     if (typeof Sounds !== "undefined") Sounds.playSfx("reusables/iconbutton/click.wav");
+                    const launching = !dockButton.isAppRunning || (mouse.modifiers & (Qt.ShiftModifier | Qt.ControlModifier)) || !dockWindow.focusRunning;
+                    if (launching && dockWindow.launchBounce) bounceAnim.restart();
                     dockWindow.activateOrLaunch(model.desktop_id, mouse.modifiers);
                 }
             }
