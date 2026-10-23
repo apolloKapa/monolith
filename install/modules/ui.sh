@@ -14,6 +14,10 @@ NIRI_MODE=replace
 WALLPAPERS=random
 
 OPT_SDDM=true
+# another login screen theme is set up already (e.g. Serpantinum's): leave it unless asked
+_sddm_theme="$(grep -hs '^Current=' /etc/sddm.conf /etc/sddm.conf.d/*.conf 2>/dev/null | tail -1 | cut -d= -f2)"
+[ -n "$_sddm_theme" ] && [ "$_sddm_theme" != monolith ] && OPT_SDDM=false
+unset _sddm_theme
 REPLACE_DM=false
 SDDM_WAYLAND="$PM_SDDM_WAYLAND_DEFAULT"
 

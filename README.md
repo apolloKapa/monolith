@@ -34,15 +34,16 @@ It opens a menu (arrow keys or j/k, Enter, q to quit):
 Then it:
 
 1. installs the packages (official repos via pacman, AUR via yay/paru; it builds yay if you have neither), plus the Iosevka Nerd Font
-2. **replaces Serpantinum** if it's installed: stops it, moves its files and any compositor config that mentions it (Hyprland, Sway, ...) into `~/serpantinum-backup-<date>/`, points those configs at Monolith, and removes its system-wide bits
-3. installs the shell into `~/.local/share/monolith` and links `monolith` and `monolithd` into `~/.local/bin`
-4. copies the helper scripts (`bin/`) into `~/.local/bin` and the rofi config into `~/.config/rofi`
-5. adds `/etc/pam.d/monolith`, so the lock screen can check your password
-6. writes the niri config (old one backed up), generates the display and workspace setup from the monitors it finds, and makes niri the default login session
-7. sets up SDDM and wallpapers, if picked
-8. creates `~/.config/monolith/settings.json` from the defaults in `config/monolith/settings.json` (an existing one is kept)
-9. enables PipeWire, NetworkManager, power-profiles-daemon and EasyEffects
-10. **starts Monolith right away** if you run it from inside a desktop session, so no reboot is needed
+2. installs the shell into `~/.local/share/monolith` and links `monolith` and `monolithd` into `~/.local/bin`
+3. copies `setwall` (used by a keybind) into `~/.local/bin` and a rofi config into `~/.config/rofi`, only where you don't have your own
+4. adds `/etc/pam.d/monolith`, so the lock screen can check your password
+5. writes the niri config (old one backed up) and generates the display and workspace setup from the monitors it finds
+6. sets up SDDM and wallpapers, if picked (the SDDM theme is off by default when you already use another one)
+7. creates `~/.config/monolith/settings.json` from the defaults in `config/monolith/settings.json` (an existing one is kept)
+8. enables PipeWire, NetworkManager, power-profiles-daemon and EasyEffects
+9. **starts Monolith right away** if you run it from inside niri (from any other session it waits until you log into niri), so no reboot is needed
+
+**Other shells stay as they are.** Monolith is a separate shell with its own files, and it only runs in niri. If Serpantinum (or anything else) is installed, it isn't stopped, moved or edited, and your Hyprland/Sway/other configs aren't touched. If Serpantinum is there, Monolith also leaves kitty, cava and fastfetch's colours to it (you can change that in Settings → Theme → Apps).
 
 There's no telemetry in the installer or the shell.
 

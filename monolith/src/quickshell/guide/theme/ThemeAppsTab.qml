@@ -85,7 +85,7 @@ GuideTab {
                     wrapMode: Text.WordWrap
                     text: "Give other apps your Monolith colours, from your wallpaper or colour preset, and keep them in step whenever the theme changes. "
                         + "Monolith only adds a marked block (or one setting) to the app's config; switching it off puts the file back exactly as it was. "
-                        + "kitty, cava and fastfetch always follow the theme."
+                        + "kitty, cava and fastfetch follow the theme too, unless you switch that off below."
                     color: ThemeBackend.subtext0
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: rootObj.s(12)
@@ -101,6 +101,35 @@ GuideTab {
                     color: ThemeBackend.red
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: rootObj.s(12)
+                }
+            }
+
+            SettingsBlob {
+                Layout.fillWidth: true
+
+                SettingsRow {
+                    rootObj: appsTab.rootObj
+                    settingId: "theme_terminal_colors"
+                    icon: "󰆍"
+                    configKey: "theme.terminalColors"
+                    defaultValue: true
+                    title: "kitty, cava and fastfetch"
+                    description: "Recolour them with the theme. Switch off if another shell on this PC themes them (the installer does this when it finds Serpantinum)"
+                    searchKeywords: "kitty cava fastfetch terminal colours colors theme serpantinum"
+
+                    Toggle {
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        checked: Matugen.terminalColors
+                        accentColor: ThemeBackend.mauve
+                        baseColor: ThemeBackend.surface1
+                        handleColor: ThemeBackend.crust
+                        handleOffColor: ThemeBackend.text
+                        onToggled: function(val) {
+                            let t = JSON.parse(JSON.stringify(Config.getSetting("theme", {}) || {}));
+                            t.terminalColors = val;
+                            Config.setSetting("theme", t);
+                        }
+                    }
                 }
             }
 

@@ -1,0 +1,32 @@
+# Like config.toml, without kitty, cava and fastfetch: used when
+# Settings -> Theme -> Apps -> "kitty, cava and fastfetch" is off (another shell themes them)
+[config]
+reload_apps = false
+
+[templates.quickshell]
+input_path = "templates/monolith_matugen_colors.json.template"
+output_path = "~/.local/state/monolith/qs_colors.json"
+
+[templates.app_gtk]
+input_path = "templates/gtk-colors.css.template"
+output_path = "~/.local/state/monolith/apps/gtk.css"
+
+[templates.app_qt]
+input_path = "templates/qt-colors.conf.template"
+output_path = "~/.local/state/monolith/apps/qt.conf"
+
+[templates.app_foot]
+input_path = "templates/foot-colors.ini.template"
+output_path = "~/.local/state/monolith/apps/foot.ini"
+
+[templates.app_alacritty]
+input_path = "templates/alacritty-colors.toml.template"
+output_path = "~/.local/state/monolith/apps/alacritty.toml"
+
+[templates.app_btop]
+input_path = "templates/btop.theme.template"
+output_path = "~/.local/state/monolith/apps/btop.theme"
+
+[templates.app_rofi]
+input_path = "templates/rofi-colors.rasi.template"
+output_path = "~/.local/state/monolith/apps/rofi.rasi"

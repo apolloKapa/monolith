@@ -41,15 +41,17 @@ deploy_shell() {
     echo -e "  ${C_GREEN}shell:${RESET} installed to $SHELL_HOME"
 }
 
-# helper scripts the keybinds use (focuswin, snap, swapwin, setwall, ...) and the rofi config
+# the helper script Monolith's niri keybinds use (setwall) and a rofi config. Nothing that's
+# already there is replaced: other shells or your own setup may own those files.
 deploy_dotfiles_extras() {
     local project_root="$1"
     mkdir -p "$BIN_DIR" "$HOME/.config"
-    cp -a "$project_root/bin/." "$BIN_DIR/"
+    if [ ! -e "$BIN_DIR/setwall" ] || cmp -s "$project_root/bin/setwall" "$BIN_DIR/setwall"; then
+        cp -a "$project_root/bin/setwall" "$BIN_DIR/"
+    fi
     if [ -d "$project_root/config/rofi" ]; then
         mkdir -p "$HOME/.config/rofi"
-        cp "$project_root/config/rofi/config.rasi" "$HOME/.config/rofi/"
-        # your favourites are yours: only a starting list when you have none
+        [ -f "$HOME/.config/rofi/config.rasi" ] || cp "$project_root/config/rofi/config.rasi" "$HOME/.config/rofi/"
         [ -f "$HOME/.config/rofi/favorites" ] || cp "$project_root/config/rofi/favorites" "$HOME/.config/rofi/"
     fi
     [ -f "$HOME/.config/wallpaper" ] || cp "$project_root/config/wallpaper" "$HOME/.config/wallpaper" 2>/dev/null || true
@@ -57,7 +59,7 @@ deploy_dotfiles_extras() {
         *":$BIN_DIR:"*) ;;
         *) echo -e "  ${C_YELLOW}path:${RESET} add $BIN_DIR to your PATH (fish: fish_add_path ~/.local/bin)" ;;
     esac
-    echo -e "  ${C_GREEN}scripts:${RESET} helper scripts copied to $BIN_DIR"
+    echo -e "  ${C_GREEN}scripts:${RESET} setwall and the rofi config are in place (existing ones kept)"
 }
 
 # settings.json: kept if you have one, otherwise the repo's defaults with this machine's paths
