@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import "../"
+import "../reusables"
 
 // The Frame bar style (Settings -> Bar -> Style -> Frame): the bar runs into a solid frame
 // around the whole screen, with rounded inner corners where it meets the desktop. The side and
@@ -22,42 +23,55 @@ Variants {
             readonly property real barH: Scaler.s(barCfg.height !== undefined ? Number(barCfg.height) : 40)
             readonly property real radius: Scaler.s(18)
             // solid, like the bar in this style (bar/Bar.qml barOpacity)
-            readonly property color color: ThemeBackend.base
+            readonly property color color: ThemeBackend.frameColor
             // what's taken on each side: the bar on its edge, the frame on the others
-            readonly property real topIn: barPos === "top" ? barH : thickness
-            readonly property real bottomIn: barPos === "bottom" ? barH : thickness
-            readonly property real leftIn: barPos === "left" ? barH : thickness
-            readonly property real rightIn: barPos === "right" ? barH : thickness
+            // an auto-hiding bar doesn't hold its edge: the frame runs along it like the others
+            readonly property real edgeBar: barCfg.autohide === true ? thickness : barH
+            readonly property real topIn: barPos === "top" ? edgeBar : thickness
+            readonly property real bottomIn: barPos === "bottom" ? edgeBar : thickness
+            readonly property real leftIn: barPos === "left" ? edgeBar : thickness
+            readonly property real rightIn: barPos === "right" ? edgeBar : thickness
 
             component Strip: PanelWindow {
                 screen: frame.modelData
                 visible: frame.enabled
-                color: frame.color
+                color: "transparent"
                 WlrLayershell.namespace: "qs-frame"
                 WlrLayershell.layer: WlrLayer.Top
                 mask: Region {}
+                Rectangle {
+                    anchors.fill: parent
+                    color: frame.color
+                    // glass, like the bar and popups, in the see-through styles
+                    WallpaperBlur {
+                        z: -1
+                        anchors.fill: parent
+                        radius: 0
+                        standalone: true
+                    }
+                }
             }
 
             Strip {
-                visible: frame.enabled && frame.barPos !== "left"
+                visible: frame.enabled && frame.thickness > 0 && (frame.barPos !== "left" || frame.barCfg.autohide === true)
                 anchors { left: true; top: true; bottom: true }
                 implicitWidth: frame.thickness
                 exclusiveZone: frame.thickness
             }
             Strip {
-                visible: frame.enabled && frame.barPos !== "right"
+                visible: frame.enabled && frame.thickness > 0 && (frame.barPos !== "right" || frame.barCfg.autohide === true)
                 anchors { right: true; top: true; bottom: true }
                 implicitWidth: frame.thickness
                 exclusiveZone: frame.thickness
             }
             Strip {
-                visible: frame.enabled && frame.barPos !== "bottom"
+                visible: frame.enabled && frame.thickness > 0 && (frame.barPos !== "bottom" || frame.barCfg.autohide === true)
                 anchors { left: true; right: true; bottom: true }
                 implicitHeight: frame.thickness
                 exclusiveZone: frame.thickness
             }
             Strip {
-                visible: frame.enabled && frame.barPos !== "top"
+                visible: frame.enabled && frame.thickness > 0 && (frame.barPos !== "top" || frame.barCfg.autohide === true)
                 anchors { left: true; right: true; top: true }
                 implicitHeight: frame.thickness
                 exclusiveZone: frame.thickness

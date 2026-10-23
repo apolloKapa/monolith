@@ -76,7 +76,7 @@ Item {
             visible: root.buttonText !== ""
             text: root.buttonText
             font.family: ThemeBackend.fontFamily
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             font.pixelSize: root.textFontSize
             color: root.textColor
             Layout.alignment: Qt.AlignVCenter
@@ -84,10 +84,17 @@ Item {
 
         Rectangle {
             id: track
-            implicitWidth: 44
-            implicitHeight: 24
-            radius: ThemeBackend.rad(Math.min(height / 2, root.cornerRadius))
-            color: trackGlass.active ? "transparent" : (root.checked ? root.accentColor : (root.isHoveredOrHighlighted ? Qt.lighter(root.baseColor, 1.2) : root.baseColor))
+            // Material: Google's switch. Off is an outlined track with a small dot, on is a filled
+            // track with a big handle carrying a check mark.
+            readonly property bool m3: ThemeBackend.material
+            implicitWidth: m3 ? 46 : 44
+            implicitHeight: m3 ? 28 : 24
+            radius: m3 ? height / 2 : ThemeBackend.rad(Math.min(height / 2, root.cornerRadius))
+            border.width: (m3 && !root.checked) ? 2 : 0
+            border.color: ThemeBackend.overlay1
+            color: trackGlass.active ? "transparent" : (track.m3
+                ? (root.checked ? ThemeBackend.mauve : ThemeBackend.surfaceContainerHighest)
+                : (root.checked ? root.accentColor : (root.isHoveredOrHighlighted ? Qt.lighter(root.baseColor, 1.2) : root.baseColor)))
             opacity: root.enabled ? 1.0 : 0.5
             Layout.alignment: Qt.AlignVCenter
 
@@ -108,12 +115,26 @@ Item {
 
             Rectangle {
                 id: handle
-                width: parent.height - 6 + (handleGlass.active && btnMa.pressed ? 8 : 0) + (handleGlass.active ? 10 * root.stretch : 0)
-                height: parent.height - 6
-                radius: ThemeBackend.rad(Math.min(height / 2, Math.max(0, root.cornerRadius - 3)))
+                readonly property real m3Size: btnMa.pressed ? parent.height - 4 : (root.checked ? parent.height - 8 : parent.height - 14)
+                width: track.m3 ? m3Size : parent.height - 6 + (handleGlass.active && btnMa.pressed ? 8 : 0) + (handleGlass.active ? 10 * root.stretch : 0)
+                height: track.m3 ? m3Size : parent.height - 6
+                radius: track.m3 ? height / 2 : ThemeBackend.rad(Math.min(height / 2, Math.max(0, root.cornerRadius - 3)))
                 anchors.verticalCenter: parent.verticalCenter
-                x: root.checked ? parent.width - width - 3 : 3
-                color: handleGlass.active ? "transparent" : (root.checked ? root.handleColor : root.handleOffColor)
+                x: track.m3 ? (root.checked ? parent.width - (parent.height + width) / 2 : (parent.height - width) / 2)
+                    : (root.checked ? parent.width - width - 3 : 3)
+                color: handleGlass.active ? "transparent" : (track.m3
+                    ? (root.checked ? ThemeBackend.onPrimary : ThemeBackend.overlay1)
+                    : (root.checked ? root.handleColor : root.handleOffColor))
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: track.m3 && root.checked
+                    text: "󰄬"
+                    font.family: ThemeBackend.iconFont
+                    font.pixelSize: parent.height * 0.7
+                    color: ThemeBackend.mauve
+                }
+                Behavior on height { NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
                 GlassFill {
                     id: handleGlass

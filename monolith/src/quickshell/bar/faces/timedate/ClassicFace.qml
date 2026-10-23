@@ -71,7 +71,7 @@ Item {
                 text: widget ? widget.timeStr : (typeof DateTime !== "undefined" ? DateTime.time : "12:00")
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: widget ? widget.s(widget.isCompact ? 14 : 15) : 15
-                font.weight: Font.Black
+                font.weight: ThemeBackend.weightBlack
                 color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.blue, 1.1) : ThemeBackend.blue
             }
 
@@ -82,7 +82,7 @@ Item {
                 text: widget ? widget.dateStr : (typeof DateTime !== "undefined" ? DateTime.fullDate : "Mon, Jan 1")
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: widget ? widget.s(widget.isCompact ? 9 : 10) : 10
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.subtext0, 1.08) : ThemeBackend.subtext0
             }
         }
@@ -100,7 +100,7 @@ Item {
                 text: parsedTime.hours
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: widget ? widget.s(widget.isCompact ? 13 : 14) : 14
-                font.weight: Font.Black
+                font.weight: ThemeBackend.weightBlack
                 color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.blue, 1.1) : ThemeBackend.blue
             }
 
@@ -110,7 +110,7 @@ Item {
                 text: parsedTime.minutes
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: widget ? widget.s(widget.isCompact ? 13 : 14) : 14
-                font.weight: Font.Black
+                font.weight: ThemeBackend.weightBlack
                 color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.sapphire, 1.1) : ThemeBackend.sapphire
             }
 
@@ -120,7 +120,7 @@ Item {
                 text: parsedTime.seconds
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: widget ? widget.s(widget.isCompact ? 11 : 12) : 12
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.teal, 1.1) : ThemeBackend.teal
             }
 
@@ -130,7 +130,7 @@ Item {
                 text: parsedTime.ampm
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: widget ? widget.s(widget.isCompact ? 8 : 9) : 9
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 color: ThemeBackend.subtext0
             }
 
@@ -155,7 +155,7 @@ Item {
                 text: widget ? widget.dayStr : (typeof DateTime !== "undefined" ? DateTime.day : "18")
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: widget ? widget.s(widget.isCompact ? 11 : 12) : 12
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 color: ThemeBackend.text
             }
 
@@ -165,7 +165,7 @@ Item {
                 text: widget ? widget.monthStr : (typeof DateTime !== "undefined" ? DateTime.monthShort : "Sep")
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: widget ? widget.s(widget.isCompact ? 9 : 10) : 10
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.subtext0, 1.08) : ThemeBackend.subtext0
             }
         }

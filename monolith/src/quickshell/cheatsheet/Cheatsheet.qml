@@ -57,7 +57,7 @@ PopupShell {
                 color: ThemeBackend.text
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: root.s(22)
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
             }
             Text {
                 Layout.fillWidth: true

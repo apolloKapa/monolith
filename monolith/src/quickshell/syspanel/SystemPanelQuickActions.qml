@@ -13,18 +13,23 @@ Item {
     property alias nightLight: nightLightBtn
     property alias coffee: coffeeBtn
 
+    // A quick-settings tile: icon, name and state on a pill. On = filled with the accent.
     component QuickActionBtn : Rectangle {
         id: qaBtn
         Layout.fillWidth: true
         Layout.fillHeight: true
-        radius: ThemeBackend.rad(view.panel.cardRadius)
+        Layout.preferredWidth: 1
+        radius: ThemeBackend.pill ? height / 2 : ThemeBackend.rad(view.panel.cardRadius)
 
         property bool isActive: false
         property string iconText: ""
+        property string label: ""
+        property string stateText: isActive ? I18n.t("syspanel.tiles.on", "On") : I18n.t("syspanel.tiles.off", "Off")
         property color activeColor: ThemeBackend.blue
         readonly property bool isHovered: qaMa.containsMouse
-        property real customFontSize: 0
-        property string customFontFamily: ""
+        // Material fills an on tile with the primary colour; the other styles tint it
+        readonly property color onFill: ThemeBackend.material ? ThemeBackend.mauve : Qt.alpha(activeColor, 0.3)
+        readonly property color onInk: ThemeBackend.material ? ThemeBackend.onPrimary : activeColor
 
         property real togglePulse: 0.0
 
@@ -41,7 +46,7 @@ Item {
         signal leftClicked()
         signal rightClicked()
 
-        color: qaGlass.active ? "transparent" : (isActive ? Qt.alpha(activeColor, 0.18) : ThemeBackend.faded(qaMa.containsMouse ? ThemeBackend.surface1 : Qt.darker(ThemeBackend.surface0, 1.04)))
+        color: qaGlass.active ? "transparent" : (isActive ? onFill : ThemeBackend.faded(qaMa.containsMouse ? ThemeBackend.surfaceContainerHighest : ThemeBackend.surfaceContainerHigh))
 
         GlassFill {
             id: qaGlass
@@ -57,38 +62,53 @@ Item {
         }
         Behavior on color {
             enabled: view.panel.visible
-            ColorAnimation { duration: (150) * ThemeBackend.animScale }
+            ColorAnimation { duration: (180) * ThemeBackend.animScale }
         }
 
-        scale: qaMa.pressed ? 0.95 : (qaMa.containsMouse ? 1.01 : 1.0)
+        scale: qaMa.pressed ? 0.96 : 1.0
         Behavior on scale {
             enabled: view.panel.visible
             NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
         }
 
-        Text {
-            anchors.centerIn: parent
-            font.family: qaBtn.customFontFamily !== "" ? qaBtn.customFontFamily : ThemeBackend.iconFont
-            font.pixelSize: qaBtn.customFontSize > 0 ? qaBtn.customFontSize : view.panel.s(18)
-            font.weight: qaBtn.customFontSize > 0 ? Font.Bold : Font.Normal
-            color: qaBtn.isActive ? qaBtn.activeColor : (qaMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
-            text: qaBtn.iconText
-            Behavior on color {
-                enabled: view.panel.visible
-                ColorAnimation { duration: (150) * ThemeBackend.animScale }
-            }
-        }
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: view.panel.s(16)
+            anchors.rightMargin: view.panel.s(12)
+            spacing: view.panel.s(12)
 
-        // on: a slab along the bottom (Monolith's selection mark)
-        Rectangle {
-            visible: qaBtn.isActive
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: view.panel.s(5)
-            width: parent.width * 0.38
-            height: view.panel.s(3)
-            radius: ThemeBackend.rad(height / 2)
-            color: qaBtn.activeColor
+            Text {
+                Layout.alignment: Qt.AlignVCenter
+                font.family: ThemeBackend.iconFont
+                font.pixelSize: view.panel.s(20)
+                color: qaBtn.isActive ? qaBtn.onInk : ThemeBackend.text
+                text: qaBtn.iconText
+                Behavior on color { enabled: view.panel.visible; ColorAnimation { duration: (180) * ThemeBackend.animScale } }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                spacing: 0
+
+                Text {
+                    Layout.fillWidth: true
+                    text: qaBtn.label
+                    elide: Text.ElideRight
+                    font.family: ThemeBackend.fontFamily
+                    font.weight: Font.DemiBold
+                    font.pixelSize: view.panel.s(13)
+                    color: qaBtn.isActive ? qaBtn.onInk : ThemeBackend.text
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: qaBtn.stateText
+                    elide: Text.ElideRight
+                    font.family: ThemeBackend.fontFamily
+                    font.pixelSize: view.panel.s(11)
+                    color: qaBtn.isActive ? Qt.alpha(qaBtn.onInk, 0.8) : ThemeBackend.subtext0
+                }
+            }
         }
 
         MouseArea {
@@ -107,18 +127,21 @@ Item {
     id: view
     z: 5
     Layout.fillWidth: true
-    Layout.preferredHeight: view.panel.s(73)
-    Layout.maximumHeight: view.panel.s(73)
+    Layout.preferredHeight: view.panel.s(56) * 3 + view.panel.s(8) * 2
+    Layout.maximumHeight: Layout.preferredHeight
     opacity: view.panel.introQuickActions
     transform: Translate { x: (view.panel.isLeftAnchored ? -view.panel.rowSlideDistance : view.panel.rowSlideDistance) * (1.0 - view.panel.introQuickActions) }
 
-    RowLayout {
+    GridLayout {
         anchors.fill: parent
-        spacing: view.panel.s(6)
+        columns: 2
+        rowSpacing: view.panel.s(8)
+        columnSpacing: view.panel.s(8)
 
         QuickActionBtn {
             id: nightLightBtn
             iconText: "󰖔"
+            label: I18n.t("syspanel.tiles.night_light", "Night light")
             activeColor: ThemeBackend.peach
 
             function updateState() {
@@ -216,9 +239,9 @@ Item {
                 return Math.max(1, m) + "m";
             }
 
-            iconText: (isActive && isHovered) ? remainingTimeString : "󰅶"
-            customFontSize: (isActive && isHovered) ? view.panel.s(12) : 0
-            customFontFamily: (isActive && isHovered) ? ThemeBackend.fontFamily : ""
+            iconText: "󰅶"
+            label: I18n.t("syspanel.tiles.caffeine", "Stay awake")
+            stateText: isActive ? remainingTimeString : I18n.t("syspanel.tiles.off", "Off")
 
             function updateRemaining() {
                 if (!isActive || coffeeEndTime <= 0) {
@@ -331,6 +354,7 @@ Item {
 
         QuickActionBtn {
             iconText: isActive ? "󰤨" : "󰤮"
+            label: I18n.t("syspanel.tiles.wifi", "Wi-Fi")
             activeColor: ThemeBackend.blue
             isActive: view.panel.wifiRadioEnabled
             onLeftClicked: {
@@ -345,6 +369,7 @@ Item {
 
         QuickActionBtn {
             iconText: isActive ? "󰂯" : "󰂲"
+            label: I18n.t("syspanel.tiles.bluetooth", "Bluetooth")
             activeColor: ThemeBackend.mauve
             isActive: view.panel.btRadioEnabled
             onLeftClicked: {
@@ -361,6 +386,7 @@ Item {
 
         QuickActionBtn {
             iconText: "󰀝"
+            label: I18n.t("syspanel.tiles.airplane", "Airplane mode")
             activeColor: ThemeBackend.red
             isActive: !view.panel.wifiRadioEnabled && !view.panel.btRadioEnabled
             onLeftClicked: {
@@ -380,6 +406,24 @@ Item {
                     Networking.wifiEnabled = restoreWifi;
                     BtPower.setEnabled(restoreBt);
                 }
+            }
+        }
+
+        QuickActionBtn {
+            id: dndBtn
+            iconText: isActive ? "󰂛" : "󰂚"
+            label: I18n.t("syspanel.tiles.dnd", "Do not disturb")
+            activeColor: ThemeBackend.blue
+            isActive: Boolean(Config.rawSettings && Config.rawSettings.notifications && Config.rawSettings.notifications.dnd)
+            onLeftClicked: {
+                Sounds.playSfx("system/quick_click.wav");
+                let n = Object.assign({}, Config.getSetting("notifications", { "dnd": false }));
+                n.dnd = !dndBtn.isActive;
+                Config.setSetting("notifications", n);
+            }
+            onRightClicked: {
+                view.panel.closeAnim.start();
+                Quickshell.execDetached(["bash", Caching.monolithDir + "/scripts/qs_manager.sh", "open", "settings", "notifications"]);
             }
         }
     }

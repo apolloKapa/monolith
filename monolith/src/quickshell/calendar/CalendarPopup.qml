@@ -678,7 +678,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         text: DateTime.time
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Black
+                        font.weight: ThemeBackend.weightBlack
                         font.pixelSize: {
                             let baseSize = window.s(84);
                             let len = (DateTime.time || "").length;
@@ -695,7 +695,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         text: DateTime.fullDate
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.pixelSize: window.s(16)
                         color: window.subtext0
                         opacity: 0.9
@@ -773,7 +773,7 @@ Item {
                                         Layout.alignment: Qt.AlignHCenter
                                         text: modelData ? modelData.time : ""
                                         font.family: ThemeBackend.fontFamily
-                                        font.weight: Font.Bold
+                                        font.weight: ThemeBackend.weightBold
                                         font.pixelSize: window.s(11.5)
                                         color: (isHighlighted && !hourGlass.active) ? window.base : (hrMa.containsMouse || isHighlighted ? window.text : window.overlay1)
                                         Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -791,7 +791,7 @@ Item {
                                         Layout.alignment: Qt.AlignHCenter
                                         text: modelData ? (modelData.temp + "°") : ""
                                         font.family: ThemeBackend.fontFamily
-                                        font.weight: Font.Black
+                                        font.weight: ThemeBackend.weightBlack
                                         font.pixelSize: window.s(12.5)
                                         color: (isHighlighted && !hourGlass.active) ? window.base : window.text
                                     }
@@ -873,7 +873,7 @@ Item {
                             Layout.fillWidth: true
                             text: window.targetMonthName.toUpperCase()
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Black
+                            font.weight: ThemeBackend.weightBlack
                             font.pixelSize: window.s(14)
                             fontSizeMode: Text.Fit
                             minimumPixelSize: window.s(8)
@@ -908,7 +908,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: modelData
                                 font.family: ThemeBackend.fontFamily
-                                font.weight: Font.Black
+                                font.weight: ThemeBackend.weightBlack
                                 font.pixelSize: window.s(11.5)
                                 color: window.overlay0
                                 horizontalAlignment: Text.AlignHCenter
@@ -985,7 +985,7 @@ Item {
                             horizontalAlignment: Text.AlignHCenter
                             text: window.weatherData && window.weatherData.forecast[window.weatherView] ? window.weatherData.forecast[window.weatherView].day_full.toUpperCase() : I18n.t("calendar.loading")
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Black
+                            font.weight: ThemeBackend.weightBlack
                             font.pixelSize: window.s(15)
                             fontSizeMode: Text.Fit
                             minimumPixelSize: window.s(8)
@@ -1013,7 +1013,7 @@ Item {
                             Layout.alignment: Qt.AlignRight
                             text: (window.weatherData && window.weatherData.offline ? "--" : window.displayedTemp.toFixed(1)) + (Weather.unitSym || "°")
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Black
+                            font.weight: ThemeBackend.weightBlack
                             font.pixelSize: window.s(68)
                             color: window.tempGlowColor
                             style: Text.Outline
@@ -1029,7 +1029,7 @@ Item {
                             horizontalAlignment: Text.AlignRight
                             text: (typeof Location !== "undefined" && Location.city && Location.city !== "") ? Location.city : (window.weatherData && window.weatherData.city ? window.weatherData.city : "")
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: window.s(14)
                             color: window.text
                             elide: Text.ElideRight

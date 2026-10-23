@@ -294,7 +294,7 @@ PanelWindow {
                                 text: String(dockAppMenuWindow.windowsList ? dockAppMenuWindow.windowsList.length : 0)
                                 color: ThemeBackend.subtext0
                                 font.pixelSize: dockAppMenuWindow.s(10)
-                                font.weight: Font.Bold
+                                font.weight: ThemeBackend.weightBold
                             }
                         }
                     }

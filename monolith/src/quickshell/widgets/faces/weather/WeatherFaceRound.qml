@@ -125,7 +125,7 @@ Item {
                         anchors.centerIn: parent
                         text: root.tempNumber
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Black
+                        font.weight: ThemeBackend.weightBlack
                         color: ThemeBackend.text
                         font.pixelSize: tempContainer.height * 0.58
                         horizontalAlignment: Text.AlignHCenter
@@ -140,7 +140,7 @@ Item {
                         anchors.topMargin: tempContainer.height * 0.04
                         text: "°"
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         color: ThemeBackend.text
                         font.pixelSize: tempContainer.height * 0.30
                     }

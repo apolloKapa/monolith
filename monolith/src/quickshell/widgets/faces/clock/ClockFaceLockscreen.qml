@@ -15,9 +15,12 @@ Item {
     property bool isRound: false
 
     readonly property bool isStacked: (width / height) < 1.25
-    readonly property color hourColor: ThemeBackend.mauve
-    readonly property color minuteColor: ThemeBackend.text
-    readonly property color dateColor: ThemeBackend.subtext0
+    // Material: one soft accent tint for the whole time, light type, no shadow
+    readonly property bool m3: ThemeBackend.material
+    readonly property color m3Ink: Qt.tint(ThemeBackend.text, Qt.alpha(ThemeBackend.mauve, 0.55))
+    readonly property color hourColor: m3 ? m3Ink : ThemeBackend.mauve
+    readonly property color minuteColor: m3 ? m3Ink : ThemeBackend.text
+    readonly property color dateColor: m3 ? ThemeBackend.text : ThemeBackend.subtext0
     readonly property string stackedDateText: root.meridiemText !== "" ? root.meridiemText + "  ·  " + root.dateText : root.dateText
 
     property var currentTime: (typeof DateTime !== "undefined" && DateTime.now) ? DateTime.now : new Date()
@@ -32,7 +35,7 @@ Item {
     readonly property string hoursText: Qt.formatDateTime(root.currentTime, root.hourFmt)
     readonly property string minutesText: Qt.formatDateTime(root.currentTime, "mm")
     readonly property string meridiemText: root.is12h ? Qt.formatDateTime(root.currentTime, "AP") : ""
-    readonly property string dateText: Qt.formatDateTime(root.currentTime, "dddd, d MMMM").toUpperCase()
+    readonly property string dateText: root.m3 ? Qt.formatDateTime(root.currentTime, "dddd, MMMM d") : Qt.formatDateTime(root.currentTime, "dddd, d MMMM").toUpperCase()
 
     Connections {
         target: typeof DateTime !== "undefined" ? DateTime : null
@@ -43,9 +46,10 @@ Item {
 
     component ShadowText: Text {
         font.family: ThemeBackend.fontFamily
-        font.weight: Font.Bold
+        font.weight: root.m3 ? Font.Normal : Font.Bold
 
         Text {
+            visible: !root.m3
             anchors.fill: parent
             anchors.topMargin: Scaler.s(3)
             anchors.bottomMargin: -Scaler.s(3)
@@ -84,9 +88,9 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root.stackedDateText
             color: root.dateColor
-            font.pixelSize: Scaler.s(16)
+            font.pixelSize: root.m3 ? Scaler.s(20) : Scaler.s(16)
             font.weight: Font.Medium
-            font.letterSpacing: 1.4
+            font.letterSpacing: root.m3 ? 0 : 1.4
         }
     }
 
@@ -109,7 +113,7 @@ Item {
             ShadowText {
                 Layout.alignment: Qt.AlignVCenter
                 text: ":"
-                color: root.dateColor
+                color: root.m3 ? root.m3Ink : root.dateColor
                 font.pixelSize: Scaler.s(80)
             }
 
@@ -133,9 +137,9 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root.dateText
             color: root.dateColor
-            font.pixelSize: Scaler.s(16)
+            font.pixelSize: root.m3 ? Scaler.s(20) : Scaler.s(16)
             font.weight: Font.Medium
-            font.letterSpacing: 1.4
+            font.letterSpacing: root.m3 ? 0 : 1.4
         }
     }
 }

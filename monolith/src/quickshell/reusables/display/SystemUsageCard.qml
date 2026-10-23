@@ -227,7 +227,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.right: parent.right
             font.family: root.fontFamily
-            font.weight: Font.Black
+            font.weight: ThemeBackend.weightBlack
             font.pixelSize: root.valueFontSize
             color: root.valueTextColor
             text: root.valueText
@@ -304,7 +304,7 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
                 font.family: root.fontFamily
-                font.weight: Font.Black
+                font.weight: ThemeBackend.weightBlack
                 font.pixelSize: root.valueFontSize
                 color: root.effFilledTextColor
                 text: root.valueText

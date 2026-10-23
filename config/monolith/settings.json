@@ -64,8 +64,8 @@
       "g_kb": "#514060"
     },
     "menuStyle": "icon",
-    "workspacesStyle": "slabs",
-    "timeStyle": "material",
+    "workspacesStyle": "pills",
+    "timeStyle": "google",
     "visAlignment": "center",
     "visContinuous": false,
     "sysmonStyle": "wave",
@@ -83,12 +83,12 @@
     "btStyle": "button"
   },
   "theme": {
-    "fontFamily": "Noto Serif CJK KR",
+    "fontFamily": "Google Sans Flex",
     "borderRadius": 10,
-    "activePreset": "Obsidian",
-    "matugen": false,
-    "blurBackground": true,
-    "blurStyle": "liquid",
+    "activePreset": "Matugen",
+    "matugen": true,
+    "blurBackground": false,
+    "blurStyle": "material",
     "colors": {
       "base": "#000000",
       "blue": "#ffffff",

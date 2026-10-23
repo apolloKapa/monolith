@@ -168,7 +168,7 @@ PanelWindow {
                         color: ThemeBackend.text
                         font.family: ThemeBackend.fontFamily
                         font.pixelSize: polkitWindow.s(14)
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         wrapMode: Text.Wrap
                         horizontalAlignment: I18n.textAlignment
                         Layout.fillWidth: true

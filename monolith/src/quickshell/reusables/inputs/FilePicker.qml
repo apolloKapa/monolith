@@ -254,7 +254,7 @@ Popup {
                 color: ThemeBackend.text
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: Scaler.s(16)
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 Layout.fillWidth: true
             }
             CloseButton {

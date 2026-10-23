@@ -43,7 +43,7 @@ ColumnLayout {
             Layout.fillWidth: true
             elide: Text.ElideRight
             font.family: ThemeBackend.fontFamily
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             font.pixelSize: metric.valueSize
             color: metric.tab.textMain
             text: metric.value

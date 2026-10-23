@@ -24,7 +24,7 @@ Item {
         font.pixelSize: height
         fontSizeMode: Text.Fit
         minimumPixelSize: 12
-        font.weight: Font.Black
+        font.weight: ThemeBackend.weightBlack
         font.letterSpacing: height * 0.01
         color: Qt.tint(ThemeBackend.text, Qt.alpha(ThemeBackend.mauve, 0.14))
         horizontalAlignment: Text.AlignHCenter

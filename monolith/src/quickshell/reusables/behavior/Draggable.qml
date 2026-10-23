@@ -167,8 +167,99 @@ Item {
         handlePopAnim.restart();
     }
 
+    // Material: Google's slider. A thick active track, a gap, a slim bar handle, a gap, the
+    // inactive track with a stop dot at its end. Replaces the classic track + round handle.
+    readonly property bool m3: ThemeBackend.material
+    readonly property real m3Gap: 4
+    readonly property real m3Bar: root.isDragging ? 3 : 4
+    readonly property real m3Span: root.vertical ? root.height : root.width
+    readonly property real m3Thick: root.vertical ? root.width : root.height
+    readonly property real m3Pos: root.animPosition * (root.m3Span - root.m3Bar)
+    readonly property color m3Inactive: Qt.tint(root.backgroundColor, Qt.alpha(root.accentColor, 0.22))
+
+    Item {
+        id: m3Slider
+        anchors.fill: parent
+        visible: root.m3
+        opacity: root.enabled ? 1.0 : 0.45
+
+        // active part
+        Rectangle {
+            readonly property real len: Math.max(0, root.m3Pos - root.m3Gap)
+            visible: len > 0.5
+            x: root.vertical ? 0 : 0
+            y: root.vertical ? root.height - len : 0
+            width: root.vertical ? root.m3Thick : len
+            height: root.vertical ? len : root.m3Thick
+            color: root.accentColor
+            topLeftRadius: root.vertical ? Math.min(width / 2, 4) : root.m3Thick / 2
+            bottomLeftRadius: root.m3Thick / 2
+            topRightRadius: root.vertical ? Math.min(width / 2, 4) : Math.min(height / 2, 4)
+            bottomRightRadius: root.vertical ? root.m3Thick / 2 : Math.min(height / 2, 4)
+            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
+        }
+        // inactive part
+        Rectangle {
+            readonly property real start: root.m3Pos + root.m3Bar + root.m3Gap
+            readonly property real len: Math.max(0, root.m3Span - start)
+            visible: len > 0.5
+            x: root.vertical ? 0 : start
+            y: 0
+            width: root.vertical ? root.m3Thick : len
+            height: root.vertical ? len : root.m3Thick
+            color: root.m3Inactive
+            topLeftRadius: root.vertical ? root.m3Thick / 2 : Math.min(height / 2, 4)
+            topRightRadius: root.m3Thick / 2
+            bottomLeftRadius: root.vertical ? Math.min(width / 2, 4) : Math.min(height / 2, 4)
+            bottomRightRadius: root.vertical ? Math.min(width / 2, 4) : root.m3Thick / 2
+
+            // stop dot
+            Rectangle {
+                width: Math.max(3, root.m3Thick * 0.22)
+                height: width
+                radius: width / 2
+                color: root.accentColor
+                visible: parent.len > root.m3Thick
+                x: root.vertical ? (parent.width - width) / 2 : parent.width - width - (root.m3Thick - width) / 2
+                y: root.vertical ? (root.m3Thick - width) / 2 : (parent.height - height) / 2
+            }
+        }
+        // handle
+        Rectangle {
+            x: root.vertical ? -4 : root.m3Pos
+            y: root.vertical ? root.height - root.m3Pos - root.m3Bar : -4
+            width: root.vertical ? root.m3Thick + 8 : root.m3Bar
+            height: root.vertical ? root.m3Bar : root.m3Thick + 8
+            radius: 2
+            color: root.accentColor
+            Behavior on width { NumberAnimation { duration: (120) * ThemeBackend.animScale } }
+        }
+        // value while dragging
+        Rectangle {
+            visible: root.showValueBubble
+            opacity: root.isDragging ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
+            width: Math.max(28, m3Value.implicitWidth + 16)
+            height: 28
+            radius: 14
+            color: ThemeBackend.text
+            x: root.vertical ? root.m3Thick + 10 : root.m3Pos + root.m3Bar / 2 - width / 2
+            y: root.vertical ? root.height - root.m3Pos - height / 2 : -height - 10
+            Text {
+                id: m3Value
+                anchors.centerIn: parent
+                text: root.valueFormatter(root.effectiveValue)
+                color: ThemeBackend.base
+                font.family: ThemeBackend.fontFamily
+                font.weight: Font.DemiBold
+                font.pixelSize: 12
+            }
+        }
+    }
+
     Rectangle {
         id: bgTrack
+        visible: !root.m3
         anchors.fill: parent
         radius: ThemeBackend.rad(root.cornerRadius)
         color: trackGlass.active ? "transparent" : root.backgroundColor
@@ -233,6 +324,7 @@ Item {
     }
 
     Rectangle {
+        visible: !root.m3
         anchors.fill: parent
         radius: ThemeBackend.rad(root.cornerRadius)
         color: "transparent"
@@ -242,6 +334,7 @@ Item {
 
     Rectangle {
         id: handle
+        visible: !root.m3
         readonly property int textLength: handleText.text ? handleText.text.length : 0
         readonly property real fontScale: textLength <= 2 ? 1.0 : Math.max(0.65, 1.0 - (textLength - 2) * 0.09)
         readonly property real textPadding: Math.min(10, Math.max(4, Math.round(root.handleSize * 0.25)))
@@ -333,7 +426,7 @@ Item {
             text: root.valueFormatter(root.effectiveValue)
             color: handleGlass.active ? ThemeBackend.text : Qt.hsla(root.accentColor.hslHue, root.accentColor.hslSaturation, 0.12, 1.0)
             font.family: "JetBrains Mono"
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             font.pixelSize: Math.max(8, Math.round(root.handleSize * 0.42 * handle.fontScale))
             visible: root.showValueBubble
         }
@@ -409,7 +502,7 @@ Item {
             text: root.valueFormatter(valueBubble.previewVal)
             color: Qt.hsla(root.accentColor.hslHue, root.accentColor.hslSaturation, 0.12, 1.0)
             font.family: "JetBrains Mono"
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             font.pixelSize: 11
         }
     }

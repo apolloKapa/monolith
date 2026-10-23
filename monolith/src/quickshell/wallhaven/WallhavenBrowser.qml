@@ -97,7 +97,7 @@ PopupShell {
                 color: ThemeBackend.text
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: root.s(22)
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
             }
             SearchBox {
                 id: search
@@ -166,7 +166,7 @@ PopupShell {
                     color: ThemeBackend.crust
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: root.s(13)
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                 }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.enable() }
             }

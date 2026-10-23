@@ -116,7 +116,7 @@ Variants {
                 return (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar && Config.rawSettings.bar.autohideTimeout !== undefined) ? Config.rawSettings.bar.autohideTimeout : 1000;
             }
             // the Frame style is solid (it is the edge of the screen)
-            property real barOpacity: isFrame ? 1.0 : ThemeBackend.elementOpacity
+            property real barOpacity: (isFrame && !ThemeBackend.seeThrough) ? 1.0 : ThemeBackend.elementOpacity
 
             HoverHandler {
                 id: barHover
@@ -230,8 +230,8 @@ Variants {
             }
 
             readonly property real baseThickness: 40
-            readonly property real minThickness: 28
-            readonly property real maxThickness: 48
+            readonly property real minThickness: 22
+            readonly property real maxThickness: 72
             property real thicknessSetting: {
                 let dummy = configRevision;
                 let v = (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar && Config.rawSettings.bar.height !== undefined) ? Number(Config.rawSettings.bar.height) : baseThickness;

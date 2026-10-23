@@ -299,9 +299,11 @@ Item {
         return (w && isModuleActive(norm)) ? (w.targetWidth !== undefined ? w.targetWidth : w.width) : 0;
     }
 
-    property real gap: barWindow ? barWindow.s(2) : 2
+    // spacing from Settings -> Bar: between pills (0 = they touch) and between the sections
+    readonly property var spacingCfg: (Config.rawSettings && Config.rawSettings.bar) ? Config.rawSettings.bar : ({})
+    property real gap: barWindow ? barWindow.s(spacingCfg.gap !== undefined ? Number(spacingCfg.gap) : 2) : 2
     property real groupGap: barWindow ? -barWindow.s(4) : -4
-    property real gap8: barWindow ? barWindow.s(10) : 10
+    property real gap8: barWindow ? barWindow.s(spacingCfg.sectionGap !== undefined ? Number(spacingCfg.sectionGap) : 10) : 10
     property real groupPad: (!isSolid || distinctPills) ? (barWindow ? barWindow.s(4) : 4) : 0
 
     function calcTargetWidth(arr) {
@@ -796,11 +798,11 @@ Item {
             opacity: visible ? 1.0 : 0.0
 
             color: (groupGlass.active || (ThemeBackend.liquidGlass && groupBlur.active)) ? "transparent" : ((contentWrapper.isSolid && contentWrapper.distinctPills)
-                ? Qt.alpha(Qt.darker(ThemeBackend.surface0, 1.15), (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
-                : Qt.alpha(ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0))
-            radius: ThemeBackend.borderRadius
-            // hairline edge (outlined styles draw their own line)
-            border.width: ThemeBackend.outlined ? 0 : 1
+                ? Qt.alpha(ThemeBackend.material ? ThemeBackend.surfaceContainerHigh : Qt.darker(ThemeBackend.surface0, 1.15), (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
+                : Qt.alpha(ThemeBackend.material ? ThemeBackend.surfaceContainer : ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0))
+            radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
+            // hairline edge (outlined styles draw their own line; Material has none)
+            border.width: (ThemeBackend.outlined || ThemeBackend.material) ? 0 : 1
             border.color: Qt.alpha(ThemeBackend.text, 0.08)
             property Item blurSurface: groupBlur
 

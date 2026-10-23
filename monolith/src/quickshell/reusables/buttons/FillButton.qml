@@ -11,7 +11,7 @@ Item {
 
     property int horizontalPadding: 30
     property int cornerRadius: 12
-    readonly property real effectiveRadius: Math.max(0, Math.min(root.cornerRadius, Math.min(width > 0 ? width : desiredWidth, height > 0 ? height : implicitHeight) / 2))
+    readonly property real effectiveRadius: Math.max(0, Math.min(ThemeBackend.pill ? 9999 : root.cornerRadius, Math.min(width > 0 ? width : desiredWidth, height > 0 ? height : implicitHeight) / 2))
 
     property string buttonText: ""
     property string subText: ""
@@ -119,7 +119,7 @@ Item {
                     visible: I18n.rtl && root.buttonText !== ""
                     text: root.buttonText
                     font.family: ThemeBackend.fontFamily
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.pixelSize: root.textFontSize
                     color: bRoot.contentTextColor
                     horizontalAlignment: root.contentAlignment === Qt.AlignHCenter ? Text.AlignHCenter : I18n.textAlignment
@@ -198,7 +198,7 @@ Item {
                                 anchors.centerIn: parent
                                 text: charSlot.modelData === " " ? "\u00A0" : charSlot.modelData
                                 font.family: ThemeBackend.fontFamily
-                                font.weight: Font.Bold
+                                font.weight: ThemeBackend.weightBold
                                 font.pixelSize: root.textFontSize
                                 color: bRoot.contentTextColor
                                 Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale } }
@@ -320,7 +320,7 @@ Item {
                 from: 0; to: Math.PI * 2; duration: 800
             }
 
-            radius: ThemeBackend.rad(root.cornerRadius)
+            radius: ThemeBackend.pill ? root.effectiveRadius : ThemeBackend.rad(root.cornerRadius)
             fillLevel: root.fillLevel
             waveAmp: root.fillLevel < 0.99 ? (Math.min(10, Math.min(width * root.fillLevel, width - width * root.fillLevel)) * Math.sin(root.fillLevel * Math.PI)) : 0
             phase: wavePhase

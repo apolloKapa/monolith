@@ -108,7 +108,7 @@ GuideTab {
                             Text {
                                 text: I18n.t("guide.about.title")
                                 font.family: ThemeBackend.fontFamily
-                                font.weight: Font.Bold
+                                font.weight: ThemeBackend.weightBold
                                 font.pixelSize: rootObj.s(22)
                                 color: ThemeBackend.text
                                 Layout.alignment: Qt.AlignHCenter
@@ -159,7 +159,7 @@ GuideTab {
                             Layout.bottomMargin: rootObj.s(4)
                             text: "Update available v" + Updater.remoteVersion
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: rootObj.s(18)
                             color: ThemeBackend.mauve
                         }

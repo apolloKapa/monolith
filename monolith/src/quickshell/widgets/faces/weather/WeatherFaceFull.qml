@@ -205,7 +205,7 @@ Item {
                         text: Weather.currentTemp !== "" ? Math.round(parseFloat(Weather.currentTemp)) + "°" : "--°"
                         font.family: ThemeBackend.fontFamily
                         font.pixelSize: root.tempHuge
-                        font.weight: Font.Black
+                        font.weight: ThemeBackend.weightBlack
                         color: ThemeBackend.text
                         elide: Text.ElideRight
                     }
@@ -236,7 +236,7 @@ Item {
                         text: Location.city && Location.city !== "" ? Location.city : (root.weatherData && root.weatherData.city ? root.weatherData.city : "Unknown")
                         font.family: ThemeBackend.fontFamily
                         font.pixelSize: root.textCity
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         color: ThemeBackend.text
                         horizontalAlignment: Text.AlignRight
                         Layout.fillWidth: true

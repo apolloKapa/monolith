@@ -9,6 +9,8 @@ Item {
 
     property int horizontalPadding: 12
     property int cornerRadius: 10
+    // Material makes every button a pill (or a circle)
+    readonly property real shapeRadius: ThemeBackend.pill ? Math.min(width, height) / 2 : ThemeBackend.rad(cornerRadius)
 
     property string buttonText: ""
     property string subText: ""
@@ -67,7 +69,7 @@ Item {
     Rectangle {
         id: btnShape
         anchors.fill: parent
-        radius: ThemeBackend.rad(root.cornerRadius)
+        radius: root.shapeRadius
         clip: !glass.active
         color: glass.active ? "transparent" : root.withBgOpacity((btnMa.pressed && root.enabled) ? Qt.darker(root.accentColor, 1.28) : (root.isHoveredOrHighlighted ? Qt.darker(root.accentColor, 1.14) : root.accentColor))
         opacity: 1.0
@@ -79,7 +81,7 @@ Item {
             press: (btnMa.pressed && root.enabled) ? 1 : (root.isHoveredOrHighlighted ? 0.25 : 0)
             pulse: Math.min(1, root.flashOpacity * 2.5)
             Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-            radius: ThemeBackend.rad(root.cornerRadius)
+            radius: root.shapeRadius
             tintColor: root.accentColor
             tintAmount: ((btnMa.pressed && root.enabled) ? 0.55 : (root.isHoveredOrHighlighted ? 0.42 : 0.3)) * root.bgOpacity * root.glassTintScale
             Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -131,7 +133,7 @@ Item {
                     visible: root.buttonText !== ""
                     text: root.buttonText
                     font.family: ThemeBackend.fontFamily
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.pixelSize: root.textFontSize
                     color: root.displayTextColor
                     horizontalAlignment: root.contentAlignment === Qt.AlignHCenter ? Text.AlignHCenter : I18n.textAlignment
@@ -156,7 +158,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: ThemeBackend.rad(root.cornerRadius)
+            radius: root.shapeRadius
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !glass.active
@@ -167,7 +169,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         anchors.margins: -2
-        radius: ThemeBackend.rad(root.cornerRadius + 2)
+        radius: root.shapeRadius + 2
         color: "transparent"
         border.width: 2
         border.color: Qt.alpha(ThemeBackend.mauve, 0.8)

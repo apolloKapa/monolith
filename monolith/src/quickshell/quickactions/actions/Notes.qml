@@ -456,7 +456,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: section
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: root.s(10.5)
                             color: ThemeBackend.subtext0
                             opacity: 0.85

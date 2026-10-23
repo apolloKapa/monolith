@@ -1,5 +1,6 @@
 import QtQuick
 import "../"
+import "../reusables"
 
 // With the Frame bar style, a popup is a drawer pulled out of the frame: a solid shape behind it
 // that reaches the bar and/or the side of the screen when the popup is near them, square where it
@@ -21,13 +22,15 @@ Item {
     readonly property string barPos: barCfg.position || "top"
     readonly property real thickness: Scaler.s(barCfg.frameThickness !== undefined ? Number(barCfg.frameThickness) : 8)
     readonly property real barH: Scaler.s(barCfg.height !== undefined ? Number(barCfg.height) : 40)
-    readonly property real topIn: barPos === "top" ? barH : thickness
-    readonly property real bottomIn: barPos === "bottom" ? barH : thickness
-    readonly property real leftIn: barPos === "left" ? barH : thickness
-    readonly property real rightIn: barPos === "right" ? barH : thickness
+    // an auto-hiding bar doesn't hold its edge: the frame runs along it like the others
+    readonly property real edgeBar: barCfg.autohide === true ? thickness : barH
+    readonly property real topIn: barPos === "top" ? edgeBar : thickness
+    readonly property real bottomIn: barPos === "bottom" ? edgeBar : thickness
+    readonly property real leftIn: barPos === "left" ? edgeBar : thickness
+    readonly property real rightIn: barPos === "right" ? edgeBar : thickness
     readonly property real r: Scaler.s(18)
     readonly property real reach: Scaler.s(80)
-    readonly property color color: ThemeBackend.base
+    readonly property color color: ThemeBackend.frameColor
 
     // which frame edges the popup hangs from (it's near them, and not a full-screen panel)
     readonly property bool fullScreen: popupW >= width - leftIn - rightIn - 2 && popupH >= height - topIn - bottomIn - 2
@@ -56,12 +59,23 @@ Item {
         height: (drawer.from === "top" || drawer.from === "bottom") ? (drawer.dB - drawer.dT) * drawer.progress : drawer.dB - drawer.dT
 
         Rectangle {
+            id: plate
             anchors.fill: parent
             color: drawer.color
             topLeftRadius: (drawer.atTop || drawer.atLeft) ? 0 : drawer.r
             topRightRadius: (drawer.atTop || drawer.atRight) ? 0 : drawer.r
             bottomLeftRadius: (drawer.atBottom || drawer.atLeft) ? 0 : drawer.r
             bottomRightRadius: (drawer.atBottom || drawer.atRight) ? 0 : drawer.r
+            // glass in the see-through styles, the same as the popup inside it
+            WallpaperBlur {
+                z: -1
+                anchors.fill: parent
+                topLeftRadius: plate.topLeftRadius
+                topRightRadius: plate.topRightRadius
+                bottomLeftRadius: plate.bottomLeftRadius
+                bottomRightRadius: plate.bottomRightRadius
+                standalone: true
+            }
         }
 
         // ears: concave corners joining the drawer to the frame

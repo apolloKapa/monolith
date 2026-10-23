@@ -81,7 +81,7 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: root.valueText
                 font.family: root.fontFamily
-                font.weight: Font.Black
+                font.weight: ThemeBackend.weightBlack
                 font.pixelSize: Math.round(root.diameter * (root.compact ? 0.2 : 0.22))
                 color: root.valueTextColor
             }

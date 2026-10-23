@@ -946,7 +946,7 @@ PanelWindow {
                                 horizontalAlignment: I18n.textAlignment
                                 text: section
                                 font.family: ThemeBackend.fontFamily
-                                font.weight: Font.Bold
+                                font.weight: ThemeBackend.weightBold
                                 font.pixelSize: clipboardWindow.s(10.5)
                                 color: ThemeBackend.subtext0
                                 opacity: 0.85

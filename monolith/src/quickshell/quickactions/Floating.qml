@@ -342,7 +342,7 @@ Variants {
                 id: activeTabMetrics
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: floatingWidget.s(10)
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 text: floatingWidget.getTabName(floatingWidget.activeIndex)
             }
 
@@ -1767,7 +1767,7 @@ Variants {
                                             text: floatingWidget.getTabName(index)
                                             font.family: ThemeBackend.fontFamily
                                             font.pixelSize: floatingWidget.s(10)
-                                            font.weight: Font.Bold
+                                            font.weight: ThemeBackend.weightBold
                                             color: highlightGlass.active ? ThemeBackend.text : ThemeBackend.crust
                                             rotation: (floatingWidget.activeEdge === "right" || floatingWidget.activeEdge === "bottom") ? 90 : -90
                                         }

@@ -102,7 +102,7 @@ FilePicker {
                                 return typeof I18n !== "undefined" ? I18n.t("guide.sound_picker.no_sound_selected") : "No sound selected";
                             }
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: soundPickerRoot.s(14)
                             color: soundPickerRoot.selectedFileName !== "" ? ThemeBackend.text : ThemeBackend.subtext0
                             elide: Text.ElideMiddle

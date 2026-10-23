@@ -104,9 +104,16 @@ QtObject {
         "timedate": {
             name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.name", "Time & Date") : "Time & Date",
             icon: "󰃰",
-            defaultVariant: "classic",
+            defaultVariant: "google",
             face: "faces/timedate/TimeDateFace.qml",
             variants: {
+                "google": {
+                    id: "google",
+                    name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.name.google", "Google") : "Google",
+                    desc: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.google", "Time and a short date on one line") : "Time and a short date on one line",
+                    icon: "󰅐",
+                    face: "faces/timedate/GoogleFace.qml"
+                },
                 "classic": {
                     id: "classic",
                     name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.name.classic", "Classic") : "Classic",
@@ -284,7 +291,7 @@ QtObject {
         }
         if (norm === "timedate") {
             if (bs.timeStyle) return bs.timeStyle;
-            return "classic";
+            return "google";
         }
         if (norm === "left") {
             if (bs.menuStyle) return bs.menuStyle;

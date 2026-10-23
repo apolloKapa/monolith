@@ -12,14 +12,14 @@ RowLayout {
     required property var panel
 
     Layout.fillWidth: true
-    Layout.preferredHeight: panel.s(73)
-    Layout.maximumHeight: panel.s(73)
+    Layout.preferredHeight: panel.s(52)
+    Layout.maximumHeight: panel.s(52)
     spacing: panel.s(6)
 
     Repeater {
         model: ListModel {
             ListElement { cmd: "lock"; icon: ""; weight: 1.0 }
-            ListElement { cmd: "sleep"; icon: "ᶻ 𝗓 𝗓"; weight: 1.0 }
+            ListElement { cmd: "sleep"; icon: "󰒲"; weight: 1.0 }
             ListElement { cmd: "hibernate"; icon: "󰤄"; weight: 1.5 }
             ListElement { cmd: "reboot"; icon: "󰑓"; weight: 2.5 }
             ListElement { cmd: "poweroff"; icon: ""; weight: 3.5 }
@@ -29,7 +29,7 @@ RowLayout {
             id: actionCapsule
             Layout.fillWidth: true
             Layout.fillHeight: true
-            radius: ThemeBackend.rad(panel.boxRadius)
+            radius: ThemeBackend.pill ? height / 2 : ThemeBackend.rad(panel.boxRadius)
             clip: !capsuleGlass.active
 
             property bool isHibernate: cmd === "hibernate"
@@ -43,7 +43,7 @@ RowLayout {
                 Translate { x: (panel.isLeftAnchored ? -panel.rowSlideDistance : panel.rowSlideDistance) * (1.0 - panel.introActions) }
             ]
 
-            color: capsuleGlass.active ? "transparent" : ThemeBackend.faded((actionMa.containsMouse && !isDisabled) ? ThemeBackend.surface1 : Qt.darker(ThemeBackend.surface0, 1.04))
+            color: capsuleGlass.active ? "transparent" : ThemeBackend.faded((actionMa.containsMouse && !isDisabled) ? ThemeBackend.surfaceContainerHighest : ThemeBackend.surfaceContainerHigh)
 
             GlassFill {
                 id: capsuleGlass
@@ -104,7 +104,7 @@ RowLayout {
             FluidWave {
                 id: actionWaveCanvas
                 anchors.fill: parent
-                visible: panel.visible && actionCapsule.fillLevel > 0.001 && !capsuleGlass.active
+                visible: panel.visible && actionCapsule.fillLevel > 0.001 && !capsuleGlass.active && !ThemeBackend.material
 
                 property real wavePhase: 0.0
                 NumberAnimation on wavePhase {
@@ -120,6 +120,16 @@ RowLayout {
                 vertical: 1.0
                 color1: (cmd === "poweroff" || cmd === "hibernate" ? ThemeBackend.red : ThemeBackend.blue)
                 color2: color1
+            }
+
+            // Material: hold to confirm fills the pill from the left
+            Rectangle {
+                visible: ThemeBackend.material && actionCapsule.fillLevel > 0.001
+                height: parent.height
+                width: Math.max(height, parent.width * actionCapsule.fillLevel)
+                radius: actionCapsule.radius
+                opacity: Math.min(1, actionCapsule.fillLevel * 4)
+                color: actionWaveCanvas.color1
             }
 
             LiquidFill {
@@ -163,7 +173,7 @@ RowLayout {
                 anchors.centerIn: parent
                 font.family: ThemeBackend.iconFont
                 font.pixelSize: panel.s(19)
-                color: isDisabled ? ThemeBackend.surface2 : (actionMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
+                color: isDisabled ? ThemeBackend.surface2 : ((ThemeBackend.material && actionCapsule.fillLevel > 0.5) ? ThemeBackend.crust : (actionMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0))
                 text: icon
                 Behavior on color {
                     enabled: panel.visible
@@ -172,6 +182,7 @@ RowLayout {
             }
 
             Item {
+                visible: !ThemeBackend.material
                 anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
                 height: actionCapsule.height * actionCapsule.fillLevel
                 clip: true

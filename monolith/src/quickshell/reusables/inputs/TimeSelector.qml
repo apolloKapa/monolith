@@ -174,7 +174,7 @@ Item {
             anchors.centerIn: parent
             text: segRoot.value.toString().padStart(2, '0')
             font.family: "JetBrains Mono"
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             font.pixelSize: root.fontPixelSize
             color: (isSelected && !pillGlass.active) ? root.activeTextColor : root.textColor
             visible: !isEditing
@@ -185,7 +185,7 @@ Item {
             id: valInput
             anchors.centerIn: parent
             font.family: "JetBrains Mono"
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             font.pixelSize: root.fontPixelSize
             color: (isSelected && !pillGlass.active) ? root.activeTextColor : root.accentColor
             visible: isEditing
@@ -337,7 +337,7 @@ Item {
             Text { 
                 text: ":"
                 font.family: "JetBrains Mono"
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 font.pixelSize: root.fontPixelSize
                 color: root.alpha(root.subTextColor, 0.4)
                 anchors.verticalCenter: parent.verticalCenter 
@@ -355,7 +355,7 @@ Item {
             Text { 
                 text: ":"
                 font.family: "JetBrains Mono"
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 font.pixelSize: root.fontPixelSize
                 color: root.alpha(root.subTextColor, 0.4)
                 anchors.verticalCenter: parent.verticalCenter 

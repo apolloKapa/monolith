@@ -298,7 +298,7 @@ Item {
                     }
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: rootObj.s(12)
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     color: "#ffffff"
                     Layout.alignment: Qt.AlignRight
                     elide: Text.ElideLeft

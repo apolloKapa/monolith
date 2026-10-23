@@ -135,7 +135,7 @@ PanelWindow {
                                     return typeof I18n !== "undefined" ? I18n.t("guide.lyrics_picker.no_lyrics_selected", "No lyrics selected") : "No lyrics selected";
                                 }
                                 font.family: ThemeBackend.fontFamily
-                                font.weight: Font.Bold
+                                font.weight: ThemeBackend.weightBold
                                 font.pixelSize: Scaler.s(14)
                                 color: filePicker.selectedFileName !== "" ? ThemeBackend.text : ThemeBackend.subtext0
                                 elide: Text.ElideMiddle

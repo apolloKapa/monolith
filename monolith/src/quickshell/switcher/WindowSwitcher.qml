@@ -142,7 +142,7 @@ PopupShell {
                             color: ThemeBackend.text
                             font.family: ThemeBackend.fontFamily
                             font.pixelSize: root.s(40)
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                         }
                     }
                     Text {

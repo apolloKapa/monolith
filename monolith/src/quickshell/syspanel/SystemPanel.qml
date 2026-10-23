@@ -35,12 +35,12 @@ Item {
 
     readonly property bool isDesktop: UPower.displayDevice.ready ? !UPower.displayDevice.isLaptopBattery : SystemInfo.isDesktop
 
-    readonly property real boxRadius: Math.min(ThemeBackend.borderRadius, root.s(20))
-    readonly property real cardRadius: Math.min(ThemeBackend.borderRadius, root.s(14))
+    readonly property real boxRadius: ThemeBackend.material ? root.s(24) : Math.min(ThemeBackend.borderRadius, root.s(20))
+    readonly property real cardRadius: ThemeBackend.material ? root.s(16) : Math.min(ThemeBackend.borderRadius, root.s(14))
 
     readonly property color briColor: Qt.lighter(ThemeBackend.mauve, 1.1)
     readonly property color volColor: Qt.lighter(ThemeBackend.sapphire, 1.5)
-    readonly property color profileColor: Qt.lighter(ThemeBackend.blue, 1.55)
+    readonly property color profileColor: ThemeBackend.material ? ThemeBackend.mauve : Qt.lighter(ThemeBackend.blue, 1.55)
     readonly property int batCapacity: UPower.displayDevice.ready ? Math.round(UPower.displayDevice.percentage * 100) : 0
 
     readonly property bool isCharging: UPower.displayDevice.ready && (UPower.displayDevice.state === UPowerDeviceState.Charging || UPower.displayDevice.state === UPowerDeviceState.FullyCharged)
@@ -363,7 +363,7 @@ Item {
 
                 Text {
                     font.family: ThemeBackend.fontFamily
-                    font.weight: Font.Black
+                    font.weight: ThemeBackend.weightBlack
                     font.pixelSize: root.s(20)
                     color: bRoot.contentTextColor
                     text: Math.round(root.animCapacity) + "%"
@@ -385,7 +385,7 @@ Item {
                     }
 
                     font.family: ThemeBackend.fontFamily
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.pixelSize: root.s(10)
                     color: bRoot.glass ? Qt.alpha(bRoot.contentTextColor, 0.75) : (bRoot.contentTextColor === ThemeBackend.crust ? Qt.alpha(ThemeBackend.crust, 0.85) : (root.isCharging ? ThemeBackend.green : ThemeBackend.subtext0))
                     text: timeString
@@ -428,87 +428,67 @@ Item {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: root.s(8)
-                spacing: root.s(5)
+                anchors.margins: root.s(12)
+                spacing: root.s(10)
 
-                Rectangle {
+                // header: the time and date, then you (avatar) with settings and log out
+                Item {
                     id: userBox
                     Layout.fillWidth: true
-                    Layout.preferredHeight: root.s(54)
-                    Layout.maximumHeight: root.s(54)
-                    radius: ThemeBackend.rad(root.boxRadius)
-                    color: userGlass.active ? "transparent" : ThemeBackend.faded(Qt.darker(ThemeBackend.surface0, 1.04))
+                    Layout.preferredHeight: root.s(64)
+                    Layout.maximumHeight: root.s(64)
+                    Layout.leftMargin: root.s(6)
                     opacity: root.introTop
                     transform: Translate { x: (root.isLeftAnchored ? -root.rowSlideDistance : root.rowSlideDistance) * (1.0 - root.introTop) }
 
-                    GlassFill {
-                        id: userGlass
-                        anchors.fill: parent
-                        radius: ThemeBackend.rad(parent.radius)
-                        tintColor: ThemeBackend.surface0
-                        tintAmount: 0.3
-                    }
-
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: root.s(10)
                         spacing: root.s(10)
 
-                        ImageBox {
-                            Layout.alignment: Qt.AlignTop
-                            Layout.preferredWidth: root.s(34)
-                            Layout.preferredHeight: root.s(34)
-                            size: root.s(34)
-                            cornerRadius: ThemeBackend.rad(root.s(8))
-                            imageRadius: ThemeBackend.rad(root.s(8))
-                            source: SystemInfo.avatarPath !== "" ? "file://" + SystemInfo.avatarPath : ""
-                            backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.surface1 : "transparent"
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: ""
-                                font.family: ThemeBackend.iconFont
-                                font.pixelSize: root.s(18)
-                                color: ThemeBackend.text
-                                visible: SystemInfo.avatarPath === ""
-                            }
-                        }
-
                         ColumnLayout {
-                            Layout.alignment: Qt.AlignTop
-                            spacing: 0
+                            Layout.alignment: Qt.AlignVCenter
+                            spacing: root.s(0)
 
                             Text {
-                                text: SystemInfo.username !== "" ? SystemInfo.username : I18n.t("syspanel.user.default_name")
+                                text: DateTime.hour + ":" + DateTime.minute + (DateTime.amPm !== "" ? " " + DateTime.amPm : "")
                                 font.family: ThemeBackend.fontFamily
-                                font.weight: Font.Black
-                                font.pixelSize: root.s(15)
+                                font.weight: Font.Normal
+                                font.pixelSize: root.s(34)
                                 color: ThemeBackend.text
                             }
-
                             Text {
-                                text: SystemInfo.osName !== "" ? SystemInfo.osName : I18n.t("syspanel.user.default_os")
+                                text: DateTime.fullDate
                                 font.family: ThemeBackend.fontFamily
                                 font.weight: Font.Medium
-                                font.pixelSize: root.s(10)
+                                font.pixelSize: root.s(12)
                                 color: ThemeBackend.subtext0
                             }
                         }
 
                         Item { Layout.fillWidth: true }
 
-                        ClickButton {
+                        IconButton {
+                            Layout.alignment: Qt.AlignVCenter
+                            size: root.s(40)
+                            cornerRadius: ThemeBackend.pill ? size / 2 : ThemeBackend.rad(root.s(12))
+                            buttonIcon: "󰒓"
+                            iconFontSize: root.s(17)
+                            accentColor: ThemeBackend.surfaceContainerHigh
+                            textColor: ThemeBackend.text
+                            onClicked: {
+                                closeSequence.start();
+                                Quickshell.execDetached(["bash", Caching.monolithDir + "/scripts/qs_manager.sh", "open", "settings", ""]);
+                            }
+                        }
+
+                        IconButton {
                             id: logoutBtn
-                            Layout.alignment: Qt.AlignTop | Qt.AlignRight
-                            Layout.preferredWidth: root.s(92)
-                            Layout.preferredHeight: root.s(34)
-                            horizontalPadding: root.s(10)
-                            cornerRadius: ThemeBackend.rad(root.s(12))
-                            buttonText: I18n.t("syspanel.user.logout")
-                            textFontSize: root.s(11)
+                            Layout.alignment: Qt.AlignVCenter
+                            size: root.s(40)
+                            cornerRadius: ThemeBackend.pill ? size / 2 : ThemeBackend.rad(root.s(12))
                             buttonIcon: "󰍃"
-                            iconFontSize: root.s(14)
-                            accentColor: ThemeBackend.surface2
+                            iconFontSize: root.s(17)
+                            accentColor: ThemeBackend.surfaceContainerHigh
                             textColor: ThemeBackend.text
 
                             Timer {
@@ -521,8 +501,27 @@ Item {
                                 }
                             }
 
-                            onTriggered: {
-                                logoutOpenTimer.start();
+                            onClicked: logoutOpenTimer.start()
+                        }
+
+                        ImageBox {
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.preferredWidth: root.s(40)
+                            Layout.preferredHeight: root.s(40)
+                            size: root.s(40)
+                            cornerRadius: ThemeBackend.square ? 0 : root.s(20)
+                            imageRadius: ThemeBackend.square ? 0 : root.s(20)
+                            source: SystemInfo.avatarPath !== "" ? "file://" + SystemInfo.avatarPath : ""
+                            backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.primaryContainer : "transparent"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: (SystemInfo.username || "?").charAt(0).toUpperCase()
+                                font.family: ThemeBackend.fontFamily
+                                font.weight: Font.DemiBold
+                                font.pixelSize: root.s(17)
+                                color: ThemeBackend.onPrimaryContainer
+                                visible: SystemInfo.avatarPath === ""
                             }
                         }
                     }
@@ -545,7 +544,7 @@ Item {
                     Layout.minimumHeight: root.s(68)
                     cornerRadius: ThemeBackend.rad(root.boxRadius)
                     cardRadius: ThemeBackend.rad(root.cardRadius)
-                    baseColor: ThemeBackend.faded(Qt.darker(ThemeBackend.surface0, 1.04))
+                    baseColor: ThemeBackend.faded(ThemeBackend.surfaceContainer)
                     rootContext: root
                     opacity: root.introNotifs
                     transform: Translate { x: (root.isLeftAnchored ? -root.rowSlideDistance : root.rowSlideDistance) * (1.0 - root.introNotifs) }
@@ -652,7 +651,7 @@ Item {
 
                         Rectangle {
                             id: profileSwitchShadow
-                            visible: !root.isDesktop && !profileSwitch.glassActive
+                            visible: !root.isDesktop && !profileSwitch.glassActive && !ThemeBackend.material
                             anchors.fill: parent
                             anchors.topMargin: root.s(1.5)
                             anchors.bottomMargin: -root.s(1.5)
@@ -679,9 +678,9 @@ Item {
                                 }
                             }
                             accentColor: root.profileColor
-                            baseColor: ThemeBackend.surface1
+                            baseColor: ThemeBackend.material ? ThemeBackend.surfaceContainerHigh : ThemeBackend.surface1
                             textColor: ThemeBackend.text
-                            activeTextColor: ThemeBackend.crust
+                            activeTextColor: ThemeBackend.material ? ThemeBackend.onPrimary : ThemeBackend.crust
                             currentIndex: {
                                 if (PowerProfiles.hasPerformanceProfile) {
                                     if (root.powerProfile === "power-saver") return 0;

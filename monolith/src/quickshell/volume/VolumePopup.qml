@@ -343,7 +343,7 @@ Item {
                                 fontSizeMode: Text.Fit
                                 minimumPixelSize: window.s(8)
                                 font.family: ThemeBackend.fontFamily
-                                font.weight: Font.Black
+                                font.weight: ThemeBackend.weightBlack
                                 font.pixelSize: window.s(26)
                                 color: window.activeMute ? ThemeBackend.red : ThemeBackend.text
                                 text: window.activeMute ? I18n.t("volumepopup.mute") : window.activeVol + "%"
@@ -375,7 +375,7 @@ Item {
                                     fontSizeMode: Text.Fit
                                     minimumPixelSize: window.s(8)
                                     font.family: ThemeBackend.fontFamily
-                                    font.weight: Font.Black
+                                    font.weight: ThemeBackend.weightBlack
                                     font.pixelSize: window.s(26)
                                     color: coreGlass.active ? ThemeBackend.text : ThemeBackend.crust
                                     text: window.activeMute ? I18n.t("volumepopup.mute") : window.activeVol + "%"

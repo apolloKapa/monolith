@@ -55,7 +55,7 @@ Item {
         id: ref
         font.family: root.fontName
         font.pixelSize: 100
-        font.weight: Font.Black
+        font.weight: ThemeBackend.weightBlack
         font.variableAxes: ({ "wght": 1000, "ROND": 100, "wdth": 100 })
     }
 
@@ -92,7 +92,7 @@ Item {
                     text: cell.digit
                     font.family: root.fontName
                     font.pixelSize: root.effectivePixelSize
-                    font.weight: Font.Black
+                    font.weight: ThemeBackend.weightBlack
                     font.variableAxes: ({ "wght": 1000, "ROND": 100, "wdth": 100 })
                     renderType: Text.NativeRendering
                     color: Qt.rgba(0, 0, 0, modelData.alpha)
@@ -105,7 +105,7 @@ Item {
                 text: cell.digit
                 font.family: root.fontName
                 font.pixelSize: root.effectivePixelSize
-                font.weight: Font.Black
+                font.weight: ThemeBackend.weightBlack
                 font.variableAxes: ({ "wght": 1000, "ROND": 100, "wdth": 100 })
                 renderType: Text.NativeRendering
                 color: cell.tint

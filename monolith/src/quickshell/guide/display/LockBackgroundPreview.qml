@@ -140,7 +140,7 @@ Item {
             text: I18n.t("guide.display.lockscreen.background.follows_hint", "Follows wallpaper")
             font.family: ThemeBackend.fontFamily
             font.pixelSize: rootObj.s(14)
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             color: ThemeBackend.text
         }
     }
@@ -196,7 +196,7 @@ Item {
                 text: preview.shownPath === "" ? I18n.t("guide.display.lockscreen.background.none", "No background selected") : (preview.shownPath.split("/").pop() || preview.shownPath)
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: rootObj.s(12)
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 color: "#ffffff"
                 Layout.alignment: Qt.AlignRight
                 elide: Text.ElideLeft

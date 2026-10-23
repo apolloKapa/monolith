@@ -428,7 +428,7 @@ PanelWindow {
                     reveal: window.toSerpReveal
                     color: window.colorizeActive ? window.mauve : window.text
                     font.family: ThemeBackend.fontFamily
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.pixelSize: window.s(48)
                     soundEnabled: false
                 }
@@ -468,7 +468,7 @@ PanelWindow {
                     text: I18n.t("start.welcome")
                     reveal: window.welcomeReveal
                     font.family: ThemeBackend.fontFamily
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.pixelSize: window.s(48)
                 }
             }
@@ -491,7 +491,7 @@ PanelWindow {
                         reveal: window.shellTextReveal
                         color: window.text
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.pixelSize: window.s(28)
                         y: window.s(12)
                     }
@@ -501,7 +501,7 @@ PanelWindow {
                         text: I18n.t("start.you")
                         reveal: Math.max(0.0, Math.min(1.0, (window.shellTextReveal - 0.70) * 3.33))
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Black
+                        font.weight: ThemeBackend.weightBlack
                         font.pixelSize: window.s(48)
 
                         property color blinkColor: window.mauve

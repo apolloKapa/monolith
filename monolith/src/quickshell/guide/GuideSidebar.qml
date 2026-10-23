@@ -22,7 +22,7 @@ Rectangle {
     anchors.top: parent.top
     anchors.bottom: parent.bottom
     width: popup.compact ? popup.s(64) : popup.s(232)
-    color: sidebarGlass.active ? "transparent" : Qt.alpha(ThemeBackend.surface0, 0.4)
+    color: sidebarGlass.active ? "transparent" : (ThemeBackend.material ? ThemeBackend.surfaceContainerLow : Qt.alpha(ThemeBackend.surface0, 0.4))
 
     topLeftRadius: ThemeBackend.rad(!I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
     bottomLeftRadius: ThemeBackend.rad(!I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
@@ -59,6 +59,7 @@ Rectangle {
                 Layout.leftMargin: popup.s(10)
                 spacing: 0
                 Caption {
+                    visible: !ThemeBackend.material
                     text: "Monolith"
                     Layout.fillWidth: true
                 }
@@ -67,8 +68,8 @@ Rectangle {
                     horizontalAlignment: I18n.textAlignment
                     text: I18n.t("guide.settings", "Settings")
                     font.family: ThemeBackend.fontFamily
-                    font.pixelSize: popup.s(16)
-                    font.bold: true
+                    font.pixelSize: ThemeBackend.material ? popup.s(22) : popup.s(16)
+                    font.bold: !ThemeBackend.material
                     color: ThemeBackend.text
                 }
             }
@@ -105,13 +106,14 @@ Rectangle {
             Rectangle {
                 id: activeHighlight
                 z: -1
-                radius: ThemeBackend.borderRadius
-                color: activeGlass.active ? "transparent" : Qt.alpha(ThemeBackend.mauve, 0.14)
+                radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
+                color: activeGlass.active ? "transparent" : (ThemeBackend.material ? ThemeBackend.secondaryContainer : Qt.alpha(ThemeBackend.mauve, 0.14))
                 visible: activeDelegate !== null
 
                 // the spine: Monolith's selection mark (a slab, like the logo)
                 Rectangle {
                     z: 2
+                    visible: !ThemeBackend.material
                     x: I18n.rtl ? parent.width - width : 0
                     anchors.verticalCenter: parent.verticalCenter
                     width: popup.s(3)
@@ -195,7 +197,7 @@ Rectangle {
                             id: header
                             Layout.fillWidth: true
                             Layout.preferredHeight: sidebar.headerH
-                            radius: ThemeBackend.borderRadius
+                            radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
                             property bool active: false
                             Component.onCompleted: active = Qt.binding(() => tabDelegate.hasSubtabs ? (sidebar.curTab === tabDelegate.tabIndex && !tabDelegate.isExpanded) : (sidebar.curTab === tabDelegate.tabIndex))
                             color: (!active && headerMa.containsMouse && !headerHoverGlass.active) ? Qt.alpha(ThemeBackend.surface1, 0.5) : "transparent"
@@ -230,7 +232,7 @@ Rectangle {
                                     bgOpacity: 2.0
                                     iconFontSize: popup.s(15)
                                     accentColor: "transparent"
-                                    textColor: header.active ? ThemeBackend.mauve : (headerMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
+                                    textColor: header.active ? (ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.mauve) : (headerMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
                                 }
 
                                 Text {
@@ -250,7 +252,7 @@ Rectangle {
                                 }
 
                                 Text {
-                                    visible: !popup.compact
+                                    visible: !popup.compact && !ThemeBackend.material
                                     text: String(tabDelegate.tabIndex + 1).padStart(2, "0")
                                     font.family: "JetBrains Mono"
                                     font.pixelSize: popup.s(10)
@@ -351,7 +353,7 @@ Rectangle {
 
                                             Layout.fillWidth: true
                                             Layout.preferredHeight: sidebar.subH
-                                            radius: ThemeBackend.borderRadius
+                                            radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
 
                                             readonly property int subIndex: index
                                             readonly property int parentIndex: tabDelegate.tabIndex
@@ -389,7 +391,7 @@ Rectangle {
                                                     bgOpacity: 2.0
                                                     iconFontSize: popup.s(12)
                                                     accentColor: "transparent"
-                                                    textColor: sub.isCurrent ? ThemeBackend.mauve : ThemeBackend.subtext0
+                                                    textColor: sub.isCurrent ? (ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.mauve) : ThemeBackend.subtext0
                                                 }
 
                                                 Text {

@@ -144,7 +144,7 @@ Item {
                     text: parsedTime.hours
                     font.family: materialFaceRoot.clockFont
                     font.pixelSize: widget ? widget.s(widget.isCompact ? (parsedTime.hasSeconds ? 18 : 17) : (parsedTime.hasSeconds ? 22 : 20)) : (parsedTime.hasSeconds ? 22 : 20)
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                     font.letterSpacing: -0.8
                     color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.mauve, 1.08) : ThemeBackend.mauve
@@ -158,7 +158,7 @@ Item {
                     text: parsedTime.minutes
                     font.family: materialFaceRoot.clockFont
                     font.pixelSize: widget ? widget.s(widget.isCompact ? 14 : 16) : 16
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                     font.letterSpacing: -0.5
                     color: ThemeBackend.text
@@ -176,7 +176,7 @@ Item {
                     text: parsedTime.ampm
                     font.family: materialFaceRoot.clockFont
                     font.pixelSize: widget ? widget.s(widget.isCompact ? 8 : 9) : 9
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                     color: ThemeBackend.subtext0
                 }
@@ -194,7 +194,7 @@ Item {
                             text: parsedTime.minutes
                             font.family: materialFaceRoot.clockFont
                             font.pixelSize: widget ? widget.s(widget.isCompact ? 11 : 12) : 12
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                             font.letterSpacing: -0.4
                             color: ThemeBackend.text
@@ -205,7 +205,7 @@ Item {
                             text: parsedTime.ampm
                             font.family: materialFaceRoot.clockFont
                             font.pixelSize: widget ? widget.s(widget.isCompact ? 7 : 8) : 8
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                             color: ThemeBackend.subtext0
                             anchors.bottom: parent.bottom
@@ -218,7 +218,7 @@ Item {
                         text: parsedTime.seconds
                         font.family: materialFaceRoot.clockFont
                         font.pixelSize: widget ? widget.s(widget.isCompact ? 9 : 10) : 10
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                         font.letterSpacing: -0.3
                         color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.teal, 1.1) : ThemeBackend.teal
@@ -248,7 +248,7 @@ Item {
                     text: parsedDate.day
                     font.family: materialFaceRoot.clockFont
                     font.pixelSize: widget ? widget.s(widget.isCompact ? 13 : 15) : 15
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                     font.letterSpacing: -0.5
                     color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.teal, 1.1) : ThemeBackend.teal
@@ -264,7 +264,7 @@ Item {
                         text: parsedDate.weekday
                         font.family: materialFaceRoot.clockFont
                         font.pixelSize: widget ? widget.s(widget.isCompact ? 7 : 8) : 8
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                         font.letterSpacing: 0.2
                         color: ThemeBackend.subtext0
@@ -275,7 +275,7 @@ Item {
                         text: parsedDate.month
                         font.family: materialFaceRoot.clockFont
                         font.pixelSize: widget ? widget.s(widget.isCompact ? 8 : 9) : 9
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                         font.letterSpacing: -0.2
                         color: ThemeBackend.text
@@ -331,7 +331,7 @@ Item {
                         }
                         return widget ? widget.s(widget.isCompact ? 16 : 18) : 18;
                     }
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                     font.letterSpacing: -0.8
                     color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.mauve, 1.08) : ThemeBackend.mauve
@@ -345,7 +345,7 @@ Item {
                     text: parsedTime.minutes
                     font.family: materialFaceRoot.clockFont
                     font.pixelSize: widget ? widget.s(widget.isCompact ? 13 : 15) : 15
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                     font.letterSpacing: -0.6
                     color: ThemeBackend.text
@@ -363,7 +363,7 @@ Item {
                     text: parsedTime.ampm
                     font.family: materialFaceRoot.clockFont
                     font.pixelSize: widget ? widget.s(widget.isCompact ? 6.5 : 7.5) : 7.5
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                     color: ThemeBackend.subtext0
                 }
@@ -379,7 +379,7 @@ Item {
                         text: parsedTime.minutes
                         font.family: materialFaceRoot.clockFont
                         font.pixelSize: widget ? widget.s(widget.isCompact ? 9 : 10) : 10
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                         font.letterSpacing: -0.4
                         color: ThemeBackend.text
@@ -390,7 +390,7 @@ Item {
                         text: parsedTime.seconds
                         font.family: materialFaceRoot.clockFont
                         font.pixelSize: widget ? widget.s(widget.isCompact ? 7.5 : 8.5) : 8.5
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                         font.letterSpacing: -0.3
                         color: (widget && widget.isCompact) ? Qt.lighter(ThemeBackend.teal, 1.1) : ThemeBackend.teal
@@ -402,7 +402,7 @@ Item {
                         text: parsedTime.ampm
                         font.family: materialFaceRoot.clockFont
                         font.pixelSize: widget ? widget.s(widget.isCompact ? 6 : 7) : 7
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                         color: ThemeBackend.subtext0
                     }
@@ -430,7 +430,7 @@ Item {
                     text: widget ? widget.dayStr : (typeof DateTime !== "undefined" ? DateTime.day : "18")
                     font.family: materialFaceRoot.clockFont
                     font.pixelSize: widget ? widget.s(widget.isCompact ? 10 : 11) : 11
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                     color: ThemeBackend.text
                 }
@@ -440,7 +440,7 @@ Item {
                     text: widget ? widget.monthStr : (typeof DateTime !== "undefined" ? DateTime.monthShort : "Sep")
                     font.family: materialFaceRoot.clockFont
                     font.pixelSize: widget ? widget.s(widget.isCompact ? 8.5 : 9.5) : 9.5
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.variableAxes: ({ "wght": 700, "ROND": 100, "wdth": 100 })
                     color: ThemeBackend.subtext0
                 }
