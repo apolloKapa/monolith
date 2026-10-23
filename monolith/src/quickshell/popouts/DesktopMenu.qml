@@ -84,6 +84,13 @@ PanelWindow {
         }
     }
 
+    // a box's corner follows the buttons inside it (their corner + the gap round them), so the
+    // buttons sit evenly inside the curve instead of poking out of it
+    function boxRadius(buttonHeight) {
+        const inner = ThemeBackend.square ? 0 : (ThemeBackend.pill ? buttonHeight / 2 : ThemeBackend.rad(s(8)));
+        return ThemeBackend.square ? 0 : inner + s(4);
+    }
+
     property real cornerRadius: {
         let dummy = configRevision;
         return (typeof ThemeBackend !== "undefined" && ThemeBackend.borderRadius !== undefined && ThemeBackend.borderRadius !== null)
@@ -447,13 +454,13 @@ PanelWindow {
                         Layout.preferredWidth: iconRow.implicitWidth + desktopMenuWindow.s(8)
                         Layout.preferredHeight: iconRow.implicitHeight + desktopMenuWindow.s(8)
                         color: Qt.alpha(desktopMenuWindow.menuBackgroundColor, ThemeBackend.elementOpacity)
-                        radius: ThemeBackend.rad(desktopMenuWindow.cornerRadius)
+                        radius: desktopMenuWindow.boxRadius(desktopMenuWindow.s(36))
                         clip: true
 
                         WallpaperBlur {
                             z: -1
                             anchors.fill: parent
-                            radius: ThemeBackend.rad(parent.radius)
+                            radius: parent.radius
                         }
 
                         Row {
@@ -585,13 +592,13 @@ PanelWindow {
                     width: parent.width
                     height: clickButtonsCol.implicitHeight + desktopMenuWindow.s(8)
                     color: Qt.alpha(desktopMenuWindow.menuBackgroundColor, ThemeBackend.elementOpacity)
-                    radius: ThemeBackend.rad(desktopMenuWindow.cornerRadius)
+                    radius: desktopMenuWindow.boxRadius(desktopMenuWindow.s(29))
                     clip: true
 
                     WallpaperBlur {
                         z: -1
                         anchors.fill: parent
-                        radius: ThemeBackend.rad(parent.radius)
+                        radius: parent.radius
                     }
 
                     Column {
@@ -719,13 +726,13 @@ PanelWindow {
                     width: parent.width
                     height: settingsCol.implicitHeight + desktopMenuWindow.s(8)
                     color: Qt.alpha(desktopMenuWindow.menuBackgroundColor, ThemeBackend.elementOpacity)
-                    radius: ThemeBackend.rad(desktopMenuWindow.cornerRadius)
+                    radius: desktopMenuWindow.boxRadius(desktopMenuWindow.s(29))
                     clip: true
 
                     WallpaperBlur {
                         z: -1
                         anchors.fill: parent
-                        radius: ThemeBackend.rad(parent.radius)
+                        radius: parent.radius
                     }
 
                     Column {

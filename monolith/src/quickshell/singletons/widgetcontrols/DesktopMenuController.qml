@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import "../../"
 
 Item {
@@ -34,6 +35,16 @@ Item {
 
     function hide() {
         controller.isVisible = false;
+    }
+
+    // `monolith ipc call desktopmenu open [x] [y]`: the desktop menu without a right-click
+    IpcHandler {
+        target: "desktopmenu"
+        function open(x: real, y: real): void {
+            const scr = Quickshell.screens.length > 0 ? Quickshell.screens[0] : null;
+            controller.openAt(scr, x > 0 ? x : 200, y > 0 ? y : 200, "desktop", "");
+        }
+        function close(): void { controller.hide(); }
     }
 
     function toggle(scr, posX, posY, menuMode, widgetId) {
