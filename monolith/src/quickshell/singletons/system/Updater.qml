@@ -25,15 +25,13 @@ Item {
         }
     }
 
-    // the installed version: the newer of what the installer recorded (state) and the
-    // version.txt shipped with the files actually installed (a redeploy only updates that one)
+    // the installed version: the version.txt shipped with the files actually installed (a
+    // redeploy only updates that one), else what the installer recorded
     function syncLocalVersion() {
-        if (root.stateVersion !== "" && root.packageVersion !== "") {
-            root.localVersion = isRemoteNewer(root.packageVersion, root.stateVersion) ? root.packageVersion : root.stateVersion;
+        if (root.packageVersion !== "") {
+            root.localVersion = root.packageVersion;
         } else if (root.stateVersion !== "") {
             root.localVersion = root.stateVersion;
-        } else if (root.packageVersion !== "") {
-            root.localVersion = root.packageVersion;
         }
         root.reevaluateUpdate();
     }
