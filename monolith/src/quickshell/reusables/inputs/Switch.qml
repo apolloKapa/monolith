@@ -23,10 +23,13 @@ Item {
     // selection as a floating pill, where small inner corners looked square (and visibly
     // rounded up when picking an end option)
     // Material: the whole switch is a pill and the selection a smaller pill floating inside it
-    readonly property real pillInset: ThemeBackend.pill ? 3 : 0
-    readonly property real outerRadius: ThemeBackend.pill ? height / 2 : cornerRadius
-    readonly property real innerRadius: ThemeBackend.pill ? Math.max(0, height / 2 - pillInset) : (ThemeBackend.liquidGlass ? cornerRadius : smallRadius)
-    readonly property real endRadius: ThemeBackend.pill ? innerRadius : cornerRadius
+    // floating: the pill look in any (non-square) style, not only Material
+    property bool floating: false
+    readonly property bool pillMode: (ThemeBackend.pill || floating) && !ThemeBackend.square
+    readonly property real pillInset: pillMode ? 3 : 0
+    readonly property real outerRadius: pillMode ? height / 2 : cornerRadius
+    readonly property real innerRadius: pillMode ? Math.max(0, height / 2 - pillInset) : (ThemeBackend.liquidGlass ? cornerRadius : smallRadius)
+    readonly property real endRadius: pillMode ? innerRadius : cornerRadius
     property int fontPixelSize: 11
     property int minFontPixelSize: 7
     property bool enabled: true

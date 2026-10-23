@@ -11,7 +11,8 @@ Item {
     property alias chargeAnim: chargeAnim
 
     anchors.fill: parent
-    visible: !ThemeBackend.liquidGlass
+    // the glowing art-coloured outline is gone; the panel is a plain card now
+    visible: false
 
     Shape {
         id: maskRectOuter
