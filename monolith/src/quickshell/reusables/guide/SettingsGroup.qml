@@ -43,6 +43,9 @@ Item {
     }
 
     property string settingId: ""
+    // Reset button (see SettingsRow): passed on to the header row
+    property string configKey: ""
+    property var defaultValue: undefined
     property string searchTab: ""
     property string searchSubTab: ""
     property string searchKeywords: ""
@@ -93,6 +96,8 @@ Item {
         searchable: false
 
         icon: root.icon
+        configKey: root.configKey
+        defaultValue: root.defaultValue
         iconSize: root.iconSize
         iconFontSize: root.iconFontSize
         iconCornerRadius: ThemeBackend.rad(root.iconCornerRadius)

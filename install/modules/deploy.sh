@@ -29,6 +29,8 @@ deploy_shell() {
     rm -rf "$SHELL_HOME"
     mkdir -p "$SHELL_HOME" "$BIN_DIR"
     cp -r "$project_root/monolith/bin" "$project_root/monolith/src" "$project_root/monolith/version.txt" "$SHELL_HOME/"
+    # the shipped settings, for the Reset buttons in Settings
+    cp "$project_root/config/monolith/settings.json" "$SHELL_HOME/src/assets/default_settings.json" 2>/dev/null || true
     # a copy of the installer, so `monolith installer` works without the repo around
     cp -r "$project_root/install" "$SHELL_HOME/install"
     printf 'REPO_SLUG="%s"\nMONOLITH_BRANCH="%s"\n' "$REPO_SLUG" "$MONOLITH_BRANCH" > "$SHELL_HOME/install/source.env"

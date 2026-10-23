@@ -394,6 +394,24 @@ GuideTab {
                     enabled: Updater.manualState !== "checking"
                     onTriggered: Updater.checkNow()
                 }
+
+                // play the first-launch intro again (it opens Settings again when it ends)
+                ClickButton {
+                    Layout.preferredWidth: rootObj.s(180)
+                    Layout.preferredHeight: rootObj.s(42)
+                    horizontalPadding: rootObj.s(14)
+                    cornerRadius: ThemeBackend.borderRadius
+                    buttonText: I18n.t("guide.about.replay_intro", "Replay intro")
+                    textFontSize: rootObj.s(13)
+                    buttonIcon: "󰐊"
+                    iconFontSize: rootObj.s(16)
+                    accentColor: ThemeBackend.surface0
+                    textColor: ThemeBackend.text
+                    onTriggered: {
+                        Quickshell.execDetached(["quickshell", "-p", Caching.monolithDir + "/quickshell/Shell.qml", "ipc", "call", "firstlaunch", "trigger"]);
+                        rootObj.dismissHost();
+                    }
+                }
             }
 
             // how the last check you asked for went

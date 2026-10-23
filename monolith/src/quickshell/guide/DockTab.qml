@@ -596,6 +596,7 @@ GuideTab {
                         settingId: "dock_position"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰍹"
+                        configKey: "dock.position"
                         title: I18n.t("guide.dock.position.title", "Dock position")
                         description: I18n.t("guide.dock.position.desc", "Select the screen edge to anchor the dock")
 
@@ -680,6 +681,7 @@ GuideTab {
                         settingId: "dock_on_top"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰹤"
+                        configKey: "dock.onTop"
                         title: I18n.t("guide.dock.on_top.title", "Place dock on top of windows")
                         description: I18n.t("guide.dock.on_top.desc", "Keep the dock visible above application windows")
 
@@ -742,6 +744,7 @@ GuideTab {
                         settingId: "dock_floating"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰉈"
+                        configKey: "dock.floating"
                         title: I18n.t("guide.dock.floating.title", "Floating dock")
                         description: I18n.t("guide.dock.floating.desc", "Detach dock from screen edge with rounded corners")
 
@@ -804,6 +807,7 @@ GuideTab {
                         settingId: "dock_background"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰂵"
+                        configKey: "dock.background"
                         title: I18n.t("guide.dock.background.title", "Draw a background behind apps")
                         description: I18n.t("guide.dock.background.desc", "Show the dock panel behind app icons")
 
@@ -866,6 +870,7 @@ GuideTab {
                         settingId: "dock_exclusive"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰖲"
+                        configKey: "dock.exclusive"
                         title: I18n.t("guide.dock.exclusive.title", "Exclusive mode")
                         description: I18n.t("guide.dock.exclusive.desc", "Prevent windows from taking space occupied by the dock")
 
@@ -930,6 +935,7 @@ GuideTab {
                         settingId: "dock_element_size"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰘖"
+                        configKey: "dock.elementSize"
                         title: I18n.t("guide.dock.size.title", "Element size")
                         description: I18n.t("guide.dock.size.desc", "Dimensions of individual app buttons in pixels")
 
@@ -1072,6 +1078,7 @@ GuideTab {
                         settingId: "dock_scrolling"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰍽"
+                        configKey: "dock.enableScrolling"
                         title: I18n.t("guide.dock.scrolling.title", "Enable element scrolling")
                         description: I18n.t("guide.dock.scrolling.desc", "Limit visible elements and allow mouse wheel or touchpad scrolling")
                         expanded: dockTabRoot.currentEnableScrolling
@@ -1120,6 +1127,7 @@ GuideTab {
                                 settingId: "dock_visible_elements"
                                 rootObj: dockTabRoot.rootObj
                                 icon: "󰅫"
+                                configKey: "dock.visibleElements"
                                 title: I18n.t("guide.dock.visible_elements.title", "Visible elements")
                                 description: I18n.t("guide.dock.visible_elements.desc", "Number of dock items visible at the same time")
 
@@ -1202,6 +1210,7 @@ GuideTab {
                         settingId: "dock_hover_scale"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰍔"
+                        configKey: "dock.hoverScale"
                         title: I18n.t("guide.dock.hover_scale.title", "Hover scale effect")
                         description: I18n.t("guide.dock.hover_scale.desc", "Magnification level when hovering over dock items")
 
@@ -1282,6 +1291,7 @@ GuideTab {
                         settingId: "dock_cascade_scale"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰘚"
+                        configKey: "dock.cascadeScale"
                         title: I18n.t("guide.dock.cascade_scale.title", "Scale nearest elements")
                         description: I18n.t("guide.dock.cascade_scale.desc", "Cascading magnification on neighboring icons")
 
@@ -1394,6 +1404,7 @@ GuideTab {
                                 settingId: "dock_autohide_delay"
                                 rootObj: dockTabRoot.rootObj
                                 icon: "󰔛"
+                                configKey: "dock.autohideTimeout"
                                 title: I18n.t("guide.dock.timeout.title", "Auto-hide delay")
                                 description: I18n.t("guide.dock.timeout.desc", "Duration before hiding after pointer leaves")
 
@@ -1476,6 +1487,7 @@ GuideTab {
                         settingId: "dock_smart_autohide"
                         rootObj: dockTabRoot.rootObj
                         icon: "󱂬"
+                        configKey: "dock.smartAutohide"
                         title: I18n.t("guide.dock.smart_autohide.title", "Smart auto-hide")
                         description: I18n.t("guide.dock.smart_autohide.desc", "Auto-hide dock only when windows are open, keep visible on desktop")
 
@@ -1538,6 +1550,8 @@ GuideTab {
                         settingId: "dock_dodge_windows"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰘕"
+                        configKey: "dock.dodgeWindows"
+                        defaultValue: false
                         title: I18n.t("guide.dock.dodge_windows.title", "Dodge windows")
                         description: I18n.t("guide.dock.dodge_windows.desc", "Stay visible with windows open; hide only when a window is over the dock, then come back from the screen edge")
                         searchKeywords: "dock dodge windows overlap cover hide autohide intellihide"
@@ -1579,6 +1593,7 @@ GuideTab {
                         settingId: "dock_focus_running"
                         rootObj: dockTabRoot.rootObj
                         icon: "󱂬"
+                        configKey: "dock.focusRunning"
                         title: I18n.t("guide.dock.focus_running.title", "Focus existing window")
                         description: I18n.t("guide.dock.focus_running.desc", "Clicking an app icon activates its open window instead of launching a new instance")
 
@@ -1619,6 +1634,7 @@ GuideTab {
                         settingId: "dock_show_running_indicators"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰄯"
+                        configKey: "dock.showRunningIndicators"
                         title: I18n.t("guide.dock.show_running_indicators.title", "Running indicators")
                         description: I18n.t("guide.dock.show_running_indicators.desc", "Show dot or pill indicators on open application icons")
 
@@ -1659,6 +1675,7 @@ GuideTab {
                         settingId: "dock_show_running_apps"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰘓"
+                        configKey: "dock.showRunningApps"
                         title: I18n.t("guide.dock.show_running_apps.title", "Show open applications")
                         description: I18n.t("guide.dock.show_running_apps.desc", "Display unpinned open applications in the dock")
 
@@ -1699,6 +1716,7 @@ GuideTab {
                         settingId: "dock_running_scope"
                         rootObj: dockTabRoot.rootObj
                         icon: "󰍹"
+                        configKey: "dock.runningScope"
                         title: I18n.t("guide.dock.running_scope.title", "Active window scope")
                         description: I18n.t("guide.dock.running_scope.desc", "Filter running windows displayed and controlled by the dock")
 
@@ -1763,6 +1781,8 @@ GuideTab {
                     rootObj: dockTabRoot.rootObj
                     settingId: "dock_launch_bounce"
                     icon: "󰜷"
+                    configKey: "dock.launchBounce"
+                    defaultValue: true
                     title: I18n.t("guide.dock.launch_bounce.title", "Bounce while launching")
                     description: I18n.t("guide.dock.launch_bounce.desc", "An app's icon hops while the app starts, until its window shows up")
                     searchKeywords: "dock bounce launch animation starting"
@@ -1772,6 +1792,8 @@ GuideTab {
                     rootObj: dockTabRoot.rootObj
                     settingId: "dock_scroll_workspaces"
                     icon: "󰕌"
+                    configKey: "dock.scrollWorkspaces"
+                    defaultValue: false
                     title: I18n.t("guide.dock.scroll_ws.title", "Scroll to switch workspaces")
                     description: I18n.t("guide.dock.scroll_ws.desc", "Scroll the mouse wheel over the dock to go to the next or previous workspace (when element scrolling is off)")
                     searchKeywords: "dock scroll wheel workspace switch"
@@ -1781,6 +1803,8 @@ GuideTab {
                     rootObj: dockTabRoot.rootObj
                     settingId: "dock_launcher_button"
                     icon: "󰀻"
+                    configKey: "dock.showLauncher"
+                    defaultValue: false
                     title: I18n.t("guide.dock.launcher_btn.title", "Launcher button")
                     description: I18n.t("guide.dock.launcher_btn.desc", "An all-apps button at the end of the dock that opens the launcher")
                     searchKeywords: "dock launcher button apps grid"
@@ -1790,6 +1814,8 @@ GuideTab {
                     rootObj: dockTabRoot.rootObj
                     settingId: "dock_screens"
                     icon: "󰍺"
+                    configKey: "dock.screens"
+                    defaultValue: []
                     title: I18n.t("guide.dock.screens.title", "Monitors")
                     description: I18n.t("guide.dock.screens.desc", "Which screens have a dock. None picked means every screen")
                     searchKeywords: "dock monitor screen display output which"

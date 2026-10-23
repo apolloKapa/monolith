@@ -13,6 +13,42 @@ Item {
 
     readonly property real searchHeaderHeight: popup.s(64)
 
+    // after a Reset button: rebuild the page that's open so its controls show the defaults,
+    // keeping where it was scrolled to
+    function findFlickable(item, depth) {
+        if (!item || depth > 6) return null;
+        if (item.contentY !== undefined && item.contentHeight !== undefined) return item;
+        const kids = item.children || [];
+        for (let i = 0; i < kids.length; i++) {
+            const f = contentArea.findFlickable(kids[i], depth + 1);
+            if (f) return f;
+        }
+        return null;
+    }
+    function reloadCurrentPage() {
+        const wrapper = contentRepeater.itemAt(popup.currentTab);
+        if (!wrapper) return;
+        const loader = wrapper.hasSubtabs ? wrapper.subLoadersRepeater.itemAt(popup.currentSubTab) : wrapper.singleLoader;
+        if (!loader) return;
+        const flick = contentArea.findFlickable(loader.item, 0);
+        const y = flick ? flick.contentY : 0;
+        loader.source = "";
+        loader.ensureLoaded();
+        Qt.callLater(function() {
+            const f = contentArea.findFlickable(loader.item, 0);
+            if (f) f.contentY = Math.min(y, Math.max(0, f.contentHeight - f.height));
+        });
+    }
+    Timer {
+        id: resetReloadTimer
+        interval: 200
+        onTriggered: contentArea.reloadCurrentPage()
+    }
+    Connections {
+        target: SettingsDefaults
+        function onResetDone(path) { resetReloadTimer.restart(); }
+    }
+
     // page header: the section in small type, the page's name big under it
     Item {
         id: crumb

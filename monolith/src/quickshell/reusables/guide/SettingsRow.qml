@@ -33,6 +33,16 @@ Rectangle {
     property bool searchable: true
 
     property bool hiddenByConfig: false
+    // Reset: where this setting lives in settings.json ("section.key"), and the default the code
+    // uses when the shipped settings don't have it. A ↺ button shows while it's been changed.
+    property string configKey: ""
+    property var defaultValue: undefined
+    readonly property bool resettable: {
+        if (root.configKey === "") return false;
+        void Config.rawSettings;
+        void SettingsDefaults.data;
+        return SettingsDefaults.isChanged(root.configKey, root.defaultValue);
+    }
     property string unavailableReason: ""
 
     property int revealHolds: 0
@@ -586,6 +596,20 @@ Rectangle {
                 Layout.columnSpan: root.stacked ? mainRow.columns : 1
                 Layout.alignment: root.fillControlWidth ? Qt.AlignVCenter : ((I18n.rtl ? Qt.AlignLeft : Qt.AlignRight) | Qt.AlignVCenter)
                 spacing: root.controlSpacing
+
+                // back to the default (only while the setting is changed)
+                IconButton {
+                    visible: root.resettable
+                    Layout.alignment: Qt.AlignVCenter
+                    size: root.s(28)
+                    cornerRadius: ThemeBackend.square ? 0 : root.s(14)
+                    buttonIcon: "󰑓"
+                    iconFontSize: root.s(14)
+                    glassShadow: 0
+                    accentColor: Qt.alpha(ThemeBackend.mauve, 0.16)
+                    textColor: ThemeBackend.mauve
+                    onClicked: SettingsDefaults.reset(root.configKey)
+                }
             }
         }
 

@@ -241,7 +241,7 @@ run_installer_ui() {
 
         local labels=(
             "Packages overview"
-            "Apps for the keybinds (librewolf, thunar, rofi, steam...) $(on_off "$OPT_KEYBIND_APPS")"
+            "Apps for the keybinds (kitty, librewolf, thunar, rofi, mission center) $(on_off "$OPT_KEYBIND_APPS")"
             "niri config (keybinds, displays, workspaces) $niri_label"
             "Login screen (SDDM theme) $(on_off "$OPT_SDDM")"
             "Wallpapers $wp_label"
