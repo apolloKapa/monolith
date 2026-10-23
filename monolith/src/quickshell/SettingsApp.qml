@@ -105,6 +105,25 @@ ShellRoot {
             implicitHeight: Math.round(750 * app.uiScale)
             minimumSize: Qt.size(Math.round(480 * app.uiScale), Math.round(400 * app.uiScale))
             visible: true
+
+            // where the window is on its screen, from niri (for glass: the wallpaper behind it
+            // has to line up with the real one)
+            readonly property var niriWindow: {
+                const ws = NiriState._windows;
+                for (const id in ws) if (ws[id] && ws[id].app_id === "monolith-settings") return ws[id];
+                return null;
+            }
+            readonly property var niriPos: {
+                const l = niriWindow ? niriWindow.layout : null;
+                if (!l || !l.tile_pos_in_workspace_view) return null;
+                const off = l.window_offset_in_tile || [0, 0];
+                return [l.tile_pos_in_workspace_view[0] + off[0], l.tile_pos_in_workspace_view[1] + off[1]];
+            }
+            property real glassScreenX: niriPos ? niriPos[0] : 0
+            property real glassScreenY: niriPos ? niriPos[1] : 0
+            Component.onCompleted: NiriState.subscribe()
+            Component.onDestruction: NiriState.unsubscribe()
+
             // closed by niri (close-window) or anything else
             onVisibleChanged: if (!visible && app.window === win) app.closeWindow()
             onClosed: if (app.window === win) app.closeWindow()

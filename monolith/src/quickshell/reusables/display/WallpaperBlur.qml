@@ -143,7 +143,11 @@ Item {
         if (!scr) return;
         let wx = 0;
         let wy = 0;
-        if (w && w.anchors && !root.effectiveScreenOverride) {
+        if (w && w.glassScreenX !== undefined && !root.effectiveScreenOverride) {
+            // an ordinary window (the Settings app) that tracks its own position on screen
+            wx = w.glassScreenX;
+            wy = w.glassScreenY;
+        } else if (w && w.anchors && !root.effectiveScreenOverride) {
             const a = w.anchors;
             const m = w.margins;
             if (a.left) wx = m.left;

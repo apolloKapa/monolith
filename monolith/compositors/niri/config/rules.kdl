@@ -19,8 +19,3 @@ window-rule {
     shadow { off; }
 }
 
-// Monolith Settings: blur what is behind it (it goes see-through in the Blur / Liquid glass styles)
-window-rule {
-    match app-id="^monolith-settings$"
-    background-effect { blur true; }
-}
