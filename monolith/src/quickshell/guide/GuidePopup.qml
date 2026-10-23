@@ -614,7 +614,7 @@ Item {
         { id: "Notifications", key: "notifications", name: "Notifications", icon: "󰂚", file: "notifications/NotificationsTab.qml", desc: "Pop-up notifications: where they appear, how long they stay, sounds and Do not disturb" },
         { id: "Wellbeing", key: "wellbeing", name: "Wellbeing", icon: "󰄉", separatorBefore: true, file: "wellbeing/DigitalWellbeingTab.qml", desc: "How long you spend in each app, with optional daily limits and breaks" },
         { id: "Idle", key: "idle", name: "Idle", icon: "󰒲", file: "IdleTab.qml", desc: "What happens when you step away: dim, lock, turn off the screen, sleep" },
-        { id: "About", key: "about", name: "About", icon: "󰋽", separatorBefore: true, file: "AboutTab.qml", desc: "Your version, updates and system details" }
+        { id: "About", key: "about", name: "System", icon: "󰋽", separatorBefore: true, file: "AboutTab.qml", desc: "Your version, updates and system details" }
     ]
 
     readonly property var currentTabModel: tabsModel[currentTab] || null
