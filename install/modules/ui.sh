@@ -26,7 +26,7 @@ GPU_INFO=$(lspci -nn 2>/dev/null | grep -iE 'vga|3d|display' | head -1 | cut -d:
 [[ -z "$GPU_INFO" ]] && GPU_INFO="unknown"
 
 cleanup_terminal() {
-    printf "\e[?25h" 2>/dev/null || true
+    printf "\e[?25h\e[?7h" 2>/dev/null || true
     stty echo icanon 2>/dev/null || true
 }
 trap cleanup_terminal EXIT INT TERM
@@ -76,7 +76,7 @@ read_key() {
 manage_sddm_menu() {
     draw_banner
     stty -echo 2>/dev/null || true
-    printf "\e[?25l"
+    printf "\e[?25l\e[?7l"
     printf "%s%s$(t "installer.ui.sddm_title")%s\n\n" "$BOLD" "$C_CYAN" "$RESET"
 
     local current_dm=""
@@ -217,7 +217,7 @@ show_package_overview() {
     printf "%s\n" "${lines[@]}" | fzf --ansi --layout=reverse --border=rounded --margin=1,2 --height=25 \
         --prompt="packages > " --header="${#target_list[@]} packages (Esc to go back)" > /dev/null || true
     stty -echo icanon 2>/dev/null || true
-    printf "\e[?25l"
+    printf "\e[?25l\e[?7l"
 }
 
 on_off() { [ "$1" = true ] && printf "%s[ON]%s" "$C_GREEN" "$RESET" || printf "%s[OFF]%s" "$DIM" "$RESET"; }
@@ -227,11 +227,11 @@ run_installer_ui() {
     while true; do
         draw_banner
         stty -echo 2>/dev/null || true
-        printf "\e[?25l"
+        printf "\e[?25l\e[?7l"
 
         local niri_label wp_label
         [ "$NIRI_MODE" = replace ] \
-            && niri_label="${C_GREEN}[Monolith config, old one backed up]${RESET}" \
+            && niri_label="${C_GREEN}[replace, backup kept]${RESET}" \
             || niri_label="${DIM}[keep mine]${RESET}"
         case "$WALLPAPERS" in
             full)   wp_label="${C_GREEN}[full pack]${RESET}" ;;
