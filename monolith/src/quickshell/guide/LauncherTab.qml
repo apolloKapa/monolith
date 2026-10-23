@@ -262,6 +262,7 @@ GuideTab {
                 SettingsRow {
                     rootObj: launcherTabRoot.rootObj
                     icon: "󰍹"
+                    configKey: "launcher.position"
                     title: I18n.t("guide.launcher.position.title", "Screen Position")
                     description: I18n.t("guide.launcher.position.desc", "Select which screen edge the launcher attaches to")
 
@@ -307,6 +308,7 @@ GuideTab {
                 SettingsRow {
                     rootObj: launcherTabRoot.rootObj
                     icon: "󰘖"
+                    configKey: "launcher.width"
                     title: I18n.t("guide.launcher.width.title", "Launcher Width")
                     description: I18n.t("guide.launcher.width.desc", "Total width of the launcher window in pixels")
 
@@ -354,6 +356,7 @@ GuideTab {
                 SettingsRow {
                     rootObj: launcherTabRoot.rootObj
                     icon: "󰅫"
+                    configKey: "launcher.itemCount"
                     title: I18n.t("guide.launcher.items.title", "Visible Items")
                     description: I18n.t("guide.launcher.items.desc", "Number of search results displayed simultaneously")
 
@@ -414,6 +417,8 @@ GuideTab {
                     rootObj: launcherTabRoot.rootObj
                     settingId: "launcher_rail"
                     icon: "󰐃"
+                    configKey: "launcher.showRail"
+                    defaultValue: true
                     title: I18n.t("guide.launcher.rail.title", "Favourites grid")
                     description: I18n.t("guide.launcher.rail.desc", "The left side of the launcher: the tabs and a grid of your favourite apps. Drag an app onto it (or right-click it) to pin it, drag tiles to reorder them")
                     searchKeywords: "favourites favorites pinned rail sidebar launcher"
@@ -428,6 +433,8 @@ GuideTab {
                     rootObj: launcherTabRoot.rootObj
                     settingId: "launcher_fav_columns"
                     icon: "󰕭"
+                    configKey: "launcher.favColumns"
+                    defaultValue: 4
                     title: I18n.t("guide.launcher.fav_columns.title", "Favourites per row")
                     description: I18n.t("guide.launcher.fav_columns.desc", "How many favourite apps sit side by side in the grid")
                     hiddenByConfig: !launcherTabRoot.currentShowRail
@@ -465,6 +472,8 @@ GuideTab {
                     rootObj: launcherTabRoot.rootObj
                     settingId: "launcher_order_reset"
                     icon: "󰑓"
+                    configKey: "launcher.appOrder"
+                    defaultValue: []
                     title: I18n.t("guide.launcher.order.title", "App order")
                     description: I18n.t("guide.launcher.order.desc", "Drag apps in the list to reorder them. Reset to go back to the automatic order")
                     ClickButton {
@@ -484,6 +493,8 @@ GuideTab {
                     rootObj: launcherTabRoot.rootObj
                     settingId: "launcher_grid"
                     icon: "󰕰"
+                    configKey: "launcher.gridView"
+                    defaultValue: false
                     title: I18n.t("guide.launcher.grid.title", "Grid view")
                     description: I18n.t("guide.launcher.grid.desc", "Show apps as a grid of icons instead of a list")
                     searchKeywords: "grid icons view list launcher"
@@ -498,6 +509,8 @@ GuideTab {
                     rootObj: launcherTabRoot.rootObj
                     settingId: "launcher_grid_columns"
                     icon: "󰕭"
+                    configKey: "launcher.gridColumns"
+                    defaultValue: 5
                     title: I18n.t("guide.launcher.grid_columns.title", "Grid columns")
                     description: I18n.t("guide.launcher.grid_columns.desc", "Apps per row in grid view")
                     hiddenByConfig: !launcherTabRoot.currentGridView
@@ -535,6 +548,8 @@ GuideTab {
                     rootObj: launcherTabRoot.rootObj
                     settingId: "launcher_descriptions"
                     icon: "󰦨"
+                    configKey: "launcher.showDescriptions"
+                    defaultValue: true
                     title: I18n.t("guide.launcher.descriptions.title", "Show descriptions")
                     description: I18n.t("guide.launcher.descriptions.desc", "The line under each app's name in the list")
                     searchKeywords: "description comment subtitle launcher"
@@ -549,6 +564,8 @@ GuideTab {
                     rootObj: launcherTabRoot.rootObj
                     settingId: "launcher_web"
                     icon: "󰖟"
+                    configKey: "launcher.webSearch"
+                    defaultValue: true
                     title: I18n.t("guide.launcher.web.title", "Web search")
                     description: I18n.t("guide.launcher.web.desc", "The globe button next to the search field, and searching the web by starting with ?")
                     searchKeywords: "web search browser internet globe question mark launcher"
@@ -564,6 +581,7 @@ GuideTab {
                 SettingsRow {
                     rootObj: launcherTabRoot.rootObj
                     icon: "󰓥"
+                    configKey: "launcher.smartRanking"
                     title: I18n.t("guide.launcher.smart_ranking.title", "Smart Rank by Usage")
                     description: I18n.t("guide.launcher.smart_ranking.desc", "Rank apps and widgets based on usage frequency and recency")
 
@@ -585,6 +603,7 @@ GuideTab {
                 SettingsRow {
                     rootObj: launcherTabRoot.rootObj
                     icon: "󰆍"
+                    configKey: "launcher.terminalCommand"
                     title: I18n.t("guide.launcher.terminal.title", "Terminal Command")
                     description: I18n.t("guide.launcher.terminal.desc", "Command prefix used for > executions (e.g. kitty -e, alacritty -e, foot -e)")
 
@@ -618,6 +637,8 @@ GuideTab {
                 SettingsRow {
                     rootObj: launcherTabRoot.rootObj
                     icon: "󰖟"
+                    configKey: "launcher.searchProvider"
+                    defaultValue: "google"
                     title: I18n.t("guide.launcher.search.title", "Web search provider")
                     description: I18n.t("guide.launcher.search.desc", "Search engine used when a query starts with ?")
 

@@ -31,6 +31,7 @@ SettingsGroup {
         SettingsRow {
             rootObj: section.tab.rootObj
             icon: "󰔛"
+            configKey: "bar.autohideTimeout"
             title: I18n.t("guide.bar.timeout.title")
             description: I18n.t("guide.bar.timeout.desc")
 

@@ -105,6 +105,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_enabled"
                     icon: "󰀻"
+                    configKey: "quickactions.enabled"
+                    defaultValue: true
                     title: I18n.t("guide.qa.enabled.title", "Quick actions panel")
                     description: I18n.t("guide.qa.enabled.desc", "Push the mouse against a screen edge to slide out a panel with drawing, system usage, a timer, notes and a calculator")
                     searchKeywords: "quick actions side menu panel edge floating enable disable"
@@ -117,6 +119,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_tools"
                     icon: "󰏘"
+                    configKey: "quickactions.actions"
+                    defaultValue: ["draw", "system", "timer", "notes", "calculator"]
                     title: I18n.t("guide.qa.tools.title", "Tools")
                     description: I18n.t("guide.qa.tools.desc", "Which tools the panel has. Click to turn one on or off")
                     hiddenByConfig: !qaTab.on
@@ -148,6 +152,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_edges"
                     icon: "󰹑"
+                    configKey: "quickactions.edges"
+                    defaultValue: ["top", "bottom", "left", "right"]
                     title: I18n.t("guide.qa.edges.title", "Screen edges")
                     description: I18n.t("guide.qa.edges.desc", "Which edges open it when you push the mouse against them")
                     hiddenByConfig: !qaTab.on
@@ -176,6 +182,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_edge_size"
                     icon: "󰡏"
+                    configKey: "quickactions.edgeSize"
+                    defaultValue: 3
                     title: I18n.t("guide.qa.edge_size.title", "Edge sensitivity")
                     description: I18n.t("guide.qa.edge_size.desc", "How thick the strip along the edge is that opens it. Thicker is easier to hit, thinner gets in the way less")
                     hiddenByConfig: !qaTab.on
@@ -188,6 +196,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_show_delay"
                     icon: "󰔛"
+                    configKey: "quickactions.showDelay"
+                    defaultValue: 300
                     title: I18n.t("guide.qa.show_delay.title", "Wait before opening")
                     description: I18n.t("guide.qa.show_delay.desc", "How long the mouse has to stay at the edge before it opens")
                     hiddenByConfig: !qaTab.on
@@ -197,6 +207,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_hide_delay"
                     icon: "󰅖"
+                    configKey: "quickactions.hideDelay"
+                    defaultValue: 800
                     title: I18n.t("guide.qa.hide_delay.title", "Wait before hiding")
                     description: I18n.t("guide.qa.hide_delay.desc", "How long it stays after the mouse leaves it")
                     hiddenByConfig: !qaTab.on
@@ -206,6 +218,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_grace"
                     icon: "󰥔"
+                    configKey: "quickactions.graceDelay"
+                    defaultValue: 3000
                     title: I18n.t("guide.qa.grace.title", "Stay time when opened on purpose")
                     description: I18n.t("guide.qa.grace.desc", "When something opens it for you (the bar's system monitor, a notes widget), how long it waits before hiding")
                     hiddenByConfig: !qaTab.on
@@ -215,6 +229,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_speed"
                     icon: "󰓅"
+                    configKey: "quickactions.speed"
+                    defaultValue: 1.0
                     title: I18n.t("guide.qa.speed.title", "Animation speed")
                     description: I18n.t("guide.qa.speed.desc", "How fast it slides in and out. 1× is normal")
                     hiddenByConfig: !qaTab.on
@@ -227,6 +243,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_fullscreen"
                     icon: "󰊓"
+                    configKey: "quickactions.showFullscreen"
+                    defaultValue: false
                     title: I18n.t("guide.qa.fullscreen.title", "Over fullscreen apps")
                     description: I18n.t("guide.qa.fullscreen.desc", "Let it open while a game or video is fullscreen")
                     hiddenByConfig: !qaTab.on
@@ -237,6 +255,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_maximized"
                     icon: "󰖯"
+                    configKey: "quickactions.showMaximized"
+                    defaultValue: true
                     title: I18n.t("guide.qa.maximized.title", "Over maximized windows")
                     description: I18n.t("guide.qa.maximized.desc", "Let it open while the focused window is maximized")
                     hiddenByConfig: !qaTab.on
@@ -247,6 +267,8 @@ GuideTab {
                     rootObj: qaTab.rootObj
                     settingId: "qa_desktop_only"
                     icon: "󰍹"
+                    configKey: "quickactions.desktopOnly"
+                    defaultValue: false
                     title: I18n.t("guide.qa.desktop_only.title", "Only on the desktop")
                     description: I18n.t("guide.qa.desktop_only.desc", "Only open when no window has focus, so it never gets in the way of an app")
                     hiddenByConfig: !qaTab.on

@@ -226,6 +226,8 @@ GuideTab {
                     rootObj: winTab.rootObj
                     settingId: "window_borders"
                     icon: "󰹑"
+                    configKey: "windows.borders.enabled"
+                    defaultValue: true
                     title: "Window borders"
                     description: winTab.niriSession ? "Draw a border around every window" : "Only available on niri"
                     searchKeywords: "window border borders outline frame niri"
@@ -249,6 +251,8 @@ GuideTab {
                     rootObj: winTab.rootObj
                     settingId: "window_border_width"
                     icon: "󰡎"
+                    configKey: "windows.borders.width"
+                    defaultValue: 2
                     title: "Border width"
                     description: "Thickness in pixels"
                     searchKeywords: "window border width thickness size pixels"
@@ -289,6 +293,8 @@ GuideTab {
                     rootObj: winTab.rootObj
                     settingId: "window_border_follow_theme"
                     icon: "󰏘"
+                    configKey: "windows.borders.followTheme"
+                    defaultValue: false
                     title: "Follow theme colours"
                     description: "Accent for the focused window, a surface tone for the rest. Updates with the theme"
                     searchKeywords: "window border colour color theme accent match"

@@ -13,6 +13,7 @@ SettingsBlob {
     SettingsRow {
         rootObj: section.tab.rootObj
         icon: "󱂬"
+        configKey: "bar.position"
         title: I18n.t("guide.bar.position.title")
         description: I18n.t("guide.bar.position.desc")
 
@@ -105,6 +106,7 @@ SettingsBlob {
     SettingsRow {
         rootObj: section.tab.rootObj
         icon: "󰘖"
+        configKey: "bar.height"
         title: I18n.t("guide.bar.thickness.title", "Bar thickness")
         description: I18n.t("guide.bar.thickness.desc", "Change how thick the bar is, modules scale to fit")
 
@@ -144,6 +146,7 @@ SettingsBlob {
         id: centerByEdgesBox
         rootObj: section.tab.rootObj
         icon: "󰉹"
+        configKey: "bar.centerByEdges"
         title: I18n.t("guide.bar.center_by_edges.title")
         description: (section.tab.barPosition === "left" || section.tab.barPosition === "right") ? I18n.t("guide.bar.center_by_edges.desc_vertical") : I18n.t("guide.bar.center_by_edges.desc")
 

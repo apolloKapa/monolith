@@ -2,13 +2,10 @@
 
 PM_BOOTSTRAP_TOOLS=(fzf jq curl git pciutils unzip fontconfig base-devel)
 
+# Nothing Monolith installs needs an extra repository, so pacman.conf is left alone (it used to
+# switch multilib on for Steam, which isn't part of the install any more).
 pm_prepare_repos() {
-    if [ -f /etc/pacman.conf ]; then
-        if grep -q "^#\[multilib\]" /etc/pacman.conf; then
-            sudo sed -i '/^#\[multilib\]/{s/^#//;n;s/^#//}' /etc/pacman.conf
-            sudo pacman -Sy --noconfirm >/dev/null 2>&1 || true
-        fi
-    fi
+    return 0
 }
 
 pm_bootstrap_install() {
