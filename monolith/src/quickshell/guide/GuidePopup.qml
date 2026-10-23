@@ -558,7 +558,7 @@ Item {
 
     property var tabsModel: [
         { id: "Welcome", key: "welcome", name: "Welcome", icon: "󰋜", file: "WelcomeTab.qml" },
-        { id: "General", key: "general", name: "General", icon: "󰒓", file: "general/GeneralTab.qml" },
+        { id: "General", key: "general", name: "General", icon: "󰒓", file: "general/GeneralTab.qml", desc: "Language, sounds, online extras and other things that apply everywhere" },
         {
             id: "Display",
             key: "display",
@@ -566,9 +566,9 @@ Item {
             icon: "󰃠",
             file: "display/DisplayMainTab.qml",
             subtabs: [
-                { id: "DisplayGeneral", key: "display_general", name: "Display", icon: "󰍹", file: "display/DisplayMainTab.qml" },
-                { id: "DisplayWidgets", key: "display_widgets", name: "Widgets", icon: "󰕰", file: "display/DisplayWidgetsTab.qml" },
-                { id: "DisplayLockscreen", key: "display_lockscreen", name: "Lock screen", icon: "󰌾", file: "display/DisplayLockscreenTab.qml" }
+                { id: "DisplayGeneral", key: "display_general", name: "Display", icon: "󰍹", file: "display/DisplayMainTab.qml", desc: "Your monitors: brightness, night light and how each screen is set up" },
+                { id: "DisplayWidgets", key: "display_widgets", name: "Widgets", icon: "󰕰", file: "display/DisplayWidgetsTab.qml", desc: "Clocks, weather, music and other widgets you can place on the desktop" },
+                { id: "DisplayLockscreen", key: "display_lockscreen", name: "Lock screen", icon: "󰌾", file: "display/DisplayLockscreenTab.qml", desc: "What the lock screen shows and how it looks. Open the editor to move things around" }
             ]
         },
         {
@@ -578,11 +578,11 @@ Item {
             icon: "󰏘",
             file: "theme/ThemeTab.qml",
             subtabs: [
-                { id: "ThemeAppearance", key: "theme_appearance", name: "Appearance", icon: "󰏘", file: "theme/ThemeTab.qml" },
-                { id: "ThemeAnimations", key: "theme_animations", name: "Animations", icon: "󰔡", file: "theme/ThemeAnimationsTab.qml" },
-                { id: "ThemeEffects", key: "theme_effects", name: "Effects", icon: "󰫢", file: "theme/ThemeEffectsTab.qml" },
-                { id: "ThemeWindows", key: "theme_windows", name: "Windows", icon: "󰖲", file: "theme/ThemeWindowsTab.qml" },
-                { id: "ThemeApps", key: "theme_apps", name: "Apps", icon: "󰏘", file: "theme/ThemeAppsTab.qml" }
+                { id: "ThemeAppearance", key: "theme_appearance", name: "Appearance", icon: "󰏘", file: "theme/ThemeTab.qml", desc: "The overall look: wallpaper, style (Material, glass...), colours, font and roundness" },
+                { id: "ThemeAnimations", key: "theme_animations", name: "Animations", icon: "󰔡", file: "theme/ThemeAnimationsTab.qml", desc: "How fast panels open and close, or turn animations off. GameMode pauses effects in fullscreen games" },
+                { id: "ThemeEffects", key: "theme_effects", name: "Effects", icon: "󰫢", file: "theme/ThemeEffectsTab.qml", desc: "Small extras on panels: film grain, a light along the top edge, unfolding when they open" },
+                { id: "ThemeWindows", key: "theme_windows", name: "Windows", icon: "󰖲", file: "theme/ThemeWindowsTab.qml", desc: "The border niri draws around your app windows: on or off, thickness and colours" },
+                { id: "ThemeApps", key: "theme_apps", name: "Apps", icon: "󰏘", file: "theme/ThemeAppsTab.qml", desc: "Let other apps (GTK, Qt, terminals, rofi...) use Monolith's colours too" }
             ]
         },
         {
@@ -593,13 +593,13 @@ Item {
             separatorBefore: true,
             file: "bar/BarGeneralTab.qml",
             subtabs: [
-                { id: "BarGeneral", key: "bar_general", name: "General", icon: "󰍜", file: "bar/BarGeneralTab.qml" },
-                { id: "BarModules", key: "bar_modules", name: "Modules", icon: "󰐱", file: "bar/BarModulesTab.qml" }
+                { id: "BarGeneral", key: "bar_general", name: "General", icon: "󰍜", file: "bar/BarGeneralTab.qml", desc: "Where the bar sits, its shape, size and spacing. The preview shows your bar as you change it" },
+                { id: "BarModules", key: "bar_modules", name: "Modules", icon: "󰐱", file: "bar/BarModulesTab.qml", desc: "What each item on the bar shows and how it looks (clock style, workspaces, volume...)" }
             ]
         },
-        { id: "Dock", key: "dock", name: "Dock", icon: "󰮯", file: "DockTab.qml" },
-        { id: "Launcher", key: "launcher", name: "Launcher", icon: "󰵆", file: "LauncherTab.qml" },
-        { id: "On-Screen Display", key: "osd", name: "On-Screen Display", icon: "󰕾", file: "OnScreenDisplayTab.qml" },
+        { id: "Dock", key: "dock", name: "Dock", icon: "󰮯", file: "DockTab.qml", desc: "The app dock at the edge of the screen: which apps it holds, where it sits and when it hides" },
+        { id: "Launcher", key: "launcher", name: "Launcher", icon: "󰵆", file: "LauncherTab.qml", desc: "The app launcher (search apps, files, emojis). The preview shows the layout you pick" },
+        { id: "On-Screen Display", key: "osd", name: "On-Screen Display", icon: "󰕾", file: "OnScreenDisplayTab.qml", desc: "The little pop-ups for volume, brightness and keyboard layout" },
         {
             id: "Screenshots",
             key: "screenshots",
@@ -607,14 +607,14 @@ Item {
             icon: "󰄀",
             file: "screenshot/ScreenshotTab.qml",
             subtabs: [
-                { id: "Screenshot", key: "screenshot", name: "Capture", icon: "󰹑", file: "screenshot/ScreenshotTab.qml" },
-                { id: "ScreenshotKeys", key: "screenshot_keys", name: "Keys", icon: "󰌌", file: "ScreenshotsTab.qml" }
+                { id: "Screenshot", key: "screenshot", name: "Capture", icon: "󰹑", file: "screenshot/ScreenshotTab.qml", desc: "How screenshots and screen recordings are taken and saved" },
+                { id: "ScreenshotKeys", key: "screenshot_keys", name: "Keys", icon: "󰌌", file: "ScreenshotsTab.qml", desc: "The keys used inside the screenshot tool" }
             ]
         },
-        { id: "Notifications", key: "notifications", name: "Notifications", icon: "󰂚", file: "notifications/NotificationsTab.qml" },
-        { id: "Wellbeing", key: "wellbeing", name: "Wellbeing", icon: "󰄉", separatorBefore: true, file: "wellbeing/DigitalWellbeingTab.qml" },
-        { id: "Idle", key: "idle", name: "Idle", icon: "󰒲", file: "IdleTab.qml" },
-        { id: "About", key: "about", name: "About", icon: "󰋽", separatorBefore: true, file: "AboutTab.qml" }
+        { id: "Notifications", key: "notifications", name: "Notifications", icon: "󰂚", file: "notifications/NotificationsTab.qml", desc: "Pop-up notifications: where they appear, how long they stay, sounds and Do not disturb" },
+        { id: "Wellbeing", key: "wellbeing", name: "Wellbeing", icon: "󰄉", separatorBefore: true, file: "wellbeing/DigitalWellbeingTab.qml", desc: "How long you spend in each app, with optional daily limits and breaks" },
+        { id: "Idle", key: "idle", name: "Idle", icon: "󰒲", file: "IdleTab.qml", desc: "What happens when you step away: dim, lock, turn off the screen, sleep" },
+        { id: "About", key: "about", name: "About", icon: "󰋽", separatorBefore: true, file: "AboutTab.qml", desc: "Your version, updates and system details" }
     ]
 
     readonly property var currentTabModel: tabsModel[currentTab] || null
