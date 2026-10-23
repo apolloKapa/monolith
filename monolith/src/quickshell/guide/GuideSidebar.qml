@@ -23,11 +23,9 @@ Rectangle {
     anchors.bottom: parent.bottom
     width: popup.compact ? popup.s(72) : popup.s(268)
 
-    // each section gets its own colour for its icon badge (spread round the colour wheel, so the
-    // list reads at a glance whatever the theme's palette is)
+    // the sections' icon badges wear the theme's accent colour
     function badgeColor(i) {
-        const hue = ((i * 0.137) + 0.58) % 1.0;
-        return Qt.hsla(hue, ThemeBackend.darkMode ? 0.55 : 0.6, ThemeBackend.darkMode ? 0.68 : 0.45, 1.0);
+        return ThemeBackend.mauve;
     }
     color: sidebarGlass.active ? "transparent" : (ThemeBackend.material ? ThemeBackend.surfaceContainerLow : Qt.alpha(ThemeBackend.surface0, 0.4))
 
@@ -266,7 +264,7 @@ Rectangle {
                                         text: tabDelegate.modelData.icon || "󰒓"
                                         font.family: ThemeBackend.iconFont
                                         font.pixelSize: popup.s(16)
-                                        color: ThemeBackend.darkMode ? "#141414" : "#ffffff"
+                                        color: ThemeBackend.onPrimary
                                     }
                                 }
 
