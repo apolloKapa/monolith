@@ -243,6 +243,9 @@ Item {
         }
     }
 
+    // attached to the Frame bar style: the dock is part of the frame
+    readonly property bool joinsFrame: dockWindow.frameStyle && containerRoot.isAttached
+
     GlassFillets {
         id: dockFillets
         card: dockBg
@@ -296,7 +299,8 @@ Item {
             topRightRadius: ThemeBackend.rad(containerRoot.topRightCorner)
             bottomLeftRadius: ThemeBackend.rad(containerRoot.bottomLeftCorner)
             bottomRightRadius: ThemeBackend.rad(containerRoot.bottomRightCorner)
-            color: (ThemeBackend.liquidGlass && !(dockWindow.frameStyle && containerRoot.isAttached)) ? "transparent" : ThemeBackend.base
+            // joined to the Frame it takes the frame's colour (glass in the see-through styles)
+            color: containerRoot.joinsFrame ? ThemeBackend.frameColor : (ThemeBackend.liquidGlass ? "transparent" : ThemeBackend.base)
             border.width: (!ThemeBackend.liquidGlass && (dockWindow.dockFloating || dockWindow.editMode || containerRoot.outerCornerProgress < 0.99)) ? 1 : 0
             border.color: (dockWindow.dockFloating || dockWindow.editMode || containerRoot.outerCornerProgress < 0.99) ? Qt.alpha(ThemeBackend.surface1, 0.4 * (1.0 - containerRoot.outerCornerProgress * 0.5)) : "transparent"
             clip: true
@@ -305,7 +309,7 @@ Item {
     }
 
     ShaderEffect {
-        visible: !ThemeBackend.liquidGlass && containerRoot.outerCornerProgress > 0.001 && dockWindow.outerCornerRadius > 0.5 && (!dockWindow.sameSideAsBar || (dockWindow.isVertical ? containerRoot.width : containerRoot.height) >= dockWindow.outerCornerRadius)
+        visible: (!ThemeBackend.liquidGlass || containerRoot.joinsFrame) && containerRoot.outerCornerProgress > 0.001 && dockWindow.outerCornerRadius > 0.5 && (!dockWindow.sameSideAsBar || (dockWindow.isVertical ? containerRoot.width : containerRoot.height) >= dockWindow.outerCornerRadius)
         opacity: containerRoot.outerCornerProgress * (dockWindow.sameSideAsBar ? containerRoot.revealProgress : 1.0)
         x: {
             if (dockWindow.dockPosition === "left") return 0;
@@ -326,12 +330,12 @@ Item {
             if (dockWindow.dockPosition === "right") return 3.0;
             return 1.0; // top
         }
-        property color color: Qt.alpha(ThemeBackend.base, dockWindow.dockOpacity)
+        property color color: containerRoot.joinsFrame ? ThemeBackend.frameColor : Qt.alpha(ThemeBackend.base, dockWindow.dockOpacity)
         fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/corner_cutout.frag.qsb"
     }
 
     ShaderEffect {
-        visible: !ThemeBackend.liquidGlass && containerRoot.outerCornerProgress > 0.001 && dockWindow.outerCornerRadius > 0.5 && (!dockWindow.sameSideAsBar || (dockWindow.isVertical ? containerRoot.width : containerRoot.height) >= dockWindow.outerCornerRadius)
+        visible: (!ThemeBackend.liquidGlass || containerRoot.joinsFrame) && containerRoot.outerCornerProgress > 0.001 && dockWindow.outerCornerRadius > 0.5 && (!dockWindow.sameSideAsBar || (dockWindow.isVertical ? containerRoot.width : containerRoot.height) >= dockWindow.outerCornerRadius)
         opacity: containerRoot.outerCornerProgress * (dockWindow.sameSideAsBar ? containerRoot.revealProgress : 1.0)
         x: {
             if (dockWindow.dockPosition === "left") return 0;
@@ -352,7 +356,7 @@ Item {
             if (dockWindow.dockPosition === "right") return 1.0;
             return 0.0; // top
         }
-        property color color: Qt.alpha(ThemeBackend.base, dockWindow.dockOpacity)
+        property color color: containerRoot.joinsFrame ? ThemeBackend.frameColor : Qt.alpha(ThemeBackend.base, dockWindow.dockOpacity)
         fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/corner_cutout.frag.qsb"
     }
 
