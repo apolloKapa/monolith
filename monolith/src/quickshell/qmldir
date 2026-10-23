@@ -11,6 +11,7 @@ Clipboard 1.0 clipboard/Clipboard.qml
 Launcher 1.0 launcher/Launcher.qml
 ScreenshotOverlay 1.0 screenshot/ScreenshotOverlay.qml
 WallpaperEngine 1.0 wallpaper/WallpaperEngine.qml
+WallpaperHexGrid 1.0 wallpaper/WallpaperHexGrid.qml
 Idle 1.0 idle/Idle.qml
 Lock 1.0 lock/Lock.qml
 LockRedactor 1.0 lock/redactor/LockRedactor.qml

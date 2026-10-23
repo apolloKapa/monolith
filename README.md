@@ -4,10 +4,6 @@
 
 My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri config, keybinds and helper scripts.
 
-> **INSPIRED BY SERPANTINUM BY [@ilyamiro](https://github.com/ilyamiro)**
->
-> Monolith is a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) and keeps its licence (AGPL-3.0, see [`LICENSE`](LICENSE)).
->
 > Some features are inspired by [iNiR](https://github.com/snowarch/inir) by snowarch (the overview, dashboard, cheatsheet, switcher, session screen, island, GameMode, app theming and the extra styles), rebuilt for Monolith.
 
 ---

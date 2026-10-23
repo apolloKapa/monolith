@@ -103,7 +103,7 @@ function getLayout(name, mx, my, mw, mh, userScale, barPosition) {
             } 
         },
         "wallpaper": { 
-            w: "fill", h: 650, comp: "wallpaper/WallpaperPicker.qml", 
+            w: "fill", h: 820, comp: "wallpaper/WallpaperPicker.qml", 
             pos: { 
                 "top": { anchor: "center-left" }, 
                 "bottom": { anchor: "center-left" }, 
