@@ -21,7 +21,7 @@ Item {
         anchors.right: parent.right
         anchors.leftMargin: popup.s(22)
         anchors.rightMargin: popup.s(22)
-        height: popup.s(72)
+        height: crumbCol.implicitHeight + popup.s(18)
 
         function tabName(t) {
             return t ? I18n.t("guide.tabs." + (t.key || t.id).toLowerCase(), t.name || t.id) : "";
@@ -29,7 +29,14 @@ Item {
         readonly property var tab: popup.currentTabModel
         readonly property var sub: (tab && tab.subtabs && popup.currentSubTab >= 0) ? tab.subtabs[popup.currentSubTab] : null
 
+        readonly property string pageDesc: {
+            const d = (crumb.sub && crumb.sub.desc) ? crumb.sub.desc : (crumb.tab && crumb.tab.desc ? crumb.tab.desc : "");
+            const key = "guide.tabs." + ((crumb.sub || crumb.tab || {}).key || "") + "_desc";
+            return d !== "" ? I18n.t(key, d) : "";
+        }
+
         Column {
+            id: crumbCol
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
@@ -51,6 +58,17 @@ Item {
                 font.weight: Font.Normal
                 font.pixelSize: popup.s(28)
                 color: ThemeBackend.text
+            }
+            // what this page is for, in one line
+            Text {
+                visible: crumb.pageDesc !== ""
+                width: parent.width
+                topPadding: popup.s(2)
+                wrapMode: Text.WordWrap
+                text: crumb.pageDesc
+                font.family: ThemeBackend.fontFamily
+                font.pixelSize: popup.s(13)
+                color: ThemeBackend.subtext0
             }
         }
     }

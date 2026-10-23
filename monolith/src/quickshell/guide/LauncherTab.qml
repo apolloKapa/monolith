@@ -129,6 +129,135 @@ GuideTab {
             width: parent.width
             spacing: rootObj.s(6)
 
+            // a small launcher drawn with the layout settings below
+            Rectangle {
+                id: launcherPreviewCard
+                Layout.fillWidth: true
+                Layout.preferredHeight: lp.height + rootObj.s(24)
+                radius: ThemeBackend.square ? 0 : ThemeBackend.borderRadius
+                color: Qt.alpha(ThemeBackend.surface0, 0.4)
+
+                Rectangle {
+                    id: lp
+                    anchors.centerIn: parent
+                    readonly property bool rail: launcherTabRoot.currentShowRail
+                    readonly property real u: rootObj.s(1)
+                    width: Math.min(parent.width - rootObj.s(24), rootObj.s(rail ? 520 : 360))
+                    height: rootObj.s(200)
+                    radius: ThemeBackend.square ? 0 : rootObj.s(16)
+                    color: ThemeBackend.base
+                    border.width: 1
+                    border.color: Qt.alpha(ThemeBackend.text, 0.1)
+
+                    readonly property color chip: ThemeBackend.material ? ThemeBackend.surfaceContainerHigh : Qt.lighter(ThemeBackend.surface0, 1.2)
+                    readonly property color ink: Qt.alpha(ThemeBackend.text, 0.35)
+
+                    // search field (+ globe button)
+                    Rectangle {
+                        x: 10 * lp.u; y: 10 * lp.u
+                        width: lp.width - 20 * lp.u - (launcherTabRoot.currentWebSearch ? 26 * lp.u : 0)
+                        height: 20 * lp.u
+                        radius: height / 2
+                        color: lp.chip
+                        Rectangle { x: 10 * lp.u; anchors.verticalCenter: parent.verticalCenter; width: parent.width * 0.3; height: 4 * lp.u; radius: 2 * lp.u; color: lp.ink }
+                    }
+                    Rectangle {
+                        visible: launcherTabRoot.currentWebSearch
+                        x: lp.width - 30 * lp.u; y: 10 * lp.u
+                        width: 20 * lp.u; height: 20 * lp.u; radius: 10 * lp.u
+                        color: lp.chip
+                        Text { anchors.centerIn: parent; text: "󰖟"; font.family: ThemeBackend.iconFont; font.pixelSize: 11 * lp.u; color: ThemeBackend.text }
+                    }
+
+                    // left: tabs + favourites grid
+                    Item {
+                        id: lpPane
+                        visible: lp.rail
+                        x: 10 * lp.u; y: 38 * lp.u
+                        width: lp.rail ? (lp.width - 30 * lp.u) * 0.42 : 0
+                        height: lp.height - 48 * lp.u
+                        Rectangle {
+                            width: parent.width; height: 14 * lp.u; radius: 7 * lp.u
+                            color: lp.chip
+                            Rectangle { width: parent.width / 3; height: parent.height; radius: parent.radius; color: ThemeBackend.mauve; opacity: 0.8 }
+                        }
+                        Grid {
+                            y: 22 * lp.u
+                            columns: launcherTabRoot.currentFavColumns
+                            readonly property real cell: parent.width / columns
+                            Repeater {
+                                model: launcherTabRoot.currentFavColumns * 2
+                                Item {
+                                    width: parent.cell; height: 34 * lp.u
+                                    Rectangle { anchors.horizontalCenter: parent.horizontalCenter; y: 2 * lp.u; width: 16 * lp.u; height: 16 * lp.u; radius: 5 * lp.u; color: Qt.alpha(ThemeBackend.mauve, 0.35 + 0.1 * (index % 3)) }
+                                    Rectangle { anchors.horizontalCenter: parent.horizontalCenter; y: 22 * lp.u; width: Math.min(parent.width - 4 * lp.u, 18 * lp.u); height: 3 * lp.u; radius: 1.5 * lp.u; color: lp.ink }
+                                }
+                            }
+                        }
+                    }
+                    Rectangle {
+                        visible: lp.rail
+                        x: lpPane.x + lpPane.width + 5 * lp.u; y: 38 * lp.u
+                        width: 1; height: lpPane.height
+                        color: Qt.alpha(ThemeBackend.text, 0.15)
+                    }
+
+                    // right: the list, or a grid
+                    Item {
+                        id: lpList
+                        x: lp.rail ? lpPane.x + lpPane.width + 11 * lp.u : 10 * lp.u
+                        y: lp.rail ? 38 * lp.u : 38 * lp.u + 20 * lp.u
+                        width: lp.width - x - 10 * lp.u
+                        height: lp.height - y - 10 * lp.u
+                        clip: true
+
+                        // tabs on top when there's no left pane
+                        Rectangle {
+                            visible: !lp.rail
+                            y: -20 * lp.u
+                            width: parent.width; height: 14 * lp.u; radius: 7 * lp.u
+                            color: lp.chip
+                            Rectangle { width: parent.width / 3; height: parent.height; radius: parent.radius; color: ThemeBackend.mauve; opacity: 0.8 }
+                        }
+
+                        Column {
+                            visible: !launcherTabRoot.currentGridView
+                            width: parent.width
+                            spacing: 4 * lp.u
+                            Repeater {
+                                model: 5
+                                Rectangle {
+                                    width: parent.width
+                                    height: (launcherTabRoot.currentShowDescriptions ? 22 : 16) * lp.u
+                                    radius: height / 2
+                                    color: index === 0 ? Qt.alpha(ThemeBackend.mauve, 0.22) : "transparent"
+                                    Rectangle { x: 6 * lp.u; anchors.verticalCenter: parent.verticalCenter; width: 12 * lp.u; height: 12 * lp.u; radius: 4 * lp.u; color: Qt.alpha(ThemeBackend.mauve, 0.3 + 0.12 * (index % 3)) }
+                                    Column {
+                                        x: 24 * lp.u; anchors.verticalCenter: parent.verticalCenter; spacing: 2 * lp.u
+                                        Rectangle { width: (60 + 18 * (index % 3)) * lp.u; height: 4 * lp.u; radius: 2 * lp.u; color: Qt.alpha(ThemeBackend.text, 0.55) }
+                                        Rectangle { visible: launcherTabRoot.currentShowDescriptions; width: (100 + 20 * (index % 2)) * lp.u; height: 3 * lp.u; radius: 1.5 * lp.u; color: lp.ink }
+                                    }
+                                }
+                            }
+                        }
+
+                        Grid {
+                            visible: launcherTabRoot.currentGridView
+                            columns: launcherTabRoot.currentGridColumns
+                            readonly property real cell: parent.width / columns
+                            Repeater {
+                                model: launcherTabRoot.currentGridColumns * 3
+                                Item {
+                                    width: parent.cell; height: 38 * lp.u
+                                    Rectangle { anchors.horizontalCenter: parent.horizontalCenter; y: 3 * lp.u; width: 18 * lp.u; height: 18 * lp.u; radius: 6 * lp.u; color: Qt.alpha(ThemeBackend.mauve, 0.3 + 0.12 * (index % 3)) }
+                                    Rectangle { anchors.horizontalCenter: parent.horizontalCenter; y: 26 * lp.u; width: Math.min(parent.width - 4 * lp.u, 22 * lp.u); height: 3 * lp.u; radius: 1.5 * lp.u; color: lp.ink }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             SettingsBlob {
                 SettingsRow {
                     rootObj: launcherTabRoot.rootObj

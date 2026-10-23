@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "general"
+import "../../"
 
 BarGeneralState {
     id: barTabRoot
@@ -42,6 +43,30 @@ BarGeneralState {
             id: settingsCol
             width: parent.width
             spacing: rootObj.s(6)
+
+            // live preview of the bar as the settings below describe it
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: livePreview.height + rootObj.s(24)
+                radius: ThemeBackend.square ? 0 : ThemeBackend.borderRadius
+                color: Qt.alpha(ThemeBackend.surface0, 0.4)
+
+                BarPreview {
+                    id: livePreview
+                    anchors.centerIn: parent
+                    width: Math.min(parent.width - rootObj.s(24), rootObj.s(520), rootObj.s(240) * screenW / screenH)
+                    height: implicitHeight
+                    style: barTabRoot.barStyle
+                    position: barTabRoot.barPosition
+                    widthPct: barTabRoot.currentBarWidth
+                    thickness: barTabRoot.currentBarThickness
+                    pillGap: barTabRoot.pillGap
+                    sectionGap: barTabRoot.sectionGap
+                    frameThickness: barTabRoot.frameThickness
+                    distinctPills: barTabRoot.distinctPills
+                    autohide: barTabRoot.autohide
+                }
+            }
 
             BarPlacementSection { id: placementSection; tab: barTabRoot }
 
