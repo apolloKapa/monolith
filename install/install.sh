@@ -104,11 +104,6 @@ fi
 step "Packages"
 install_dependencies "$PROJECT_ROOT" "$INSTALL_STATE"
 
-if old_shell_installed; then
-    step "Replacing Serpantinum"
-    migrate_from_old_shell
-fi
-
 step "Monolith shell"
 SHELL_WAS_RUNNING=false
 monolithd status >/dev/null 2>&1 && SHELL_WAS_RUNNING=true
@@ -120,7 +115,6 @@ setup_pam_service
 
 step "niri"
 setup_niri_config "$PROJECT_ROOT" "$NIRI_MODE"
-[ "$UPDATE_ONLY" != true ] && [ "$NIRI_MODE" = replace ] && prefer_niri_session
 # screenshot binds -> Monolith's screenshot tool, and let its keys (e.g. Meta+C copy) through niri
 upgrade_screenshot_binds "$NIRI_DIR/config/keybinds.kdl" >/dev/null
 bash "$SHELL_HOME/src/scripts/niri_screenshot_keys.sh" >/dev/null 2>&1 || true
@@ -138,6 +132,8 @@ fi
 step "Settings"
 [ "$IS_REINSTALL" = true ] && rm -f "$SETTINGS_FILE"
 init_settings "$PROJECT_ROOT" "$(get_wallpaper_dir)"
+# another shell (Serpantinum) on this PC: leave it and its app colours alone
+share_with_other_shell
 
 step "Services"
 setup_services
@@ -145,9 +141,10 @@ write_version_state "$PROJECT_ROOT"
 # fresh installs get the intro
 [[ "$INSTALL_STATE" == fresh || "$IS_REINSTALL" == true ]] && rm -f "$STATE_DIR/first_launch.done"
 
-# switch over right away when we're inside a desktop session (no reboot needed). niri only runs
-# spawn-at-startup at login, so a fresh install has to start the shell itself.
-if [ -n "$WAYLAND_DISPLAY" ] && { [ "$UPDATE_ONLY" != true ] || [ "$SHELL_WAS_RUNNING" = true ]; }; then
+# switch over right away when we're inside a niri session (no reboot needed). niri only runs
+# spawn-at-startup at login, so a fresh install has to start the shell itself. In any other
+# session (Hyprland with Serpantinum, ...) Monolith waits until you log into niri.
+if [ -n "$WAYLAND_DISPLAY" ] && [ -n "$NIRI_SOCKET" ] && { [ "$UPDATE_ONLY" != true ] || [ "$SHELL_WAS_RUNNING" = true ]; }; then
     setsid "$BIN_DIR/monolithd" start >/dev/null 2>&1 < /dev/null &
     MONOLITH_STARTED=true
 fi

@@ -20,8 +20,14 @@ Item {
         }
         return dir;
     }
-    property string configPath: matugenBaseDir + "/config.toml"
-    property string configPathStatic: matugenBaseDir + "/config-static.toml"
+    // kitty, cava and fastfetch follow the theme unless that's switched off (Settings -> Theme ->
+    // Apps), e.g. when another shell on this PC themes them
+    readonly property bool terminalColors: {
+        void Config.rawSettings;
+        return Config.getSetting("theme", {}).terminalColors !== false;
+    }
+    property string configPath: matugenBaseDir + (terminalColors ? "/config.toml" : "/config-own.toml")
+    property string configPathStatic: matugenBaseDir + (terminalColors ? "/config-static.toml" : "/config-static-own.toml")
 
     property var _pendingRequest: null
     property string _currentReqType: ""

@@ -69,11 +69,12 @@ Item {
         id: installedFile
         path: Caching.monolithDir ? Caching.monolithDir + "/assets/default_settings.json" : ""
         onLoaded: { try { root.data = JSON.parse(text()); } catch (e) {} }
+        onLoadFailed: repoFile.path = Caching.monolithDir + "/../../config/monolith/settings.json"
     }
     // running from the repo: the file the installer copies
     FileView {
         id: repoFile
-        path: Caching.monolithDir ? Caching.monolithDir + "/../../config/monolith/settings.json" : ""
+        path: ""
         onLoaded: { try { root.data = JSON.parse(text()); } catch (e) {} }
     }
 }
