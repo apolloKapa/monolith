@@ -4,8 +4,6 @@
 
 My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri config, keybinds and helper scripts.
 
-> Some features are inspired by [iNiR](https://github.com/snowarch/inir) by snowarch (the overview, dashboard, cheatsheet, switcher, session screen, island, GameMode, app theming and the extra styles), rebuilt for Monolith.
-
 ---
 
 ## Install
@@ -319,4 +317,4 @@ While the repo is private, the update check goes through the GitHub CLI (`gh aut
 
 Copyright (C) 2026 apolloKapa
 
-Monolith is based on Serpantinum, copyright (C) its author [@ilyamiro](https://github.com/ilyamiro), and is licensed under the [GNU AGPL-3.0](LICENSE), like Serpantinum. Several features are inspired by [iNiR](https://github.com/snowarch/inir) by snowarch (GPL-3.0); they were written anew for Monolith, and iNiR's names, logos and mascot aren't used. You can use, change and share it; if you share a modified version (or run it for others over a network), share its source under the same licence.
+Monolith is based on Serpantinum, copyright (C) its author [@ilyamiro](https://github.com/ilyamiro), and is licensed under the [GNU AGPL-3.0](LICENSE), like Serpantinum. You can use, change and share it; if you share a modified version (or run it for others over a network), share its source under the same licence.

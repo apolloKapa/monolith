@@ -165,8 +165,7 @@
       },
       "title": "Monolith",
       "unknown": "غير معروف",
-      "version_by": "الإصدار {version} بواسطة @{author}",
-      "credits": "Features inspired by iNiR by snowarch"
+      "version_by": "الإصدار {version} بواسطة @{author}"
     },
     "autostart": {
       "add_button": "إضافة تطبيق",
