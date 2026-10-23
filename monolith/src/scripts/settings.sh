@@ -65,10 +65,10 @@ if [[ "$ACTION" == "close" ]]; then
     exit 0
 fi
 
-# the settings app keeps running hidden after it's closed (and is started hidden at login),
-# so opening it just shows the window again
+# Settings starts when it's opened and quits when it's closed (it used to stay loaded in the
+# background, ~500 MB). If it's open, toggle closes it; otherwise it starts.
+[[ "$ACTION" == "prewarm" ]] && exit 0
 if is_running; then
-    [[ "$ACTION" == "prewarm" ]] && exit 0
     if [[ "$ACTION" == "toggle" ]] && [[ "$(quickshell -p "$SETTINGS_QML" ipc call settings isOpen 2>/dev/null)" == "true" ]]; then
         settings_ipc close
         exit 0
@@ -80,8 +80,5 @@ if is_running; then
     exit 0
 fi
 
-if [[ "$ACTION" == "prewarm" ]]; then
-    MONOLITH_SETTINGS_HIDDEN=1 exec setsid quickshell -n -p "$SETTINGS_QML" >/dev/null 2>&1 < /dev/null
-fi
 write_tab
 exec setsid quickshell -n -p "$SETTINGS_QML"

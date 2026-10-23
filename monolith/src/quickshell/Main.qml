@@ -350,12 +350,29 @@ PanelWindow {
     Component.onCompleted: {
         applyConfigSettings();
         reportWidgetState();
-        Qt.callLater(function() {
-            if (masterWindow.currentActive === "hidden") {
-                let w = masterWindow.getLayout("wallpaper");
-                if (w) masterWindow.ensureWidgetItem("wallpaper", w);
-            }
-        });
+    }
+
+    // Panels are freed a while after they're closed, so memory doesn't keep growing with every
+    // panel ever opened. Reopening within the grace time is still instant; after it the panel
+    // is built again (its compiled component stays cached, so that's quick).
+    Timer {
+        id: evictTimer
+        interval: 20000
+        onTriggered: masterWindow.evictIdleWidgets()
+    }
+
+    function evictIdleWidgets() {
+        if (masterWindow.isClosing) { evictTimer.restart(); return; }
+        for (let name in widgetCache) {
+            if (name === masterWindow.currentActive) continue;
+            let it = widgetCache[name];
+            delete widgetCache[name];
+            if (!it) continue;
+            if (widgetStack.currentItem === it) widgetStack.clear(StackView.Immediate);
+            it.visible = false;
+            it.destroy();
+        }
+        gc();
     }
 
     Component.onDestruction: {
@@ -372,6 +389,7 @@ PanelWindow {
     onCurrentActiveChanged: {
         if (currentActive !== "hidden") lastShown = currentActive;
         reportWidgetState();
+        evictTimer.restart();
     }
 
     onScreenChanged: {

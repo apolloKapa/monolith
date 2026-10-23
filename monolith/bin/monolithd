@@ -252,7 +252,7 @@ if [ "$COMMAND" == "start" ]; then
     QS_PID=$!
 
     # load the settings window in the background once the shell is up, so it opens instantly
-    (sleep 8; bash "$MONOLITH_DIR/scripts/settings.sh" prewarm) 9>&- >/dev/null 2>&1 &
+    # Settings isn't preloaded any more: it starts when opened and quits when closed (saves ~500 MB)
 
     while kill -0 "$QS_PID" 2>/dev/null; do
         wait "$QS_PID" 2>/dev/null
