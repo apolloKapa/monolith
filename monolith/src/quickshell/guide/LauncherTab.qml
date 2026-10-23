@@ -15,7 +15,13 @@ GuideTab {
         "itemCount": 6,
         "terminalCommand": "kitty -e",
         "smartRanking": true,
-        "searchProvider": "google"
+        "searchProvider": "google",
+        "favorites": [],
+        "showRail": true,
+        "gridView": false,
+        "gridColumns": 5,
+        "showDescriptions": true,
+        "webSearch": true
     })
 
     property var launcherSettings: {
@@ -33,6 +39,12 @@ GuideTab {
     property string currentTerminalCommand: launcherSettings && launcherSettings.terminalCommand !== undefined ? launcherSettings.terminalCommand : "kitty -e"
     property bool currentSmartRanking: launcherSettings && launcherSettings.smartRanking !== undefined ? launcherSettings.smartRanking : true
 
+    property bool currentShowRail: !(launcherSettings && launcherSettings.showRail === false)
+    property bool currentGridView: !!(launcherSettings && launcherSettings.gridView === true)
+    property int currentGridColumns: (launcherSettings && Number(launcherSettings.gridColumns) >= 3) ? Number(launcherSettings.gridColumns) : 5
+    property bool currentShowDescriptions: !(launcherSettings && launcherSettings.showDescriptions === false)
+    property bool currentWebSearch: !(launcherSettings && launcherSettings.webSearch === false)
+
     property string currentSearchProvider: launcherSettings && launcherSettings.searchProvider !== undefined ? launcherSettings.searchProvider : SearchProviders.DEFAULT_ID
 
     function syncSettings() {
@@ -46,6 +58,11 @@ GuideTab {
         launcherTabRoot.currentTerminalCommand = s.terminalCommand !== undefined ? s.terminalCommand : "kitty -e";
         launcherTabRoot.currentSmartRanking = s.smartRanking !== undefined ? s.smartRanking : true;
         launcherTabRoot.currentSearchProvider = s.searchProvider !== undefined ? s.searchProvider : SearchProviders.DEFAULT_ID;
+        launcherTabRoot.currentShowRail = s.showRail !== false;
+        launcherTabRoot.currentGridView = s.gridView === true;
+        launcherTabRoot.currentGridColumns = Number(s.gridColumns) >= 3 ? Number(s.gridColumns) : 5;
+        launcherTabRoot.currentShowDescriptions = s.showDescriptions !== false;
+        launcherTabRoot.currentWebSearch = s.webSearch !== false;
     }
 
     function updateLauncherSetting(key, value) {
@@ -240,6 +257,110 @@ GuideTab {
                             launcherTabRoot.currentItemCount = rounded;
                             launcherTabRoot.updateLauncherSetting("itemCount", rounded);
                         }
+                    }
+                }
+            }
+
+            // layout: the rail with favourites, grid view, descriptions, the web button
+            SettingsBlob {
+                component LauncherToggle: Toggle {
+                    property string key: ""
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface1
+                    handleColor: ThemeBackend.crust
+                    handleOffColor: ThemeBackend.text
+                    onToggled: function(val) { launcherTabRoot.updateLauncherSetting(key, val); }
+                }
+
+                SettingsRow {
+                    rootObj: launcherTabRoot.rootObj
+                    settingId: "launcher_rail"
+                    icon: "󰐃"
+                    title: I18n.t("guide.launcher.rail.title", "Favourites rail")
+                    description: I18n.t("guide.launcher.rail.desc", "A slim column on the left with the tabs and your favourite apps. Right-click an app to pin or unpin it")
+                    searchKeywords: "favourites favorites pinned rail sidebar launcher"
+                    LauncherToggle {
+                        key: "showRail"
+                        checked: launcherTabRoot.currentShowRail
+                        onToggled: function(val) { launcherTabRoot.currentShowRail = val; }
+                    }
+                }
+
+                SettingsRow {
+                    rootObj: launcherTabRoot.rootObj
+                    settingId: "launcher_grid"
+                    icon: "󰕰"
+                    title: I18n.t("guide.launcher.grid.title", "Grid view")
+                    description: I18n.t("guide.launcher.grid.desc", "Show apps as a grid of icons instead of a list")
+                    searchKeywords: "grid icons view list launcher"
+                    LauncherToggle {
+                        key: "gridView"
+                        checked: launcherTabRoot.currentGridView
+                        onToggled: function(val) { launcherTabRoot.currentGridView = val; }
+                    }
+                }
+
+                SettingsRow {
+                    rootObj: launcherTabRoot.rootObj
+                    settingId: "launcher_grid_columns"
+                    icon: "󰕭"
+                    title: I18n.t("guide.launcher.grid_columns.title", "Grid columns")
+                    description: I18n.t("guide.launcher.grid_columns.desc", "Apps per row in grid view")
+                    hiddenByConfig: !launcherTabRoot.currentGridView
+                    NumberSelector {
+                        implicitWidth: rootObj.s(150)
+                        implicitHeight: rootObj.s(32)
+                        from: 3
+                        to: 8
+                        stepSize: 1
+                        decimals: 0
+                        value: launcherTabRoot.currentGridColumns
+                        baseColor: ThemeBackend.surface0
+                        accentColor: ThemeBackend.mauve
+                        buttonColor: ThemeBackend.surface1
+                        buttonTextColor: ThemeBackend.text
+                        textColor: ThemeBackend.text
+                        subTextColor: ThemeBackend.subtext0
+                        borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                        cornerRadius: ThemeBackend.borderRadius
+                        fontFamily: ThemeBackend.fontFamily
+                        fontPixelSize: rootObj.s(11)
+                        onValueChanged: function(val) {
+                            const c = Math.round(val);
+                            if (c >= 3 && c <= 8 && c !== launcherTabRoot.currentGridColumns) {
+                                launcherTabRoot.currentGridColumns = c;
+                                launcherTabRoot.updateLauncherSetting("gridColumns", c);
+                            }
+                        }
+                    }
+                }
+
+                SettingsRow {
+                    rootObj: launcherTabRoot.rootObj
+                    settingId: "launcher_descriptions"
+                    icon: "󰦨"
+                    title: I18n.t("guide.launcher.descriptions.title", "Show descriptions")
+                    description: I18n.t("guide.launcher.descriptions.desc", "The line under each app's name in the list")
+                    searchKeywords: "description comment subtitle launcher"
+                    LauncherToggle {
+                        key: "showDescriptions"
+                        checked: launcherTabRoot.currentShowDescriptions
+                        onToggled: function(val) { launcherTabRoot.currentShowDescriptions = val; }
+                    }
+                }
+
+                SettingsRow {
+                    rootObj: launcherTabRoot.rootObj
+                    settingId: "launcher_web"
+                    icon: "󰖟"
+                    title: I18n.t("guide.launcher.web.title", "Web search")
+                    description: I18n.t("guide.launcher.web.desc", "The globe button next to the search field, and searching the web by starting with ?")
+                    searchKeywords: "web search browser internet globe question mark launcher"
+                    LauncherToggle {
+                        key: "webSearch"
+                        checked: launcherTabRoot.currentWebSearch
+                        onToggled: function(val) { launcherTabRoot.currentWebSearch = val; }
                     }
                 }
             }
