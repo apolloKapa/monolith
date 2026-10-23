@@ -112,6 +112,20 @@ Item {
         updateProc.running = true;
     }
 
+    // Settings -> System -> Check for updates: ask GitHub now (not the cached copy), and say
+    // how it went: "checking", "latest", "available" or "failed"
+    property string manualState: ""
+    property bool manualCheck: false
+    function checkNow() {
+        if (typeof Caching === "undefined" || !Caching.monolithDir) return;
+        if (updateProc.running) return;
+        root.manualCheck = true;
+        root.manualState = "checking";
+        root.isChecking = true;
+        updateProc.command = ["python3", Caching.monolithDir + "/scripts/updater.py", "--state-dir", Caching.getStateDir(), "--fresh"];
+        updateProc.running = true;
+    }
+
     function scheduleInitialCheck() {
         if (!root.autoCheckEnabled) return;
         if (typeof SystemInfo !== "undefined" && SystemInfo.osName.toLowerCase().indexOf("nixos") !== -1) return;
@@ -231,6 +245,7 @@ Item {
                         if (data.remote) root.remoteVersion = data.remote;
                         if (data.last_notified !== undefined) root.lastNotifiedVersion = data.last_notified;
                         root.reevaluateUpdate();
+                        if (root.manualCheck) root.manualState = data.error ? "failed" : (root.updateAvailable ? "available" : "latest");
 
                         if (!Caching.isStandalone && root.updateAvailable && root.remoteVersion !== root.lastNotifiedVersion) {
                             root.lastNotifiedVersion = root.remoteVersion;
@@ -241,8 +256,14 @@ Item {
                 }
             }
         }
-        onExited: {
+        onExited: (code) => {
             root.isChecking = false;
+            if (root.manualCheck) {
+                if (code !== 0 && root.manualState === "checking") root.manualState = "failed";
+                root.manualCheck = false;
+                // back to the normal (cached, quiet) check for next time
+                updateProc.command = ["python3", Caching.monolithDir + "/scripts/updater.py", "--state-dir", Caching.getStateDir()];
+            }
         }
     }
 }
