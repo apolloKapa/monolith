@@ -73,7 +73,7 @@ GuideTab {
 
                         text: modelData === " " ? "\u00A0" : modelData
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.pixelSize: rootObj.s(14)
 
                         color: bRoot.textColor

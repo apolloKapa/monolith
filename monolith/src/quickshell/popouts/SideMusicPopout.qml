@@ -480,7 +480,7 @@ PanelWindow {
                             text: isMediaActive ? (targetPlayer ? targetPlayer.trackTitle : "") : I18n.t("music.nothing_playing")
                             color: ThemeBackend.text
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Black
+                            font.weight: ThemeBackend.weightBlack
                             font.pixelSize: sideMusicPopout.s(13)
                             marqueeSpacing: sideMusicPopout.s(40)
                             pauseDuration: 2500
@@ -492,7 +492,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: targetPlayer && targetPlayer.trackArtist ? targetPlayer.trackArtist : (targetPlayer ? targetPlayer.identity : "")
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: sideMusicPopout.s(11)
                             color: ThemeBackend.subtext0
                             elide: Text.ElideRight

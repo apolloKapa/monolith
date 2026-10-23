@@ -232,7 +232,7 @@ Item {
                 text: model.name ? model.name.charAt(0).toUpperCase() : "?"
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: dockWindow.s(Math.round(dockWindow.dockElementSize * 0.42))
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 color: ThemeBackend.text
             }
 

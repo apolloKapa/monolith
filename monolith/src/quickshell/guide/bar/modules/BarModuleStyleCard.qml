@@ -115,7 +115,7 @@ Rectangle {
             text: styleCard.variant.name
             font.family: ThemeBackend.fontFamily
             font.pixelSize: rootObj.s(13)
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             color: ThemeBackend.text
         }
     }

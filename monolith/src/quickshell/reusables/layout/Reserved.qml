@@ -34,7 +34,7 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root.text
             font.family: ThemeBackend.fontFamily
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             font.pixelSize: root.textSize
             color: ThemeBackend.subtext0
         }

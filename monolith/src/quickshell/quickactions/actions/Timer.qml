@@ -438,7 +438,7 @@ Item {
                         anchors.centerIn: parent
                         text: root.formatTime(stateCache.timerRemainingMs, false)
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Black
+                        font.weight: ThemeBackend.weightBlack
                         font.pixelSize: root.s(68)
                         color: stateCache.timerRemainingMs === 0 && !root.isTimerRunning ? ThemeBackend.mauve : ThemeBackend.text
                         visible: !root.isTimerIdle
@@ -540,7 +540,7 @@ Item {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.formatTime(stopwatchView.currentDisplayMs, true)
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Black
+                            font.weight: ThemeBackend.weightBlack
                             font.pixelSize: root.s(52)
                             color: ThemeBackend.text
                         }

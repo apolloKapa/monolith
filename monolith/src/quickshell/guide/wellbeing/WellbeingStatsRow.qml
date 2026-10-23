@@ -50,7 +50,7 @@ RowLayout {
 
             Text {
                 font.family: ThemeBackend.fontFamily
-                font.weight: Font.Black
+                font.weight: ThemeBackend.weightBlack
                 font.pixelSize: rootObj.s(38)
                 color: stats.tab.textMain
                 text: stats.tab.formatTimeLarge(stats.tab.animatedTotalSeconds).replace(/ /g, " ")

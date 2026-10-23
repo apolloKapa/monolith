@@ -1685,11 +1685,12 @@ PanelWindow {
                             x: 0
                             width: appList.width
                             height: launcherWindow.s(44)
-                            radius: ThemeBackend.borderRadius
-                            color: ThemeBackend.liquidGlass ? "transparent" : Qt.alpha(ThemeBackend.mauve, 0.16)
+                            radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
+                            color: ThemeBackend.liquidGlass ? "transparent" : (ThemeBackend.material ? ThemeBackend.secondaryContainer : Qt.alpha(ThemeBackend.mauve, 0.16))
 
-                            // Monolith's selection spine
+                            // Monolith's selection spine (Material marks the row by filling it)
                             Rectangle {
+                                visible: !ThemeBackend.material
                                 x: I18n.rtl ? parent.width - width - launcherWindow.s(4) : launcherWindow.s(4)
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: launcherWindow.s(3)

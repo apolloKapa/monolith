@@ -267,7 +267,7 @@ Item {
                                     text: root.isPreview ? I18n.t("guide.bar.media.preview.title", "Song title") : (isMediaActive ? (player ? player.trackTitle : "") : I18n.t("music.nothing_playing"))
                                     color: ThemeBackend.text
                                     font.family: ThemeBackend.fontFamily
-                                    font.weight: Font.Black
+                                    font.weight: ThemeBackend.weightBlack
                                     font.pixelSize: barWindow ? barWindow.cs(root.isCompact ? 11 : 12) : (root.isCompact ? 11 : 12)
                                     marqueeSpacing: barWindow ? barWindow.cs(40) : 40
                                     speed: 30
@@ -279,7 +279,7 @@ Item {
                                         ? (root.isPreview ? I18n.t("guide.bar.media.preview.author", "Song author") : (isMediaActive && player ? (player.trackArtist || "") : ""))
                                         : (root.isPreview ? "01:24 / 03:42" : (isMediaActive && player ? (root.formatTime(MprisController.livePosition) + " / " + root.formatTime(player.length)) : ""))
                                     font.family: ThemeBackend.fontFamily
-                                    font.weight: Font.Black
+                                    font.weight: ThemeBackend.weightBlack
                                     font.pixelSize: barWindow ? barWindow.cs(root.isCompact ? 9 : 10) : (root.isCompact ? 9 : 10)
                                     color: root.isCompact ? ThemeBackend.overlay2 : ThemeBackend.subtext0
                                     width: parent.width

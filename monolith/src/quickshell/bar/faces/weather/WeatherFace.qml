@@ -82,8 +82,8 @@ Item {
                 text: root.weatherTemp
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: root.isVertical ? (barWindow ? barWindow.cs(root.isCompact ? 11 : 12) : (root.isCompact ? 11 : 12)) : (barWindow ? barWindow.cs(root.isCompact ? 14 : 15) : (root.isCompact ? 14 : 15))
-                font.weight: Font.Black
-                color: root.isCompact ? Qt.lighter(ThemeBackend.peach, 1.1) : ThemeBackend.peach
+                font.weight: ThemeBackend.weightBlack
+                color: ThemeBackend.material ? ThemeBackend.text : (root.isCompact ? Qt.lighter(ThemeBackend.peach, 1.1) : ThemeBackend.peach)
                 visible: !root.isWeatherLoading
             }
         }

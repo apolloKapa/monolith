@@ -114,8 +114,8 @@ SettingsBlob {
             Layout.rightMargin: rootObj.s(8)
             implicitWidth: rootObj.s(220)
             implicitHeight: rootObj.s(18)
-            from: 28
-            to: 48
+            from: 22
+            to: 72
             stepSize: 1
             defaultValue: 40
             showValueBubble: true

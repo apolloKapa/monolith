@@ -423,7 +423,7 @@ Item {
                 visible: !root.isEditing
                 text: root.formatValue(root.value)
                 font.family: root.fontFamily
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 font.pixelSize: root.fontPixelSize
                 color: root.textColor
                 horizontalAlignment: Text.AlignHCenter
@@ -510,7 +510,7 @@ Item {
                             text: model.char
                             color: root.accentColor
                             font.family: root.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: root.fontPixelSize
                         }
                     }
@@ -547,7 +547,7 @@ Item {
                     selectByMouse: true
                     mouseSelectionMode: TextInput.SelectCharacters
                     font.family: root.fontFamily
-                    font.weight: Font.Bold
+                    font.weight: ThemeBackend.weightBold
                     font.pixelSize: root.fontPixelSize
                     horizontalAlignment: TextInput.AlignHCenter
                     verticalAlignment: TextInput.AlignVCenter

@@ -114,7 +114,7 @@ PopupShell {
                         color: ThemeBackend.text
                         font.family: ThemeBackend.fontFamily
                         font.pixelSize: root.s(64)
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                     }
                     Text {
                         text: root.now.toLocaleDateString(Qt.locale(), "dddd, d MMMM")
@@ -252,7 +252,7 @@ PopupShell {
                             color: ThemeBackend.text
                             font.family: ThemeBackend.fontFamily
                             font.pixelSize: root.s(18)
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             elide: Text.ElideRight
                         }
                         Text {
@@ -365,7 +365,7 @@ PopupShell {
                         color: Pomodoro.running ? ThemeBackend.text : ThemeBackend.subtext1
                         font.family: ThemeBackend.fontFamily
                         font.pixelSize: root.s(52)
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                     }
                     Rectangle {
                         Layout.fillWidth: true

@@ -92,7 +92,7 @@ PopupShell {
             color: ThemeBackend.text
             font.family: ThemeBackend.fontFamily
             font.pixelSize: root.s(54)
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
         }
 
         RowLayout {

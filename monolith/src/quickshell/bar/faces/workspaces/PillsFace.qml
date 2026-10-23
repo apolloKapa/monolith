@@ -135,7 +135,7 @@ Item {
                     id: wsVisualShape
                     anchors.fill: parent
                     radius: ThemeBackend.rad(widget ? widget.s(widget.isCompact ? 8 : 10) : 10)
-                    color: (wsPill.isActive || pillsShapeGlass.active) ? "transparent" : Qt.alpha(wsPill.isOccupied ? ThemeBackend.surface2 : ((widget && widget.isCompact) ? ThemeBackend.surface1 : ThemeBackend.surface0), ThemeBackend.elementOpacity)
+                    color: (wsPill.isActive || pillsShapeGlass.active) ? "transparent" : Qt.alpha(ThemeBackend.material ? (wsPill.isOccupied ? Qt.tint(ThemeBackend.surfaceContainerHighest, Qt.alpha(ThemeBackend.text, 0.35)) : ThemeBackend.surfaceContainerHighest) : (wsPill.isOccupied ? ThemeBackend.surface2 : ((widget && widget.isCompact) ? ThemeBackend.surface1 : ThemeBackend.surface0)), ThemeBackend.elementOpacity)
                     border.width: 0
 
                     GlassFill {

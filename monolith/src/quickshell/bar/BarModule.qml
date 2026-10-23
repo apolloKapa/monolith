@@ -92,9 +92,11 @@ Rectangle {
         NumberAnimation { duration: (300) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
     }
 
-    radius: ThemeBackend.borderRadius
+    // Material: the bar's pills are full pills on the tonal container colour
+    readonly property color pillColor: ThemeBackend.material ? ThemeBackend.surfaceContainer : ThemeBackend.base
+    radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
     border.width: 0
-    color: isGrouped || pillGlass.active ? "transparent" : (isSolid ? (distinctPills ? Qt.alpha(Qt.darker(ThemeBackend.surface0, 1.15), root.barOpacity) : "transparent") : Qt.alpha(ThemeBackend.base, root.barOpacity))
+    color: isGrouped || pillGlass.active ? "transparent" : (isSolid ? (distinctPills ? Qt.alpha(ThemeBackend.material ? ThemeBackend.surfaceContainerHigh : Qt.darker(ThemeBackend.surface0, 1.15), root.barOpacity) : "transparent") : Qt.alpha(root.pillColor, root.barOpacity))
     clip: true
 
     WallpaperBlur {

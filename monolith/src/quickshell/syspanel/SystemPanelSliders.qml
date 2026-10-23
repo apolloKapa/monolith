@@ -32,7 +32,7 @@ Rectangle {
     Layout.preferredHeight: slidersCol.implicitHeight + panel.s(20)
     Layout.maximumHeight: slidersCol.implicitHeight + panel.s(20)
     radius: ThemeBackend.rad(panel.boxRadius)
-    color: slidersGlass.active ? "transparent" : ThemeBackend.faded(Qt.darker(ThemeBackend.surface0, 1.04))
+    color: slidersGlass.active ? "transparent" : ThemeBackend.faded(ThemeBackend.surfaceContainer)
     opacity: panel.introSliders
     transform: Translate { x: (panel.isLeftAnchored ? -panel.rowSlideDistance : panel.rowSlideDistance) * (1.0 - panel.introSliders) }
 
@@ -48,7 +48,7 @@ Rectangle {
         id: slidersCol
         anchors.fill: parent
         anchors.margins: panel.s(12)
-        spacing: panel.s(6)
+        spacing: ThemeBackend.material ? panel.s(12) : panel.s(6)
 
         RowLayout {
             Layout.fillWidth: true
@@ -56,12 +56,12 @@ Rectangle {
 
             IconButton {
                 Layout.alignment: Qt.AlignVCenter
-                size: panel.s(26)
-                cornerRadius: ThemeBackend.rad(panel.s(8))
+                size: ThemeBackend.material ? panel.s(32) : panel.s(26)
+                cornerRadius: ThemeBackend.pill ? size / 2 : ThemeBackend.rad(panel.s(8))
                 buttonIcon: panel.sysMuted || panel.sysVolume === 0 ? "󰖁" : (panel.sysVolume > 50 ? "󰕾" : "󰖀")
                 iconFontSize: panel.s(15)
                 accentColor: ThemeBackend.surface1
-                textColor: isHoveredOrHighlighted ? ThemeBackend.text : (panel.sysMuted ? ThemeBackend.overlay0 : panel.volColor)
+                textColor: isHoveredOrHighlighted ? ThemeBackend.text : (panel.sysMuted ? ThemeBackend.overlay0 : (ThemeBackend.material ? ThemeBackend.text : panel.volColor))
                 onClicked: {
                     if (Audio.defaultSink) {
                         Audio.toggleMute(Audio.defaultSink);
@@ -91,7 +91,7 @@ Rectangle {
             Draggable {
                 id: volSlider
                 Layout.fillWidth: true
-                implicitHeight: panel.s(18)
+                implicitHeight: ThemeBackend.material ? panel.s(20) : panel.s(18)
                 from: 0.0
                 to: 100.0
                 stepSize: 1.0
@@ -99,7 +99,7 @@ Rectangle {
                 valueFormatter: function(v) { return Math.round(v) }
                 value: panel.sysVolume
                 backgroundColor: ThemeBackend.surface1
-                accentColor: panel.sysMuted ? ThemeBackend.surface2 : panel.volColor
+                accentColor: panel.sysMuted ? ThemeBackend.surface2 : (ThemeBackend.material ? ThemeBackend.mauve : panel.volColor)
                 gradColor1: panel.sysMuted ? ThemeBackend.surface2 : panel.volColor
                 gradColor2: panel.sysMuted ? ThemeBackend.surface2 : Qt.lighter(panel.volColor, 1.05)
                 gradColor3: panel.sysMuted ? ThemeBackend.surface2 : Qt.lighter(panel.volColor, 1.10)
@@ -145,12 +145,12 @@ Rectangle {
 
             IconButton {
                 Layout.alignment: Qt.AlignVCenter
-                size: panel.s(26)
-                cornerRadius: ThemeBackend.rad(panel.s(8))
+                size: ThemeBackend.material ? panel.s(32) : panel.s(26)
+                cornerRadius: ThemeBackend.pill ? size / 2 : ThemeBackend.rad(panel.s(8))
                 buttonIcon: panel.sysBrightness > 66 ? "󰃠" : (panel.sysBrightness > 33 ? "󰃟" : "󰃞")
                 iconFontSize: panel.s(15)
                 accentColor: ThemeBackend.surface1
-                textColor: isHoveredOrHighlighted ? ThemeBackend.text : panel.briColor
+                textColor: isHoveredOrHighlighted ? ThemeBackend.text : (ThemeBackend.material ? ThemeBackend.text : panel.briColor)
                 onClicked: {
                     briCmdThrottle.stop();
                     briCmdThrottle.targetPct = -1;
@@ -175,7 +175,7 @@ Rectangle {
             Draggable {
                 id: briSlider
                 Layout.fillWidth: true
-                implicitHeight: panel.s(18)
+                implicitHeight: ThemeBackend.material ? panel.s(20) : panel.s(18)
                 from: 0.0
                 to: 100.0
                 stepSize: 1.0
@@ -183,7 +183,7 @@ Rectangle {
                 valueFormatter: function(v) { return Math.round(v) }
                 value: panel.sysBrightness
                 backgroundColor: ThemeBackend.surface1
-                accentColor: panel.briColor
+                accentColor: ThemeBackend.material ? ThemeBackend.mauve : panel.briColor
                 gradColor1: panel.briColor
                 gradColor2: Qt.lighter(panel.briColor, 1.05)
                 gradColor3: Qt.lighter(panel.briColor, 1.10)

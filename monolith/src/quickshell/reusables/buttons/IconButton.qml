@@ -11,6 +11,8 @@ Item {
 
     property int size: 44
     property int cornerRadius: 12
+    // Material makes every button a pill (or a circle)
+    readonly property real shapeRadius: ThemeBackend.pill ? Math.min(width, height) / 2 : ThemeBackend.rad(cornerRadius)
 
     property string buttonIcon: ""
     property string iconFont: ThemeBackend.iconFont
@@ -68,7 +70,7 @@ Item {
         Rectangle {
             id: btnShape
             anchors.fill: parent
-            radius: ThemeBackend.rad(root.cornerRadius)
+            radius: root.shapeRadius
             clip: !glass.active
             color: ThemeBackend.liquidGlass ? "transparent" : (!root.enabled ? root.accentColor : (btnMa.pressed ? Qt.darker(root.accentColor, 1.12) : (root.isHoveredOrHighlighted ? Qt.lighter(root.accentColor, 1.12) : root.accentColor)))
             opacity: (root.enabled ? 1.0 : 0.5) * root.bgOpacity
@@ -83,7 +85,7 @@ Item {
                 press: btnMa.pressed ? 1 : (root.isHoveredOrHighlighted ? 0.25 : 0)
                 pulse: Math.min(1, root.flashOpacity * 2.5)
                 Behavior on press { NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-                radius: ThemeBackend.rad(root.cornerRadius)
+                radius: root.shapeRadius
                 tintColor: root.accentColor
                 tintAmount: btnMa.pressed ? 0.55 : (root.isHoveredOrHighlighted ? 0.42 : 0.3)
                 Behavior on tintAmount { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -103,7 +105,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: ThemeBackend.rad(root.cornerRadius)
+            radius: root.shapeRadius
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !glass.active
@@ -139,7 +141,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         anchors.margins: -2
-        radius: ThemeBackend.rad(root.cornerRadius + 2)
+        radius: root.shapeRadius + 2
         color: "transparent"
         border.width: 2
         border.color: Qt.alpha(ThemeBackend.mauve, 0.8)

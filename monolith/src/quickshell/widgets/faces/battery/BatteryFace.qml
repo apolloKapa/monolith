@@ -172,7 +172,7 @@ Item {
 
                     Text {
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Black
+                        font.weight: ThemeBackend.weightBlack
                         font.pixelSize: Math.max(Scaler.s(14), Math.min(Scaler.s(24), root.height * 0.26))
                         color: bRoot.contentTextColor
                         text: root.hasBattery ? (Math.round(root.animCapacity) + "%") : "No battery found"
@@ -182,7 +182,7 @@ Item {
 
                     Text {
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         font.pixelSize: Math.max(Scaler.s(9), Math.min(Scaler.s(12), root.height * 0.13))
                         color: bRoot.contentTextColor === ThemeBackend.crust ? Qt.alpha(ThemeBackend.crust, 0.85) : (root.isCharging ? ThemeBackend.green : ThemeBackend.subtext0)
                         text: root.hasBattery ? root.timeString : "AC power connected"

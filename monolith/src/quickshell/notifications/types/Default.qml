@@ -49,7 +49,7 @@ Notification {
             horizontalAlignment: I18n.textAlignment
             text: model ? (model.displayName || model.appName || "System") : "System"
             font.family: ThemeBackend.fontFamily
-            font.weight: Font.Bold
+            font.weight: ThemeBackend.weightBold
             font.pixelSize: s(11)
             color: faceRoot.bodyText
             elide: Text.ElideRight

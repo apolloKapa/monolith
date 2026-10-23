@@ -8,8 +8,8 @@ import "../../"
 Item {
     id: root
 
-    property string fontFamily: "Adwaita Mono"
-    property int _borderRadius: 8
+    property string fontFamily: "Google Sans Flex"
+    property int _borderRadius: 10
     readonly property int borderRadius: square ? 0 : Math.round(_borderRadius * radiusScale)
     property int clampedBorderRadius: {
         const r = borderRadius;
@@ -22,7 +22,7 @@ Item {
 
     property real elementOpacity: 1.0
     property bool blurBackground: false
-    property string blurStyle: "blur"
+    property string blurStyle: "material"
     readonly property real liquidGlassOpacity: 0.1
     readonly property bool minimalist: blurStyle === "minimalist"
 
@@ -31,6 +31,8 @@ Item {
     // that load when it's picked (both can be changed afterwards). Components ask for tokens
     // (square, rad(), outlined, outline*, hardShadow) instead of checking a style by name.
     readonly property var styles: ({
+        "material":   { "name": "Material", "opaque": true, "radiusScale": 1.8, "font": "Google Sans Flex", "matugen": true, "pill": true,
+                        "desc": "Soft, round, your wallpaper's colours" },
         "blur":       { "name": "Blur",         "opaque": false },
         "liquid":     { "name": "Liquid glass", "opaque": false },
         "minimalist": { "name": "Minimalist", "opaque": true, "square": true, "outline": [2, 1], "font": "JetBrains Mono",
@@ -68,8 +70,15 @@ Item {
                                     "blue": "#2f5d8a", "sapphire": "#2f5d8a", "teal": "#3d7a6e", "mauve": "#8a3b2e", "pink": "#a85a6e", "green": "#4a7a3d",
                                     "yellow": "#b08a2e", "peach": "#b8662e", "red": "#a8322e", "maroon": "#7a2420" } }
     })
-    readonly property var styleOrder: ["blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper"]
-    readonly property var style: styles[blurStyle] || styles["blur"]
+    readonly property var styleOrder: ["material", "blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper"]
+    readonly property var style: styles[blurStyle] || styles["material"]
+    // Material: Google-style tonal surfaces, pill controls and filled containers instead of outlines
+    readonly property bool material: blurStyle === "material"
+    // controls are full pills (buttons, chips, segmented switches) unless the style is square
+    readonly property bool pill: style.pill === true
+    // type weights: Material sets lighter type than the shell's heavy defaults
+    readonly property int weightBlack: material ? Font.DemiBold : Font.Black
+    readonly property int weightBold: material ? Font.Medium : Font.Bold
     readonly property bool opaqueStyle: style.opaque === true
     readonly property bool square: style.square === true
     readonly property real radiusScale: style.radiusScale !== undefined ? style.radiusScale : 1.0
@@ -105,8 +114,9 @@ Item {
     //   grain:  faint film grain on panels      edge:   a light along each panel's top
     //   unfold: panels open by unfolding from a line
     property var effects: ({})
-    readonly property bool fxGrain: effects.grain !== false && !gameModeActive
-    readonly property bool fxEdge: effects.edge !== false && !gameModeActive
+    // Material keeps its surfaces clean: grain and edge light are opt-in there
+    readonly property bool fxGrain: (material ? effects.grain === true : effects.grain !== false) && !gameModeActive
+    readonly property bool fxEdge: (material ? effects.edge === true : effects.edge !== false) && !gameModeActive
     // corner marks inside panel corners: "off" (default), "square" brackets or "round" arcs
     readonly property string fxMarks: gameModeActive ? "off" : ((effects.marks === "square" || effects.marks === "round") ? effects.marks : "off")
     readonly property bool fxUnfold: effects.unfold !== false
@@ -114,6 +124,10 @@ Item {
         && ToplevelManager.activeToplevel.fullscreen === true
     readonly property bool glassActive: blurBackground && !opaqueStyle && elementOpacity < 0.999 && !gameModeActive
     readonly property bool liquidGlass: blurBackground && blurStyle === "liquid" && !gameModeActive
+    // a see-through look is on (Blur or Liquid glass): the Frame bar style turns to glass too
+    readonly property bool seeThrough: glassActive || liquidGlass
+    // the Frame's colour: solid, or the panels' see-through tint
+    readonly property color frameColor: seeThrough ? Qt.alpha(base, Math.max(0.35, elementOpacity)) : base
 
     // Minimalist: flat, opaque, square, outlined. Outer surfaces get the thick line, nested ones the thin one.
     readonly property int minimalistOuterBorder: outlineOuter
@@ -156,6 +170,23 @@ Item {
     property color yellow: "#f9e2af"
     property color maroon: "#eba0ac"
     property color teal: "#94e2d5"
+
+    // Material 3 roles. With wallpaper colours (Matugen) the palette slots already hold them
+    // (see the matugen template: sapphire = primary container, yellow = secondary container);
+    // with a fixed palette they're mixed from it.
+    property bool matugenPalette: true
+    function _lum(c) { return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; }
+    readonly property bool darkMode: _lum(base) < 0.5
+    readonly property color surfaceContainerLow: mantle
+    readonly property color surfaceContainer: surface0
+    readonly property color surfaceContainerHigh: surface1
+    readonly property color surfaceContainerHighest: surface2
+    readonly property color onPrimary: _lum(mauve) > 0.5 ? Qt.darker(mauve, 3.2) : "#ffffff"
+    readonly property color primaryContainer: matugenPalette ? sapphire : Qt.tint(surface0, Qt.alpha(mauve, 0.32))
+    readonly property color onPrimaryContainer: darkMode ? Qt.tint(text, Qt.alpha(mauve, 0.35)) : Qt.darker(mauve, 2.4)
+    readonly property color secondaryContainer: matugenPalette ? yellow : Qt.tint(surface1, Qt.alpha(mauve, 0.16))
+    readonly property color onSecondaryContainer: darkMode ? Qt.tint(text, Qt.alpha(green, 0.25)) : Qt.darker(mauve, 2.6)
+    readonly property color outlineVariant: surface2
 
     property string configPath: Quickshell.env("QS_COLORS_JSON") ?? "~/.local/state/monolith/qs_colors.json"
     property string matugenConfigPath: (typeof Caching !== "undefined" && Caching.stateDir ? Caching.stateDir : ((Quickshell.env("HOME") ?? "") + "/.local/state/monolith")) + "/qs_matugen_colors.json"
@@ -359,7 +390,7 @@ Item {
         const themeConfig = Config.getSetting("theme", {});
         const pct = themeConfig.elementOpacity !== undefined ? Number(themeConfig.elementOpacity) : 100;
         root.blurBackground = !Caching.isStandalone && (themeConfig.blurBackground !== undefined ? Boolean(themeConfig.blurBackground) : false);
-        root.blurStyle = root.styles[themeConfig.blurStyle] ? themeConfig.blurStyle : "blur";
+        root.blurStyle = root.styles[themeConfig.blurStyle] ? themeConfig.blurStyle : "material";
         const anim = themeConfig.animations || {};
         root.animationsEnabled = anim.enabled !== false;
         root.gameModeEnabled = themeConfig.gameMode !== false;
@@ -382,7 +413,8 @@ Item {
 
         let customColors = themeConfig.colors || themeConfig.palette || (themeConfig.base !== undefined ? themeConfig : null);
 
-        if (root.isMatugenTheme()) {
+        root.matugenPalette = root.isMatugenTheme();
+        if (root.matugenPalette) {
             root.applyMatugenColors();
             let wp = themeConfig.wallpaper || Config.getSetting("wallpaper", "");
             if (!Caching.isStandalone && typeof Matugen !== "undefined" && typeof Matugen.generate === "function") {

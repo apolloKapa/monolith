@@ -165,7 +165,7 @@ Item {
                         text: numDelegate.hourVal
                         font.family: ThemeBackend.fontFamily
                         font.pixelSize: Math.min(root.width, root.height) * 0.054
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                         color: numDelegate.intensity > 0.5 ? root.numberColor : numDelegate.activeColor
                         opacity: numDelegate.intensity
                     }

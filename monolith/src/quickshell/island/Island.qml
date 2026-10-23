@@ -165,7 +165,7 @@ Variants {
 
                     Label {
                         text: Qt.formatDateTime(win.now, DateTime.is12Hour ? "h:mm AP" : "HH:mm")
-                        font.weight: Font.Bold
+                        font.weight: ThemeBackend.weightBold
                     }
 
                     RowLayout {
@@ -225,7 +225,7 @@ Variants {
                                         text: String(parent.modelData.name || parent.modelData.idx).replace(/^d\d+-/, "")
                                         color: parent.modelData.is_active ? ThemeBackend.crust : ThemeBackend.text
                                         font.pixelSize: win.s(12)
-                                        font.weight: Font.Bold
+                                        font.weight: ThemeBackend.weightBold
                                     }
                                     MouseArea {
                                         id: wsMa
@@ -265,7 +265,7 @@ Variants {
                                 Layout.fillWidth: true
                                 text: MprisController.hasActivePlayer ? (MprisController.trackTitle || "—") : I18n.t("dashboard.nothing_playing", "Nothing playing")
                                 font.pixelSize: win.s(16)
-                                font.weight: Font.Bold
+                                font.weight: ThemeBackend.weightBold
                             }
                             Label { Layout.fillWidth: true; text: MprisController.trackArtist || ""; color: ThemeBackend.subtext1; font.pixelSize: win.s(12) }
                             Item { Layout.fillHeight: true }

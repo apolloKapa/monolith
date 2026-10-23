@@ -13,7 +13,7 @@ Item {
 
     ClickButton {
         anchors.fill: parent
-        cornerRadius: ThemeBackend.borderRadius
+        cornerRadius: ThemeBackend.pill ? Math.round(el.height / 2) : ThemeBackend.borderRadius
         horizontalPadding: Scaler.s(16)
         buttonIcon: "󰌾"
         iconFontSize: Scaler.s(15)

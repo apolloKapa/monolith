@@ -24,7 +24,7 @@ Item {
         font.pixelSize: height
         fontSizeMode: Text.Fit
         minimumPixelSize: 10
-        font.weight: Font.Black
+        font.weight: ThemeBackend.weightBlack
         color: ThemeBackend.text
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter

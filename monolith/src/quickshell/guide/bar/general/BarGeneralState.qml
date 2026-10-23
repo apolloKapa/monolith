@@ -44,6 +44,10 @@ GuideTab {
     property bool centerByEdges: barSettings.centerByEdges !== undefined ? barSettings.centerByEdges : true
     property bool autohide: barSettings.autohide !== undefined ? barSettings.autohide : false
     property int autohideTimeout: barSettings.autohideTimeout !== undefined ? barSettings.autohideTimeout : 1000
+    // spacing: between pills ("gap"), between the left/centre/right sections, and the frame's border
+    property real pillGap: barSettings.gap !== undefined ? barSettings.gap : 2
+    property real sectionGap: barSettings.sectionGap !== undefined ? barSettings.sectionGap : 10
+    property real frameThickness: barSettings.frameThickness !== undefined ? barSettings.frameThickness : 8
 
     ListModel { id: leftModel }
     ListModel { id: centerModel }
@@ -707,6 +711,9 @@ GuideTab {
         barTabRoot.centerByEdges = ts.centerByEdges !== undefined ? ts.centerByEdges : true;
         barTabRoot.autohide = ts.autohide !== undefined ? ts.autohide : false;
         barTabRoot.autohideTimeout = ts.autohideTimeout !== undefined ? ts.autohideTimeout : 1000;
+        barTabRoot.pillGap = ts.gap !== undefined ? ts.gap : 2;
+        barTabRoot.sectionGap = ts.sectionGap !== undefined ? ts.sectionGap : 10;
+        barTabRoot.frameThickness = ts.frameThickness !== undefined ? ts.frameThickness : 8;
         if (ts.groupColors) {
             barTabRoot.assignedGroupColors = ts.groupColors;
         }
@@ -743,6 +750,9 @@ GuideTab {
         current.centerByEdges = barTabRoot.centerByEdges;
         current.autohide = barTabRoot.autohide;
         current.autohideTimeout = barTabRoot.autohideTimeout;
+        current.gap = barTabRoot.pillGap;
+        current.sectionGap = barTabRoot.sectionGap;
+        current.frameThickness = barTabRoot.frameThickness;
         if (!current.modules) current.modules = barTabRoot.defaultBarSettings.modules;
         current.groupColors = barTabRoot.assignedGroupColors;
 

@@ -47,6 +47,8 @@ BarGeneralState {
 
             BarStyleSection { tab: barTabRoot }
 
+            BarSpacingSection { tab: barTabRoot }
+
             BarAutohideSection { tab: barTabRoot }
 
             BarLayoutEditor { tab: barTabRoot }

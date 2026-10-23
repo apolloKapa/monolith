@@ -57,7 +57,7 @@ SettingsBlob {
                     }
                 }
                 readonly property real cardRadius: st.square ? 0 : rootObj.s(10) * (st.radiusScale !== undefined ? st.radiusScale : 1)
-                readonly property bool seeThrough: st.opaque !== true
+                readonly property bool seeThrough: st.opaque !== true && card.modelData !== "material"
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: rootObj.s(92)

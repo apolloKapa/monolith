@@ -94,7 +94,7 @@ Popup {
                 text: typeof I18n !== "undefined" ? I18n.t("guide.general.location.popup_title") : "Location Information"
                 color: ThemeBackend.text
                 font.pixelSize: locationInfoRoot.s(16)
-                font.weight: Font.Bold
+                font.weight: ThemeBackend.weightBold
                 Layout.fillWidth: true
             }
             CloseButton {

@@ -365,7 +365,7 @@ Item {
                             height: parent.height
                             text: myButtonText
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: window.s(12)
                             color: dynamicTextColor
                             marqueeSpacing: window.s(30)
@@ -427,7 +427,7 @@ Item {
                                             Text {
                                                 text: myButtonText
                                                 font.family: ThemeBackend.fontFamily
-                                                font.weight: Font.Bold
+                                                font.weight: ThemeBackend.weightBold
                                                 font.pixelSize: window.s(12)
                                                 color: floatCardDelegateContainer.filledContentColor
                                             }
@@ -435,7 +435,7 @@ Item {
                                             Text {
                                                 text: myButtonText
                                                 font.family: ThemeBackend.fontFamily
-                                                font.weight: Font.Bold
+                                                font.weight: ThemeBackend.weightBold
                                                 font.pixelSize: window.s(12)
                                                 color: floatCardDelegateContainer.filledContentColor
                                                 visible: marqueeClip.canMarquee

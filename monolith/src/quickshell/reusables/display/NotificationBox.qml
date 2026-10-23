@@ -32,7 +32,7 @@ Item {
     property string titleText: I18n.t("syspanel.notifications.title")
 
     property bool dndEnabled: Boolean(Config.rawSettings && Config.rawSettings.notifications && Config.rawSettings.notifications.dnd)
-    readonly property bool showEmptyGraphic: (Config.rawSettings && Config.rawSettings.notifications && Config.rawSettings.notifications.showEmptyGraphic !== undefined) ? Boolean(Config.rawSettings.notifications.showEmptyGraphic) : true
+    readonly property bool showEmptyGraphic: !ThemeBackend.material && ((Config.rawSettings && Config.rawSettings.notifications && Config.rawSettings.notifications.showEmptyGraphic !== undefined) ? Boolean(Config.rawSettings.notifications.showEmptyGraphic) : true)
 
     property bool isClearingNotifs: false
 
@@ -166,7 +166,8 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: root.contentMargins
+        // never less than the curve of the box's corners, so cards can't poke out of them
+        anchors.margins: Math.max(root.contentMargins, ThemeBackend.rad(root.cornerRadius) * 0.32)
         spacing: root.s(8)
 
         RowLayout {
@@ -181,8 +182,8 @@ Item {
                 horizontalAlignment: I18n.textAlignment
                 text: root.titleText
                 font.family: ThemeBackend.fontFamily
-                font.weight: Font.Bold
-                font.pixelSize: root.s(12)
+                font.weight: ThemeBackend.material ? Font.Medium : Font.Bold
+                font.pixelSize: ThemeBackend.material ? root.s(15) : root.s(12)
                 color: ThemeBackend.liquidGlass ? ThemeBackend.text : ThemeBackend.subtext0
             }
 
@@ -193,12 +194,12 @@ Item {
                 Layout.preferredWidth: root.s(80)
                 Layout.preferredHeight: root.s(32)
                 horizontalPadding: root.s(10)
-                cornerRadius: ThemeBackend.rad(root.s(10))
+                cornerRadius: ThemeBackend.pill ? height / 2 : ThemeBackend.rad(root.s(10))
                 buttonText: I18n.t("syspanel.notifications.clear")
                 textFontSize: root.s(11)
                 buttonIcon: "󰅖"
                 iconFontSize: root.s(14)
-                accentColor: ThemeBackend.surface1
+                accentColor: ThemeBackend.material ? ThemeBackend.surfaceContainerHighest : ThemeBackend.surface1
                 textColor: ThemeBackend.text
                 visible: NotificationManager.groupedHistory && NotificationManager.groupedHistory.count > 0
                 enabled: !root.isClearingNotifs
@@ -213,12 +214,12 @@ Item {
                 Layout.preferredWidth: root.s(86)
                 Layout.preferredHeight: root.s(32)
                 horizontalPadding: root.s(10)
-                cornerRadius: ThemeBackend.rad(root.s(10))
+                cornerRadius: ThemeBackend.pill ? height / 2 : ThemeBackend.rad(root.s(10))
                 buttonText: root.dndEnabled ? I18n.t("syspanel.notifications.silent") : I18n.t("syspanel.notifications.mute")
                 textFontSize: root.s(11)
                 buttonIcon: root.dndEnabled ? "󰂛" : "󰂚"
                 iconFontSize: root.s(14)
-                accentColor: root.dndEnabled ? ThemeBackend.blue : ThemeBackend.surface1
+                accentColor: root.dndEnabled ? ThemeBackend.blue : (ThemeBackend.material ? ThemeBackend.surfaceContainerHighest : ThemeBackend.surface1)
                 textColor: root.dndEnabled ? ThemeBackend.crust : ThemeBackend.text
 
                 onTriggered: {
@@ -785,7 +786,7 @@ Item {
                                                 Text {
                                                     text: displayName
                                                     font.family: ThemeBackend.fontFamily
-                                                    font.weight: Font.Bold
+                                                    font.weight: ThemeBackend.weightBold
                                                     font.pixelSize: root.s(13)
                                                     color: ThemeBackend.text
                                                     elide: Text.ElideRight
@@ -873,7 +874,7 @@ Item {
                                                     anchors.centerIn: parent
                                                     text: groupWrapper.memberCount
                                                     font.family: ThemeBackend.fontFamily
-                                                    font.weight: Font.Bold
+                                                    font.weight: ThemeBackend.weightBold
                                                     font.pixelSize: root.s(12)
                                                     color: ThemeBackend.text
                                                 }

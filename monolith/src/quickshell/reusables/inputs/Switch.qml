@@ -22,7 +22,11 @@ Item {
     // inner corners of the selection: square-ish segments normally, but liquid glass draws the
     // selection as a floating pill, where small inner corners looked square (and visibly
     // rounded up when picking an end option)
-    readonly property int innerRadius: ThemeBackend.liquidGlass ? cornerRadius : smallRadius
+    // Material: the whole switch is a pill and the selection a smaller pill floating inside it
+    readonly property real pillInset: ThemeBackend.pill ? 3 : 0
+    readonly property real outerRadius: ThemeBackend.pill ? height / 2 : cornerRadius
+    readonly property real innerRadius: ThemeBackend.pill ? Math.max(0, height / 2 - pillInset) : (ThemeBackend.liquidGlass ? cornerRadius : smallRadius)
+    readonly property real endRadius: ThemeBackend.pill ? innerRadius : cornerRadius
     property int fontPixelSize: 11
     property int minFontPixelSize: 7
     property bool enabled: true
@@ -118,7 +122,7 @@ Item {
     Rectangle {
         id: bgShape
         anchors.fill: parent
-        radius: ThemeBackend.rad(root.cornerRadius)
+        radius: ThemeBackend.rad(root.outerRadius)
         color: ThemeBackend.liquidGlass ? "transparent" : root.withBgOpacity(root.baseColor)
         clip: !baseGlass.active
         opacity: root.enabled ? 1.0 : 0.5
@@ -132,7 +136,7 @@ Item {
         GlassFill {
             id: baseGlass
             anchors.fill: parent
-            radius: ThemeBackend.rad(root.cornerRadius)
+            radius: ThemeBackend.rad(root.outerRadius)
             tintColor: root.baseColor
             tintAmount: 0.22 * root.bgOpacity
         }
@@ -167,16 +171,16 @@ Item {
             Behavior on actualLeft { NumberAnimation { id: leftAnim; duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
             Behavior on actualRight { NumberAnimation { id: rightAnim; duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutExpo } }
 
-            y: 0
-            height: bgShape.height
-            x: actualLeft
-            width: Math.max(0, actualRight - actualLeft)
+            y: root.pillInset
+            height: bgShape.height - root.pillInset * 2
+            x: actualLeft + root.pillInset
+            width: Math.max(0, actualRight - actualLeft - root.pillInset * 2)
             z: highlightGlass.active ? 2 : 0
 
-            topLeftRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.innerRadius)
-            bottomLeftRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.cornerRadius : root.innerRadius)
-            topRightRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.innerRadius)
-            bottomRightRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.cornerRadius : root.innerRadius)
+            topLeftRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.endRadius : root.innerRadius)
+            bottomLeftRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === 0 : root.currentIndex === root.options.length - 1) ? root.endRadius : root.innerRadius)
+            topRightRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.endRadius : root.innerRadius)
+            bottomRightRadius: ThemeBackend.rad((!I18n.rtl ? root.currentIndex === root.options.length - 1 : root.currentIndex === 0) ? root.endRadius : root.innerRadius)
 
             Behavior on topLeftRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
             Behavior on bottomLeftRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -241,10 +245,10 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        topLeftRadius: ThemeBackend.rad(optionItem.index === 0 ? root.cornerRadius : root.innerRadius)
-                        bottomLeftRadius: ThemeBackend.rad(optionItem.index === 0 ? root.cornerRadius : root.innerRadius)
-                        topRightRadius: ThemeBackend.rad(optionItem.index === root.options.length - 1 ? root.cornerRadius : root.innerRadius)
-                        bottomRightRadius: ThemeBackend.rad(optionItem.index === root.options.length - 1 ? root.cornerRadius : root.innerRadius)
+                        topLeftRadius: ThemeBackend.rad(optionItem.index === 0 ? root.outerRadius : root.innerRadius)
+                        bottomLeftRadius: ThemeBackend.rad(optionItem.index === 0 ? root.outerRadius : root.innerRadius)
+                        topRightRadius: ThemeBackend.rad(optionItem.index === root.options.length - 1 ? root.outerRadius : root.innerRadius)
+                        bottomRightRadius: ThemeBackend.rad(optionItem.index === root.options.length - 1 ? root.outerRadius : root.innerRadius)
                         color: (root.currentIndex === optionItem.index || optionGlass.active) ? "transparent" : (optionMa.containsMouse ? "#1affffff" : "transparent")
                         Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
 
@@ -271,7 +275,7 @@ Item {
                         verticalAlignment: Text.AlignVCenter
                         text: optionItem.modelData
                         font.family: ThemeBackend.fontFamily
-                        font.weight: Font.Normal
+                        font.weight: ThemeBackend.material ? Font.Medium : Font.Normal
                         font.pixelSize: root.fontPixelSize
                         fontSizeMode: Text.Fit
                         minimumPixelSize: root.minFontPixelSize
@@ -308,7 +312,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: ThemeBackend.rad(root.cornerRadius)
+            radius: ThemeBackend.rad(root.outerRadius)
             color: "#ffffff"
             opacity: root.flashOpacity
             visible: !baseGlass.active

@@ -38,7 +38,7 @@ GuideTab {
     property string timeStyle: {
         let bs = Config.getSetting("bar", {});
         if (bs && bs.timeStyle) return bs.timeStyle;
-        return "classic";
+        return "google";
     }
 
     property bool timeShowDate: {
@@ -256,7 +256,7 @@ GuideTab {
         if (bs && bs.timeStyle) {
             barModulesRoot.timeStyle = bs.timeStyle;
         } else {
-            barModulesRoot.timeStyle = "classic";
+            barModulesRoot.timeStyle = "google";
         }
 
         if (bs && bs.timeShowDate !== undefined) {

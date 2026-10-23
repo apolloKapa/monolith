@@ -12,7 +12,7 @@ GuideTab {
         "borderRadius": ThemeBackend.borderRadius,
         "elementOpacity": 100,
         "blurBackground": false,
-        "blurStyle": "blur",
+        "blurStyle": "material",
         "activePreset": "Matugen",
         "matugen": true,
         "colors": {}
@@ -27,7 +27,7 @@ GuideTab {
     property string currentFontFamily: themeSettings.fontFamily !== undefined ? themeSettings.fontFamily : ThemeBackend.fontFamily
     property int currentBorderRadius: themeSettings.borderRadius !== undefined ? themeSettings.borderRadius : ThemeBackend.borderRadius
     property int currentElementOpacity: themeSettings.elementOpacity !== undefined ? Number(themeSettings.elementOpacity) : 100
-    property string currentBlurStyle: ThemeBackend.styles[themeSettings.blurStyle] ? themeSettings.blurStyle : "blur"
+    property string currentBlurStyle: ThemeBackend.styles[themeSettings.blurStyle] ? themeSettings.blurStyle : "material"
     property bool currentBlurBackground: themeSettings.blurBackground !== undefined ? Boolean(themeSettings.blurBackground) : false
     property string currentPreset: themeSettings.activePreset !== undefined ? themeSettings.activePreset : "Matugen"
     property bool useMatugen: themeSettings.matugen !== undefined ? themeSettings.matugen : true
@@ -506,7 +506,7 @@ GuideTab {
             themeTabRoot.currentBorderRadius = ts.borderRadius !== undefined ? ts.borderRadius : ThemeBackend.borderRadius;
             themeTabRoot.currentElementOpacity = ts.elementOpacity !== undefined ? Number(ts.elementOpacity) : 100;
             themeTabRoot.currentBlurBackground = ts.blurBackground !== undefined ? Boolean(ts.blurBackground) : false;
-            themeTabRoot.currentBlurStyle = ThemeBackend.styles[ts.blurStyle] ? ts.blurStyle : "blur";
+            themeTabRoot.currentBlurStyle = ThemeBackend.styles[ts.blurStyle] ? ts.blurStyle : "material";
             themeTabRoot.currentPreset = ts.activePreset !== undefined ? ts.activePreset : "Matugen";
             themeTabRoot.useMatugen = ts.matugen !== undefined ? ts.matugen : true;
             themeTabRoot.themeSettings = ts;
@@ -573,6 +573,14 @@ GuideTab {
         if (st.font) themeTabRoot.currentFontFamily = st.font;
         let colors = st.colors || (id === "minimalist" ? ThemeBackend.minimalistColors : null);
         if (colors) themeTabRoot.applyPreset({ "name": st.name, "colors": colors });
+        // Material takes its colours from the wallpaper, and the bar gets its Google faces
+        else if (st.matugen) {
+            themeTabRoot.applyPreset({ "name": "Matugen", "isMatugen": true });
+            let bar = Config.getSetting("bar", {});
+            bar.timeStyle = "google";
+            bar.workspacesStyle = "pills";
+            Config.setSetting("bar", bar);
+        }
         ThemeBackend.reloadColors();
     }
 

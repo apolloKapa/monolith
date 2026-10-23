@@ -87,7 +87,7 @@ Item {
                 text: Weather.currentTemp !== "" ? Math.round(parseFloat(Weather.currentTemp)) + "°" : "--°"
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: Math.min(parent.width, parent.height) * 0.45
-                font.weight: Font.Black
+                font.weight: ThemeBackend.weightBlack
                 color: ThemeBackend.text
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

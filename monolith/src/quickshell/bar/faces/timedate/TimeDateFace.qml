@@ -36,7 +36,7 @@ Item {
         if (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar) {
             if (Config.rawSettings.bar.timeStyle) return Config.rawSettings.bar.timeStyle;
         }
-        return "classic";
+        return "google";
     }
 
     property bool showDate: {

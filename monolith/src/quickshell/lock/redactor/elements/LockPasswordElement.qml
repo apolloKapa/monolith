@@ -28,7 +28,7 @@ Item {
         subTextColor: ThemeBackend.subtext0
         errorColor: ThemeBackend.red
         busyColor: ThemeBackend.peach
-        cornerRadius: ThemeBackend.borderRadius
+        cornerRadius: ThemeBackend.pill ? Math.round(el.height / 2) : ThemeBackend.borderRadius
         horizontalPadding: Scaler.s(12)
         fontFamily: ThemeBackend.fontFamily
         fontPixelSize: Scaler.s(14)

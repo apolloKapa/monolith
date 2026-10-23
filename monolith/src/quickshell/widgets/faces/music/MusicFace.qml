@@ -207,7 +207,7 @@ Item {
                     text: root.isMediaActive ? (MprisController.trackTitle || "Unknown Track") : I18n.t("music.nothing_playing")
                     color: ThemeBackend.text
                     font.family: ThemeBackend.fontFamily
-                    font.weight: Font.Black
+                    font.weight: ThemeBackend.weightBlack
                     font.pixelSize: root.titleSize
                     marqueeSpacing: 30
                     active: root.isMediaActive
@@ -296,7 +296,7 @@ Item {
                         Text {
                             text: root.isMediaActive && root.player ? root.formatTime(MprisController.livePosition) : "--:--"
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: Math.max(7, root.subSize * 0.85)
                             color: ThemeBackend.subtext0
                             verticalAlignment: Text.AlignVCenter
@@ -346,7 +346,7 @@ Item {
                         Text {
                             text: root.isMediaActive && root.player ? root.formatTime(root.player.length) : "--:--"
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: Math.max(7, root.subSize * 0.85)
                             color: ThemeBackend.subtext0
                             verticalAlignment: Text.AlignVCenter

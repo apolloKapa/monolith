@@ -357,7 +357,7 @@ Item {
                     text: widget ? widget.monthStr : (typeof DateTime !== "undefined" ? DateTime.monthShort : "Sep")
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: widget ? widget.s(widget.isCompact ? 7.5 : 8.5) : 8.5
-                    font.weight: Font.Black
+                    font.weight: ThemeBackend.weightBlack
                     font.bold: true
                     font.capitalization: Font.AllUppercase
                     font.letterSpacing: 0.5

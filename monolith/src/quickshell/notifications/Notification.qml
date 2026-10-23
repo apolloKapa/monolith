@@ -387,7 +387,7 @@ Rectangle {
     TextMetrics {
         id: collapsedSummaryMetrics
         font.family: ThemeBackend.fontFamily
-        font.weight: Font.Bold
+        font.weight: ThemeBackend.weightBold
         font.pixelSize: typeRoot.isPopup ? s(13) : s(12)
         text: typeRoot.fullSummary
     }
@@ -417,11 +417,13 @@ Rectangle {
     Rectangle {
         id: visualItem
         anchors.fill: parent
-        radius: ThemeBackend.borderRadius
+        radius: ThemeBackend.material ? s(20) : ThemeBackend.borderRadius
         clip: true
         implicitHeight: cardContent.implicitHeight + s(20)
 
-        property color baseColor: typeRoot.readState === false ? Qt.lighter(ThemeBackend.surface1, 1.05) : ThemeBackend.surface1
+        property color baseColor: ThemeBackend.material
+            ? (typeRoot.readState === false ? ThemeBackend.surfaceContainerHighest : ThemeBackend.surfaceContainerHigh)
+            : (typeRoot.readState === false ? Qt.lighter(ThemeBackend.surface1, 1.05) : ThemeBackend.surface1)
         color: ThemeBackend.faded((cardHover.pressed && !cardHover.draggingH && !cardHover.draggingV) ? Qt.darker(baseColor, 1.1) : (cardHover.containsMouse && !cardHover.draggingH && !cardHover.draggingV ? Qt.lighter(baseColor, 1.05) : baseColor))
 
         scale: (cardHover.pressed && !cardHover.draggingH && !cardHover.draggingV) ? 0.98 : 1.0
@@ -435,13 +437,15 @@ Rectangle {
             useSnapshot: !!(typeRoot.root && typeRoot.root.glassScreen)
         }
 
-        // Monolith's spine down the left edge: accent, or red for urgent notifications
+        // the unread/urgent spine down the left edge (not in Material, where cards stay clean).
+        // Kept clear of the rounded corners so it never pokes out of the card.
         Rectangle {
             z: 5
-            x: s(5)
+            visible: !ThemeBackend.material && height > s(6)
+            x: Math.max(s(5), visualItem.radius * 0.3)
             anchors.verticalCenter: parent.verticalCenter
             width: s(3)
-            height: Math.max(s(16), parent.height - s(22))
+            height: Math.min(parent.height - s(22), parent.height - visualItem.radius * 2)
             radius: ThemeBackend.rad(width / 2)
             color: typeRoot.urgency === 2 ? ThemeBackend.red : ThemeBackend.mauve
             opacity: typeRoot.readState === false ? 1.0 : 0.45
@@ -658,7 +662,7 @@ Rectangle {
                             horizontalAlignment: I18n.textAlignment
                             text: typeRoot.fullSummary
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: typeRoot.isPopup ? s(13) : s(12)
                             color: ThemeBackend.text
                             elide: Text.ElideRight
@@ -709,7 +713,7 @@ Rectangle {
                                 horizontalAlignment: I18n.textAlignment
                                 text: typeRoot.summaryPrefix
                                 font.family: ThemeBackend.fontFamily
-                                font.weight: Font.Bold
+                                font.weight: ThemeBackend.weightBold
                                 font.pixelSize: typeRoot.isPopup ? s(13) : s(12)
                                 color: ThemeBackend.text
                                 elide: Text.ElideRight
@@ -724,7 +728,7 @@ Rectangle {
                                 Text {
                                     text: typeRoot.summaryLastWord
                                     font.family: ThemeBackend.fontFamily
-                                    font.weight: Font.Bold
+                                    font.weight: ThemeBackend.weightBold
                                     font.pixelSize: typeRoot.isPopup ? s(13) : s(12)
                                     color: ThemeBackend.text
                                     visible: typeRoot.summaryLastWord !== ""
@@ -782,7 +786,7 @@ Rectangle {
                             horizontalAlignment: I18n.textAlignment
                             text: typeRoot.fullSummary
                             font.family: ThemeBackend.fontFamily
-                            font.weight: Font.Bold
+                            font.weight: ThemeBackend.weightBold
                             font.pixelSize: typeRoot.isPopup ? s(13) : s(12)
                             color: ThemeBackend.text
                             wrapMode: Text.Wrap

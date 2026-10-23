@@ -374,7 +374,7 @@ Item {
                             Layout.alignment: Qt.AlignHCenter
                             Layout.maximumWidth: window.s(130) - (window.s(40) * coreContainer.multiShift)
                             horizontalAlignment: Text.AlignHCenter
-                            font.family: ThemeBackend.fontFamily; font.weight: Font.Black
+                            font.family: ThemeBackend.fontFamily; font.weight: ThemeBackend.weightBlack
                             font.pixelSize: window.s(14) - (window.s(3) * coreContainer.multiShift)
                             color: isMyDisconnecting ? ThemeBackend.overlay1 : (coreGlass.active ? ThemeBackend.text : ThemeBackend.crust)
                             text: coreContainer.myDevice ? (window.activeMode === "wifi" ? (coreContainer.myDevice.ssid || "") : (coreContainer.myDevice.name || "")) : ""
@@ -420,7 +420,7 @@ Item {
                                 Layout.alignment: Qt.AlignHCenter
                                 Layout.maximumWidth: window.s(130) - (window.s(40) * coreContainer.multiShift)
                                 horizontalAlignment: Text.AlignHCenter
-                                font.family: ThemeBackend.fontFamily; font.weight: Font.Black
+                                font.family: ThemeBackend.fontFamily; font.weight: ThemeBackend.weightBlack
                                 font.pixelSize: window.s(14) - (window.s(3) * coreContainer.multiShift)
                                 color: ThemeBackend.text
                                 text: coreContainer.myDevice ? (window.activeMode === "wifi" ? (coreContainer.myDevice.ssid || "") : (coreContainer.myDevice.name || "")) : ""
