@@ -214,6 +214,8 @@ PanelWindow {
         "showRail": true,
         "gridView": false,
         "gridColumns": 5,
+        "favColumns": 4,
+        "appOrder": [],
         "showDescriptions": true,
         "webSearch": true
     })
@@ -244,7 +246,54 @@ PanelWindow {
     property bool webSearch: !(rawLauncherSettings && rawLauncherSettings.webSearch === false)
     // apps show as a grid (only the Applications tab; files stay a list)
     readonly property bool appGridActive: gridView && currentTabIndex === 0
-    readonly property real railW: showRail ? s(52) : 0
+    // the favourites pane: the left part of the launcher, a grid of pinned apps under the tabs
+    property int favColumns: (rawLauncherSettings && Number(rawLauncherSettings.favColumns) >= 2) ? Math.min(6, Number(rawLauncherSettings.favColumns)) : 4
+    property var appOrder: (rawLauncherSettings && Array.isArray(rawLauncherSettings.appOrder)) ? rawLauncherSettings.appOrder : []
+    readonly property real railW: showRail ? Math.round(s(customWidth) * 0.72) : 0
+    readonly property real favCellH: s(86)
+    readonly property int favRows: Math.max(1, Math.ceil(favoriteApps.length / favColumns))
+
+    function saveLauncher(patch) {
+        let cur = JSON.parse(JSON.stringify(Config.getSetting("launcher", defaultLauncherSettings) || {}));
+        for (let k in patch) cur[k] = patch[k];
+        Config.setSetting("launcher", cur);
+    }
+    // move a favourite from one slot to another (dragging in the grid)
+    function moveFavorite(from, to) {
+        let favs = favorites.slice();
+        if (from < 0 || from >= favs.length) return;
+        to = Math.max(0, Math.min(favs.length - 1, to));
+        if (from === to) return;
+        let it = favs.splice(from, 1)[0];
+        favs.splice(to, 0, it);
+        saveLauncher({ "favorites": favs });
+    }
+    // pin an app at a slot (dragging a list row onto the grid)
+    function pinAt(desktopId, slot) {
+        if (!desktopId) return;
+        let favs = favorites.slice();
+        let i = favs.indexOf(desktopId);
+        if (i !== -1) favs.splice(i, 1);
+        slot = Math.max(0, Math.min(favs.length, slot));
+        favs.splice(slot, 0, desktopId);
+        saveLauncher({ "favorites": favs });
+    }
+    // reorder the list (dragging a row); the order is kept for the unfiltered list
+    function moveListItem(from, to) {
+        if (from < 0 || from >= appModel.count) return;
+        to = Math.max(0, Math.min(appModel.count - 1, to));
+        if (from === to) return;
+        appModel.move(from, to, 1);
+        let order = [];
+        for (let i = 0; i < appModel.count; i++) {
+            let id = appModel.get(i).desktop_id;
+            if (id) order.push(id);
+        }
+        // keep the place of apps not shown right now (the pinned ones)
+        for (let j = 0; j < appOrder.length; j++) if (order.indexOf(appOrder[j]) === -1) order.push(appOrder[j]);
+        appList.currentIndex = to;
+        saveLauncher({ "appOrder": order });
+    }
 
     function isFavorite(desktopId) {
         return desktopId !== "" && favorites.indexOf(desktopId) !== -1;
@@ -385,14 +434,14 @@ PanelWindow {
     property real cornerRadius: ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 2 : Math.min(32, 32 - 16 * Math.exp(-(ThemeBackend.borderRadius - 16) / 12))
     property real outerCornerRadius: cornerRadius
 
-    property real baseLauncherWidth: s(customWidth)
+    property real baseLauncherWidth: s(customWidth) + (showRail ? railW + s(13) : 0)
     property real collapsedCenterHeight: s(110)
 
     readonly property real gridCellH: s(92)
-    readonly property real railMinH: showRail ? (3 * s(44) + s(17) + favoriteApps.length * s(44)) : 0
+    readonly property real railMinH: showRail ? (s(28) + s(10) + favRows * favCellH) : 0
     property real targetLauncherHeight: {
         let headerH = s(36) + (showRail ? 0 : s(28) + s(8)) + s(28);
-        let listMin = railMinH > 0 ? headerH + s(8) + railMinH : 0;
+        let listMin = railMinH > 0 ? s(36) + s(8) + railMinH + s(28) : 0;
         if (appGridActive) {
             let rows = Math.ceil(appModel.count / gridColumns);
             let shown = Math.min(rows, Math.max(2, Math.round(customItemCount * s(48) / gridCellH)));
@@ -1104,10 +1153,29 @@ PanelWindow {
                 }
                 return a.name.localeCompare(b.name);
             });
+        } else {
+            // the plain list: the rest of the apps (favourites live in their grid), in the
+            // order you dragged them into; apps never moved keep their place after those
+            if (launcherWindow.showRail) filtered = filtered.filter(it => !launcherWindow.isFavorite(it.desktop_id || ""));
+            let order = launcherWindow.appOrder;
+            if (order.length > 0) {
+                let pos = {};
+                for (let i = 0; i < order.length; i++) pos[order[i]] = i;
+                let idx = filtered.map((it, i) => ({ it: it, i: i }));
+                idx.sort((a, b) => {
+                    let pa = pos[a.it.desktop_id], pb = pos[b.it.desktop_id];
+                    if (pa !== undefined && pb !== undefined) return pa - pb;
+                    if (pa !== undefined) return -1;
+                    if (pb !== undefined) return 1;
+                    return a.i - b.i;
+                });
+                filtered = idx.map(x => x.it);
+            }
         }
 
         applyModelItems(filtered);
     }
+    onFavoritesChanged: if (launcherWindow.currentTabIndex === 0 && searchInput.text.trim() === "") filterApps("")
 
     function activateIndex(index) {
         if (index < 0 || index >= appModel.count) return;
@@ -1557,13 +1625,14 @@ PanelWindow {
                 Switch {
                     id: tabSwitch
                     z: 10
-                    visible: !launcherWindow.showRail
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    y: contentContainer.isSearchAtBottom
-                       ? (searchInput.y - height - (launcherWindow.showRail ? 0 : launcherWindow.s(8)))
-                       : (searchInput.y + searchInput.height + (launcherWindow.showRail ? 0 : launcherWindow.s(8)))
-                    height: launcherWindow.showRail ? 0 : launcherWindow.s(28)
+                    x: 0
+                    width: launcherWindow.showRail ? launcherWindow.railW : parent.width
+                    y: launcherWindow.showRail
+                       ? (contentContainer.isSearchAtBottom ? listContainer.y + listContainer.height - height : listContainer.y)
+                       : (contentContainer.isSearchAtBottom
+                          ? (searchInput.y - height - launcherWindow.s(8))
+                          : (searchInput.y + searchInput.height + launcherWindow.s(8)))
+                    height: launcherWindow.s(28)
                     cornerRadius: ThemeBackend.borderRadius
                     fontPixelSize: launcherWindow.s(11)
                     baseColor: ThemeBackend.surface0
@@ -1581,122 +1650,260 @@ PanelWindow {
                     }
                 }
 
-                // the rail: tabs on top, a line, then favourite apps (right-click an app to pin it)
+                // the favourites pane: under the tabs, a grid of pinned apps. Drag tiles to reorder;
+                // drag a row from the list onto it to pin; right-click a tile to unpin.
                 Item {
-                    id: rail
+                    id: favPane
                     visible: launcherWindow.showRail
                     x: 0
-                    y: listContainer.y
+                    y: contentContainer.isSearchAtBottom ? listContainer.y : tabSwitch.y + tabSwitch.height + launcherWindow.s(10)
                     width: launcherWindow.railW
-                    height: listContainer.height
+                    height: contentContainer.isSearchAtBottom ? tabSwitch.y - launcherWindow.s(10) - y : listContainer.y + listContainer.height - y
+                    clip: true
 
-                    component RailButton: Rectangle {
-                        id: rb
-                        property bool selected: false
-                        property string glyph: ""
-                        property string image: ""
-                        signal activated()
-                        signal secondary()
-                        width: launcherWindow.railW
-                        height: launcherWindow.s(40)
-                        radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
-                        color: selected ? (ThemeBackend.material ? ThemeBackend.secondaryContainer : Qt.alpha(ThemeBackend.mauve, 0.18))
-                                        : (rbMa.containsMouse ? Qt.alpha(ThemeBackend.surface1, 0.7) : "transparent")
-                        Behavior on color { ColorAnimation { duration: (140) * ThemeBackend.animScale } }
-                        Text {
-                            anchors.centerIn: parent
-                            visible: rb.image === ""
-                            text: rb.glyph
-                            font.family: ThemeBackend.iconFont
-                            font.pixelSize: launcherWindow.s(18)
-                            color: rb.selected ? (ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.mauve) : ThemeBackend.subtext0
+                    readonly property real cellW: width / launcherWindow.favColumns
+                    property int dragFrom: -1
+                    property int dragTo: -1
+                    // a list row being dragged over the pane: where it would land
+                    property int dropSlot: -1
+
+                    function slotAt(px, py) {
+                        let col = Math.max(0, Math.min(launcherWindow.favColumns - 1, Math.floor(px / cellW)));
+                        let row = Math.max(0, Math.floor((py + favFlick.contentY) / launcherWindow.favCellH));
+                        return row * launcherWindow.favColumns + col;
+                    }
+                    // where tile i sits while something is dragged
+                    function shownSlot(i) {
+                        if (dragFrom >= 0 && dragTo >= 0) {
+                            if (i === dragFrom) return dragTo;
+                            if (dragFrom < dragTo && i > dragFrom && i <= dragTo) return i - 1;
+                            if (dragFrom > dragTo && i >= dragTo && i < dragFrom) return i + 1;
                         }
-                        Image {
-                            anchors.centerIn: parent
-                            visible: rb.image !== ""
-                            width: launcherWindow.s(26)
-                            height: width
-                            source: rb.image
-                            sourceSize: Qt.size(64, 64)
-                            asynchronous: true
-                            smooth: true
-                            mipmap: true
-                        }
-                        MouseArea {
-                            id: rbMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: (mouse) => mouse.button === Qt.RightButton ? rb.secondary() : rb.activated()
-                        }
+                        if (dropSlot >= 0 && i >= dropSlot) return i + 1;
+                        return i;
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        width: parent.width - launcherWindow.s(24)
+                        visible: launcherWindow.favoriteApps.length === 0
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                        text: I18n.t("applauncher.favorites_empty", "Drag apps here, or right-click one, to pin it")
+                        font.family: ThemeBackend.fontFamily
+                        font.pixelSize: launcherWindow.s(12)
+                        color: ThemeBackend.subtext0
                     }
 
                     Flickable {
+                        id: favFlick
                         anchors.fill: parent
-                        contentHeight: railCol.implicitHeight
-                        clip: true
+                        contentHeight: (launcherWindow.favRows + (favPane.dropSlot >= 0 ? 1 : 0)) * launcherWindow.favCellH
                         boundsBehavior: Flickable.StopAtBounds
+                        interactive: favPane.dragFrom < 0
 
-                        Column {
-                            id: railCol
-                            width: parent.width
-                            spacing: launcherWindow.s(4)
+                        Repeater {
+                            model: launcherWindow.favoriteApps
+                            delegate: Item {
+                                id: favTile
+                                required property var modelData
+                                required property int index
+                                readonly property int slot: favPane.shownSlot(index)
+                                readonly property bool dragging: favPane.dragFrom === index
+                                width: favPane.cellW
+                                height: launcherWindow.favCellH
+                                x: dragging ? favDragX : (slot % launcherWindow.favColumns) * favPane.cellW
+                                y: dragging ? favDragY : Math.floor(slot / launcherWindow.favColumns) * launcherWindow.favCellH
+                                z: dragging ? 10 : 1
+                                property real favDragX: 0
+                                property real favDragY: 0
+                                Behavior on x { enabled: !favTile.dragging; NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+                                Behavior on y { enabled: !favTile.dragging; NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
-                            Repeater {
-                                model: [
-                                    { glyph: "󰀻", tab: 0 },
-                                    { glyph: "󰉋", tab: 1 },
-                                    { glyph: "󰞅", tab: 2 }
-                                ]
-                                delegate: RailButton {
-                                    required property var modelData
-                                    glyph: modelData.glyph
-                                    selected: launcherWindow.currentTabIndex === modelData.tab
-                                    onActivated: {
-                                        launcherWindow.currentTabIndex = modelData.tab;
-                                        launcherWindow.grabInputFocus();
-                                    }
-                                }
-                            }
-
-                            Item {
-                                width: parent.width
-                                height: launcherWindow.s(9)
-                                visible: launcherWindow.favoriteApps.length > 0
                                 Rectangle {
-                                    anchors.centerIn: parent
-                                    width: parent.width * 0.55
-                                    height: 1
-                                    color: Qt.alpha(ThemeBackend.text, 0.15)
+                                    anchors.fill: parent
+                                    anchors.margins: launcherWindow.s(3)
+                                    radius: ThemeBackend.pill ? launcherWindow.s(22) : ThemeBackend.borderRadius
+                                    color: favTile.dragging ? (ThemeBackend.material ? ThemeBackend.secondaryContainer : ThemeBackend.surface1)
+                                                            : (favMa.containsMouse ? Qt.alpha(ThemeBackend.text, 0.07) : "transparent")
+                                    scale: favTile.dragging ? 1.06 : 1.0
+                                    Behavior on scale { NumberAnimation { duration: (120) * ThemeBackend.animScale } }
                                 }
-                            }
 
-                            Repeater {
-                                model: launcherWindow.favoriteApps
-                                delegate: RailButton {
-                                    required property var modelData
-                                    image: modelData.fontIcon ? "" : launcherWindow.iconUrl(modelData.icon)
-                                    glyph: modelData.fontIcon || "󰵆"
-                                    onActivated: {
-                                        if (String(modelData.desktop_id).startsWith("qs-widget-")) launcherWindow.launchWidget(modelData.name, String(modelData.desktop_id).substring(10));
-                                        else launcherWindow.launchApp(modelData.name, modelData.desktop_id);
+                                Column {
+                                    anchors.centerIn: parent
+                                    width: parent.width - launcherWindow.s(8)
+                                    spacing: launcherWindow.s(5)
+                                    Item {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        width: launcherWindow.s(40)
+                                        height: width
+                                        Image {
+                                            id: favIcon
+                                            anchors.fill: parent
+                                            visible: !favTile.modelData.fontIcon && status === Image.Ready
+                                            source: favTile.modelData.fontIcon ? "" : launcherWindow.iconUrl(favTile.modelData.icon || "")
+                                            sourceSize: Qt.size(96, 96)
+                                            asynchronous: true
+                                            smooth: true
+                                            mipmap: true
+                                        }
+                                        Text {
+                                            anchors.centerIn: parent
+                                            visible: !favIcon.visible
+                                            text: favTile.modelData.fontIcon || "󰵆"
+                                            font.family: ThemeBackend.iconFont
+                                            font.pixelSize: launcherWindow.s(24)
+                                            color: ThemeBackend.subtext0
+                                        }
                                     }
-                                    onSecondary: launcherWindow.toggleFavorite(modelData.desktop_id)
+                                    Text {
+                                        width: parent.width
+                                        horizontalAlignment: Text.AlignHCenter
+                                        text: favTile.modelData.name
+                                        elide: Text.ElideRight
+                                        font.family: ThemeBackend.fontFamily
+                                        font.pixelSize: launcherWindow.s(11)
+                                        color: ThemeBackend.text
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: favMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    preventStealing: true
+                                    cursorShape: favTile.dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+                                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                    property point pressAt
+                                    property point grabOffset
+                                    property bool dragged: false
+                                    onPressed: (mouse) => {
+                                        dragged = false;
+                                        pressAt = mapToItem(favPane, mouse.x, mouse.y);
+                                        grabOffset = Qt.point(mouse.x, mouse.y);
+                                    }
+                                    onPositionChanged: (mouse) => {
+                                        if (!pressed || !(mouse.buttons & Qt.LeftButton)) return;
+                                        let p = mapToItem(favPane, mouse.x, mouse.y);
+                                        if (favPane.dragFrom < 0 && Math.abs(p.x - pressAt.x) + Math.abs(p.y - pressAt.y) > launcherWindow.s(8)) {
+                                            dragged = true;
+                                            favPane.dragFrom = favTile.index;
+                                            favPane.dragTo = favTile.index;
+                                        }
+                                        if (favPane.dragFrom === favTile.index) {
+                                            favTile.favDragX = p.x - grabOffset.x;
+                                            favTile.favDragY = p.y - grabOffset.y + favFlick.contentY;
+                                            favPane.dragTo = Math.min(launcherWindow.favoriteApps.length - 1, favPane.slotAt(p.x, p.y));
+                                        }
+                                    }
+                                    onReleased: {
+                                        if (favPane.dragFrom === favTile.index) {
+                                            let from = favPane.dragFrom, to = favPane.dragTo;
+                                            favPane.dragFrom = -1;
+                                            favPane.dragTo = -1;
+                                            launcherWindow.moveFavorite(from, to);
+                                        }
+                                    }
+                                    onCanceled: { favPane.dragFrom = -1; favPane.dragTo = -1; }
+                                    onClicked: (mouse) => {
+                                        if (dragged) return;
+                                        if (mouse.button === Qt.RightButton) {
+                                            launcherWindow.toggleFavorite(favTile.modelData.desktop_id);
+                                            return;
+                                        }
+                                        let id = String(favTile.modelData.desktop_id);
+                                        if (id.startsWith("qs-widget-")) launcherWindow.launchWidget(favTile.modelData.name, id.substring(10));
+                                        else launcherWindow.launchApp(favTile.modelData.name, favTile.modelData.desktop_id);
+                                    }
                                 }
                             }
+                        }
+
+                        // where a dragged list row would be pinned
+                        Rectangle {
+                            visible: favPane.dropSlot >= 0
+                            x: (favPane.dropSlot % launcherWindow.favColumns) * favPane.cellW + launcherWindow.s(3)
+                            y: Math.floor(favPane.dropSlot / launcherWindow.favColumns) * launcherWindow.favCellH + launcherWindow.s(3)
+                            width: favPane.cellW - launcherWindow.s(6)
+                            height: launcherWindow.favCellH - launcherWindow.s(6)
+                            radius: ThemeBackend.pill ? launcherWindow.s(22) : ThemeBackend.borderRadius
+                            color: "transparent"
+                            border.width: 2
+                            border.color: ThemeBackend.mauve
                         }
                     }
                 }
 
-                // the line between the rail and the list
+                // the line between the favourites and the list
                 Rectangle {
                     visible: launcherWindow.showRail
                     x: launcherWindow.railW + launcherWindow.s(6)
-                    y: listContainer.y + launcherWindow.s(4)
+                    y: Math.min(tabSwitch.y, listContainer.y) + launcherWindow.s(4)
                     width: 1
-                    height: Math.max(0, listContainer.height - launcherWindow.s(8))
+                    height: Math.max(0, Math.max(listContainer.y + listContainer.height, favPane.y + favPane.height) - y - launcherWindow.s(4))
                     color: Qt.alpha(ThemeBackend.text, 0.12)
+                }
+
+                // a list row being dragged (to reorder the list, or onto the favourites to pin it)
+                Rectangle {
+                    id: rowGhost
+                    z: 50
+                    visible: listDrag.active
+                    width: launcherWindow.s(220)
+                    height: launcherWindow.s(40)
+                    x: listDrag.pos.x - width / 2
+                    y: listDrag.pos.y - height / 2
+                    radius: height / 2
+                    color: ThemeBackend.material ? ThemeBackend.secondaryContainer : ThemeBackend.surface1
+                    opacity: 0.95
+                    Text {
+                        anchors.centerIn: parent
+                        width: parent.width - launcherWindow.s(20)
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        text: listDrag.name
+                        font.family: ThemeBackend.fontFamily
+                        font.weight: Font.Medium
+                        font.pixelSize: launcherWindow.s(12)
+                        color: ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.text
+                    }
+                }
+
+                QtObject {
+                    id: listDrag
+                    property bool active: false
+                    property int from: -1
+                    property int to: -1
+                    property string name: ""
+                    property string desktopId: ""
+                    property point pos: Qt.point(0, 0)
+                    // reordering only makes sense in the plain list (no search typed)
+                    readonly property bool canReorder: searchInput.text.trim() === "" && launcherWindow.currentTabIndex === 0
+                    function overPane() { return launcherWindow.showRail && pos.x < launcherWindow.railW + launcherWindow.s(6); }
+                    function update(p) {
+                        pos = p;
+                        if (overPane()) {
+                            let q = favPane.mapFromItem(contentContainer, p.x, p.y);
+                            favPane.dropSlot = Math.min(launcherWindow.favoriteApps.length, favPane.slotAt(q.x, q.y));
+                            to = -1;
+                        } else {
+                            favPane.dropSlot = -1;
+                            if (canReorder) {
+                                let l = appList.mapFromItem(contentContainer, p.x, p.y);
+                                to = Math.max(0, Math.min(appModel.count - 1, Math.floor((l.y + appList.contentY) / (launcherWindow.s(44) + appList.spacing))));
+                            }
+                        }
+                    }
+                    function finish() {
+                        if (!active) return;
+                        if (overPane() && desktopId) launcherWindow.pinAt(desktopId, favPane.dropSlot);
+                        else if (canReorder && to >= 0) launcherWindow.moveListItem(from, to);
+                        active = false;
+                        from = -1;
+                        to = -1;
+                        favPane.dropSlot = -1;
+                    }
                 }
 
                 Item {
@@ -1705,9 +1912,10 @@ PanelWindow {
                     anchors.left: parent.left
                     anchors.leftMargin: launcherWindow.showRail ? launcherWindow.railW + launcherWindow.s(13) : 0
                     anchors.right: parent.right
-                    y: contentContainer.isSearchAtBottom ? 0 : (tabSwitch.y + tabSwitch.height + launcherWindow.s(8))
+                    y: contentContainer.isSearchAtBottom ? 0
+                       : (launcherWindow.showRail ? searchInput.y + searchInput.height + launcherWindow.s(8) : (tabSwitch.y + tabSwitch.height + launcherWindow.s(8)))
                     height: contentContainer.isSearchAtBottom
-                            ? Math.max(0, tabSwitch.y - launcherWindow.s(8))
+                            ? Math.max(0, (launcherWindow.showRail ? searchInput.y : tabSwitch.y) - launcherWindow.s(8))
                             : Math.max(0, parent.height - y)
                     clip: true
 
@@ -1763,6 +1971,7 @@ PanelWindow {
                         id: appList
                         anchors.fill: parent
                         visible: launcherWindow.currentTabIndex !== 2 && !launcherWindow.appGridActive
+                        interactive: !listDrag.active
                         clip: true
                         model: appModel
                         spacing: launcherWindow.s(4)
@@ -1944,6 +2153,8 @@ PanelWindow {
                             height: launcherWindow.s(44)
                             clip: false
                             z: 1
+                            // the row being dragged fades; a line shows where it will go
+                            opacity: (listDrag.active && listDrag.from === index) ? 0.35 : launcherWindow.getItemOpacity(index)
 
                             property bool isSelected: index === appList.currentIndex
                             readonly property bool pressed: ma.pressed
@@ -1951,7 +2162,15 @@ PanelWindow {
                                 if (appList.hoverItem === delegateRoot) appList.hoverItem = null;
                             }
 
-                            opacity: launcherWindow.getItemOpacity(index)
+                            Rectangle {
+                                visible: listDrag.active && listDrag.to === index && listDrag.from !== index
+                                z: 20
+                                width: parent.width
+                                height: launcherWindow.s(3)
+                                radius: height / 2
+                                color: ThemeBackend.mauve
+                                y: listDrag.to > listDrag.from ? parent.height + appList.spacing / 2 - height / 2 : -appList.spacing / 2 - height / 2
+                            }
                             transform: Translate {
                                 x: launcherWindow.s(-20) * (1.0 - launcherWindow.getItemProgress(index))
                             }
@@ -2154,9 +2373,30 @@ PanelWindow {
                                     id: ma
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
+                                    preventStealing: listDrag.active
+                                    cursorShape: listDrag.active ? Qt.ClosedHandCursor : Qt.PointingHandCursor
                                     acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                    property point pressAt
+                                    property bool dragged: false
+                                    onPressed: (mouse) => { dragged = false; pressAt = mapToItem(contentContainer, mouse.x, mouse.y); }
+                                    onPositionChanged: (mouse) => {
+                                        if (!pressed || !(mouse.buttons & Qt.LeftButton) || model.isFile || !model.desktop_id) return;
+                                        let p = mapToItem(contentContainer, mouse.x, mouse.y);
+                                        if (!listDrag.active && Math.abs(p.x - pressAt.x) + Math.abs(p.y - pressAt.y) > launcherWindow.s(10)) {
+                                            dragged = true;
+                                            listDrag.active = true;
+                                            listDrag.from = index;
+                                            listDrag.name = model.name;
+                                            listDrag.desktopId = model.desktop_id;
+                                        }
+                                        if (listDrag.active) listDrag.update(p);
+                                    }
+                                    onReleased: {
+                                        if (listDrag.active) listDrag.finish();
+                                    }
+                                    onCanceled: { listDrag.active = false; favPane.dropSlot = -1; }
                                     onClicked: (mouse) => {
+                                        if (dragged) return;
                                         if (mouse.button === Qt.RightButton) {
                                             if (model.desktop_id && !model.isFile) launcherWindow.toggleFavorite(model.desktop_id);
                                             return;
