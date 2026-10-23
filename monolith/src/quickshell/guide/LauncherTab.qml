@@ -203,6 +203,8 @@ GuideTab {
                         fontFamily: ThemeBackend.fontFamily
                         fontPixelSize: rootObj.s(11)
                         onValueChanged: function(val) {
+                            // valueChanged carries no argument: read the new value
+                            val = (typeof val === "number" && !isNaN(val)) ? val : value;
                             let num = (typeof val === "number" && !isNaN(val)) ? val : value;
                             let rounded = Math.round(num);
                             if (!isNaN(rounded) && rounded >= 320 && rounded <= 1400 && launcherTabRoot.currentWidth !== rounded) {
@@ -247,6 +249,8 @@ GuideTab {
                         fontFamily: ThemeBackend.fontFamily
                         fontPixelSize: rootObj.s(11)
                         onValueChanged: function(val) {
+                            // valueChanged carries no argument: read the new value
+                            val = (typeof val === "number" && !isNaN(val)) ? val : value;
                             let num = (typeof val === "number" && !isNaN(val)) ? val : value;
                             let rounded = Math.round(num);
                             if (!isNaN(rounded) && rounded >= 3 && rounded <= 15 && launcherTabRoot.currentItemCount !== rounded) {
@@ -317,6 +321,8 @@ GuideTab {
                         fontFamily: ThemeBackend.fontFamily
                         fontPixelSize: rootObj.s(11)
                         onValueChanged: function(val) {
+                            // valueChanged carries no argument: read the new value
+                            val = (typeof val === "number" && !isNaN(val)) ? val : value;
                             const c = Math.round(val);
                             if (c >= 2 && c <= 6 && c !== launcherTabRoot.currentFavColumns) {
                                 launcherTabRoot.currentFavColumns = c;
@@ -385,6 +391,8 @@ GuideTab {
                         fontFamily: ThemeBackend.fontFamily
                         fontPixelSize: rootObj.s(11)
                         onValueChanged: function(val) {
+                            // valueChanged carries no argument: read the new value
+                            val = (typeof val === "number" && !isNaN(val)) ? val : value;
                             const c = Math.round(val);
                             if (c >= 3 && c <= 8 && c !== launcherTabRoot.currentGridColumns) {
                                 launcherTabRoot.currentGridColumns = c;
