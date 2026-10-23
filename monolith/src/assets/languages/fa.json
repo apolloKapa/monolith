@@ -21,8 +21,7 @@
         "uptime": "مدت‌زمان روشن‌بودن",
         "default_os": "لینوکس"
       },
-      "github_repo": "apolloKapa/monolith",
-      "credits": "Features inspired by iNiR by snowarch"
+      "github_repo": "apolloKapa/monolith"
     },
     "tabs": {
       "welcome": "خوش‌آمدید",

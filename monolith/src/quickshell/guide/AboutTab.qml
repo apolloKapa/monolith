@@ -125,14 +125,6 @@ GuideTab {
                                 Layout.alignment: Qt.AlignHCenter
                             }
 
-                            // credits (AGPL-3.0 / GPL-3.0 notices: see README and LICENSE)
-                            Text {
-                                text: I18n.t("guide.about.credits", "Features inspired by iNiR by snowarch")
-                                font.family: ThemeBackend.fontFamily
-                                font.pixelSize: rootObj.s(10)
-                                color: Qt.alpha(ThemeBackend.subtext0, 0.8)
-                                Layout.alignment: Qt.AlignHCenter
-                            }
                         }
                     }
                 }

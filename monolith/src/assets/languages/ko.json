@@ -21,8 +21,7 @@
         "uptime": "가동 시간",
         "default_os": "Linux"
       },
-      "github_repo": "apolloKapa/monolith",
-      "credits": "Features inspired by iNiR by snowarch"
+      "github_repo": "apolloKapa/monolith"
     },
     "tabs": {
       "welcome": "시작",

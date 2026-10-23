@@ -792,8 +792,7 @@
         "uptime": "稼働時間",
         "default_os": "Linux"
       },
-      "github_repo": "apolloKapa/monolith",
-      "credits": "Features inspired by iNiR by snowarch"
+      "github_repo": "apolloKapa/monolith"
     },
     "tabs": {
       "welcome": "ようこそ",
