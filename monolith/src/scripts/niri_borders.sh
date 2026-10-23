@@ -36,11 +36,12 @@ lay_end = block(text, lay.end())
 inner = text[lay.end():lay_end - 1]
 m = re.search(r"^([ \t]*)border\s*\{", inner, re.M)
 
-cur = {"enabled": True, "width": 4, "active": "#ffc87f", "inactive": "#505050", "urgent": "#9b0000"}
+cur = {"enabled": False, "width": 4, "active": "#ffc87f", "inactive": "#505050", "urgent": "#9b0000"}
 if m:
     b_end = block(inner, m.end())
     body = inner[m.end():b_end - 1]
-    cur["enabled"] = not re.search(r"^\s*off\s*;?\s*$", body, re.M)
+    # niri keeps the border off unless the block says `on` (an `off` wins)
+    cur["enabled"] = bool(re.search(r"^\s*on\s*;?\s*$", body, re.M)) and not re.search(r"^\s*off\s*;?\s*$", body, re.M)
     w = re.search(r"^\s*width\s+([0-9.]+)", body, re.M)
     if w: cur["width"] = float(w.group(1)) if "." in w.group(1) else int(w.group(1))
     for key, name in (("active", "active-color"), ("inactive", "inactive-color"), ("urgent", "urgent-color")):
@@ -64,7 +65,7 @@ for a in args:
         new[k] = v.lower()
 
 ind = m.group(1) if m else "    "
-lines = ([f"{ind}    off"] if not new["enabled"] else []) + [
+lines = [f"{ind}    {'on' if new['enabled'] else 'off'}"] + [
     f"{ind}    width {new['width']}",
     f'{ind}    active-color "{new["active"]}"',
     f'{ind}    inactive-color "{new["inactive"]}"',
