@@ -274,6 +274,8 @@ GuideTab {
                         fontFamily: ThemeBackend.fontFamily
                         fontPixelSize: rootObj.s(11)
                         onValueChanged: function(val) {
+                            // valueChanged carries no argument: read the new value
+                            val = (typeof val === "number" && !isNaN(val)) ? val : value;
                             const w = Math.round(val);
                             if (w >= 1 && w <= 10 && w !== winTab.borderWidth) {
                                 winTab.borderWidth = w;
