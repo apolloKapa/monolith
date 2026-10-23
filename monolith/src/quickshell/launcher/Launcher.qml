@@ -148,8 +148,9 @@ PanelWindow {
 
     Connections {
         target: (typeof Config !== "undefined") ? Config : null
+        // (it used to close on every settings save, so pinning or reordering an app closed it;
+        // moving the launcher or the bar still closes it, see onAttachEdgeChanged and below)
         function onSettingsLoaded() {
-            LauncherController.hide();
             launcherWindow.configRevision++;
         }
     }
