@@ -445,7 +445,8 @@ MusicEqualizerState {
                     Layout.preferredHeight: popupRoot.s(2)
                     Layout.topMargin: popupRoot.s(16)
                     Layout.bottomMargin: popupRoot.s(16)
-                    color: "#1AFFFFFF"
+                    // no rule between the player and the tabs any more, just space
+                    color: "transparent"
                     radius: ThemeBackend.rad(popupRoot.s(1))
 
                     opacity: popupRoot.introSeparator

@@ -131,10 +131,10 @@ Item {
                                     id: trackBg
                                     x: eqSlider.leftPadding + (eqSlider.availableWidth - width) / 2
                                     y: eqSlider.topPadding
-                                    implicitWidth: root.s(12)
+                                    implicitWidth: root.s(26)
                                     implicitHeight: root.s(130)
-                                    width: root.s(12); height: eqSlider.availableHeight
-                                    radius: ThemeBackend.borderRadius
+                                    width: root.s(26); height: eqSlider.availableHeight
+                                    radius: ThemeBackend.square ? 0 : width / 2
                                     
                                     color: trackGlass.active ? "transparent" : Qt.rgba((ThemeBackend.surface0 ? ThemeBackend.surface0.r : 0.2), (ThemeBackend.surface0 ? ThemeBackend.surface0.g : 0.2), (ThemeBackend.surface0 ? ThemeBackend.surface0.b : 0.3), 0.7 * ThemeBackend.elementOpacity)
 
@@ -185,7 +185,7 @@ Item {
                                         Rectangle {
                                             id: eqFillMask
                                             anchors.fill: parent
-                                            radius: ThemeBackend.borderRadius
+                                            radius: ThemeBackend.square ? 0 : width / 2
                                             visible: false
                                             layer.enabled: true 
                                         }
@@ -193,7 +193,7 @@ Item {
                                         GlassFill {
                                             id: eqFillGlass
                                             anchors.fill: parent
-                                            radius: ThemeBackend.borderRadius
+                                            radius: ThemeBackend.square ? 0 : width / 2
                                             forceClear: true
                                             tintColor: (root ? root.eqAccentColor : ThemeBackend.mauve)
                                             tintAmount: 0.6
@@ -245,12 +245,12 @@ Item {
                                     id: eqHandle
                                     x: eqSlider.leftPadding + (eqSlider.availableWidth - width) / 2
                                     y: eqSlider.topPadding + eqSlider.visualPosition * (eqSlider.availableHeight - height)
-                                    implicitWidth: root.s(16)
-                                    implicitHeight: root.s(16)
-                                    width: root.s(16); height: root.s(16)
-                                    radius: ThemeBackend.rad(root.s(8))
+                                    implicitWidth: root.s(14)
+                                    implicitHeight: root.s(4)
+                                    width: root.s(14); height: root.s(4)
+                                    radius: root.s(2)
 
-                                    property color handleColor: ThemeBackend.text || "#cdd6f4"
+                                    property color handleColor: ThemeBackend.base || "#1e1e2e"
                                     property color handleHoverColor: Qt.lighter(root.eqAccentColor, 1.15)
                                     property color handleDragColor: Qt.lighter(root.eqAccentColor, 1.30)
 
@@ -397,19 +397,11 @@ Item {
             opacity: root.introPresets
             transform: Translate { y: root.s(18) * (1 - root.introPresets) }
 
-            RowLayout {
+            Flow {
                 Layout.fillWidth: true
-                spacing: root.s(8)
+                spacing: root.s(6)
                 Repeater {
-                    model: ["Flat", "Bass", "Treble", "Vocal"]
-                    delegate: MusicPresetButton { required property var modelData; root: eqView.root; name: modelData }
-                }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: root.s(8)
-                Repeater {
-                    model: ["Pop", "Rock", "Jazz", "Classic"]
+                    model: ["Flat", "Bass", "Treble", "Vocal", "Pop", "Rock", "Jazz", "Classic"]
                     delegate: MusicPresetButton { required property var modelData; root: eqView.root; name: modelData }
                 }
             }
