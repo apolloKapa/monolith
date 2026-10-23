@@ -59,7 +59,7 @@ Rectangle {
                 Layout.leftMargin: popup.s(10)
                 spacing: 0
                 Caption {
-                    visible: !ThemeBackend.material
+                    visible: false
                     text: "Monolith"
                     Layout.fillWidth: true
                 }
@@ -68,8 +68,8 @@ Rectangle {
                     horizontalAlignment: I18n.textAlignment
                     text: I18n.t("guide.settings", "Settings")
                     font.family: ThemeBackend.fontFamily
-                    font.pixelSize: ThemeBackend.material ? popup.s(22) : popup.s(16)
-                    font.bold: !ThemeBackend.material
+                    font.pixelSize: popup.s(22)
+                    font.bold: false
                     color: ThemeBackend.text
                 }
             }
@@ -107,13 +107,13 @@ Rectangle {
                 id: activeHighlight
                 z: -1
                 radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
-                color: activeGlass.active ? "transparent" : (ThemeBackend.material ? ThemeBackend.secondaryContainer : Qt.alpha(ThemeBackend.mauve, 0.14))
+                color: activeGlass.active ? "transparent" : (ThemeBackend.material ? ThemeBackend.secondaryContainer : Qt.alpha(ThemeBackend.mauve, 0.2))
                 visible: activeDelegate !== null
 
                 // the spine: Monolith's selection mark (a slab, like the logo)
                 Rectangle {
                     z: 2
-                    visible: !ThemeBackend.material
+                    visible: false
                     x: I18n.rtl ? parent.width - width : 0
                     anchors.verticalCenter: parent.verticalCenter
                     width: popup.s(3)
@@ -232,7 +232,7 @@ Rectangle {
                                     bgOpacity: 2.0
                                     iconFontSize: popup.s(15)
                                     accentColor: "transparent"
-                                    textColor: header.active ? (ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.mauve) : (headerMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
+                                    textColor: header.active ? (ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.text) : (headerMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
                                 }
 
                                 Text {
@@ -252,7 +252,7 @@ Rectangle {
                                 }
 
                                 Text {
-                                    visible: !popup.compact && !ThemeBackend.material
+                                    visible: false
                                     text: String(tabDelegate.tabIndex + 1).padStart(2, "0")
                                     font.family: "JetBrains Mono"
                                     font.pixelSize: popup.s(10)

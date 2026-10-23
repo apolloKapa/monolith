@@ -17,8 +17,8 @@ Rectangle {
     radius: ThemeBackend.rad(root.cornerRadius)
     color: blobGlass.active ? "transparent" : root.baseColor
     // hairline edge (outlined styles draw their own line)
-    border.width: ThemeBackend.outlined ? 0 : 1
-    border.color: Qt.alpha(ThemeBackend.text, 0.06)
+    border.width: 0
+    border.color: "transparent"
     clip: true
 
     implicitHeight: blobCol.implicitHeight

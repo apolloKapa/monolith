@@ -52,8 +52,8 @@ Item {
     property int iconSize: 32
     property int iconFontSize: 16
     property real iconCornerRadius: ThemeBackend.borderRadius
-    property color iconAccentColor: ThemeBackend.surface0
-    property color iconTextColor: "#ffffff"
+    property color iconAccentColor: Qt.alpha(ThemeBackend.mauve, 0.14)
+    property color iconTextColor: ThemeBackend.mauve
 
     property string title: ""
     property string description: ""

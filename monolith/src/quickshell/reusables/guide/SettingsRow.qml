@@ -386,8 +386,8 @@ Rectangle {
     property int iconSize: 32
     property int iconFontSize: 16
     property real iconCornerRadius: ThemeBackend.borderRadius
-    property color iconAccentColor: "transparent"
-    property color iconTextColor: Qt.alpha(ThemeBackend.mauve, 0.85)
+    property color iconAccentColor: Qt.alpha(ThemeBackend.mauve, 0.14)
+    property color iconTextColor: ThemeBackend.mauve
     property bool iconInteractive: false
 
     property string title: ""
@@ -502,7 +502,7 @@ Rectangle {
                 Layout.preferredWidth: visible ? root.s(root.iconSize) : 0
                 Layout.preferredHeight: visible ? root.s(root.iconSize) : 0
                 Layout.alignment: Qt.AlignVCenter
-                cornerRadius: ThemeBackend.rad(root.iconCornerRadius)
+                cornerRadius: ThemeBackend.square ? 0 : root.s(root.iconSize) / 2
                 buttonIcon: root.icon
                 iconFontSize: root.s(root.iconFontSize)
                 accentColor: root.dimmed ? ThemeBackend.surface1 : root.iconAccentColor
