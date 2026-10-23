@@ -387,6 +387,33 @@ GuideTab {
 
                     onTriggered: Quickshell.execDetached(["xdg-open", "https://github.com/apolloKapa/monolith"])
                 }
+
+                ClickButton {
+                    Layout.preferredWidth: rootObj.s(220)
+                    Layout.preferredHeight: rootObj.s(42)
+                    horizontalPadding: rootObj.s(14)
+                    cornerRadius: ThemeBackend.borderRadius
+                    buttonText: Updater.manualState === "checking" ? I18n.t("guide.about.checking", "Checking...") : I18n.t("guide.about.check_updates", "Check for updates")
+                    textFontSize: rootObj.s(13)
+                    buttonIcon: "󰚰"
+                    iconFontSize: rootObj.s(16)
+                    accentColor: ThemeBackend.surface0
+                    textColor: ThemeBackend.text
+                    enabled: Updater.manualState !== "checking"
+                    onTriggered: Updater.checkNow()
+                }
+            }
+
+            // how the last check you asked for went
+            Text {
+                Layout.alignment: Qt.AlignHCenter
+                visible: Updater.manualState !== "" && Updater.manualState !== "checking"
+                text: Updater.manualState === "latest" ? I18n.t("guide.about.up_to_date", "You're up to date") + " (" + Updater.localVersion + ")"
+                    : Updater.manualState === "available" ? I18n.t("guide.about.update_ready", "Version {v} is available: use Update above").replace("{v}", Updater.remoteVersion)
+                    : I18n.t("guide.about.check_failed", "Couldn't reach GitHub. Check your connection and try again")
+                font.family: ThemeBackend.fontFamily
+                font.pixelSize: rootObj.s(12)
+                color: Updater.manualState === "failed" ? ThemeBackend.red : (Updater.manualState === "available" ? ThemeBackend.mauve : ThemeBackend.subtext0)
             }
         }
     }

@@ -123,6 +123,16 @@ def fetch_remote_ver():
     """monolith/version.txt on the install's repo + branch: a plain download when the repo is
     public, otherwise through the GitHub CLI's login (private repo)"""
     path = "monolith/version.txt"
+    if "--fresh" in sys.argv:
+        # a check you asked for: GitHub's API, which isn't cached like raw.githubusercontent
+        try:
+            req = urllib.request.Request(
+                f"https://api.github.com/repos/{REPO}/contents/{path}?ref={BRANCH}",
+                headers={"User-Agent": "monolith-updater", "Accept": "application/vnd.github.raw"}
+            )
+            return urllib.request.urlopen(req, timeout=8).read().decode("utf-8").strip()
+        except Exception:
+            pass
     try:
         req = urllib.request.Request(
             f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/{path}",
@@ -142,8 +152,11 @@ def fetch_remote_ver():
             pass
     return None
 
+fetch_failed = False
 if not package_managed:
-    remote_ver = fetch_remote_ver() or local_ver
+    fetched = fetch_remote_ver()
+    fetch_failed = fetched is None
+    remote_ver = fetched or local_ver
 
 has_update = parse_v(remote_ver) > parse_v(local_ver)
 
@@ -151,5 +164,6 @@ print(json.dumps({
     "local": local_ver,
     "remote": remote_ver,
     "has_update": has_update,
+    "error": fetch_failed,
     "last_notified": get_last_notified()
 }))
