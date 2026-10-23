@@ -9,6 +9,8 @@ import "../reusables/media"
 Item {
     required property var root
     id: coverHost
+    // the artwork is a rounded square (it used to be a spinning vinyl disc)
+    function coverR(w) { return ThemeBackend.square ? 0 : w * 0.14; }
     Layout.preferredWidth: root.s(224)
     Layout.preferredHeight: root.s(224)
     Layout.alignment: Qt.AlignVCenter
@@ -64,7 +66,7 @@ Item {
             anchors.centerIn: parent
             width: (coverHost.artRadius * 2) + (coverHost.maxBarHeight * 2.2)
             height: width
-            radius: ThemeBackend.rad(width / 2)
+            radius: coverHost.coverR(width)
             color: ThemeBackend.mauve || "#cba6f7"
             opacity: (root.targetPlayer && root.targetPlayer.isPlaying) ? (0.005 + (root.bassLevel * 0.035)) : 0.0
             scale: 0.985 + (root.bassLevel * 0.0375)
@@ -88,7 +90,7 @@ Item {
             anchors.centerIn: parent
             width: (coverHost.artRadius * 2) + (coverHost.maxBarHeight * 1.5)
             height: width
-            radius: ThemeBackend.rad(width / 2)
+            radius: coverHost.coverR(width)
             color: ThemeBackend.mauve || "#cba6f7"
             opacity: (root.targetPlayer && root.targetPlayer.isPlaying) ? (0.01 + (root.kickLevel * 0.055)) : 0.0
             scale: 0.992 + (root.kickLevel * 0.02625)
@@ -109,6 +111,7 @@ Item {
         }
 
         Visualizer {
+            visible: false
             anchors.centerIn: parent
             width: (coverHost.artRadius + coverHost.maxBarHeight * 1.4) * 2 + 2
             height: width
@@ -141,7 +144,7 @@ Item {
                 anchors.centerIn: parent
                 width: parent.width + root.s(12)
                 height: parent.height + root.s(12)
-                radius: ThemeBackend.rad(width / 2)
+                radius: coverHost.coverR(width)
                 color: ThemeBackend.mauve || "#cba6f7"
                 opacity: (root.targetPlayer && root.targetPlayer.isPlaying) ? (0.35 + root.kickLevel * 0.25) : 0.0
                 Behavior on opacity { NumberAnimation { duration: (500) * ThemeBackend.animScale } }
@@ -156,18 +159,12 @@ Item {
             Rectangle {
                 id: vinylBase
                 anchors.fill: parent
-                radius: ThemeBackend.rad(width / 2)
+                radius: coverHost.coverR(width)
                 color: ThemeBackend.surface1 || "#45475a"
                 border.width: discContainer.borderWidth
                 border.color: (root.targetPlayer && root.targetPlayer.isPlaying) ? (ThemeBackend.mauve || "#cba6f7") : (ThemeBackend.overlay0 || "#6c7086")
                 Behavior on border.color { ColorAnimation { duration: (500) * ThemeBackend.animScale } }
 
-                NumberAnimation on rotation {
-                    from: 0; to: 360; duration: 25000
-                    loops: Animation.Infinite
-                    running: root.active
-                    paused: root.active && !(root.targetPlayer && root.targetPlayer.isPlaying)
-                }
 
                 Item {
                     anchors.fill: parent
@@ -176,7 +173,7 @@ Item {
                     Rectangle {
                         id: maskRect
                         anchors.fill: parent
-                        radius: ThemeBackend.rad(width / 2)
+                        radius: coverHost.coverR(width)
                         visible: false
                         layer.enabled: true 
                     }
@@ -239,7 +236,7 @@ Item {
                     Rectangle {
                         id: fallbackPlaceholder
                         anchors.fill: parent
-                        radius: ThemeBackend.rad(width / 2)
+                        radius: coverHost.coverR(width)
                         color: ThemeBackend.mantle || "#1e1e2e"
                         opacity: (root.hasTargetPlayer && root.activeArtUrl) ? 0.0 : 1.0
                         Behavior on opacity { NumberAnimation { duration: (400) * ThemeBackend.animScale } }
@@ -255,7 +252,7 @@ Item {
                     Rectangle {
                         id: discTinter
                         anchors.fill: parent
-                        radius: ThemeBackend.rad(width / 2)
+                        radius: coverHost.coverR(width)
                         color: {
                             let m = ThemeBackend.mauve || Qt.rgba(0.8, 0.6, 0.9, 1);
                             return Qt.rgba(m.r, m.g, m.b, 0.08 + (root.kickLevel * 0.08));
@@ -265,12 +262,12 @@ Item {
                     }
 
                     Repeater {
-                        model: [0.92, 0.84, 0.76, 0.68, 0.60, 0.52, 0.44]
+                        model: []
                         delegate: Rectangle {
                             anchors.centerIn: parent
                             width: parent.width * modelData
                             height: width
-                            radius: ThemeBackend.rad(width / 2)
+                            radius: coverHost.coverR(width)
                             color: "transparent"
                             border.color: index % 2 === 0 ? "#ffffff" : "#000000"
                             border.width: 1
@@ -280,10 +277,11 @@ Item {
                     }
 
                     Rectangle {
+                        visible: false
                         anchors.centerIn: parent
                         width: parent.width * 0.28
                         height: width
-                        radius: ThemeBackend.rad(width / 2)
+                        radius: coverHost.coverR(width)
                         color: ThemeBackend.crust || "#11111b"
                         opacity: 0.96
                         scale: 1.0 + (root.kickLevel * 0.0135)
@@ -305,7 +303,7 @@ Item {
                             anchors.centerIn: parent
                             width: parent.width * 0.68
                             height: width
-                            radius: ThemeBackend.rad(width / 2)
+                            radius: coverHost.coverR(width)
                             color: ThemeBackend.surface2 || "#585b70"
                             border.width: 1
                             border.color: Qt.rgba(1, 1, 1, 0.18)
@@ -314,7 +312,7 @@ Item {
                                 anchors.centerIn: parent
                                 width: parent.width * 0.38
                                 height: width
-                                radius: ThemeBackend.rad(width / 2)
+                                radius: coverHost.coverR(width)
                                 color: "#0d0e15"
                             }
                         }
