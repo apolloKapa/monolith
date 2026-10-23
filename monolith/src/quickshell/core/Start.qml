@@ -1,13 +1,14 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Effects
-import QtQuick.Layouts
-import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
 import "../"
 import "../reusables"
 
+// Monolith's first-launch intro. A line of light draws across the dark, rises into the
+// monolith (a tall rounded slab in the wallpaper's colours) while soft colour glows open up
+// behind it; the slab settles, "Monolith" draws together under it, then a Get started button.
 PanelWindow {
     id: window
 
@@ -31,592 +32,277 @@ PanelWindow {
         return res > 0 ? res : val;
     }
 
-    readonly property color base:     ThemeBackend.base
-    readonly property color mantle:   ThemeBackend.mantle   || ThemeBackend.base
-    readonly property color crust:    ThemeBackend.crust
-    readonly property color surface0: ThemeBackend.surface0
-    readonly property color surface1: ThemeBackend.surface1
-    readonly property color surface2: ThemeBackend.surface2
-    readonly property color text:     ThemeBackend.text
-    readonly property color subtext0: ThemeBackend.subtext0
-    readonly property color green:    ThemeBackend.green
-    readonly property color blue:     ThemeBackend.blue     || "#89b4fa"
-    readonly property color mauve:    ThemeBackend.mauve    || "#cba6f7"
-    readonly property color peach:    ThemeBackend.peach    || "#fab387"
+    readonly property color accent: ThemeBackend.mauve || "#cba6f7"
+    readonly property color accent2: ThemeBackend.blue || "#89b4fa"
+    readonly property color accent3: ThemeBackend.peach || "#fab387"
 
-    property real globalOrbitAngle: 0
-    NumberAnimation on globalOrbitAngle {
-        from: 0; to: Math.PI * 2; duration: 120000; loops: Animation.Infinite; running: true
-    }
+    // the steps of the intro, each 0 -> 1
+    property real dim: 0          // the screen going dark
+    property real line: 0         // the line of light drawing out
+    property real rise: 0         // the line rising into the slab
+    property real glow: 0         // colour glows behind
+    property real settle: 0       // the slab moving up and shrinking
+    property real word: 0         // "Monolith" drawing together
+    property real tagline: 0      // the line under it
+    property real button: 0       // Get started
+    property real leave: 0        // closing
 
-    property real panelReveal: 0.0
-    property real introPhase: 0.0
-    NumberAnimation on introPhase {
-        from: 0.0; to: 1.0; duration: (2500) * ThemeBackend.animScale; easing.type: Easing.OutExpo; running: window.panelReveal > 0.5
-    }
-
-    property real orbBoost: 0.0
-
-    property real welcomeReveal: 0.0
-    property real welcomeOpacity: 1.0
-
-    property real shellTextReveal: 0.0
-    property real shellTextOpacity: 0.0
-    property real shellTextScale: 0.94
-
-    property real authorOpacity: 0.0
-    property real authorScale: 0.94
-    property real authorAnimX: 0
-    property real authorAnimY: window.s(20)
-
-    property bool authorAbsolute: false
-    property real finalAuthorOpacity: 0.0
-
-    property real toSerpReveal: 0.0
-    property real toSerpOpacity: 0.0
-
-    property real logoOpacity: 0.0
-    property real logoScale: 0.94
-
-    property bool colorizeActive: false
-    property real logoFillLevel: 0.0
-    property real btnOpacity: 0.0
-
-    property real textGroupOffset: 0
-    property real mainOpacity: 1.0
-
-    property int bgSoundHandle: -1
-    property int exitSoundHandle: -1
-
-    property bool idleTextActive: false
-    property real idlePhase: 0.0
-    NumberAnimation on idlePhase {
-        from: 0.0; to: Math.PI * 2; duration: 8000; loops: Animation.Infinite; running: window.idleTextActive
-    }
-
-    property real monitorZoomProgress: 0.0
-
-    component TypewriterText : Row {
-        id: twRoot
-        property string text: ""
-        property real reveal: 0.0
-        property font font
-        property color color: window.text
-        property bool soundEnabled: true
-        property string typeSfx: "start/type.wav"
-
-        spacing: 0
-        Repeater {
-            model: Array.from(twRoot.text)
-            Text {
-                required property string modelData
-                required property int index
-                text: modelData === " " ? "\u00A0" : modelData
-                font: twRoot.font
-                color: twRoot.color
-
-                property bool shown: (twRoot.reveal * (twRoot.text.length + 2)) > index
-
-                onShownChanged: {
-                    if (shown && twRoot.soundEnabled && modelData !== " ") {
-                        if (typeof Sounds !== "undefined") Sounds.playSfx(twRoot.typeSfx);
-                    }
-                }
-
-                opacity: shown ? 1.0 : 0.0
-                scale: shown ? 1.0 : 0.94
-                rotation: 0
-
-                transform: Translate {
-                    y: (shown ? 0 : window.s(10)) + (window.idleTextActive && shown ? Math.sin(window.idlePhase + (index * 0.3)) * window.s(1.2) : 0)
-                    Behavior on y { NumberAnimation { duration: (550) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
-                }
-
-                Behavior on opacity { NumberAnimation { duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart } }
-                Behavior on scale { NumberAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
-                Behavior on color { ColorAnimation { duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-            }
-        }
-    }
+    property bool ready: false
 
     Timer {
-        id: initStartTimer
-        interval: 100
-        repeat: false
-        onTriggered: introChoreography.start()
+        interval: 200
+        running: true
+        onTriggered: intro.start()
     }
-
-    Component.onCompleted: initStartTimer.start()
 
     SequentialAnimation {
-        id: introChoreography
-        ScriptAction { script: window.bgSoundHandle = Sounds.playUntilStopped("start/background.wav", 0.4, true) }
-        ScriptAction { script: Sounds.playSfx("start/start.wav") }
-        PauseAnimation { duration: (100) * ThemeBackend.animScale }
-
-        NumberAnimation { target: window; property: "panelReveal"; from: 0.0; to: 1.0; duration: (2000) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
-        PauseAnimation { duration: (140) * ThemeBackend.animScale }
-
-        NumberAnimation { target: window; property: "welcomeReveal"; to: 1.0; duration: (850) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
-        PauseAnimation { duration: (800) * ThemeBackend.animScale }
-        NumberAnimation { target: window; property: "welcomeOpacity"; to: 0.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
-        ScriptAction { script: Sounds.playSfx("start/transition_monolith.wav", 0.6) }
-
+        id: intro
+        NumberAnimation { target: window; property: "dim"; to: 1; duration: (500) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+        NumberAnimation { target: window; property: "line"; to: 1; duration: (700) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
         ParallelAnimation {
-            PropertyAction { target: window; property: "shellTextOpacity"; value: 1.0 }
-            NumberAnimation { target: window; property: "shellTextReveal"; to: 1.0; duration: (1600) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
-            NumberAnimation { target: window; property: "shellTextScale"; from: 0.94; to: 1.0; duration: (1600) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
+            NumberAnimation { target: window; property: "rise"; to: 1; duration: (1000) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
+            NumberAnimation { target: window; property: "glow"; to: 1; duration: (1800) * ThemeBackend.animScale; easing.type: Easing.OutSine }
         }
-        PauseAnimation { duration: (140) * ThemeBackend.animScale }
+        PauseAnimation { duration: (350) * ThemeBackend.animScale }
         ParallelAnimation {
-            NumberAnimation { target: window; property: "authorOpacity"; to: 1.0; duration: (500) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
-            NumberAnimation { target: window; property: "authorScale"; to: 1.0; duration: (500) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
-            ScriptAction { script: Sounds.playSfx("start/pop_author.wav") }
-        }
-
-        PauseAnimation { duration: (1500) * ThemeBackend.animScale }
-
-        ParallelAnimation {
-            NumberAnimation { target: window; property: "shellTextOpacity"; to: 0.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
-            NumberAnimation { target: window; property: "authorOpacity"; to: 0.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
-        }
-        ScriptAction { script: Sounds.playSfx("start/transition_monolith.wav", 0.6) }
-
-        ParallelAnimation {
+            NumberAnimation { target: window; property: "settle"; to: 1; duration: (900) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
             SequentialAnimation {
-                PropertyAction { target: window; property: "authorAbsolute"; value: true }
-                PauseAnimation { duration: (800) * ThemeBackend.animScale }
-                NumberAnimation { target: window; property: "finalAuthorOpacity"; to: 0.6; duration: (1000) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
-            }
-
-            SequentialAnimation {
-                PauseAnimation { duration: (210) * ThemeBackend.animScale }
-
-                ParallelAnimation {
-                    ParallelAnimation {
-                        PropertyAction { target: window; property: "toSerpOpacity"; value: 1.0 }
-                        NumberAnimation { target: window; property: "toSerpReveal"; to: 1.0; duration: (1500) * ThemeBackend.animScale; easing.type: Easing.InOutSine }
-                        NumberAnimation { target: window; property: "logoOpacity"; to: 1.0; duration: (1500) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
-                        NumberAnimation { target: window; property: "logoScale"; from: 0.94; to: 1.0; duration: (1800) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
-                    }
-
-                    SequentialAnimation {
-                        PauseAnimation { duration: (1200) * ThemeBackend.animScale }
-                        ParallelAnimation {
-                            NumberAnimation { target: window; property: "btnOpacity"; to: 1.0; duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
-                            ScriptAction { script: window.idleTextActive = true }
-                        }
-                    }
-                }
-            }
-
-            SequentialAnimation {
-                ScriptAction { script: Sounds.playSfx("start/wave.wav", 0.2) }
                 PauseAnimation { duration: (300) * ThemeBackend.animScale }
-
-                ParallelAnimation {
-                    NumberAnimation { target: window; property: "orbBoost"; to: 1.0; duration: (3200) * ThemeBackend.animScale; easing.type: Easing.OutSine }
-                    ScriptAction { script: window.colorizeActive = true }
-                    NumberAnimation { target: window; property: "logoFillLevel"; to: 1.5; duration: (4500) * ThemeBackend.animScale; easing.type: Easing.OutSine }
-                    NumberAnimation { target: window; property: "monitorZoomProgress"; from: 0.0; to: 1.0; duration: (2800) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
-                }
+                NumberAnimation { target: window; property: "word"; to: 1; duration: (1100) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
             }
         }
+        NumberAnimation { target: window; property: "tagline"; to: 1; duration: (700) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: (250) * ThemeBackend.animScale }
+        NumberAnimation { target: window; property: "button"; to: 1; duration: (600) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
+        ScriptAction { script: window.ready = true }
     }
 
-    ShaderEffect {
-        id: bgCanvas
-        anchors.fill: parent
-
-        property real phase: 0.0
-        NumberAnimation on phase {
-            loops: Animation.Infinite
-            running: window.panelReveal > 0.0 && window.panelReveal < 1.0
-            from: 0; to: Math.PI * 2; duration: 3600
-        }
-
-        property vector2d itemSize: Qt.vector2d(width, height)
-        property real reveal: window.panelReveal
-        property color color0: window.crust
-        property color color1: window.surface1
-        property color color2: window.blue
-        property color color3: window.mauve
-        property color color4: window.base
-        property vector4d params: Qt.vector4d(window.s(45), 0.0, 0.0, 0.0)
-
-        fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/effects/screen_wipe.frag.qsb"
-    }
-
-    Item {
-        id: rootItem
-        anchors.fill: parent
-        focus: true
-        opacity: window.mainOpacity
-
-        Shortcut {
-            sequence: "Escape"
-            onActivated: closeSequence.start()
-        }
-
-        // Monolith intro backdrop: a horizon with a perspective floor scrolling towards the viewer.
-        Item {
-            id: horizonGrid
-            anchors.fill: parent
-            z: 1
-            clip: true
-            opacity: window.introPhase * 0.25 + window.orbBoost * 0.35
-
-            // lines up with the ground bar under the logo, so the slab stands on the horizon
-            readonly property real horizonY: height / 2 + window.s(33)
-            readonly property int floorLines: 16
-            readonly property int rays: 25
-
-            property real drift: 0
-            NumberAnimation on drift {
-                from: 0; to: 1; duration: 2600; loops: Animation.Infinite; running: horizonGrid.opacity > 0.01
-            }
-
-            Rectangle {
-                x: 0
-                y: horizonGrid.horizonY
-                width: parent.width
-                height: window.s(2)
-                color: window.text
-                opacity: 0.8
-            }
-
-            Repeater {
-                model: horizonGrid.floorLines
-                Rectangle {
-                    readonly property real t: (index + horizonGrid.drift) / horizonGrid.floorLines
-                    x: 0
-                    width: horizonGrid.width
-                    height: 1
-                    y: horizonGrid.horizonY + (horizonGrid.height - horizonGrid.horizonY) * t * t
-                    color: window.text
-                    opacity: 0.15 + 0.55 * t
-                }
-            }
-
-            Repeater {
-                model: horizonGrid.rays
-                Rectangle {
-                    readonly property real spread: (index - (horizonGrid.rays - 1) / 2) / ((horizonGrid.rays - 1) / 2)
-                    x: horizonGrid.width / 2
-                    y: horizonGrid.horizonY
-                    width: 1
-                    height: horizonGrid.height * 2
-                    transformOrigin: Item.Top
-                    rotation: -spread * 80
-                    color: window.text
-                    opacity: 0.35
-                }
-            }
-        }
-
-        ShaderEffect {
-            id: vignetteCanvas
-            anchors.fill: parent
-            z: 0
-
-            property vector2d itemSize: Qt.vector2d(width, height)
-            property color vignetteColor: "#000000"
-            property vector4d params: Qt.vector4d(0.4, 0.75, 0.4, 0.0)
-
-            fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/effects/vignette.frag.qsb"
-        }
-
-        Item {
-            id: monitorRig
-            width: window.s(1200)
-            height: window.s(900)
-            anchors.centerIn: parent
-            scale: 1.5 - (0.5 * window.monitorZoomProgress)
-            opacity: window.monitorZoomProgress
-            transformOrigin: Item.Center
-            z: 2
-
-            Item {
-                id: finalMonitorContent
-                anchors.fill: parent
-                opacity: window.toSerpOpacity
-
-                Item {
-                    id: logoContainer
-                    width: window.s(400)
-                    height: window.s(400)
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: window.s(-84)
-                    scale: window.logoScale
-                    transformOrigin: Item.Center
-
-                    Item {
-                        id: paddedMaskSource
-                        anchors.fill: parent
-                        visible: false
-                        layer.enabled: true
-                        layer.smooth: true
-
-                        Image {
-                            anchors.centerIn: parent
-                            width: window.s(360)
-                            height: window.s(360)
-                            source: "file://" + Caching.monolithDir + "/assets/logo.svg"
-                            sourceSize: Qt.size(width, height)
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            antialiasing: true
-                        }
-                    }
-
-                    Item {
-                        id: logoColorBlock
-                        anchors.fill: parent
-                        visible: false
-                        layer.enabled: true
-                        layer.smooth: true
-
-                        Rectangle { anchors.fill: parent; color: window.text }
-
-                        ShaderEffect {
-                            id: logoWaveCanvas
-                            anchors.fill: parent
-
-                            property real wavePhase: 0.0
-                            NumberAnimation on wavePhase {
-                                running: window.logoFillLevel > 0.0 && window.logoFillLevel < 1.45
-                                loops: Animation.Infinite
-                                from: 0; to: Math.PI * 2; duration: 3500
-                            }
-
-                            property vector2d itemSize: Qt.vector2d(width, height)
-                            property real fillLevel: window.logoFillLevel
-                            property color baseColor: window.mauve
-                            property vector4d params: Qt.vector4d(window.s(16), 0.0, 0.0, 0.0)
-
-                            fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/fluid/logo_water_wave.frag.qsb"
-                        }
-                    }
-
-                    MultiEffect {
-                        source: logoColorBlock
-                        anchors.fill: parent
-                        maskEnabled: true
-                        maskSource: paddedMaskSource
-                        autoPaddingEnabled: false
-                        shadowEnabled: true
-
-                        shadowColor: window.colorizeActive ? window.mauve : window.crust
-                        shadowBlur: window.colorizeActive ? 1.0 : 0.6
-                        shadowOpacity: window.colorizeActive ? 0.3 : 0.6
-                        shadowVerticalOffset: window.colorizeActive ? 0 : window.s(6)
-
-                        Behavior on shadowColor { ColorAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutCubic } }
-                        Behavior on shadowBlur { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutCubic } }
-                        Behavior on shadowOpacity { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutCubic } }
-                        Behavior on shadowVerticalOffset { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.InOutCubic } }
-                    }
-                }
-
-                TypewriterText {
-                    id: titleText
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: window.s(120)
-                    text: I18n.t("start.title")
-                    reveal: window.toSerpReveal
-                    color: window.colorizeActive ? window.mauve : window.text
-                    font.family: ThemeBackend.fontFamily
-                    font.weight: ThemeBackend.weightBold
-                    font.pixelSize: window.s(48)
-                    soundEnabled: false
-                }
-
-                Text {
-                    id: finalAuthorText
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: titleText.bottom
-                    anchors.topMargin: window.s(12)
-                    text: I18n.t("start.made_by", { "author": "apolloKapa" })
-                    font.family: ThemeBackend.fontFamily
-                    font.pixelSize: window.s(15)
-                    scale: 0.88
-                    color: window.subtext0
-                    opacity: window.finalAuthorOpacity
-                }
-            }
-        }
-
-        Item {
-            id: textScene
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: window.textGroupOffset
-            width: window.s(600)
-            height: window.s(160)
-            z: 5
-
-            Item {
-                anchors.centerIn: parent
-                width: welcomeText.implicitWidth
-                height: welcomeText.implicitHeight
-                opacity: window.welcomeOpacity
-
-                TypewriterText {
-                    id: welcomeText
-                    text: I18n.t("start.welcome")
-                    reveal: window.welcomeReveal
-                    font.family: ThemeBackend.fontFamily
-                    font.weight: ThemeBackend.weightBold
-                    font.pixelSize: window.s(48)
-                }
-            }
-
-            Item {
-                id: shellTextContainer
-                anchors.centerIn: parent
-                width: shellTextRow.implicitWidth
-                height: shellTextRow.implicitHeight + window.s(40)
-                opacity: window.shellTextOpacity
-                scale: window.shellTextScale
-
-                Row {
-                    id: shellTextRow
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: window.s(8)
-
-                    TypewriterText {
-                        text: I18n.t("start.tagline")
-                        reveal: window.shellTextReveal
-                        color: window.text
-                        font.family: ThemeBackend.fontFamily
-                        font.weight: ThemeBackend.weightBold
-                        font.pixelSize: window.s(28)
-                        y: window.s(12)
-                    }
-
-                    TypewriterText {
-                        id: youText
-                        text: I18n.t("start.you")
-                        reveal: Math.max(0.0, Math.min(1.0, (window.shellTextReveal - 0.70) * 3.33))
-                        font.family: ThemeBackend.fontFamily
-                        font.weight: ThemeBackend.weightBlack
-                        font.pixelSize: window.s(48)
-
-                        property color blinkColor: window.mauve
-                        SequentialAnimation on blinkColor {
-                            loops: Animation.Infinite
-                            running: window.shellTextOpacity > 0
-                            ColorAnimation { to: window.blue; duration: 900; easing.type: Easing.InOutSine }
-                            ColorAnimation { to: window.peach; duration: 900; easing.type: Easing.InOutSine }
-                            ColorAnimation { to: window.mauve; duration: 900; easing.type: Easing.InOutSine }
-                        }
-                        color: blinkColor
-
-                        layer.enabled: true
-                        layer.effect: MultiEffect {
-                            shadowEnabled: true
-                            shadowColor: youText.blinkColor
-                            shadowBlur: 0.8
-                            shadowOpacity: 0.85
-                            shadowVerticalOffset: 0
-                        }
-                    }
-                }
-
-                Item {
-                    id: introAuthorContainer
-                    anchors.top: shellTextRow.bottom
-                    anchors.topMargin: window.s(0)
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: introAuthorText.implicitWidth
-                    height: introAuthorText.implicitHeight
-                    opacity: window.authorOpacity
-                    scale: window.authorScale
-
-                    Text {
-                        id: introAuthorText
-                        text: I18n.t("start.made_by", { "author": "apolloKapa" })
-                        font.family: ThemeBackend.fontFamily
-                        font.pixelSize: window.s(14)
-                        color: window.subtext0
-                    }
-                }
-            }
-        }
-
-        Item {
-            id: btnSpacer
-            anchors.top: parent.verticalCenter
-            anchors.topMargin: window.s(180)
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            z: 10
-
-            FillButton {
-                id: startBtn
-                anchors.top: parent.top
-                anchors.topMargin: window.s(40)
-                anchors.horizontalCenter: parent.horizontalCenter
-
-                width: window.s(240)
-                height: window.s(48)
-                textFontSize: 16
-                opacity: window.btnOpacity
-
-                buttonText: I18n.t("start.start_preview")
-                buttonIcon: "󰐊"
-                accentColor: window.blue
-                baseColor: window.surface0
-                hoverColor: window.surface1
-                textColor: window.text
-                filledTextColor: window.crust
-                fillDuration: 800
-
-                Timer {
-                    id: delayCloseTimer
-                    interval: 800
-                    onTriggered: closeSequence.start()
-                }
-
-                onTriggered: delayCloseTimer.start()
-            }
-        }
+    function begin() {
+        if (!window.ready || closeSequence.running) return;
+        closeSequence.start();
     }
 
     SequentialAnimation {
         id: closeSequence
-        ScriptAction { script: Sounds.playSfx("start/transition_monolith.wav", 0.6) }
-        ScriptAction { script: window.exitSoundHandle = Sounds.playUntilStopped("start/exit.wav", 0.7, false) }
-        PauseAnimation { duration: (350) * ThemeBackend.animScale }
-        ParallelAnimation {
-            NumberAnimation { target: window; property: "mainOpacity"; to: 0.0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutQuint }
-            NumberAnimation { target: window; property: "panelReveal"; to: 0.0; duration: (1760) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
-        }
+        NumberAnimation { target: window; property: "leave"; to: 1; duration: (700) * ThemeBackend.animScale; easing.type: Easing.InOutCubic }
         ScriptAction {
             script: {
-                if (window.exitSoundHandle !== -1 ) {
-                    Sounds.stopSfx(window.exitSoundHandle);
-                    window.exitSoundHandle = -1;
-                }
-                if (startBtn.chargingSoundHandle !== -1 && typeof Sounds !== "undefined") {
-                    Sounds.stopSfx(startBtn.chargingSoundHandle);
-                    startBtn.chargingSoundHandle = -1;
-                }
-                if (window.bgSoundHandle !== -1) {
-                    Sounds.stopSfx(window.bgSoundHandle);
-                    window.bgSoundHandle = -1;
-                }
-            }
-        }
-        ScriptAction {
-            script: {
+                // one signal: FirstLaunch opens Settings on it (finished and closed both did)
                 window.finished();
-                window.closed();
                 window.visible = false;
             }
+        }
+    }
+
+    Item {
+        id: stage
+        anchors.fill: parent
+        focus: true
+        opacity: 1 - window.leave
+        Keys.onReturnPressed: window.begin()
+        Keys.onEnterPressed: window.begin()
+        Keys.onSpacePressed: window.begin()
+
+        Rectangle {
+            anchors.fill: parent
+            color: ThemeBackend.crust
+            opacity: window.dim
+        }
+
+        // soft glows in the theme's colours, drifting slowly
+        Item {
+            id: glows
+            anchors.fill: parent
+            opacity: window.glow * 0.5
+
+            property real t: 0
+            NumberAnimation on t { from: 0; to: Math.PI * 2; duration: 26000; loops: Animation.Infinite; running: window.visible }
+
+            Repeater {
+                model: [
+                    { c: window.accent,  x: 0.38, y: 0.42, r: 0.30, dx: 0.06, dy: 0.04, p: 0.0 },
+                    { c: window.accent2, x: 0.62, y: 0.55, r: 0.26, dx: 0.05, dy: 0.06, p: 2.1 },
+                    { c: window.accent3, x: 0.50, y: 0.72, r: 0.18, dx: 0.07, dy: 0.03, p: 4.2 }
+                ]
+                // a radial glow: full colour in the middle, fading to nothing at the edge
+                Canvas {
+                    required property var modelData
+                    // fixed size (repainting a canvas every frame is costly); it grows by scale
+                    width: Math.min(glows.width, glows.height) * modelData.r * 2.6
+                    height: width
+                    scale: 0.6 + 0.4 * window.glow
+                    renderTarget: Canvas.FramebufferObject
+                    onWidthChanged: requestPaint()
+                    onPaint: {
+                        const ctx = getContext("2d");
+                        ctx.reset();
+                        const g = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
+                        const c = modelData.c;
+                        g.addColorStop(0.0, Qt.rgba(c.r, c.g, c.b, 0.9));
+                        g.addColorStop(0.45, Qt.rgba(c.r, c.g, c.b, 0.35));
+                        g.addColorStop(1.0, Qt.rgba(c.r, c.g, c.b, 0.0));
+                        ctx.fillStyle = g;
+                        ctx.fillRect(0, 0, width, height);
+                    }
+                    x: glows.width * (modelData.x + modelData.dx * Math.sin(glows.t + modelData.p)) - width / 2
+                    y: glows.height * (modelData.y + modelData.dy * Math.cos(glows.t * 0.8 + modelData.p)) - height / 2
+                }
+            }
+        }
+
+        // the monolith: a line of light that rises into a slab
+        Item {
+            id: slabHolder
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: parent.height / 2 - window.s(150) * window.settle
+            scale: 1 - 0.45 * window.settle
+
+            readonly property real fullW: window.s(120)
+            readonly property real fullH: window.s(300)
+
+            // the line, before it rises
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: -height / 2
+                width: slabHolder.fullW * 2.2 * window.line * (1 - window.rise) + slabHolder.fullW * window.rise
+                height: Math.max(2, window.s(3))
+                radius: height / 2
+                opacity: window.line * (1 - window.rise)
+                color: ThemeBackend.text
+            }
+
+            // the slab
+            Rectangle {
+                id: slab
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: slabHolder.fullW
+                height: Math.max(2, slabHolder.fullH * window.rise)
+                y: -height / 2
+                radius: ThemeBackend.square ? 0 : window.s(28)
+                opacity: window.rise > 0 ? 1 : 0
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: Qt.lighter(window.accent, 1.15) }
+                    GradientStop { position: 0.55; color: window.accent }
+                    GradientStop { position: 1.0; color: window.accent2 }
+                }
+                // a light running down its face
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: parent.height * 0.08
+                    width: parent.width * 0.62
+                    height: window.s(3)
+                    radius: height / 2
+                    color: Qt.alpha("#ffffff", 0.55)
+                    opacity: window.rise
+                }
+            }
+
+            // its shadow on the "ground"
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: slab.height / 2 + window.s(18)
+                width: slabHolder.fullW * 1.6 * window.rise
+                height: window.s(10)
+                radius: height / 2
+                color: Qt.alpha("#000000", 0.45)
+                opacity: window.rise
+                layer.enabled: true
+                layer.effect: MultiEffect { blurEnabled: true; blurMax: 24; blur: 1.0 }
+            }
+        }
+
+        // the name, letters drawing together
+        Row {
+            id: nameRow
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: parent.height / 2 + window.s(20)
+            spacing: window.s(40) * (1 - window.word)
+            opacity: window.word
+            Repeater {
+                model: "Monolith".split("")
+                Text {
+                    required property string modelData
+                    required property int index
+                    text: modelData
+                    font.family: ThemeBackend.fontFamily
+                    font.pixelSize: window.s(64)
+                    font.weight: Font.Normal
+                    color: ThemeBackend.text
+                    // each letter lands a little after the last
+                    readonly property real own: Math.max(0, Math.min(1, window.word * 1.6 - index * 0.08))
+                    opacity: own
+                    transform: Translate { y: window.s(18) * (1 - own) }
+                }
+            }
+        }
+
+        Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: nameRow.bottom
+            anchors.topMargin: window.s(10)
+            spacing: window.s(6)
+            opacity: window.tagline
+            transform: Translate { y: window.s(10) * (1 - window.tagline) }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: I18n.t("start.tagline", "A desktop for niri")
+                font.family: ThemeBackend.fontFamily
+                font.pixelSize: window.s(18)
+                color: ThemeBackend.subtext0
+            }
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: I18n.t("start.made_by", { "author": "apolloKapa" })
+                font.family: ThemeBackend.fontFamily
+                font.pixelSize: window.s(13)
+                color: Qt.alpha(ThemeBackend.subtext0, 0.7)
+            }
+        }
+
+        // Get started
+        Rectangle {
+            id: startBtn
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: nameRow.bottom
+            anchors.topMargin: window.s(110)
+            width: btnLabel.implicitWidth + window.s(56)
+            height: window.s(52)
+            radius: ThemeBackend.square ? 0 : height / 2
+            color: btnMa.pressed ? Qt.darker(window.accent, 1.1) : (btnMa.containsMouse ? Qt.lighter(window.accent, 1.08) : window.accent)
+            opacity: window.button
+            scale: btnMa.pressed ? 0.97 : 1.0
+            transform: Translate { y: window.s(14) * (1 - window.button) }
+            Behavior on scale { NumberAnimation { duration: (120) * ThemeBackend.animScale } }
+
+            Text {
+                id: btnLabel
+                anchors.centerIn: parent
+                text: I18n.t("start.get_started", "Get started")
+                font.family: ThemeBackend.fontFamily
+                font.weight: Font.Medium
+                font.pixelSize: window.s(17)
+                color: ThemeBackend.onPrimary
+            }
+            MouseArea {
+                id: btnMa
+                anchors.fill: parent
+                hoverEnabled: true
+                enabled: window.ready
+                cursorShape: Qt.PointingHandCursor
+                onClicked: window.begin()
+            }
+        }
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: startBtn.bottom
+            anchors.topMargin: window.s(12)
+            opacity: window.button * 0.6
+            text: I18n.t("start.press_enter", "or press Enter")
+            font.family: ThemeBackend.fontFamily
+            font.pixelSize: window.s(12)
+            color: ThemeBackend.subtext0
         }
     }
 }
