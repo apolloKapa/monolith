@@ -20,6 +20,8 @@ GuideTab {
         "showRail": true,
         "gridView": false,
         "gridColumns": 5,
+        "favColumns": 4,
+        "appOrder": [],
         "showDescriptions": true,
         "webSearch": true
     })
@@ -42,6 +44,7 @@ GuideTab {
     property bool currentShowRail: !(launcherSettings && launcherSettings.showRail === false)
     property bool currentGridView: !!(launcherSettings && launcherSettings.gridView === true)
     property int currentGridColumns: (launcherSettings && Number(launcherSettings.gridColumns) >= 3) ? Number(launcherSettings.gridColumns) : 5
+    property int currentFavColumns: (launcherSettings && Number(launcherSettings.favColumns) >= 2) ? Number(launcherSettings.favColumns) : 4
     property bool currentShowDescriptions: !(launcherSettings && launcherSettings.showDescriptions === false)
     property bool currentWebSearch: !(launcherSettings && launcherSettings.webSearch === false)
 
@@ -62,6 +65,7 @@ GuideTab {
         launcherTabRoot.currentGridView = s.gridView === true;
         launcherTabRoot.currentGridColumns = Number(s.gridColumns) >= 3 ? Number(s.gridColumns) : 5;
         launcherTabRoot.currentShowDescriptions = s.showDescriptions !== false;
+        launcherTabRoot.currentFavColumns = Number(s.favColumns) >= 2 ? Number(s.favColumns) : 4;
         launcherTabRoot.currentWebSearch = s.webSearch !== false;
     }
 
@@ -277,13 +281,67 @@ GuideTab {
                     rootObj: launcherTabRoot.rootObj
                     settingId: "launcher_rail"
                     icon: "󰐃"
-                    title: I18n.t("guide.launcher.rail.title", "Favourites rail")
-                    description: I18n.t("guide.launcher.rail.desc", "A slim column on the left with the tabs and your favourite apps. Right-click an app to pin or unpin it")
+                    title: I18n.t("guide.launcher.rail.title", "Favourites grid")
+                    description: I18n.t("guide.launcher.rail.desc", "The left side of the launcher: the tabs and a grid of your favourite apps. Drag an app onto it (or right-click it) to pin it, drag tiles to reorder them")
                     searchKeywords: "favourites favorites pinned rail sidebar launcher"
                     LauncherToggle {
                         key: "showRail"
                         checked: launcherTabRoot.currentShowRail
                         onToggled: function(val) { launcherTabRoot.currentShowRail = val; }
+                    }
+                }
+
+                SettingsRow {
+                    rootObj: launcherTabRoot.rootObj
+                    settingId: "launcher_fav_columns"
+                    icon: "󰕭"
+                    title: I18n.t("guide.launcher.fav_columns.title", "Favourites per row")
+                    description: I18n.t("guide.launcher.fav_columns.desc", "How many favourite apps sit side by side in the grid")
+                    hiddenByConfig: !launcherTabRoot.currentShowRail
+                    NumberSelector {
+                        implicitWidth: rootObj.s(150)
+                        implicitHeight: rootObj.s(32)
+                        from: 2
+                        to: 6
+                        stepSize: 1
+                        decimals: 0
+                        value: launcherTabRoot.currentFavColumns
+                        baseColor: ThemeBackend.surface0
+                        accentColor: ThemeBackend.mauve
+                        buttonColor: ThemeBackend.surface1
+                        buttonTextColor: ThemeBackend.text
+                        textColor: ThemeBackend.text
+                        subTextColor: ThemeBackend.subtext0
+                        borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                        cornerRadius: ThemeBackend.borderRadius
+                        fontFamily: ThemeBackend.fontFamily
+                        fontPixelSize: rootObj.s(11)
+                        onValueChanged: function(val) {
+                            const c = Math.round(val);
+                            if (c >= 2 && c <= 6 && c !== launcherTabRoot.currentFavColumns) {
+                                launcherTabRoot.currentFavColumns = c;
+                                launcherTabRoot.updateLauncherSetting("favColumns", c);
+                            }
+                        }
+                    }
+                }
+
+                SettingsRow {
+                    rootObj: launcherTabRoot.rootObj
+                    settingId: "launcher_order_reset"
+                    icon: "󰑓"
+                    title: I18n.t("guide.launcher.order.title", "App order")
+                    description: I18n.t("guide.launcher.order.desc", "Drag apps in the list to reorder them. Reset to go back to the automatic order")
+                    ClickButton {
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        implicitHeight: rootObj.s(32)
+                        horizontalPadding: rootObj.s(14)
+                        cornerRadius: ThemeBackend.borderRadius
+                        buttonText: I18n.t("guide.launcher.order.reset", "Reset order")
+                        textFontSize: rootObj.s(11)
+                        accentColor: ThemeBackend.surface1
+                        textColor: ThemeBackend.text
+                        onClicked: launcherTabRoot.updateLauncherSetting("appOrder", [])
                     }
                 }
 
