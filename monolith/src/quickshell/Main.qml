@@ -366,8 +366,11 @@ PanelWindow {
 
     property string targetActive: "hidden"
     property string currentActive: "hidden"
+    // the last panel shown, kept while it closes (currentActive is already "hidden" by then)
+    property string lastShown: "hidden"
 
     onCurrentActiveChanged: {
+        if (currentActive !== "hidden") lastShown = currentActive;
         reportWidgetState();
     }
 
@@ -533,7 +536,8 @@ PanelWindow {
         popupW: masterWindow._animW
         popupH: masterWindow._animH
         progress: contentStage.unfold
-        active: masterWindow.isVisible || contentStage.unfold > 0.001
+        // the wallpaper picker floats over the desktop with no plate behind it
+        active: masterWindow.lastShown !== "wallpaper" && (masterWindow.isVisible || contentStage.unfold > 0.001)
     }
 
     Item {
