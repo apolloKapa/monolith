@@ -115,8 +115,9 @@ Item {
         anchors.fill: parent
         color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
         radius: ThemeBackend.borderRadius
-        border.width: 1
-        border.color: Qt.rgba(ThemeBackend.text.r, ThemeBackend.text.g, ThemeBackend.text.b, 0.06)
+        // the outlined styles' line, and none otherwise (it used to keep a hairline in every style)
+        border.width: ThemeBackend.outlined ? ThemeBackend.outlineOuter : 0
+        border.color: ThemeBackend.outlineColor
         clip: true
 
         WallpaperBlur {
