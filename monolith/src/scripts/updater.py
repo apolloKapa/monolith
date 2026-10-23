@@ -70,7 +70,20 @@ if "--delay" in sys.argv:
     print(0)
     sys.exit(0)
 
+# the version.txt shipped with the installed files: what's really running (a redeploy or a
+# manual copy updates only this, not the installer's record)
+installed_version_file = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "version.txt")
+
 def get_local_ver():
+    if os.path.isfile(installed_version_file):
+        try:
+            with open(installed_version_file, "r") as f:
+                v = f.read().strip()
+            if v:
+                return v
+        except Exception:
+            pass
     if os.path.isfile(state_file):
         try:
             with open(state_file, "r") as f:

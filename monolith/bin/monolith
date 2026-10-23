@@ -276,7 +276,8 @@ if [[ "$1" == "installer" ]]; then
     # stops the shell, which used to take the terminal (and the half-done update) down with it.
     for term in "${TERMINAL:-}" kitty foot alacritty wezterm xterm; do
         [ -n "$term" ] && command -v "$term" >/dev/null 2>&1 || continue
-        exec setsid -f "$term" -e bash "$installer" "$@"
+        # keep the window open if it fails, so the error can be read
+        exec setsid -f "$term" -e bash -c 'bash "$0" "$@" || { echo; read -r -p "The update stopped with an error (see above). Press Enter to close. " _ < /dev/tty; }' "$installer" "$@"
     done
     echo "No terminal found to run the installer in."
     exit 1
