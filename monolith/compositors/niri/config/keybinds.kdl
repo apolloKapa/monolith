@@ -78,6 +78,7 @@ binds {
     Mod+V { spawn "monolith" "msg" "toggle" "volume"; }
     Mod+A { spawn "monolith" "msg" "toggle" "autohide"; }
     Mod+Alt+C { spawn "monolith" "msg" "toggle" "clipboard"; }
+    Mod+P { spawn "monolith" "msg" "toggle" "cheatsheet"; }
     Mod+Alt+M { spawn "monolith" "msg" "toggle" "music"; }
     Mod+Alt+W { spawn "monolith" "msg" "toggle" "wallpaper"; }
     Mod+Alt+H { spawn "monolith" "msg" "toggle" "settings"; }
