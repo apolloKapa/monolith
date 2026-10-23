@@ -209,7 +209,13 @@ PanelWindow {
         "itemCount": 6,
         "terminalCommand": "kitty -e",
         "smartRanking": true,
-        "searchProvider": "google"
+        "searchProvider": "google",
+        "favorites": [],
+        "showRail": true,
+        "gridView": false,
+        "gridColumns": 5,
+        "showDescriptions": true,
+        "webSearch": true
     })
 
     property var rawLauncherSettings: {
@@ -229,6 +235,64 @@ PanelWindow {
     property string terminalCommand: (rawLauncherSettings && rawLauncherSettings.terminalCommand !== undefined) ? rawLauncherSettings.terminalCommand : "kitty -e"
     property string searchProvider: (rawLauncherSettings && rawLauncherSettings.searchProvider !== undefined) ? rawLauncherSettings.searchProvider : SearchProviders.DEFAULT_ID
     property bool smartRanking: (rawLauncherSettings && rawLauncherSettings.smartRanking !== undefined) ? rawLauncherSettings.smartRanking : true
+    // Settings -> Launcher: the left rail (tabs + favourite apps), grid view, descriptions, web search
+    property var favorites: (rawLauncherSettings && Array.isArray(rawLauncherSettings.favorites)) ? rawLauncherSettings.favorites : []
+    property bool showRail: !(rawLauncherSettings && rawLauncherSettings.showRail === false)
+    property bool gridView: !!(rawLauncherSettings && rawLauncherSettings.gridView === true)
+    property int gridColumns: (rawLauncherSettings && Number(rawLauncherSettings.gridColumns) >= 3) ? Math.min(8, Number(rawLauncherSettings.gridColumns)) : 5
+    property bool showDescriptions: !(rawLauncherSettings && rawLauncherSettings.showDescriptions === false)
+    property bool webSearch: !(rawLauncherSettings && rawLauncherSettings.webSearch === false)
+    // apps show as a grid (only the Applications tab; files stay a list)
+    readonly property bool appGridActive: gridView && currentTabIndex === 0
+    readonly property real railW: showRail ? s(52) : 0
+
+    function isFavorite(desktopId) {
+        return desktopId !== "" && favorites.indexOf(desktopId) !== -1;
+    }
+    function toggleFavorite(desktopId) {
+        if (!desktopId) return;
+        let cur = JSON.parse(JSON.stringify(Config.getSetting("launcher", defaultLauncherSettings) || {}));
+        let favs = Array.isArray(cur.favorites) ? cur.favorites.slice() : [];
+        let i = favs.indexOf(desktopId);
+        if (i === -1) favs.push(desktopId); else favs.splice(i, 1);
+        cur.favorites = favs;
+        Config.setSetting("launcher", cur);
+    }
+    // favourites as app entries (name, icon, desktop_id), in the order they were pinned
+    readonly property var favoriteApps: {
+        let out = [];
+        for (let i = 0; i < favorites.length; i++) {
+            for (let j = 0; j < allApps.length; j++) {
+                if (allApps[j].desktop_id === favorites[i]) { out.push(allApps[j]); break; }
+            }
+        }
+        return out;
+    }
+    function iconUrl(ic) {
+        if (!ic) return "";
+        if (ic.startsWith("file://") || ic.startsWith("image://") || ic.startsWith("http://") || ic.startsWith("https://")) return ic;
+        if (ic.startsWith("/")) return "file://" + ic;
+        let baseName = ic.replace(/\.(png|svg|xpm|ico)$/i, "");
+        if (typeof Quickshell !== "undefined" && typeof Quickshell.iconPath === "function") {
+            let resolved = Quickshell.iconPath(ic) || Quickshell.iconPath(baseName);
+            if (resolved && resolved.length > 0) return resolved.startsWith("/") ? ("file://" + resolved) : resolved;
+        }
+        return "image://icon/" + baseName;
+    }
+    // the web button: search what's typed, or start a "?" web query
+    function webButton() {
+        let q = searchInput.text.trim();
+        if (q.startsWith("?")) q = q.substring(1).trim();
+        if (q.length > 0 && !q.startsWith(">")) {
+            Quickshell.execDetached(["xdg-open", SearchProviders.urlFor(launcherWindow.searchProvider, q)]);
+            closeLauncher();
+        } else {
+            if (launcherWindow.currentTabIndex !== 0) launcherWindow.currentTabIndex = 0;
+            searchInput.text = "? ";
+            filterApps(searchInput.text);
+            launcherWindow.grabInputFocus();
+        }
+    }
 
     onSmartRankingChanged: {
         if (launcherWindow.isVisible) {
@@ -324,20 +388,28 @@ PanelWindow {
     property real baseLauncherWidth: s(customWidth)
     property real collapsedCenterHeight: s(110)
 
+    readonly property real gridCellH: s(92)
+    readonly property real railMinH: showRail ? (3 * s(44) + s(17) + favoriteApps.length * s(44)) : 0
     property real targetLauncherHeight: {
-        let headerH = s(36) + s(28) + s(8) + s(28);
+        let headerH = s(36) + (showRail ? 0 : s(28) + s(8)) + s(28);
+        let listMin = railMinH > 0 ? headerH + s(8) + railMinH : 0;
+        if (appGridActive) {
+            let rows = Math.ceil(appModel.count / gridColumns);
+            let shown = Math.min(rows, Math.max(2, Math.round(customItemCount * s(48) / gridCellH)));
+            return Math.max(listMin, headerH + s(8) + Math.max(1, shown) * gridCellH);
+        }
         if (currentTabIndex === 2) {
             let totalRows = Math.ceil(emojiModel.count / 5);
             if (totalRows <= 0) {
                 return headerH;
             }
-            return headerH + s(8) + (Math.min(totalRows, customItemCount) * s(60));
+            return Math.max(listMin, headerH + s(8) + (Math.min(totalRows, customItemCount) * s(60)));
         }
         let count = Math.min(appModel.count, customItemCount);
         if (count <= 0) {
-            return headerH;
+            return Math.max(listMin, headerH);
         }
-        return headerH + s(8) + (count * s(48));
+        return Math.max(listMin, headerH + s(8) + (count * s(48)));
     }
 
     property real animatedLauncherHeight: targetLauncherHeight
@@ -922,7 +994,7 @@ PanelWindow {
             }
         }
 
-        if (rawTrimmed.startsWith("?")) {
+        if (launcherWindow.webSearch && rawTrimmed.startsWith("?")) {
             let term = rawTrimmed.substring(1).trim();
             let provider = SearchProviders.find(launcherWindow.searchProvider);
             filtered.push({
@@ -1327,6 +1399,7 @@ PanelWindow {
                     Keys.priority: Keys.BeforeItem
                     anchors.left: parent.left
                     anchors.right: parent.right
+                    anchors.rightMargin: launcherWindow.webSearch ? launcherWindow.s(44) : 0
                     y: contentContainer.isSearchAtBottom ? Math.max(0, parent.height - height) : 0
                     height: launcherWindow.s(36)
 
@@ -1398,6 +1471,8 @@ PanelWindow {
                             } else if (emojiGrid.currentIndex < emojiModel.count - 1) {
                                 emojiGrid.currentIndex = emojiModel.count - 1;
                             }
+                        } else if (launcherWindow.appGridActive) {
+                            appList.currentIndex = Math.min(appModel.count - 1, appList.currentIndex + launcherWindow.gridColumns);
                         } else {
                             if (appList.currentIndex < appModel.count - 1) {
                                 appList.currentIndex++;
@@ -1412,6 +1487,8 @@ PanelWindow {
                             if (emojiGrid.currentIndex >= 5) {
                                 emojiGrid.currentIndex -= 5;
                             }
+                        } else if (launcherWindow.appGridActive) {
+                            appList.currentIndex = Math.max(0, appList.currentIndex - launcherWindow.gridColumns);
                         } else {
                             if (appList.currentIndex > 0) {
                                 appList.currentIndex--;
@@ -1420,7 +1497,10 @@ PanelWindow {
                         event.accepted = true;
                     }
                     Keys.onLeftPressed: function(event) {
-                        if (launcherWindow.currentTabIndex === 2) {
+                        if (launcherWindow.appGridActive && searchInput.text === "") {
+                            appList.currentIndex = Math.max(0, appList.currentIndex - 1);
+                            event.accepted = true;
+                        } else if (launcherWindow.currentTabIndex === 2) {
                             launcherWindow.isKeyboardNav = true;
                             keyboardNavTimer.restart();
                             if (emojiGrid.currentIndex > 0) {
@@ -1430,7 +1510,10 @@ PanelWindow {
                         }
                     }
                     Keys.onRightPressed: function(event) {
-                        if (launcherWindow.currentTabIndex === 2) {
+                        if (launcherWindow.appGridActive && searchInput.text === "") {
+                            appList.currentIndex = Math.min(appModel.count - 1, appList.currentIndex + 1);
+                            event.accepted = true;
+                        } else if (launcherWindow.currentTabIndex === 2) {
                             launcherWindow.isKeyboardNav = true;
                             keyboardNavTimer.restart();
                             if (emojiGrid.currentIndex < emojiModel.count - 1) {
@@ -1453,15 +1536,34 @@ PanelWindow {
                     }
                 }
 
+                // web search button next to the search field (Settings -> Launcher -> Web search)
+                IconButton {
+                    id: webBtn
+                    z: 10
+                    visible: launcherWindow.webSearch
+                    anchors.right: parent.right
+                    y: searchInput.y
+                    size: launcherWindow.s(36)
+                    cornerRadius: ThemeBackend.borderRadius
+                    buttonIcon: "󰖟"
+                    iconFontSize: launcherWindow.s(16)
+                    glassShadow: 0
+                    accentColor: ThemeBackend.surface0
+                    textColor: ThemeBackend.text
+                    onClicked: launcherWindow.webButton()
+                }
+
+                // the tabs: a row here, or icons in the rail when it's on
                 Switch {
                     id: tabSwitch
                     z: 10
+                    visible: !launcherWindow.showRail
                     anchors.left: parent.left
                     anchors.right: parent.right
                     y: contentContainer.isSearchAtBottom
-                       ? (searchInput.y - height - launcherWindow.s(8))
-                       : (searchInput.y + searchInput.height + launcherWindow.s(8))
-                    height: launcherWindow.s(28)
+                       ? (searchInput.y - height - (launcherWindow.showRail ? 0 : launcherWindow.s(8)))
+                       : (searchInput.y + searchInput.height + (launcherWindow.showRail ? 0 : launcherWindow.s(8)))
+                    height: launcherWindow.showRail ? 0 : launcherWindow.s(28)
                     cornerRadius: ThemeBackend.borderRadius
                     fontPixelSize: launcherWindow.s(11)
                     baseColor: ThemeBackend.surface0
@@ -1479,10 +1581,129 @@ PanelWindow {
                     }
                 }
 
+                // the rail: tabs on top, a line, then favourite apps (right-click an app to pin it)
+                Item {
+                    id: rail
+                    visible: launcherWindow.showRail
+                    x: 0
+                    y: listContainer.y
+                    width: launcherWindow.railW
+                    height: listContainer.height
+
+                    component RailButton: Rectangle {
+                        id: rb
+                        property bool selected: false
+                        property string glyph: ""
+                        property string image: ""
+                        signal activated()
+                        signal secondary()
+                        width: launcherWindow.railW
+                        height: launcherWindow.s(40)
+                        radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
+                        color: selected ? (ThemeBackend.material ? ThemeBackend.secondaryContainer : Qt.alpha(ThemeBackend.mauve, 0.18))
+                                        : (rbMa.containsMouse ? Qt.alpha(ThemeBackend.surface1, 0.7) : "transparent")
+                        Behavior on color { ColorAnimation { duration: (140) * ThemeBackend.animScale } }
+                        Text {
+                            anchors.centerIn: parent
+                            visible: rb.image === ""
+                            text: rb.glyph
+                            font.family: ThemeBackend.iconFont
+                            font.pixelSize: launcherWindow.s(18)
+                            color: rb.selected ? (ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.mauve) : ThemeBackend.subtext0
+                        }
+                        Image {
+                            anchors.centerIn: parent
+                            visible: rb.image !== ""
+                            width: launcherWindow.s(26)
+                            height: width
+                            source: rb.image
+                            sourceSize: Qt.size(64, 64)
+                            asynchronous: true
+                            smooth: true
+                            mipmap: true
+                        }
+                        MouseArea {
+                            id: rbMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: (mouse) => mouse.button === Qt.RightButton ? rb.secondary() : rb.activated()
+                        }
+                    }
+
+                    Flickable {
+                        anchors.fill: parent
+                        contentHeight: railCol.implicitHeight
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        Column {
+                            id: railCol
+                            width: parent.width
+                            spacing: launcherWindow.s(4)
+
+                            Repeater {
+                                model: [
+                                    { glyph: "󰀻", tab: 0 },
+                                    { glyph: "󰉋", tab: 1 },
+                                    { glyph: "󰞅", tab: 2 }
+                                ]
+                                delegate: RailButton {
+                                    required property var modelData
+                                    glyph: modelData.glyph
+                                    selected: launcherWindow.currentTabIndex === modelData.tab
+                                    onActivated: {
+                                        launcherWindow.currentTabIndex = modelData.tab;
+                                        launcherWindow.grabInputFocus();
+                                    }
+                                }
+                            }
+
+                            Item {
+                                width: parent.width
+                                height: launcherWindow.s(9)
+                                visible: launcherWindow.favoriteApps.length > 0
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: parent.width * 0.55
+                                    height: 1
+                                    color: Qt.alpha(ThemeBackend.text, 0.15)
+                                }
+                            }
+
+                            Repeater {
+                                model: launcherWindow.favoriteApps
+                                delegate: RailButton {
+                                    required property var modelData
+                                    image: modelData.fontIcon ? "" : launcherWindow.iconUrl(modelData.icon)
+                                    glyph: modelData.fontIcon || "󰵆"
+                                    onActivated: {
+                                        if (String(modelData.desktop_id).startsWith("qs-widget-")) launcherWindow.launchWidget(modelData.name, String(modelData.desktop_id).substring(10));
+                                        else launcherWindow.launchApp(modelData.name, modelData.desktop_id);
+                                    }
+                                    onSecondary: launcherWindow.toggleFavorite(modelData.desktop_id)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // the line between the rail and the list
+                Rectangle {
+                    visible: launcherWindow.showRail
+                    x: launcherWindow.railW + launcherWindow.s(6)
+                    y: listContainer.y + launcherWindow.s(4)
+                    width: 1
+                    height: Math.max(0, listContainer.height - launcherWindow.s(8))
+                    color: Qt.alpha(ThemeBackend.text, 0.12)
+                }
+
                 Item {
                     id: listContainer
                     z: 1
                     anchors.left: parent.left
+                    anchors.leftMargin: launcherWindow.showRail ? launcherWindow.railW + launcherWindow.s(13) : 0
                     anchors.right: parent.right
                     y: contentContainer.isSearchAtBottom ? 0 : (tabSwitch.y + tabSwitch.height + launcherWindow.s(8))
                     height: contentContainer.isSearchAtBottom
@@ -1541,7 +1762,7 @@ PanelWindow {
                     ListView {
                         id: appList
                         anchors.fill: parent
-                        visible: launcherWindow.currentTabIndex !== 2
+                        visible: launcherWindow.currentTabIndex !== 2 && !launcherWindow.appGridActive
                         clip: true
                         model: appModel
                         spacing: launcherWindow.s(4)
@@ -1901,7 +2122,7 @@ PanelWindow {
                                         Text {
                                             id: delegateDesc
                                             Layout.fillWidth: true
-                                            visible: model.description !== undefined && model.description !== null && model.description !== ""
+                                            visible: launcherWindow.showDescriptions && model.description !== undefined && model.description !== null && model.description !== ""
                                             text: model.description || ""
                                             font.family: ThemeBackend.fontFamily
                                             font.pixelSize: launcherWindow.s(10)
@@ -1917,16 +2138,134 @@ PanelWindow {
                                     }
                                 }
 
+                                // pinned to favourites
+                                Text {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: launcherWindow.s(12)
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    visible: launcherWindow.showRail && launcherWindow.isFavorite(model.desktop_id || "")
+                                    text: "󰐃"
+                                    font.family: ThemeBackend.iconFont
+                                    font.pixelSize: launcherWindow.s(12)
+                                    color: ThemeBackend.subtext0
+                                }
+
                                 MouseArea {
                                     id: ma
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
+                                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                    onClicked: (mouse) => {
+                                        if (mouse.button === Qt.RightButton) {
+                                            if (model.desktop_id && !model.isFile) launcherWindow.toggleFavorite(model.desktop_id);
+                                            return;
+                                        }
                                         launcherWindow.isKeyboardNav = false;
                                         appList.currentIndex = index;
                                         activateIndex(index);
                                     }
+                                }
+                            }
+                        }
+                    }
+
+                    // apps as a grid (Settings -> Launcher -> Grid view); shares appList's selection
+                    GridView {
+                        id: appGrid
+                        anchors.fill: parent
+                        visible: launcherWindow.appGridActive
+                        clip: true
+                        model: appModel
+                        cellWidth: width / launcherWindow.gridColumns
+                        cellHeight: launcherWindow.gridCellH
+                        currentIndex: appList.currentIndex
+                        boundsBehavior: Flickable.StopAtBounds
+                        highlightFollowsCurrentItem: true
+                        highlightMoveDuration: (160) * ThemeBackend.animScale
+                        highlight: Rectangle {
+                            radius: ThemeBackend.pill ? launcherWindow.s(22) : ThemeBackend.borderRadius
+                            color: ThemeBackend.material ? ThemeBackend.secondaryContainer : Qt.alpha(ThemeBackend.mauve, 0.16)
+                        }
+                        Keys.forwardTo: [searchInput]
+
+                        delegate: Item {
+                            id: gridCell
+                            width: appGrid.cellWidth
+                            height: appGrid.cellHeight
+                            readonly property bool selected: index === appList.currentIndex
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: ThemeBackend.pill ? launcherWindow.s(22) : ThemeBackend.borderRadius
+                                color: Qt.alpha(ThemeBackend.surface1, 0.6)
+                                visible: gma.containsMouse && !gridCell.selected
+                            }
+
+                            Column {
+                                anchors.centerIn: parent
+                                width: parent.width - launcherWindow.s(10)
+                                spacing: launcherWindow.s(6)
+
+                                Item {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: launcherWindow.s(44)
+                                    height: width
+                                    Image {
+                                        id: gridIcon
+                                        anchors.fill: parent
+                                        visible: (!model.fontIcon || model.fontIcon === "") && status === Image.Ready
+                                        source: (model.fontIcon && model.fontIcon !== "") ? "" : launcherWindow.iconUrl(model.icon || "")
+                                        sourceSize: Qt.size(96, 96)
+                                        asynchronous: true
+                                        smooth: true
+                                        mipmap: true
+                                    }
+                                    Text {
+                                        anchors.centerIn: parent
+                                        visible: !gridIcon.visible
+                                        text: (model.fontIcon && model.fontIcon !== "") ? model.fontIcon : (model.isCalc ? "󰃬" : (model.isCommand ? "󰆍" : "󰵆"))
+                                        font.family: ThemeBackend.iconFont
+                                        font.pixelSize: launcherWindow.s(26)
+                                        color: ThemeBackend.subtext0
+                                    }
+                                    Text {
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        anchors.margins: -launcherWindow.s(4)
+                                        visible: launcherWindow.showRail && launcherWindow.isFavorite(model.desktop_id || "")
+                                        text: "󰐃"
+                                        font.family: ThemeBackend.iconFont
+                                        font.pixelSize: launcherWindow.s(11)
+                                        color: ThemeBackend.subtext0
+                                    }
+                                }
+                                Text {
+                                    width: parent.width
+                                    horizontalAlignment: Text.AlignHCenter
+                                    text: model.name
+                                    elide: Text.ElideRight
+                                    font.family: ThemeBackend.fontFamily
+                                    font.pixelSize: launcherWindow.s(11)
+                                    font.weight: gridCell.selected ? Font.DemiBold : Font.Normal
+                                    color: gridCell.selected && ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.text
+                                }
+                            }
+
+                            MouseArea {
+                                id: gma
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: (mouse) => {
+                                    if (mouse.button === Qt.RightButton) {
+                                        if (model.desktop_id && !model.isFile) launcherWindow.toggleFavorite(model.desktop_id);
+                                        return;
+                                    }
+                                    launcherWindow.isKeyboardNav = false;
+                                    appList.currentIndex = index;
+                                    activateIndex(index);
                                 }
                             }
                         }
