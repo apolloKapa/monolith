@@ -21,6 +21,8 @@ Item {
     }
 
     property real elementOpacity: 1.0
+    // Settings window in a see-through style: translucent, blurred by niri
+    property bool standaloneGlass: false
     property bool blurBackground: false
     property string blurStyle: "material"
     readonly property real liquidGlassOpacity: 0.1
@@ -397,7 +399,16 @@ Item {
         root.effects = themeConfig.effects || {};
         const speed = Number(anim.speed);
         root.animationSpeed = isNaN(speed) ? 1.0 : Math.max(0.25, Math.min(3.0, speed));
-        root.elementOpacity = (root.opaqueStyle || Caching.isStandalone) ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));
+        // the Settings app (standalone) is a normal window: it can't draw the wallpaper behind
+        // itself, so in the see-through styles it goes translucent and niri blurs what's behind it
+        // (window rule `background-effect { blur true; }`)
+        const wantsGlass = themeConfig.blurBackground === true && (themeConfig.blurStyle === "blur" || themeConfig.blurStyle === "liquid" || themeConfig.blurStyle === "bubbly");
+        root.standaloneGlass = Caching.isStandalone && wantsGlass && !root.opaqueStyle;
+        if (root.standaloneGlass) {
+            root.elementOpacity = themeConfig.blurStyle === "liquid" ? 0.45 : (isNaN(pct) ? 0.7 : Math.max(0.35, Math.min(1.0, pct / 100.0)));
+        } else {
+            root.elementOpacity = (root.opaqueStyle || Caching.isStandalone) ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));
+        }
     }
 
     function updateColors() {
