@@ -114,6 +114,34 @@ QtObject {
                     icon: "󰅐",
                     face: "faces/timedate/GoogleFace.qml"
                 },
+                "analog": {
+                    id: "analog",
+                    name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.name.analog", "Analog") : "Analog",
+                    desc: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.analog", "A small clock face and the time") : "A small clock face and the time",
+                    icon: "󰥔",
+                    face: "faces/timedate/AnalogFace.qml"
+                },
+                "minimal": {
+                    id: "minimal",
+                    name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.name.minimal", "Minimal") : "Minimal",
+                    desc: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.minimal", "Just the time, light and a little larger") : "Just the time, light and a little larger",
+                    icon: "󰔟",
+                    face: "faces/timedate/MinimalFace.qml"
+                },
+                "seconds": {
+                    id: "seconds",
+                    name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.name.seconds", "Seconds") : "Seconds",
+                    desc: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.seconds", "The time with ticking seconds") : "The time with ticking seconds",
+                    icon: "󱑎",
+                    face: "faces/timedate/SecondsFace.qml"
+                },
+                "chips": {
+                    id: "chips",
+                    name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.name.chips", "Chips") : "Chips",
+                    desc: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.chips", "Hours and minutes in small pills") : "Hours and minutes in small pills",
+                    icon: "󰙅",
+                    face: "faces/timedate/ChipsFace.qml"
+                },
                 "classic": {
                     id: "classic",
                     name: typeof I18n !== "undefined" ? I18n.t("guide.bar.modules.timedate.style.name.classic", "Classic") : "Classic",

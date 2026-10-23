@@ -14,14 +14,21 @@ Rectangle {
     readonly property int curTab: popup ? popup.currentTab : -1
     readonly property int expTab: popup ? popup.expandedTab : -1
     readonly property int curSub: popup ? popup.currentSubTab : -1
-    readonly property real headerH: popup.s(38)
-    readonly property real subH: popup.s(32)
+    readonly property real headerH: popup.s(46)
+    readonly property real subH: popup.s(36)
     readonly property real gap: popup.s(2)
 
     x: I18n.rtl ? (parent.width - width) : 0
     anchors.top: parent.top
     anchors.bottom: parent.bottom
-    width: popup.compact ? popup.s(64) : popup.s(232)
+    width: popup.compact ? popup.s(72) : popup.s(268)
+
+    // each section gets its own colour for its icon badge (spread round the colour wheel, so the
+    // list reads at a glance whatever the theme's palette is)
+    function badgeColor(i) {
+        const hue = ((i * 0.137) + 0.58) % 1.0;
+        return Qt.hsla(hue, ThemeBackend.darkMode ? 0.55 : 0.6, ThemeBackend.darkMode ? 0.68 : 0.45, 1.0);
+    }
     color: sidebarGlass.active ? "transparent" : (ThemeBackend.material ? ThemeBackend.surfaceContainerLow : Qt.alpha(ThemeBackend.surface0, 0.4))
 
     topLeftRadius: ThemeBackend.rad(!I18n.rtl ? ThemeBackend.clampedBorderRadius : 0)
@@ -50,27 +57,53 @@ Rectangle {
         RowLayout {
             layoutDirection: I18n.layoutDirection
             Layout.fillWidth: true
-            Layout.preferredHeight: popup.s(40)
+            Layout.preferredHeight: popup.s(52)
+            Layout.bottomMargin: popup.s(6)
             spacing: popup.s(8)
 
-            ColumnLayout {
+            // you: avatar, name and the Monolith version, like the top of a phone's settings
+            RowLayout {
                 visible: !popup.compact
                 Layout.fillWidth: true
-                Layout.leftMargin: popup.s(10)
-                spacing: 0
-                Caption {
-                    visible: false
-                    text: "Monolith"
-                    Layout.fillWidth: true
+                Layout.leftMargin: popup.s(4)
+                spacing: popup.s(10)
+                ImageBox {
+                    Layout.preferredWidth: popup.s(40)
+                    Layout.preferredHeight: popup.s(40)
+                    size: popup.s(40)
+                    cornerRadius: ThemeBackend.square ? 0 : popup.s(20)
+                    imageRadius: ThemeBackend.square ? 0 : popup.s(20)
+                    source: SystemInfo.avatarPath !== "" ? "file://" + SystemInfo.avatarPath : ""
+                    backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.primaryContainer : "transparent"
+                    Text {
+                        anchors.centerIn: parent
+                        visible: SystemInfo.avatarPath === ""
+                        text: (SystemInfo.username || "?").charAt(0).toUpperCase()
+                        font.family: ThemeBackend.fontFamily
+                        font.pixelSize: popup.s(17)
+                        color: ThemeBackend.onPrimaryContainer
+                    }
                 }
-                Text {
+                ColumnLayout {
                     Layout.fillWidth: true
-                    horizontalAlignment: I18n.textAlignment
-                    text: I18n.t("guide.settings", "Settings")
-                    font.family: ThemeBackend.fontFamily
-                    font.pixelSize: popup.s(22)
-                    font.bold: false
-                    color: ThemeBackend.text
+                    spacing: 0
+                    Text {
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        text: SystemInfo.username !== "" ? SystemInfo.username : I18n.t("guide.settings", "Settings")
+                        font.family: ThemeBackend.fontFamily
+                        font.weight: Font.Medium
+                        font.pixelSize: popup.s(16)
+                        color: ThemeBackend.text
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        text: I18n.t("guide.settings", "Settings") + " · Monolith " + Updater.localVersion
+                        font.family: ThemeBackend.fontFamily
+                        font.pixelSize: popup.s(11)
+                        color: ThemeBackend.subtext0
+                    }
                 }
             }
 
@@ -221,18 +254,20 @@ Rectangle {
                                 anchors.rightMargin: popup.compact ? (header.width - popup.s(28)) / 2 : popup.s(12)
                                 spacing: popup.s(10)
 
-                                IconButton {
-                                    enabled: false
-                                    size: popup.s(28)
-                                    Layout.preferredWidth: popup.s(28)
-                                    Layout.preferredHeight: popup.s(28)
+                                // the section's icon in its own coloured circle
+                                Rectangle {
+                                    Layout.preferredWidth: popup.s(32)
+                                    Layout.preferredHeight: popup.s(32)
                                     Layout.alignment: Qt.AlignVCenter
-                                    cornerRadius: ThemeBackend.borderRadius
-                                    buttonIcon: tabDelegate.modelData.icon || "󰒓"
-                                    bgOpacity: 2.0
-                                    iconFontSize: popup.s(15)
-                                    accentColor: "transparent"
-                                    textColor: header.active ? (ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.text) : (headerMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)
+                                    radius: ThemeBackend.square ? 0 : width / 2
+                                    color: sidebar.badgeColor(tabDelegate.tabIndex)
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: tabDelegate.modelData.icon || "󰒓"
+                                        font.family: ThemeBackend.iconFont
+                                        font.pixelSize: popup.s(16)
+                                        color: ThemeBackend.darkMode ? "#141414" : "#ffffff"
+                                    }
                                 }
 
                                 Text {
@@ -240,7 +275,7 @@ Rectangle {
                                     text: I18n.t("guide.tabs." + (tabDelegate.modelData.key || tabDelegate.modelData.id).toLowerCase(), tabDelegate.modelData.name || tabDelegate.modelData.id)
                                     font.family: ThemeBackend.fontFamily
                                     font.weight: header.active ? Font.Bold : Font.Medium
-                                    font.pixelSize: popup.s(13)
+                                    font.pixelSize: popup.s(14)
                                     color: header.active
                                         ? ThemeBackend.text
                                         : (headerMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0)

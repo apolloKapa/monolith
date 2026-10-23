@@ -1741,6 +1741,100 @@ GuideTab {
                     }
                 }
             }
+
+            // more: launch bounce, scroll for workspaces, a launcher button, which monitors
+            SettingsBlob {
+                component DockSwitch: Toggle {
+                    property string key: ""
+                    property bool fallback: false
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    checked: {
+                        const d = (Config.rawSettings && Config.rawSettings.dock) ? Config.rawSettings.dock : {};
+                        return d[key] !== undefined ? d[key] === true : fallback;
+                    }
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface1
+                    handleColor: ThemeBackend.crust
+                    handleOffColor: ThemeBackend.text
+                    onToggled: function(val) { dockTabRoot.updateDockSetting(key, val); }
+                }
+
+                SettingsRow {
+                    rootObj: dockTabRoot.rootObj
+                    settingId: "dock_launch_bounce"
+                    icon: "󰜷"
+                    title: I18n.t("guide.dock.launch_bounce.title", "Bounce while launching")
+                    description: I18n.t("guide.dock.launch_bounce.desc", "An app's icon hops while the app starts, until its window shows up")
+                    searchKeywords: "dock bounce launch animation starting"
+                    DockSwitch { key: "launchBounce"; fallback: true }
+                }
+                SettingsRow {
+                    rootObj: dockTabRoot.rootObj
+                    settingId: "dock_scroll_workspaces"
+                    icon: "󰕌"
+                    title: I18n.t("guide.dock.scroll_ws.title", "Scroll to switch workspaces")
+                    description: I18n.t("guide.dock.scroll_ws.desc", "Scroll the mouse wheel over the dock to go to the next or previous workspace (when element scrolling is off)")
+                    searchKeywords: "dock scroll wheel workspace switch"
+                    DockSwitch { key: "scrollWorkspaces"; fallback: false }
+                }
+                SettingsRow {
+                    rootObj: dockTabRoot.rootObj
+                    settingId: "dock_launcher_button"
+                    icon: "󰀻"
+                    title: I18n.t("guide.dock.launcher_btn.title", "Launcher button")
+                    description: I18n.t("guide.dock.launcher_btn.desc", "An all-apps button at the end of the dock that opens the launcher")
+                    searchKeywords: "dock launcher button apps grid"
+                    DockSwitch { key: "showLauncher"; fallback: false }
+                }
+                SettingsRow {
+                    rootObj: dockTabRoot.rootObj
+                    settingId: "dock_screens"
+                    icon: "󰍺"
+                    title: I18n.t("guide.dock.screens.title", "Monitors")
+                    description: I18n.t("guide.dock.screens.desc", "Which screens have a dock. None picked means every screen")
+                    searchKeywords: "dock monitor screen display output which"
+                    Flow {
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        Layout.maximumWidth: dockTabRoot.rootObj.s(360)
+                        spacing: dockTabRoot.rootObj.s(6)
+                        Repeater {
+                            model: Quickshell.screens
+                            Rectangle {
+                                id: scrChip
+                                required property var modelData
+                                readonly property var picked: (Config.rawSettings && Config.rawSettings.dock && Array.isArray(Config.rawSettings.dock.screens)) ? Config.rawSettings.dock.screens : []
+                                readonly property bool on: picked.indexOf(modelData.name) !== -1
+                                width: scrLabel.implicitWidth + dockTabRoot.rootObj.s(24)
+                                height: dockTabRoot.rootObj.s(32)
+                                radius: ThemeBackend.square ? 0 : height / 2
+                                color: on ? ThemeBackend.mauve : (scrMa.containsMouse ? Qt.alpha(ThemeBackend.text, 0.08) : "transparent")
+                                border.width: on ? 0 : 1
+                                border.color: Qt.alpha(ThemeBackend.text, 0.18)
+                                Text {
+                                    id: scrLabel
+                                    anchors.centerIn: parent
+                                    text: scrChip.modelData.name + "  " + scrChip.modelData.width + "×" + scrChip.modelData.height
+                                    font.family: ThemeBackend.fontFamily
+                                    font.pixelSize: dockTabRoot.rootObj.s(12)
+                                    color: scrChip.on ? ThemeBackend.onPrimary : ThemeBackend.text
+                                }
+                                MouseArea {
+                                    id: scrMa
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        let list = scrChip.picked.slice();
+                                        const i = list.indexOf(scrChip.modelData.name);
+                                        if (i === -1) list.push(scrChip.modelData.name); else list.splice(i, 1);
+                                        dockTabRoot.updateDockSetting("screens", list);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

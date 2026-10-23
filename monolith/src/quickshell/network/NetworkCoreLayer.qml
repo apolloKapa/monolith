@@ -42,7 +42,7 @@ Item {
 
             property real multiShift: window.activeMode === "wifi" || window.activeMode === "eth" ? 0.0 : window.multiTransitionState
 
-            width: window.currentPower ? (window.s(170) - (window.s(25) * multiShift) - (window.s(12) * Math.max(0, window.smoothedActiveCoreCount - 2))) : window.s(140)
+            width: window.currentPower ? Math.min(window.s(150), (orbitContainer.width - window.s(18) * Math.max(0, window.activeCoreCount - 1)) / Math.max(1, window.activeCoreCount)) : window.s(130)
             height: width
 
             property real myBaseAngle: (window.coreVisualIndices[index] / Math.max(1, window.activeCoreCount)) * Math.PI * 2
@@ -54,8 +54,12 @@ Item {
             property real myOrbitRadiusX: window.s(150) + (window.activeCoreCount > 2 ? window.s(15) : 0)
             property real myOrbitRadiusY: window.s(90) + (window.activeCoreCount > 2 ? window.s(12) : 0)
 
-            x: window.activeMode === "eth" ? (orbitContainer.width / 2 - width / 2) : ((orbitContainer.width / 2 - width / 2) + (Math.cos(coreOrbitAngle) * myOrbitRadiusX * multiShift * activeTransition))
-            y: window.activeMode === "eth" ? (orbitContainer.height / 2 - height / 2) : ((orbitContainer.height / 2 - height / 2) + (Math.sin(coreOrbitAngle) * myOrbitRadiusY * multiShift * activeTransition))
+            // Monolith: the connections sit side by side along the top (they used to orbit the middle)
+            readonly property int rowCount: Math.max(1, window.activeCoreCount)
+            readonly property real rowGap: window.s(18)
+            x: (orbitContainer.width - (rowCount * width + (rowCount - 1) * rowGap)) / 2 + (window.coreVisualIndices[index] || 0) * (width + rowGap)
+            y: window.s(14)
+            Behavior on x { enabled: window.visible && window.introState >= 0.3; NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
 
             opacity: activeTransition * window.easeOut(window.animWin(window.introState, coreIntroStart, coreIntroStart + 0.22))
             scale: centralCore.bumpScale * (0.8 + 0.2 * activeTransition) * coreIntroProg

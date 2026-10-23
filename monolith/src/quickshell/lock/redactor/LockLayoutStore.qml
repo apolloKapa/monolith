@@ -11,8 +11,9 @@ QtObject {
     readonly property real screenW: Quickshell.screens.length > 0 ? Quickshell.screens[0].width : 1920
     readonly property real screenH: Quickshell.screens.length > 0 ? Quickshell.screens[0].height : 1080
 
-    readonly property real defaultPanelW: 1280
-    readonly property real defaultPanelH: 566
+    // the unlock card: small and centred (it used to be a wide three-column dashboard)
+    readonly property real defaultPanelW: 440
+    readonly property real defaultPanelH: 480
     readonly property var legacyPanelSize: ({ w: 1280, h: 580 })
     readonly property var legacyPanelItems: [
         ["widget:weather", "full", 20, 20, 380, 182],
@@ -81,31 +82,30 @@ QtObject {
         };
     }
 
+    // Monolith's lock screen: a big stacked clock in the bottom-left corner, weather top-left,
+    // notifications down the right side and the player bottom-right; the unlock card in the middle
     function defaultScreenItems() {
+        const W = root.screenW, H = root.screenH, m = Math.round(W * 0.05);
         return [
-            root.makeEntry("clock", "lockscreen", root.screenW * 0.5 - 210, root.screenH * 0.36 - 100, 420, 200),
-            root.makeEntry("fingerprint", "classic", root.screenW * 0.5, root.screenH * 0.92, 0, 0)
+            root.makeEntry("clock", "lockscreen", m, H - m - 360, 320, 360),
+            root.makeEntry("widget:weather", "compact", m, m, 300, 130),
+            root.makeEntry("notifications", "card", W - m - 380, m, 380, Math.round(H * 0.5)),
+            root.makeEntry("widget:music", "full", W - m - 380, H - m - 110, 380, 110),
+            root.makeEntry("fingerprint", "classic", W * 0.5, H * 0.92, 0, 0)
         ];
     }
 
     function defaultPanelItems(supported) {
         let hasFingerprint = supported === undefined ? root.fingerprintSupported : supported;
-        let dy = hasFingerprint ? 0 : root.noFingerprintShift;
+        let dy = hasFingerprint ? 0 : 30;
         return [
-            root.makeEntry("widget:weather", "full", 20, 20, 380, 190),
-            root.makeEntry("widget:cpu", "default", 20, 218, 186, 160),
-            root.makeEntry("widget:ram", "default", 214, 218, 186, 160),
-            root.makeEntry("widget:temp", "default", 20, 386, 186, 160),
-            root.makeEntry("widget:disk", "default", 214, 386, 186, 160),
-            root.makeEntry("avatar", "round", 540, 20 + dy, 200, 200),
-            root.makeEntry("user", "filled", 450, 236 + dy, 185, 44),
-            root.makeEntry("lockstatus", "filled", 645, 236 + dy, 185, 44),
-            root.makeEntry("password", "filled", 450, 288 + dy, 380, 44),
-            root.makeEntry("keyboard", "button", 600, 364 + dy, 0, 0),
-            root.makeEntry("battery", "button", 685, 364 + dy, 0, 0),
-            root.makeEntry("fingerprint", "classic", 640, 450, 0, 0),
-            root.makeEntry("notifications", "card", 860, 20, 400, 422),
-            root.makeEntry("widget:music", "full", 860, 450, 400, 96)
+            root.makeEntry("avatar", "round", 150, 28 + dy, 140, 140),
+            root.makeEntry("user", "plain", 40, 184 + dy, 360, 40),
+            root.makeEntry("password", "filled", 40, 236 + dy, 360, 50),
+            root.makeEntry("lockstatus", "plain", 40, 296 + dy, 360, 36),
+            root.makeEntry("keyboard", "button", 180, 350 + dy, 0, 0),
+            root.makeEntry("battery", "button", 260, 350 + dy, 0, 0),
+            root.makeEntry("fingerprint", "classic", 220, 420, 0, 0)
         ];
     }
 

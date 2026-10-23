@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../"
 import "../reusables"
 
@@ -44,7 +45,7 @@ Item {
         let pinned = dockWindow.dockAppsModel.count;
         let running = dockWindow.showRunningApps ? dockWindow.runningAppsModel.count : 0;
         let hasSep = (pinned > 0 && running > 0);
-        return pinned + (hasSep ? 1 : 0) + running;
+        return pinned + (hasSep ? 1 : 0) + running + (dockWindow.showLauncherButton ? 1 : 0);
     }
     property int effectiveItemCount: {
         if (dockWindow.enableScrolling && totalItemCount > 0) {
@@ -88,12 +89,24 @@ Item {
         if (scrollIndex > 0) scrollIndex--;
     }
 
+    Timer { id: wsScrollThrottle; interval: 220 }
+
     WheelHandler {
         id: dockWheelHandler
         target: null
         orientation: Qt.Vertical | Qt.Horizontal
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: function(event) {
+            // Settings -> Dock -> Scroll to switch workspaces (when the dock isn't scrolling its apps)
+            if (!dockWindow.enableScrolling && dockWindow.scrollWorkspaces) {
+                let wd = (event.angleDelta && event.angleDelta.y !== 0) ? event.angleDelta.y : (event.angleDelta ? event.angleDelta.x : 0);
+                if (wd !== 0 && !wsScrollThrottle.running) {
+                    wsScrollThrottle.start();
+                    Quickshell.execDetached(["niri", "msg", "action", wd < 0 ? "focus-workspace-down" : "focus-workspace-up"]);
+                }
+                event.accepted = true;
+                return;
+            }
             if (!dockWindow.enableScrolling) return;
             let dy = (event.angleDelta && event.angleDelta.y !== 0) ? event.angleDelta.y : (event.pixelDelta ? event.pixelDelta.y : 0);
             let dx = (event.angleDelta && event.angleDelta.x !== 0) ? event.angleDelta.x : (event.pixelDelta ? event.pixelDelta.x : 0);
@@ -119,13 +132,13 @@ Item {
         let pinned = dockWindow.dockAppsModel.count;
         let running = (dockWindow.showRunningApps && !dockWindow.editMode) ? dockWindow.runningAppsModel.count : 0;
         let hasSep = (pinned > 0 && running > 0);
-        let totalCount = pinned + running + (hasSep ? 1 : 0);
+        let totalCount = pinned + running + (hasSep ? 1 : 0) + (dockWindow.showLauncherButton ? 1 : 0);
         if (dockWindow.enableScrolling && totalCount > 0) {
             let vis = Math.min(totalCount, Math.max(1, dockWindow.dockVisibleElements));
             return vis * itemSize + Math.max(0, vis - 1) * itemSpacing;
         }
         let sepThickness = dockWindow.s(1);
-        let appCount = pinned + running;
+        let appCount = pinned + running + (dockWindow.showLauncherButton ? 1 : 0);
         if (appCount === 0) return 0;
         let appsLen = appCount * itemSize;
         let sepLen = hasSep ? sepThickness : 0;
@@ -458,6 +471,37 @@ Item {
                     delegate: DockRunningButton {
                         dockWindow: containerRoot.dockWindow
                         dockContainer: containerRoot
+                    }
+                }
+
+                // optional: a button at the end that opens the launcher (Settings -> Dock)
+                Item {
+                    id: dockLauncherBtn
+                    visible: dockWindow.showLauncherButton && !dockWindow.editMode
+                    Layout.preferredWidth: visible ? dockWindow.s(dockWindow.dockElementSize) : 0
+                    Layout.preferredHeight: visible ? dockWindow.s(dockWindow.dockElementSize) : 0
+                    Layout.alignment: Qt.AlignCenter
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: parent.width * 0.06
+                        radius: ThemeBackend.square ? 0 : width * 0.3
+                        color: launcherBtnMa.containsMouse ? Qt.alpha(ThemeBackend.mauve, 0.3) : Qt.alpha(ThemeBackend.surface1, 0.8)
+                        scale: launcherBtnMa.pressed ? 0.92 : (launcherBtnMa.containsMouse ? 1.06 : 1.0)
+                        Behavior on scale { NumberAnimation { duration: (150) * ThemeBackend.animScale } }
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰀻"
+                            font.family: ThemeBackend.iconFont
+                            font.pixelSize: parent.width * 0.48
+                            color: ThemeBackend.text
+                        }
+                    }
+                    MouseArea {
+                        id: launcherBtnMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: LauncherController.toggle()
                     }
                 }
             }

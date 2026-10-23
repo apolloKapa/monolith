@@ -1526,7 +1526,7 @@ Item {
                     : (popupWindowRoot.currentConn ? popupWindowRoot.activeColor : ThemeBackend.surface2)
                 Behavior on color { enabled: popupWindowRoot.visible; ColorAnimation { duration: 300; easing.type: Easing.OutQuad } }
                 Behavior on opacity { enabled: popupWindowRoot.visible && popupWindowRoot.introState >= 1.0; NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
-                visible: opacity > 0.005
+                visible: false // Serpantinum's orbiting glows and radar rings: not part of Monolith's look
             }
 
             Rectangle {
@@ -1539,7 +1539,7 @@ Item {
                     : (popupWindowRoot.currentConn ? popupWindowRoot.activeGradientSecondary : ThemeBackend.surface1)
                 Behavior on color { enabled: popupWindowRoot.visible; ColorAnimation { duration: 300; easing.type: Easing.OutQuad } }
                 Behavior on opacity { enabled: popupWindowRoot.visible && popupWindowRoot.introState >= 1.0; NumberAnimation { duration: 300; easing.type: Easing.OutQuad } }
-                visible: opacity > 0.002
+                visible: false // Serpantinum's orbiting glows and radar rings: not part of Monolith's look
             }
 
             Rectangle {
@@ -1563,7 +1563,7 @@ Item {
                 anchors.bottomMargin: popupWindowRoot.s(65)
                 opacity: popupWindowRoot.currentPower ? 1.0 : 0.0
                 scale: popupWindowRoot.currentPower ? 1.0 : 1.05
-                visible: popupWindowRoot.visible && opacity > 0.01
+                visible: false // Serpantinum's orbiting glows and radar rings: not part of Monolith's look
                 Behavior on opacity { enabled: popupWindowRoot.visible; NumberAnimation { duration: 600; easing.type: Easing.InOutQuad } }
                 Behavior on scale { enabled: popupWindowRoot.visible; NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
 
@@ -1596,7 +1596,8 @@ Item {
                 anchors.bottomMargin: popupWindowRoot.s(65)
                 z: 0
                 opacity: (popupWindowRoot.currentConn && popupWindowRoot.showInfoView && popupWindowRoot.currentPower && popupWindowRoot.lightningStrikeProg > 0.01) ? 1.0 : 0.0
-                visible: popupWindowRoot.visible && opacity > 0.01
+                // the lightning lines between the orbiting nodes; nodes sit in a grid now, so no lines
+                visible: false
                 Behavior on opacity { enabled: popupWindowRoot.visible; NumberAnimation { duration: 400 } }
 
                 property real animTime: 0.0

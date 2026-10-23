@@ -1808,7 +1808,8 @@ Item {
                             fillMode: Image.PreserveAspectCrop
                             source: delegateRoot.isVideo ? (delegateRoot.itemPosterUrl !== "" ? delegateRoot.itemPosterUrl : "") : delegateRoot.itemFileUrl
                             asynchronous: true
-                            cache: true
+                            // big images: no second copy in the image cache (the GPU texture is enough)
+                            cache: false
                             opacity: (status === Image.Ready && source.toString() !== "") ? 1.0 : 0.0
                             Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                             sourceSize.width: Math.round((window.itemWidth * 1.5) + ((window.itemHeight + window.s(30)) * 0.35) + window.s(50))
