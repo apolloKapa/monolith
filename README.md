@@ -4,6 +4,8 @@
 
 My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri config, keybinds and helper scripts.
 
+Monolith started as a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) by [@ilyamiro](https://github.com/ilyamiro) and has since been reworked.
+
 ---
 
 ## Install
@@ -318,3 +320,7 @@ While the repo is private, the update check goes through the GitHub CLI (`gh aut
 Copyright (C) 2026 apolloKapa
 
 Monolith is based on Serpantinum, copyright (C) its author [@ilyamiro](https://github.com/ilyamiro), and is licensed under the [GNU AGPL-3.0](LICENSE), like Serpantinum. You can use, change and share it; if you share a modified version (or run it for others over a network), share its source under the same licence.
+
+Modified extensively by apolloKapa since May 2026; see the commit history for every change.
+
+The login screen theme is based on [Qylock](https://github.com/Darkkal44/qylock) by Darkkal44, licensed under the GNU GPL-3.0.
