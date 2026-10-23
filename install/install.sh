@@ -57,6 +57,12 @@ if [ ! -d "$PROJECT_ROOT/monolith/src" ]; then
     fi
     PROJECT_ROOT="$CACHE_REPO"
     INSTALL_DIR="$CACHE_REPO/install"
+    # run the installer that came with the download, so an update uses the new installer's
+    # steps (and questions), not the copy installed with the old version
+    if [ -z "${MONOLITH_INSTALLER_REEXEC:-}" ] && [ -f "$CACHE_REPO/install/install.sh" ]; then
+        export MONOLITH_INSTALLER_REEXEC=1
+        exec bash "$CACHE_REPO/install/install.sh" "$@"
+    fi
 fi
 MODULES_DIR="$INSTALL_DIR/modules"
 
@@ -153,9 +159,19 @@ if [ "$UPDATE_ONLY" = true ]; then
     fi
     printf "A restart makes sure everything (keybinds, login screen, services) uses the new version.\n"
     answer=""
-    { read -r -p "Restart your computer now? [y/N] " answer < /dev/tty; } 2>/dev/null || true
-    if [[ "$answer" =~ ^[Yy]$ ]]; then
+    if { : < /dev/tty; } 2>/dev/null; then
+        printf "\n%s%sRestart your computer now?%s\n" "$BOLD" "$C_CYAN" "$RESET"
+        read -r -p "  [y] restart now   [n] later: " answer < /dev/tty || true
+    elif command -v notify-send >/dev/null 2>&1; then
+        # no terminal to ask in: ask with a notification instead
+        answer=$(notify-send -a "Monolith" -u critical -A "y=Restart now" -A "n=Later" --wait \
+            "Monolith updated to $TARGET_VERSION" "Restart now so everything uses the new version?" 2>/dev/null)
+    fi
+    if [[ "$answer" =~ ^[Yy] ]]; then
         systemctl reboot
+    else
+        printf "OK, the new version is active; restart whenever you like.\n"
+        command -v notify-send >/dev/null 2>&1 && notify-send -a "Monolith" "Monolith updated to $TARGET_VERSION" "Restart later so keybinds, login screen and services pick it up." 2>/dev/null || true
     fi
 else
     draw_completion_screen
