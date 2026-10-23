@@ -166,7 +166,7 @@
       "title": "Monolith",
       "unknown": "غير معروف",
       "version_by": "الإصدار {version} بواسطة @{author}",
-      "credits": "Based on Serpantinum by @ilyamiro · features inspired by iNiR by snowarch"
+      "credits": "Features inspired by iNiR by snowarch"
     },
     "autostart": {
       "add_button": "إضافة تطبيق",

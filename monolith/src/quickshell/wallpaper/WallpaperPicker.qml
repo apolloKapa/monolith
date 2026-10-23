@@ -1532,17 +1532,36 @@ Item {
         onStatusChanged: { if (status === FolderListModel.Ready) window.syncSearchModel() }
     }
 
+    // the honeycomb (WallpaperHexGrid) is what you see; this ListView stays underneath as a
+    // 1px, invisible keeper of the selection, keyboard focus and filter bookkeeping
+    readonly property bool hexMode: true
+
+    WallpaperHexGrid {
+        id: hexGrid
+        anchors.fill: parent
+        anchors.topMargin: window.s(120)
+        picker: window
+        listView: view
+        model: displayModel
+        opacity: window.isReady ? 1.0 : 0.0
+        scale: window.isReady ? 1.0 : 0.94
+        Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
+    }
+
     ListView {
         id: view
-        anchors.fill: parent
-        opacity: window.isReady ? 1.0 : 0.0
+        anchors.fill: window.hexMode ? undefined : parent
+        width: window.hexMode ? 1 : undefined
+        height: window.hexMode ? 1 : undefined
+        opacity: window.hexMode ? 0.0 : (window.isReady ? 1.0 : 0.0)
         anchors.margins: window.isReady ? 0 : window.s(40)
         Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
         Behavior on anchors.margins { NumberAnimation { duration: (650) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         spacing: 0; orientation: ListView.Horizontal; clip: false
         interactive: !window.isScrollingBlocked && !window.isApplying
-        cacheBuffer: window.dynamicCacheBuffer
+        cacheBuffer: window.hexMode ? 0 : window.dynamicCacheBuffer
         reuseItems: true
 
         highlightRangeMode: ListView.StrictlyEnforceRange
