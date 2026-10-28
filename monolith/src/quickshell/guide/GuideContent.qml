@@ -185,7 +185,9 @@ Item {
                 }
 
                 Component.onCompleted: {
-                    if (popup.standalone || popup.currentTab === tabContentWrapper.parentTabIndex) ensureLoaded();
+                    // only the page being opened: the rest load one by one once the window is up
+                    // (searchLoadTimer), so Settings doesn't build every page before it appears
+                    if (popup.currentTab === tabContentWrapper.parentTabIndex) ensureLoaded();
                 }
 
                 Connections {
@@ -260,7 +262,7 @@ Item {
                     }
 
                     Component.onCompleted: {
-                        if (popup.standalone || isSubCurrent) ensureLoaded();
+                        if (isSubCurrent) ensureLoaded();
                     }
 
                     Connections {

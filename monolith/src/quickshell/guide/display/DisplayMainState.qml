@@ -587,9 +587,9 @@ GuideTab {
 
     Component.onCompleted: {
         displayTabRoot.refreshDisplaySettings();
-        if (visible) {
-            reloadMonitorsDebounceTimer.restart();
-        }
+        // even while the page loads in the background: its monitor settings (resolution,
+        // refresh rate, scale...) only exist once the monitors are known, and search needs them
+        reloadMonitorsDebounceTimer.restart();
     }
 
     onVisibleChanged: {
