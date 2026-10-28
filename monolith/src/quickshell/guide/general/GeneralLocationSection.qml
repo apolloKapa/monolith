@@ -34,6 +34,19 @@ SettingsBlob {
             accentColor: ThemeBackend.mauve
         }
 
+        // look it up again from the internet connection
+        IconButton {
+            Layout.preferredWidth: rootObj.s(32)
+            Layout.preferredHeight: rootObj.s(32)
+            cornerRadius: ThemeBackend.borderRadius
+            buttonIcon: "󰆤"
+            iconFontSize: rootObj.s(16)
+            accentColor: ThemeBackend.surface0
+            textColor: ThemeBackend.text
+            enabled: !Location.isDetecting
+            onClicked: Location.detect()
+        }
+
         IconButton {
             Layout.preferredWidth: rootObj.s(32)
             Layout.preferredHeight: rootObj.s(32)

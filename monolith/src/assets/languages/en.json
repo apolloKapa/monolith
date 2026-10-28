@@ -228,7 +228,7 @@
       },
       "location": {
         "title": "Location",
-        "desc": "Configure location for automatic sun schedule and weather",
+        "desc": "Found automatically from your internet connection (city only, no IP kept), or set it yourself. Used for the weather and night light",
         "popup_title": "Location details",
         "autodetect": "Auto-detect",
         "latitude": "Latitude",

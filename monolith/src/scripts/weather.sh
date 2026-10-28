@@ -98,8 +98,11 @@ get_location() {
     fi
     local gen_json loc_json
     gen_json="$(get_setting "general" '{}')"
-    # one without the time it was set came with the old defaults (location.sh removes it)
-    loc_json="$(echo "$gen_json" | jq -c 'if (.location.updated_at // 0) == 0 then empty else .location end' 2>/dev/null)"
+    # none yet, one without the time it was set (the old defaults' author location), or a detected
+    # one that's due another look: location.sh works it out
+    loc_json="$(echo "$gen_json" | jq -c 'if (.location.updated_at // 0) == 0 then empty
+        elif .location.source == "auto" and (now - .location.updated_at) > 21600 then empty
+        else .location end' 2>/dev/null)"
 
     if [[ -z "$loc_json" || "$loc_json" == "null" ]]; then
         script_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
