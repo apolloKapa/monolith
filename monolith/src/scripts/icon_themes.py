@@ -6,6 +6,20 @@
   icon_themes.py set <id>    use that pack: Qt apps (qt6ct / qt5ct), GTK 3 and 4 (settings.ini)
                              and apps that read GNOME's setting (gsettings)
 
+One app's own icon (like KDE's "Edit Application -> Icon"):
+  icon_themes.py search <text>              JSON: icons whose name has <text>, from every pack
+                                            (the current one first)
+  icon_themes.py app-icon <app> <icon>      give an app another icon: an icon name, or an image
+                                            file (copied into Monolith's data, so moving the
+                                            original doesn't break it)
+  icon_themes.py app-icon-reset <app>       the app's own icon again
+  icon_themes.py app-overrides              JSON: {app id: icon} for the apps given one here
+
+<app> is its desktop file id (firefox, org.kde.dolphin...). The new icon goes in a copy of the
+app's .desktop file in ~/.local/share/applications, which launchers, docks and menus everywhere
+read first. If that copy was already yours, only its Icon line changes (the old one is kept
+in the file and put back on reset).
+
 Only the icon theme line is changed in those files; everything else in them stays.
 """
 import configparser
@@ -203,10 +217,207 @@ def cmd_set(theme):
     print(json.dumps({"current": theme}))
 
 
+APPS_HOME = os.path.join(DATA, "applications")
+ICON_COPIES = os.path.join(DATA, "monolith", "app-icons")
+MADE_BY_US = "X-Monolith-Icon-Override"
+OLD_ICON = "X-Monolith-Original-Icon"
+
+
+def app_dirs():
+    dirs = [os.path.join(d, "applications") for d in (os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share").split(":") if d]
+    return [APPS_HOME] + dirs
+
+
+def desktop_files():
+    """desktop file id -> path, earlier directories winning (how menus resolve them)"""
+    found = {}
+    for base in app_dirs():
+        for root, _, files in os.walk(base):
+            for f in files:
+                if not f.endswith(".desktop"):
+                    continue
+                path = os.path.join(root, f)
+                did = os.path.relpath(path, base)[:-len(".desktop")].replace(os.sep, "-")
+                found.setdefault(did, path)
+    return found
+
+
+def entry_section(text):
+    """span (start, end) of the [Desktop Entry] section's body"""
+    m = re.search(r"(?ms)^\[Desktop Entry\]\s*$(.*?)(?=^\[|\Z)", text)
+    if not m:
+        sys.exit("not a desktop file (no [Desktop Entry])")
+    return m.start(1), m.end(1)
+
+
+def entry_get(text, key):
+    a, b = entry_section(text)
+    m = re.search(rf"(?m)^{re.escape(key)}\s*=\s*(.*)$", text[a:b])
+    return m.group(1).strip() if m else None
+
+
+def entry_set(text, key, value):
+    """set (or with value None remove) one key of [Desktop Entry], nothing else"""
+    a, b = entry_section(text)
+    body = text[a:b]
+    pat = rf"(?m)^{re.escape(key)}\s*=.*\n?"
+    if value is None:
+        body = re.sub(pat, "", body)
+    elif re.search(pat, body):
+        body = re.sub(rf"(?m)^{re.escape(key)}\s*=.*$", lambda _: f"{key}={value}", body, count=1)
+    else:
+        body = body.rstrip("\n") + f"\n{key}={value}\n" + ("\n" if body.endswith("\n\n") else "")
+    return text[:a] + body + text[b:]
+
+
+def app_id(arg):
+    return arg[:-len(".desktop")] if arg.endswith(".desktop") else arg
+
+
+def write_text(path, text):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "r+" if os.path.exists(path) else "w", encoding="utf-8") as f:
+        f.write(text)
+        f.truncate()
+
+
+CACHE = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.join(HOME, ".cache")), "monolith", "icon_index.json")
+
+
+def icon_index():
+    """{pack: {name: path}} for every pack (and hicolor, where apps put their own icons).
+    Walking every pack takes a second or two, so it's kept in a cache, rebuilt whenever a
+    pack's folder changes (installed, removed, updated)."""
+    all_themes = theme_dirs()
+    packs = [t for t in all_themes if t == "hicolor" or is_icon_pack(t, read_index(all_themes[t]))]
+    stamp = {t: [os.path.getmtime(p) for p in all_themes[t]] for t in packs}
+    try:
+        cached = json.load(open(CACHE, encoding="utf-8"))
+        if cached.get("stamp") == stamp:
+            return cached["icons"]
+    except (OSError, ValueError, KeyError):
+        pass
+    icons = {}
+    for t in packs:
+        names = {}
+        for root_dir in all_themes[t]:
+            for root, _, files in os.walk(root_dir):
+                for f in files:
+                    name, ext = os.path.splitext(f)
+                    # symbolic ones are tiny monochrome glyphs, not app icons
+                    if ext in (".svg", ".png") and not name.endswith("-symbolic"):
+                        names.setdefault(name, os.path.join(root, f))
+        icons[t] = names
+    try:
+        os.makedirs(os.path.dirname(CACHE), exist_ok=True)
+        with open(CACHE, "w", encoding="utf-8") as f:
+            json.dump({"stamp": stamp, "icons": icons}, f)
+    except OSError:
+        pass
+    return icons
+
+
+def cmd_search(query, limit=240):
+    q = query.strip().lower()
+    icons = icon_index()
+    cur = current()
+    # the pack in use first, hicolor (apps' own icons) last
+    order = ([cur] if cur in icons else []) + sorted(t for t in icons if t not in (cur, "hicolor")) + (["hicolor"] if "hicolor" in icons else [])
+    seen, out = set(), []
+    for t in order:
+        for name, path in icons[t].items():
+            if name in seen or (q and q not in name.lower()):
+                continue
+            seen.add(name)
+            out.append({"name": name, "path": path, "pack": t})
+    out.sort(key=lambda i: (not i["name"].lower().startswith(q), len(i["name"]), i["name"]))
+    print(json.dumps(out[:limit]))
+
+
+def cmd_app_icon(arg, icon):
+    did = app_id(arg)
+    files = desktop_files()
+    if did not in files:
+        sys.exit(f"no app called {did}")
+    if icon.startswith("file://"):
+        icon = icon[len("file://"):]
+    if icon.startswith("/"):
+        if not os.path.isfile(icon):
+            sys.exit(f"{icon} isn't a file")
+        ext = os.path.splitext(icon)[1].lower()
+        if ext not in (".png", ".svg", ".svgz", ".xpm", ".jpg", ".jpeg", ".webp", ".ico"):
+            sys.exit("pick a PNG, SVG or other image")
+        os.makedirs(ICON_COPIES, exist_ok=True)
+        dest = os.path.join(ICON_COPIES, did + ext)
+        for old in os.listdir(ICON_COPIES):        # one copy per app
+            if os.path.splitext(old)[0] == did and old != os.path.basename(dest):
+                os.remove(os.path.join(ICON_COPIES, old))
+        if os.path.abspath(icon) != dest:
+            shutil.copyfile(icon, dest)
+        icon = dest
+    elif not re.fullmatch(r"[A-Za-z0-9._+-]+", icon):
+        sys.exit(f"not an icon name: {icon}")
+
+    target = os.path.join(APPS_HOME, did.replace("/", "-") + ".desktop")
+    src = files[did]
+    text = open(src, encoding="utf-8").read()
+    if os.path.abspath(src) == os.path.abspath(target):
+        # already a copy of the user's: change the Icon line, remember the old one once
+        if entry_get(text, MADE_BY_US) != "true" and entry_get(text, OLD_ICON) is None:
+            text = entry_set(text, OLD_ICON, entry_get(text, "Icon") or "")
+    else:
+        text = entry_set(text, MADE_BY_US, "true")
+    text = entry_set(text, "Icon", icon)
+    write_text(target, text)
+    print(json.dumps({"app": did, "icon": icon}))
+
+
+def cmd_app_reset(arg):
+    did = app_id(arg)
+    target = os.path.join(APPS_HOME, did + ".desktop")
+    if not os.path.isfile(target):
+        print(json.dumps({"app": did, "icon": ""}))
+        return
+    text = open(target, encoding="utf-8").read()
+    if entry_get(text, MADE_BY_US) == "true":
+        os.remove(target)
+    elif entry_get(text, OLD_ICON) is not None:
+        old = entry_get(text, OLD_ICON)
+        text = entry_set(text, "Icon", old if old else None)
+        write_text(target, entry_set(text, OLD_ICON, None))
+    for old in os.listdir(ICON_COPIES) if os.path.isdir(ICON_COPIES) else []:
+        if os.path.splitext(old)[0] == did:
+            os.remove(os.path.join(ICON_COPIES, old))
+    print(json.dumps({"app": did, "icon": ""}))
+
+
+def cmd_app_overrides():
+    out = {}
+    if os.path.isdir(APPS_HOME):
+        for f in os.listdir(APPS_HOME):
+            if not f.endswith(".desktop"):
+                continue
+            try:
+                text = open(os.path.join(APPS_HOME, f), encoding="utf-8").read()
+                if entry_get(text, MADE_BY_US) == "true" or entry_get(text, OLD_ICON) is not None:
+                    out[f[:-len(".desktop")]] = entry_get(text, "Icon") or ""
+            except (OSError, UnicodeDecodeError, SystemExit):
+                continue
+    print(json.dumps(out))
+
+
 if __name__ == "__main__":
     if len(sys.argv) >= 2 and sys.argv[1] == "list":
         cmd_list()
     elif len(sys.argv) >= 3 and sys.argv[1] == "set":
         cmd_set(sys.argv[2])
+    elif len(sys.argv) >= 2 and sys.argv[1] == "search":
+        cmd_search(sys.argv[2] if len(sys.argv) >= 3 else "")
+    elif len(sys.argv) >= 4 and sys.argv[1] == "app-icon":
+        cmd_app_icon(sys.argv[2], sys.argv[3])
+    elif len(sys.argv) >= 3 and sys.argv[1] == "app-icon-reset":
+        cmd_app_reset(sys.argv[2])
+    elif len(sys.argv) >= 2 and sys.argv[1] == "app-overrides":
+        cmd_app_overrides()
     else:
         sys.exit(__doc__)

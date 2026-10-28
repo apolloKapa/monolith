@@ -63,6 +63,8 @@ PopupShell {
     function iconFor(appId) {
         let e = AppMatcher.entry(AppMatcher.resolve(appId));
         let name = e && e.icon ? e.icon : appId;
+        // an icon picked from a file (Settings -> Theme -> Icons) is a path, not a theme name
+        if (String(name).startsWith("/")) return "file://" + name;
         return Quickshell.iconPath(name, true) || Quickshell.iconPath(String(appId).toLowerCase(), true) || "";
     }
 
@@ -151,7 +153,7 @@ PopupShell {
                         Image {
                             Layout.preferredWidth: root.s(22); Layout.preferredHeight: root.s(22)
                             sourceSize: Qt.size(root.s(44), root.s(44))
-                            source: res.modelData.kind === "window" ? root.iconFor(res.modelData.win.app_id) : Quickshell.iconPath(res.modelData.app.icon, true)
+                            source: res.modelData.kind === "window" ? root.iconFor(res.modelData.win.app_id) : (String(res.modelData.app.icon).startsWith("/") ? "file://" + res.modelData.app.icon : Quickshell.iconPath(res.modelData.app.icon, true))
                         }
                         Text {
                             Layout.fillWidth: true

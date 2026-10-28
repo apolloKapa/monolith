@@ -126,7 +126,7 @@ None of these have keybinds by default, so your niri config stays as it is; bind
 - Theme → Effects: **Unfold** (popups open from a thin line, like an old screen switching on), **Edge light** (a soft light along each panel's top) and **Grain** (faint film grain on panels), all on by default
 - Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, the same speed for niri's window animations, and **GameMode** (no animations, blur or glass while a fullscreen window has focus)
 - Theme → Windows: niri window borders on/off, width, colours for focused / other / attention windows (theme swatches or any hex), or follow the theme's colours automatically
-- Theme → Icons: pick the icon pack (Papirus, Breeze, Adwaita... whatever's installed, with a preview of each) for Qt and GTK apps and Monolith's own launcher, dock and overview
+- Theme → Icons: pick the icon pack (Papirus, Breeze, Adwaita... whatever's installed, with a preview of each) for Qt and GTK apps and Monolith's own launcher, dock and overview, or give **one app** its own icon (search every pack, or pick an image file); it goes in that app's `.desktop` copy in `~/.local/share/applications`, so other launchers and menus show it too, and *Use original* undoes it
 - Bar: general and modules
 - Launcher, Dock, On-screen display, Notifications
 - Screenshots → Capture: capture as soon as you let go of the mouse, OCR languages (downloaded only when you install one)
