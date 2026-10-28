@@ -122,7 +122,10 @@ Item {
     // corner marks inside panel corners: "off" (default), "square" brackets or "round" arcs
     readonly property string fxMarks: gameModeActive ? "off" : ((effects.marks === "square" || effects.marks === "round") ? effects.marks : "off")
     readonly property bool fxUnfold: effects.unfold !== false
-    readonly property bool gameModeActive: gameModeEnabled && ToplevelManager.activeToplevel !== null
+    // activeToplevel is undefined (not null) with nothing focused: comparing with null let the
+    // binding throw, and a failed binding keeps its old value, so GameMode could stay on (no
+    // glass anywhere in the shell) long after the fullscreen game was gone
+    readonly property bool gameModeActive: gameModeEnabled && !!ToplevelManager.activeToplevel
         && ToplevelManager.activeToplevel.fullscreen === true
     readonly property bool glassActive: blurBackground && !opaqueStyle && elementOpacity < 0.999 && !gameModeActive
     readonly property bool liquidGlass: blurBackground && blurStyle === "liquid" && !gameModeActive

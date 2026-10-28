@@ -121,9 +121,60 @@ ShellRoot {
                 const off = l.window_offset_in_tile || [0, 0];
                 return [l.tile_pos_in_workspace_view[0] + off[0], l.tile_pos_in_workspace_view[1] + off[1]];
             }
-            property real glassScreenX: niriPos ? niriPos[0] : 0
-            property real glassScreenY: niriPos ? niriPos[1] : 0
+            // niri reports no position while it moves the window itself (Mod+drag), but the
+            // window follows the pointer 1:1 then: the glass follows the mouse's own motion
+            // (pointer_motion.py) from the last position niri gave, so it keeps bending the right
+            // part of the wallpaper all through the drag.
+            property var heldPos: [0, 0]
+            property real motionX: 0
+            property real motionY: 0
+            property real dragBaseX: 0
+            property real dragBaseY: 0
+            // motion total when the left button last went down (the drag's real start)
+            property real pressX: 0
+            property real pressY: 0
+            property bool pointerReady: false
+            onNiriPosChanged: {
+                if (niriPos) {
+                    heldPos = niriPos;
+                } else {
+                    dragBaseX = pressX;
+                    dragBaseY = pressY;
+                }
+            }
+            property real glassScreenX: niriPos ? niriPos[0] : heldPos[0] + (pointerReady ? motionX - dragBaseX : 0)
+            property real glassScreenY: niriPos ? niriPos[1] : heldPos[1] + (pointerReady ? motionY - dragBaseY : 0)
+            // without the mouse's motion (no input group) the glass can't know where it is
+            // mid-drag: it steps aside and the window rule's backdrop (xray) shows instead
+            readonly property bool glassSuspended: niriWindow !== null && niriPos === null && !pointerReady
+
+            Process {
+                running: NiriState.isNiri
+                command: ["python3", Caching.qsDir + "/reusables/display/pointer_motion.py"]
+                stdout: SplitParser {
+                    onRead: data => {
+                        if (data === "ready") { win.pointerReady = true; return; }
+                        const v = data.split(" ");
+                        if (v[0] === "down") {
+                            win.pressX = Number(v[1]);
+                            win.pressY = Number(v[2]);
+                            return;
+                        }
+                        if (v.length !== 2) return;
+                        win.motionX = Number(v[0]);
+                        win.motionY = Number(v[1]);
+                    }
+                }
+                onExited: win.pointerReady = false
+            }
             Component.onCompleted: NiriState.subscribe()
+            // until niri lists this window (it can open before niri reports it), ask again
+            Timer {
+                interval: 400
+                repeat: true
+                running: NiriState.isNiri && win.niriWindow === null
+                onTriggered: NiriState.refreshWindows()
+            }
             Component.onDestruction: NiriState.unsubscribe()
 
             // closed by niri (close-window) or anything else

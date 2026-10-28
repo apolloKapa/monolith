@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import "../../"
 import "../"
 import "glassNesting.js" as Nesting
@@ -45,6 +46,7 @@ Item {
     }
     // the backdrop's texture is only safe to sample while the backdrop is alive
     readonly property bool drawable: shown > 0.001 && backdrop !== null && backdrop.active
+        && !(QsWindow.window && QsWindow.window.glassSuspended === true)
 
     function findBackdrop() {
         if (root.backdropOverride) {
@@ -234,13 +236,9 @@ Item {
         }
     }
 
-    // movement wobble: bumps raise a target that `motion` eases towards, so a fast slide
-    // builds up over a few frames instead of popping to full strength in one
-    property real motionTarget: 0
-
     function bump(distance) {
         if (!root.active || !root.armed || distance < 0.05) return;
-        root.motionTarget = Math.min(1, root.motionTarget + distance / 36);
+        root.motion = Math.min(1, root.motion + distance / 36);
         if (!motionDecay.running) motionDecay.start();
     }
 
@@ -265,12 +263,9 @@ Item {
     FrameAnimation {
         id: motionDecay
         onTriggered: {
-            const steps = frameTime / 0.016;
-            root.motionTarget *= Math.pow(0.91, steps);
-            root.motion += (root.motionTarget - root.motion) * (1 - Math.pow(0.7, steps));
-            if (root.motion < 0.004 && root.motionTarget < 0.004) {
+            root.motion *= Math.pow(0.91, frameTime / 0.016);
+            if (root.motion < 0.004) {
                 root.motion = 0;
-                root.motionTarget = 0;
                 stop();
             }
         }

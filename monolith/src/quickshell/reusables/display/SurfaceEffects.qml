@@ -16,7 +16,7 @@ Item {
     width: target ? target.width : 0
     height: target ? target.height : 0
     z: target ? target.z : -1
-    visible: !!target && target.surfaceEnabled && !target.earsOnly && target.nestLevel === 0 && target.parentVisible && big
+    visible: !!target && target.surfaceEnabled && target.drawn !== false && !target.earsOnly && target.nestLevel === 0 && target.parentVisible && big
 
     // ── grain ──
     ShaderEffect {

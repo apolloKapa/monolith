@@ -29,6 +29,9 @@ Item {
     }
     // Frame (frame/ScreenFrame.qml) is a full-width solid bar that runs into the screen frame
     property bool isFrame: barStyle === "frame"
+    // Frame + Blur/Liquid glass: the frame (frame/ScreenFrame.qml) is one sheet of glass round
+    // the whole screen, bar included; the bar's own glass only stays as the backdrop its pills bend
+    property bool frameGlass: isFrame && ThemeBackend.seeThrough
     property bool isFill: barStyle === "fill" || barStyle === "frame"
     property bool isSolid: barStyle === "solid" || barStyle === "fill" || barStyle === "frame"
     property bool distinctPills: barWindow ? (barWindow.distinctPills !== undefined ? barWindow.distinctPills : false) : false
@@ -564,7 +567,7 @@ Item {
         width: Math.round(contentWrapper.dynamicMaxX) - Math.round(contentWrapper.dynamicMinX)
         height: barWindow ? barWindow.barHeight : 0
         y: barWindow ? barWindow.baseOffsetY : 0
-        color: Qt.alpha(ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
+        color: frameGlass ? "transparent" : Qt.alpha(ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
         radius: ThemeBackend.rad(isFill ? 0 : ThemeBackend.borderRadius)
         topLeftRadius: ThemeBackend.rad(isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
         topRightRadius: ThemeBackend.rad(isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
@@ -591,6 +594,7 @@ Item {
             id: solidBlur
             z: -1
             anchors.fill: parent
+            drawn: !frameGlass
             rim: (ThemeBackend.liquidGlass && contentWrapper.isFill) ? 0 : 0.45
             topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
             topRightRadius: ThemeBackend.rad(parent.topRightRadius)
