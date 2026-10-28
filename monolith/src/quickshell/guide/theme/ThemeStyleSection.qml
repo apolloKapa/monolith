@@ -17,7 +17,7 @@ SettingsBlob {
         icon: "󰸌"
         title: I18n.t("guide.theme.style.title", "Style")
         description: I18n.t("guide.theme.style.desc", "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below")
-        searchKeywords: "style look blur liquid glass minimalist terminal brutal neo brutalism luxe poster bubbly round paper editorial serif"
+        searchKeywords: "style look blur liquid glass minimalist terminal brutal neo brutalism luxe poster bubbly round paper editorial serif arcade pixel neon retro"
     }
 
     GridLayout {
