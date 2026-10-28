@@ -186,6 +186,7 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `Mod+Alt+V` | clipboard history (rofi) |
 | `Mod+Alt+S` | pick wallpaper (setwall) |
 | `Mod+Ctrl+Z` | zoom (wooz) |
+| `Mod+Ctrl+scroll` | zoom in (up) and back out (down), at the mouse, like KDE |
 
 **Monolith**
 
