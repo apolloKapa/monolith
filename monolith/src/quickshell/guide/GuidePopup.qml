@@ -583,6 +583,7 @@ Item {
                 { id: "ThemeEffects", key: "theme_effects", name: "Effects", icon: "󰫢", file: "theme/ThemeEffectsTab.qml", desc: "Small extras on panels: film grain, a light along the top edge, unfolding when they open" },
                 { id: "ThemeWindows", key: "theme_windows", name: "Windows", icon: "󰖲", file: "theme/ThemeWindowsTab.qml", desc: "The border niri draws around your app windows: on or off, thickness and colours" },
                 { id: "ThemeIcons", key: "theme_icons", name: "Icons", icon: "󰀻", file: "theme/ThemeIconsTab.qml", desc: "The icon pack apps and Monolith use (Papirus, Breeze, Adwaita...), picked from the ones installed" },
+                { id: "ThemeCursors", key: "theme_cursors", name: "Cursors", icon: "󰆿", file: "theme/ThemeCursorsTab.qml", desc: "The mouse pointer: pick an installed cursor theme and its size, or add your own (a downloaded theme or an image)" },
                 { id: "ThemeApps", key: "theme_apps", name: "Apps", icon: "󰏘", file: "theme/ThemeAppsTab.qml", desc: "Let other apps (GTK, Qt, terminals, rofi...) use Monolith's colours too" }
             ]
         },

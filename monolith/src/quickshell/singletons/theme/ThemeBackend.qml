@@ -70,9 +70,15 @@ Item {
                         "colors": { "base": "#f5f2eb", "mantle": "#ece7dc", "crust": "#f9f7f2", "surface0": "#e8e2d4", "surface1": "#ddd5c4", "surface2": "#c9bfab",
                                     "overlay0": "#a39a88", "overlay1": "#857c6b", "overlay2": "#6b6355", "text": "#242321", "subtext0": "#5e584e", "subtext1": "#45403a",
                                     "blue": "#2f5d8a", "sapphire": "#2f5d8a", "teal": "#3d7a6e", "mauve": "#8a3b2e", "pink": "#a85a6e", "green": "#4a7a3d",
-                                    "yellow": "#b08a2e", "peach": "#b8662e", "red": "#a8322e", "maroon": "#7a2420" } }
+                                    "yellow": "#b08a2e", "peach": "#b8662e", "red": "#a8322e", "maroon": "#7a2420" } },
+        "arcade":     { "name": "Arcade", "opaque": true, "square": true, "outline": [2, 1], "outlineRole": "accent", "hardShadow": 4, "font": "Bitcount Prop Single",
+                        "desc": "Pixel type, neon on night blue, glowing drop shadows",
+                        "colors": { "base": "#110f2b", "mantle": "#0b0a20", "crust": "#060514", "surface0": "#1c1a42", "surface1": "#29265a", "surface2": "#3a3678",
+                                    "overlay0": "#55509a", "overlay1": "#726db5", "overlay2": "#938fcf", "text": "#f4f1ff", "subtext0": "#b3aee0", "subtext1": "#d3cff2",
+                                    "blue": "#3ad8ff", "sapphire": "#3ad8ff", "teal": "#3dffd0", "mauve": "#ff3df2", "pink": "#ff6ec7", "green": "#5cff8a",
+                                    "yellow": "#ffe14d", "peach": "#ff9e3d", "red": "#ff4d6d", "maroon": "#d63a57" } }
     })
-    readonly property var styleOrder: ["material", "blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper"]
+    readonly property var styleOrder: ["material", "blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper", "arcade"]
     readonly property var style: styles[blurStyle] || styles["material"]
     // Material: Google-style tonal surfaces, pill controls and filled containers instead of outlines
     readonly property bool material: blurStyle === "material"
