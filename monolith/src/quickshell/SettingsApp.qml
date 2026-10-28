@@ -134,6 +134,12 @@ ShellRoot {
             property real pressX: 0
             property real pressY: 0
             property bool pointerReady: false
+            // left button held (a drag can only be happening then)
+            property bool buttonHeld: false
+            // niri reports no position for tiled windows at all: there the glass can't line up
+            readonly property bool tiled: niriWindow !== null && niriWindow.is_floating === false
+            // a Super+drag of the floating window: position gone while the button is held
+            readonly property bool dragging: niriWindow !== null && !tiled && niriPos === null && buttonHeld
             onNiriPosChanged: {
                 if (niriPos) {
                     heldPos = niriPos;
@@ -142,11 +148,11 @@ ShellRoot {
                     dragBaseY = pressY;
                 }
             }
-            property real glassScreenX: niriPos ? niriPos[0] : heldPos[0] + (pointerReady ? motionX - dragBaseX : 0)
-            property real glassScreenY: niriPos ? niriPos[1] : heldPos[1] + (pointerReady ? motionY - dragBaseY : 0)
+            property real glassScreenX: niriPos ? niriPos[0] : heldPos[0] + (pointerReady && dragging ? motionX - dragBaseX : 0)
+            property real glassScreenY: niriPos ? niriPos[1] : heldPos[1] + (pointerReady && dragging ? motionY - dragBaseY : 0)
             // without the mouse's motion (no input group) the glass can't know where it is
             // mid-drag: it steps aside and the window rule's backdrop (xray) shows instead
-            readonly property bool glassSuspended: niriWindow !== null && niriPos === null && !pointerReady
+            readonly property bool glassSuspended: tiled || (niriWindow !== null && niriPos === null && !pointerReady)
 
             Process {
                 running: NiriState.isNiri
@@ -158,6 +164,14 @@ ShellRoot {
                         if (v[0] === "down") {
                             win.pressX = Number(v[1]);
                             win.pressY = Number(v[2]);
+                            win.buttonHeld = true;
+                            return;
+                        }
+                        if (v[0] === "up") {
+                            // let go of a drag: keep where it got to until niri reports the new spot
+                            if (win.dragging && win.pointerReady)
+                                win.heldPos = [win.heldPos[0] + win.motionX - win.dragBaseX, win.heldPos[1] + win.motionY - win.dragBaseY];
+                            win.buttonHeld = false;
                             return;
                         }
                         if (v.length !== 2) return;
