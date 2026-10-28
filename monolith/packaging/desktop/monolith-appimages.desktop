@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.5
+Type=Application
+Name=AppImages
+GenericName=AppImage installer
+Comment=Drop an AppImage and it's set up like an installed app, with its own icon
+Exec=monolith appimages
+Icon=application-x-executable
+Terminal=false
+Categories=System;Utility;
+Keywords=appimage;install;apps;shortcut;icon;desktop;
+StartupWMClass=monolith-appimages

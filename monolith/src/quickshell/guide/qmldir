@@ -3,3 +3,4 @@ GuideSidebar 1.0 GuideSidebar.qml
 GuideSearchResults 1.0 GuideSearchResults.qml
 GuideContent 1.0 GuideContent.qml
 GuideTab 1.0 GuideTab.qml
+AppImagesTab 1.0 AppImagesTab.qml

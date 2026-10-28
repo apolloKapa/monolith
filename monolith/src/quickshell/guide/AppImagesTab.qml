@@ -336,8 +336,8 @@ GuideTab {
                             cornerRadius: ThemeBackend.borderRadius
                             buttonText: "Delete file"
                             textFontSize: rootObj.s(11)
-                            accentColor: Qt.alpha(ThemeBackend.red, 0.85)
-                            textColor: ThemeBackend.crust
+                            accentColor: Qt.alpha(ThemeBackend.red, 0.35)
+                            textColor: ThemeBackend.text
                             onClicked: appimagesTab.run(["remove", appRow.modelData.id, "--delete"], "Deleting " + appRow.modelData.name + "...")
                         }
                     }
