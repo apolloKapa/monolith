@@ -38,6 +38,8 @@ PopupShell {
     function iconFor(appId) {
         let e = AppMatcher.entry(AppMatcher.resolve(appId));
         let name = e && e.icon ? e.icon : appId;
+        // an icon picked from a file (Settings -> Theme -> Icons) is a path, not a theme name
+        if (String(name).startsWith("/")) return "file://" + name;
         return Quickshell.iconPath(name, true) || Quickshell.iconPath(String(appId).toLowerCase(), true) || "";
     }
 
