@@ -7,7 +7,7 @@ import Quickshell.Io
 import "."
 import "guide"
 
-// The AppImages window (monolith appimages, Mod+Shift+A, "AppImages" in the launcher): drop an
+// The AppImages window (monolith appimages, Mod+I, "AppImages" in the launcher): drop an
 // AppImage on it and it's set up like an installed app. The same page as Settings -> AppImages,
 // in a window of its own; it quits when it's closed.
 ShellRoot {

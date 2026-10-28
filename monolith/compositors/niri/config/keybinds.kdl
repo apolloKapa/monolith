@@ -165,7 +165,7 @@ binds {
     // Launcher (rofi)
     Mod+Z { spawn "monolith" "msg" "toggle" "launcher"; }
     Mod+Space { spawn "monolith" "msg" "toggle" "launcher"; }
-    Mod+Shift+A { spawn "monolith" "appimages"; }
+    Mod+I { spawn "monolith" "appimages"; }
     Mod+Tab { spawn "rofi" "-show" "window" "-hover-select" "-me-select-entry" "" "-me-accept-entry" "MousePrimary"; }
     Mod+Alt+S { spawn "setwall" "pick"; }
     Mod+Alt+V { spawn-sh "cliphist list | rofi -dmenu | cliphist decode | wl-copy"; }
