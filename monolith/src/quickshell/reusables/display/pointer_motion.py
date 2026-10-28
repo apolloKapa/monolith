@@ -4,8 +4,10 @@
 niri reports no window position during an interactive move, but the window follows the
 pointer 1:1, so the glass can follow the pointer instead. Reads relative-motion devices
 (mice) without grabbing them and prints "x y" (summed REL_X/REL_Y) whenever it changes,
-and "down x y" when the left button goes down: niri only reports the drag once the window
-starts moving, a few pixels later, so the glass measures from the press.
+"down x y" when the left button goes down (niri only reports the drag once the window starts
+moving, a few pixels later, so the glass measures from the press) and "up" when it's released
+(the glass only follows the pointer while a button is held: a window niri reports no position
+for that isn't being dragged mustn't slide the glass around with every mouse movement).
 Needs read access to /dev/input (the input group); prints "unavailable" and exits otherwise.
 """
 import glob
@@ -81,6 +83,9 @@ def main():
                     dirty = True
                 elif kind == EV_KEY and code == BTN_LEFT and value == 1:
                     sys.stdout.write(f"down {x} {y}\n")
+                    sys.stdout.flush()
+                elif kind == EV_KEY and code == BTN_LEFT and value == 0:
+                    sys.stdout.write("up\n")
                     sys.stdout.flush()
                 elif kind == EV_SYN and dirty:
                     sys.stdout.write(f"{x} {y}\n")
