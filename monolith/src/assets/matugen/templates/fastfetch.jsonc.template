@@ -1,53 +1,113 @@
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
   "logo": {
-    "type": "small",
+    "type": "data",
+    "source": "$1███╗   ███╗ ██████╗ ███╗   ██╗ ██████╗ ██╗     ██╗████████╗██╗  ██╗\n$1████╗ ████║██╔═══██╗████╗  ██║██╔═══██╗██║     ██║╚══██╔══╝██║  ██║\n$1██╔████╔██║██║   ██║██╔██╗ ██║██║   ██║██║     ██║   ██║   ███████║\n$2██║╚██╔╝██║██║   ██║██║╚██╗██║██║   ██║██║     ██║   ██║   ██╔══██║\n$2██║ ╚═╝ ██║╚██████╔╝██║ ╚████║╚██████╔╝███████╗██║   ██║   ██║  ██║\n$2╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═╝",
+    "position": "top",
     "color": {
       "1": "{{colors.primary.default.hex}}",
-      "2": "{{colors.tertiary.default.hex}}",
-      "3": "{{colors.secondary.default.hex}}"
+      "2": "{{colors.tertiary.default.hex}}"
     },
     "padding": {
       "top": 1,
-      "left": 2,
-      "right": 3
+      "left": 0,
+      "right": 0
     }
   },
   "display": {
     "separator": "  ",
+    "constants": [
+      "\u001b[38;2;{{colors.outline.default.red}};{{colors.outline.default.green}};{{colors.outline.default.blue}}m",
+      "\u001b[38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}m",
+      "\u001b[38;2;{{colors.secondary.default.red}};{{colors.secondary.default.green}};{{colors.secondary.default.blue}}m",
+      "\u001b[38;2;{{colors.tertiary.default.red}};{{colors.tertiary.default.green}};{{colors.tertiary.default.blue}}m",
+      "\u001b[38;2;{{colors.on_surface_variant.default.red}};{{colors.on_surface_variant.default.green}};{{colors.on_surface_variant.default.blue}}m",
+      "\u001b[38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}m",
+      "\u001b[0m"
+    ],
     "color": {
-      "separator": "{{colors.on_surface.default.hex}}"
+      "keys": "default",
+      "output": "default"
     }
   },
   "modules": [
-    "break",
     {
-      "type": "title",
-      "format": "{1}",
-      "color": {
-        "user": "{{colors.primary.default.hex}}"
-      }
+      "type": "custom",
+      "format": "{$1}╭─────────────────────────────────────────────────────────────────╮{$7}"
     },
-    "break",
+    {
+      "type": "command",
+      "text": "echo \"$USER@$(cat /etc/hostname 2>/dev/null || hostname)\"",
+      "key": "{$1}│ {$2}{$5}  user    ",
+      "format": "{$6}{>50} {$1}│{$7}"
+    },
     {
       "type": "os",
-      "key": "󱄅 os ",
-      "keyColor": "{{colors.primary.default.hex}}"
+      "key": "{$1}│ {$3}{$5}  distro  ",
+      "format": "{$6}{pretty-name>50} {$1}│{$7}"
     },
     {
-      "type": "cpu",
-      "key": " cpu",
-      "keyColor": "{{colors.tertiary.default.hex}}"
+      "type": "kernel",
+      "key": "{$1}│ {$4}{$5}  kernel  ",
+      "format": "{$6}{release>50} {$1}│{$7}"
     },
     {
-      "type": "memory",
-      "key": "󰘚 ram",
-      "keyColor": "{{colors.secondary.default.hex}}"
+      "type": "wm",
+      "key": "{$1}│ {$2}{$5}  wm      ",
+      "format": "{$6}{pretty-name>50} {$1}│{$7}"
     },
     {
       "type": "shell",
-      "key": " sh ",
-      "keyColor": "{{colors.inverse_primary.default.hex}}"
+      "key": "{$1}│ {$3}{$5}  shell   ",
+      "format": "{$6}{pretty-name>50} {$1}│{$7}"
+    },
+    {
+      "type": "command",
+      "text": "echo \"Monolith $(cat ~/.local/share/monolith/version.txt 2>/dev/null)\"",
+      "key": "{$1}│ {$4}󰕮{$5}  desktop ",
+      "format": "{$6}{>50} {$1}│{$7}"
+    },
+    {
+      "type": "command",
+      "text": "uptime -p | cut -d ' ' -f 2-",
+      "key": "{$1}│ {$2}󰅐{$5}  uptime  ",
+      "format": "{$6}{>50} {$1}│{$7}"
+    },
+    {
+      "type": "custom",
+      "format": "{$1}├─────────────────────────────────────────────────────────────────┤{$7}"
+    },
+    {
+      "type": "cpu",
+      "key": "{$1}│ {$3}{$5}  cpu     ",
+      "format": "{$6}{name>50} {$1}│{$7}"
+    },
+    {
+      "type": "gpu",
+      "hideType": "integrated",
+      "key": "{$1}│ {$4}󰢮{$5}  gpu     ",
+      "format": "{$6}{name>50} {$1}│{$7}"
+    },
+    {
+      "type": "command",
+      "text": "free -b | awk 'NR==2{printf \"%.1f GiB / %.1f GiB\",$3/1073741824,$2/1073741824}'",
+      "key": "{$1}│ {$2}󰍛{$5}  memory  ",
+      "format": "{$6}{>50} {$1}│{$7}"
+    },
+    {
+      "type": "command",
+      "text": "df -h / | awk 'NR==2{print $3\" / \"$2\" (\"$5\")\"}'",
+      "key": "{$1}│ {$3}󰋊{$5}  disk    ",
+      "format": "{$6}{>50} {$1}│{$7}"
+    },
+    {
+      "type": "packages",
+      "key": "{$1}│ {$4}󰏖{$5}  pkgs    ",
+      "format": "{$6}{all>50} {$1}│{$7}"
+    },
+    {
+      "type": "custom",
+      "format": "{$1}╰─────────────────────────────────────────────────────────────────╯{$7}"
     },
     "break",
     {
