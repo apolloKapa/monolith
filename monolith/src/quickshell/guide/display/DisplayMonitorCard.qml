@@ -65,6 +65,41 @@ Rectangle {
         return ni >= 0 ? ni : 0;
     }
 
+    // ---- Resolution, refresh rate, rotation (niri) ----
+    readonly property bool canSetMode: monDelegate.tab.compositor === "niri" && monitorPowered
+        && !!modelData.modes && modelData.modes.length > 0 && !!modelData.currentMode
+    readonly property var curParts: (modelData.currentMode || "").match(/^(\d+)x(\d+)@([0-9.]+)$/)
+    readonly property string curRes: curParts ? curParts[1] + "x" + curParts[2] : ""
+    readonly property string curHz: curParts ? Number(curParts[3]).toFixed(3) : ""
+    // sizes, biggest first
+    readonly property var resolutions: {
+        let seen = {}, out = [];
+        for (const md of (modelData.modes || [])) {
+            let r = md.width + "x" + md.height;
+            if (!seen[r]) { seen[r] = true; out.push({ r: r, area: md.width * md.height, w: md.width }); }
+        }
+        out.sort((a, b) => b.area - a.area || b.w - a.w);
+        return out.map(o => o.r);
+    }
+    function ratesFor(res) {
+        let seen = {}, out = [];
+        for (const md of (modelData.modes || [])) {
+            if (md.width + "x" + md.height !== res) continue;
+            let hz = md.hz.toFixed(3);
+            if (!seen[hz]) { seen[hz] = true; out.push(hz); }
+        }
+        return out.sort((a, b) => Number(b) - Number(a));
+    }
+    readonly property var rates: ratesFor(curRes)
+    function hzLabel(hz) { return Number(hz).toFixed(2).replace(/\.?0+$/, "") + " Hz"; }
+    readonly property var rotations: [
+        { id: "normal", label: "Normal" }, { id: "90", label: "90°" },
+        { id: "180", label: "180°" }, { id: "270", label: "270°" },
+        { id: "flipped", label: "Flipped" }, { id: "flipped-90", label: "Flipped 90°" },
+        { id: "flipped-180", label: "Flipped 180°" }, { id: "flipped-270", label: "Flipped 270°" }
+    ]
+    readonly property bool confirming: !!monDelegate.tab.pendingOutput && monDelegate.tab.pendingOutput.name === monName
+
     onMonSettingsChanged: {
         if (!monSettings) return;
         if (monSettings.powerEnabled !== undefined) {
@@ -116,6 +151,171 @@ Rectangle {
                 font.family: ThemeBackend.fontFamily
                 font.pixelSize: rootObj.s(12)
                 color: ThemeBackend.subtext0
+            }
+        }
+
+        // applied right away; kept only once confirmed
+        Rectangle {
+            Layout.fillWidth: true
+            visible: monDelegate.confirming
+            implicitHeight: confirmRow.implicitHeight + rootObj.s(16)
+            radius: ThemeBackend.rad(ThemeBackend.borderRadius)
+            color: Qt.alpha(ThemeBackend.mauve, 0.16)
+            border.width: 1
+            border.color: Qt.alpha(ThemeBackend.mauve, 0.5)
+
+            RowLayout {
+                id: confirmRow
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: rootObj.s(12)
+                anchors.rightMargin: rootObj.s(8)
+                spacing: rootObj.s(8)
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Keep these display settings? Going back in " + (monDelegate.confirming ? monDelegate.tab.pendingOutput.left : 0) + " s"
+                    color: ThemeBackend.text
+                    font.family: ThemeBackend.fontFamily
+                    font.pixelSize: rootObj.s(12)
+                    wrapMode: Text.WordWrap
+                }
+                ClickButton {
+                    implicitHeight: rootObj.s(30)
+                    horizontalPadding: rootObj.s(14)
+                    cornerRadius: ThemeBackend.borderRadius
+                    buttonText: "Revert"
+                    textFontSize: rootObj.s(11)
+                    accentColor: ThemeBackend.surface1
+                    textColor: ThemeBackend.text
+                    onClicked: monDelegate.tab.revertOutput()
+                }
+                ClickButton {
+                    implicitHeight: rootObj.s(30)
+                    horizontalPadding: rootObj.s(14)
+                    cornerRadius: ThemeBackend.borderRadius
+                    buttonText: "Keep"
+                    textFontSize: rootObj.s(11)
+                    accentColor: ThemeBackend.mauve
+                    textColor: ThemeBackend.crust
+                    onClicked: monDelegate.tab.keepOutput()
+                }
+            }
+        }
+
+        Text {
+            Layout.fillWidth: true
+            Layout.leftMargin: rootObj.s(4)
+            visible: monDelegate.tab.outputError !== "" && monDelegate.tab.compositor === "niri"
+            text: monDelegate.tab.outputError
+            color: ThemeBackend.red
+            font.family: ThemeBackend.fontFamily
+            font.pixelSize: rootObj.s(11)
+            wrapMode: Text.WordWrap
+        }
+
+        SettingsRow {
+            visible: monDelegate.canSetMode
+            rootObj: monDelegate.rootObj
+            baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
+            icon: "󰹑"
+            title: "Resolution"
+            description: "How many pixels the screen shows"
+
+            Dropdown {
+                id: resDropdown
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                implicitWidth: rootObj.s(180)
+                implicitHeight: rootObj.s(32)
+                options: monDelegate.resolutions
+                currentIndex: Math.max(0, monDelegate.resolutions.indexOf(monDelegate.curRes))
+                // picking assigns currentIndex; follow the monitor again after a revert or a refusal
+                Binding { target: resDropdown; property: "currentIndex"; value: Math.max(0, monDelegate.resolutions.indexOf(monDelegate.curRes)) }
+                fuzzySearch: false
+                accentColor: ThemeBackend.mauve
+                baseColor: ThemeBackend.surface0
+                hoverColor: ThemeBackend.surface1
+                dropdownColor: ThemeBackend.surface0
+                borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                textColor: ThemeBackend.text
+                activeTextColor: ThemeBackend.crust
+                fontPixelSize: rootObj.s(11)
+                onValueChanged: function(index, value) {
+                    if (!value || value === monDelegate.curRes) return;
+                    // keep the refresh rate if the new size has it, else take its fastest
+                    let r = monDelegate.ratesFor(value);
+                    let hz = r.indexOf(monDelegate.curHz) >= 0 ? monDelegate.curHz : r[0];
+                    monDelegate.tab.applyOutput(monDelegate.monName, value + "@" + hz, "", false);
+                }
+            }
+        }
+
+        SettingsRow {
+            visible: monDelegate.canSetMode
+            rootObj: monDelegate.rootObj
+            baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
+            icon: "󰔟"
+            title: "Refresh rate"
+            description: "How many times a second the screen redraws"
+
+            Dropdown {
+                id: rateDropdown
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                implicitWidth: rootObj.s(180)
+                implicitHeight: rootObj.s(32)
+                options: monDelegate.rates.map(h => monDelegate.hzLabel(h))
+                currentIndex: Math.max(0, monDelegate.rates.indexOf(monDelegate.curHz))
+                // picking assigns currentIndex; follow the monitor again after a revert or a refusal
+                Binding { target: rateDropdown; property: "currentIndex"; value: Math.max(0, monDelegate.rates.indexOf(monDelegate.curHz)) }
+                fuzzySearch: false
+                accentColor: ThemeBackend.mauve
+                baseColor: ThemeBackend.surface0
+                hoverColor: ThemeBackend.surface1
+                dropdownColor: ThemeBackend.surface0
+                borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                textColor: ThemeBackend.text
+                activeTextColor: ThemeBackend.crust
+                fontPixelSize: rootObj.s(11)
+                onValueChanged: function(index, value) {
+                    let hz = monDelegate.rates[index];
+                    if (!hz || hz === monDelegate.curHz) return;
+                    monDelegate.tab.applyOutput(monDelegate.monName, monDelegate.curRes + "@" + hz, "", false);
+                }
+            }
+        }
+
+        SettingsRow {
+            visible: monDelegate.canSetMode
+            rootObj: monDelegate.rootObj
+            baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
+            icon: "󰑵"
+            title: "Rotation"
+            description: "Turn the picture for a monitor on its side or upside down"
+
+            Dropdown {
+                id: rotDropdown
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                implicitWidth: rootObj.s(180)
+                implicitHeight: rootObj.s(32)
+                options: monDelegate.rotations.map(r => r.label)
+                currentIndex: Math.max(0, monDelegate.rotations.findIndex(r => r.id === monDelegate.modelData.transform))
+                // picking assigns currentIndex; follow the monitor again after a revert or a refusal
+                Binding { target: rotDropdown; property: "currentIndex"; value: Math.max(0, monDelegate.rotations.findIndex(r => r.id === monDelegate.modelData.transform)) }
+                fuzzySearch: false
+                accentColor: ThemeBackend.mauve
+                baseColor: ThemeBackend.surface0
+                hoverColor: ThemeBackend.surface1
+                dropdownColor: ThemeBackend.surface0
+                borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
+                textColor: ThemeBackend.text
+                activeTextColor: ThemeBackend.crust
+                fontPixelSize: rootObj.s(11)
+                onValueChanged: function(index, value) {
+                    let tf = monDelegate.rotations[index] ? monDelegate.rotations[index].id : "";
+                    if (!tf || tf === monDelegate.modelData.transform) return;
+                    monDelegate.tab.applyOutput(monDelegate.monName, "", tf, false);
+                }
             }
         }
 

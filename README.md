@@ -56,7 +56,7 @@ niri reloads its config as soon as you save, so keybind/monitor/layout edits app
 | What | Where |
 |---|---|
 | **Keybinds** | `keybinds.kdl` (`Mod+Shift+/` lists them all) |
-| **Monitors**: resolution, refresh rate, position, scale, rotation, on/off | `output.kdl` (`niri msg outputs` shows names and modes). Settings → Display changes them live but doesn't save; `monolith installer` regenerates this file from your current setup |
+| **Monitors**: resolution, refresh rate, position, scale, rotation, on/off | `output.kdl` (`niri msg outputs` shows names and modes). Settings → Display sets resolution, refresh rate and rotation here (applied live, kept only once you confirm, otherwise it goes back after 15 s); `monolith installer` regenerates this file from your current setup |
 | **Workspaces** (and which monitor they live on) | `workspaces.kdl` |
 | **Keyboard layouts, mouse, touchpad, cursor** | `input.kdl` |
 | **Apps that start with niri** | `autostart.kdl` |
@@ -112,7 +112,7 @@ None of these have keybinds by default, so your niri config stays as it is; bind
 
 - Welcome
 - General: language, location, weather units, sounds, and **Online** features (all off until you switch them on): song recognition and the Wallhaven browser
-- Display: monitors, widgets, lock screen
+- Display: monitors (resolution, refresh rate, rotation, scale, on/off, night light; resolution, refresh rate and rotation are saved to niri's config and go back by themselves unless you confirm them, like KDE), widgets, lock screen
 - Theme: 97 colour presets, colours from your wallpaper (matugen), fonts, corner radius, opacity, and the **style**, picked from a preview grid:
   - **Blur**, **Liquid glass**: see-through, your colours
   - **Minimalist**: flat, square, grey outlines (my old Quickshell look)
@@ -126,6 +126,7 @@ None of these have keybinds by default, so your niri config stays as it is; bind
 - Theme → Effects: **Unfold** (popups open from a thin line, like an old screen switching on), **Edge light** (a soft light along each panel's top) and **Grain** (faint film grain on panels), all on by default
 - Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, the same speed for niri's window animations, and **GameMode** (no animations, blur or glass while a fullscreen window has focus)
 - Theme → Windows: niri window borders on/off, width, colours for focused / other / attention windows (theme swatches or any hex), or follow the theme's colours automatically
+- Theme → Icons: pick the icon pack (Papirus, Breeze, Adwaita... whatever's installed, with a preview of each) for Qt and GTK apps and Monolith's own launcher, dock and overview
 - Bar: general and modules
 - Launcher, Dock, On-screen display, Notifications
 - Screenshots → Capture: capture as soon as you let go of the mouse, OCR languages (downloaded only when you install one)
@@ -166,7 +167,7 @@ Modular config in `~/.config/niri/` (source: `monolith/compositors/niri/`):
 | `config/keybinds.kdl` | the keybinds below |
 | `config/rules.kdl` | rounded window corners, Steam toasts as notifications |
 
-The installer reads displays from the running niri. If you install from a TTY, nothing is pinned and niri picks each monitor's preferred mode; run `monolith installer` from inside niri later to pin the layout. The Display page in Settings can also change monitors live.
+The installer reads displays from the running niri. If you install from a TTY, nothing is pinned and niri picks each monitor's preferred mode; run `monolith installer` from inside niri later to pin the layout. The Display page in Settings can also change resolution, refresh rate and rotation, and saves them.
 
 ## Keybinds
 
