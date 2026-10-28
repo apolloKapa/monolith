@@ -257,7 +257,7 @@ GuideTab {
                     settingId: "game_mode"
                     icon: "󰊴"
                     title: "GameMode"
-                    description: "While a fullscreen app has focus (games, videos), turn off animations, blur and liquid glass so the shell costs nothing"
+                    description: "While a fullscreen app has focus (games, videos), turn off animations, blur, liquid glass and the quick actions panel so the shell costs nothing. The Game mode button in the system panel turns it on any time"
                     searchKeywords: "game mode gaming fullscreen performance fps effects blur glass animations battery"
 
                     Toggle {

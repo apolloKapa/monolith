@@ -86,7 +86,8 @@ ShellRoot {
         sourceComponent: WallpaperEngine {}
     }
     Loader {
-        active: !performanceMode && quickactionsEnabled
+        // off in GameMode (the button, or a fullscreen game when that option is on)
+        active: !performanceMode && quickactionsEnabled && !ThemeBackend.gameModeActive
         sourceComponent: Floating {}
     }
 
