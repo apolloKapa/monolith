@@ -273,6 +273,7 @@ Variants {
             }
 
             exclusiveZone: (!barConfigReady || autohide || shouldHideForRedact) ? 0 : barHeight
+            ReservedReport { window: barWindowRoot }
             color: "transparent"
 
             property real activeMaskHeight: shouldHideForRedact ? 0 : ((autohide && !isRevealed) ? s(4) : (isVertical ? (isFill ? barWindowRoot.height : (effectiveBarHeight + edgePadding * 2)) : (isFill ? (barHeight + cornerRadius) : (barHeight + edgePadding))))

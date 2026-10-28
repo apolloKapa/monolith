@@ -30,6 +30,7 @@ Visualizer 1.0 media/Visualizer.qml
 
 AxisFlow 1.0 layout/AxisFlow.qml
 Reserved 1.0 layout/Reserved.qml
+ReservedReport 1.0 layout/ReservedReport.qml
 
 Dropdown 1.0 inputs/Dropdown.qml
 FilePicker 1.0 inputs/FilePicker.qml

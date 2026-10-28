@@ -32,6 +32,7 @@ Variants {
             anchors { top: true; left: true; right: true }
             implicitHeight: s(300)
             exclusiveZone: s(48)
+            ReservedReport { window: win }
             color: "transparent"
             mask: Region { item: island }
 
