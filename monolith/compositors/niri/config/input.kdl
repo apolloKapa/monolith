@@ -9,7 +9,8 @@ input {
     focus-follows-mouse max-scroll-amount="0%"
     keyboard {
         xkb {
-            layout "us,gr"
+            // the installer puts this PC's own layout here (localectl)
+            layout "us"
             options "grp:alt_shift_toggle"
         }
         numlock
