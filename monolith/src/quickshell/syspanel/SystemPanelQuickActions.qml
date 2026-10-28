@@ -409,6 +409,24 @@ Item {
             }
         }
 
+        // Game mode by hand: no animations or panel effects, quick actions panel off
+        QuickActionBtn {
+            iconText: "󰊴"
+            label: I18n.t("syspanel.tiles.gamemode", "Game mode")
+            activeColor: ThemeBackend.green
+            isActive: ThemeBackend.gameModeForced
+            onLeftClicked: {
+                Sounds.playSfx("system/quick_click.wav");
+                let t = Object.assign({}, Config.getSetting("theme", {}));
+                t.gameModeOn = !ThemeBackend.gameModeForced;
+                Config.setSetting("theme", t);
+            }
+            onRightClicked: {
+                view.panel.closeAnim.start();
+                Quickshell.execDetached(["bash", Caching.monolithDir + "/scripts/qs_manager.sh", "open", "settings", "theme", "theme_animations"]);
+            }
+        }
+
         QuickActionBtn {
             id: dndBtn
             iconText: isActive ? "󰂛" : "󰂚"

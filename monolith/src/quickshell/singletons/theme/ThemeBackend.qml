@@ -148,8 +148,11 @@ Item {
     readonly property real animScale: (animationsEnabled && !gameModeActive) ? 1.0 / Math.max(0.25, animationSpeed) : 0
 
     // GameMode (Theme -> Animations): while a fullscreen window has focus (games, videos),
-    // animations, blur and liquid glass are off so the shell costs the GPU nothing.
+    // animations, blur and liquid glass are off so the shell costs the GPU nothing. The Game mode
+    // button in the system panel turns it on by hand (theme.gameModeOn), fullscreen or not. While
+    // it's on, the quick actions panel is off too (Shell.qml).
     property bool gameModeEnabled: true
+    property bool gameModeForced: false
 
     // Monolith's surface effects (Theme -> Effects), all on by default; GameMode turns them off.
     //   grain:  faint film grain on panels      edge:   a light along each panel's top
@@ -164,8 +167,8 @@ Item {
     // activeToplevel is undefined (not null) with nothing focused: comparing with null let the
     // binding throw, and a failed binding keeps its old value, so GameMode could stay on (no
     // glass anywhere in the shell) long after the fullscreen game was gone
-    readonly property bool gameModeActive: gameModeEnabled && !!ToplevelManager.activeToplevel
-        && ToplevelManager.activeToplevel.fullscreen === true
+    readonly property bool gameModeActive: gameModeForced || (gameModeEnabled && !!ToplevelManager.activeToplevel
+        && ToplevelManager.activeToplevel.fullscreen === true)
     readonly property bool glassActive: blurBackground && !opaqueStyle && elementOpacity < 0.999 && !gameModeActive
     readonly property bool liquidGlass: blurBackground && blurStyle === "liquid" && !gameModeActive
     // a see-through look is on (Blur or Liquid glass): the Frame bar style turns to glass too
@@ -441,6 +444,7 @@ Item {
         const anim = themeConfig.animations || {};
         root.animationsEnabled = anim.enabled !== false;
         root.gameModeEnabled = themeConfig.gameMode !== false;
+        root.gameModeForced = themeConfig.gameModeOn === true;
         root.effects = themeConfig.effects || {};
         const speed = Number(anim.speed);
         root.animationSpeed = isNaN(speed) ? 1.0 : Math.max(0.25, Math.min(3.0, speed));
