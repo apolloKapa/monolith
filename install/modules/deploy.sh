@@ -78,9 +78,8 @@ init_settings() {
     # machine's wallpaper folder and avatar (so those don't get rewritten twice)
     sed -e "s|/home/[^/\"]*/|$HOME/|g" "$src" \
         | jq --arg user "$USER" --arg wp "$wallpaper_dir" '
-            # nothing that identifies you by network: IP, ISP, postcode
-            (if .general.location then .general.location |= (del(.ip, .asn, .org, .postal, .currency, .languages, .utc_offset)
-                | .latitude |= ((. * 100 | round) / 100) | .longitude |= ((. * 100 | round) / 100) | .source = "manual") else . end)
+            # no location: each person sets their own in Settings -> General
+            del(.general.location)
             | .wallpaperDir = $wp
             | (if .general.avatarPath then .general.avatarPath = "/var/lib/AccountsService/icons/\($user)" else . end)
         ' > "$SETTINGS_FILE"
