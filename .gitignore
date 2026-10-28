@@ -10,3 +10,4 @@ bin/osu-wine
 bin/cosu-launch.sh
 bin/roblox-studio-mcp
 bin/gparted-dark
+__pycache__/
