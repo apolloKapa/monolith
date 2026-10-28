@@ -95,6 +95,7 @@ ShellRoot {
         Qt.application.domain = "monolith.org";
         Qt.application.name = "monolith";
         FirstLaunch.checkFirstLaunch();
+        AppImageWatcher.start();
         SysNotif.checkBattery();
     }
 }

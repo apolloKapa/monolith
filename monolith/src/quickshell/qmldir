@@ -57,6 +57,7 @@ singleton SettingsDefaults 1.0 singletons/system/SettingsDefaults.qml
 singleton CurrentFocus 1.0 singletons/system/CurrentFocus.qml
 singleton DateTime 1.0 singletons/system/DateTime.qml
 singleton FirstLaunch 1.0 singletons/system/FirstLaunch.qml
+singleton AppImageWatcher 1.0 singletons/system/AppImageWatcher.qml
 singleton I18n 1.0 singletons/system/I18n.qml
 singleton MangoState 1.0 singletons/system/MangoState.qml
 singleton NiriState 1.0 singletons/system/NiriState.qml
