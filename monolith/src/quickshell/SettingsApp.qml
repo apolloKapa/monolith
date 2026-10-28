@@ -198,6 +198,10 @@ ShellRoot {
             property var heldPos: [0, 0]
             property real motionX: 0
             property real motionY: 0
+            // the pointer's speed (px/s) and when that line came in (ms)
+            property real motionVX: 0
+            property real motionVY: 0
+            property real motionTime: 0
             property real dragBaseX: 0
             property real dragBaseY: 0
             // motion total when the left button last went down (the drag's real start)
@@ -230,6 +234,17 @@ ShellRoot {
             }
             property real glassScreenX: globalX - (glassScreenObj ? glassScreenObj.x : 0)
             property real glassScreenY: globalY - (glassScreenObj ? glassScreenObj.y : 0)
+            // where to draw the glass in a frame being prepared now (WallpaperBlur asks every
+            // frame). Mid-drag that frame shows about two refreshes later (Qt hands it over on
+            // niri's next frame callback, niri shows it on the one after), while niri puts the
+            // window at the newest pointer position every refresh: the glass trailed it by that
+            // much, so it aims that far ahead along the pointer's current speed.
+            function glassScreenPos(frameTime) {
+                if (!pointerReady || !dragging) return [glassScreenX, glassScreenY];
+                const refresh = frameTime > 0 ? Math.min(frameTime, 0.034) : 0.0042;
+                const ahead = Math.min(0.06, 2 * refresh + Math.max(0, Date.now() - motionTime) / 1000);
+                return [glassScreenX + motionVX * ahead, glassScreenY + motionVY * ahead];
+            }
             // the window rule's backdrop (blurred wallpaper) shows instead when the glass can't
             // line up: a column scrolled to an unknown spot, or a drag without the mouse's motion
             readonly property bool glassSuspended: (tiled && niriPos === null) || (pointerFailed && niriWindow !== null && !tiled && niriPos === null)
@@ -261,9 +276,12 @@ ShellRoot {
                             win.buttonHeld = false;
                             return;
                         }
-                        if (v.length !== 2) return;
+                        if (v.length !== 4) return;
                         win.motionX = Number(v[0]);
                         win.motionY = Number(v[1]);
+                        win.motionVX = Number(v[2]);
+                        win.motionVY = Number(v[3]);
+                        win.motionTime = Date.now();
                     }
                 }
                 onExited: {

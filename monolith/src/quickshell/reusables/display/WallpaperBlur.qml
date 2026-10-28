@@ -155,8 +155,9 @@ Item {
         if (w && w.glassScreenX !== undefined && !root.effectiveScreenOverride) {
             // an ordinary window (the Settings app) that tracks its own position on screen
             // (undefined for a moment while the window is still being set up)
-            wx = Number(w.glassScreenX) || 0;
-            wy = Number(w.glassScreenY) || 0;
+            const pos = w.glassScreenPos ? w.glassScreenPos(frameTicker.smoothFrameTime) : [w.glassScreenX, w.glassScreenY];
+            wx = Number(pos[0]) || 0;
+            wy = Number(pos[1]) || 0;
         } else if (w && w.anchors && !root.effectiveScreenOverride) {
             const a = w.anchors;
             const m = w.margins;
@@ -192,6 +193,7 @@ Item {
     }
 
     FrameAnimation {
+        id: frameTicker
         running: root.active
         onTriggered: {
             root.refreshGeometry();
