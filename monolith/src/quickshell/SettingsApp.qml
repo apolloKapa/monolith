@@ -102,7 +102,10 @@ ShellRoot {
         FloatingWindow {
             id: win
             title: I18n.t("widgets.guide.name", "Settings")
-            color: "transparent"
+            // niri's backdrop for this window (blurred wallpaper, rules.kdl) is only for the glass
+            // styles; in the others the window is solid from its first frame, so the backdrop
+            // doesn't flash through while Settings fades in or out
+            color: ThemeBackend.seeThrough ? "transparent" : ThemeBackend.base
             implicitWidth: Math.round(1200 * app.uiScale)
             implicitHeight: Math.round(750 * app.uiScale)
             minimumSize: Qt.size(Math.round(480 * app.uiScale), Math.round(400 * app.uiScale))
