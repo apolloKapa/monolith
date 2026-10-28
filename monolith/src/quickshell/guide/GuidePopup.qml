@@ -566,7 +566,7 @@ Item {
             icon: "󰃠",
             file: "display/DisplayMainTab.qml",
             subtabs: [
-                { id: "DisplayGeneral", key: "display_general", name: "Display", icon: "󰍹", file: "display/DisplayMainTab.qml", desc: "Your monitors: brightness, night light and how each screen is set up" },
+                { id: "DisplayGeneral", key: "display_general", name: "Display", icon: "󰍹", file: "display/DisplayMainTab.qml", desc: "Your monitors: resolution, refresh rate, rotation, scale and night light" },
                 { id: "DisplayWidgets", key: "display_widgets", name: "Widgets", icon: "󰕰", file: "display/DisplayWidgetsTab.qml", desc: "Clocks, weather, music and other widgets you can place on the desktop" },
                 { id: "DisplayLockscreen", key: "display_lockscreen", name: "Lock screen", icon: "󰌾", file: "display/DisplayLockscreenTab.qml", desc: "What the lock screen shows and how it looks. Open the editor to move things around" }
             ]
@@ -582,6 +582,7 @@ Item {
                 { id: "ThemeAnimations", key: "theme_animations", name: "Animations", icon: "󰔡", file: "theme/ThemeAnimationsTab.qml", desc: "How fast panels open and close, or turn animations off. GameMode pauses effects in fullscreen games" },
                 { id: "ThemeEffects", key: "theme_effects", name: "Effects", icon: "󰫢", file: "theme/ThemeEffectsTab.qml", desc: "Small extras on panels: film grain, a light along the top edge, unfolding when they open" },
                 { id: "ThemeWindows", key: "theme_windows", name: "Windows", icon: "󰖲", file: "theme/ThemeWindowsTab.qml", desc: "The border niri draws around your app windows: on or off, thickness and colours" },
+                { id: "ThemeIcons", key: "theme_icons", name: "Icons", icon: "󰀻", file: "theme/ThemeIconsTab.qml", desc: "The icon pack apps and Monolith use (Papirus, Breeze, Adwaita...), picked from the ones installed" },
                 { id: "ThemeApps", key: "theme_apps", name: "Apps", icon: "󰏘", file: "theme/ThemeAppsTab.qml", desc: "Let other apps (GTK, Qt, terminals, rofi...) use Monolith's colours too" }
             ]
         },

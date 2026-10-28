@@ -278,12 +278,23 @@ GuideTab {
                             let rr = m.refresh_rate ? Math.round(m.refresh_rate / 1000) : 60;
                             let sc = item.scale !== undefined ? item.scale : 1.0;
                             let isOff = item.active === false || item.is_active === false || (modes.length > 0 && (item.current_mode === null || item.current_mode === undefined));
+                            // every mode the monitor offers, for Resolution / Refresh rate
+                            let modeList = [];
+                            for (let j = 0; j < modes.length; j++) {
+                                let md = modes[j];
+                                modeList.push({ width: md.width, height: md.height, hz: md.refresh_rate / 1000, preferred: md.is_preferred === true });
+                            }
+                            let tf = item.logical ? item.logical.transform : "Normal";
                             mList.push({
                                 name: k,
                                 dimensions: w + "x" + h,
                                 framerate: rr.toString(),
                                 scale: sc,
-                                active: !isOff
+                                active: !isOff,
+                                modes: modeList,
+                                // niri's config spelling: "2560x1440@239.970", "flipped-90"
+                                currentMode: isOff ? "" : (w + "x" + h + "@" + (m.refresh_rate / 1000).toFixed(3)),
+                                transform: !tf || tf === "Normal" ? "normal" : String(tf).toLowerCase().replace(/^flipped(\d+)$/, "flipped-$1")
                             });
                         }
                     } else if (displayTabRoot.compositor === "mango") {
@@ -346,6 +357,101 @@ GuideTab {
                     displayTabRoot.refreshDisplaySettings();
                 }
             }
+        }
+    }
+
+    // ---- Resolution, refresh rate and rotation (niri) ----
+    // Applied at once (scripts/niri_outputs.sh writes Monolith's output.kdl, niri reloads it),
+    // then kept only if confirmed: unconfirmed changes go back after confirmSeconds, so a mode
+    // the monitor can't show can't leave you with a black screen.
+    readonly property int confirmSeconds: 15
+    property var pendingOutput: null      // { name, prev: { mode, transform }, left }
+    property string outputError: ""
+    property var outputQueue: []
+
+    function applyOutput(monName, mode, transform, isRevert) {
+        if (compositor !== "niri" || !monName) return;
+        let mon = monitorsList.find(mm => mm.name === monName);
+        if (!mon) return;
+        if (!isRevert) {
+            // a second change while one is waiting: the first one's "before" is what to go back to
+            let prev = (pendingOutput && pendingOutput.name === monName) ? pendingOutput.prev
+                : { mode: mon.currentMode, transform: mon.transform };
+            pendingOutput = { name: monName, prev: prev, left: confirmSeconds };
+            confirmTimer.restart();
+        }
+        let args = ["bash", Caching.monolithDir + "/scripts/niri_outputs.sh", "set", monName];
+        if (mode) args.push("mode=" + mode);
+        if (transform) args.push("transform=" + transform);
+        outputQueue = outputQueue.concat([args]);
+        runNextOutput();
+    }
+
+    function runNextOutput() {
+        if (outputSetter.running || outputQueue.length === 0) return;
+        outputSetter.command = outputQueue[0];
+        outputQueue = outputQueue.slice(1);
+        outputError = "";
+        outputSetter.running = true;
+    }
+
+    // Settings quits when it closes: an unconfirmed change goes back rather than staying by default
+    Component.onDestruction: {
+        let p = pendingOutput;
+        if (p && p.prev.mode && Caching.monolithDir)
+            Quickshell.execDetached(["bash", Caching.monolithDir + "/scripts/niri_outputs.sh", "set", p.name,
+                "mode=" + p.prev.mode, "transform=" + p.prev.transform]);
+    }
+
+    function keepOutput() {
+        confirmTimer.stop();
+        pendingOutput = null;
+    }
+
+    function revertOutput() {
+        confirmTimer.stop();
+        let p = pendingOutput;
+        pendingOutput = null;
+        if (p && p.prev.mode) applyOutput(p.name, p.prev.mode, p.prev.transform, true);
+    }
+
+    Process {
+        id: outputSetter
+        running: false
+        stderr: StdioCollector { id: outputErr }
+        onExited: function(code) {
+            if (code !== 0) {
+                displayTabRoot.outputError = outputErr.text.trim() || "niri couldn't use that setting";
+                // nothing changed, so there's nothing to confirm
+                if (displayTabRoot.outputQueue.length === 0) {
+                    confirmTimer.stop();
+                    displayTabRoot.pendingOutput = null;
+                }
+            }
+            outputRefresh.restart();
+            displayTabRoot.runNextOutput();
+        }
+    }
+
+    // niri applies the new config a moment after the file changes
+    Timer {
+        id: outputRefresh
+        interval: 700
+        onTriggered: displayTabRoot.reloadMonitors()
+    }
+
+    Timer {
+        id: confirmTimer
+        interval: 1000
+        repeat: true
+        onTriggered: {
+            let p = displayTabRoot.pendingOutput;
+            if (!p) { stop(); return; }
+            if (p.left <= 1) {
+                displayTabRoot.revertOutput();
+                return;
+            }
+            displayTabRoot.pendingOutput = Object.assign({}, p, { left: p.left - 1 });
         }
     }
 
