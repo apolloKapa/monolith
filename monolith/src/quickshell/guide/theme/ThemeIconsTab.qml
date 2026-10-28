@@ -117,12 +117,23 @@ GuideTab {
         onTriggered: iconsTab.searchIcons()
     }
 
+    // where your own icon images go (~/.local/share/icons, the usual place for icons you add):
+    // "Choose image..." always opens there
+    readonly property string customIconsDir: (Quickshell.env("XDG_DATA_HOME") || ((Quickshell.env("HOME") || "") + "/.local/share")) + "/icons"
+
+    function pickImage() {
+        Quickshell.execDetached(["mkdir", "-p", customIconsDir]);
+        imagePicker.openWithOptionalPath("");
+        imagePicker.gotoFolder(customIconsDir);
+    }
+
     FilePicker {
         id: imagePicker
         rootObj: iconsTab.rootObj
         titleText: "Pick an image for the icon"
         nameFilters: ["*.png", "*.svg", "*.svgz", "*.xpm", "*.jpg", "*.jpeg", "*.webp", "*.ico"]
         places: [
+            { name: "Custom icons", icon: "󰀻", path: "file://" + iconsTab.customIconsDir },
             { name: "Home", icon: "󰋜", path: "file://" + (Quickshell.env("HOME") || "") },
             { name: "Pictures", icon: "󰉏", path: "file://" + (Quickshell.env("HOME") || "") + "/Pictures" },
             { name: "Downloads", icon: "󰇚", path: "file://" + (Quickshell.env("HOME") || "") + "/Downloads" },
@@ -438,7 +449,7 @@ GuideTab {
                                 textFontSize: rootObj.s(11)
                                 accentColor: ThemeBackend.surface1
                                 textColor: ThemeBackend.text
-                                onClicked: imagePicker.openWithOptionalPath("")
+                                onClicked: iconsTab.pickImage()
                             }
                             ClickButton {
                                 visible: iconsTab.overrides[iconsTab.editingId] !== undefined
