@@ -259,25 +259,39 @@ PanelWindow {
         for (let k in patch) cur[k] = patch[k];
         Config.setSetting("launcher", cur);
     }
+    // The grid's slots count the favourites it shows (favoriteApps). Pinned apps that aren't
+    // installed any more stay in `favorites` but aren't shown, so slot numbers aren't indexes
+    // into it: a drag used them as if they were and moved the wrong app. These work on the
+    // shown ones and leave the hidden ones where they are.
+    function withShownFavorites(change) {
+        let shown = favoriteApps.map(a => a.desktop_id);
+        let moved = change(shown.slice());
+        let out = [], k = 0;
+        for (const id of favorites) {
+            if (shown.indexOf(id) !== -1) { if (k < moved.length) out.push(moved[k++]); }
+            else out.push(id);
+        }
+        while (k < moved.length) out.push(moved[k++]);
+        saveLauncher({ "favorites": out });
+    }
     // move a favourite from one slot to another (dragging in the grid)
     function moveFavorite(from, to) {
-        let favs = favorites.slice();
-        if (from < 0 || from >= favs.length) return;
-        to = Math.max(0, Math.min(favs.length - 1, to));
+        let n = favoriteApps.length;
+        if (from < 0 || from >= n) return;
+        to = Math.max(0, Math.min(n - 1, to));
         if (from === to) return;
-        let it = favs.splice(from, 1)[0];
-        favs.splice(to, 0, it);
-        saveLauncher({ "favorites": favs });
+        withShownFavorites(ids => { let it = ids.splice(from, 1)[0]; ids.splice(to, 0, it); return ids; });
     }
     // pin an app at a slot (dragging a list row onto the grid)
     function pinAt(desktopId, slot) {
         if (!desktopId) return;
-        let favs = favorites.slice();
-        let i = favs.indexOf(desktopId);
-        if (i !== -1) favs.splice(i, 1);
-        slot = Math.max(0, Math.min(favs.length, slot));
-        favs.splice(slot, 0, desktopId);
-        saveLauncher({ "favorites": favs });
+        withShownFavorites(ids => {
+            let i = ids.indexOf(desktopId);
+            if (i !== -1) ids.splice(i, 1);
+            slot = Math.max(0, Math.min(ids.length, slot));
+            ids.splice(slot, 0, desktopId);
+            return ids;
+        });
     }
     // reorder the list (dragging a row); the order is kept for the unfiltered list
     function moveListItem(from, to) {
