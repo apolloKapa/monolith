@@ -51,7 +51,9 @@ install_wallpapers() {
     local full_pack="${1:-true}"
     local wallpaper_dir
     wallpaper_dir=$(get_wallpaper_dir)
-    local wallpaper_repo="${WALLPAPER_REPO:-https://github.com/apolloKapa/wallpapers.git}"
+    # Serpantinum's wallpaper pack (public; Monolith had no pack of its own, so without
+    # Serpantinum installed a fresh install got no wallpaper at all)
+    local wallpaper_repo="${WALLPAPER_REPO:-https://github.com/ilyamiro/shell-wallpapers.git}"
     local clone_dir="${XDG_CACHE_HOME:-"$HOME/.cache"}/monolith-wallpapers"
 
     mkdir -p "$wallpaper_dir"
@@ -80,6 +82,7 @@ install_wallpapers() {
     fi
 
     if [ ! -d "$src_dir" ]; then
+        echo -e "  ${C_YELLOW}wallpapers:${RESET} couldn't download $wallpaper_repo; put your own in $wallpaper_dir"
         return 0
     fi
 

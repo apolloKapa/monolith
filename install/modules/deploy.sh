@@ -54,7 +54,6 @@ deploy_dotfiles_extras() {
         [ -f "$HOME/.config/rofi/config.rasi" ] || cp "$project_root/config/rofi/config.rasi" "$HOME/.config/rofi/"
         [ -f "$HOME/.config/rofi/favorites" ] || cp "$project_root/config/rofi/favorites" "$HOME/.config/rofi/"
     fi
-    [ -f "$HOME/.config/wallpaper" ] || cp "$project_root/config/wallpaper" "$HOME/.config/wallpaper" 2>/dev/null || true
     case ":$PATH:" in
         *":$BIN_DIR:"*) ;;
         *) echo -e "  ${C_YELLOW}path:${RESET} add $BIN_DIR to your PATH (fish: fish_add_path ~/.local/bin)" ;;
