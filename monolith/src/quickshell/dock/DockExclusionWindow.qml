@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import "../reusables"
 
 PanelWindow {
     id: dockExclusionWindow
@@ -27,4 +28,6 @@ PanelWindow {
     implicitWidth: dockWindow.isVertical ? dockWindow.dockReservedSpace : 0
 
     mask: Region {}
+
+    ReservedReport { window: dockExclusionWindow }
 }

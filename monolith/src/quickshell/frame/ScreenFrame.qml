@@ -37,7 +37,9 @@ Variants {
             readonly property bool glass: ThemeBackend.seeThrough
 
             component Strip: PanelWindow {
+                id: strip
                 screen: frame.modelData
+                ReservedReport { window: strip }
                 visible: frame.enabled
                 color: "transparent"
                 WlrLayershell.namespace: "qs-frame"

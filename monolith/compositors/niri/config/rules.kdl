@@ -6,11 +6,11 @@ window-rule {
     clip-to-geometry true
 }
 
-// Monolith Settings floats: its liquid glass draws the wallpaper behind it, and niri
-// only reports where a window is on screen for floating windows (tiled ones get no
-// position, so the glass background stayed stuck to the window instead of the desktop).
-// While niri drags it there is no position at all: the glass steps aside and this
-// backdrop (the real wallpaper, blurred, always in the right place) shows instead.
+// Monolith Settings opens floating: its liquid glass draws the wallpaper behind it, and
+// niri only reports where floating windows are (tiled and fullscreen spots are worked out
+// from the tile sizes and what the bar/frame/dock reserve, drags from the mouse's motion).
+// When none of that works (a column scrolled to an unknown spot, no access to the mouse)
+// the glass steps aside and this backdrop (the real wallpaper, blurred) shows instead.
 window-rule {
     match app-id="^monolith-settings$"
     open-floating true

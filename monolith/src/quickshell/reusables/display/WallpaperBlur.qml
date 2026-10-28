@@ -80,7 +80,8 @@ Item {
     readonly property var hostWindow: QsWindow.window
     // the Settings window while niri drags it: position unknown, so niri's backdrop shows instead
     readonly property bool glassSuspended: hostWindow ? hostWindow.glassSuspended === true : false
-    readonly property var hostScreen: effectiveScreenOverride ? effectiveScreenOverride : (hostWindow ? hostWindow.screen : null)
+    // the Settings window says which monitor it's on itself (niri's, which Qt can lag behind)
+    readonly property var hostScreen: effectiveScreenOverride ? effectiveScreenOverride : (hostWindow ? (hostWindow.glassScreenObj ? hostWindow.glassScreenObj : hostWindow.screen) : null)
     readonly property string screenName: hostScreen && hostScreen.name ? hostScreen.name : ""
     readonly property bool parentVisible: parent ? parent.visible : true
     readonly property bool active: surfaceEnabled && parentVisible && ThemeBackend.blurBackground && ThemeBackend.elementOpacity < 0.999 && width > 0 && height > 0 && hostScreen !== null && (hostWindow ? hostWindow.visible : true)
