@@ -30,8 +30,14 @@ Item {
     // Frame (frame/ScreenFrame.qml) is a full-width solid bar that runs into the screen frame
     property bool isFrame: barStyle === "frame"
     // Frame + Blur/Liquid glass: the frame (frame/ScreenFrame.qml) is one sheet of glass round
-    // the whole screen, bar included; the bar's own glass only stays as the backdrop its pills bend
-    property bool frameGlass: isFrame && ThemeBackend.seeThrough
+    // the whole screen, bar included; the bar's own glass only stays as the backdrop its pills bend.
+    // A bar narrower than its edge hangs below the frame as a notch and draws its own.
+    property bool frameGlass: isFrame && ThemeBackend.seeThrough && !(barWindow && barWindow.fillAttached)
+    // Frame with a notch bar: the frame runs along the bar's edge, so the bar's edge fillets join
+    // it this far in instead of at the screen edge
+    property real frameInset: (isFrame && barWindow && barWindow.fillAttached)
+        ? Scaler.s(Config.rawSettings && Config.rawSettings.bar && Config.rawSettings.bar.frameThickness !== undefined ? Number(Config.rawSettings.bar.frameThickness) : 8)
+        : 0
     property bool isFill: barStyle === "fill" || barStyle === "frame"
     property bool isSolid: barStyle === "solid" || barStyle === "fill" || barStyle === "frame"
     property bool distinctPills: barWindow ? (barWindow.distinctPills !== undefined ? barWindow.distinctPills : false) : false
@@ -621,7 +627,7 @@ Item {
     ShaderEffect {
         id: topEdgeFillet
         property real radius: Math.min(contentWrapper.cornerRadius, Math.max(0, solidBackground.y)) * contentWrapper.fillAttachProgress
-        x: contentWrapper.barAtRight ? (solidBackground.x + solidBackground.width - width) : solidBackground.x
+        x: contentWrapper.barAtRight ? (solidBackground.x + solidBackground.width - width - contentWrapper.frameInset) : solidBackground.x + contentWrapper.frameInset
         y: solidBackground.y - height
         width: radius
         height: radius
@@ -644,7 +650,7 @@ Item {
     ShaderEffect {
         id: bottomEdgeFillet
         property real radius: Math.min(contentWrapper.cornerRadius, Math.max(0, contentWrapper.height - solidBackground.y - solidBackground.height)) * contentWrapper.fillAttachProgress
-        x: contentWrapper.barAtRight ? (solidBackground.x + solidBackground.width - width) : solidBackground.x
+        x: contentWrapper.barAtRight ? (solidBackground.x + solidBackground.width - width - contentWrapper.frameInset) : solidBackground.x + contentWrapper.frameInset
         y: solidBackground.y + solidBackground.height
         width: radius
         height: radius

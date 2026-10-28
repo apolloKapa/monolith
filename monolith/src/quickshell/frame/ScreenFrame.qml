@@ -24,9 +24,13 @@ Variants {
             readonly property real radius: Scaler.s(18)
             // solid, like the bar in this style (bar/Bar.qml barOpacity)
             readonly property color color: ThemeBackend.frameColor
-            // what's taken on each side: the bar on its edge, the frame on the others
-            // an auto-hiding bar doesn't hold its edge: the frame runs along it like the others
-            readonly property real edgeBar: barCfg.autohide === true ? thickness : barH
+            // what's taken on each side: the bar on its edge, the frame on the others.
+            // A bar that doesn't hold its whole edge (auto-hiding, or narrower than the screen:
+            // Bar -> Width) leaves it to the frame, which runs along it like the others; a
+            // narrower bar hangs from it as a notch (bar/TopBar.qml frameInset)
+            readonly property bool barSpans: barCfg.autohide !== true && !(Number(barCfg.width) < 100)
+            readonly property real edgeBar: barSpans ? barH : thickness
+            readonly property bool barVertical: barPos === "left" || barPos === "right"
             readonly property real topIn: barPos === "top" ? edgeBar : thickness
             readonly property real bottomIn: barPos === "bottom" ? edgeBar : thickness
             readonly property real leftIn: barPos === "left" ? edgeBar : thickness
@@ -83,6 +87,32 @@ Variants {
                 anchors { left: true; right: true; top: true }
                 implicitHeight: frame.thickness
                 exclusiveZone: frame.thickness
+            }
+
+            // a notch bar's edge: the frame runs along it under the bar (Bottom layer), without
+            // reserving it or pushing the bar off the edge (the bar reserves that edge itself)
+            PanelWindow {
+                screen: frame.modelData
+                visible: frame.enabled && frame.thickness > 0 && !frame.barSpans && frame.barCfg.autohide !== true
+                color: "transparent"
+                anchors {
+                    top: frame.barPos === "top" || frame.barVertical
+                    bottom: frame.barPos === "bottom" || frame.barVertical
+                    left: frame.barPos === "left" || !frame.barVertical
+                    right: frame.barPos === "right" || !frame.barVertical
+                }
+                implicitWidth: frame.thickness
+                implicitHeight: frame.thickness
+                exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.namespace: "qs-frame"
+                WlrLayershell.layer: WlrLayer.Bottom
+                mask: Region {}
+                Rectangle {
+                    anchors.fill: parent
+                    // see-through styles: the sheet below draws it
+                    visible: !frame.glass
+                    color: frame.color
+                }
             }
 
             // the see-through frame: below windows, so a window reaching into a rounded corner

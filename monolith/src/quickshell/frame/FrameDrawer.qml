@@ -22,8 +22,10 @@ Item {
     readonly property string barPos: barCfg.position || "top"
     readonly property real thickness: Scaler.s(barCfg.frameThickness !== undefined ? Number(barCfg.frameThickness) : 8)
     readonly property real barH: Scaler.s(barCfg.height !== undefined ? Number(barCfg.height) : 40)
-    // an auto-hiding bar doesn't hold its edge: the frame runs along it like the others
-    readonly property real edgeBar: barCfg.autohide === true ? thickness : barH
+    // a bar that doesn't hold its whole edge (auto-hiding, or narrower than the screen) leaves
+    // it to the frame, which runs along it like the others (frame/ScreenFrame.qml)
+    readonly property bool barSpans: barCfg.autohide !== true && !(Number(barCfg.width) < 100)
+    readonly property real edgeBar: barSpans ? barH : thickness
     readonly property real topIn: barPos === "top" ? edgeBar : thickness
     readonly property real bottomIn: barPos === "bottom" ? edgeBar : thickness
     readonly property real leftIn: barPos === "left" ? edgeBar : thickness
