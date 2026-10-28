@@ -9,12 +9,17 @@ moving, a few pixels later, so the glass measures from the press) and "up" when 
 (the glass only follows the pointer while a button is held: a window niri reports no position
 for that isn't being dragged mustn't slide the glass around with every mouse movement).
 Needs read access to /dev/input (the input group); prints "unavailable" and exits otherwise.
+
+Motion goes out at most once per FLUSH_S (a 240 Hz frame): a gaming mouse reports up to 1000+
+times a second, and every line costs the shell a round of bindings on its GUI thread, so
+printing each one queued them up and the glass trailed behind the window.
 """
 import glob
 import os
 import select
 import struct
 import sys
+import time
 
 EVENT = struct.Struct("llHHi")
 EV_SYN, EV_KEY, EV_REL = 0, 1, 2
@@ -34,6 +39,7 @@ def is_mouse(event_path):
 
 
 RESCAN_MS = 2000
+FLUSH_S = 1 / 240
 
 
 def open_new_mice(opened, poller):
@@ -59,9 +65,22 @@ def main():
     print("ready", flush=True)
     x = y = 0
     dirty = False
+    last_flush = 0.0
+
+    def flush():
+        nonlocal dirty, last_flush
+        sys.stdout.write(f"{x} {y}\n")
+        sys.stdout.flush()
+        dirty = False
+        last_flush = time.monotonic()
+
     while True:
-        events = poller.poll(RESCAN_MS)
-        if not events:
+        if dirty:
+            timeout = max(0, int((last_flush + FLUSH_S - time.monotonic()) * 1000) + 1)
+        else:
+            timeout = RESCAN_MS
+        events = poller.poll(timeout)
+        if not events and not dirty:
             open_new_mice(opened, poller)
         for fd, flags in events:
             if flags & (select.POLLERR | select.POLLHUP | select.POLLNVAL):
@@ -81,17 +100,14 @@ def main():
                 elif kind == EV_REL and code == REL_Y:
                     y += value
                     dirty = True
-                elif kind == EV_KEY and code == BTN_LEFT and value == 1:
-                    sys.stdout.write(f"down {x} {y}\n")
+                elif kind == EV_KEY and code == BTN_LEFT and value in (0, 1):
+                    # the motion before a press/release goes out first, in order
+                    if dirty:
+                        flush()
+                    sys.stdout.write(f"down {x} {y}\n" if value == 1 else "up\n")
                     sys.stdout.flush()
-                elif kind == EV_KEY and code == BTN_LEFT and value == 0:
-                    sys.stdout.write("up\n")
-                    sys.stdout.flush()
-                elif kind == EV_SYN and dirty:
-                    sys.stdout.write(f"{x} {y}\n")
-                    sys.stdout.flush()
-                    dirty = False
-
+        if dirty and time.monotonic() - last_flush >= FLUSH_S:
+            flush()
 
 if __name__ == "__main__":
     try:
