@@ -1,7 +1,7 @@
 {
   "general": {
     "language": "en",
-    "avatarPath": "/var/lib/AccountsService/icons/apollo",
+    "avatarPath": "/var/lib/AccountsService/icons/user",
     "muteSfx": false,
     "weatherInterval": 5,
     "weatherUnit": "metric",
@@ -157,7 +157,7 @@
     "dnd": false,
     "position": "top right",
     "sound": true,
-    "soundFile": "/home/apollo/.local/share/monolith/src/assets/sounds/notifications/WakeUp.mp3"
+    "soundFile": "/home/user/.local/share/monolith/src/assets/sounds/notifications/WakeUp.mp3"
   },
   "display": {
     "monitors": {
@@ -170,7 +170,7 @@
       }
     }
   },
-  "wallpaperDir": "/home/apollo/Pictures/Wallpapers",
+  "wallpaperDir": "/home/user/Pictures/Wallpapers",
   "launcher": {
     "position": "center",
     "width": 600,

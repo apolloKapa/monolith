@@ -152,6 +152,8 @@ setup_niri_config() {
         echo -e "  ${C_CYAN}niri:${RESET} kept your startup apps: $(echo "$own_startup" | wc -l)"
     fi
 
+    set_niri_keyboard_layout "$NIRI_DIR/config/input.kdl"
+
     local json=""
     json="$(niri_outputs_json)" || json=""
     generate_niri_outputs "$json" > "$NIRI_DIR/config/output.kdl"
@@ -167,6 +169,26 @@ setup_niri_config() {
         echo -e "  ${C_YELLOW}niri:${RESET} this niri can't split its config into files, so it's all in config.kdl"
     fi
     echo -e "  ${C_GREEN}niri:${RESET} config written to $NIRI_DIR"
+}
+
+# this PC's keyboard layout (what localectl / vconsole.conf say), not the one the config shipped with
+set_niri_keyboard_layout() {
+    local file="$1" layout="" variant=""
+    [ -f "$file" ] || return 0
+    if command -v localectl &>/dev/null; then
+        layout="$(localectl status 2>/dev/null | awk -F': *' '/X11 Layout/{print $2; exit}')"
+        variant="$(localectl status 2>/dev/null | awk -F': *' '/X11 Variant/{print $2; exit}')"
+    fi
+    [ -z "$layout" ] && layout="$(sed -n 's/^XKBLAYOUT=//p' /etc/vconsole.conf 2>/dev/null | tr -d '"' | head -1)"
+    [ -z "$variant" ] && variant="$(sed -n 's/^XKBVARIANT=//p' /etc/vconsole.conf 2>/dev/null | tr -d '"' | head -1)"
+    layout="$(printf '%s' "${layout:-us}" | tr -cd 'a-zA-Z0-9,_()-')"
+    variant="$(printf '%s' "$variant" | tr -cd 'a-zA-Z0-9,_()-')"
+    [ -n "$layout" ] || layout="us"
+    sed -i "s|^\([[:space:]]*\)layout \"[^\"]*\"|\1layout \"$layout\"|" "$file"
+    if [ -n "$variant" ] && ! grep -q '^[[:space:]]*variant ' "$file"; then
+        sed -i "s|^\([[:space:]]*\)layout \"$layout\"|&\n\1variant \"$variant\"|" "$file"
+    fi
+    echo -e "  ${C_CYAN}niri:${RESET} keyboard layout $layout${variant:+ ($variant)}"
 }
 
 # replaces each `include "x"` line in config.kdl with the contents of x
