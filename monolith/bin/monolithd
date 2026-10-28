@@ -201,6 +201,12 @@ if [ "$COMMAND" == "start" ]; then
 
     echo $$ > "/tmp/monolithd.pid"
 
+    # a location without the time it was set (updated_at 0) came with Monolith's old default
+    # settings, which carried the author's location: remove it before anything shows it
+    if get_setting "general" '{}' | jq -e '.location and ((.location.updated_at // 0) == 0)' >/dev/null 2>&1; then
+        set_setting "general" "$(get_setting "general" '{}' | jq -c 'del(.location)')"
+    fi
+
     CLEANUP_DONE=false
     LAUNCH_PID=""
     QS_PID=""

@@ -7,18 +7,7 @@
     "weatherUnit": "metric",
     "sfxVolume": 100,
     "screenshotCaptureOnRelease": false,
-    "quickactions": true,
-    "location": {
-      "latitude": 40.64,
-      "longitude": 22.94,
-      "city": "Thessaloniki",
-      "region": "Central Macedonia",
-      "country_name": "Greece",
-      "country_code": "GR",
-      "timezone": "Europe/Athens",
-      "source": "manual",
-      "updated_at": 0
-    }
+    "quickactions": true
   },
   "syspanel": {
     "clipExpandProgress": 0,

@@ -98,7 +98,8 @@ get_location() {
     fi
     local gen_json loc_json
     gen_json="$(get_setting "general" '{}')"
-    loc_json="$(echo "$gen_json" | jq -c '.location // empty' 2>/dev/null)"
+    # one without the time it was set came with the old defaults (location.sh removes it)
+    loc_json="$(echo "$gen_json" | jq -c 'if (.location.updated_at // 0) == 0 then empty else .location end' 2>/dev/null)"
 
     if [[ -z "$loc_json" || "$loc_json" == "null" ]]; then
         script_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"

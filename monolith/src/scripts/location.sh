@@ -47,6 +47,17 @@ resolve_location() {
     local existing
     existing="$(get_existing_location)"
 
+    # a location you set always has the time you set it. One without (updated_at 0) came with
+    # Monolith's old default settings, which carried the author's location: never use it
+    if [[ -n "$existing" && "$existing" != "null" ]] \
+        && echo "$existing" | jq -e '(.updated_at // 0) == 0' >/dev/null 2>&1; then
+        log_debug "Removing a location that came with the default settings."
+        local gen
+        gen="$(get_setting "general" '{}')"
+        set_setting "general" "$(echo "$gen" | jq 'del(.location)')"
+        existing=""
+    fi
+
     if [[ -n "$existing" && "$existing" != "null" ]]; then
         local clean
         clean="$(echo "$existing" | jq -c "$PRIVATE_FIELDS")"
