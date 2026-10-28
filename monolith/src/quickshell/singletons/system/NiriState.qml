@@ -203,11 +203,16 @@ Item {
         } else if ((p = ev.WindowLayoutsChanged)) {
             // a window moved or resized (positions are what the dock's "dodge windows" checks)
             let wCopy = Object.assign({}, _windows);
+            let missing = false;
             for (let change of (p.changes || [])) {
                 let cur = wCopy[change[0]];
                 if (cur) wCopy[change[0]] = Object.assign({}, cur, { layout: change[1] });
+                else missing = true;
             }
             _windows = wCopy;
+            // a window we don't know: the startup poll can land after its open event and drop
+            // it from the list, which made every later move of it get ignored
+            if (missing) refreshWindows();
         } else if ((p = ev.WindowClosed)) {
             if (p.id !== undefined) {
                 let wCopy = Object.assign({}, _windows);

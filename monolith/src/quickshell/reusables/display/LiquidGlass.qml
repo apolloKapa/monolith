@@ -35,6 +35,9 @@ ShaderEffect {
     property rect boxRect: Qt.rect(0, 0, 0, 0)
     property rect validRect: Qt.rect(0, 0, 1, 1)
     property real unpremul: 0
+    // optional rounded hole, in item coordinates (the screen frame: glass all round the desktop)
+    property rect holeRect: Qt.rect(0, 0, 0, 0)
+    property real holeRadius: 0
 
     property vector2d itemSize: Qt.vector2d(width, height)
     property vector4d radii: Qt.vector4d(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius)
@@ -42,6 +45,7 @@ ShaderEffect {
     property vector2d cursor: Qt.vector2d(cursorPos.x, cursorPos.y)
     property vector4d fillet: Qt.vector4d(filletDir.x, filletDir.y, filletRadius, earsOnly ? 1 : 0)
     property vector4d sampleBounds: Qt.vector4d(validRect.x, validRect.y, validRect.x + validRect.width, validRect.y + validRect.height)
+    property vector4d hole: holeRect.width > 0 ? Qt.vector4d(holeRect.x + holeRect.width * 0.5 - width * 0.5, holeRect.y + holeRect.height * 0.5 - height * 0.5, holeRect.width * 0.5, holeRect.height * 0.5) : Qt.vector4d(0, 0, 0, 0)
     property vector4d box:boxRect.width > 0 ? Qt.vector4d(boxRect.x + boxRect.width * 0.5 - width * 0.5, boxRect.y + boxRect.height * 0.5 - height * 0.5, boxRect.width * 0.5, boxRect.height * 0.5) : Qt.vector4d(0, 0, 0, 0)
 
     fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/effects/liquid_glass.frag.qsb"

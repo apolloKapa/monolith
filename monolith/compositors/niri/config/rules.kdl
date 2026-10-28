@@ -6,6 +6,20 @@ window-rule {
     clip-to-geometry true
 }
 
+// Monolith Settings floats: its liquid glass draws the wallpaper behind it, and niri
+// only reports where a window is on screen for floating windows (tiled ones get no
+// position, so the glass background stayed stuck to the window instead of the desktop).
+// While niri drags it there is no position at all: the glass steps aside and this
+// backdrop (the real wallpaper, blurred, always in the right place) shows instead.
+window-rule {
+    match app-id="^monolith-settings$"
+    open-floating true
+    background-effect {
+        blur true
+        xray true
+    }
+}
+
 // Steam's friend/game toasts ("X is playing ...") are real windows (titled notificationtoasts_N_desktop).
 // Make them behave like notifications: top-right where mako puts its popups, never take focus,
 // no frame of their own.

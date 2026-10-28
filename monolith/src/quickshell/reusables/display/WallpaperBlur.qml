@@ -23,6 +23,12 @@ Item {
     property bool earsOnly: false
     property rect boxRect: Qt.rect(0, 0, 0, 0)
     property Item maskItem: null
+    // optional rounded hole cut out of the glass (item coordinates): the screen frame
+    property rect holeRect: Qt.rect(0, 0, 0, 0)
+    property real holeRadius: 0
+    // false: still renders (glass nested inside keeps sampling it) but shows nothing itself,
+    // e.g. the bar in the Frame style, where the frame's one sheet of glass is what shows
+    property bool drawn: true
     property real bezelSize: Math.max(5, Math.min(26, Math.min(width, height) * 0.36))
 
     readonly property bool liquid: ThemeBackend.liquidGlass
@@ -72,6 +78,8 @@ Item {
     readonly property bool snapshotMode: useSnapshot || inheritedOwner !== null
 
     readonly property var hostWindow: QsWindow.window
+    // the Settings window while niri drags it: position unknown, so niri's backdrop shows instead
+    readonly property bool glassSuspended: hostWindow ? hostWindow.glassSuspended === true : false
     readonly property var hostScreen: effectiveScreenOverride ? effectiveScreenOverride : (hostWindow ? hostWindow.screen : null)
     readonly property string screenName: hostScreen && hostScreen.name ? hostScreen.name : ""
     readonly property bool parentVisible: parent ? parent.visible : true
@@ -145,8 +153,9 @@ Item {
         let wy = 0;
         if (w && w.glassScreenX !== undefined && !root.effectiveScreenOverride) {
             // an ordinary window (the Settings app) that tracks its own position on screen
-            wx = w.glassScreenX;
-            wy = w.glassScreenY;
+            // (undefined for a moment while the window is still being set up)
+            wx = Number(w.glassScreenX) || 0;
+            wy = Number(w.glassScreenY) || 0;
         } else if (w && w.anchors && !root.effectiveScreenOverride) {
             const a = w.anchors;
             const m = w.margins;
@@ -290,6 +299,7 @@ Item {
                 Item {
                     id: rendered
                     anchors.fill: parent
+                    visible: root.drawn
 
                     MultiEffect {
                         id: blurred
@@ -329,13 +339,15 @@ Item {
                         property vector2d itemSize: Qt.vector2d(width, height)
                         property vector4d radii: Qt.vector4d(root.topLeftRadius, root.topRightRadius, root.bottomRightRadius, root.bottomLeftRadius)
                         property real fillAlpha: Math.min(0.98, ThemeBackend.elementOpacity)
+                        property vector4d hole: root.holeRect.width > 0 ? Qt.vector4d(root.holeRect.x + root.holeRect.width * 0.5 - width * 0.5, root.holeRect.y + root.holeRect.height * 0.5 - height * 0.5, root.holeRect.width * 0.5, root.holeRect.height * 0.5) : Qt.vector4d(0, 0, 0, 0)
+                        property real holeRadius: root.holeRadius
                         fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/rounded_mask.frag.qsb"
                     }
 
                     LiquidGlass {
                         id: glassEffect
                         anchors.fill: parent
-                        visible: root.liquid
+                        visible: root.liquid && !root.glassSuspended
                         src: content
                         topLeftRadius: ThemeBackend.rad(root.topLeftRadius)
                         topRightRadius: ThemeBackend.rad(root.topRightRadius)
@@ -353,6 +365,8 @@ Item {
                         earsOnly: root.earsOnly
                         boxRect: root.boxRect
                         validRect: root.validRect
+                        holeRect: root.holeRect
+                        holeRadius: root.holeRadius
                         unpremul: 1
                         clear: root.nestLevel >= 1 ? 1 : 0
                         cursorPos: Qt.point(root.cursorX, root.cursorY)

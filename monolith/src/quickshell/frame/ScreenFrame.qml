@@ -31,6 +31,10 @@ Variants {
             readonly property real bottomIn: barPos === "bottom" ? edgeBar : thickness
             readonly property real leftIn: barPos === "left" ? edgeBar : thickness
             readonly property real rightIn: barPos === "right" ? edgeBar : thickness
+            // Blur / Liquid glass: one sheet of glass round the whole screen (bar edge included)
+            // with a rounded hole for the desktop. Separate strips each drew their own glass edge,
+            // which showed as cuts where they met the bar, and the flat corners didn't match.
+            readonly property bool glass: ThemeBackend.seeThrough
 
             component Strip: PanelWindow {
                 screen: frame.modelData
@@ -41,6 +45,8 @@ Variants {
                 mask: Region {}
                 Rectangle {
                     anchors.fill: parent
+                    // see-through styles: the strip only reserves its edge, the sheet below draws
+                    visible: !frame.glass
                     color: frame.color
                     // glass, like the bar and popups, in the see-through styles
                     WallpaperBlur {
@@ -77,10 +83,49 @@ Variants {
                 exclusiveZone: frame.thickness
             }
 
-            // the four rounded inner corners, over everything, clicks pass through
+            // the see-through frame: below windows, so a window reaching into a rounded corner
+            // sits on the glass instead of being cut by a flat corner patch
             PanelWindow {
                 screen: frame.modelData
-                visible: frame.enabled
+                visible: frame.enabled && frame.glass
+                color: "transparent"
+                anchors { left: true; right: true; top: true; bottom: true }
+                exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.namespace: "qs-frame-glass"
+                WlrLayershell.layer: WlrLayer.Bottom
+                mask: Region {}
+
+                Item {
+                    id: sheet
+                    anchors.fill: parent
+                    readonly property rect hole: Qt.rect(frame.leftIn, frame.topIn,
+                        width - frame.leftIn - frame.rightIn, height - frame.topIn - frame.bottomIn)
+                    // the glass's outer edge sits off screen: the only rim is round the hole
+                    readonly property real offscreen: 64
+
+                    WallpaperBlur {
+                        anchors.fill: parent
+                        standalone: true
+                        radius: 0
+                        boxRect: Qt.rect(-sheet.offscreen, -sheet.offscreen, width + 2 * sheet.offscreen, height + 2 * sheet.offscreen)
+                        holeRect: sheet.hole
+                        holeRadius: frame.radius
+                    }
+                    ShaderEffect {
+                        anchors.fill: parent
+                        property vector2d itemSize: Qt.vector2d(width, height)
+                        property color color: frame.color
+                        property vector4d hole: Qt.vector4d(sheet.hole.x + sheet.hole.width * 0.5 - width * 0.5, sheet.hole.y + sheet.hole.height * 0.5 - height * 0.5, sheet.hole.width * 0.5, sheet.hole.height * 0.5)
+                        property real holeRadius: frame.radius
+                        fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/frame_tint.frag.qsb"
+                    }
+                }
+            }
+
+            // solid styles: the four rounded inner corners, over everything, clicks pass through
+            PanelWindow {
+                screen: frame.modelData
+                visible: frame.enabled && !frame.glass
                 color: "transparent"
                 anchors { left: true; right: true; top: true; bottom: true }
                 exclusionMode: ExclusionMode.Ignore
