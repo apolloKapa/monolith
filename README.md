@@ -313,7 +313,7 @@ While the repo is private, the update check goes through the GitHub CLI (`gh aut
 
 - **Bar or panels don't appear:** run `monolith -v restart` in a terminal to see errors. Logs are in `$XDG_RUNTIME_DIR/monolith/logs`.
 - **`qs: command not found`:** `sudo pacman -S quickshell qt6-wayland`.
-- **No weather:** set your location in Settings → General. Monolith never detects it automatically.
+- **No weather:** Monolith finds your location automatically from your internet connection (city level, through ipapi.co or ipwho.is; the IP isn't kept) and looks again every few hours. Offline, or if you'd rather not, set it yourself in Settings → General: a location you set is never replaced, except by the Detect button there.
 - **Wrong monitor layout:** run `monolith installer` from inside niri, or edit `~/.config/niri/config/output.kdl`, then `niri validate`.
 - **Lock screen won't accept your password:** check `/etc/pam.d/monolith` exists (the installer adds it). If you're ever stuck, switch to a TTY (Ctrl+Alt+F3), log in, and run `monolithd stop`.
 

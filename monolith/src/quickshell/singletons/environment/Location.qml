@@ -74,6 +74,20 @@ Item {
         manualProcess.running = true;
     }
 
+    // look the location up now from the internet connection (location.sh --detect), replacing
+    // even one set by hand
+    function detect() {
+        if (!Caching.monolithDir || detectProcess.running) return;
+        root.isDetecting = true;
+        detectProcess.running = true;
+    }
+
+    Process {
+        id: detectProcess
+        command: ["bash", Caching.monolithDir + "/scripts/location.sh", "--detect"]
+        onExited: root.isDetecting = false
+    }
+
     Process {
         id: manualProcess
         property string lat: ""
