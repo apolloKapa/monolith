@@ -76,10 +76,43 @@ Item {
                         "colors": { "base": "#110f2b", "mantle": "#0b0a20", "crust": "#060514", "surface0": "#1c1a42", "surface1": "#29265a", "surface2": "#3a3678",
                                     "overlay0": "#55509a", "overlay1": "#726db5", "overlay2": "#938fcf", "text": "#f4f1ff", "subtext0": "#b3aee0", "subtext1": "#d3cff2",
                                     "blue": "#3ad8ff", "sapphire": "#3ad8ff", "teal": "#3dffd0", "mauve": "#ff3df2", "pink": "#ff6ec7", "green": "#5cff8a",
-                                    "yellow": "#ffe14d", "peach": "#ff9e3d", "red": "#ff4d6d", "maroon": "#d63a57" } }
+                                    "yellow": "#ffe14d", "peach": "#ff9e3d", "red": "#ff4d6d", "maroon": "#d63a57" } },
+        // the OLED mode of shells like Ambxst: true black, the wallpaper's accents
+        "oled":       { "name": "OLED", "opaque": true, "radiusScale": 1.3, "font": "Roboto", "matugen": true, "oled": true,
+                        "desc": "Pure black, your wallpaper's accents" },
+        "mainframe":  { "name": "Mainframe", "opaque": true, "square": true, "outline": [1, 1], "outlineRole": "accent", "font": "3270 Nerd Font",
+                        "desc": "Amber CRT, IBM 3270 type",
+                        "colors": { "base": "#0d0a05", "mantle": "#090703", "crust": "#000000", "surface0": "#1a1409", "surface1": "#261d0d", "surface2": "#3a2c13",
+                                    "overlay0": "#5c4520", "overlay1": "#80612d", "overlay2": "#a67f3c", "text": "#ffb347", "subtext0": "#c98a2e", "subtext1": "#e69f3a",
+                                    "blue": "#ffb347", "sapphire": "#ffc46b", "teal": "#ffd28a", "mauve": "#ffb347", "pink": "#ff9f6b", "green": "#d8c05a",
+                                    "yellow": "#ffd24d", "peach": "#ff9a3d", "red": "#ff5f3d", "maroon": "#cc4a2e" } },
+        "sakura":     { "name": "Sakura", "opaque": true, "radiusScale": 1.6, "pill": true, "outline": [1, 1], "outlineRole": "rule", "font": "Google Sans Flex",
+                        "desc": "Pastel pink, soft and very round",
+                        "colors": { "base": "#fff5f7", "mantle": "#fdecf0", "crust": "#ffffff", "surface0": "#fbe0e7", "surface1": "#f6cfda", "surface2": "#eab6c5",
+                                    "overlay0": "#c993a3", "overlay1": "#a97585", "overlay2": "#8c5b6b", "text": "#3d2a31", "subtext0": "#7a5562", "subtext1": "#5c3f49",
+                                    "blue": "#7d9cd6", "sapphire": "#6bb0c9", "teal": "#6cbfa8", "mauve": "#e2638f", "pink": "#ef7fa6", "green": "#7dbb7a",
+                                    "yellow": "#e0b04f", "peach": "#ef9a6b", "red": "#d9546a", "maroon": "#b5405a" } },
+        // the Nord palette, a favourite of tiling-WM setups
+        "fjord":      { "name": "Fjord", "opaque": true, "radiusScale": 1.0, "outline": [1, 1], "outlineRole": "accentSoft", "font": "Roboto",
+                        "desc": "Arctic blue-grey, frosted accents",
+                        "colors": { "base": "#2e3440", "mantle": "#292e39", "crust": "#242933", "surface0": "#3b4252", "surface1": "#434c5e", "surface2": "#4c566a",
+                                    "overlay0": "#616e88", "overlay1": "#7b88a1", "overlay2": "#949fb5", "text": "#eceff4", "subtext0": "#d8dee9", "subtext1": "#e5e9f0",
+                                    "blue": "#81a1c1", "sapphire": "#88c0d0", "teal": "#8fbcbb", "mauve": "#88c0d0", "pink": "#b48ead", "green": "#a3be8c",
+                                    "yellow": "#ebcb8b", "peach": "#d08770", "red": "#bf616a", "maroon": "#a5545c" } },
+        "doodle":     { "name": "Doodle", "opaque": true, "radiusScale": 1.3, "outline": [2, 1], "outlineRole": "ink", "hardShadow": 3, "font": "ComicShannsMono Nerd Font",
+                        "desc": "Sketchbook paper, inked lines, marker colours",
+                        "colors": { "base": "#fbfaf4", "mantle": "#f3f1e6", "crust": "#22201c", "surface0": "#ecead9", "surface1": "#e0ddc6", "surface2": "#c9c5a8",
+                                    "overlay0": "#9a9680", "overlay1": "#77745f", "overlay2": "#5a5746", "text": "#22201c", "subtext0": "#5a5746", "subtext1": "#3d3b30",
+                                    "blue": "#2f6fdb", "sapphire": "#2a8fc4", "teal": "#1e9e8a", "mauve": "#e0457b", "pink": "#f06aa4", "green": "#3a9e3a",
+                                    "yellow": "#f2c230", "peach": "#f28a30", "red": "#e03c3c", "maroon": "#b52d2d" } }
     })
-    readonly property var styleOrder: ["material", "blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper", "arcade"]
+    readonly property var styleOrder: ["material", "blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper", "arcade",
+                                       "oled", "mainframe", "sakura", "fjord", "doodle"]
     readonly property var style: styles[blurStyle] || styles["material"]
+    // OLED style: black backgrounds over any palette (applyColorObject); re-read the colours
+    // when it's switched on or off so the backgrounds follow
+    readonly property bool oledStyle: style.oled === true
+    onOledStyleChanged: reloadColors()
     // Material: Google-style tonal surfaces, pill controls and filled containers instead of outlines
     readonly property bool material: blurStyle === "material"
     // controls are full pills (buttons, chips, segmented switches) unless the style is square
@@ -472,6 +505,12 @@ Item {
             let hexColor = resolveHex(c[names[i]]);
             if (!hexColor) continue;
             let nextColor = Qt.color(hexColor);
+            // OLED: whatever the palette (usually the wallpaper's), the backgrounds are pure black
+            // and the surfaces on them go darker; accents and text stay
+            if (root.oledStyle) {
+                if (names[i] === "base" || names[i] === "mantle" || names[i] === "crust") nextColor = Qt.color("#000000");
+                else if (names[i] === "surface0" || names[i] === "surface1" || names[i] === "surface2") nextColor = Qt.darker(nextColor, 1.7);
+            }
             let slot = (names[i] === "text" || names[i] === "subtext0" || names[i] === "subtext1") ? "_" + names[i] : names[i];
             if (root[slot].toString() !== nextColor.toString()) {
                 queue.push({ name: slot, value: nextColor });

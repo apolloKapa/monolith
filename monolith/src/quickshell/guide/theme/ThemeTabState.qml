@@ -573,13 +573,16 @@ GuideTab {
         if (st.font) themeTabRoot.currentFontFamily = st.font;
         let colors = st.colors || (id === "minimalist" ? ThemeBackend.minimalistColors : null);
         if (colors) themeTabRoot.applyPreset({ "name": st.name, "colors": colors });
-        // Material takes its colours from the wallpaper, and the bar gets its Google faces
+        // Material (and OLED) take their colours from the wallpaper; Material's bar also gets
+        // its Google faces
         else if (st.matugen) {
             themeTabRoot.applyPreset({ "name": "Matugen", "isMatugen": true });
-            let bar = Config.getSetting("bar", {});
-            bar.timeStyle = "google";
-            bar.workspacesStyle = "pills";
-            Config.setSetting("bar", bar);
+            if (id === "material") {
+                let bar = Config.getSetting("bar", {});
+                bar.timeStyle = "google";
+                bar.workspacesStyle = "pills";
+                Config.setSetting("bar", bar);
+            }
         }
         ThemeBackend.reloadColors();
     }

@@ -17,7 +17,7 @@ SettingsBlob {
         icon: "󰸌"
         title: I18n.t("guide.theme.style.title", "Style")
         description: I18n.t("guide.theme.style.desc", "The look of every panel. Blur, Liquid glass and Bubbly keep your colours; the others bring their own colours and font, which you can still change below")
-        searchKeywords: "style look blur liquid glass minimalist terminal brutal neo brutalism luxe poster bubbly round paper editorial serif arcade pixel neon retro"
+        searchKeywords: "style look blur liquid glass minimalist terminal brutal neo brutalism luxe poster bubbly round paper editorial serif arcade pixel neon retro oled black amoled mainframe amber crt ibm sakura pink pastel cute fjord nord arctic doodle sketch comic hand drawn"
     }
 
     GridLayout {
@@ -40,8 +40,9 @@ SettingsBlob {
                 readonly property bool selected: section.tab.currentBlurStyle === modelData
                 readonly property var pal: st.colors ? st.colors
                     : (modelData === "minimalist" ? ThemeBackend.minimalistColors : null)
-                readonly property color cBase: pal ? pal.base : ThemeBackend.base
-                readonly property color cSurface: pal ? pal.surface0 : ThemeBackend.surface0
+                // OLED keeps the current accents on black (ThemeBackend.applyColorObject)
+                readonly property color cBase: st.oled ? "#000000" : (pal ? pal.base : ThemeBackend.base)
+                readonly property color cSurface: st.oled ? Qt.darker(ThemeBackend.surface0, 1.7) : (pal ? pal.surface0 : ThemeBackend.surface0)
                 readonly property color cText: pal ? pal.text : "#ffffff"
                 readonly property color cSub: pal ? pal.subtext0 : Qt.alpha("#ffffff", 0.7)
                 readonly property color cAccent: pal ? pal.mauve : ThemeBackend.mauve
