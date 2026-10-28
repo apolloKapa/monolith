@@ -87,6 +87,7 @@ show_help() {
     echo "  launch <target> [args...]   $(t "cli.launch_desc")"
     echo "  installer                    open the Monolith installer (update, reinstall, options)"
     echo "  settings [tab]               $(t "cli.settings_desc")"
+    echo "  appimages                    the AppImages window: drop an AppImage to set it up"
     echo "  msg <action|workspace> ...  $(t "cli.msg_desc")"
     echo "  ipc ...                      $(t "cli.ipc_desc")"
     echo "  kill                         $(t "cli.kill_desc")"
@@ -677,6 +678,17 @@ fi
 if [[ "$1" == "settings" ]]; then
     shift
     exec "$MONOLITH_DIR/scripts/settings.sh" "$@"
+fi
+
+# monolith appimages: the AppImages window (drop an AppImage, it's set up like an installed app)
+if [[ "$1" == "appimages" ]]; then
+    APPIMAGES_QML="$QS_DIR/AppImagesApp.qml"
+    if quickshell -p "$APPIMAGES_QML" ipc call appimages ping >/dev/null 2>&1; then
+        id="$(niri msg -j windows 2>/dev/null | jq -r '[.[] | select(.app_id == "monolith-appimages")][0].id // empty')"
+        [[ -n "$id" ]] && niri msg action focus-window --id "$id" >/dev/null 2>&1
+        exit 0
+    fi
+    exec setsid quickshell -n -p "$APPIMAGES_QML"
 fi
 
 if [[ "$1" == "msg" ]]; then

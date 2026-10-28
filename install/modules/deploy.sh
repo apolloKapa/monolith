@@ -107,6 +107,9 @@ install_desktop_entry() {
     mkdir -p "$apps_dir" "$icons_dir"
     sed "s|^Exec=.*|Exec=\"$BIN_DIR/monolith\" settings|" "$src_dir/monolith-settings.desktop" > "$apps_dir/monolith-settings.desktop"
     [ -f "$src_dir/monolith-settings.svg" ] && cp "$src_dir/monolith-settings.svg" "$icons_dir/monolith-settings.svg"
+    # the AppImages window ("AppImages" in the launcher)
+    [ -f "$src_dir/monolith-appimages.desktop" ] && \
+        sed "s|^Exec=.*|Exec=\"$BIN_DIR/monolith\" appimages|" "$src_dir/monolith-appimages.desktop" > "$apps_dir/monolith-appimages.desktop"
     command -v update-desktop-database >/dev/null && update-desktop-database "$apps_dir" >/dev/null 2>&1
     return 0
 }
