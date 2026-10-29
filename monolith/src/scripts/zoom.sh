@@ -9,6 +9,8 @@
 # the steps are counted so zooming all the way out closes it.
 DIR="$(dirname "$(readlink -f "$0")")"
 RUN="${XDG_RUNTIME_DIR:-/tmp}"
+STEP=12        # wooz key presses per scroll notch (each is ~0.7% of the view)
+START=20       # how far the first notch zooms in, in %
 STATE="$RUN/monolith-zoom-level"
 FIFO="$RUN/monolith-zoom.fifo"
 running() { pgrep -x wooz >/dev/null; }
@@ -21,11 +23,12 @@ send() {
 case "${1:-in}" in
     in)
         if running; then
-            send in && echo $(( $(level) + 1 )) > "$STATE"
+            send "in $STEP" && echo $(( $(level) + 1 )) > "$STATE"
         else
             echo 1 > "$STATE"
             [ -p "$FIFO" ] || { rm -f "$FIFO"; mkfifo "$FIFO"; }
-            setsid -f wooz --mouse-track --zoom-in 25% >/dev/null 2>&1
+            # --invert-scroll: scrolling inside wooz (without Meta+Ctrl) goes the same way, up = in
+            setsid -f wooz --mouse-track --invert-scroll --zoom-in "$START%" >/dev/null 2>&1
             # the key helper waits for wooz to be up, and quits with it
             setsid -f sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do pgrep -x wooz >/dev/null && break; sleep 0.1; done; exec python3 "$1" "$2"' _ "$DIR/zoom_keys.py" "$FIFO" >/dev/null 2>&1
         fi
@@ -37,7 +40,7 @@ case "${1:-in}" in
             pkill -x wooz
             rm -f "$STATE"
         else
-            send out && echo "$n" > "$STATE"
+            send "out $STEP" && echo "$n" > "$STATE"
         fi
         ;;
     off)

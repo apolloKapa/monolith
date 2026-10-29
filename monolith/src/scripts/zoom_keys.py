@@ -4,8 +4,9 @@
 wooz reads raw key codes, and wtype sends its own temporary keymap's codes (its "+" arrives as
 code 1, which wooz takes for Esc and closes), so the keys come from a small virtual keyboard
 (/dev/uinput) instead. It's made once and kept while wooz runs: a new input device takes a moment
-before the compositor uses it. Commands come through a FIFO, one per line: "in" (=) or "out" (-).
-It quits when wooz does.
+before the compositor uses it. Commands come through a FIFO, one per line: "in N" (= pressed N
+times) or "out N" (-). wooz's key step is small (10 px of the view), so zoom.sh sends a burst per
+scroll notch. It quits when wooz does.
 """
 import fcntl
 import os
@@ -33,11 +34,13 @@ def main():
     os.write(fd, struct.pack("80sHHHHi", b"monolith-zoom-keys", 3, 1, 0x7a6f, 1, 0) + b"\0" * (64 * 4 * 4))
     fcntl.ioctl(fd, UI_DEV_CREATE)
 
-    def tap(key):
-        for value in (1, 0):
-            os.write(fd, struct.pack("llHHi", 0, 0, EV_KEY, key, value))
-            os.write(fd, struct.pack("llHHi", 0, 0, EV_SYN, 0, 0))
-            time.sleep(0.01)
+    def tap(key, n):
+        # press and release in one go: wooz acts on the press, the release stops its key repeat
+        for _ in range(n):
+            for value in (1, 0):
+                os.write(fd, struct.pack("llHHi", 0, 0, EV_KEY, key, value))
+                os.write(fd, struct.pack("llHHi", 0, 0, EV_SYN, 0, 0))
+            time.sleep(0.002)
 
     # read and write ends, so the FIFO never reports end-of-file between commands
     rfd = os.open(FIFO, os.O_RDONLY | os.O_NONBLOCK)
@@ -52,11 +55,12 @@ def main():
             buf += os.read(rfd, 256)
             while b"\n" in buf:
                 line, buf = buf.split(b"\n", 1)
-                cmd = line.strip()
-                if cmd == b"in":
-                    tap(KEY_EQUAL)
-                elif cmd == b"out":
-                    tap(KEY_MINUS)
+                parts = line.split()
+                n = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
+                if parts[:1] == [b"in"]:
+                    tap(KEY_EQUAL, min(n, 100))
+                elif parts[:1] == [b"out"]:
+                    tap(KEY_MINUS, min(n, 100))
     finally:
         fcntl.ioctl(fd, UI_DEV_DESTROY)
         os.close(fd)
