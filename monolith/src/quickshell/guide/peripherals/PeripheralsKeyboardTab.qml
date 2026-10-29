@@ -62,7 +62,7 @@ GuideTab {
                     description: !kbTab.st ? "Looking for keyboards..."
                         : kbTab.keyboards.length > 0 ? kbTab.keyboards.join(", ")
                         : "No keyboard found. These settings still apply to any you plug in"
-                    searchKeywords: "keyboard keyboards connected device wooting"
+                    searchKeywords: "keyboard keyboards connected device usb wireless"
                 }
 
                 SettingsRow {

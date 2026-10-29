@@ -212,7 +212,7 @@ def write_checked(f, old, new):
 # ---- connected devices --------------------------------------------------------------------------
 
 def tidy_name(name):
-    # "Wooting Wooting 80HE" -> "Wooting 80HE"
+    # "Acme Acme K1" -> "Acme K1" (some keyboards repeat the brand)
     words = name.split()
     if len(words) >= 2 and words[0].lower() == words[1].lower():
         words = words[1:]

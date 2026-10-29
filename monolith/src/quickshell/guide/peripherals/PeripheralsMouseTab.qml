@@ -55,7 +55,7 @@ GuideTab {
                     description: !mouseTab.st ? "Looking for mice..."
                         : mouseTab.mice.length > 0 ? mouseTab.mice.join(", ")
                         : "No mouse found. These settings still apply to any you plug in"
-                    searchKeywords: "mouse mice connected device logitech razer"
+                    searchKeywords: "mouse mice connected device usb wireless"
                 }
 
                 SettingsRow {
