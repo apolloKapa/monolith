@@ -14,8 +14,9 @@ GuideTab {
     id: appsTab
 
     readonly property var apps: [
-        { id: "gtk", icon: "󰏘", title: "GTK apps", desc: "GTK 3 and GTK 4 / libadwaita apps (Files, Settings, most GNOME apps). Takes effect when they restart" },
-        { id: "qt", icon: "󰟓", title: "Qt apps", desc: "Qt apps that use qt5ct / qt6ct (KDE apps, VLC, OBS...). Takes effect when they restart" },
+        { id: "gtk", icon: "󰏘", title: "GTK apps", desc: "GTK 3 and GTK 4 / libadwaita apps (Files, Settings, most GNOME apps), and the system light/dark setting follows the theme. Takes effect when they restart" },
+        { id: "qt", icon: "󰟓", title: "Qt and KDE apps", desc: "Qt apps that use qt5ct / qt6ct (VLC, OBS...) and KDE / Kirigami apps that don't (WiVRn, Dolphin...), through a Monolith KDE colour scheme. Takes effect when they restart" },
+        { id: "flatpak", icon: "󰏖", title: "Flatpak apps", desc: "Lets Flatpak apps (PortProton, Bottles...) read the GTK and KDE colours above, and drops per-app overrides that pin them to another theme. Switch GTK and Qt on too. Takes effect when they restart" },
         { id: "foot", icon: "󰆍", title: "foot", desc: "The foot terminal. New windows use the colours" },
         { id: "alacritty", icon: "󰆍", title: "Alacritty", desc: "The Alacritty terminal" },
         { id: "btop", icon: "󰍛", title: "btop", desc: "The btop system monitor" },
@@ -149,7 +150,7 @@ GuideTab {
                         icon: modelData.icon
                         title: modelData.title
                         description: modelData.desc
-                        searchKeywords: "app theming colours colors gtk qt terminal follow theme matugen " + modelData.id
+                        searchKeywords: "app theming colours colors gtk qt kde kirigami flatpak dark light terminal follow theme matugen " + modelData.id
                         hiddenByConfig: row.st.available === false
                         unavailableReason: modelData.title + " isn't installed"
 
