@@ -8,7 +8,7 @@
                 middle on|off | scroll <factor>
       touchpad  speed <-1..1> | tap on|off | natural on|off | dwt on|off
       keyboard  delay <ms> | rate <per second> | numlock on|off |
-                shortcut <grp option, e.g. alt_shift_toggle, or none> | layouts <us,gr,...>
+                shortcut <grp option, e.g. alt_shift_toggle, or none> | layouts <us,de,...>
 
 niri reloads its config by itself, so a change works straight away. Only the lines being
 changed are touched; comments and everything else in the file stay. A config niri can't read
@@ -212,7 +212,7 @@ def write_checked(f, old, new):
 # ---- connected devices --------------------------------------------------------------------------
 
 def tidy_name(name):
-    # "Wooting Wooting 80HE" -> "Wooting 80HE"
+    # "Acme Acme K1" -> "Acme K1" (some keyboards repeat the brand)
     words = name.split()
     if len(words) >= 2 and words[0].lower() == words[1].lower():
         words = words[1:]
