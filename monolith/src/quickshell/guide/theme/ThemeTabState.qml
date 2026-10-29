@@ -83,6 +83,68 @@ GuideTab {
 
     property var systemPresets: []
     property var userPresets: []
+
+    // Your colour changes to the built-in themes: {theme name: {colour: "#hex"}}, only the colours
+    // that differ from the theme's own (theme_overrides.json, next to the themes folder: every file
+    // in that folder is read as a custom theme). A built-in theme with changes shows
+    // them, says it's modified, and can be reset to its own colours.
+    property var presetOverrides: ({})
+    readonly property string overridesPath: (Caching.stateDir ? Caching.stateDir : (Caching.home + "/.local/state/monolith")) + "/theme_overrides.json"
+
+    FileView {
+        id: overridesFile
+        path: themeTabRoot.overridesPath
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try { themeTabRoot.presetOverrides = JSON.parse(text()) || {}; } catch (e) { themeTabRoot.presetOverrides = {}; }
+        }
+        onLoadFailed: themeTabRoot.presetOverrides = {}
+    }
+
+    // a built-in theme with your changes on top (and its own colours kept for resetting)
+    function withOverride(p) {
+        if (!p || p.isDivider || p.isMatugen === true || p.isCustom === true) return p;
+        let o = themeTabRoot.presetOverrides[p.name];
+        if (!o || Object.keys(o).length === 0) return p;
+        return Object.assign({}, p, { colors: Object.assign({}, p.colors || {}, o), modified: true, defaultColors: p.colors || {} });
+    }
+
+    function writeOverrides(all) {
+        themeTabRoot.presetOverrides = all;
+        // folder and file in one go (the folder doesn't exist until the first change)
+        Quickshell.execDetached(["bash", "-c", "mkdir -p \"$(dirname \"$1\")\" && printf '%s\\n' \"$2\" > \"$1\"",
+                                 "_", themeTabRoot.overridesPath, JSON.stringify(all, null, 2)]);
+    }
+
+    // save the edited colours of a built-in theme (only the ones that differ from its own)
+    function saveOverride(name, colors, defaults) {
+        let diff = {};
+        for (let k in colors) {
+            let c = String(colors[k] || "").toLowerCase();
+            if (c === "") continue;
+            if (defaults[k] === undefined || String(defaults[k]).toLowerCase() !== c) diff[k] = colors[k];
+        }
+        let all = Object.assign({}, themeTabRoot.presetOverrides);
+        if (Object.keys(diff).length > 0) all[name] = diff; else delete all[name];
+        themeTabRoot.writeOverrides(all);
+        themeTabRoot.reapplyIfCurrent(name, Object.assign({}, defaults, diff));
+    }
+
+    // a built-in theme back to its own colours
+    function resetPreset(name) {
+        let all = Object.assign({}, themeTabRoot.presetOverrides);
+        delete all[name];
+        themeTabRoot.writeOverrides(all);
+        let base = themeTabRoot.systemPresets.find(p => p.name === name);
+        if (base) themeTabRoot.reapplyIfCurrent(name, base.colors);
+    }
+
+    function reapplyIfCurrent(name, colors) {
+        if (themeTabRoot.currentPreset !== name) return;
+        let base = themeTabRoot.systemPresets.find(p => p.name === name) || { name: name };
+        themeTabRoot.applyPreset(Object.assign({}, base, { colors: colors }));
+    }
     property string themeSearchText: ""
     property string _lastPresetsStr: ""
     property bool _needsReload: true
@@ -114,7 +176,7 @@ GuideTab {
                         result.push({ isDivider: true });
                         pendingDivider = false;
                     }
-                    result.push(p);
+                    result.push(themeTabRoot.withOverride(p));
                 }
             }
         }

@@ -27,6 +27,9 @@ ThemeTabState {
             themeTabRoot.saveCustomTheme(themeObj);
             themeTabRoot.applyPreset(themeObj);
         }
+        onOverrideRequested: function(name, colors, defaults) {
+            themeTabRoot.saveOverride(name, colors, defaults);
+        }
     }
 
     Flickable {

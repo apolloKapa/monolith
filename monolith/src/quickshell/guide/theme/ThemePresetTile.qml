@@ -153,7 +153,7 @@ Rectangle {
         spacing: rootObj.s(6)
 
         Text {
-            text: modelData.name
+            text: modelData.name + (modelData.modified === true ? "  •" : "")
             font.family: ThemeBackend.fontFamily
             font.pixelSize: rootObj.s(11)
             font.weight: delegateContainer.isSelected ? Font.Bold : Font.Medium
@@ -178,6 +178,37 @@ Rectangle {
                     color: modelData
                 }
             }
+        }
+
+        // a built-in theme you changed: back to its own colours (also shown while not hovered,
+        // so it's clear the theme isn't as it came)
+        IconButton {
+            visible: modelData.modified === true
+            Layout.alignment: Qt.AlignVCenter
+            size: rootObj.s(24)
+            Layout.preferredWidth: rootObj.s(24)
+            Layout.preferredHeight: rootObj.s(24)
+            cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
+            buttonIcon: "󰑓"
+            iconFontSize: rootObj.s(12)
+            accentColor: Qt.alpha(delegateContainer.textC, 0.15)
+            textColor: delegateContainer.textC
+            onClicked: delegateContainer.tab.resetPreset(modelData.name)
+        }
+
+        // edit its colours (Matugen's come from the wallpaper)
+        IconButton {
+            visible: modelData.isMatugen !== true && (delegateContainer.isHovered || delegateContainer.isSelected)
+            Layout.alignment: Qt.AlignVCenter
+            size: rootObj.s(24)
+            Layout.preferredWidth: rootObj.s(24)
+            Layout.preferredHeight: rootObj.s(24)
+            cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, rootObj.s(6)))
+            buttonIcon: "󰏫"
+            iconFontSize: rootObj.s(12)
+            accentColor: Qt.alpha(delegateContainer.textC, 0.15)
+            textColor: delegateContainer.textC
+            onClicked: delegateContainer.tab.themeEditorPopup.openForEdit(modelData)
         }
 
         Loader {
