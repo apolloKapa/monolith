@@ -572,6 +572,19 @@ Item {
             ]
         },
         {
+            id: "Peripherals",
+            key: "peripherals",
+            name: "Peripherals",
+            icon: "󰍽",
+            file: "peripherals/PeripheralsMouseTab.qml",
+            subtabs: [
+                { id: "Mouse", key: "mouse", name: "Mouse", icon: "󰍽", file: "peripherals/PeripheralsMouseTab.qml", desc: "Pointer speed, acceleration, scrolling and buttons (and the touchpad, on a laptop). Changes work straight away" },
+                { id: "Keyboard", key: "keyboard", name: "Keyboard", icon: "󰌌", file: "peripherals/PeripheralsKeyboardTab.qml", desc: "Keyboard layouts and the keys that switch them, how fast held keys repeat, and Num Lock" },
+                { id: "Microphone", key: "microphone", name: "Microphone", icon: "󰍬", file: "peripherals/PeripheralsMicTab.qml", desc: "Which mic apps use, its volume and mute, a meter to check it hears you, and which apps are listening" },
+                { id: "Webcam", key: "webcam", name: "Webcam", icon: "󰖠", file: "peripherals/PeripheralsWebcamTab.qml", desc: "Your cameras, with a preview to check one works. The camera only turns on while you preview" }
+            ]
+        },
+        {
             id: "Theme",
             key: "theme",
             name: "Theme",
