@@ -20,6 +20,35 @@ Popup {
 
     property string editingThemeName: ""
     property var currentColors: ({})
+    // editing a built-in theme: its name stays, and the changes are kept apart from its own
+    // colours (defaultColors), so each colour, or all of them, can go back to the theme's own
+    property bool builtin: false
+    property var defaultColors: ({})
+    // the colours as the editor opened (a theme without, say, "sky" gets a stand-in for it: only
+    // saved if you change it)
+    property var openedColors: ({})
+    function defaultOf(key) {
+        return defaultColors[key] !== undefined ? String(defaultColors[key]) : "";
+    }
+    function isChanged(key) {
+        let d = defaultOf(key);
+        return d !== "" && String(currentColors[key] || "").toLowerCase() !== d.toLowerCase();
+    }
+    readonly property bool anyChanged: {
+        let c = currentColors;
+        for (let i = 0; i < colorKeys.length; i++) if (isChanged(colorKeys[i])) return true;
+        return false;
+    }
+    function resetColor(key) {
+        let c = Object.assign({}, currentColors);
+        c[key] = defaultOf(key);
+        currentColors = c;
+    }
+    function resetAll() {
+        let c = Object.assign({}, currentColors);
+        for (let i = 0; i < colorKeys.length; i++) if (defaultOf(colorKeys[i]) !== "") c[colorKeys[i]] = defaultOf(colorKeys[i]);
+        currentColors = c;
+    }
 
     readonly property var colorKeys: [
         "base", "mantle", "crust",
@@ -42,6 +71,8 @@ Popup {
     })
 
     signal saveRequested(var themeObj)
+    // a built-in theme's edited colours: name, all colours, its own colours
+    signal overrideRequested(string name, var colors, var defaults)
 
     function colorLabel(key) {
         let translationKey = colorTranslationKeys[key] || key;
@@ -49,6 +80,8 @@ Popup {
     }
 
     function openForNew() {
+        builtin = false;
+        defaultColors = {};
         editingThemeName = "";
         themeNameInput.text = "";
 
@@ -68,6 +101,9 @@ Popup {
     function openForEdit(themeObj) {
         if (!themeObj) return;
 
+        builtin = themeObj.isCustom !== true;
+        // a built-in theme's own colours (without your changes); a custom theme has none to go back to
+        defaultColors = builtin ? (themeObj.defaultColors || themeObj.colors || {}) : {};
         editingThemeName = themeObj.name || "";
         themeNameInput.text = editingThemeName;
 
@@ -87,11 +123,23 @@ Popup {
         }
 
         currentColors = initial;
+        openedColors = Object.assign({}, initial);
         open();
-        themeNameInput.forceInputFocus();
+        if (!builtin) themeNameInput.forceInputFocus();
     }
 
     function commitSave() {
+        if (builtin) {
+            let colors = {};
+            for (let i = 0; i < colorKeys.length; i++) {
+                let k = colorKeys[i];
+                if (defaultColors[k] !== undefined || String(currentColors[k]).toLowerCase() !== String(openedColors[k]).toLowerCase())
+                    colors[k] = currentColors[k];
+            }
+            themeEditorPopup.overrideRequested(editingThemeName, colors, defaultColors);
+            close();
+            return;
+        }
         let name = themeNameInput.text.trim();
 
         if (!name) {
@@ -154,7 +202,9 @@ Popup {
             Layout.fillWidth: true
 
             Text {
-                text: themeEditorPopup.editingThemeName === ""
+                text: themeEditorPopup.builtin
+                    ? "Edit " + themeEditorPopup.editingThemeName
+                    : themeEditorPopup.editingThemeName === ""
                     ? I18n.t("guide.theme_editor.title", "Create Custom Theme")
                     : I18n.t("guide.theme_editor.edit_title", "Edit Custom Theme")
 
@@ -177,8 +227,32 @@ Popup {
             Layout.fillWidth: true
             spacing: rootObj ? rootObj.s(10) : 10
 
+            // a built-in theme keeps its name
+            Text {
+                visible: themeEditorPopup.builtin
+                Layout.fillWidth: true
+                text: themeEditorPopup.anyChanged ? "Changed colours have ↺ to go back to the theme's own" : "Your changes are kept apart: the theme can always go back to its own colours"
+                color: ThemeBackend.subtext0
+                font.family: ThemeBackend.fontFamily
+                font.pixelSize: rootObj ? rootObj.s(11) : 11
+                wrapMode: Text.WordWrap
+            }
+
+            ClickButton {
+                visible: themeEditorPopup.builtin && themeEditorPopup.anyChanged
+                implicitHeight: rootObj ? rootObj.s(36) : 36
+                horizontalPadding: rootObj ? rootObj.s(14) : 14
+                cornerRadius: ThemeBackend.borderRadius
+                buttonText: "↺  Reset all"
+                textFontSize: rootObj ? rootObj.s(11) : 11
+                accentColor: ThemeBackend.surface1
+                textColor: ThemeBackend.text
+                onClicked: themeEditorPopup.resetAll()
+            }
+
             Input {
                 id: themeNameInput
+                visible: !themeEditorPopup.builtin
                 Layout.fillWidth: true
                 Layout.preferredHeight: rootObj ? rootObj.s(36) : 36
 
@@ -273,10 +347,24 @@ Popup {
                             fontPixelSize: rootObj ? rootObj.s(11) : 11
 
                             onTextEdited: newText => {
-                                let c = themeEditorPopup.currentColors;
+                                let c = Object.assign({}, themeEditorPopup.currentColors);
                                 c[modelData] = newText;
                                 themeEditorPopup.currentColors = c;
                             }
+                        }
+
+                        // back to the theme's own colour
+                        IconButton {
+                            visible: themeEditorPopup.isChanged(modelData)
+                            size: rootObj ? rootObj.s(28) : 28
+                            Layout.preferredWidth: rootObj ? rootObj.s(28) : 28
+                            Layout.preferredHeight: rootObj ? rootObj.s(28) : 28
+                            cornerRadius: ThemeBackend.rad(rootObj ? rootObj.s(6) : 6)
+                            buttonIcon: "󰑓"
+                            iconFontSize: rootObj ? rootObj.s(13) : 13
+                            accentColor: ThemeBackend.surface1
+                            textColor: ThemeBackend.text
+                            onClicked: themeEditorPopup.resetColor(modelData)
                         }
                     }
                 }
