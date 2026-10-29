@@ -619,7 +619,7 @@ Item {
             file: "AppImagesTab.qml",
             subtabs: [
                 { id: "AppImages", key: "appimages", name: "AppImages", icon: "󰏗", file: "AppImagesTab.qml", desc: "Drop an AppImage and it's set up like an installed app: kept in one folder, with its own name and icon in the launcher, dock and menus" },
-                { id: "Cleanup", key: "cleanup", name: "Clean up", icon: "󰃢", file: "CleanupTab.qml", desc: "Find orphan packages, unused Flatpak runtimes, leftover app data and old downloads, and remove them after asking" }
+                { id: "Cleanup", key: "cleanup", name: "Clean up", icon: "󰃢", file: "CleanupTab.qml", desc: "Remove packages you installed, and find orphan packages, unused Flatpak runtimes, leftover app data and old downloads. Always asks first" }
             ]
         },
         { id: "Quick actions", key: "quickactions", name: "Quick actions", icon: "󰀻", file: "QuickActionsTab.qml", desc: "The panel that slides out from a screen edge: which tools it has, where and when it opens, and how fast" },

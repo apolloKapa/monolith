@@ -5,6 +5,7 @@
   packages.py clean <check>   runs in a terminal: lists what it found and asks before removing
 
 Checks:
+  explicit    the packages you installed yourself (system ones left out): pick any to remove
   orphans     pacman/AUR packages installed as dependencies that nothing needs any more
   flatpak     Flatpak runtimes and extensions no installed app uses
   flatdata    data folders in ~/.var/app of Flatpak apps that aren't installed any more
@@ -13,6 +14,7 @@ Nothing is removed without a yes.
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -76,6 +78,75 @@ def orphans():
     return [(n, sizes.get(n, 0)) for n in names]
 
 
+# never offered for removal: what boots the PC and runs the desktop. Plus whatever the base
+# package pulls in, read from pacman
+SYSTEM = {
+    "base", "base-devel", "sudo", "pacman", "pacman-contrib", "archlinux-keyring", "grub", "efibootmgr",
+    "systemd-boot", "refind", "limine", "os-prober", "mkinitcpio", "dracut", "booster", "btrfs-progs",
+    "e2fsprogs", "dosfstools", "xfsprogs", "ntfs-3g", "lvm2", "cryptsetup", "networkmanager", "iwd",
+    "dhcpcd", "wpa_supplicant", "openssh", "mesa", "lib32-mesa", "nvidia", "nvidia-open", "nvidia-dkms",
+    "nvidia-utils", "lib32-nvidia-utils", "xf86-video-amdgpu", "pipewire", "pipewire-pulse", "pipewire-alsa",
+    "pipewire-jack", "wireplumber", "niri", "quickshell", "xwayland-satellite", "sddm", "greetd", "gdm",
+    "ly", "lightdm", "xdg-desktop-portal", "xdg-desktop-portal-gnome", "xdg-desktop-portal-gtk",
+    "polkit", "dbus", "git", "python", "yay", "paru", "flatpak", "zram-generator", "bluez", "bluez-utils",
+}
+SYSTEM_PREFIXES = ("linux", "vulkan-", "lib32-vulkan-", "amd-ucode", "intel-ucode", "sof-firmware", "alsa-")
+
+
+def monolith_deps():
+    """what Monolith itself needs: the installer's package lists (install/modules/deps.sh, next to
+    src/ in an install, a folder up in the repo)"""
+    here = os.path.dirname(os.path.abspath(__file__))
+    for rel in ("../../install/modules/deps.sh", "../../../install/modules/deps.sh"):
+        try:
+            text = open(os.path.normpath(os.path.join(here, rel)), encoding="utf-8").read()
+        except OSError:
+            continue
+        out = set()
+        for m in re.finditer(r"(?ms)^(?:REQUIRED_PKGS|KEYBIND_PKGS)=\((.*?)^\)", text):
+            for name in re.findall(r'"([^"]+)"', m.group(1)):
+                out.update(name.split("|"))
+        return out
+    return set()
+
+
+def is_system(name, base_deps):
+    if name in SYSTEM or name in base_deps or name.startswith(SYSTEM_PREFIXES):
+        return True
+    return name.endswith(("-firmware", "-ucode", "-headers")) and name.startswith(("linux", "amd", "intel"))
+
+
+def explicit_packages():
+    """[(name, size, description, from AUR)] of the packages you installed yourself, biggest first"""
+    names = run(["pacman", "-Qqe"]).split()
+    if not names:
+        return []
+    aur = set(run(["pacman", "-Qqm"]).split())
+    base_deps = set()
+    for line in run(["pacman", "-Qi", "base"]).splitlines():
+        if line.startswith("Depends On"):
+            base_deps = {re.split(r"[<>=]", d)[0] for d in line.split(":", 1)[1].split()}
+    info, cur = {}, {}
+    for line in run(["pacman", "-Qi", *names]).splitlines():
+        k, _, v = line.partition(":")
+        k, v = k.strip(), v.strip()
+        if k == "Name":
+            cur = info.setdefault(v, {})
+        elif k == "Description":
+            cur["desc"] = v
+        elif k == "Installed Size":
+            num, _, unit = v.partition(" ")
+            mult = {"B": 1, "KiB": 1024, "MiB": 1024 ** 2, "GiB": 1024 ** 3}.get(unit, 1)
+            try:
+                cur["size"] = int(float(num.replace(",", ".")) * mult)
+            except ValueError:
+                cur["size"] = 0
+    base_deps |= monolith_deps()
+    out = [(n, info.get(n, {}).get("size", 0), info.get(n, {}).get("desc", ""), n in aur)
+           for n in names if not is_system(n, base_deps)]
+    return sorted(out, key=lambda p: -p[1])
+
+
 def flatpak_apps():
     return set(run(["flatpak", "list", "--app", "--columns=application"]).split())
 
@@ -116,6 +187,8 @@ def status():
     if st["pacman"]:
         o = orphans()
         st["orphans"] = {"count": len(o), "size": sum(s for _, s in o)}
+        e = explicit_packages()
+        st["explicit"] = {"count": len(e), "size": sum(p[1] for p in e)}
         c = cache_files()
         # without paccache, how much can go isn't known: show the whole pacman cache
         st["cache"] = {"count": len(c), "size": sum(s for _, s in c) + (0 if st["paccache"] else du(PACMAN_CACHE))}
@@ -139,6 +212,42 @@ def ask(question):
 
 def title(text):
     print(f"\n{BOLD}{text}{RESET}\n" + "─" * min(len(text), 60))
+
+
+def pick_packages(pkgs):
+    """the names picked: fzf (Tab marks, Enter confirms) or, without it, numbers typed in"""
+    lines = [f"{n:<34} {human(sz):>9}  {'AUR ' if a else ''}{d}" for n, sz, d, a in pkgs]
+    if have("fzf"):
+        r = subprocess.run(["fzf", "--multi", "--reverse", "--height=90%", "--no-sort",
+                            "--header=Tab: mark   Enter: remove the marked ones   Esc: cancel",
+                            "--prompt=search: ", "--preview=pacman -Qi {1}", "--preview-window=down,40%,wrap"],
+                           input="\n".join(lines), capture_output=False, stdout=subprocess.PIPE, text=True)
+        return [l.split()[0] for l in r.stdout.splitlines() if l.strip()]
+    for i, l in enumerate(lines, 1):
+        print(f"{i:>4}  {l}")
+    try:
+        typed = input(f"\n{BOLD}Numbers to remove (e.g. 3 7 12), or Enter for none: {RESET}")
+    except EOFError:
+        return []
+    return [pkgs[int(t) - 1][0] for t in typed.replace(",", " ").split() if t.isdigit() and 0 < int(t) <= len(pkgs)]
+
+
+def clean_explicit():
+    title("Installed packages")
+    print(f"{DIM}The packages you installed yourself, biggest first. System ones (kernel, drivers, firmware,\n"
+          f"login, sound) and what Monolith needs aren't listed, so they can't be removed by mistake.{RESET}")
+    pkgs = explicit_packages()
+    if not pkgs:
+        print("\nNone found.")
+        return
+    picked = pick_packages(pkgs)
+    if not picked:
+        print("\nNothing picked, nothing removed.")
+        return
+    print(f"\n{BOLD}Picked:{RESET} " + ", ".join(picked))
+    print(f"{DIM}pacman shows everything that would go (their unused dependencies too) and asks once more.\n"
+          f"If another package needs one of these, pacman refuses and nothing is removed.{RESET}\n")
+    subprocess.run(["sudo", "pacman", "-Rns", *picked])
 
 
 def clean_orphans():
@@ -230,7 +339,7 @@ def main():
     if cmd == "status":
         status()
         return
-    checks = {"orphans": clean_orphans, "flatpak": clean_flatpak, "flatdata": clean_flatdata, "cache": clean_cache}
+    checks = {"explicit": clean_explicit, "orphans": clean_orphans, "flatpak": clean_flatpak, "flatdata": clean_flatdata, "cache": clean_cache}
     if cmd != "clean" or len(sys.argv) < 3 or sys.argv[2] not in checks:
         raise SystemExit(__doc__)
     try:

@@ -40,6 +40,9 @@ GuideTab {
     }
 
     readonly property var checks: [
+        { id: "explicit", icon: "󰏓", title: "Installed packages", need: "pacman",
+          desc: "The packages you installed yourself, biggest first. Pick any to remove. System packages and what Monolith needs aren't listed",
+          found: st.explicit ? st.explicit.count + " package" + (st.explicit.count !== 1 ? "s" : "") + ", " + human(st.explicit.size) : "" },
         { id: "orphans", icon: "󰏗", title: "Orphan packages", need: "pacman",
           desc: "Packages installed as dependencies of something you've since removed. Nothing needs them now",
           found: st.orphans ? (st.orphans.count === 0 ? "None" : st.orphans.count + " package" + (st.orphans.count !== 1 ? "s" : "") + ", " + human(st.orphans.size)) : "" },
@@ -107,7 +110,7 @@ GuideTab {
                     icon: "󰑐"
                     title: "Checks"
                     description: cleanupTab.loading ? "Looking..." : "Press Refresh after cleaning to update the counts"
-                    searchKeywords: "clean up cleanup orphan packages flatpak unused runtimes cache leftover data pacman aur"
+                    searchKeywords: "clean up cleanup installed uninstall remove orphan packages flatpak unused runtimes cache leftover data pacman aur"
 
                     ClickButton {
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
