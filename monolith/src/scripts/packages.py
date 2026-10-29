@@ -1,0 +1,247 @@
+#!/usr/bin/env python3
+"""Settings -> Software -> Clean up: find what's left over from installing and removing software.
+
+  packages.py status          JSON: what each check finds (for the Settings page; quick, no root)
+  packages.py clean <check>   runs in a terminal: lists what it found and asks before removing
+
+Checks:
+  orphans     pacman/AUR packages installed as dependencies that nothing needs any more
+  flatpak     Flatpak runtimes and extensions no installed app uses
+  flatdata    data folders in ~/.var/app of Flatpak apps that aren't installed any more
+  cache       downloaded package files: pacman's cache (keeps the newest 2 of each) and yay's/paru's
+Nothing is removed without a yes.
+"""
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+HOME = os.path.expanduser("~")
+VAR_APP = os.path.join(HOME, ".var", "app")
+PACMAN_CACHE = "/var/cache/pacman/pkg"
+AUR_CACHES = [os.path.join(HOME, ".cache", "yay"), os.path.join(HOME, ".cache", "paru", "clone")]
+
+
+def run(cmd):
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        return r.stdout if r.returncode == 0 else ""
+    except OSError:
+        return ""
+
+
+def have(cmd):
+    return shutil.which(cmd) is not None
+
+
+def du(path):
+    total = 0
+    for root, _, files in os.walk(path):
+        for f in files:
+            try:
+                total += os.lstat(os.path.join(root, f)).st_size
+            except OSError:
+                pass
+    return total
+
+
+def human(n):
+    for unit in ("B", "KB", "MB", "GB"):
+        if n < 1024 or unit == "GB":
+            return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+        n /= 1024
+
+
+# ---- what each check finds ----
+
+def orphans():
+    """[(name, installed size in bytes)]"""
+    names = run(["pacman", "-Qdtq"]).split()
+    if not names:
+        return []
+    sizes, name = {}, None
+    for line in run(["pacman", "-Qi", *names]).splitlines():
+        k, _, v = line.partition(":")
+        k, v = k.strip(), v.strip()
+        if k == "Name":
+            name = v
+        elif k == "Installed Size" and name:
+            num, _, unit = v.partition(" ")
+            mult = {"B": 1, "KiB": 1024, "MiB": 1024 ** 2, "GiB": 1024 ** 3}.get(unit, 1)
+            try:
+                sizes[name] = int(float(num.replace(",", ".")) * mult)
+            except ValueError:
+                sizes[name] = 0
+    return [(n, sizes.get(n, 0)) for n in names]
+
+
+def flatpak_apps():
+    return set(run(["flatpak", "list", "--app", "--columns=application"]).split())
+
+
+def flatpak_leftovers():
+    """[(app id, folder, size)]: ~/.var/app folders of apps that aren't installed"""
+    if not os.path.isdir(VAR_APP) or not have("flatpak"):
+        return []
+    installed = flatpak_apps()
+    out = []
+    for name in sorted(os.listdir(VAR_APP)):
+        path = os.path.join(VAR_APP, name)
+        if os.path.isdir(path) and not os.path.islink(path) and name not in installed:
+            out.append((name, path, du(path)))
+    return out
+
+
+def cache_files():
+    """[(path, size)] of pacman cache packages paccache would remove, plus AUR build folders"""
+    out = []
+    if have("paccache"):
+        for args in (["-dk2"], ["-duk0"]):
+            for line in run(["paccache", "-v", *args]).splitlines():
+                p = line.strip()
+                if p.startswith("/") and os.path.isfile(p):
+                    out.append((p, os.path.getsize(p)))
+    for d in AUR_CACHES:
+        if os.path.isdir(d):
+            for name in sorted(os.listdir(d)):
+                p = os.path.join(d, name)
+                if os.path.isdir(p):
+                    out.append((p, du(p)))
+    return out
+
+
+def status():
+    st = {"pacman": have("pacman"), "flatpakInstalled": have("flatpak"), "paccache": have("paccache")}
+    if st["pacman"]:
+        o = orphans()
+        st["orphans"] = {"count": len(o), "size": sum(s for _, s in o)}
+        c = cache_files()
+        # without paccache, how much can go isn't known: show the whole pacman cache
+        st["cache"] = {"count": len(c), "size": sum(s for _, s in c) + (0 if st["paccache"] else du(PACMAN_CACHE))}
+    if st["flatpakInstalled"]:
+        f = flatpak_leftovers()
+        st["flatdata"] = {"count": len(f), "size": sum(s for *_, s in f)}
+    print(json.dumps(st))
+
+
+# ---- the terminal side ----
+
+BOLD, DIM, RED, GREEN, RESET = "\033[1m", "\033[2m", "\033[31m", "\033[32m", "\033[0m"
+
+
+def ask(question):
+    try:
+        return input(f"\n{BOLD}{question} [y/N] {RESET}").strip().lower() in ("y", "yes")
+    except EOFError:
+        return False
+
+
+def title(text):
+    print(f"\n{BOLD}{text}{RESET}\n" + "─" * min(len(text), 60))
+
+
+def clean_orphans():
+    title("Orphan packages")
+    print(f"{DIM}Installed as dependencies of something you've since removed; nothing needs them now.{RESET}")
+    while True:
+        found = orphans()
+        if not found:
+            print(f"\n{GREEN}No orphan packages.{RESET}")
+            return
+        print()
+        for name, size in found:
+            print(f"  {name:<40} {DIM}{human(size)}{RESET}")
+        print(f"\n{len(found)} package{'s' if len(found) != 1 else ''}, {human(sum(s for _, s in found))}")
+        if not ask("Remove them?"):
+            print("Left as they are.")
+            return
+        # -Rns: also their config files and any dependencies only they needed
+        r = subprocess.run(["sudo", "pacman", "-Rns", "--noconfirm", *[n for n, _ in found]])
+        if r.returncode != 0:
+            print(f"{RED}pacman didn't remove them.{RESET}")
+            return
+        print(f"{GREEN}Removed.{RESET} Checking again: removing packages can leave new orphans...")
+
+
+def clean_flatpak():
+    title("Unused Flatpak runtimes")
+    print(f"{DIM}Runtimes and extensions that no installed Flatpak app uses any more.{RESET}")
+    for scope in ("--user", "--system"):
+        # flatpak lists them and asks itself
+        print(f"\n{BOLD}{'Your' if scope == '--user' else 'System-wide'} Flatpaks{RESET}")
+        subprocess.run(["flatpak", "uninstall", scope, "--unused"])
+
+
+def clean_flatdata():
+    title("Leftover Flatpak app data")
+    print(f"{DIM}Settings and files in ~/.var/app from Flatpak apps that aren't installed any more.\n"
+          f"If you reinstall one of these apps later, it starts fresh.{RESET}")
+    found = flatpak_leftovers()
+    if not found:
+        print(f"\n{GREEN}Nothing left over.{RESET}")
+        return
+    print()
+    for app, _, size in found:
+        print(f"  {app:<50} {DIM}{human(size)}{RESET}")
+    print(f"\n{len(found)} folder{'s' if len(found) != 1 else ''}, {human(sum(s for *_, s in found))}")
+    if ask("Delete all of them?"):
+        for _, path, _ in found:
+            shutil.rmtree(path, ignore_errors=True)
+        print(f"{GREEN}Deleted.{RESET}")
+    elif ask("Go through them one by one?"):
+        for app, path, size in found:
+            if ask(f"Delete {app} ({human(size)})?"):
+                shutil.rmtree(path, ignore_errors=True)
+                print(f"{GREEN}Deleted.{RESET}")
+
+
+def clean_cache():
+    title("Old package downloads")
+    print(f"{DIM}pacman keeps every version it downloads. This keeps the newest 2 of each installed\n"
+          f"package (to roll back with) and drops the rest, and the AUR helper's build folders.{RESET}")
+    if have("paccache"):
+        old = [p for p, _ in cache_files() if p.startswith(PACMAN_CACHE)]
+        size = sum(os.path.getsize(p) for p in old if os.path.isfile(p))
+        print(f"\npacman cache: {len(old)} old file{'s' if len(old) != 1 else ''}, {human(size)}")
+        if old and ask("Remove them?"):
+            subprocess.run(["sudo", "paccache", "-rk2"])
+            subprocess.run(["sudo", "paccache", "-ruk0"])
+    else:
+        # without paccache: pacman's own clean, which drops packages that aren't installed any
+        # more (and asks first). paccache (pacman-contrib) also trims old versions
+        size = du(PACMAN_CACHE)
+        print(f"\npacman cache: {human(size)}. {DIM}Install pacman-contrib to also drop old versions of installed packages.{RESET}")
+        if size and ask("Clean out packages that aren't installed any more?"):
+            subprocess.run(["sudo", "pacman", "-Sc"])
+    for d in AUR_CACHES:
+        if os.path.isdir(d):
+            size = du(d)
+            print(f"\n{d}: {human(size)}")
+            if size and ask("Empty it? (AUR packages are downloaded again when they update)"):
+                for name in os.listdir(d):
+                    p = os.path.join(d, name)
+                    shutil.rmtree(p, ignore_errors=True) if os.path.isdir(p) else os.remove(p)
+                print(f"{GREEN}Emptied.{RESET}")
+
+
+def main():
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
+    if cmd == "status":
+        status()
+        return
+    checks = {"orphans": clean_orphans, "flatpak": clean_flatpak, "flatdata": clean_flatdata, "cache": clean_cache}
+    if cmd != "clean" or len(sys.argv) < 3 or sys.argv[2] not in checks:
+        raise SystemExit(__doc__)
+    try:
+        checks[sys.argv[2]]()
+    except KeyboardInterrupt:
+        print("\nStopped.")
+    try:
+        input(f"\n{DIM}Press Enter to close{RESET}")
+    except (EOFError, KeyboardInterrupt):
+        pass
+
+
+if __name__ == "__main__":
+    main()
