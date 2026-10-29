@@ -11,7 +11,8 @@ import "../reusables"
 // notifications; hover it and it grows into a panel with workspace buttons, the player, the
 // date and shortcuts, then folds back when the mouse leaves.
 Variants {
-    model: Quickshell.screens
+    // only where there's a bar (Settings -> Bar -> General -> Monitors)
+    model: Config.screensFor("bar")
 
     delegate: Component {
         PanelWindow {
