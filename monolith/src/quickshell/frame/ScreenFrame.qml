@@ -9,7 +9,8 @@ import "../reusables"
 // bottom strips reserve their space (windows tile inside the frame) and let clicks through.
 // Popups open as drawers pulled out of the frame (Main.qml).
 Variants {
-    model: Quickshell.screens
+    // only where there's a bar (Settings -> Bar -> General -> Monitors)
+    model: Config.screensFor("bar")
 
     delegate: Component {
         Scope {

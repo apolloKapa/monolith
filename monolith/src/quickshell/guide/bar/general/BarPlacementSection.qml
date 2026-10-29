@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../../../"
 import "../../../reusables"
 import "../../../reusables/guide"
@@ -161,6 +162,61 @@ SettingsBlob {
                 section.tab.clearPendingGroup();
                 section.tab.centerByEdges = c;
                 section.tab.updateBarSettings();
+            }
+        }
+    }
+
+    SettingsRow {
+        rootObj: section.tab.rootObj
+        settingId: "bar_screens"
+        icon: "󰍺"
+        configKey: "bar.screens"
+        defaultValue: []
+        title: "Monitors"
+        description: "Which screens have the bar. None picked means every screen"
+        searchKeywords: "bar monitor screen display output which island frame"
+
+        Flow {
+            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+            Layout.maximumWidth: rootObj.s(360)
+            spacing: rootObj.s(6)
+            Repeater {
+                model: Quickshell.screens
+                Rectangle {
+                    id: scrChip
+                    required property var modelData
+                    readonly property var picked: (Config.rawSettings && Config.rawSettings.bar && Array.isArray(Config.rawSettings.bar.screens)) ? Config.rawSettings.bar.screens : []
+                    readonly property bool on: picked.indexOf(modelData.name) !== -1
+                    width: scrLabel.implicitWidth + rootObj.s(24)
+                    height: rootObj.s(32)
+                    radius: ThemeBackend.square ? 0 : height / 2
+                    color: on ? ThemeBackend.mauve : (scrMa.containsMouse ? Qt.alpha(ThemeBackend.text, 0.08) : "transparent")
+                    border.width: on ? 0 : 1
+                    border.color: Qt.alpha(ThemeBackend.text, 0.18)
+                    Text {
+                        id: scrLabel
+                        anchors.centerIn: parent
+                        text: scrChip.modelData.name + "  " + scrChip.modelData.width + "×" + scrChip.modelData.height
+                        font.family: ThemeBackend.fontFamily
+                        font.pixelSize: rootObj.s(12)
+                        color: scrChip.on ? ThemeBackend.onPrimary : ThemeBackend.text
+                    }
+                    MouseArea {
+                        id: scrMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            section.tab.clearPendingGroup();
+                            let list = scrChip.picked.slice();
+                            const i = list.indexOf(scrChip.modelData.name);
+                            if (i === -1) list.push(scrChip.modelData.name); else list.splice(i, 1);
+                            let current = Config.getSetting("bar", section.tab.defaultBarSettings);
+                            current.screens = list;
+                            Config.setSetting("bar", current);
+                        }
+                    }
+                }
             }
         }
     }

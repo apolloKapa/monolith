@@ -9,7 +9,8 @@ import "../reusables"
 import "../"
 
 Variants {
-    model: Quickshell.screens
+    // Settings -> Bar -> General -> Monitors: every screen, or only the ones picked
+    model: Config.screensFor("bar")
 
     delegate: Component {
         PanelWindow {

@@ -4,12 +4,7 @@ import "../"
 
 Variants {
     // Settings -> Dock -> Monitors: every screen, or only the ones picked
-    model: {
-        const picked = (Config.rawSettings && Config.rawSettings.dock && Array.isArray(Config.rawSettings.dock.screens)) ? Config.rawSettings.dock.screens : [];
-        if (picked.length === 0) return Quickshell.screens;
-        const list = Quickshell.screens.filter(scr => picked.indexOf(scr.name) !== -1);
-        return list.length > 0 ? list : Quickshell.screens;
-    }
+    model: Config.screensFor("dock")
 
     delegate: Component {
         Scope {

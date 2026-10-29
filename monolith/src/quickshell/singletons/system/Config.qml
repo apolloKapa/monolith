@@ -63,6 +63,16 @@ Item {
         Quickshell.execDetached(["bash", "-c", cmd]);
     }
 
+    // the screens a per-screen part goes on (Settings -> Bar/Dock -> Monitors): every screen,
+    // or only the ones picked under <section>.screens (all of them again if none is plugged in)
+    function screensFor(section) {
+        const s = rawSettings && rawSettings[section];
+        const picked = (s && Array.isArray(s.screens)) ? s.screens : [];
+        if (picked.length === 0) return Quickshell.screens;
+        const list = Quickshell.screens.filter(scr => picked.indexOf(scr.name) !== -1);
+        return list.length > 0 ? list : Quickshell.screens;
+    }
+
     function getSetting(key, fallbackValue) {
         if (!rawSettings || typeof rawSettings !== "object") {
             if (fallbackValue !== null && typeof fallbackValue === "object") {
