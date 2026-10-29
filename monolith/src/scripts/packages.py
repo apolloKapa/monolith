@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""Settings -> Software -> Clean up: find what's left over from installing and removing software.
+"""Settings -> Software -> Pacman / AUR / Flatpak: remove software, and find what installing and
+removing it leaves behind.
 
-  packages.py status          JSON: what each check finds (for the Settings page; quick, no root)
+  packages.py status          JSON: what each check finds (for the Settings pages; quick, no root)
   packages.py clean <check>   runs in a terminal: lists what it found and asks before removing
 
 Checks:
-  explicit    the packages you installed yourself (system ones left out): pick any to remove
+  explicit    repo packages you installed yourself (system ones left out): pick any to remove
   orphans     pacman/AUR packages installed as dependencies that nothing needs any more
+  cache       pacman's downloaded packages (keeps the newest 2 of each with paccache)
+  aur         AUR packages you installed yourself: pick any to remove
+  aurcache    the AUR helper's (yay's/paru's) download and build folders
+  flatapps    installed Flatpak apps: pick any to remove, with or without their data
   flatpak     Flatpak runtimes and extensions no installed app uses
   flatdata    data folders in ~/.var/app of Flatpak apps that aren't installed any more
-  cache       downloaded package files: pacman's cache (keeps the newest 2 of each) and yay's/paru's
 Nothing is removed without a yes.
 """
 import json
@@ -116,8 +120,9 @@ def is_system(name, base_deps):
     return name.endswith(("-firmware", "-ucode", "-headers")) and name.startswith(("linux", "amd", "intel"))
 
 
-def explicit_packages():
-    """[(name, size, description, from AUR)] of the packages you installed yourself, biggest first"""
+def explicit_packages(source=None):
+    """[(name, size, description, from AUR)] of the packages you installed yourself, biggest first;
+    source "repo" or "aur" keeps only those"""
     names = run(["pacman", "-Qqe"]).split()
     if not names:
         return []
@@ -144,11 +149,31 @@ def explicit_packages():
     base_deps |= monolith_deps()
     out = [(n, info.get(n, {}).get("size", 0), info.get(n, {}).get("desc", ""), n in aur)
            for n in names if not is_system(n, base_deps)]
+    if source:
+        out = [p for p in out if p[3] == (source == "aur")]
     return sorted(out, key=lambda p: -p[1])
 
 
 def flatpak_apps():
     return set(run(["flatpak", "list", "--app", "--columns=application"]).split())
+
+
+def flatpak_installed():
+    """[(id, name, size text, installation)] of the installed Flatpak apps"""
+    out = []
+    for line in run(["flatpak", "list", "--app", "--columns=application,name,size,installation"]).splitlines():
+        f = line.split("\t")
+        if len(f) >= 4:
+            out.append((f[0], f[1], f[2], f[3]))
+    return out
+
+
+def size_of(text):
+    """"209.7 MB" -> bytes"""
+    m = re.match(r"([\d.,]+)\s*([kMGT]?B)", text.replace("\xa0", " "))
+    if not m:
+        return 0
+    return int(float(m.group(1).replace(",", ".")) * {"B": 1, "kB": 1e3, "MB": 1e6, "GB": 1e9, "TB": 1e12}[m.group(2)])
 
 
 def flatpak_leftovers():
@@ -165,7 +190,7 @@ def flatpak_leftovers():
 
 
 def cache_files():
-    """[(path, size)] of pacman cache packages paccache would remove, plus AUR build folders"""
+    """[(path, size)] of pacman cache packages paccache would remove"""
     out = []
     if have("paccache"):
         for args in (["-dk2"], ["-duk0"]):
@@ -173,6 +198,12 @@ def cache_files():
                 p = line.strip()
                 if p.startswith("/") and os.path.isfile(p):
                     out.append((p, os.path.getsize(p)))
+    return out
+
+
+def aur_cache():
+    """[(path, size)] of the AUR helpers' download/build folders"""
+    out = []
     for d in AUR_CACHES:
         if os.path.isdir(d):
             for name in sorted(os.listdir(d)):
@@ -188,13 +219,19 @@ def status():
         o = orphans()
         st["orphans"] = {"count": len(o), "size": sum(s for _, s in o)}
         e = explicit_packages()
-        st["explicit"] = {"count": len(e), "size": sum(p[1] for p in e)}
+        for key, aur in (("explicit", False), ("aur", True)):
+            part = [p for p in e if p[3] == aur]
+            st[key] = {"count": len(part), "size": sum(p[1] for p in part)}
         c = cache_files()
         # without paccache, how much can go isn't known: show the whole pacman cache
-        st["cache"] = {"count": len(c), "size": sum(s for _, s in c) + (0 if st["paccache"] else du(PACMAN_CACHE))}
+        st["cache"] = {"count": len(c), "size": sum(s for _, s in c) if st["paccache"] else du(PACMAN_CACHE)}
+        a = aur_cache()
+        st["aurcache"] = {"count": len(a), "size": sum(s for _, s in a)}
     if st["flatpakInstalled"]:
         f = flatpak_leftovers()
         st["flatdata"] = {"count": len(f), "size": sum(s for *_, s in f)}
+        apps = flatpak_installed()
+        st["flatapps"] = {"count": len(apps), "size": sum(size_of(a[2]) for a in apps)}
     print(json.dumps(st))
 
 
@@ -214,14 +251,14 @@ def title(text):
     print(f"\n{BOLD}{text}{RESET}\n" + "─" * min(len(text), 60))
 
 
-def pick_packages(pkgs):
-    """the names picked: fzf (Tab marks, Enter confirms) or, without it, numbers typed in"""
-    lines = [f"{n:<34} {human(sz):>9}  {'AUR ' if a else ''}{d}" for n, sz, d, a in pkgs]
+def pick(lines, preview):
+    """the first word of the lines picked: fzf (Tab marks, Enter confirms) or, without it, numbers
+    typed in"""
     if have("fzf"):
         r = subprocess.run(["fzf", "--multi", "--reverse", "--height=90%", "--no-sort",
                             "--header=Tab: mark   Enter: remove the marked ones   Esc: cancel",
-                            "--prompt=search: ", "--preview=pacman -Qi {1}", "--preview-window=down,40%,wrap"],
-                           input="\n".join(lines), capture_output=False, stdout=subprocess.PIPE, text=True)
+                            "--prompt=search: ", f"--preview={preview}", "--preview-window=down,40%,wrap"],
+                           input="\n".join(lines), stdout=subprocess.PIPE, text=True)
         return [l.split()[0] for l in r.stdout.splitlines() if l.strip()]
     for i, l in enumerate(lines, 1):
         print(f"{i:>4}  {l}")
@@ -229,14 +266,22 @@ def pick_packages(pkgs):
         typed = input(f"\n{BOLD}Numbers to remove (e.g. 3 7 12), or Enter for none: {RESET}")
     except EOFError:
         return []
-    return [pkgs[int(t) - 1][0] for t in typed.replace(",", " ").split() if t.isdigit() and 0 < int(t) <= len(pkgs)]
+    return [lines[int(t) - 1].split()[0] for t in typed.replace(",", " ").split() if t.isdigit() and 0 < int(t) <= len(lines)]
 
 
-def clean_explicit():
-    title("Installed packages")
-    print(f"{DIM}The packages you installed yourself, biggest first. System ones (kernel, drivers, firmware,\n"
-          f"login, sound) and what Monolith needs aren't listed, so they can't be removed by mistake.{RESET}")
-    pkgs = explicit_packages()
+def pick_packages(pkgs):
+    return pick([f"{n:<34} {human(sz):>9}  {d}" for n, sz, d, _ in pkgs], "pacman -Qi {1}")
+
+
+def clean_aur():
+    clean_explicit("aur")
+
+
+def clean_explicit(source="repo"):
+    title("AUR packages" if source == "aur" else "Installed packages")
+    print(f"{DIM}The {'AUR ' if source == 'aur' else ''}packages you installed yourself, biggest first. System ones (kernel, drivers,\n"
+          f"firmware, login, sound) and what Monolith needs aren't listed, so they can't be removed by mistake.{RESET}")
+    pkgs = explicit_packages(source)
     if not pkgs:
         print("\nNone found.")
         return
@@ -271,6 +316,24 @@ def clean_orphans():
             print(f"{RED}pacman didn't remove them.{RESET}")
             return
         print(f"{GREEN}Removed.{RESET} Checking again: removing packages can leave new orphans...")
+
+
+def clean_flatapps():
+    title("Flatpak apps")
+    print(f"{DIM}Your installed Flatpak apps. Their runtimes are left to 'Unused Flatpak runtimes'.{RESET}")
+    apps = flatpak_installed()
+    if not apps:
+        print("\nNo Flatpak apps installed.")
+        return
+    apps.sort(key=lambda a: -size_of(a[2]))
+    picked = pick([f"{i:<44} {sz:>10}  {n}  ({inst})" for i, n, sz, inst in apps], "flatpak info {1}")
+    if not picked:
+        print("\nNothing picked, nothing removed.")
+        return
+    print(f"\n{BOLD}Picked:{RESET} " + ", ".join(picked))
+    data = ask("Also delete their settings and files (~/.var/app)? No keeps them for a reinstall")
+    # flatpak shows what goes and asks once more
+    subprocess.run(["flatpak", "uninstall", *(["--delete-data"] if data else []), *picked])
 
 
 def clean_flatpak():
@@ -308,7 +371,7 @@ def clean_flatdata():
 def clean_cache():
     title("Old package downloads")
     print(f"{DIM}pacman keeps every version it downloads. This keeps the newest 2 of each installed\n"
-          f"package (to roll back with) and drops the rest, and the AUR helper's build folders.{RESET}")
+          f"package (to roll back with) and drops the rest.{RESET}")
     if have("paccache"):
         old = [p for p, _ in cache_files() if p.startswith(PACMAN_CACHE)]
         size = sum(os.path.getsize(p) for p in old if os.path.isfile(p))
@@ -323,15 +386,25 @@ def clean_cache():
         print(f"\npacman cache: {human(size)}. {DIM}Install pacman-contrib to also drop old versions of installed packages.{RESET}")
         if size and ask("Clean out packages that aren't installed any more?"):
             subprocess.run(["sudo", "pacman", "-Sc"])
+
+
+def clean_aurcache():
+    title("AUR build folders")
+    print(f"{DIM}What yay/paru downloaded and built. Safe to empty: AUR packages are downloaded again\n"
+          f"when they update.{RESET}")
+    found = False
     for d in AUR_CACHES:
         if os.path.isdir(d):
+            found = True
             size = du(d)
             print(f"\n{d}: {human(size)}")
-            if size and ask("Empty it? (AUR packages are downloaded again when they update)"):
+            if size and ask("Empty it?"):
                 for name in os.listdir(d):
                     p = os.path.join(d, name)
                     shutil.rmtree(p, ignore_errors=True) if os.path.isdir(p) else os.remove(p)
                 print(f"{GREEN}Emptied.{RESET}")
+    if not found:
+        print(f"\n{GREEN}No AUR helper folders.{RESET}")
 
 
 def main():
@@ -339,7 +412,8 @@ def main():
     if cmd == "status":
         status()
         return
-    checks = {"explicit": clean_explicit, "orphans": clean_orphans, "flatpak": clean_flatpak, "flatdata": clean_flatdata, "cache": clean_cache}
+    checks = {"explicit": clean_explicit, "orphans": clean_orphans, "cache": clean_cache, "aur": clean_aur,
+              "aurcache": clean_aurcache, "flatapps": clean_flatapps, "flatpak": clean_flatpak, "flatdata": clean_flatdata}
     if cmd != "clean" or len(sys.argv) < 3 or sys.argv[2] not in checks:
         raise SystemExit(__doc__)
     try:
