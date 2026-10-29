@@ -4,3 +4,7 @@ GuideSearchResults 1.0 GuideSearchResults.qml
 GuideContent 1.0 GuideContent.qml
 GuideTab 1.0 GuideTab.qml
 AppImagesTab 1.0 AppImagesTab.qml
+CleanupTab 1.0 CleanupTab.qml
+CleanupPacmanTab 1.0 CleanupPacmanTab.qml
+CleanupAurTab 1.0 CleanupAurTab.qml
+CleanupFlatpakTab 1.0 CleanupFlatpakTab.qml
