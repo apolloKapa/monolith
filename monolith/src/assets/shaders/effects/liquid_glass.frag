@@ -210,10 +210,14 @@ void main() {
     col *= 1.0 - (1.0 - nest) * 0.06 * exp(-t / 6.0) * clamp(g.y, 0.0, 1.0);
     col *= 1.0 - (1.0 - nest) * 0.025 * exp(-t / (bz * 0.45));
 
-    vec2 cursorDir = cd > 0.001 ? toCursor / cd : normalize(lightDir);
-    vec2 L = normalize(mix(normalize(lightDir), cursorDir, hover * 0.4));
+    // the fixed light never turns with the cursor: bending it toward the pointer flipped the rim
+    // from lit to dark right where the edge passed over the cursor, a hard cut along the edge.
+    // The cursor adds its own glow on the edges facing it instead, faded out by distance.
+    vec2 L = normalize(lightDir);
     float facing = dot(g, L);
     float spec = pow(max(facing, 0.0), 1.6) + 0.55 * pow(max(-facing, 0.0), 2.2);
+    vec2 awayDir = cd > 0.001 ? -toCursor / cd : -g;
+    spec += 0.7 * near * pow(max(dot(g, awayDir), 0.0), 1.5);
 
     float fres = pow(1.0 - normal.z, 1.5) * (1.0 - 0.6 * nest);
     if (fres > 0.001) {
