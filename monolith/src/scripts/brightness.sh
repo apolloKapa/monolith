@@ -172,7 +172,7 @@ watch_brightness() {
     for path in /sys/class/backlight/*/brightness; do
         [[ -e "$path" ]] && paths+=("$path")
     done
-    exec inotifywait -m -e modify "${paths[@]}" 2>/dev/null
+    exec setpriv --pdeathsig TERM inotifywait -m -e modify "${paths[@]}" 2>/dev/null
 }
 
 case "$ACTION" in

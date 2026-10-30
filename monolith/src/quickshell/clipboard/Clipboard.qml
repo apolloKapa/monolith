@@ -151,7 +151,9 @@ PanelWindow {
     Process {
         id: clipWatcher
         running: true
-        command: ["sh", "-c", "wl-paste --watch echo 1 & w=$!; trap 'kill $w 2>/dev/null' EXIT TERM; while kill -0 $PPID 2>/dev/null && kill -0 $w 2>/dev/null; do sleep 1; done"]
+        // the kernel ends wl-paste with the shell, even when the shell is killed outright (a trap
+        // in a wrapper script never ran then, and each restart left a wl-paste behind)
+        command: ["setpriv", "--pdeathsig", "TERM", "wl-paste", "--watch", "echo", "1"]
         stdout: SplitParser {
             onRead: (data) => {
                 if (clipboardWindow.isVisible) {

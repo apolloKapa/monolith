@@ -84,7 +84,7 @@ Item {
         running: !root.isCleaningUp && (!module || module.moduleActive) && root.recCacheDir !== ""
         command: root.recCacheDir ? [
             "bash", "-c",
-            "mkdir -p '" + root.recCacheDir + "' && exec inotifywait -m -e create,delete,modify,moved_to,moved_from '" + root.recCacheDir + "' 2>/dev/null"
+            "mkdir -p '" + root.recCacheDir + "' && exec setpriv --pdeathsig TERM inotifywait -m -e create,delete,modify,moved_to,moved_from '" + root.recCacheDir + "' 2>/dev/null"
         ] : []
         stdout: SplitParser {
             onRead: data => {

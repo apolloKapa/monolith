@@ -47,7 +47,7 @@ Item {
     Process {
         id: watcher
         // the folder is made first, so there's always something to watch
-        command: ["bash", "-c", "mkdir -p \"$1\" && exec inotifywait -m -q -e close_write,moved_to,moved_from,delete --format '%f' \"$1\"", "_", root.folder]
+        command: ["bash", "-c", "mkdir -p \"$1\" && exec setpriv --pdeathsig TERM inotifywait -m -q -e close_write,moved_to,moved_from,delete --format '%f' \"$1\"", "_", root.folder]
         stdout: SplitParser {
             onRead: data => {
                 if (/\.appimage$/i.test(data.trim())) syncSoon.restart();
