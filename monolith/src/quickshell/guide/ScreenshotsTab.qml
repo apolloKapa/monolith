@@ -249,5 +249,7 @@ GuideTab {
                 }
             }
         }
+
+        WheelScroll {}
     }
 }

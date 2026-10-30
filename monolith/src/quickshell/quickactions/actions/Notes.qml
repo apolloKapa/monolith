@@ -686,6 +686,8 @@ Item {
                             }
                         }
                     }
+
+                    WheelScroll {}
                 }
 
                 Item {
@@ -1016,6 +1018,8 @@ Item {
                                         font.pixelSize: root.s(12)
                                         wrapMode: Text.WordWrap
                                     }
+
+                                    WheelScroll {}
                                 }
                             }
                         }

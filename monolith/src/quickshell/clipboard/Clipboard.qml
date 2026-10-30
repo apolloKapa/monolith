@@ -1499,10 +1499,14 @@ PanelWindow {
                                             wrapMode: Text.Wrap
                                             textFormat: Text.PlainText
                                         }
+
+                                        WheelScroll {}
                                     }
                                 }
                             }
                         }
+
+                        WheelScroll {}
                     }
                 }
             }

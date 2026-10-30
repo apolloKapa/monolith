@@ -915,5 +915,7 @@ GuideTab {
                 }
             }
         }
+
+        WheelScroll {}
     }
 }

@@ -199,5 +199,7 @@ Item {
                 }
             }
         }
+
+        WheelScroll {}
     }
 }

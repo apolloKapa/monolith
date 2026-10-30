@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import "../../reusables"
 
 ThemeTabState {
     id: themeTabRoot
@@ -58,5 +59,7 @@ ThemeTabState {
 
             ThemePresetsSection { tab: themeTabRoot }
         }
+
+        WheelScroll {}
     }
 }

@@ -185,5 +185,7 @@ DisplayLockscreenState {
                 ]
             }
         }
+
+        WheelScroll {}
     }
 }

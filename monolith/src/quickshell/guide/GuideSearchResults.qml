@@ -496,4 +496,6 @@ Flickable {
             }
         }
     }
+
+    WheelScroll {}
 }

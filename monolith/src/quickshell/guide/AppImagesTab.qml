@@ -344,5 +344,7 @@ GuideTab {
                 }
             }
         }
+
+        WheelScroll {}
     }
 }

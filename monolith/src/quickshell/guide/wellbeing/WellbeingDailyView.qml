@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../../"
+import "../../reusables"
 
 Flickable {
     id: dailyViewWrapper
@@ -62,4 +63,6 @@ Flickable {
 
         Item { Layout.preferredHeight: rootObj.s(4) }
     }
+
+    WheelScroll {}
 }

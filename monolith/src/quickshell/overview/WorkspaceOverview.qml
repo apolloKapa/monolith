@@ -334,6 +334,8 @@ PopupShell {
                                     }
                                 }
                             }
+
+                            WheelScroll {}
                         }
 
                         Text {
@@ -347,6 +349,8 @@ PopupShell {
                     }
                 }
             }
+
+            WheelScroll {}
         }
     }
 }

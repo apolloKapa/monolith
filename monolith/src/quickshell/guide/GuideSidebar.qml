@@ -463,6 +463,8 @@ Rectangle {
                     }
                 }
             }
+
+            WheelScroll {}
         }
 
         ClickButton {
