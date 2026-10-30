@@ -228,7 +228,14 @@ PanelWindow {
         return false;
     }
 
-    readonly property bool isBarEffectivelyHidden: barAutohide || isFullscreenActive
+    // Settings -> Bar -> Monitors can leave a screen without the bar (and its frame): panels
+    // opened there float on their own instead of hanging from a bar that isn't there
+    readonly property bool screenHasBar: {
+        if (typeof Config === "undefined" || !masterWindow.screen) return true;
+        const name = masterWindow.screen.name;
+        return Config.screensFor("bar").some(s => s && s.name === name);
+    }
+    readonly property bool isBarEffectivelyHidden: barAutohide || isFullscreenActive || !screenHasBar
     readonly property bool screenReady: masterWindow.width >= 100 && masterWindow.height >= 100
     readonly property bool isCurrentDraggable: {
         let t = getLayout(masterWindow.currentActive);
@@ -464,6 +471,22 @@ PanelWindow {
         let scale = masterWindow.globalUiScale || 1.0;
         let isFixed = (name === "wallpaper" || name === "notifications" || name === "system" || name === "hidden");
 
+        // no bar on this screen: the panel keeps its corner of the screen but floats, the same
+        // gap from every edge it sits against (full-height ones like System get it top and bottom)
+        let fullScreen = (name === "wallpaper" || name === "overview" || name === "session" || name === "hidden");
+        if (!masterWindow.screenHasBar && !fullScreen) {
+            let gap = Math.round(12 * scale);
+            let near = Math.round(64 * scale);
+            let f = { w: result.w, h: result.h, rx: result.rx, ry: result.ry, comp: result.comp, draggable: result.draggable };
+            if (f.h >= scrH - 1) { f.h = scrH - 2 * gap; f.ry = gap; }
+            if (f.w >= scrW - 1) { f.w = scrW - 2 * gap; f.rx = gap; }
+            if (f.ry < near) f.ry = gap;
+            else if (scrH - (f.ry + f.h) < near) f.ry = scrH - f.h - gap;
+            if (f.rx < near) f.rx = gap;
+            else if (scrW - (f.rx + f.w) < near) f.rx = scrW - f.w - gap;
+            return f;
+        }
+
         if (effHidden && !isFixed) {
             let offsetAdjustment = Math.round(46 * scale);
             let adjusted = {
@@ -554,6 +577,7 @@ PanelWindow {
         popupW: masterWindow._animW
         popupH: masterWindow._animH
         progress: contentStage.unfold
+        onFrameScreen: masterWindow.screenHasBar
         // the wallpaper picker floats over the desktop with no plate behind it
         active: masterWindow.lastShown !== "wallpaper" && (masterWindow.isVisible || contentStage.unfold > 0.001)
     }
