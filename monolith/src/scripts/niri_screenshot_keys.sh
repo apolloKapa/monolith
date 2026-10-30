@@ -23,7 +23,8 @@ cp "$file" "$backup"
 [ -s "$fallbacks" ] || echo '{}' > "$fallbacks"
 
 python3 - "$file" "$fallbacks" "$keys" <<'EOF'
-import json, re, sys
+import json, os, re, sys
+MONOLITH_BIN = os.path.expanduser("~/.local/bin/monolith")
 path, fb_path, keys = sys.argv[1], sys.argv[2], [k for k in sys.argv[3].split("\n") if k]
 text = open(path).read()
 fallbacks = json.load(open(fb_path))
@@ -40,7 +41,7 @@ for line in text.split("\n"):
     forwarded = '"screenshot-key"' in body
     if norm(key) in wanted and not forwarded:
         fallbacks[key] = body
-        body = f'spawn "monolith" "screenshot-key" "{key}";'
+        body = f'spawn "{MONOLITH_BIN}" "screenshot-key" "{key}";'
         changed.append(f"wrapped {key}")
     elif forwarded and norm(key) not in wanted:
         body = fallbacks.pop(key, body)

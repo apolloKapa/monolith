@@ -114,7 +114,7 @@ def describe(action, args):
         return describe("spawn", words)
     if action == "spawn":
         words = args
-        if words[:1] == ["monolith"]:
+        if words and os.path.basename(words[0]) == "monolith":
             return monolith_command([w for w in words[1:] if w != "msg"])
         prog = os.path.basename(words[0]) if words else "command"
         if prog in ("playerctl", "wpctl", "pamixer", "brightnessctl"):
