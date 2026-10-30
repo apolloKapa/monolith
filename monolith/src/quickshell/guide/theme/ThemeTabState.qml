@@ -622,30 +622,33 @@ GuideTab {
     // Picking a style (Theme -> Style). The opaque styles are whole looks: they also load their
     // colours and font, which can still be changed afterwards. Blur, Liquid glass and Bubbly keep
     // the current colours; the see-through ones switch the blurred background on.
+    // Each style remembers the font and colours it was left with (theme.styleMemory), so going
+    // back to a style brings back what was picked there instead of its defaults.
     function applyStyle(id) {
         let st = ThemeBackend.styles[id];
         if (!st) return;
         let current = Config.getSetting("theme", themeTabRoot.defaultThemeSettings);
+        let memory = current.styleMemory || {};
+        if (current.blurStyle && current.blurStyle !== id)
+            memory[current.blurStyle] = { "fontFamily": current.fontFamily, "activePreset": current.activePreset,
+                                          "matugen": current.matugen === true, "colors": current.colors };
+        current.styleMemory = memory;
+        let saved = memory[id];
+        let font = saved ? saved.fontFamily : st.font;
         current.blurStyle = id;
         if (id === "blur" || id === "liquid") current.blurBackground = true;
-        if (st.font) current.fontFamily = st.font;
+        if (font) current.fontFamily = font;
         Config.setSetting("theme", current);
         themeTabRoot.currentBlurStyle = id;
         if (id === "blur" || id === "liquid") themeTabRoot.currentBlurBackground = true;
-        if (st.font) themeTabRoot.currentFontFamily = st.font;
+        if (font) themeTabRoot.currentFontFamily = font;
         let colors = st.colors || (id === "minimalist" ? ThemeBackend.minimalistColors : null);
-        if (colors) themeTabRoot.applyPreset({ "name": st.name, "colors": colors });
-        // Material (and OLED) take their colours from the wallpaper; Material's bar also gets
-        // its Google faces
-        else if (st.matugen) {
-            themeTabRoot.applyPreset({ "name": "Matugen", "isMatugen": true });
-            if (id === "material") {
-                let bar = Config.getSetting("bar", {});
-                bar.timeStyle = "google";
-                bar.workspacesStyle = "pills";
-                Config.setSetting("bar", bar);
-            }
-        }
+        if (saved && (saved.matugen || saved.colors))
+            themeTabRoot.applyPreset(saved.matugen ? { "name": "Matugen", "isMatugen": true }
+                                                   : { "name": saved.activePreset, "colors": saved.colors });
+        else if (colors) themeTabRoot.applyPreset({ "name": st.name, "colors": colors });
+        // Material (and OLED) take their colours from the wallpaper
+        else if (st.matugen) themeTabRoot.applyPreset({ "name": "Matugen", "isMatugen": true });
         ThemeBackend.reloadColors();
     }
 
