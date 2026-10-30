@@ -586,6 +586,8 @@ Item {
                                         Text { text: lapItem ? root.formatTime(lapItem.total, true) : ""; color: ThemeBackend.text; font.family: ThemeBackend.fontFamily; font.pixelSize: root.s(12); font.bold: true; Layout.alignment: Qt.AlignRight }
                                     }
                                 }
+
+                                WheelScroll {}
                             }
                         }
                     }

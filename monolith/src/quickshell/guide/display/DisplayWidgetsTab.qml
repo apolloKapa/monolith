@@ -64,5 +64,7 @@ DisplayWidgetsState {
                 delegate: WidgetMonitorCard { tab: displayWidgetsRoot }
             }
         }
+
+        WheelScroll {}
     }
 }

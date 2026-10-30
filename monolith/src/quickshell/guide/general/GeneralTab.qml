@@ -180,5 +180,7 @@ GuideTab {
                 }
             }
         }
+
+        WheelScroll {}
     }
 }

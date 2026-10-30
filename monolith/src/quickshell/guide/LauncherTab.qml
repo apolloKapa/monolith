@@ -692,5 +692,7 @@ GuideTab {
                 }
             }
         }
+
+        WheelScroll {}
     }
 }

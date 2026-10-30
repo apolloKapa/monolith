@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import "general"
 import "../../"
+import "../../reusables"
 
 BarGeneralState {
     id: barTabRoot
@@ -78,5 +79,7 @@ BarGeneralState {
 
             BarLayoutEditor { tab: barTabRoot }
         }
+
+        WheelScroll {}
     }
 }

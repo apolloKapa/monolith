@@ -176,6 +176,8 @@ PopupShell {
                     onClicked: root.pick(card.index)
                 }
             }
+
+            WheelScroll {}
         }
     }
 }

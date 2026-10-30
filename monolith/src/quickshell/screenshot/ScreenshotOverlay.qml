@@ -937,6 +937,8 @@ PanelWindow {
                             }
                         }
                     }
+
+                    WheelScroll {}
                 }
             }
 
@@ -1060,6 +1062,8 @@ PanelWindow {
                             } 
                         }
                     }
+
+                    WheelScroll {}
                 }
             }
 

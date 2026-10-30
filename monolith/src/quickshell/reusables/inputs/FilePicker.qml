@@ -516,6 +516,8 @@ Popup {
                                 }
                             }
                         }
+
+                            WheelScroll {}
                     }
 
                     Rectangle {
@@ -684,6 +686,8 @@ Popup {
                                 }
                             }
                         }
+
+                        WheelScroll {}
                     }
                 }
             }

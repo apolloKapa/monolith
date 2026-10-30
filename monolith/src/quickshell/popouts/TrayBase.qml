@@ -592,6 +592,8 @@ PanelWindow {
                             visible: rootItemDelegate.isSep
                         }
                     }
+
+                    WheelScroll {}
                 }
             }
         }
@@ -894,6 +896,8 @@ PanelWindow {
                                 visible: subItemDelegate.isSep
                             }
                         }
+
+                        WheelScroll {}
                     }
                 }
             }

@@ -188,6 +188,8 @@ PopupShell {
                     }
                 }
             }
+
+            WheelScroll {}
         }
 
         Text {

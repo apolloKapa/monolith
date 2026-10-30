@@ -339,6 +339,8 @@ PopupShell {
                         font.family: ThemeBackend.fontFamily
                         font.pixelSize: root.s(12)
                     }
+
+                    WheelScroll {}
                 }
             }
         }
@@ -471,6 +473,8 @@ PopupShell {
                             font.family: ThemeBackend.fontFamily
                             font.pixelSize: root.s(12)
                         }
+
+                        WheelScroll {}
                     }
 
                     Text {

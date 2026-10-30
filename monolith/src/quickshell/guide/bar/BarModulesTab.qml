@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import "../../"
 import "modules"
+import "../../reusables"
 
 BarModulesSettings {
     id: barModulesRoot
@@ -141,5 +142,7 @@ BarModulesSettings {
 
             BarMediaCard { tab: barModulesRoot; visible: barModulesRoot.selectedModule === 10 }
         }
+
+        WheelScroll {}
     }
 }

@@ -369,6 +369,8 @@ Popup {
                     }
                 }
             }
+
+            WheelScroll {}
         }
     }
 }

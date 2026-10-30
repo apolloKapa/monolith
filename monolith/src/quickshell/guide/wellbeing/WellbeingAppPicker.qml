@@ -208,6 +208,8 @@ Item {
                     font.pixelSize: rootObj.s(11)
                     color: ThemeBackend.subtext0
                 }
+
+                WheelScroll {}
             }
 
             RowLayout {

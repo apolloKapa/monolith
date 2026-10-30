@@ -1851,6 +1851,8 @@ PanelWindow {
                             border.width: 2
                             border.color: ThemeBackend.mauve
                         }
+
+                        WheelScroll {}
                     }
                 }
 
@@ -2432,6 +2434,8 @@ PanelWindow {
                                 }
                             }
                         }
+
+                        WheelScroll {}
                     }
 
                     // apps as a grid (Settings -> Launcher -> Grid view); shares appList's selection
@@ -2537,6 +2541,8 @@ PanelWindow {
                                 }
                             }
                         }
+
+                        WheelScroll {}
                     }
 
                     GridView {
@@ -2741,6 +2747,8 @@ PanelWindow {
                                 }
                             }
                         }
+
+                        WheelScroll {}
                     }
 
                     Item {

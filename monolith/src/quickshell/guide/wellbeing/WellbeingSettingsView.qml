@@ -226,4 +226,6 @@ Flickable {
 
         Item { Layout.preferredHeight: rootObj.s(4) }
     }
+
+    WheelScroll {}
 }

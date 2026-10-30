@@ -1017,6 +1017,8 @@ Item {
                         }
                     }
                 }
+
+                WheelScroll {}
             }
         }
     }

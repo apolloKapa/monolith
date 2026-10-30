@@ -210,6 +210,8 @@ Item {
                             color: ThemeBackend.subtext0
                         }
                     }
+
+                    WheelScroll {}
                 }
             }
         }

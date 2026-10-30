@@ -698,6 +698,8 @@ FocusScope {
                         PauseAnimation { duration: 400 }
                     }
                 }
+
+                WheelScroll {}
             }
         }
 

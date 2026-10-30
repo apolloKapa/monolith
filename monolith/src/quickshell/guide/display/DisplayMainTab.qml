@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "../../"
+import "../../reusables"
 
 DisplayMainState {
     id: displayTabRoot
@@ -39,5 +40,7 @@ DisplayMainState {
                 delegate: DisplayMonitorCard { tab: displayTabRoot }
             }
         }
+
+        WheelScroll {}
     }
 }

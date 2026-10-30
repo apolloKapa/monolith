@@ -426,5 +426,7 @@ GuideTab {
                 color: Updater.manualState === "failed" ? ThemeBackend.red : (Updater.manualState === "available" ? ThemeBackend.mauve : ThemeBackend.subtext0)
             }
         }
+
+        WheelScroll {}
     }
 }
