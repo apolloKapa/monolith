@@ -8,6 +8,9 @@ import subprocess
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 
+import warnings
+warnings.filterwarnings("ignore", module="PIL")
+
 try:
     from PIL import Image
     HAS_PIL = True
@@ -125,7 +128,55 @@ def generate_video_poster(video_path, poster_path):
             continue
     return False
 
-def process_entry(entry_tuple, poster_dir, cached_items):
+# small JPEGs for the picker's cards: decoding ~200 full-size wallpapers every time the picker
+# opened made it crawl. Named by the md5 of the file's path, so the picker finds a thumbnail
+# without the index (WallpaperCardGrid.qml computes the same name); remade when the file changes.
+THUMB_WIDTH = 640
+
+def thumb_path_for(fpath, thumb_dir):
+    return os.path.join(thumb_dir, hashlib.md5(fpath.encode("utf-8")).hexdigest() + ".jpg")
+
+def generate_thumb(src_path, thumb_path, mtime):
+    try:
+        if os.path.getsize(thumb_path) > 512 and int(os.path.getmtime(thumb_path)) >= mtime:
+            return True
+    except OSError:
+        pass
+    tmp = f"{thumb_path}.tmp.jpg"
+    if HAS_PIL:
+        try:
+            with Image.open(src_path) as im:
+                im.draft("RGB", (THUMB_WIDTH, THUMB_WIDTH))  # JPEGs decode straight at a smaller size
+                im = im.convert("RGB")
+                im.thumbnail((THUMB_WIDTH, THUMB_WIDTH * 2), Image.Resampling.LANCZOS)
+                im.save(tmp, "JPEG", quality=85)
+            os.replace(tmp, thumb_path)
+            return True
+        except Exception:
+            pass
+    for cmd in ["magick", "convert"]:
+        try:
+            subprocess.run([cmd, f"{src_path}[0]", "-thumbnail", f"{THUMB_WIDTH}x", "-quality", "85", tmp],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True, timeout=15)
+            os.replace(tmp, thumb_path)
+            return True
+        except Exception:
+            continue
+    try:
+        os.remove(tmp)
+    except OSError:
+        pass
+    return False
+
+def process_entry(entry_tuple, poster_dir, cached_items, thumb_dir):
+    item = index_entry(entry_tuple, poster_dir, cached_items)
+    fname, fpath, mtime, size, is_video = entry_tuple
+    src = item.get("posterPath") if is_video else fpath
+    if src and os.path.exists(src):
+        generate_thumb(src, thumb_path_for(fpath, thumb_dir), mtime)
+    return item
+
+def index_entry(entry_tuple, poster_dir, cached_items):
     fname, fpath, mtime, size, is_video = entry_tuple
     furl = f"file://{fpath}"
 
@@ -172,9 +223,10 @@ def process_entry(entry_tuple, poster_dir, cached_items):
             "size": size
         }
 
-def run_indexing(src_dir, per_dir_cache, index_file, poster_dir):
+def run_indexing(src_dir, per_dir_cache, index_file, poster_dir, thumb_dir):
     os.makedirs(per_dir_cache, exist_ok=True)
     os.makedirs(poster_dir, exist_ok=True)
+    os.makedirs(thumb_dir, exist_ok=True)
 
     cached_items = {}
     if os.path.exists(index_file):
@@ -232,7 +284,7 @@ def run_indexing(src_dir, per_dir_cache, index_file, poster_dir):
     workers = min(12, max(4, os.cpu_count() or 4))
     items_map = {}
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = [executor.submit(process_entry, item, poster_dir, cached_items) for item in entries_to_process]
+        futures = [executor.submit(process_entry, item, poster_dir, cached_items, thumb_dir) for item in entries_to_process]
         for f in futures:
             try:
                 res = f.result()
@@ -281,6 +333,8 @@ def main():
     per_dir_cache = os.path.join(cache_dir, "dirs", dir_hash)
     poster_dir = os.path.join(per_dir_cache, "posters")
     index_file = os.path.join(per_dir_cache, "index.json")
+    # one folder for every wallpaper folder: the names are hashes of the full path
+    thumb_dir = os.path.join(cache_dir, "cards")
 
     dirty_file = os.path.join(run_dir, f"indexer_{dir_hash}.dirty")
     lock_file = os.path.join(run_dir, f"indexer_{dir_hash}.lock")
@@ -307,7 +361,7 @@ def main():
                     os.remove(dirty_file)
                 except OSError:
                     pass
-            result_data = run_indexing(src_dir, per_dir_cache, index_file, poster_dir)
+            result_data = run_indexing(src_dir, per_dir_cache, index_file, poster_dir, thumb_dir)
             if not os.path.exists(dirty_file):
                 break
 

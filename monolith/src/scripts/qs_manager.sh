@@ -229,7 +229,8 @@ if [[ "$ACTION" == "open" || "$ACTION" == "toggle" ]]; then
             [[ -n "$SUBTARGET" ]] && echo "$SUBTARGET" > "$NETWORK_MODE_FILE"
             ;;
         wallpaper)
-            handle_wallpaper_prep
+            # no handle_wallpaper_prep: the picker's cards use the indexer's thumbnails, and
+            # this one-at-a-time pass (which also rewrote .webp wallpapers as .jpg) only cost time
             SUBTARGET=""
             ;;
     esac

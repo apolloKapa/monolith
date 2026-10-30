@@ -1532,11 +1532,21 @@ Item {
         onStatusChanged: { if (status === FolderListModel.Ready) window.syncSearchModel() }
     }
 
-    // the honeycomb (WallpaperHexGrid) is what you see; this ListView stays underneath as a
+    // the card grid (WallpaperCardGrid) is what you see; this ListView stays underneath as a
     // 1px, invisible keeper of the selection, keyboard focus and filter bookkeeping
     readonly property bool hexMode: true
 
-    WallpaperHexGrid {
+    // a panel behind the cards, so they don't sit straight on top of whatever windows are open
+    Rectangle {
+        anchors.fill: hexGrid
+        anchors.leftMargin: window.s(20)
+        anchors.rightMargin: window.s(20)
+        radius: ThemeBackend.rad(window.s(24))
+        color: Qt.rgba(ThemeBackend.base.r, ThemeBackend.base.g, ThemeBackend.base.b, 0.92)
+        opacity: hexGrid.opacity
+    }
+
+    WallpaperCardGrid {
         id: hexGrid
         anchors.fill: parent
         anchors.topMargin: window.s(120)
@@ -1570,6 +1580,9 @@ Item {
 
         highlightMoveDuration: (window.isFilterAnimating || window.isModelChanging) ? 0 : 400
         focus: true
+        // the card grid shows rows: up/down move a whole row (left/right are the ListView's own)
+        Keys.onUpPressed: currentIndex = Math.max(0, currentIndex - hexGrid.columns)
+        Keys.onDownPressed: currentIndex = Math.min(count - 1, currentIndex + hexGrid.columns)
 
         onCurrentIndexChanged: {
             window.isItemAnimating = true; itemAnimationTimer.restart();
