@@ -391,6 +391,9 @@ Item {
             hoverEnabled: true
             enabled: !root.isTriggered
             cursorShape: root.isTriggered ? Qt.ArrowCursor : Qt.PointingHandCursor
+            // a hold button inside a scrolling page: the page took over the press as soon as the
+            // mouse moved a little, and the hold silently drained (the Update button "did nothing")
+            preventStealing: true
 
             onPressed: {
                 if (!root.isTriggered) {

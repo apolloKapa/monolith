@@ -187,8 +187,10 @@ GuideTab {
                             fillDuration: 1200
 
                             onTriggered: {
-                                let cmd = "monolith installer --update";
-                                Quickshell.execDetached(["bash", "-c", cmd]);
+                                // by full path: a bare "monolith" did nothing where ~/.local/bin isn't on
+                                // the PATH the shell was started with
+                                const dir = (typeof Caching !== "undefined" && Caching.monolithDir) ? Caching.monolithDir : rootObj.appPaths.monolithDir;
+                                Quickshell.execDetached([dir + "/../bin/monolith", "installer", "--update"]);
                                 rootObj.dismissHost();
                             }
                         }
