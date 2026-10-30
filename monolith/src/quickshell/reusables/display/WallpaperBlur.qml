@@ -401,19 +401,21 @@ Item {
 
     property real cursorX: width / 2
     property real cursorY: height / 2
-    // glide while inside; on entry jump straight to the cursor instead of sliding over from
-    // wherever it last left
-    Behavior on cursorX { enabled: root.hoverAmount > 0.05; NumberAnimation { duration: (120) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-    Behavior on cursorY { enabled: root.hoverAmount > 0.05; NumberAnimation { duration: (120) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+    // the light sits right under the pointer: no easing (it trailed the cursor by 120 ms and,
+    // re-entering during the fade-out, slid over from where the pointer had left)
+
+    function followPointer() {
+        if (!pointer.hovered) return;
+        root.cursorX = pointer.point.position.x;
+        root.cursorY = pointer.point.position.y;
+    }
 
     Connections {
         target: pointer
-        function onPointChanged() {
-            if (pointer.hovered) {
-                root.cursorX = pointer.point.position.x;
-                root.cursorY = pointer.point.position.y;
-            }
-        }
+        function onPointChanged() { root.followPointer(); }
+        // the first position can arrive before hovered turns true; without this the light stayed
+        // at the old spot until the pointer moved again
+        function onHoveredChanged() { root.followPointer(); }
     }
 
     // Outlined styles (Minimalist, Terminal, Brutal, Luxe, Poster, Paper): a line instead of
