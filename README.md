@@ -8,6 +8,24 @@ Monolith started as a fork of [Serpantinum](https://github.com/ilyamiro/serpanti
 
 ---
 
+## Preview
+
+**Styles**: one click in Settings → Theme → Appearance restyles the whole shell (bar, dock, panels and Settings itself)
+
+![Switching styles](docs/media/styles.gif)
+
+**Panels**: launcher, quick settings and notifications, wallpaper picker, music player
+
+![Panels](docs/media/panels.gif)
+
+**Settings**
+
+![Settings](docs/media/settings.gif)
+
+Sharper MP4 versions are in [`docs/media`](docs/media).
+
+---
+
 ## Install
 
 One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...), as your normal user:
@@ -293,6 +311,7 @@ Helper scripts in `bin/` (installed to `~/.local/bin`):
 | `config/monolith/settings.json` | default shell settings |
 | `config/rofi/`, `config/wallpaper` | rofi theme + favourites, setwall state |
 | `bin/` | helper scripts |
+| `docs/media/` | the preview clips in this README (GIF + MP4) |
 
 Installed files: shell in `~/.local/share/monolith`; settings in `~/.config/monolith`; state, cache and logs in `~/.local/state/monolith`, `~/.cache/monolith` and `$XDG_RUNTIME_DIR/monolith`.
 
