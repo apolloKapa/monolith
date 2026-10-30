@@ -316,22 +316,18 @@ Item {
 
     // Outlined styles (Minimalist, Terminal, Brutal, Luxe, Poster, Paper): a line instead of
     // glass/blur, following the surface's corners. Brutal also gets a hard offset shadow; only
-    // the part that shows is drawn (a child can't draw behind its own surface).
-    Rectangle {
-        x: parent.width
-        y: ThemeBackend.hardShadow
-        width: ThemeBackend.hardShadow
-        height: parent.height
+    // the part that shows is drawn (a child can't draw behind its own surface), in the
+    // surface's own rounded shape so round pills get round shadows.
+    ShaderEffect {
+        width: root.width + ThemeBackend.hardShadow
+        height: root.height + ThemeBackend.hardShadow
         visible: ThemeBackend.hardShadow > 0 && root.nestLevel === 0 && root.allowed && root.tintColor.a > 0.02
-        color: ThemeBackend.outlineColor
-    }
-    Rectangle {
-        x: ThemeBackend.hardShadow
-        y: parent.height
-        width: parent.width
-        height: ThemeBackend.hardShadow
-        visible: ThemeBackend.hardShadow > 0 && root.nestLevel === 0 && root.allowed && root.tintColor.a > 0.02
-        color: ThemeBackend.outlineColor
+        property vector2d itemSize: Qt.vector2d(width, height)
+        property vector2d surfaceSize: Qt.vector2d(root.width, root.height)
+        property real offset: ThemeBackend.hardShadow
+        property vector4d radii: Qt.vector4d(root.radius, root.radius, root.radius, root.radius)
+        property color shadowColor: ThemeBackend.outlineColor
+        fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/hard_shadow.frag.qsb"
     }
 
     Rectangle {

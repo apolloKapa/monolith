@@ -1762,6 +1762,10 @@ PanelWindow {
                                             asynchronous: true
                                             smooth: true
                                             mipmap: true
+                                            layer.enabled: !ThemeBackend.darkMode
+                                            layer.mipmap: true
+                                            layer.smooth: true
+                                            layer.effect: InkIcon {}
                                         }
                                         Text {
                                             anchors.centerIn: parent
@@ -2304,6 +2308,11 @@ PanelWindow {
                                                 asynchronous: true
                                                 smooth: true
                                                 mipmap: true
+                                                // white-glyph icons vanish in light styles
+                                                layer.enabled: !ThemeBackend.darkMode
+                                                layer.mipmap: true
+                                                layer.smooth: true
+                                                layer.effect: InkIcon {}
 
                                                 onStatusChanged: {
                                                     if (status === Image.Error) {
@@ -2475,6 +2484,10 @@ PanelWindow {
                                         asynchronous: true
                                         smooth: true
                                         mipmap: true
+                                        layer.enabled: !ThemeBackend.darkMode
+                                        layer.mipmap: true
+                                        layer.smooth: true
+                                        layer.effect: InkIcon {}
                                     }
                                     Text {
                                         anchors.centerIn: parent

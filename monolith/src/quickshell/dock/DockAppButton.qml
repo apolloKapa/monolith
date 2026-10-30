@@ -223,6 +223,12 @@ Item {
 
                 visible: source !== "" && status === Image.Ready && !failedLoad
 
+                // white-glyph icon packs vanish on light tiles (Brutal, Paper, Doodle...)
+                layer.enabled: !ThemeBackend.darkMode
+                layer.mipmap: true
+                layer.smooth: true
+                layer.effect: InkIcon {}
+
                 source: {
                     let ic = model.icon || "";
                     if (!ic) return "";

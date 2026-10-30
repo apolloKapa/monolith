@@ -131,6 +131,12 @@ Item {
                 width: root.iconSize
                 height: root.iconSize
 
+                // white-glyph icons vanish on a light bar (Brutal, Paper, Doodle...)
+                layer.enabled: !ThemeBackend.darkMode
+                layer.mipmap: true
+                layer.smooth: true
+                layer.effect: InkIcon {}
+
                 property bool isHovered: trayMouse.containsMouse
                 property bool initAnimTrigger: false
                 opacity: initAnimTrigger ? (isHovered ? 1.0 : (root.isCompact ? 0.9 : 0.8)) : 0.0
