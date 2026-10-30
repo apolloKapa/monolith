@@ -54,11 +54,21 @@ deploy_dotfiles_extras() {
         [ -f "$HOME/.config/rofi/config.rasi" ] || cp "$project_root/config/rofi/config.rasi" "$HOME/.config/rofi/"
         [ -f "$HOME/.config/rofi/favorites" ] || cp "$project_root/config/rofi/favorites" "$HOME/.config/rofi/"
     fi
-    case ":$PATH:" in
-        *":$BIN_DIR:"*) ;;
-        *) echo -e "  ${C_YELLOW}path:${RESET} add $BIN_DIR to your PATH (fish: fish_add_path ~/.local/bin)" ;;
-    esac
+    ensure_bin_on_path
     echo -e "  ${C_GREEN}scripts:${RESET} setwall and the rofi config are in place (existing ones kept)"
+}
+
+# niri (via niri-session) gets its PATH from the systemd user manager, which on a fresh PC has
+# no ~/.local/bin: `spawn-at-startup "monolithd"` found nothing and the shell never started
+# (the plain grey niri screen), and every `spawn "monolith" ...` keybind did nothing.
+# environment.d puts it on the PATH of everything the session starts, from the next login.
+ensure_bin_on_path() {
+    local conf="${XDG_CONFIG_HOME:-$HOME/.config}/environment.d/60-monolith-path.conf"
+    if [ ! -f "$conf" ]; then
+        mkdir -p "$(dirname "$conf")"
+        printf '# Added by the Monolith installer: its commands (monolith, monolithd) live here\nPATH=$HOME/.local/bin:${PATH}\n' > "$conf"
+        echo -e "  ${C_CYAN}path:${RESET} $BIN_DIR added to the session PATH ($conf)"
+    fi
 }
 
 # settings.json: kept if you have one, otherwise the repo's defaults with this machine's paths

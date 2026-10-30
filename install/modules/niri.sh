@@ -88,6 +88,17 @@ personal_startup_lines() {
         | awk '!seen[$0]++'
 }
 
+# the bare `spawn-at-startup "monolithd" "start"` needs ~/.local/bin on niri's PATH, which a
+# fresh PC doesn't have: switch it to the full-path line from autostart.kdl, wherever it is
+upgrade_monolithd_autostart() {
+    local f
+    for f in "$NIRI_DIR"/config.kdl "$NIRI_DIR"/config/*.kdl; do
+        [ -f "$f" ] || continue
+        grep -qE '^[[:space:]]*spawn-at-startup "monolithd" "start"' "$f" || continue
+        sed -i 's|^\([[:space:]]*\)spawn-at-startup "monolithd" "start".*$|\1spawn-at-startup "bash" "-c" "export PATH=\\"$HOME/.local/bin:$PATH\\"; exec \\"$HOME/.local/bin/monolithd\\" start"|' "$f"
+    done
+}
+
 # switches the old screenshot binds (niri's built-in screenshots, grim + swappy) to Monolith's
 # screenshot tool, wherever they appear; leaves any other bind alone
 upgrade_screenshot_binds() {

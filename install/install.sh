@@ -117,6 +117,7 @@ step "niri"
 setup_niri_config "$PROJECT_ROOT" "$NIRI_MODE"
 # screenshot binds -> Monolith's screenshot tool, and let its keys (e.g. Meta+C copy) through niri
 upgrade_screenshot_binds "$NIRI_DIR/config/keybinds.kdl" >/dev/null
+upgrade_monolithd_autostart
 bash "$SHELL_HOME/src/scripts/niri_screenshot_keys.sh" >/dev/null 2>&1 || true
 
 if [ "$OPT_SDDM" = true ]; then
