@@ -55,7 +55,45 @@ deploy_dotfiles_extras() {
         [ -f "$HOME/.config/rofi/favorites" ] || cp "$project_root/config/rofi/favorites" "$HOME/.config/rofi/"
     fi
     ensure_bin_on_path
+    setup_kitty_fastfetch
     echo -e "  ${C_GREEN}scripts:${RESET} setwall and the rofi config are in place (existing ones kept)"
+}
+
+# kitty greets you with Monolith's fastfetch: your login shell runs it when it starts inside kitty.
+# fish gets its own conf.d file; bash and zsh a marked block at the end of their rc. Done once:
+# if you take it out again, updates leave it out. Skipped when your shell already runs fastfetch.
+setup_kitty_fastfetch() {
+    local flag="$STATE_DIR/kitty_fastfetch.done"
+    [ -e "$flag" ] && return 0
+    command -v fastfetch &>/dev/null || return 0
+    local login_shell rc
+    login_shell="$(basename "$(getent passwd "$USER" 2>/dev/null | cut -d: -f7)")"
+    [ -n "$login_shell" ] || login_shell="$(basename "${SHELL:-bash}")"
+    case "$login_shell" in
+        fish)
+            local fish_dir="${XDG_CONFIG_HOME:-$HOME/.config}/fish"
+            if ! grep -qs 'fastfetch' "$fish_dir/config.fish" "$fish_dir"/conf.d/*.fish; then
+                mkdir -p "$fish_dir/conf.d"
+                printf '%s\n' "# Added by the Monolith installer: fastfetch when kitty opens (delete this file to stop it)" \
+                    "if status is-interactive; and set -q KITTY_WINDOW_ID" "    fastfetch" "end" \
+                    > "$fish_dir/conf.d/monolith-fastfetch.fish"
+                echo -e "  ${C_GREEN}kitty:${RESET} fastfetch shows when kitty opens ($fish_dir/conf.d/monolith-fastfetch.fish)"
+            fi
+            ;;
+        bash|zsh)
+            rc="$HOME/.${login_shell}rc"
+            if ! grep -qs 'fastfetch' "$rc"; then
+                printf '\n%s\n' "# >>> monolith fastfetch (added by the Monolith installer: fastfetch when kitty opens) >>>
+if [[ \$- == *i* && -n \"\$KITTY_WINDOW_ID\" ]]; then
+    fastfetch
+fi
+# <<< monolith fastfetch <<<" >> "$rc"
+                echo -e "  ${C_GREEN}kitty:${RESET} fastfetch shows when kitty opens (end of $rc)"
+            fi
+            ;;
+        *) return 0 ;;
+    esac
+    mkdir -p "$STATE_DIR" && touch "$flag"
 }
 
 # niri (via niri-session) gets its PATH from the systemd user manager, which on a fresh PC has
