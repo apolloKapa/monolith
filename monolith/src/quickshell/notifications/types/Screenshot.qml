@@ -73,6 +73,8 @@ Notification {
                     return "image://icon/" + p;
                 }
                 fillMode: Image.PreserveAspectCrop
+                // decoded at the size it's shown, not the screenshot's full resolution
+                sourceSize: Qt.size(Math.max(1, Math.ceil(width)), Math.max(1, Math.ceil(height)))
                 asynchronous: true
                 visible: false
             }

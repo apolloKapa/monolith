@@ -260,7 +260,7 @@ ShellRoot {
 
             Process {
                 running: NiriState.isNiri
-                command: ["python3", Caching.qsDir + "/reusables/display/pointer_motion.py"]
+                command: ["setpriv", "--pdeathsig", "TERM", "python3", Caching.qsDir + "/reusables/display/pointer_motion.py"]
                 stdout: SplitParser {
                     onRead: data => {
                         if (data === "ready") { win.pointerReady = true; return; }
