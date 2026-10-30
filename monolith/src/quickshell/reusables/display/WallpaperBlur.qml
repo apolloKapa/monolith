@@ -26,6 +26,10 @@ Item {
     // optional rounded hole cut out of the glass (item coordinates): the screen frame
     property rect holeRect: Qt.rect(0, 0, 0, 0)
     property real holeRadius: 0
+    // optional notch kept out of the hole (a Frame bar narrower than its edge), see LiquidGlass.qml
+    property rect notchRect: Qt.rect(0, 0, 0, 0)
+    property real notchRadius: 0
+    property real notchFillet: 0
     // false: still renders (glass nested inside keeps sampling it) but shows nothing itself,
     // e.g. the bar in the Frame style, where the frame's one sheet of glass is what shows
     property bool drawn: true
@@ -344,6 +348,8 @@ Item {
                         property real fillAlpha: Math.min(0.98, ThemeBackend.elementOpacity)
                         property vector4d hole: root.holeRect.width > 0 ? Qt.vector4d(root.holeRect.x + root.holeRect.width * 0.5 - width * 0.5, root.holeRect.y + root.holeRect.height * 0.5 - height * 0.5, root.holeRect.width * 0.5, root.holeRect.height * 0.5) : Qt.vector4d(0, 0, 0, 0)
                         property real holeRadius: root.holeRadius
+                        property vector4d notch: root.notchRect.width > 0 ? Qt.vector4d(root.notchRect.x + root.notchRect.width * 0.5 - width * 0.5, root.notchRect.y + root.notchRect.height * 0.5 - height * 0.5, root.notchRect.width * 0.5, root.notchRect.height * 0.5) : Qt.vector4d(0, 0, 0, 0)
+                        property vector2d notchRadii: Qt.vector2d(root.notchRadius, root.notchFillet)
                         fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/rounded_mask.frag.qsb"
                     }
 
@@ -370,6 +376,9 @@ Item {
                         validRect: root.validRect
                         holeRect: root.holeRect
                         holeRadius: root.holeRadius
+                        notchRect: root.notchRect
+                        notchRadius: root.notchRadius
+                        notchFillet: root.notchFillet
                         unpremul: 1
                         clear: root.nestLevel >= 1 ? 1 : 0
                         cursorPos: Qt.point(root.cursorX, root.cursorY)

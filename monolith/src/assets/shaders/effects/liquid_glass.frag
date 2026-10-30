@@ -36,6 +36,10 @@ layout(std140, binding = 0) uniform buf {
     // around the screen is one sheet of glass with its rim running round the inside of the hole
     vec4 hole;
     float holeRadius;
+    // optional notch taken out of the hole (centre, half size, like hole): a bar narrower than
+    // its edge hanging from the frame. x: its own corner radius, y: the fillets where it meets the frame
+    vec4 notch;
+    vec2 notchRadii;
 };
 
 layout(binding = 1) uniform sampler2D src;
@@ -80,10 +84,19 @@ float sdfShape(vec2 p) {
     return max(r, min(a, b)) - length(u);
 }
 
+// the hole, less the notch: its outside corners where the notch meets the frame are rounded
+float sdHole(vec2 p) {
+    float d = sdRoundBox(p - hole.xy, hole.zw, vec4(holeRadius));
+    if (notch.z <= 0.0) return d;
+    float n = -sdRoundBox(p - notch.xy, notch.zw, vec4(notchRadii.x));
+    float r = notchRadii.y;
+    return min(-r, max(d, n)) + length(max(vec2(d, n) + r, vec2(0.0)));
+}
+
 float sdf(vec2 p) {
     float d = sdfShape(p);
     if (hole.z <= 0.0) return d;
-    return max(d, -sdRoundBox(p - hole.xy, hole.zw, vec4(holeRadius)));
+    return max(d, -sdHole(p));
 }
 
 vec4 fetchLod4(vec2 p, float lod) {

@@ -135,6 +135,21 @@ Variants {
                         width - frame.leftIn - frame.rightIn, height - frame.topIn - frame.bottomIn)
                     // the glass's outer edge sits off screen: the only rim is round the hole
                     readonly property real offscreen: 64
+                    // a bar narrower than its edge (bar/TopBar.qml, SideBar.qml): the glass runs
+                    // round it too. Its window starts after the frame strips on the sides.
+                    readonly property var notch: frame.barSpans ? undefined : FrameNotch.notches[frame.modelData.name]
+                    readonly property rect notchRect: {
+                        const n = sheet.notch;
+                        if (!n || n.edge !== frame.barPos || n.to - n.from < 1) return Qt.rect(0, 0, 0, 0);
+                        const o = sheet.offscreen;
+                        const len = n.to - n.from;
+                        if (n.edge === "top") return Qt.rect(frame.leftIn + n.from, -o, len, n.depth + o);
+                        if (n.edge === "bottom") return Qt.rect(frame.leftIn + n.from, height - n.depth, len, n.depth + o);
+                        if (n.edge === "left") return Qt.rect(-o, frame.topIn + n.from, n.depth + o, len);
+                        return Qt.rect(width - n.depth, frame.topIn + n.from, n.depth + o, len);
+                    }
+                    readonly property real notchRadius: sheet.notch ? sheet.notch.radius : 0
+                    readonly property real notchFillet: sheet.notch ? sheet.notch.fillet : 0
 
                     WallpaperBlur {
                         anchors.fill: parent
@@ -143,6 +158,9 @@ Variants {
                         boxRect: Qt.rect(-sheet.offscreen, -sheet.offscreen, width + 2 * sheet.offscreen, height + 2 * sheet.offscreen)
                         holeRect: sheet.hole
                         holeRadius: frame.radius
+                        notchRect: sheet.notchRect
+                        notchRadius: sheet.notchRadius
+                        notchFillet: sheet.notchFillet
                     }
                     ShaderEffect {
                         anchors.fill: parent
@@ -150,6 +168,8 @@ Variants {
                         property color color: frame.color
                         property vector4d hole: Qt.vector4d(sheet.hole.x + sheet.hole.width * 0.5 - width * 0.5, sheet.hole.y + sheet.hole.height * 0.5 - height * 0.5, sheet.hole.width * 0.5, sheet.hole.height * 0.5)
                         property real holeRadius: frame.radius
+                        property vector4d notch: sheet.notchRect.width > 0 ? Qt.vector4d(sheet.notchRect.x + sheet.notchRect.width * 0.5 - width * 0.5, sheet.notchRect.y + sheet.notchRect.height * 0.5 - height * 0.5, sheet.notchRect.width * 0.5, sheet.notchRect.height * 0.5) : Qt.vector4d(0, 0, 0, 0)
+                        property vector2d notchRadii: Qt.vector2d(sheet.notchRadius, sheet.notchFillet)
                         fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/frame_tint.frag.qsb"
                     }
                 }

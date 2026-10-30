@@ -31,8 +31,16 @@ Item {
     property bool isFrame: barStyle === "frame"
     // Frame + Blur/Liquid glass: the frame (frame/ScreenFrame.qml) is one sheet of glass round
     // the whole screen, bar included; the bar's own glass only stays as the backdrop its pills bend.
-    // A bar narrower than its edge hangs below the frame as a notch and draws its own.
-    property bool frameGlass: isFrame && ThemeBackend.seeThrough && !(barWindow && barWindow.fillAttached)
+    // A bar narrower than its edge hangs from the frame as a notch: the frame's glass draws that
+    // too (singletons/system/FrameNotch.qml), so they're one shape with rounded joins.
+    property bool frameGlass: isFrame && ThemeBackend.seeThrough
+    readonly property var frameNotch: (isFrame && barWindow && barWindow.fillAttached && solidBackground.height > 0)
+        ? ({ "edge": barAtRight ? "right" : "left", "from": solidBackground.y, "to": solidBackground.y + solidBackground.height,
+             "depth": solidBackground.width, "radius": ThemeBackend.rad(fillFarRadius), "fillet": cornerRadius })
+        : null
+    readonly property string notchScreen: (barWindow && barWindow.screen) ? barWindow.screen.name : ""
+    onFrameNotchChanged: FrameNotch.set(notchScreen, frameNotch)
+    Component.onDestruction: FrameNotch.set(notchScreen, null)
     // Frame with a notch bar: the frame runs along the bar's edge, so the bar's edge fillets join
     // it this far in instead of at the screen edge
     property real frameInset: (isFrame && barWindow && barWindow.fillAttached)
@@ -631,7 +639,7 @@ Item {
         y: solidBackground.y - height
         width: radius
         height: radius
-        visible: !ThemeBackend.liquidGlass && contentWrapper.isFill && radius > 0.5 && (barWindow ? !barWindow.positionChanging : true)
+        visible: !ThemeBackend.liquidGlass && !contentWrapper.frameGlass && contentWrapper.isFill && radius > 0.5 && (barWindow ? !barWindow.positionChanging : true)
         opacity: (visible && (!barWindow || barWindow.isRevealed)) ? 1.0 : 0.0
         z: 0
 
@@ -654,7 +662,7 @@ Item {
         y: solidBackground.y + solidBackground.height
         width: radius
         height: radius
-        visible: !ThemeBackend.liquidGlass && contentWrapper.isFill && radius > 0.5 && (barWindow ? !barWindow.positionChanging : true)
+        visible: !ThemeBackend.liquidGlass && !contentWrapper.frameGlass && contentWrapper.isFill && radius > 0.5 && (barWindow ? !barWindow.positionChanging : true)
         opacity: (visible && (!barWindow || barWindow.isRevealed)) ? 1.0 : 0.0
         z: 0
 
