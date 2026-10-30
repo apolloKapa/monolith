@@ -16,9 +16,11 @@ Item {
     property real popupH: 0
     property real progress: 0
     property bool active: false
+    // false on a screen left without the bar (Settings -> Bar -> Monitors): no frame to pull from
+    property bool onFrameScreen: true
 
     readonly property var barCfg: Config.getSetting("bar", {}) || {}
-    readonly property bool frameStyle: barCfg.style === "frame"
+    readonly property bool frameStyle: barCfg.style === "frame" && onFrameScreen
     readonly property string barPos: barCfg.position || "top"
     readonly property real thickness: Scaler.s(barCfg.frameThickness !== undefined ? Number(barCfg.frameThickness) : 8)
     readonly property real barH: Scaler.s(barCfg.height !== undefined ? Number(barCfg.height) : 40)
