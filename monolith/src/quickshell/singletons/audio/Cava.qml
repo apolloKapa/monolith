@@ -20,7 +20,8 @@ Item {
     property bool hasActiveAudio: false
     property bool isRestarting: false
     property int consecutiveCrashes: 0
-    property bool processEnabled: activeConsumers > 0 && (isPlaying || isDecaying) && !isRestarting
+    // GameMode stops cava: the visualizers sit under the game anyway
+    property bool processEnabled: activeConsumers > 0 && (isPlaying || isDecaying) && !isRestarting && !ThemeBackend.gameModeActive
 
     function registerConsumer() {
         activeConsumers++;

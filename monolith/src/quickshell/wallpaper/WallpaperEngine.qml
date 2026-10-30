@@ -43,6 +43,8 @@ ShellRoot {
                 property string pathB: ""
                 property bool isVideoB: false
                 property bool playbackPaused: false
+                // GameMode pauses video wallpapers (on the last frame) so they don't decode under a game
+                readonly property bool videoHeld: playbackPaused || ThemeBackend.gameModeActive
                 property bool snapReadyA: false
                 property bool snapReadyB: false
                 property int snapRevA: 0
@@ -100,6 +102,7 @@ ShellRoot {
                                 barWindow.stopB();
                             } else if (state === "play") {
                                 barWindow.playbackPaused = false;
+                                if (ThemeBackend.gameModeActive) return;
                                 if (barWindow.activeLayer === 0 && barWindow.isVideoA) barWindow.playA();
                                 if (barWindow.activeLayer === 1 && barWindow.isVideoB) barWindow.playB();
                             }
@@ -254,6 +257,23 @@ ShellRoot {
                 function playB() {
                     if (videoLoaderB.item && typeof videoLoaderB.item.play === "function") {
                         videoLoaderB.item.play();
+                    }
+                }
+
+                function pauseVideos() {
+                    if (videoLoaderA.item && typeof videoLoaderA.item.pause === "function") videoLoaderA.item.pause();
+                    if (videoLoaderB.item && typeof videoLoaderB.item.pause === "function") videoLoaderB.item.pause();
+                }
+
+                Connections {
+                    target: ThemeBackend
+                    function onGameModeActiveChanged() {
+                        if (ThemeBackend.gameModeActive) {
+                            barWindow.pauseVideos();
+                        } else if (!barWindow.playbackPaused) {
+                            if (barWindow.activeLayer === 0 && barWindow.isVideoA) barWindow.playA();
+                            if (barWindow.activeLayer === 1 && barWindow.isVideoB) barWindow.playB();
+                        }
                     }
                 }
 
@@ -479,6 +499,7 @@ ShellRoot {
                         anchors.fill: parent
                         function play() { playerA.play(); }
                         function stop() { playerA.stop(); }
+                        function pause() { playerA.pause(); }
 
                         MediaPlayer {
                             id: playerA
@@ -486,7 +507,7 @@ ShellRoot {
                             videoOutput: videoOutputA
                             loops: MediaPlayer.Infinite
                             onMediaStatusChanged: {
-                                if ((mediaStatus === MediaPlayer.LoadedMedia || mediaStatus === MediaPlayer.BufferedMedia) && barWindow.activeLayer === 0 && barWindow.isVideoA && !barWindow.playbackPaused) {
+                                if ((mediaStatus === MediaPlayer.LoadedMedia || mediaStatus === MediaPlayer.BufferedMedia) && barWindow.activeLayer === 0 && barWindow.isVideoA && !barWindow.videoHeld) {
                                     playerA.play();
                                 }
                             }
@@ -506,6 +527,7 @@ ShellRoot {
                         anchors.fill: parent
                         function play() { playerB.play(); }
                         function stop() { playerB.stop(); }
+                        function pause() { playerB.pause(); }
 
                         MediaPlayer {
                             id: playerB
@@ -513,7 +535,7 @@ ShellRoot {
                             videoOutput: videoOutputB
                             loops: MediaPlayer.Infinite
                             onMediaStatusChanged: {
-                                if ((mediaStatus === MediaPlayer.LoadedMedia || mediaStatus === MediaPlayer.BufferedMedia) && barWindow.activeLayer === 1 && barWindow.isVideoB && !barWindow.playbackPaused) {
+                                if ((mediaStatus === MediaPlayer.LoadedMedia || mediaStatus === MediaPlayer.BufferedMedia) && barWindow.activeLayer === 1 && barWindow.isVideoB && !barWindow.videoHeld) {
                                     playerB.play();
                                 }
                             }
@@ -593,7 +615,7 @@ ShellRoot {
                             sourceComponent: videoLayerCompA
                             visible: barWindow.isVideoA
                             onLoaded: {
-                                if (item && barWindow.activeLayer === 0 && barWindow.isVideoA && !barWindow.playbackPaused) {
+                                if (item && barWindow.activeLayer === 0 && barWindow.isVideoA && !barWindow.videoHeld) {
                                     item.play();
                                 }
                             }
@@ -661,7 +683,7 @@ ShellRoot {
                             sourceComponent: videoLayerCompB
                             visible: barWindow.isVideoB
                             onLoaded: {
-                                if (item && barWindow.activeLayer === 1 && barWindow.isVideoB && !barWindow.playbackPaused) {
+                                if (item && barWindow.activeLayer === 1 && barWindow.isVideoB && !barWindow.videoHeld) {
                                     item.play();
                                 }
                             }

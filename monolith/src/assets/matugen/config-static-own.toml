@@ -1,7 +1,11 @@
-# Like config-static.toml, without kitty, cava and fastfetch: used when
-# Settings -> Theme -> Apps -> "kitty, cava and fastfetch" is off (another shell themes them)
+# Like config-static.toml, without kitty and cava: used when
+# Settings -> Theme -> Apps -> "kitty and cava" is off (another shell themes them)
 [config]
 reload_apps = false
+
+[templates.fastfetch]
+input_path = "templates/fastfetch.jsonc.template"
+output_path = "~/.config/fastfetch/config.jsonc"
 
 [templates.app_gtk]
 input_path = "templates/gtk-colors.css.template"

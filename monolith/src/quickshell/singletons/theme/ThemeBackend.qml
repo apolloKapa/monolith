@@ -20,7 +20,9 @@ Item {
         );
     }
 
-    property real elementOpacity: 1.0
+    // the panels' opacity from Settings; GameMode makes them solid, so no blur renders behind them
+    property real elementOpacitySetting: 1.0
+    readonly property real elementOpacity: gameModeActive ? 1.0 : elementOpacitySetting
     // the Settings app draws glass too (on niri, where it can find its own position)
     property bool standaloneGlass: false
     property bool blurBackground: false
@@ -148,9 +150,10 @@ Item {
     readonly property real animScale: (animationsEnabled && !gameModeActive) ? 1.0 / Math.max(0.25, animationSpeed) : 0
 
     // GameMode (Theme -> Animations): while a fullscreen window has focus (games, videos),
-    // animations, blur and liquid glass are off so the shell costs the GPU nothing. The Game mode
-    // button in the system panel turns it on by hand (theme.gameModeOn), fullscreen or not. While
-    // it's on, the quick actions panel is off too (Shell.qml).
+    // animations, blur and liquid glass are off (panels solid) so the shell costs the GPU nothing.
+    // The Game mode button in the system panel turns it on by hand (theme.gameModeOn), fullscreen
+    // or not. While it's on, the quick actions panel (Shell.qml), video wallpapers (WallpaperEngine)
+    // and cava (Cava.qml) are off too.
     property bool gameModeEnabled: true
     property bool gameModeForced: false
 
@@ -448,7 +451,7 @@ Item {
         root.effects = themeConfig.effects || {};
         const speed = Number(anim.speed);
         root.animationSpeed = isNaN(speed) ? 1.0 : Math.max(0.25, Math.min(3.0, speed));
-        root.elementOpacity = (root.opaqueStyle || (Caching.isStandalone && !root.standaloneGlass)) ? 1.0 : root.liquidGlass ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));
+        root.elementOpacitySetting = (root.opaqueStyle || (Caching.isStandalone && !root.standaloneGlass)) ? 1.0 : (root.blurBackground && root.blurStyle === "liquid") ? root.liquidGlassOpacity : (isNaN(pct) ? 1.0 : Math.max(0, Math.min(1.0, pct / 100.0)));
     }
 
     function updateColors() {

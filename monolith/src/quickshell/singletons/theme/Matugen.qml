@@ -20,8 +20,8 @@ Item {
         }
         return dir;
     }
-    // kitty, cava and fastfetch follow the theme unless that's switched off (Settings -> Theme ->
-    // Apps), e.g. when another shell on this PC themes them
+    // kitty and cava follow the theme unless that's switched off (Settings -> Theme -> Apps), e.g.
+    // when another shell on this PC themes them; fastfetch always does
     readonly property bool terminalColors: {
         void Config.rawSettings;
         return Config.getSetting("theme", {}).terminalColors !== false;
@@ -284,6 +284,21 @@ Item {
         matugenProcess.command = ["bash", "-c", script];
         root.generationStarted();
         matugenProcess.running = true;
+    }
+
+    // fastfetch is always Monolith's (kitty and cava follow the toggle above). Matugen only writes
+    // it when the theme changes, so after an update, or when another shell wrote its own config,
+    // write it now from the saved colours. The config that was there first is kept as .pre-monolith.
+    Component.onCompleted: {
+        let stateDir = (typeof Caching !== "undefined" && Caching.stateDir) ? Caching.stateDir : (Quickshell.env("HOME") + "/.local/state/monolith");
+        let script =
+            "F=\"${XDG_CONFIG_HOME:-$HOME/.config}/fastfetch/config.jsonc\"; C=\"$1/qs_colors.json\"; " +
+            "grep -qF 'Monolith fastfetch' \"$F\" 2>/dev/null && exit 0; [ -f \"$C\" ] || exit 0; " +
+            "[ -f \"$F\" ] && [ ! -e \"$F.pre-monolith\" ] && cp \"$F\" \"$F.pre-monolith\"; " +
+            "T=\"$(mktemp)\" && jq '{colors: (with_entries(.value = {default: {hex: .value, color: .value}}) " +
+            "| {primary: .blue, secondary: .green, tertiary: .peach, outline: .subtext1, on_surface_variant: .subtext0, on_surface: .text})}' " +
+            "\"$C\" > \"$T\" && matugen -c \"$2/config-fastfetch.toml\" json \"$T\"; rm -f \"$T\"";
+        Quickshell.execDetached(["bash", "-c", script, "_", stateDir, root.matugenBaseDir]);
     }
 
     Process {

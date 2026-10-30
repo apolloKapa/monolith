@@ -1,0 +1,8 @@
+# Only fastfetch: used at shell start to write Monolith's fastfetch config from the saved colours
+# when ~/.config/fastfetch/config.jsonc isn't Monolith's yet (e.g. after an update)
+[config]
+reload_apps = false
+
+[templates.fastfetch]
+input_path = "templates/fastfetch.jsonc.template"
+output_path = "~/.config/fastfetch/config.jsonc"

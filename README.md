@@ -61,7 +61,7 @@ Then it:
 8. enables PipeWire, NetworkManager, power-profiles-daemon and EasyEffects
 9. **starts Monolith right away** if you run it from inside niri (from any other session it waits until you log into niri), so no reboot is needed
 
-**Other shells stay as they are.** Monolith is a separate shell with its own files, and it only runs in niri. If Serpantinum (or anything else) is installed, it isn't stopped, moved or edited, and your Hyprland/Sway/other configs aren't touched. If Serpantinum is there, Monolith also leaves kitty, cava and fastfetch's colours to it (you can change that in Settings → Theme → Apps).
+**Other shells stay as they are.** Monolith is a separate shell with its own files, and it only runs in niri. If Serpantinum (or anything else) is installed, it isn't stopped, moved or edited, and your Hyprland/Sway/other configs aren't touched. If Serpantinum is there, Monolith also leaves kitty and cava's colours to it (you can change that in Settings → Theme → Apps). fastfetch always gets Monolith's look; the config that was there before is kept as `~/.config/fastfetch/config.jsonc.pre-monolith`.
 
 There's no telemetry in the installer or the shell.
 

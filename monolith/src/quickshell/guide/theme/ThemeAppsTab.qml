@@ -86,7 +86,7 @@ GuideTab {
                     wrapMode: Text.WordWrap
                     text: "Give other apps your Monolith colours, from your wallpaper or colour preset, and keep them in step whenever the theme changes. "
                         + "Monolith only adds a marked block (or one setting) to the app's config; switching it off puts the file back exactly as it was. "
-                        + "kitty, cava and fastfetch follow the theme too, unless you switch that off below."
+                        + "kitty and cava follow the theme too, unless you switch that off below; fastfetch always does."
                     color: ThemeBackend.subtext0
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: rootObj.s(12)
@@ -114,7 +114,7 @@ GuideTab {
                     icon: "󰆍"
                     configKey: "theme.terminalColors"
                     defaultValue: true
-                    title: "kitty, cava and fastfetch"
+                    title: "kitty and cava"
                     description: "Recolour them with the theme. Switch off if another shell on this PC themes them (the installer does this when it finds Serpantinum)"
                     searchKeywords: "kitty cava fastfetch terminal colours colors theme serpantinum"
 

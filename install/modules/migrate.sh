@@ -12,7 +12,7 @@ other_shell_installed() {
         || pacman -Qq "$OTHER_SHELL" "$OTHER_SHELL-git" &>/dev/null
 }
 
-# Serpantinum themes kitty, cava and fastfetch too: on a new Monolith settings file, leave those to
+# Serpantinum themes kitty and cava too (fastfetch is always Monolith's): on a new Monolith settings file, leave those to
 # it (Settings -> Theme -> Apps can switch them back on)
 share_with_other_shell() {
     other_shell_installed || return 0
@@ -22,5 +22,5 @@ share_with_other_shell() {
     jq -e '.theme.terminalColors != null' "$f" &>/dev/null && return 0
     local tmp
     tmp="$(mktemp)" && jq '.theme = ((.theme // {}) + {terminalColors: false})' "$f" > "$tmp" && mv "$tmp" "$f"
-    echo -e "  ${C_CYAN}other shell:${RESET} kitty, cava and fastfetch keep Serpantinum's colours"
+    echo -e "  ${C_CYAN}other shell:${RESET} kitty and cava keep Serpantinum's colours"
 }
