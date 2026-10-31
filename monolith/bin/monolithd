@@ -251,6 +251,9 @@ if [ "$COMMAND" == "start" ]; then
 
     [ "$VERBOSE" = true ] && echo "$(t "daemon.launching")"
 
+    # niri's live zoom when it has one (scripts/zoom.sh)
+    bash "$MONOLITH_DIR/scripts/zoom.sh" setup 9>&- || true
+
     setsid bash "$MONOLITH_DIR/quickshell/guide/wellbeing/launch_daemon.sh" 9>&- &
     LAUNCH_PID=$!
 
