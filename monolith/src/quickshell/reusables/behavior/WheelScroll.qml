@@ -13,7 +13,8 @@ WheelHandler {
     property Item flickable: null
     // pixels per wheel notch
     property real step: 120
-    property int duration: 180
+    // how fast the view catches up with where the wheel sent it (per second): ~90% in 150 ms
+    property real catchUp: 15
 
     readonly property bool horizontal: {
         const f = flickable;
@@ -65,7 +66,7 @@ WheelHandler {
         // with a scroll phase counts as fingers; wheel notches never have one
         const px = horizontal ? (event.pixelDelta.y || event.pixelDelta.x) : event.pixelDelta.y;
         if (px !== 0 && event.phase !== Qt.NoScrollPhase) {
-            root.glide.stop();
+            root.gliding = false;
             const to = Math.max(lo, Math.min(hi, position() - px));
             if (horizontal) f.contentX = to; else f.contentY = to;
             return;
@@ -73,25 +74,40 @@ WheelHandler {
         const notches = event.angleDelta.y / 120;
         if (notches === 0) return;
         f.cancelFlick();
-        // keep adding to where the last glide was heading, so fast spins don't lose distance
-        const from = root.glide.running ? goal : position();
+        // keep adding to where the glide is heading, so fast spins don't lose distance
+        const from = root.gliding ? goal : position();
         goal = Math.max(lo, Math.min(hi, from - notches * step));
-        root.glide.property = horizontal ? "contentX" : "contentY";
-        root.glide.to = goal;
-        root.glide.restart();
+        root.gliding = true;
     }
 
+    // The glide: every frame the view covers a fixed share of what's left to the goal. Unlike an
+    // animation restarted on every notch it never starts over, so quick notches just move the goal
+    // and the motion stays smooth whatever the frame rate.
+    property bool gliding: false
     // (a handler takes no child objects, so these hang off properties)
-    readonly property NumberAnimation glide: NumberAnimation {
-        target: root.flickable
-        duration: root.duration
-        easing.type: Easing.OutCubic
+    readonly property FrameAnimation glide: FrameAnimation {
+        running: root.gliding && root.flickable !== null
+        onTriggered: {
+            const f = root.flickable;
+            const lo = root.lowest(), hi = Math.max(lo, root.highest());
+            root.goal = Math.max(lo, Math.min(hi, root.goal));
+            const pos = root.position();
+            const left = root.goal - pos;
+            let to;
+            if (Math.abs(left) < 0.5) {
+                to = root.goal;
+                root.gliding = false;
+            } else {
+                to = pos + left * (1 - Math.exp(-root.catchUp * Math.min(0.05, frameTime)));
+            }
+            if (root.horizontal) f.contentX = to; else f.contentY = to;
+        }
     }
 
     // dragging or flicking the view by hand takes over from a glide in progress
     property Connections _takeOver: Connections {
         target: root.flickable
         ignoreUnknownSignals: true
-        function onMovementStarted() { root.glide.stop(); }
+        function onMovementStarted() { root.gliding = false; }
     }
 }
