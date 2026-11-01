@@ -1636,7 +1636,9 @@
       "lineThickness": "Thickness",
       "visualizerStyle": "Visualizer style",
       "showNoLyrics": "Show \"no lyrics\" text",
-      "coverRoundness": "Roundness"
+      "coverRoundness": "Roundness",
+      "bgBlur": "Blur",
+      "backgroundOpacity": "Opacity"
     },
     "align": {
       "left": "Left",

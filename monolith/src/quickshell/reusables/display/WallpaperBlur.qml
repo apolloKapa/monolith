@@ -45,6 +45,8 @@ Item {
 
     property bool standalone: false
     property bool surfaceEnabled: true
+    // blur even when the style/theme has background blur off (a widget that asks for it itself)
+    property bool force: false
 
     Component.onCompleted: {
         inheritedOwner = findInheritedOwner();
@@ -88,7 +90,7 @@ Item {
     readonly property var hostScreen: effectiveScreenOverride ? effectiveScreenOverride : (hostWindow ? (hostWindow.glassScreenObj ? hostWindow.glassScreenObj : hostWindow.screen) : null)
     readonly property string screenName: hostScreen && hostScreen.name ? hostScreen.name : ""
     readonly property bool parentVisible: parent ? parent.visible : true
-    readonly property bool active: surfaceEnabled && parentVisible && ThemeBackend.blurBackground && ThemeBackend.elementOpacity < 0.999 && width > 0 && height > 0 && hostScreen !== null && (hostWindow ? hostWindow.visible : true)
+    readonly property bool active: surfaceEnabled && parentVisible && (force || (ThemeBackend.blurBackground && ThemeBackend.elementOpacity < 0.999)) && width > 0 && height > 0 && hostScreen !== null && (hostWindow ? hostWindow.visible : true)
 
     readonly property var engine: snapshotMode ? null : (Wallpaper.engines[screenName] || null)
 
@@ -345,7 +347,7 @@ Item {
                         property variant src: blurCrop
                         property vector2d itemSize: Qt.vector2d(width, height)
                         property vector4d radii: Qt.vector4d(root.topLeftRadius, root.topRightRadius, root.bottomRightRadius, root.bottomLeftRadius)
-                        property real fillAlpha: Math.min(0.98, ThemeBackend.elementOpacity)
+                        property real fillAlpha: root.force ? 0.98 : Math.min(0.98, ThemeBackend.elementOpacity)
                         property vector4d hole: root.holeRect.width > 0 ? Qt.vector4d(root.holeRect.x + root.holeRect.width * 0.5 - width * 0.5, root.holeRect.y + root.holeRect.height * 0.5 - height * 0.5, root.holeRect.width * 0.5, root.holeRect.height * 0.5) : Qt.vector4d(0, 0, 0, 0)
                         property real holeRadius: root.holeRadius
                         property vector4d notch: root.notchRect.width > 0 ? Qt.vector4d(root.notchRect.x + root.notchRect.width * 0.5 - width * 0.5, root.notchRect.y + root.notchRect.height * 0.5 - height * 0.5, root.notchRect.width * 0.5, root.notchRect.height * 0.5) : Qt.vector4d(0, 0, 0, 0)

@@ -18,6 +18,12 @@ Item {
     property real minAspect: 1.6
     property real maxAspect: 8.0
 
+    // background: blurred wallpaper behind it, and how see-through the tint over it is
+    // (backgroundOpacity -1 = the theme's element opacity)
+    property bool bgBlur: true
+    property real backgroundOpacity: -1
+    readonly property real effectiveBgOpacity: backgroundOpacity < 0 ? ThemeBackend.elementOpacity : Math.max(0, Math.min(1, backgroundOpacity))
+
     property var player: MprisController.activePlayer
     property bool isMediaActive: player !== null && player.playbackState !== MprisPlaybackState.Stopped && player.trackTitle !== ""
 
@@ -35,13 +41,15 @@ Item {
     Rectangle {
         id: bg
         anchors.fill: parent
-        color: Qt.alpha(ThemeBackend.surface0, ThemeBackend.elementOpacity)
+        color: Qt.alpha(ThemeBackend.surface0, root.effectiveBgOpacity)
         radius: ThemeBackend.rad(Math.min(height / 2, ThemeBackend.borderRadius * 1.5))
 
         WallpaperBlur {
             z: -1
             anchors.fill: parent
             radius: bg.radius
+            force: root.bgBlur
+            visible: root.bgBlur && active
         }
     }
 
