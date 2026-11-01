@@ -60,9 +60,11 @@ WheelHandler {
         const f = flickable;
         const lo = lowest(), hi = Math.max(lo, highest());
         if (hi - lo < 1) return;
-        // a touchpad (or a free-spinning wheel sending pixels): follow the fingers exactly
+        // a touchpad: follow the fingers exactly. On Wayland Qt hands a mouse wheel over with
+        // pixelDelta too (15 px a notch) and even calls the mouse a touchpad, so only a gesture
+        // with a scroll phase counts as fingers; wheel notches never have one
         const px = horizontal ? (event.pixelDelta.y || event.pixelDelta.x) : event.pixelDelta.y;
-        if (px !== 0) {
+        if (px !== 0 && event.phase !== Qt.NoScrollPhase) {
             root.glide.stop();
             const to = Math.max(lo, Math.min(hi, position() - px));
             if (horizontal) f.contentX = to; else f.contentY = to;
