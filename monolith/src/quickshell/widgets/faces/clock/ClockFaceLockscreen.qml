@@ -19,7 +19,21 @@ Item {
     property string clockColor: ""
     property bool perDigit: false
     property string digitColors: ""
-    readonly property bool customColors: { let _ = [clockColor, perDigit, digitColors]; return CC.isCustom(root); }
+    property bool clockGradient: false
+    property string clockColor2: ""
+    property string gradientDirection: "horizontal"
+    readonly property bool gradientOn: clockGradient && !perDigit
+    readonly property bool customColors: { let _ = [clockColor, perDigit, digitColors, gradientOn]; return CC.isCustom(root); }
+
+    // the gradient: everything is drawn white (see ClockColors.js) and this colours it
+    layer.enabled: gradientOn
+    layer.smooth: true
+    layer.effect: ShaderEffect {
+        property color colorA: CC.resolve(root.clockColor, ThemeBackend, ThemeBackend.text)
+        property color colorB: CC.resolve(root.clockColor2, ThemeBackend, ThemeBackend.mauve)
+        property real direction: root.gradientDirection === "vertical" ? 1.0 : 0.0
+        fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/gradient_tint.frag.qsb"
+    }
 
     readonly property bool isStacked: (width / height) < 1.25
     // Material: one soft accent tint for the whole time, light type, no shadow
@@ -128,7 +142,7 @@ Item {
             ShadowText {
                 Layout.alignment: Qt.AlignVCenter
                 text: ":"
-                color: root.clockColor ? CC.resolve(root.clockColor, ThemeBackend, root.dateColor) : (root.m3 ? root.m3Ink : root.dateColor)
+                color: root.gradientOn ? "#ffffff" : (root.clockColor ? CC.resolve(root.clockColor, ThemeBackend, root.dateColor) : (root.m3 ? root.m3Ink : root.dateColor))
                 font.pixelSize: Scaler.s(80)
             }
 
