@@ -11,6 +11,8 @@ Item {
     property real fitHeight: 0
     property color colorA: ThemeBackend.onSurface ?? ThemeBackend.text
     property color colorB: ThemeBackend.primary ?? ThemeBackend.mauve
+    // optional colour per digit (HH MM, left to right); null/missing = the A/B checker colour
+    property var cellColors: []
 
     readonly property string fontName: fontLoader.status === FontLoader.Ready && fontLoader.name !== ""
         ? fontLoader.name
@@ -73,7 +75,7 @@ Item {
             readonly property string digit: (row === 0 ? root.h : root.m).charAt(col)
             readonly property var ink: root.inkRects[digit >= "0" && digit <= "9" ? Number(digit) : 0]
             readonly property real textX: (root.cellW - ink.width * root.scaleFactor) / 2 - ink.x * root.scaleFactor
-            readonly property color tint: (row + col) % 2 === 0 ? root.colorA : root.colorB
+            readonly property color tint: (root.cellColors && root.cellColors[index]) ? root.cellColors[index] : ((row + col) % 2 === 0 ? root.colorA : root.colorB)
 
             x: col * root.cellW
             y: row * root.cellH

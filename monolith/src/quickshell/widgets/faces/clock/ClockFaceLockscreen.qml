@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../../"
+import "ClockColors.js" as CC
 
 Item {
     id: root
@@ -13,6 +14,12 @@ Item {
     property real minAspect: 0.8
     property real maxAspect: 2.8
     property bool isRound: false
+
+    // colours (see ClockColors.js): one for the whole clock, or one per digit
+    property string clockColor: ""
+    property bool perDigit: false
+    property string digitColors: ""
+    readonly property bool customColors: { let _ = [clockColor, perDigit, digitColors]; return CC.isCustom(root); }
 
     readonly property bool isStacked: (width / height) < 1.25
     // Material: one soft accent tint for the whole time, light type, no shadow
@@ -44,7 +51,9 @@ Item {
         }
     }
 
+    // the text without colour markup, for the drop shadow under it
     component ShadowText: Text {
+        property string plain: text
         font.family: ThemeBackend.fontFamily
         font.weight: root.m3 ? Font.Normal : Font.Bold
 
@@ -58,7 +67,7 @@ Item {
             font.weight: parent.font.weight
             font.letterSpacing: parent.font.letterSpacing
             color: Qt.rgba(0, 0, 0, 0.32)
-            text: parent.text
+            text: parent.plain
             z: -1
         }
     }
@@ -72,14 +81,18 @@ Item {
         ShadowText {
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: -Scaler.s(28)
-            text: root.hoursText
+            plain: root.hoursText
+            text: root.customColors ? CC.rich(root.hoursText, root, ThemeBackend, root.hourColor, 2 - root.hoursText.length) : root.hoursText
+            textFormat: root.customColors ? Text.StyledText : Text.PlainText
             color: root.hourColor
             font.pixelSize: Scaler.s(150)
         }
 
         ShadowText {
             Layout.alignment: Qt.AlignHCenter
-            text: root.minutesText
+            plain: root.minutesText
+            text: root.customColors ? CC.rich(root.minutesText, root, ThemeBackend, root.minuteColor, 2) : root.minutesText
+            textFormat: root.customColors ? Text.StyledText : Text.PlainText
             color: root.minuteColor
             font.pixelSize: Scaler.s(150)
         }
@@ -105,7 +118,9 @@ Item {
             spacing: Scaler.s(4)
 
             ShadowText {
-                text: root.hoursText
+                plain: root.hoursText
+                text: root.customColors ? CC.rich(root.hoursText, root, ThemeBackend, root.hourColor, 2 - root.hoursText.length) : root.hoursText
+                textFormat: root.customColors ? Text.StyledText : Text.PlainText
                 color: root.hourColor
                 font.pixelSize: Scaler.s(120)
             }
@@ -113,12 +128,14 @@ Item {
             ShadowText {
                 Layout.alignment: Qt.AlignVCenter
                 text: ":"
-                color: root.m3 ? root.m3Ink : root.dateColor
+                color: root.clockColor ? CC.resolve(root.clockColor, ThemeBackend, root.dateColor) : (root.m3 ? root.m3Ink : root.dateColor)
                 font.pixelSize: Scaler.s(80)
             }
 
             ShadowText {
-                text: root.minutesText
+                plain: root.minutesText
+                text: root.customColors ? CC.rich(root.minutesText, root, ThemeBackend, root.minuteColor, 2) : root.minutesText
+                textFormat: root.customColors ? Text.StyledText : Text.PlainText
                 color: root.minuteColor
                 font.pixelSize: Scaler.s(120)
             }

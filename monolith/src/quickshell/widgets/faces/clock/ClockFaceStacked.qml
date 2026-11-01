@@ -1,8 +1,9 @@
 import QtQuick
 import "../../../reusables"
 import "../../../"
+import "ClockColors.js" as CC
 
-// Hours above minutes, big and tight: the hours in full text colour, the minutes dimmed.
+// Hours above minutes, big and tight: the hours in full text colour, the minutes in the softer text colour (both fully opaque).
 Item {
     id: root
     anchors.fill: parent
@@ -15,6 +16,12 @@ Item {
     property real maxAspect: 1.4
     property bool isRound: false
 
+    // colours (see ClockColors.js): one for the whole clock, or one per digit
+    property string clockColor: ""
+    property bool perDigit: false
+    property string digitColors: ""
+    readonly property bool customColors: { let _ = [clockColor, perDigit, digitColors]; return CC.isCustom(root); }
+
     readonly property real lineH: height / 2
 
     Column {
@@ -23,19 +30,20 @@ Item {
         spacing: -root.lineH * 0.26
 
         Text {
-            text: DateTime.hour
+            text: root.customColors ? CC.rich(DateTime.hour, root, ThemeBackend, ThemeBackend.text, 0) : DateTime.hour
+            textFormat: root.customColors ? Text.StyledText : Text.PlainText
             font.family: ThemeBackend.fontFamily
             font.pixelSize: root.lineH * 1.05
             font.weight: Font.DemiBold
             color: ThemeBackend.text
         }
         Text {
-            text: DateTime.minute
+            text: root.customColors ? CC.rich(DateTime.minute, root, ThemeBackend, ThemeBackend.subtext0, 2) : DateTime.minute
+            textFormat: root.customColors ? Text.StyledText : Text.PlainText
             font.family: ThemeBackend.fontFamily
             font.pixelSize: root.lineH * 1.05
             font.weight: Font.DemiBold
             color: ThemeBackend.subtext0
-            opacity: 0.85
         }
     }
 }

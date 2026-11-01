@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import "../../../reusables"
 import "../../../"
+import "ClockColors.js" as CC
 
 Item {
     id: root
@@ -16,6 +17,12 @@ Item {
     property real maxAspect: 2.5
     property bool isRound: false
 
+    // colours (see ClockColors.js): one for the whole clock, or one per digit
+    property string clockColor: ""
+    property bool perDigit: false
+    property string digitColors: ""
+    readonly property bool customColors: { let _ = [clockColor, perDigit, digitColors]; return CC.isCustom(root); }
+
     readonly property real areaTop: height * 0.03
     readonly property real areaWidth: width * 0.94
     readonly property real areaHeight: Math.max(1, height - areaTop - height * 0.03)
@@ -27,7 +34,6 @@ Item {
     readonly property real contentWidth: cw * (4 + colonRatio) + gap * 4
     readonly property real stroke: cw * 0.24
     readonly property var chars: (DateTime.hour + ":" + DateTime.minute).split("")
-    readonly property real fillOpacity: 0.78
 
     function roundRect(x0, y0, x1, y1, r) {
         return "M" + (x0 + r) + " " + y0
@@ -98,7 +104,11 @@ Item {
             Item {
                 id: cell
                 required property string modelData
+                required property int index
                 readonly property bool isColon: modelData === ":"
+                // which digit this is (the colon doesn't count)
+                readonly property int digitIndex: index - (root.chars.slice(0, index).indexOf(":") >= 0 ? 1 : 0)
+                readonly property color ink: { let _ = [root.clockColor, root.perDigit, root.digitColors]; return CC.colorFor(root, isColon ? 99 : digitIndex, ThemeBackend, glyphs.col); }
                 width: isColon ? root.colonW : root.cw
                 height: root.areaHeight
 
@@ -110,7 +120,7 @@ Item {
 
                     ShapePath {
                         strokeWidth: glyphs.strokeW
-                        strokeColor: glyphs.col
+                        strokeColor: cell.ink
                         fillColor: "transparent"
                         capStyle: ShapePath.FlatCap
                         joinStyle: ShapePath.RoundJoin
@@ -128,7 +138,7 @@ Item {
                         width: Math.max(1, root.stroke * 1.1 - (root.stroke - glyphs.strokeW))
                         height: width
                         radius: ThemeBackend.rad(width / 2)
-                        color: glyphs.col
+                        color: cell.ink
                         x: (cell.width - width) / 2
                         y: cell.height * (index === 0 ? 0.35 : 0.65) - height / 2
                     }
@@ -146,7 +156,6 @@ Item {
 
         Glyphs {
             col: ThemeBackend.text
-            opacity: root.fillOpacity
             layer.enabled: true
             layer.smooth: true
         }
