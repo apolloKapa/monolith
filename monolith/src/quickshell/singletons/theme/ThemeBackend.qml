@@ -101,6 +101,13 @@ Item {
                                     "overlay0": "#616e88", "overlay1": "#7b88a1", "overlay2": "#949fb5", "text": "#eceff4", "subtext0": "#d8dee9", "subtext1": "#e5e9f0",
                                     "blue": "#81a1c1", "sapphire": "#88c0d0", "teal": "#8fbcbb", "mauve": "#88c0d0", "pink": "#b48ead", "green": "#a3be8c",
                                     "yellow": "#ebcb8b", "peach": "#d08770", "red": "#bf616a", "maroon": "#a5545c" } },
+        // flat grey cards and monospace type, after shadoww.dev's DarkShadow's Shell
+        "shadow":     { "name": "Shadow", "opaque": true, "radiusScale": 1.6, "font": "JetBrains Mono",
+                        "desc": "Grey cards, monospace type, no colour",
+                        "colors": { "base": "#141415", "mantle": "#0f0f10", "crust": "#0a0a0b", "surface0": "#2a2a2d", "surface1": "#36363a", "surface2": "#4a4a4f",
+                                    "overlay0": "#5c5c60", "overlay1": "#7c7c80", "overlay2": "#9c9ca0", "text": "#f0f0f0", "subtext0": "#a3a3a6", "subtext1": "#c6c6c9",
+                                    "blue": "#e8e8e8", "sapphire": "#d8d8d8", "teal": "#cfcfcf", "mauve": "#f0f0f0", "pink": "#dcdcdc", "green": "#d4d4d4",
+                                    "yellow": "#e4e4e4", "peach": "#d0d0d0", "red": "#ff8a80", "maroon": "#e57373" } },
         "doodle":     { "name": "Doodle", "opaque": true, "radiusScale": 1.3, "outline": [2, 1], "outlineRole": "ink", "hardShadow": 3, "font": "ComicShannsMono Nerd Font",
                         "desc": "Sketchbook paper, inked lines, marker colours",
                         "colors": { "base": "#fbfaf4", "mantle": "#f3f1e6", "crust": "#22201c", "surface0": "#ecead9", "surface1": "#e0ddc6", "surface2": "#c9c5a8",
@@ -109,7 +116,7 @@ Item {
                                     "yellow": "#f2c230", "peach": "#f28a30", "red": "#e03c3c", "maroon": "#b52d2d" } }
     })
     readonly property var styleOrder: ["material", "blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper", "arcade",
-                                       "oled", "mainframe", "sakura", "fjord", "doodle"]
+                                       "oled", "mainframe", "sakura", "fjord", "doodle", "shadow"]
     readonly property var style: styles[blurStyle] || styles["material"]
     // OLED style: black backgrounds over any palette (applyColorObject); re-read the colours
     // when it's switched on or off so the backgrounds follow

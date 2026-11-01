@@ -19,6 +19,7 @@ GuideTab {
         "showCapsLock": true,
         "showNumLock": true,
         "showAirplane": true,
+        "showKbLayout": true,
         "attachToBar": true
     })
 
@@ -38,6 +39,7 @@ GuideTab {
     property bool showCapsLock: osdSettings && osdSettings.showCapsLock !== undefined ? osdSettings.showCapsLock : true
     property bool showNumLock: osdSettings && osdSettings.showNumLock !== undefined ? osdSettings.showNumLock : true
     property bool showAirplane: osdSettings && osdSettings.showAirplane !== undefined ? osdSettings.showAirplane : true
+    property bool showKbLayout: osdSettings && osdSettings.showKbLayout !== undefined ? osdSettings.showKbLayout : true
     property bool attachToBar: osdSettings && osdSettings.attachToBar !== undefined ? osdSettings.attachToBar : true
 
     readonly property bool isCustomPos: {
@@ -93,6 +95,7 @@ GuideTab {
         osdTabRoot.showCapsLock = s.showCapsLock !== undefined ? s.showCapsLock : true;
         osdTabRoot.showNumLock = s.showNumLock !== undefined ? s.showNumLock : true;
         osdTabRoot.showAirplane = s.showAirplane !== undefined ? s.showAirplane : true;
+        osdTabRoot.showKbLayout = s.showKbLayout !== undefined ? s.showKbLayout : true;
         osdTabRoot.attachToBar = s.attachToBar !== undefined ? s.attachToBar : true;
     }
 
@@ -704,6 +707,49 @@ GuideTab {
                                 osdTabRoot.showAirplane = c;
                                 osdTabRoot.updateOsdSetting("showAirplane", c);
                             }
+                        }
+                    }
+                }
+            }
+
+            // keyboard layout switches (the layout keybind or the bar's layout button)
+            SettingsBlob {
+                Layout.fillWidth: true
+                baseColor: osdTabRoot.isVertical ? Qt.alpha(ThemeBackend.surface0, 0.18) : Qt.alpha(ThemeBackend.surface0, 0.4)
+
+                SettingsRow {
+                    rootObj: osdTabRoot.rootObj
+                    settingId: "osd_kblayout"
+                    icon: "󰌌"
+                    title: I18n.t("guide.osd.kblayout.title", "Show on keyboard layout change")
+                    description: I18n.t("guide.osd.kblayout.desc", "The new layout's name pops up when you switch keyboard language")
+                    searchKeywords: "keyboard layout language switch osd popup animation"
+                    titleColor: osdTabRoot.isVertical ? ThemeBackend.subtext0 : ThemeBackend.text
+                    opacity: osdTabRoot.isVertical ? 0.6 : 1.0
+                    Behavior on opacity { NumberAnimation { duration: (250) * ThemeBackend.animScale } }
+
+                    Text {
+                        visible: osdTabRoot.isVertical
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        text: I18n.t("guide.common.unavailable", "Unavailable")
+                        font.family: ThemeBackend.fontFamily
+                        font.pixelSize: rootObj.s(11)
+                        font.bold: true
+                        color: ThemeBackend.subtext0
+                    }
+
+                    Toggle {
+                        visible: !osdTabRoot.isVertical
+                        enabled: !osdTabRoot.isVertical
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        checked: osdTabRoot.showKbLayout
+                        accentColor: ThemeBackend.mauve
+                        baseColor: ThemeBackend.surface1
+                        handleColor: ThemeBackend.crust
+                        handleOffColor: ThemeBackend.text
+                        onToggled: function(c) {
+                            osdTabRoot.showKbLayout = c;
+                            osdTabRoot.updateOsdSetting("showKbLayout", c);
                         }
                     }
                 }

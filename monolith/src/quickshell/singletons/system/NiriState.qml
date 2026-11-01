@@ -23,6 +23,8 @@ Item {
     property bool keyboardReady: false
     readonly property string keyboardLayout: (keyboardLayouts && keyboardLayouts.length > keyboardLayoutIndex && keyboardLayouts[keyboardLayoutIndex]) ? keyboardLayouts[keyboardLayoutIndex] : ""
     readonly property string shortKeyboardLayout: keyboardLayout ? keyboardLayout.substring(0, 2).toUpperCase() : "US"
+    // the layout was switched (the OSD shows the new one)
+    signal keyboardLayoutSwitched()
 
     property int subscribers: 0
 
@@ -236,8 +238,11 @@ Item {
             keyboardReady = true;
             return;
         } else if ((p = ev.KeyboardLayoutSwitched)) {
+            let prevIdx = keyboardLayoutIndex;
             keyboardLayoutIndex = p.idx || 0;
             keyboardReady = true;
+            // a real switch (keybind, bar button...), not the initial state or a config reload
+            if (keyboardLayoutIndex !== prevIdx) keyboardLayoutSwitched();
             return;
         } else {
             return;

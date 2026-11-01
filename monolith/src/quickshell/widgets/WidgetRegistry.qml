@@ -621,7 +621,8 @@ QtObject {
                 "materialAnalog": { file: "faces/clock/ClockFaceMaterialAnalog.qml", icon: "5", label: I18n.t("widgets.variants.materialAnalog") },
                 "lumen":          { file: "faces/clock/ClockFaceMaterialLumen.qml",  icon: "6", label: I18n.t("widgets.variants.lumen") },
                 "lockscreen":     { file: "faces/clock/ClockFaceLockscreen.qml",     icon: "7", label: I18n.t("widgets.variants.lockscreen", "Lockscreen") },
-                "stretched":      { file: "faces/clock/ClockFaceStretched.qml",      icon: "8", label: I18n.t("widgets.variants.stretched", "Stretched") }
+                "stretched":      { file: "faces/clock/ClockFaceStretched.qml",      icon: "8", label: I18n.t("widgets.variants.stretched", "Stretched") },
+                "stacked":        { file: "faces/clock/ClockFaceStacked.qml",        icon: "9", label: I18n.t("widgets.variants.stacked", "Stacked") }
             }
         },
         "music": {
@@ -742,7 +743,8 @@ QtObject {
             defaultHeight: 140,
             defaultVariant: "default",
             variants: {
-                "default": { file: "faces/user/UserFace.qml", icon: "1", label: I18n.t("widgets.variants.default") }
+                "default":  { file: "faces/user/UserFace.qml", icon: "1", label: I18n.t("widgets.variants.default") },
+                "greeting": { file: "faces/user/UserFaceGreeting.qml", icon: "2", label: I18n.t("widgets.variants.greeting", "Greeting") }
             }
         },
         "cpu": {
@@ -753,7 +755,8 @@ QtObject {
             defaultVariant: "default",
             variants: {
                 "default": { file: "faces/usage/CpuFace.qml", icon: "1", label: I18n.t("widgets.variants.default") },
-                "circle":  { file: "faces/usage/CpuFaceCircle.qml", icon: "2", label: I18n.t("widgets.variants.circle", "Circle") }
+                "circle":  { file: "faces/usage/CpuFaceCircle.qml", icon: "2", label: I18n.t("widgets.variants.circle", "Circle") },
+                "card":    { file: "faces/usage/CpuFaceCard.qml", icon: "3", label: I18n.t("widgets.variants.card", "Card") }
             },
             additionalSettings: registry.usageCircleSettings
         },
@@ -765,7 +768,8 @@ QtObject {
             defaultVariant: "default",
             variants: {
                 "default": { file: "faces/usage/RamFace.qml", icon: "1", label: I18n.t("widgets.variants.default") },
-                "circle":  { file: "faces/usage/RamFaceCircle.qml", icon: "2", label: I18n.t("widgets.variants.circle", "Circle") }
+                "circle":  { file: "faces/usage/RamFaceCircle.qml", icon: "2", label: I18n.t("widgets.variants.circle", "Circle") },
+                "card":    { file: "faces/usage/RamFaceCard.qml", icon: "3", label: I18n.t("widgets.variants.card", "Card") }
             },
             additionalSettings: registry.usageCircleSettings
         },
@@ -777,7 +781,8 @@ QtObject {
             defaultVariant: "default",
             variants: {
                 "default": { file: "faces/usage/TempFace.qml", icon: "1", label: I18n.t("widgets.variants.default") },
-                "circle":  { file: "faces/usage/TempFaceCircle.qml", icon: "2", label: I18n.t("widgets.variants.circle", "Circle") }
+                "circle":  { file: "faces/usage/TempFaceCircle.qml", icon: "2", label: I18n.t("widgets.variants.circle", "Circle") },
+                "card":    { file: "faces/usage/TempFaceCard.qml", icon: "3", label: I18n.t("widgets.variants.card", "Card") }
             },
             additionalSettings: registry.usageCircleSettings
         },
@@ -789,7 +794,8 @@ QtObject {
             defaultVariant: "default",
             variants: {
                 "default": { file: "faces/usage/DiskFace.qml", icon: "1", label: I18n.t("widgets.variants.default") },
-                "circle":  { file: "faces/usage/DiskFaceCircle.qml", icon: "2", label: I18n.t("widgets.variants.circle", "Circle") }
+                "circle":  { file: "faces/usage/DiskFaceCircle.qml", icon: "2", label: I18n.t("widgets.variants.circle", "Circle") },
+                "card":    { file: "faces/usage/DiskFaceCard.qml", icon: "3", label: I18n.t("widgets.variants.card", "Card") }
             },
             additionalSettings: registry.usageCircleSettings
         },
@@ -813,6 +819,16 @@ QtObject {
             defaultVariant: "default",
             variants: {
                 "default": { file: "faces/github/GithubFace.qml", icon: "1", label: typeof I18n !== "undefined" ? I18n.t("widgets.variants.default", "Default") : "Default" }
+            }
+        },
+        "calendar": {
+            name: typeof I18n !== "undefined" ? I18n.t("widgets.types.calendar", "Calendar") : "Calendar",
+            icon: String.fromCodePoint(0xF00ED),
+            defaultWidth: 340,
+            defaultHeight: 340,
+            defaultVariant: "default",
+            variants: {
+                "default": { file: "faces/calendar/CalendarFace.qml", icon: "1", label: typeof I18n !== "undefined" ? I18n.t("widgets.variants.default", "Default") : "Default" }
             }
         },
         "notes": {

@@ -13,6 +13,7 @@ ImageBox 1.0 display/ImageBox.qml
 LoaderIcon 1.0 display/LoaderIcon.qml
 NotificationBox 1.0 display/NotificationBox.qml
 SystemUsageCard 1.0 display/SystemUsageCard.qml
+UsageRingCard 1.0 display/UsageRingCard.qml
 SystemUsageCircle 1.0 display/SystemUsageCircle.qml
 FluidWave 1.0 display/FluidWave.qml
 LiquidFill 1.0 display/LiquidFill.qml

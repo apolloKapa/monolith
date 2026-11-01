@@ -79,11 +79,7 @@
         "title": "Slimme sortering van items in starter",
         "desc": "Sorteer apps op basis van gebruik en doorgebrachte tijd"
       },
-      "test": "Starter openen",
-      "search": {
-        "title": "Webzoekmachine",
-        "desc": "Zoekmachine voor zoekopdrachten die met ? beginnen"
-      }
+      "test": "Starter openen"
     },
     "notifications": {
       "dnd": {
@@ -259,10 +255,6 @@
         "song": {
           "title": "Song recognition",
           "desc": "\"What's this song?\" in the dashboard: records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (needs songrec)"
-        },
-        "wallhaven": {
-          "title": "Wallhaven",
-          "desc": "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven"
         }
       }
     },
@@ -1032,9 +1024,7 @@
     "tab_files": "Bestanden",
     "placeholder_files": "Bestanden zoeken of pad invoeren...",
     "tab_emojis": "Emoji's",
-    "placeholder_emojis": "Zoek emoji's op naam of trefwoord...",
-    "search_run": "Zoeken met {provider}",
-    "search_hint": "Typ om te zoeken met {provider}"
+    "placeholder_emojis": "Zoek emoji's op naam of trefwoord..."
   },
   "calendar": {
     "loading": "Laden...",
@@ -1815,17 +1805,5 @@
   },
   "island": {
     "workspaces": "Workspaces"
-  },
-  "wallhaven": {
-    "search": "Search wallhaven.cc (empty = popular)",
-    "top": "Top",
-    "latest": "Latest",
-    "random": "Random",
-    "offline": "Browsing Wallhaven talks to wallhaven.cc (searches and image downloads), so it's off until you turn it on. Only safe-for-work wallpapers are shown.",
-    "enable": "Turn on Wallhaven",
-    "downloading": "Downloading…",
-    "loading": "Loading…",
-    "failed": "Couldn't reach wallhaven.cc",
-    "none": "No wallpapers found"
   }
 }

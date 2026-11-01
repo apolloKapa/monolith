@@ -79,11 +79,7 @@
         "title": "啟動器項目智慧排序",
         "desc": "根據應用程式的使用頻率與使用時間長短進行排序"
       },
-      "test": "開啟啟動器",
-      "search": {
-        "title": "網路搜尋提供者",
-        "desc": "查詢以 ? 開頭時使用的搜尋引擎"
-      }
+      "test": "開啟啟動器"
     },
     "notifications": {
       "dnd": {
@@ -259,10 +255,6 @@
         "song": {
           "title": "Song recognition",
           "desc": "\"What's this song?\" in the dashboard: records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (needs songrec)"
-        },
-        "wallhaven": {
-          "title": "Wallhaven",
-          "desc": "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven"
         }
       }
     },
@@ -1032,9 +1024,7 @@
     "tab_files": "檔案",
     "placeholder_files": "搜尋檔案或輸入路徑...",
     "tab_emojis": "表情符號",
-    "placeholder_emojis": "依名稱或關鍵字搜尋表情符號...",
-    "search_run": "使用 {provider} 搜尋",
-    "search_hint": "輸入內容以使用 {provider} 搜尋"
+    "placeholder_emojis": "依名稱或關鍵字搜尋表情符號..."
   },
   "calendar": {
     "loading": "載入中...",
@@ -1815,17 +1805,5 @@
   },
   "island": {
     "workspaces": "Workspaces"
-  },
-  "wallhaven": {
-    "search": "Search wallhaven.cc (empty = popular)",
-    "top": "Top",
-    "latest": "Latest",
-    "random": "Random",
-    "offline": "Browsing Wallhaven talks to wallhaven.cc (searches and image downloads), so it's off until you turn it on. Only safe-for-work wallpapers are shown.",
-    "enable": "Turn on Wallhaven",
-    "downloading": "Downloading…",
-    "loading": "Loading…",
-    "failed": "Couldn't reach wallhaven.cc",
-    "none": "No wallpapers found"
   }
 }
