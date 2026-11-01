@@ -784,6 +784,14 @@ QtObject {
             property bool perDigit: false
             property var digits: ["", "", "", ""]
             property int selectedDigit: 0
+            property bool gradient: false
+            property string clockColor2: ""
+            property string direction: "horizontal"
+            property int selectedStop: 0   // which gradient colour the swatches set: 0 = first, 1 = second
+            readonly property bool gradientShown: gradient && !perDigit
+            // what the swatches / hex box are editing right now
+            readonly property string current: perDigit ? (digits[selectedDigit] || "")
+                : (gradientShown && selectedStop === 1 ? clockColor2 : clockColor)
 
             // "" = the clock's own theme colours
             // "text"/"mauve" follow the theme (text, accent); the rest are real colours, since a
@@ -803,6 +811,9 @@ QtObject {
                 settingRoot.perDigit = w.perDigit === true;
                 let a = String(w.digitColors || "").split(",");
                 settingRoot.digits = [a[0] || "", a[1] || "", a[2] || "", a[3] || ""];
+                settingRoot.gradient = w.clockGradient === true;
+                settingRoot.clockColor2 = w.clockColor2 || "";
+                settingRoot.direction = w.gradientDirection === "vertical" ? "vertical" : "horizontal";
             }
 
             function write(prop, val) {
@@ -817,6 +828,9 @@ QtObject {
                     d[settingRoot.selectedDigit] = spec;
                     settingRoot.digits = d;
                     write("digitColors", d.join(","));
+                } else if (settingRoot.gradientShown && settingRoot.selectedStop === 1) {
+                    settingRoot.clockColor2 = spec;
+                    write("clockColor2", spec);
                 } else {
                     settingRoot.clockColor = spec;
                     write("clockColor", spec);
@@ -832,6 +846,9 @@ QtObject {
                 function onClockColorChanged() { settingRoot.syncValue(); }
                 function onPerDigitChanged() { settingRoot.syncValue(); }
                 function onDigitColorsChanged() { settingRoot.syncValue(); }
+                function onClockGradientChanged() { settingRoot.syncValue(); }
+                function onClockColor2Changed() { settingRoot.syncValue(); }
+                function onGradientDirectionChanged() { settingRoot.syncValue(); }
             }
 
             implicitWidth: colorRow.implicitWidth + Scaler.s(20)
@@ -913,6 +930,93 @@ QtObject {
                     }
                 }
 
+                // gradient: on/off, which of its two colours to set, and which way it fades
+                Text {
+                    visible: !settingRoot.perDigit
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: I18n.t("widgets.settings.gradient", "Gradient")
+                    font.family: ThemeBackend.fontFamily
+                    font.pixelSize: Scaler.s(11)
+                    font.bold: true
+                    color: ThemeBackend.text
+                }
+
+                Toggle {
+                    visible: !settingRoot.perDigit
+                    anchors.verticalCenter: parent.verticalCenter
+                    horizontalPadding: 0
+                    cornerRadius: ThemeBackend.borderRadius
+                    checked: settingRoot.gradient
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface1
+                    handleColor: ThemeBackend.crust
+                    handleOffColor: ThemeBackend.text
+                    onToggled: function(c) {
+                        settingRoot.gradient = c;
+                        settingRoot.selectedStop = c ? 1 : 0;
+                        settingRoot.write("clockGradient", c);
+                    }
+                }
+
+                Row {
+                    visible: settingRoot.gradientShown
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Scaler.s(3)
+
+                    Repeater {
+                        model: 2
+                        Rectangle {
+                            required property int index
+                            width: Scaler.s(22)
+                            height: Scaler.s(24)
+                            radius: ThemeBackend.rad(Scaler.s(5))
+                            color: settingRoot.colorOf(index === 0 ? settingRoot.clockColor : settingRoot.clockColor2,
+                                                       index === 0 ? ThemeBackend.text : ThemeBackend.mauve)
+                            border.width: settingRoot.selectedStop === index ? Scaler.s(2) : Scaler.s(1)
+                            border.color: settingRoot.selectedStop === index ? ThemeBackend.text : ThemeBackend.surface2
+                            Text {
+                                anchors.centerIn: parent
+                                text: String(index + 1)
+                                font.family: ThemeBackend.fontFamily
+                                font.pixelSize: Scaler.s(11)
+                                font.weight: ThemeBackend.weightBlack
+                                color: Qt.colorEqual(parent.color, "transparent") ? ThemeBackend.text
+                                    : ((parent.color.r * 0.3 + parent.color.g * 0.59 + parent.color.b * 0.11) > 0.55 ? "#000000" : "#ffffff")
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: settingRoot.selectedStop = index
+                            }
+                        }
+                    }
+
+                    // side to side / top to bottom
+                    Rectangle {
+                        width: Scaler.s(26)
+                        height: Scaler.s(24)
+                        radius: ThemeBackend.rad(Scaler.s(5))
+                        color: dirMa.containsMouse ? ThemeBackend.surface2 : ThemeBackend.surface1
+                        Text {
+                            anchors.centerIn: parent
+                            text: settingRoot.direction === "vertical" ? "↕" : "↔"
+                            font.pixelSize: Scaler.s(14)
+                            font.bold: true
+                            color: ThemeBackend.text
+                        }
+                        MouseArea {
+                            id: dirMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                settingRoot.direction = settingRoot.direction === "vertical" ? "horizontal" : "vertical";
+                                settingRoot.write("gradientDirection", settingRoot.direction);
+                            }
+                        }
+                    }
+                }
+
                 Rectangle {
                     width: 1
                     height: Scaler.s(18)
@@ -928,7 +1032,7 @@ QtObject {
                         model: settingRoot.swatches
                         Rectangle {
                             required property string modelData
-                            readonly property string current: settingRoot.perDigit ? (settingRoot.digits[settingRoot.selectedDigit] || "") : settingRoot.clockColor
+                            readonly property string current: settingRoot.current
                             width: Scaler.s(18)
                             height: width
                             radius: width / 2
@@ -976,7 +1080,7 @@ QtObject {
                         selectByMouse: true
                         maximumLength: 7
                         validator: RegularExpressionValidator { regularExpression: /#?[0-9a-fA-F]{0,6}/ }
-                        readonly property string current: settingRoot.perDigit ? (settingRoot.digits[settingRoot.selectedDigit] || "") : settingRoot.clockColor
+                        readonly property string current: settingRoot.current
                         text: current.charAt(0) === "#" ? current : ""
                         onAccepted: {
                             let t = text.charAt(0) === "#" ? text : "#" + text;

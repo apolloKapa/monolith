@@ -4,6 +4,10 @@
 //   clockColor  - one colour for the whole clock ("" = the face's own theme colours)
 //   perDigit    - colour every digit on its own
 //   digitColors - "a,b,c,d": the four digits (HH MM) left to right ("" = clockColor / the face's)
+//   clockGradient / clockColor2 / gradientDirection - fade the whole clock from clockColor to
+//                 clockColor2, "horizontal" or "vertical". The face then draws everything white and
+//                 a gradient_tint layer colours it (face.gradientOn, set when the gradient is on and
+//                 Each digit is off).
 // A colour is a theme role ("mauve", "text", ...) so it follows the theme, or a "#rrggbb".
 
 function list(face) {
@@ -19,6 +23,7 @@ function resolve(spec, theme, fallback) {
 
 // the spec for digit i (0-3), or for the whole clock when i is past the four digits
 function specFor(face, i) {
+    if (face.gradientOn) return "#ffffff";
     if (face.perDigit && i >= 0 && i < 4) {
         const s = list(face)[i] || "";
         if (s) return s;
@@ -31,6 +36,7 @@ function colorFor(face, i, theme, fallback) {
 }
 
 function isCustom(face) {
+    if (face.gradientOn) return true;
     return !!face.clockColor || (!!face.perDigit && list(face).some(s => !!s));
 }
 
@@ -43,7 +49,7 @@ function rich(text, face, theme, fallback, firstDigit) {
     for (let k = 0; k < s.length; k++) {
         const ch = s.charAt(k);
         const isDigit = ch >= "0" && ch <= "9";
-        const c = isDigit ? colorFor(face, i++, theme, fallback) : resolve(face.clockColor, theme, fallback);
+        const c = isDigit ? colorFor(face, i++, theme, fallback) : resolve(specFor(face, 99), theme, fallback);
         const esc = ch === "<" ? "&lt;" : (ch === ">" ? "&gt;" : (ch === "&" ? "&amp;" : (ch === " " ? "&nbsp;" : ch)));
         out += '<font color="' + String(c) + '">' + esc + "</font>";
     }

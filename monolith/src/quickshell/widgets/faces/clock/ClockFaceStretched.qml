@@ -21,7 +21,21 @@ Item {
     property string clockColor: ""
     property bool perDigit: false
     property string digitColors: ""
-    readonly property bool customColors: { let _ = [clockColor, perDigit, digitColors]; return CC.isCustom(root); }
+    property bool clockGradient: false
+    property string clockColor2: ""
+    property string gradientDirection: "horizontal"
+    readonly property bool gradientOn: clockGradient && !perDigit
+    readonly property bool customColors: { let _ = [clockColor, perDigit, digitColors, gradientOn]; return CC.isCustom(root); }
+
+    // the gradient: everything is drawn white (see ClockColors.js) and this colours it
+    layer.enabled: gradientOn
+    layer.smooth: true
+    layer.effect: ShaderEffect {
+        property color colorA: CC.resolve(root.clockColor, ThemeBackend, ThemeBackend.text)
+        property color colorB: CC.resolve(root.clockColor2, ThemeBackend, ThemeBackend.mauve)
+        property real direction: root.gradientDirection === "vertical" ? 1.0 : 0.0
+        fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/gradient_tint.frag.qsb"
+    }
 
     readonly property real areaTop: height * 0.03
     readonly property real areaWidth: width * 0.94
@@ -108,7 +122,7 @@ Item {
                 readonly property bool isColon: modelData === ":"
                 // which digit this is (the colon doesn't count)
                 readonly property int digitIndex: index - (root.chars.slice(0, index).indexOf(":") >= 0 ? 1 : 0)
-                readonly property color ink: { let _ = [root.clockColor, root.perDigit, root.digitColors]; return CC.colorFor(root, isColon ? 99 : digitIndex, ThemeBackend, glyphs.col); }
+                readonly property color ink: { let _ = [root.clockColor, root.perDigit, root.digitColors, root.gradientOn]; return CC.colorFor(root, isColon ? 99 : digitIndex, ThemeBackend, glyphs.col); }
                 width: isColon ? root.colonW : root.cw
                 height: root.areaHeight
 
