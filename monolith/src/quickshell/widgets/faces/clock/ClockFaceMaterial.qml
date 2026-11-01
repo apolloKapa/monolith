@@ -1,5 +1,6 @@
 import QtQuick
 import "../../../"
+import "ClockColors.js" as CC
 import "../../../reusables"
 
 Item {
@@ -14,6 +15,12 @@ Item {
     property real minAspect: 0.7
     property real maxAspect: 1.3
     property bool isRound: false
+
+    // colours (see ClockColors.js): one for the whole clock, or one per digit
+    property string clockColor: ""
+    property bool perDigit: false
+    property string digitColors: ""
+    readonly property bool customColors: { let _ = [clockColor, perDigit, digitColors]; return CC.isCustom(root); }
 
     property var currentTime: DateTime.now
 
@@ -39,5 +46,14 @@ Item {
         fitHeight: root.height * 0.94
         colorA: ThemeBackend.onSurface ?? ThemeBackend.text
         colorB: ThemeBackend.primary ?? ThemeBackend.mauve
+        cellColors: {
+            if (!root.customColors) return [];
+            let out = [];
+            for (let i = 0; i < 4; i++) {
+                let spec = CC.specFor(root, i);
+                out.push(spec ? CC.resolve(spec, ThemeBackend, null) : null);
+            }
+            return out;
+        }
     }
 }

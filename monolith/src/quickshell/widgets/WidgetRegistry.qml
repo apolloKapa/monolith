@@ -766,6 +766,237 @@ QtObject {
         }
     }
 
+    // Clock colours: one colour for the whole clock, or (Each digit) one per digit.
+    // Writes clockColor / perDigit / digitColors ("a,b,c,d"); a colour is a theme role or "#rrggbb".
+    property Component clockColorComponent: Component {
+        Item {
+            id: settingRoot
+            property var typeData: null
+            property var settingData: null
+            property var redactor: null
+            property var widget: null
+            property var widgetData: null
+            property var item: null
+
+            readonly property var targetWidget: settingRoot.widget || settingRoot.widgetData || settingRoot.item || null
+
+            property string clockColor: ""
+            property bool perDigit: false
+            property var digits: ["", "", "", ""]
+            property int selectedDigit: 0
+
+            // "" = the clock's own theme colours
+            // "text"/"mauve" follow the theme (text, accent); the rest are real colours, since a
+            // theme's own "blue", "green"... can all be greys (Shadow is monochrome)
+            readonly property var swatches: ["", "text", "mauve", "#ffffff", "#000000", "#ff5c5c", "#ff9f43", "#ffd43b", "#51cf66", "#22c7b8", "#4dabf7", "#5c7cfa", "#9775fa", "#f06595"]
+
+            function colorOf(spec, fallback) {
+                if (!spec) return fallback;
+                if (spec.charAt(0) === "#") return spec;
+                return ThemeBackend[spec] !== undefined ? ThemeBackend[spec] : fallback;
+            }
+
+            function syncValue() {
+                let w = settingRoot.targetWidget;
+                if (!w) return;
+                settingRoot.clockColor = w.clockColor || "";
+                settingRoot.perDigit = w.perDigit === true;
+                let a = String(w.digitColors || "").split(",");
+                settingRoot.digits = [a[0] || "", a[1] || "", a[2] || "", a[3] || ""];
+            }
+
+            function write(prop, val) {
+                let w = settingRoot.targetWidget;
+                if (w && w[prop] !== undefined) w[prop] = val;
+                if (settingRoot.redactor) settingRoot.redactor.setWidgetProperty(prop, val);
+            }
+
+            function pick(spec) {
+                if (settingRoot.perDigit) {
+                    let d = settingRoot.digits.slice();
+                    d[settingRoot.selectedDigit] = spec;
+                    settingRoot.digits = d;
+                    write("digitColors", d.join(","));
+                } else {
+                    settingRoot.clockColor = spec;
+                    write("clockColor", spec);
+                }
+            }
+
+            Component.onCompleted: syncValue()
+            onTargetWidgetChanged: syncValue()
+
+            Connections {
+                target: settingRoot.targetWidget
+                ignoreUnknownSignals: true
+                function onClockColorChanged() { settingRoot.syncValue(); }
+                function onPerDigitChanged() { settingRoot.syncValue(); }
+                function onDigitColorsChanged() { settingRoot.syncValue(); }
+            }
+
+            implicitWidth: colorRow.implicitWidth + Scaler.s(20)
+            implicitHeight: Scaler.s(34)
+
+            Rectangle {
+                anchors.fill: parent
+                radius: ThemeBackend.borderRadius
+                color: colorGlass.active ? "transparent" : ThemeBackend.surface0
+
+                GlassFill {
+                    id: colorGlass
+                    anchors.fill: parent
+                    radius: ThemeBackend.rad(parent.radius)
+                    tintColor: ThemeBackend.surface0
+                    tintAmount: 0.3
+                }
+            }
+
+            Row {
+                id: colorRow
+                anchors.centerIn: parent
+                spacing: Scaler.s(8)
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: I18n.t("widgets.settings.perDigit", "Each digit")
+                    font.family: ThemeBackend.fontFamily
+                    font.pixelSize: Scaler.s(11)
+                    font.bold: true
+                    color: ThemeBackend.text
+                }
+
+                Toggle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    horizontalPadding: 0
+                    cornerRadius: ThemeBackend.borderRadius
+                    checked: settingRoot.perDigit
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface1
+                    handleColor: ThemeBackend.crust
+                    handleOffColor: ThemeBackend.text
+                    onToggled: function(c) {
+                        settingRoot.perDigit = c;
+                        settingRoot.write("perDigit", c);
+                    }
+                }
+
+                // which digit the swatches colour
+                Row {
+                    visible: settingRoot.perDigit
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Scaler.s(3)
+
+                    Repeater {
+                        model: 4
+                        Rectangle {
+                            required property int index
+                            width: Scaler.s(20)
+                            height: Scaler.s(24)
+                            radius: ThemeBackend.rad(Scaler.s(5))
+                            color: ThemeBackend.surface1
+                            border.width: settingRoot.selectedDigit === index ? Scaler.s(2) : 0
+                            border.color: ThemeBackend.mauve
+                            Text {
+                                anchors.centerIn: parent
+                                text: String(index + 1)
+                                font.family: ThemeBackend.fontFamily
+                                font.pixelSize: Scaler.s(12)
+                                font.weight: ThemeBackend.weightBlack
+                                color: settingRoot.colorOf(settingRoot.digits[index] || settingRoot.clockColor, ThemeBackend.text)
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: settingRoot.selectedDigit = index
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    width: 1
+                    height: Scaler.s(18)
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: ThemeBackend.surface2
+                }
+
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Scaler.s(4)
+
+                    Repeater {
+                        model: settingRoot.swatches
+                        Rectangle {
+                            required property string modelData
+                            readonly property string current: settingRoot.perDigit ? (settingRoot.digits[settingRoot.selectedDigit] || "") : settingRoot.clockColor
+                            width: Scaler.s(18)
+                            height: width
+                            radius: width / 2
+                            color: modelData === "" ? "transparent" : settingRoot.colorOf(modelData, "transparent")
+                            border.width: current === modelData ? Scaler.s(2.5) : Scaler.s(1)
+                            border.color: current === modelData ? ThemeBackend.text : ThemeBackend.surface2
+
+                            // the "theme colours" swatch: a slash through an empty circle
+                            Rectangle {
+                                visible: modelData === ""
+                                anchors.centerIn: parent
+                                width: parent.width * 0.8
+                                height: Scaler.s(1.5)
+                                rotation: -45
+                                color: ThemeBackend.overlay1
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: settingRoot.pick(modelData)
+                            }
+                        }
+                    }
+                }
+
+                // any colour: type a hex code and press Enter
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Scaler.s(74)
+                    height: Scaler.s(24)
+                    radius: ThemeBackend.rad(Scaler.s(6))
+                    color: ThemeBackend.surface1
+                    border.width: hexInput.activeFocus ? Scaler.s(1.5) : 0
+                    border.color: ThemeBackend.mauve
+
+                    TextInput {
+                        id: hexInput
+                        anchors.fill: parent
+                        anchors.leftMargin: Scaler.s(7)
+                        anchors.rightMargin: Scaler.s(7)
+                        verticalAlignment: TextInput.AlignVCenter
+                        font.family: ThemeBackend.fontFamily
+                        font.pixelSize: Scaler.s(11)
+                        color: ThemeBackend.text
+                        selectByMouse: true
+                        maximumLength: 7
+                        validator: RegularExpressionValidator { regularExpression: /#?[0-9a-fA-F]{0,6}/ }
+                        readonly property string current: settingRoot.perDigit ? (settingRoot.digits[settingRoot.selectedDigit] || "") : settingRoot.clockColor
+                        text: current.charAt(0) === "#" ? current : ""
+                        onAccepted: {
+                            let t = text.charAt(0) === "#" ? text : "#" + text;
+                            if (/^#[0-9a-fA-F]{6}$/.test(t)) settingRoot.pick(t.toLowerCase());
+                            focus = false;
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: hexInput.text === "" && !hexInput.activeFocus
+                            text: "#hex"
+                            font: hexInput.font
+                            color: ThemeBackend.overlay1
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     readonly property var usageCircleSettings: [
         {
             id: "sineWave",
@@ -839,7 +1070,23 @@ QtObject {
                 "lockscreen":     { file: "faces/clock/ClockFaceLockscreen.qml",     icon: "7", label: I18n.t("widgets.variants.lockscreen", "Lockscreen") },
                 "stretched":      { file: "faces/clock/ClockFaceStretched.qml",      icon: "8", label: I18n.t("widgets.variants.stretched", "Stretched") },
                 "stacked":        { file: "faces/clock/ClockFaceStacked.qml",        icon: "9", label: I18n.t("widgets.variants.stacked", "Stacked") }
-            }
+            },
+            additionalSettings: [
+                {
+                    id: "clockColor",
+                    name: I18n.t("widgets.settings.clockColor", "Colour"),
+                    icon: String.fromCodePoint(0xF03D8),
+                    iconFontSize: 16,
+                    action: "clockColor",
+                    type: "custom",
+                    row: "top",
+                    variants: ["digital", "minimal", "material", "stacked", "stretched", "lockscreen"],
+                    property: "clockColor",
+                    accentColor: "surface0",
+                    textColor: "mauve",
+                    component: registry.clockColorComponent
+                }
+            ]
         },
         "music": {
             name: I18n.t("widgets.types.music"),

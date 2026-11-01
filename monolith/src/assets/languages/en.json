@@ -1638,7 +1638,9 @@
       "showNoLyrics": "Show \"no lyrics\" text",
       "coverRoundness": "Roundness",
       "bgBlur": "Blur",
-      "backgroundOpacity": "Opacity"
+      "backgroundOpacity": "Opacity",
+      "perDigit": "Each digit",
+      "clockColor": "Colour"
     },
     "align": {
       "left": "Left",
