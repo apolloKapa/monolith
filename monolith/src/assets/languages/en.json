@@ -1600,7 +1600,9 @@
       "circle": "Circle",
       "stacked": "Stacked",
       "greeting": "Greeting",
-      "card": "Card"
+      "card": "Card",
+      "cover": "Cover",
+      "controls": "Controls"
     },
     "presets": {
       "minimal": {
@@ -1633,7 +1635,8 @@
       "usageStyle": "Style",
       "lineThickness": "Thickness",
       "visualizerStyle": "Visualizer style",
-      "showNoLyrics": "Show \"no lyrics\" text"
+      "showNoLyrics": "Show \"no lyrics\" text",
+      "coverRoundness": "Roundness"
     },
     "align": {
       "left": "Left",

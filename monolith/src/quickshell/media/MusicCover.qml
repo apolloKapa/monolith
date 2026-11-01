@@ -124,7 +124,7 @@ Item {
             gamma: 1.08
             rise: 0.55
             fall: 0.55
-            ringRadius: ThemeBackend.rad(coverHost.artRadius)
+            ringRadius: coverHost.artRadius
             ringBarWidth: coverHost.barWidth
             maxLength: coverHost.maxBarHeight * 1.4
             minLength: root.s(2)
