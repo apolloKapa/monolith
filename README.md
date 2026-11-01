@@ -106,7 +106,7 @@ Everything below is built in.
 - Music (`Mod+Alt+M`): player controls, synced lyrics, cover art
 - Clipboard history (`Mod+Alt+C`)
 - Calendar
-- On-screen display for volume, brightness and caps/num lock
+- On-screen display for volume, brightness, caps/num lock, airplane mode and keyboard layout switches (each one can be turned off)
 - Quick actions: calculator, notes, timer, drawing, system usage, dock
 - Workspace overview (`monolith msg toggle overview`): every monitor's workspaces with their windows drawn to scale in niri's columns; click to jump, type to search windows and apps
 - Dashboard (`monolith msg toggle dashboard`): clock, weather, month, what's playing, recent notifications, a pomodoro timer and a todo list
@@ -118,7 +118,7 @@ None of these have keybinds by default, so your niri config stays as it is; bind
 
 **Wallpapers** (`Mod+W`): picker with transitions, video wallpapers, and online search (DuckDuckGo, only when you search).
 
-**Desktop widgets**: clock, music, system usage, weather, battery, image, GitHub contributions, user, visualizer. There's a drag-and-drop widget editor.
+**Desktop widgets**: clock, music, system usage, weather, battery, image, GitHub contributions, user, calendar, visualizer. There's a drag-and-drop widget editor.
 
 **Lock screen** (`Mod+L`): password and fingerprint. Layout editor for avatar, user, battery, keyboard layout, notifications and lock status.
 
@@ -129,7 +129,7 @@ None of these have keybinds by default, so your niri config stays as it is; bind
 **Settings** (`Mod+S`, or *Monolith Settings* in the app launcher) opens in its own window, with search and full keyboard navigation (Tab, arrows, Enter):
 
 - Welcome
-- General: language, location, weather units, sounds, and **Online** features (all off until you switch them on): song recognition and the Wallhaven browser
+- General: language, location, weather units, sounds, and **Online** features (all off until you switch them on): song recognition
 - Display: monitors (resolution, refresh rate, rotation, scale, on/off, night light; resolution, refresh rate and rotation are saved to niri's config and go back by themselves unless you confirm them, like KDE), widgets, lock screen
 - Theme: 97 colour presets, colours from your wallpaper (matugen), fonts, corner radius, opacity, and the **style**, picked from a preview grid:
   - **Blur**, **Liquid glass**: see-through, your colours
@@ -140,6 +140,7 @@ None of these have keybinds by default, so your niri config stays as it is; bind
   - **Poster**: carbon plates, signal yellow, bold square frames
   - **Bubbly**: extra-round corners, keeps your colours
   - **Paper**: ink on paper, serif type (Lora), fine rules
+  - **Shadow**: grey cards, JetBrains Mono, no colour (after shadoww.dev's DarkShadow's Shell); goes with the **Shadow** widget preset (stacked clock, greeting card, usage cards, calendar)
 - Theme → Apps: GTK, Qt, foot, alacritty, btop and rofi can follow Monolith's colours; switching one off puts its config back exactly as it was
 - Theme → Effects: **Unfold** (popups open from a thin line, like an old screen switching on), **Edge light** (a soft light along each panel's top) and **Grain** (faint film grain on panels), all on by default
 - Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, the same speed for niri's window animations, and **GameMode** (no animations, blur or glass while a fullscreen window has focus)
@@ -159,7 +160,7 @@ None of these have keybinds by default, so your niri config stays as it is; bind
 - **Private**:
   - no telemetry
   - no IP geolocation and no reverse geocoding; weather uses the location you set in Settings → General and only sends those coordinates to open-meteo
-  - online extras are off until you turn them on (Settings → General → Online): **song recognition** records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (through `songrec`); **Wallhaven** searches and downloads from wallhaven.cc (safe-for-work as rated by Wallhaven, so some anime art can be borderline)
+  - online extras are off until you turn them on (Settings → General → Online): **song recognition** records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (through `songrec`)
   - lyrics only from lrclib (NetEase removed)
   - things that still go online only do so when you use them: lyrics, YouTube cover art, the GitHub widget, wallpaper search, the Wi-Fi login-page button
 - **Its own look and voice**: Monolith logo, horizon intro ("really good desktop :3"), Lith the sleepy slab mascot (replaces the Pusheen GIFs), own name and paths
@@ -280,7 +281,7 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `monolith restart` / `kill` | restart / stop the shell |
 | `monolith settings [tab]` | open the settings window (on a tab, e.g. `monolith settings about`) |
 | `monolith config get\|set\|dump\|edit` | read or change settings from the terminal |
-| `monolith msg toggle <panel>` | open/close `launcher`, `system`, `settings`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `overview`, `dashboard`, `switcher`, `cheatsheet`, `session`, `wallhaven`, `autohide` |
+| `monolith msg toggle <panel>` | open/close `launcher`, `system`, `settings`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `overview`, `dashboard`, `switcher`, `cheatsheet`, `session`, `autohide` |
 | `monolith recognize` | what's this song? (when song recognition is on) |
 | `monolith ipc call island toggle` | unfold / fold the island (Island bar style) |
 | `monolith msg workspace <n> [move]` | go to / move to workspace |

@@ -79,11 +79,7 @@
         "title": "Ordenação inteligente no lançador",
         "desc": "Ordena apps por uso e tempo gasto neles"
       },
-      "test": "Abrir lançador",
-      "search": {
-        "title": "Mecanismo de busca na web",
-        "desc": "Mecanismo usado quando a consulta começa com ?"
-      }
+      "test": "Abrir lançador"
     },
     "notifications": {
       "dnd": {
@@ -259,10 +255,6 @@
         "song": {
           "title": "Song recognition",
           "desc": "\"What's this song?\" in the dashboard: records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (needs songrec)"
-        },
-        "wallhaven": {
-          "title": "Wallhaven",
-          "desc": "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven"
         }
       }
     },
@@ -1032,9 +1024,7 @@
     "tab_files": "Arquivos",
     "placeholder_files": "Buscar arquivos ou digitar caminho...",
     "tab_emojis": "Emojis",
-    "placeholder_emojis": "Buscar emojis ou digitar palavra-chave...",
-    "search_run": "Pesquisar com {provider}",
-    "search_hint": "Digite para pesquisar com {provider}"
+    "placeholder_emojis": "Buscar emojis ou digitar palavra-chave..."
   },
   "calendar": {
     "loading": "Carregando...",
@@ -1815,17 +1805,5 @@
   },
   "island": {
     "workspaces": "Workspaces"
-  },
-  "wallhaven": {
-    "search": "Search wallhaven.cc (empty = popular)",
-    "top": "Top",
-    "latest": "Latest",
-    "random": "Random",
-    "offline": "Browsing Wallhaven talks to wallhaven.cc (searches and image downloads), so it's off until you turn it on. Only safe-for-work wallpapers are shown.",
-    "enable": "Turn on Wallhaven",
-    "downloading": "Downloading…",
-    "loading": "Loading…",
-    "failed": "Couldn't reach wallhaven.cc",
-    "none": "No wallpapers found"
   }
 }

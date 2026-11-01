@@ -227,6 +227,7 @@
     "showCapsLock": false,
     "showNumLock": false,
     "showAirplane": true,
+    "showKbLayout": true,
     "attachToBar": true
   }
 }

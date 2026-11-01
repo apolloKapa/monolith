@@ -79,11 +79,7 @@
         "title": "런처 항목 스마트 정렬",
         "desc": "사용 빈도와 사용 시간을 기준으로 앱을 정렬합니다"
       },
-      "test": "런처 열기",
-      "search": {
-        "title": "웹 검색 제공자",
-        "desc": "?로 시작하는 쿼리에 사용할 검색 엔진"
-      }
+      "test": "런처 열기"
     },
     "notifications": {
       "dnd": {
@@ -259,10 +255,6 @@
         "song": {
           "title": "Song recognition",
           "desc": "\"What's this song?\" in the dashboard: records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (needs songrec)"
-        },
-        "wallhaven": {
-          "title": "Wallhaven",
-          "desc": "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven"
         }
       }
     },
@@ -1032,9 +1024,7 @@
     "tab_files": "파일",
     "placeholder_files": "파일 검색 또는 경로 입력...",
     "tab_emojis": "이모지",
-    "placeholder_emojis": "이모지 검색 또는 키워드 입력...",
-    "search_run": "{provider}에서 검색",
-    "search_hint": "입력하여 {provider}에서 검색"
+    "placeholder_emojis": "이모지 검색 또는 키워드 입력..."
   },
   "calendar": {
     "loading": "불러오는 중...",
@@ -1815,17 +1805,5 @@
   },
   "island": {
     "workspaces": "Workspaces"
-  },
-  "wallhaven": {
-    "search": "Search wallhaven.cc (empty = popular)",
-    "top": "Top",
-    "latest": "Latest",
-    "random": "Random",
-    "offline": "Browsing Wallhaven talks to wallhaven.cc (searches and image downloads), so it's off until you turn it on. Only safe-for-work wallpapers are shown.",
-    "enable": "Turn on Wallhaven",
-    "downloading": "Downloading…",
-    "loading": "Loading…",
-    "failed": "Couldn't reach wallhaven.cc",
-    "none": "No wallpapers found"
   }
 }

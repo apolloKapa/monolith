@@ -4,7 +4,6 @@ import QtQuick.Controls
 import Quickshell
 import "../"
 import "../reusables"
-import "../launcher/SearchProviders.js" as SearchProviders
 
 GuideTab {
     id: launcherTabRoot
@@ -15,15 +14,13 @@ GuideTab {
         "itemCount": 6,
         "terminalCommand": "kitty -e",
         "smartRanking": true,
-        "searchProvider": "google",
         "favorites": [],
         "showRail": true,
         "gridView": false,
         "gridColumns": 5,
         "favColumns": 4,
         "appOrder": [],
-        "showDescriptions": true,
-        "webSearch": true
+        "showDescriptions": true
     })
 
     property var launcherSettings: {
@@ -46,9 +43,7 @@ GuideTab {
     property int currentGridColumns: (launcherSettings && Number(launcherSettings.gridColumns) >= 3) ? Number(launcherSettings.gridColumns) : 5
     property int currentFavColumns: (launcherSettings && Number(launcherSettings.favColumns) >= 2) ? Number(launcherSettings.favColumns) : 4
     property bool currentShowDescriptions: !(launcherSettings && launcherSettings.showDescriptions === false)
-    property bool currentWebSearch: !(launcherSettings && launcherSettings.webSearch === false)
 
-    property string currentSearchProvider: launcherSettings && launcherSettings.searchProvider !== undefined ? launcherSettings.searchProvider : SearchProviders.DEFAULT_ID
 
     function syncSettings() {
         let s = (typeof Config !== "undefined" && typeof Config.getSetting === "function")
@@ -60,13 +55,11 @@ GuideTab {
         launcherTabRoot.currentItemCount = s.itemCount !== undefined ? s.itemCount : 6;
         launcherTabRoot.currentTerminalCommand = s.terminalCommand !== undefined ? s.terminalCommand : "kitty -e";
         launcherTabRoot.currentSmartRanking = s.smartRanking !== undefined ? s.smartRanking : true;
-        launcherTabRoot.currentSearchProvider = s.searchProvider !== undefined ? s.searchProvider : SearchProviders.DEFAULT_ID;
         launcherTabRoot.currentShowRail = s.showRail !== false;
         launcherTabRoot.currentGridView = s.gridView === true;
         launcherTabRoot.currentGridColumns = Number(s.gridColumns) >= 3 ? Number(s.gridColumns) : 5;
         launcherTabRoot.currentShowDescriptions = s.showDescriptions !== false;
         launcherTabRoot.currentFavColumns = Number(s.favColumns) >= 2 ? Number(s.favColumns) : 4;
-        launcherTabRoot.currentWebSearch = s.webSearch !== false;
     }
 
     function updateLauncherSetting(key, value) {
@@ -99,7 +92,6 @@ GuideTab {
             syncSettings();
         } else {
             if (posDropdown.isOpen) posDropdown.closePopup();
-            if (searchDropdown.isOpen) searchDropdown.closePopup();
         }
     }
 
@@ -152,21 +144,14 @@ GuideTab {
                     readonly property color chip: ThemeBackend.material ? ThemeBackend.surfaceContainerHigh : Qt.lighter(ThemeBackend.surface0, 1.2)
                     readonly property color ink: Qt.alpha(ThemeBackend.text, 0.35)
 
-                    // search field (+ globe button)
+                    // search field
                     Rectangle {
                         x: 10 * lp.u; y: 10 * lp.u
-                        width: lp.width - 20 * lp.u - (launcherTabRoot.currentWebSearch ? 26 * lp.u : 0)
+                        width: lp.width - 20 * lp.u
                         height: 20 * lp.u
                         radius: height / 2
                         color: lp.chip
                         Rectangle { x: 10 * lp.u; anchors.verticalCenter: parent.verticalCenter; width: parent.width * 0.3; height: 4 * lp.u; radius: 2 * lp.u; color: lp.ink }
-                    }
-                    Rectangle {
-                        visible: launcherTabRoot.currentWebSearch
-                        x: lp.width - 30 * lp.u; y: 10 * lp.u
-                        width: 20 * lp.u; height: 20 * lp.u; radius: 10 * lp.u
-                        color: lp.chip
-                        Text { anchors.centerIn: parent; text: "󰖟"; font.family: ThemeBackend.iconFont; font.pixelSize: 11 * lp.u; color: ThemeBackend.text }
                     }
 
                     // left: tabs + favourites grid
@@ -559,22 +544,6 @@ GuideTab {
                         onToggled: function(val) { launcherTabRoot.currentShowDescriptions = val; }
                     }
                 }
-
-                SettingsRow {
-                    rootObj: launcherTabRoot.rootObj
-                    settingId: "launcher_web"
-                    icon: "󰖟"
-                    configKey: "launcher.webSearch"
-                    defaultValue: true
-                    title: I18n.t("guide.launcher.web.title", "Web search")
-                    description: I18n.t("guide.launcher.web.desc", "The globe button next to the search field, and searching the web by starting with ?")
-                    searchKeywords: "web search browser internet globe question mark launcher"
-                    LauncherToggle {
-                        key: "webSearch"
-                        checked: launcherTabRoot.currentWebSearch
-                        onToggled: function(val) { launcherTabRoot.currentWebSearch = val; }
-                    }
-                }
             }
 
             SettingsBlob {
@@ -630,37 +599,6 @@ GuideTab {
                         onAccepted: function(finalText) {
                             launcherTabRoot.currentTerminalCommand = finalText;
                             launcherTabRoot.updateLauncherSetting("terminalCommand", finalText);
-                        }
-                    }
-                }
-
-                SettingsRow {
-                    rootObj: launcherTabRoot.rootObj
-                    icon: "󰖟"
-                    configKey: "launcher.searchProvider"
-                    defaultValue: "google"
-                    title: I18n.t("guide.launcher.search.title", "Web search provider")
-                    description: I18n.t("guide.launcher.search.desc", "Search engine used when a query starts with ?")
-
-                    Dropdown {
-                        id: searchDropdown
-                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                        implicitWidth: rootObj.s(180)
-                        implicitHeight: rootObj.s(32)
-                        options: SearchProviders.names()
-                        currentIndex: SearchProviders.indexOf(launcherTabRoot.currentSearchProvider)
-                        accentColor: ThemeBackend.mauve
-                        baseColor: ThemeBackend.surface0
-                        hoverColor: ThemeBackend.surface1
-                        dropdownColor: ThemeBackend.surface0
-                        borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                        textColor: ThemeBackend.text
-                        activeTextColor: ThemeBackend.crust
-                        fontPixelSize: rootObj.s(11)
-                        onValueChanged: function(index, value) {
-                            let id = SearchProviders.PROVIDERS[index].id;
-                            launcherTabRoot.currentSearchProvider = id;
-                            launcherTabRoot.updateLauncherSetting("searchProvider", id);
                         }
                     }
                 }

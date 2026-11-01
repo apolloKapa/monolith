@@ -79,11 +79,7 @@
         "title": "Интелигентно сортиране на елементите в стартера",
         "desc": "Сортиране на приложенията според употребата и прекараното време в тях"
       },
-      "test": "Отваряне на стартера",
-      "search": {
-        "title": "Уеб търсачка",
-        "desc": "Търсачка за заявки, започващи с ?"
-      }
+      "test": "Отваряне на стартера"
     },
     "notifications": {
       "dnd": {
@@ -259,10 +255,6 @@
         "song": {
           "title": "Song recognition",
           "desc": "\"What's this song?\" in the dashboard: records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (needs songrec)"
-        },
-        "wallhaven": {
-          "title": "Wallhaven",
-          "desc": "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven"
         }
       }
     },
@@ -1032,9 +1024,7 @@
     "tab_files": "Файлове",
     "placeholder_files": "Търсене на файлове или въвеждане на път...",
     "tab_emojis": "Емоджита",
-    "placeholder_emojis": "Търсене на емоджита по име или ключова дума...",
-    "search_run": "Търсене в {provider}",
-    "search_hint": "Въведете, за да търсите в {provider}"
+    "placeholder_emojis": "Търсене на емоджита по име или ключова дума..."
   },
   "calendar": {
     "loading": "Зареждане...",
@@ -1815,17 +1805,5 @@
   },
   "island": {
     "workspaces": "Workspaces"
-  },
-  "wallhaven": {
-    "search": "Search wallhaven.cc (empty = popular)",
-    "top": "Top",
-    "latest": "Latest",
-    "random": "Random",
-    "offline": "Browsing Wallhaven talks to wallhaven.cc (searches and image downloads), so it's off until you turn it on. Only safe-for-work wallpapers are shown.",
-    "enable": "Turn on Wallhaven",
-    "downloading": "Downloading…",
-    "loading": "Loading…",
-    "failed": "Couldn't reach wallhaven.cc",
-    "none": "No wallpapers found"
   }
 }

@@ -79,11 +79,7 @@
         "title": "Smart sorting of items in launcher",
         "desc": "Sort apps based on usage and amount of time spent in them"
       },
-      "test": "Open launcher",
-      "search": {
-        "title": "Web search provider",
-        "desc": "Search engine used when a query starts with ?"
-      }
+      "test": "Open launcher"
     },
     "notifications": {
       "dnd": {
@@ -259,10 +255,6 @@
         "song": {
           "title": "Song recognition",
           "desc": "\"What's this song?\" in the dashboard: records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (needs songrec)"
-        },
-        "wallhaven": {
-          "title": "Wallhaven",
-          "desc": "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven"
         }
       }
     },
@@ -867,6 +859,10 @@
       "orientation": {
         "horizontal": "Horizontal",
         "vertical": "Vertical"
+      },
+      "kblayout": {
+        "title": "Show on keyboard layout change",
+        "desc": "The new layout's name pops up when you switch keyboard language"
       }
     },
     "common": {
@@ -1054,9 +1050,7 @@
     "tab_files": "Files",
     "placeholder_files": "Search files or enter path...",
     "tab_emojis": "Emojis",
-    "placeholder_emojis": "Search emojis by name or keyword...",
-    "search_run": "Search {provider}",
-    "search_hint": "Type to search with {provider}"
+    "placeholder_emojis": "Search emojis by name or keyword..."
   },
   "calendar": {
     "loading": "Loading...",
@@ -1579,7 +1573,8 @@
       "battery": "Battery",
       "github": "Github",
       "time": "Time",
-      "notes": "Notes"
+      "notes": "Notes",
+      "calendar": "Calendar"
     },
     "variants": {
       "digital": "Digital",
@@ -1600,7 +1595,10 @@
       "lumen": "Lumen",
       "lyrics": "Lyrics",
       "simpleLyrics": "Simple Lyrics",
-      "circle": "Circle"
+      "circle": "Circle",
+      "stacked": "Stacked",
+      "greeting": "Greeting",
+      "card": "Card"
     },
     "presets": {
       "minimal": {
@@ -1611,6 +1609,9 @@
       },
       "dashboard": {
         "name": "Dashboard"
+      },
+      "shadow": {
+        "name": "Shadow"
       }
     },
     "github": {
@@ -1643,6 +1644,14 @@
     },
     "notes": {
       "empty": "No notes yet"
+    },
+    "greeting": {
+      "hi": "Hi, %1!",
+      "morning": "Good Morning",
+      "afternoon": "Good Afternoon",
+      "evening": "Good Evening",
+      "night": "Good Night",
+      "today": "Today"
     }
   },
   "cli": {
@@ -1856,17 +1865,5 @@
   },
   "island": {
     "workspaces": "Workspaces"
-  },
-  "wallhaven": {
-    "search": "Search wallhaven.cc (empty = popular)",
-    "top": "Top",
-    "latest": "Latest",
-    "random": "Random",
-    "offline": "Browsing Wallhaven talks to wallhaven.cc (searches and image downloads), so it's off until you turn it on. Only safe-for-work wallpapers are shown.",
-    "enable": "Turn on Wallhaven",
-    "downloading": "Downloading…",
-    "loading": "Loading…",
-    "failed": "Couldn't reach wallhaven.cc",
-    "none": "No wallpapers found"
   }
 }

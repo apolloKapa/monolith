@@ -41,23 +41,4 @@ SettingsBlob {
             onToggled: function(val) { section.setOnline("songRecognition", val); }
         }
     }
-
-    SettingsRow {
-        rootObj: section.rootObj
-        settingId: "online_wallhaven"
-        icon: "󰸉"
-        title: I18n.t("guide.general.online.wallhaven.title", "Wallhaven")
-        description: I18n.t("guide.general.online.wallhaven.desc", "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven")
-        searchKeywords: "wallhaven wallpapers download online internet browse search"
-
-        Toggle {
-            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-            checked: section.online.wallhaven === true
-            accentColor: ThemeBackend.mauve
-            baseColor: ThemeBackend.surface1
-            handleColor: ThemeBackend.crust
-            handleOffColor: ThemeBackend.text
-            onToggled: function(val) { section.setOnline("wallhaven", val); }
-        }
-    }
 }

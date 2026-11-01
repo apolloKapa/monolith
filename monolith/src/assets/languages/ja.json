@@ -32,9 +32,7 @@
     "tab_files": "ファイル",
     "placeholder_files": "ファイルを検索またはパスを入力...",
     "tab_emojis": "絵文字",
-    "placeholder_emojis": "名前やキーワードで絵文字を検索...",
-    "search_run": "{provider} で検索",
-    "search_hint": "入力して {provider} で検索"
+    "placeholder_emojis": "名前やキーワードで絵文字を検索..."
   },
   "calendar": {
     "loading": "読み込み中...",
@@ -850,11 +848,7 @@
         "title": "ランチャー項目のスマートソート",
         "desc": "アプリの使用頻度と滞在時間に基づいて並び替えます"
       },
-      "test": "ランチャーを開く",
-      "search": {
-        "title": "ウェブ検索プロバイダー",
-        "desc": "? で始まるクエリに使用する検索エンジン"
-      }
+      "test": "ランチャーを開く"
     },
     "notifications": {
       "dnd": {
@@ -1030,10 +1024,6 @@
         "song": {
           "title": "Song recognition",
           "desc": "\"What's this song?\" in the dashboard: records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (needs songrec)"
-        },
-        "wallhaven": {
-          "title": "Wallhaven",
-          "desc": "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven"
         }
       }
     },
@@ -1815,17 +1805,5 @@
   },
   "island": {
     "workspaces": "Workspaces"
-  },
-  "wallhaven": {
-    "search": "Search wallhaven.cc (empty = popular)",
-    "top": "Top",
-    "latest": "Latest",
-    "random": "Random",
-    "offline": "Browsing Wallhaven talks to wallhaven.cc (searches and image downloads), so it's off until you turn it on. Only safe-for-work wallpapers are shown.",
-    "enable": "Turn on Wallhaven",
-    "downloading": "Downloading…",
-    "loading": "Loading…",
-    "failed": "Couldn't reach wallhaven.cc",
-    "none": "No wallpapers found"
   }
 }

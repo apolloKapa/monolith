@@ -79,11 +79,7 @@
         "title": "Pengurutan cerdas untuk item di peluncur",
         "desc": "Urutkan aplikasi berdasarkan penggunaan dan jumlah waktu yang dihabiskan di dalamnya"
       },
-      "test": "Buka peluncur",
-      "search": {
-        "title": "Penyedia pencarian web",
-        "desc": "Mesin pencari yang digunakan saat kueri diawali ?"
-      }
+      "test": "Buka peluncur"
     },
     "notifications": {
       "dnd": {
@@ -259,10 +255,6 @@
         "song": {
           "title": "Song recognition",
           "desc": "\"What's this song?\" in the dashboard: records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (needs songrec)"
-        },
-        "wallhaven": {
-          "title": "Wallhaven",
-          "desc": "Search and download wallpapers from wallhaven.cc (safe-for-work only). Open it with: monolith msg toggle wallhaven"
         }
       }
     },
@@ -1032,9 +1024,7 @@
     "tab_files": "Berkas",
     "placeholder_files": "Cari berkas atau masukkan jalur...",
     "tab_emojis": "Emoji",
-    "placeholder_emojis": "Cari emoji berdasarkan nama atau kata kunci...",
-    "search_run": "Cari dengan {provider}",
-    "search_hint": "Ketik untuk mencari dengan {provider}"
+    "placeholder_emojis": "Cari emoji berdasarkan nama atau kata kunci..."
   },
   "calendar": {
     "loading": "Memuat...",
@@ -1815,17 +1805,5 @@
   },
   "island": {
     "workspaces": "Workspaces"
-  },
-  "wallhaven": {
-    "search": "Search wallhaven.cc (empty = popular)",
-    "top": "Top",
-    "latest": "Latest",
-    "random": "Random",
-    "offline": "Browsing Wallhaven talks to wallhaven.cc (searches and image downloads), so it's off until you turn it on. Only safe-for-work wallpapers are shown.",
-    "enable": "Turn on Wallhaven",
-    "downloading": "Downloading…",
-    "loading": "Loading…",
-    "failed": "Couldn't reach wallhaven.cc",
-    "none": "No wallpapers found"
   }
 }

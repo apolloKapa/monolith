@@ -11,7 +11,6 @@ import "../"
 import "../reusables"
 import "../WindowRegistry.js" as WindowRegistry
 import "./EmojiData.js" as EmojiData
-import "./SearchProviders.js" as SearchProviders
 
 PanelWindow {
     id: launcherWindow
@@ -210,15 +209,13 @@ PanelWindow {
         "itemCount": 6,
         "terminalCommand": "kitty -e",
         "smartRanking": true,
-        "searchProvider": "google",
         "favorites": [],
         "showRail": true,
         "gridView": false,
         "gridColumns": 5,
         "favColumns": 4,
         "appOrder": [],
-        "showDescriptions": true,
-        "webSearch": true
+        "showDescriptions": true
     })
 
     property var rawLauncherSettings: {
@@ -236,15 +233,13 @@ PanelWindow {
     property real customWidth: (rawLauncherSettings && rawLauncherSettings.width !== undefined && !isNaN(rawLauncherSettings.width) && rawLauncherSettings.width > 0) ? rawLauncherSettings.width : 600
     property int customItemCount: (rawLauncherSettings && rawLauncherSettings.itemCount !== undefined && !isNaN(rawLauncherSettings.itemCount) && rawLauncherSettings.itemCount > 0) ? rawLauncherSettings.itemCount : 6
     property string terminalCommand: (rawLauncherSettings && rawLauncherSettings.terminalCommand !== undefined) ? rawLauncherSettings.terminalCommand : "kitty -e"
-    property string searchProvider: (rawLauncherSettings && rawLauncherSettings.searchProvider !== undefined) ? rawLauncherSettings.searchProvider : SearchProviders.DEFAULT_ID
     property bool smartRanking: (rawLauncherSettings && rawLauncherSettings.smartRanking !== undefined) ? rawLauncherSettings.smartRanking : true
-    // Settings -> Launcher: the left rail (tabs + favourite apps), grid view, descriptions, web search
+    // Settings -> Launcher: the left rail (tabs + favourite apps), grid view, descriptions
     property var favorites: (rawLauncherSettings && Array.isArray(rawLauncherSettings.favorites)) ? rawLauncherSettings.favorites : []
     property bool showRail: !(rawLauncherSettings && rawLauncherSettings.showRail === false)
     property bool gridView: !!(rawLauncherSettings && rawLauncherSettings.gridView === true)
     property int gridColumns: (rawLauncherSettings && Number(rawLauncherSettings.gridColumns) >= 3) ? Math.min(8, Number(rawLauncherSettings.gridColumns)) : 5
     property bool showDescriptions: !(rawLauncherSettings && rawLauncherSettings.showDescriptions === false)
-    property bool webSearch: !(rawLauncherSettings && rawLauncherSettings.webSearch === false)
     // apps show as a grid (only the Applications tab; files stay a list)
     readonly property bool appGridActive: gridView && currentTabIndex === 0
     // the favourites pane: the left part of the launcher, a grid of pinned apps under the tabs
@@ -342,20 +337,6 @@ PanelWindow {
             if (resolved && resolved.length > 0) return resolved.startsWith("/") ? ("file://" + resolved) : resolved;
         }
         return "image://icon/" + baseName;
-    }
-    // the web button: search what's typed, or start a "?" web query
-    function webButton() {
-        let q = searchInput.text.trim();
-        if (q.startsWith("?")) q = q.substring(1).trim();
-        if (q.length > 0 && !q.startsWith(">")) {
-            Quickshell.execDetached(["xdg-open", SearchProviders.urlFor(launcherWindow.searchProvider, q)]);
-            closeLauncher();
-        } else {
-            if (launcherWindow.currentTabIndex !== 0) launcherWindow.currentTabIndex = 0;
-            searchInput.text = "? ";
-            filterApps(searchInput.text);
-            launcherWindow.grabInputFocus();
-        }
     }
 
     onSmartRankingChanged: {
@@ -1058,34 +1039,6 @@ PanelWindow {
             }
         }
 
-        if (launcherWindow.webSearch && rawTrimmed.startsWith("?")) {
-            let term = rawTrimmed.substring(1).trim();
-            let provider = SearchProviders.find(launcherWindow.searchProvider);
-            filtered.push({
-                name: term.length > 0 ? "? " + term : "? ...",
-                description: term.length > 0
-                    ? (typeof I18n !== "undefined" ? I18n.t("applauncher.search_run", { provider: provider.name }) : ("Search " + provider.name))
-                    : (typeof I18n !== "undefined" ? I18n.t("applauncher.search_hint", { provider: provider.name }) : "Type to search the web"),
-                desktop_id: "",
-                icon: "",
-                fontIcon: "󰖟",
-                score: 10000000,
-                isCommand: false,
-                command: "",
-                isCalc: false,
-                isSearch: term.length > 0,
-                searchUrl: term.length > 0 ? SearchProviders.urlFor(launcherWindow.searchProvider, term) : "",
-                calcResult: "",
-                isWidget: false,
-                widgetTarget: "",
-                isFile: false,
-                filePath: "",
-                isDir: false
-            });
-            applyModelItems(filtered);
-            return;
-        }
-
         let mathResult = evaluateMath(rawTrimmed);
         if (mathResult !== null) {
             filtered.push({
@@ -1217,12 +1170,6 @@ PanelWindow {
                 + "  xdg-open \"$(dirname \"$p\")\" >/dev/null 2>&1 &\n"
                 + "fi";
             Quickshell.execDetached(["bash", "-c", script, "_", item.filePath]);
-            closeLauncher();
-            return;
-        }
-
-        if (item.isSearch) {
-            if (item.searchUrl) Quickshell.execDetached(["xdg-open", item.searchUrl]);
             closeLauncher();
             return;
         }
@@ -1482,7 +1429,6 @@ PanelWindow {
                     Keys.priority: Keys.BeforeItem
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    anchors.rightMargin: launcherWindow.webSearch ? launcherWindow.s(44) : 0
                     y: contentContainer.isSearchAtBottom ? Math.max(0, parent.height - height) : 0
                     height: launcherWindow.s(36)
 
@@ -1617,23 +1563,6 @@ PanelWindow {
                         closeLauncher();
                         event.accepted = true;
                     }
-                }
-
-                // web search button next to the search field (Settings -> Launcher -> Web search)
-                IconButton {
-                    id: webBtn
-                    z: 10
-                    visible: launcherWindow.webSearch
-                    anchors.right: parent.right
-                    y: searchInput.y
-                    size: launcherWindow.s(36)
-                    cornerRadius: ThemeBackend.borderRadius
-                    buttonIcon: "󰖟"
-                    iconFontSize: launcherWindow.s(16)
-                    glassShadow: 0
-                    accentColor: ThemeBackend.surface0
-                    textColor: ThemeBackend.text
-                    onClicked: launcherWindow.webButton()
                 }
 
                 // the tabs: a row here, or icons in the rail when it's on

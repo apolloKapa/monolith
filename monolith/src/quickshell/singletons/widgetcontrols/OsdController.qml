@@ -111,6 +111,17 @@ Item {
         }
     }
 
+    // keyboard layout switched (niri): the OSD shows the new layout's name
+    Connections {
+        target: NiriState
+        function onKeyboardLayoutSwitched() {
+            if (!controller.isInitialized) return;
+            let name = NiriState.keyboardLayout;
+            if (name === "") return;
+            controller.show("kblayout", name);
+        }
+    }
+
     onSysBrightnessChanged: {
         if (!controller.isInitialized) return;
         if (controller.lastBrightness !== controller.sysBrightness) {
