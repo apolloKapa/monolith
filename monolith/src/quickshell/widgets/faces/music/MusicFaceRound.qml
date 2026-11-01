@@ -147,7 +147,7 @@ Item {
             gamma: root.continuous ? 1.25 : 1.08
             rise: root.continuous ? 0.5 : 0.55
             fall: root.continuous ? 0.3 : 0.55
-            ringRadius: ThemeBackend.rad(root.artRadius)
+            ringRadius: root.artRadius
             ringBarWidth: root.barWidth
             maxLength: root.maxBarHeight
             minLength: 2.5

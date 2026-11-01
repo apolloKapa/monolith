@@ -550,6 +550,71 @@ QtObject {
         }
     }
 
+    // 0 = sharp square ... 50 = circle, stored as a 0..0.5 share of the side
+    property Component coverRoundnessComponent: Component {
+        Item {
+            id: settingRoot
+            property var typeData: null
+            property var settingData: null
+            property var redactor: null
+            property var widget: null
+            property var widgetData: null
+            property var item: null
+
+            readonly property var targetWidget: settingRoot.widget || settingRoot.widgetData || settingRoot.item || null
+
+            implicitWidth: roundnessSelector.implicitWidth
+            implicitHeight: roundnessSelector.implicitHeight
+
+            function syncValue() {
+                let w = settingRoot.targetWidget;
+                if (!w) return;
+                let cur = Math.round(((w.coverRoundness !== undefined) ? w.coverRoundness : 0.12) * 100);
+                if (roundnessSelector.value !== cur) roundnessSelector.setValue(cur);
+            }
+
+            Component.onCompleted: syncValue()
+            onTargetWidgetChanged: syncValue()
+
+            Connections {
+                target: settingRoot.targetWidget
+                ignoreUnknownSignals: true
+                function onCoverRoundnessChanged() {
+                    settingRoot.syncValue();
+                }
+            }
+
+            NumberSelector {
+                id: roundnessSelector
+                anchors.centerIn: parent
+                implicitWidth: Scaler.s(120)
+                implicitHeight: Scaler.s(32)
+                from: 0
+                to: 50
+                stepSize: 2
+                decimals: 0
+                value: {
+                    let w = settingRoot.targetWidget;
+                    return Math.round(((w && w.coverRoundness !== undefined) ? w.coverRoundness : 0.12) * 100);
+                }
+                fontFamily: ThemeBackend.fontFamily
+                accentColor: ThemeBackend.mauve
+                baseColor: ThemeBackend.surface0
+                buttonColor: ThemeBackend.surface1
+                textColor: ThemeBackend.text
+                buttonTextColor: ThemeBackend.subtext1
+                cornerRadius: ThemeBackend.borderRadius
+
+                onTriggered: {
+                    let val = roundnessSelector.value / 100;
+                    let w = settingRoot.targetWidget;
+                    if (w && w.coverRoundness !== undefined) w.coverRoundness = val;
+                    if (settingRoot.redactor) settingRoot.redactor.setWidgetProperty("coverRoundness", val);
+                }
+            }
+        }
+    }
+
     readonly property var usageCircleSettings: [
         {
             id: "sineWave",
@@ -635,7 +700,9 @@ QtObject {
                 "full":         { file: "faces/music/MusicFace.qml",             icon: "1", label: I18n.t("widgets.variants.full") },
                 "round":        { file: "faces/music/MusicFaceRound.qml",        icon: "2", label: I18n.t("widgets.variants.round") },
                 "lyrics":       { file: "faces/music/MusicFaceLyrics.qml",       icon: "3", label: I18n.t("widgets.variants.lyrics") },
-                "simpleLyrics": { file: "faces/music/MusicFaceLyricsSimple.qml", icon: "4", label: typeof I18n !== "undefined" ? I18n.t("widgets.variants.simpleLyrics", "Simple Lyrics") : "Simple Lyrics" }
+                "simpleLyrics": { file: "faces/music/MusicFaceLyricsSimple.qml", icon: "4", label: typeof I18n !== "undefined" ? I18n.t("widgets.variants.simpleLyrics", "Simple Lyrics") : "Simple Lyrics" },
+                "cover":        { file: "faces/music/MusicFaceCover.qml",        icon: "5", label: I18n.t("widgets.variants.cover", "Cover") },
+                "controls":     { file: "faces/music/MusicFaceControls.qml",     icon: "6", label: I18n.t("widgets.variants.controls", "Controls") }
             },
             additionalSettings: [
                 {
@@ -697,6 +764,23 @@ QtObject {
                     accentColor: "surface0",
                     textColor: "mauve",
                     component: registry.visualizerStyleSwitchComponent
+                },
+                {
+                    id: "coverRoundness",
+                    name: I18n.t("widgets.settings.coverRoundness", "Roundness"),
+                    icon: String.fromCodePoint(0xF0A0),
+                    iconFontSize: 16,
+                    action: "coverRoundness",
+                    type: "custom",
+                    row: "top",
+                    variants: ["cover"],
+                    property: "coverRoundness",
+                    from: 0,
+                    to: 50,
+                    stepSize: 2,
+                    accentColor: "surface0",
+                    textColor: "mauve",
+                    component: registry.coverRoundnessComponent
                 }
             ]
         },
