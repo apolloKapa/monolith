@@ -21,29 +21,33 @@ BarModuleCard {
     SettingsRow {
         rootObj: card.rootObj
         settingId: "bar_sysmon_style"
-        searchKeywords: "sysmon system monitor circle style wave ring"
+        searchKeywords: "sysmon system monitor circle style wave ring square minimal text"
         baseColor: Qt.alpha(ThemeBackend.surface1, 0.35)
         icon: "󱐋"
-        title: I18n.t("guide.bar.sysmon.style.title", "Circle style")
-        description: I18n.t("guide.bar.sysmon.style.desc", "Visual appearance of the progress rings")
+        title: I18n.t("guide.bar.sysmon.style.title", "Style")
+        description: I18n.t("guide.bar.sysmon.style.desc", "Rings, rounded squares or plain text like RAM | 45%")
 
         Switch {
+            id: styleSwitch
+            readonly property var styles: ["wave", "circle", "square", "minimal"]
             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-            implicitWidth: rootObj.s(200)
+            implicitWidth: rootObj.s(340)
             implicitHeight: rootObj.s(32)
             cornerRadius: ThemeBackend.borderRadius
             fontPixelSize: rootObj.s(11)
             options: [
                 I18n.t("guide.bar.sysmon.style.wave", "Wave"),
-                I18n.t("guide.bar.sysmon.style.circle", "Circle")
+                I18n.t("guide.bar.sysmon.style.circle", "Circle"),
+                I18n.t("guide.bar.sysmon.style.square", "Square"),
+                I18n.t("guide.bar.sysmon.style.minimal", "Minimal")
             ]
-            currentIndex: card.tab.sysmonStyle === "circle" ? 1 : 0
+            currentIndex: Math.max(0, styles.indexOf(card.tab.sysmonStyle))
             accentColor: ThemeBackend.mauve
             baseColor: ThemeBackend.surface0
             textColor: ThemeBackend.text
             activeTextColor: ThemeBackend.crust
             onValueChanged: function(index, value) {
-                card.tab.setSysmonStyle(index === 1 ? "circle" : "wave");
+                card.tab.setSysmonStyle(styles[index] || "wave");
             }
         }
     }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Window
 import QtQuick.Controls
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -42,7 +43,10 @@ Item {
         return "wave";
     }
 
+    // wave and circle are the shader rings, square traces a rounded square, minimal is plain "RAM | 45%" text
     readonly property bool useSineWave: circleStyle !== "circle"
+    readonly property bool isMinimal: circleStyle === "minimal"
+    readonly property bool isSquare: circleStyle === "square"
 
     property var activeStats: {
         if (widget && widget !== root && widget.sysmonStats !== undefined) return widget.sysmonStats;
@@ -125,6 +129,29 @@ Item {
         Behavior on y { NumberAnimation { duration: (800) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
     }
 
+    // a rounded square that starts at the top middle and runs clockwise, like the rings
+    component SquareRingPath: ShapePath {
+        property var gauge: null
+        readonly property real i: (gauge ? gauge.inset : 0)
+        readonly property real w: (gauge ? gauge.width : 0)
+        readonly property real h: (gauge ? gauge.height : 0)
+        readonly property real r: (gauge ? gauge.r : 0)
+        strokeWidth: (gauge ? gauge.sw : 0)
+        fillColor: "transparent"
+        capStyle: ShapePath.FlatCap
+        joinStyle: ShapePath.RoundJoin
+        startX: w / 2; startY: i
+        PathLine { x: w - i - r; y: i }
+        PathArc { x: w - i; y: i + r; radiusX: r; radiusY: r; direction: PathArc.Clockwise }
+        PathLine { x: w - i; y: h - i - r }
+        PathArc { x: w - i - r; y: h - i; radiusX: r; radiusY: r; direction: PathArc.Clockwise }
+        PathLine { x: i + r; y: h - i }
+        PathArc { x: i; y: h - i - r; radiusX: r; radiusY: r; direction: PathArc.Clockwise }
+        PathLine { x: i; y: i + r }
+        PathArc { x: i + r; y: i; radiusX: r; radiusY: r; direction: PathArc.Clockwise }
+        PathLine { x: w / 2; y: i }
+    }
+
     component SysMonCircle: Rectangle {
         id: circleRoot
         property real value: 0
@@ -133,6 +160,7 @@ Item {
         property color accentColor: root.basePrimary
         property bool showText: textVal !== ""
         property bool useSineWave: root.useSineWave
+        property bool squareShape: root.isSquare
         property bool initAnimTrigger: (!barWindow || !!(root.activeTarget && root.activeTarget.isPreview))
 
         property real animValue: initAnimTrigger ? value : 0
@@ -144,7 +172,7 @@ Item {
         implicitHeight: root.circleSize
         width: implicitWidth
         height: implicitHeight
-        radius: ThemeBackend.rad(width / 2)
+        radius: squareShape ? 0 : ThemeBackend.rad(width / 2)
         color: "transparent"
         border.width: 0
 
@@ -166,6 +194,7 @@ Item {
         ShaderEffect {
             id: circleGauge
             anchors.fill: parent
+            visible: !circleRoot.squareShape
 
             property vector2d itemSize: Qt.vector2d(width, height)
             property real fillRatio: circleRoot.fillRatio
@@ -175,6 +204,31 @@ Item {
             property vector4d params: Qt.vector4d(barWindow ? barWindow.cs(0.9) : 0.9, 0.0, 0.0, 0.0)
 
             fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/gauges/circular_wave_gauge.frag.qsb"
+        }
+
+        Shape {
+            id: squareGauge
+            anchors.fill: parent
+            visible: circleRoot.squareShape
+            preferredRendererType: Shape.CurveRenderer
+
+            readonly property real sw: barWindow ? barWindow.cs(2.2) : 2.2
+            readonly property real inset: sw / 2
+            readonly property real side: width - 2 * inset
+            readonly property real r: ThemeBackend.square ? 0 : Math.min(side / 2, side * 0.3)
+            readonly property real perimeter: 4 * (side - 2 * r) + 2 * Math.PI * r
+
+            SquareRingPath {
+                gauge: squareGauge
+                strokeColor: Qt.alpha(circleRoot.accentColor, 0.25)
+            }
+            SquareRingPath {
+                gauge: squareGauge
+                strokeColor: circleRoot.fillRatio > 0.005 ? circleRoot.accentColor : "transparent"
+                strokeStyle: ShapePath.DashLine
+                dashPattern: [circleRoot.fillRatio * squareGauge.perimeter / squareGauge.sw,
+                              2 * squareGauge.perimeter / squareGauge.sw]
+            }
         }
 
         Text {
@@ -193,42 +247,158 @@ Item {
         }
     }
 
+    component SysMonText: Item {
+        id: textRoot
+        property string label: ""
+        property string valueText: ""
+        property bool initAnimTrigger: (!barWindow || !!(root.activeTarget && root.activeTarget.isPreview))
+
+        readonly property real fontSize: Math.round(barWindow ? barWindow.cs(root.isCompact ? 10 : 11) : (root.isCompact ? 10 : 11))
+        readonly property string fontFamily: (ThemeBackend.fontFamily !== undefined && ThemeBackend.fontFamily !== "") ? ThemeBackend.fontFamily : "sans-serif"
+        readonly property color valueColor: (ThemeBackend.text !== undefined && ThemeBackend.text !== "") ? ThemeBackend.text : "#ffffff"
+
+        implicitWidth: root.isVertical ? Math.max(labelText.implicitWidth, valueLabel.implicitWidth) : textRow.implicitWidth
+        implicitHeight: root.isVertical ? (labelText.implicitHeight + valueLabel.implicitHeight) : root.circleSize
+        width: implicitWidth
+        height: implicitHeight
+
+        Timer {
+            running: (!activeTarget || activeTarget.moduleActive) && root.showLayout && !textRoot.initAnimTrigger
+            interval: 150
+            onTriggered: textRoot.initAnimTrigger = true
+        }
+        opacity: initAnimTrigger ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: (450) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+
+        Text {
+            id: labelText
+            text: textRoot.label
+            font.pixelSize: textRoot.fontSize
+            font.family: textRoot.fontFamily
+            font.bold: true
+            color: ThemeBackend.subtext0
+            visible: root.isVertical
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+        }
+        Text {
+            id: valueLabel
+            text: textRoot.valueText
+            font.pixelSize: textRoot.fontSize
+            font.family: textRoot.fontFamily
+            color: textRoot.valueColor
+            visible: root.isVertical
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: labelText.bottom
+        }
+
+        Row {
+            id: textRow
+            visible: !root.isVertical
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: barWindow ? barWindow.cs(5) : 5
+            Text {
+                text: textRoot.label
+                font.pixelSize: textRoot.fontSize
+                font.family: textRoot.fontFamily
+                font.bold: true
+                color: ThemeBackend.subtext0
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Text {
+                text: "|"
+                font.pixelSize: textRoot.fontSize
+                font.family: textRoot.fontFamily
+                color: ThemeBackend.overlay0
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Text {
+                text: textRoot.valueText
+                font.pixelSize: textRoot.fontSize
+                font.family: textRoot.fontFamily
+                color: textRoot.valueColor
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+
     AxisFlow {
         id: sysLayout
         vertical: root.isVertical
         anchors.centerIn: parent
-        spacing: barWindow ? barWindow.cs(root.isCompact ? 5 : 6) : (root.isCompact ? 5 : 6)
+        spacing: root.isMinimal
+            ? (barWindow ? barWindow.cs(root.isCompact ? 10 : 12) : (root.isCompact ? 10 : 12))
+            : (barWindow ? barWindow.cs(root.isCompact ? 5 : 6) : (root.isCompact ? 5 : 6))
         property int circleSize: root.circleSize
 
         Repeater {
             model: root.activeStats
 
-            SysMonCircle {
+            Item {
+                id: stat
                 readonly property string statType: modelData
-                value: {
+                property real value: {
                     if (statType === "cpu") return isNaN(SysData.cpu) ? 0 : SysData.cpu / 100.0;
                     if (statType === "ram") return isNaN(SysData.ramPercent) ? 0 : SysData.ramPercent / 100.0;
                     if (statType === "temp") return isNaN(SysData.temp) ? 0 : Math.max(0, Math.min(1, SysData.temp / 100.0));
                     if (statType === "disk") return isNaN(SysData.diskPercent) ? 0 : SysData.diskPercent / 100.0;
                     return 0;
                 }
-                textVal: {
+                property string textVal: {
                     if (statType === "temp") return isNaN(SysData.temp) ? "0" : Math.round(SysData.temp).toString();
                     return "";
                 }
-                icon: {
+                property string icon: {
                     if (statType === "cpu") return String.fromCodePoint(0xF035B);
                     if (statType === "ram") return String.fromCodePoint(0xF035C);
                     if (statType === "temp") return String.fromCodePoint(0xF050F);
                     if (statType === "disk") return String.fromCodePoint(0xF0A0);
                     return "";
                 }
-                accentColor: {
+                property color accentColor: {
                     if (statType === "cpu") return Qt.tint(root.basePrimary, Qt.rgba(1.0, 0.22, 0.22, 0.25));
                     if (statType === "ram") return Qt.lighter(root.basePrimary, 1.15);
                     if (statType === "temp") return Qt.darker(root.basePrimary, 1.15);
                     if (statType === "disk") return Qt.darker(root.basePrimary, 1.35);
                     return root.basePrimary;
+                }
+                readonly property string label: {
+                    if (statType === "cpu") return "CPU";
+                    if (statType === "ram") return "RAM";
+                    if (statType === "temp") return "TEMP";
+                    if (statType === "disk") return "DISK";
+                    return statType.toUpperCase();
+                }
+                readonly property string valueText: {
+                    if (statType === "temp") return (isNaN(SysData.temp) ? 0 : Math.round(SysData.temp)) + "°";
+                    return Math.round(Math.max(0, Math.min(1, value)) * 100) + "%";
+                }
+
+                implicitWidth: statLoader.item ? statLoader.item.implicitWidth : 0
+                implicitHeight: statLoader.item ? statLoader.item.implicitHeight : 0
+                width: implicitWidth
+                height: implicitHeight
+
+                Loader {
+                    id: statLoader
+                    anchors.centerIn: parent
+                    sourceComponent: root.isMinimal ? textComp : ringComp
+                }
+                Component {
+                    id: ringComp
+                    SysMonCircle {
+                        value: stat.value
+                        textVal: stat.textVal
+                        icon: stat.icon
+                        accentColor: stat.accentColor
+                    }
+                }
+                Component {
+                    id: textComp
+                    SysMonText {
+                        label: stat.label
+                        valueText: stat.valueText
+                    }
                 }
             }
         }
