@@ -615,6 +615,157 @@ QtObject {
         }
     }
 
+    property Component controlsBlurComponent: Component {
+        Item {
+            id: settingRoot
+            property var typeData: null
+            property var settingData: null
+            property var redactor: null
+            property var widget: null
+            property var widgetData: null
+            property var item: null
+
+            readonly property var targetWidget: settingRoot.widget || settingRoot.widgetData || settingRoot.item || null
+
+            implicitWidth: blurRow.implicitWidth + Scaler.s(20)
+            implicitHeight: Scaler.s(34)
+
+            function syncValue() {
+                let w = settingRoot.targetWidget;
+                if (!w) return;
+                let cur = w.bgBlur !== false;
+                if (blurToggle.checked !== cur) blurToggle.checked = cur;
+            }
+
+            Component.onCompleted: syncValue()
+            onTargetWidgetChanged: syncValue()
+
+            Connections {
+                target: settingRoot.targetWidget
+                ignoreUnknownSignals: true
+                function onBgBlurChanged() {
+                    settingRoot.syncValue();
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: ThemeBackend.borderRadius
+                color: blurGlass.active ? "transparent" : ThemeBackend.surface0
+
+                GlassFill {
+                    id: blurGlass
+                    anchors.fill: parent
+                    radius: ThemeBackend.rad(parent.radius)
+                    tintColor: ThemeBackend.surface0
+                    tintAmount: 0.3
+                }
+            }
+
+            Row {
+                id: blurRow
+                anchors.centerIn: parent
+                spacing: Scaler.s(8)
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: I18n.t("widgets.settings.bgBlur", "Blur")
+                    font.family: ThemeBackend.fontFamily
+                    font.pixelSize: Scaler.s(11)
+                    font.bold: true
+                    color: ThemeBackend.text
+                }
+
+                Toggle {
+                    id: blurToggle
+                    anchors.verticalCenter: parent.verticalCenter
+                    horizontalPadding: 0
+                    cornerRadius: ThemeBackend.borderRadius
+                    checked: settingRoot.targetWidget ? settingRoot.targetWidget.bgBlur !== false : true
+                    accentColor: ThemeBackend.mauve
+                    baseColor: ThemeBackend.surface1
+                    handleColor: ThemeBackend.crust
+                    handleOffColor: ThemeBackend.text
+                    onToggled: function(c) {
+                        let w = settingRoot.targetWidget;
+                        if (w && w.bgBlur !== undefined) w.bgBlur = c;
+                        if (settingRoot.redactor) settingRoot.redactor.setWidgetProperty("bgBlur", c);
+                    }
+                }
+            }
+        }
+    }
+
+    // 0 = clear ... 100 = solid, stored as 0..1 (-1 until set: the theme's element opacity)
+    property Component bgOpacityComponent: Component {
+        Item {
+            id: settingRoot
+            property var typeData: null
+            property var settingData: null
+            property var redactor: null
+            property var widget: null
+            property var widgetData: null
+            property var item: null
+
+            readonly property var targetWidget: settingRoot.widget || settingRoot.widgetData || settingRoot.item || null
+
+            implicitWidth: opacitySelector.implicitWidth
+            implicitHeight: opacitySelector.implicitHeight
+
+            function percentOf(w) {
+                if (!w || w.backgroundOpacity === undefined || w.backgroundOpacity < 0) return Math.round(ThemeBackend.elementOpacity * 100);
+                return Math.round(w.backgroundOpacity * 100);
+            }
+
+            function syncValue() {
+                let w = settingRoot.targetWidget;
+                if (!w) return;
+                let cur = settingRoot.percentOf(w);
+                if (opacitySelector.value !== cur) opacitySelector.setValue(cur);
+            }
+
+            Component.onCompleted: syncValue()
+            onTargetWidgetChanged: syncValue()
+
+            Connections {
+                target: settingRoot.targetWidget
+                ignoreUnknownSignals: true
+                function onBackgroundOpacityChanged() {
+                    settingRoot.syncValue();
+                }
+            }
+
+            NumberSelector {
+                id: opacitySelector
+                anchors.centerIn: parent
+                implicitWidth: Scaler.s(120)
+                implicitHeight: Scaler.s(32)
+                from: 0
+                to: 100
+                stepSize: 5
+                decimals: 0
+                value: {
+                    let w = settingRoot.targetWidget;
+                    return settingRoot.percentOf(w);
+                }
+                fontFamily: ThemeBackend.fontFamily
+                accentColor: ThemeBackend.mauve
+                baseColor: ThemeBackend.surface0
+                buttonColor: ThemeBackend.surface1
+                textColor: ThemeBackend.text
+                buttonTextColor: ThemeBackend.subtext1
+                cornerRadius: ThemeBackend.borderRadius
+
+                onTriggered: {
+                    let val = opacitySelector.value / 100;
+                    let w = settingRoot.targetWidget;
+                    if (w && w.backgroundOpacity !== undefined) w.backgroundOpacity = val;
+                    if (settingRoot.redactor) settingRoot.redactor.setWidgetProperty("backgroundOpacity", val);
+                }
+            }
+        }
+    }
+
     readonly property var usageCircleSettings: [
         {
             id: "sineWave",
@@ -781,6 +932,37 @@ QtObject {
                     accentColor: "surface0",
                     textColor: "mauve",
                     component: registry.coverRoundnessComponent
+                },
+                {
+                    id: "bgBlur",
+                    name: I18n.t("widgets.settings.bgBlur", "Blur"),
+                    icon: String.fromCodePoint(0xF0A0),
+                    iconFontSize: 16,
+                    action: "bgBlur",
+                    type: "custom",
+                    row: "bottom",
+                    variants: ["controls"],
+                    property: "bgBlur",
+                    accentColor: "surface0",
+                    textColor: "mauve",
+                    component: registry.controlsBlurComponent
+                },
+                {
+                    id: "backgroundOpacity",
+                    name: I18n.t("widgets.settings.backgroundOpacity", "Opacity"),
+                    icon: String.fromCodePoint(0xF0A0),
+                    iconFontSize: 16,
+                    action: "backgroundOpacity",
+                    type: "custom",
+                    row: "top",
+                    variants: ["controls"],
+                    property: "backgroundOpacity",
+                    from: 0,
+                    to: 100,
+                    stepSize: 5,
+                    accentColor: "surface0",
+                    textColor: "mauve",
+                    component: registry.bgOpacityComponent
                 }
             ]
         },
