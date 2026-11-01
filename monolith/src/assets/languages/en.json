@@ -471,10 +471,12 @@
       },
       "sysmon": {
         "style": {
-          "title": "Circle style",
-          "desc": "Visual appearance of the progress rings",
+          "title": "Style",
+          "desc": "Rings, rounded squares or plain text like RAM | 45%",
           "wave": "Wave",
-          "circle": "Circle"
+          "circle": "Circle",
+          "square": "Square",
+          "minimal": "Minimal"
         },
         "cpu": {
           "title": "CPU usage",
