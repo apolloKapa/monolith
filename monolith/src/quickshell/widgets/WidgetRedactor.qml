@@ -1263,49 +1263,45 @@ Scope {
                                     property real startWidgetX
                                     property real startWidgetY
 
-                                    onPressed: (mouse) => {
+                                    // shared with dragCatcher, which sits over the face (faces have their own buttons)
+                                    function beginDrag(localPos) {
                                         redactorMode.selectedId = widgetProxy.wId;
                                         root.targetSelectedWidgetId = widgetProxy.wId;
                                         widgetProxy.bringToFront();
-                                        let localPos = mapToItem(workspaceArea, mouse.x, mouse.y);
                                         startDragX = localPos.x;
                                         startDragY = localPos.y;
                                         startWidgetX = widgetProxy.x;
                                         startWidgetY = widgetProxy.y;
                                     }
 
-                                    onPositionChanged: (mouse) => {
-                                        if (pressed) {
-                                            let localPos = mapToItem(workspaceArea, mouse.x, mouse.y);
-                                            let dx = localPos.x - startDragX;
-                                            let dy = localPos.y - startDragY;
+                                    function dragTo(localPos) {
+                                        let dx = localPos.x - startDragX;
+                                        let dy = localPos.y - startDragY;
 
-                                            let rawX = startWidgetX + dx;
-                                            let rawY = startWidgetY + dy;
+                                        let rawX = startWidgetX + dx;
+                                        let rawY = startWidgetY + dy;
 
-                                            let snapInfo = redactorMode.calculateSnap(widgetProxy, rawX, rawY);
+                                        let snapInfo = redactorMode.calculateSnap(widgetProxy, rawX, rawY);
 
-                                            model.wX = snapInfo.x;
-                                            model.wY = snapInfo.y;
+                                        model.wX = snapInfo.x;
+                                        model.wY = snapInfo.y;
 
-                                            redactorMode.activeGuideX = snapInfo.guideX;
-                                            redactorMode.activeGuideY = snapInfo.guideY;
+                                        redactorMode.activeGuideX = snapInfo.guideX;
+                                        redactorMode.activeGuideY = snapInfo.guideY;
 
-                                            widgetProxy.triggerSync();
-                                        }
+                                        widgetProxy.triggerSync();
                                     }
 
-                                    onReleased: {
+                                    function endDrag() {
                                         redactorMode.activeGuideX = -1;
                                         redactorMode.activeGuideY = -1;
                                         widgetProxy.finalizeSync();
                                     }
 
-                                    onCanceled: {
-                                        redactorMode.activeGuideX = -1;
-                                        redactorMode.activeGuideY = -1;
-                                        widgetProxy.finalizeSync();
-                                    }
+                                    onPressed: (mouse) => beginDrag(mapToItem(workspaceArea, mouse.x, mouse.y))
+                                    onPositionChanged: (mouse) => { if (pressed) dragTo(mapToItem(workspaceArea, mouse.x, mouse.y)); }
+                                    onReleased: endDrag()
+                                    onCanceled: endDrag()
                                 }
 
                                 Item {
@@ -1385,6 +1381,21 @@ Scope {
                                                 }
                                             }
                                         }
+                                    }
+
+                                    // over the face, under the selection handles: a press anywhere on the widget moves it,
+                                    // even on a face's own buttons or click areas (the music Cover and Controls have them)
+                                    MouseArea {
+                                        id: dragCatcher
+                                        z: 10
+                                        anchors.fill: preview
+                                        hoverEnabled: true
+                                        preventStealing: true
+                                        cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                                        onPressed: (mouse) => baseSelectMa.beginDrag(mapToItem(workspaceArea, mouse.x, mouse.y))
+                                        onPositionChanged: (mouse) => { if (pressed) baseSelectMa.dragTo(mapToItem(workspaceArea, mouse.x, mouse.y)); }
+                                        onReleased: baseSelectMa.endDrag()
+                                        onCanceled: baseSelectMa.endDrag()
                                     }
 
                                     Item {
