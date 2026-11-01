@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import "../"
 import "../../"
+import "../behavior/wheelPass.js" as WheelPass
 
 Item {
     id: root
@@ -241,7 +242,10 @@ Item {
             }
 
             onWheel: wheel => {
-                if (!root.enabled) return;
+                if (!root.enabled || WheelPass.inScrollingView(root)) {
+                    wheel.accepted = false;
+                    return;
+                }
                 wheelAccumulator += wheel.angleDelta.y;
                 const threshold = 120;
                 while (wheelAccumulator >= threshold) {

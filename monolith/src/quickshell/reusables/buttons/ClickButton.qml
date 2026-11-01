@@ -55,6 +55,7 @@ Item {
     signal rightClicked()
     signal triggered()
     signal wheel(var wheel)
+    property bool takesWheel: false
 
     property real flashOpacity: 0.0
     property real popScale: 1.0
@@ -199,8 +200,12 @@ Item {
             root.triggered();
         }
 
+        // only buttons that ask for the wheel take it; the rest let it scroll the page under them
         onWheel: wheel => {
-            if (!root.enabled) return;
+            if (!root.enabled || !root.takesWheel) {
+                wheel.accepted = false;
+                return;
+            }
             root.wheel(wheel);
         }
     }
