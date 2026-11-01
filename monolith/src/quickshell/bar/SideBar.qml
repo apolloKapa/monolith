@@ -549,16 +549,6 @@ Item {
         visible: (isSolid || isFill) && (barWindow ? !barWindow.positionChanging : true)
         opacity: visible ? 1.0 : 0.0
 
-        // Minimalist + fill: a single line on the edge that faces the windows
-        Rectangle {
-            visible: ThemeBackend.outlined && isFill
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            anchors.right: contentWrapper.barAtRight ? undefined : parent.right
-            anchors.left: contentWrapper.barAtRight ? parent.left : undefined
-            width: ThemeBackend.outlineOuter
-            color: ThemeBackend.outlineColor
-        }
 
         WallpaperBlur {
             id: solidBlur
@@ -601,11 +591,8 @@ Item {
         property vector2d itemSize: Qt.vector2d(width, height)
         property real cornerIndex: (barWindow && barWindow.barPosition === "right") ? 1.0 : 0.0
         property color color: Qt.alpha(ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
-        // outlined styles: the bar's edge line carries on round the corner
-        property real lineWidth: (ThemeBackend.outlined && contentWrapper.isFill) ? ThemeBackend.outlineOuter : 0
-        property color lineColor: ThemeBackend.outlineColor
 
-        fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/corner_cutout_line.frag.qsb"
+        fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/corner_cutout.frag.qsb"
 
         Behavior on opacity {
             enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
@@ -626,11 +613,8 @@ Item {
         property vector2d itemSize: Qt.vector2d(width, height)
         property real cornerIndex: (barWindow && barWindow.barPosition === "right") ? 3.0 : 2.0
         property color color: Qt.alpha(ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
-        // outlined styles: the bar's edge line carries on round the corner
-        property real lineWidth: (ThemeBackend.outlined && contentWrapper.isFill) ? ThemeBackend.outlineOuter : 0
-        property color lineColor: ThemeBackend.outlineColor
 
-        fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/corner_cutout_line.frag.qsb"
+        fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/corner_cutout.frag.qsb"
 
         Behavior on opacity {
             enabled: barWindow && !barWindow.positionChanging && barWindow.startupCascadeFinished && !contentWrapper.suppressAnimation
