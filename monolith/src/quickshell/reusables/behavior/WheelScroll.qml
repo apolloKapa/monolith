@@ -73,11 +73,49 @@ WheelHandler {
         }
         const notches = event.angleDelta.y / 120;
         if (notches === 0) return;
+        // already at the end it's heading for: the view around this one scrolls instead
+        const at = root.gliding ? goal : position();
+        if ((notches > 0 && at <= lo + 0.5) || (notches < 0 && at >= hi - 0.5)) {
+            const outer = root.outerScroller();
+            if (outer) outer.scrollNotches(notches);
+            return;
+        }
+        scrollNotches(notches);
+    }
+
+    readonly property bool isWheelScroll: true
+
+    function scrollNotches(notches) {
+        const f = flickable;
+        if (!f) return false;
+        const lo = lowest(), hi = Math.max(lo, highest());
+        const at = gliding ? goal : position();
+        if ((notches > 0 && at <= lo + 0.5) || (notches < 0 && at >= hi - 0.5)) {
+            const outer = outerScroller();
+            return outer ? outer.scrollNotches(notches) : false;
+        }
         f.cancelFlick();
         // keep adding to where the glide is heading, so fast spins don't lose distance
-        const from = root.gliding ? goal : position();
-        goal = Math.max(lo, Math.min(hi, from - notches * step));
-        root.gliding = true;
+        goal = Math.max(lo, Math.min(hi, at - notches * step));
+        gliding = true;
+        return true;
+    }
+
+    // the WheelScroll of the nearest scrolling view around ours (a wheel handler that turns an
+    // event down doesn't hand it to the one outside, so it's passed on by hand)
+    function outerScroller() {
+        for (let p = flickable ? flickable.parent : null; p; p = p.parent) {
+            if (p.contentY === undefined || p.flickableDirection === undefined) continue;
+            const lists = [p.data, p.contentItem ? p.contentItem.data : null];
+            for (const l of lists) {
+                if (!l) continue;
+                for (let k = 0; k < l.length; k++) {
+                    const h = l[k];
+                    if (h && h !== root && h.isWheelScroll === true && h.flickable === p) return h;
+                }
+            }
+        }
+        return null;
     }
 
     // The glide: every frame the view covers a fixed share of what's left to the goal. Unlike an
