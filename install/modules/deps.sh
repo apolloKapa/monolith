@@ -61,7 +61,7 @@ REQUIRED_PKGS=(
 # ("a|b": use a from the repos, else b from the AUR)
 KEYBIND_PKGS=(
     "niri" "xwayland-satellite" "xdg-desktop-portal-gnome"
-    "rofi" "jq" "cliphist" "wl-clipboard" "playerctl" "brightnessctl"
+    "jq" "cliphist" "wl-clipboard" "playerctl" "brightnessctl"
     "grim" "slurp" "swaylock" "wireplumber"
     "kitty" "thunar" "mission-center" "librewolf|librewolf-bin" "wooz"
     "ttf-jetbrains-mono" "noto-fonts-cjk" "breeze"

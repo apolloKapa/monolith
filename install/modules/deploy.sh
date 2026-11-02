@@ -65,23 +65,13 @@ install_icon_packs() {
     done
 }
 
-# the helper script Monolith's niri keybinds use (setwall) and a rofi config. Nothing that's
-# already there is replaced: other shells or your own setup may own those files.
+# extras next to the shell: the bundled icon packs, ~/.local/bin on the PATH, kitty's fastfetch
 deploy_dotfiles_extras() {
     local project_root="$1"
     mkdir -p "$BIN_DIR" "$HOME/.config"
-    if [ ! -e "$BIN_DIR/setwall" ] || cmp -s "$project_root/bin/setwall" "$BIN_DIR/setwall"; then
-        cp -a "$project_root/bin/setwall" "$BIN_DIR/"
-    fi
-    if [ -d "$project_root/config/rofi" ]; then
-        mkdir -p "$HOME/.config/rofi"
-        [ -f "$HOME/.config/rofi/config.rasi" ] || cp "$project_root/config/rofi/config.rasi" "$HOME/.config/rofi/"
-        [ -f "$HOME/.config/rofi/favorites" ] || cp "$project_root/config/rofi/favorites" "$HOME/.config/rofi/"
-    fi
     install_icon_packs "$project_root"
     ensure_bin_on_path
     setup_kitty_fastfetch
-    echo -e "  ${C_GREEN}scripts:${RESET} setwall and the rofi config are in place (existing ones kept)"
 }
 
 # kitty greets you with Monolith's fastfetch: your login shell runs it when it starts inside kitty.

@@ -99,9 +99,31 @@ upgrade_local_bin_commands() {
         sed -i \
             -e 's|^\([[:space:]]*\)spawn-at-startup "monolithd" "start".*$|\1spawn-at-startup "bash" "-c" "export PATH=\\"$HOME/.local/bin:$PATH\\"; exec \\"$HOME/.local/bin/monolithd\\" start"|' \
             -e "s|spawn \"monolith\"|spawn \"$bin/monolith\"|g" \
-            -e "s|spawn \"setwall\"|spawn \"$bin/setwall\"|g" \
             "$f"
     done
+}
+
+# Monolith doesn't ship rofi any more: the old rofi binds move to Monolith's own window switcher
+# and clipboard, and the rofi wallpaper picker bind goes (Settings has a wallpaper picker). Only
+# binds still exactly as Monolith shipped them are touched.
+upgrade_rofi_binds() {
+    local f="$1"
+    [ -f "$f" ] || return 0
+    python3 - "$f" <<'PY'
+import re, sys
+path = sys.argv[1]
+text = open(path).read()
+rules = [
+    (r'Mod\+Tab', r'spawn "rofi" "-show" "window"[^}\n]*', 'Mod+Tab { spawn "monolith" "msg" "toggle" "switcher"; }'),
+    (r'Mod\+Alt\+V', r'spawn-sh "cliphist list \| rofi -dmenu \| cliphist decode \| wl-copy";', 'Mod+Alt+V { spawn "monolith" "msg" "toggle" "clipboard"; }'),
+    (r'Mod\+Alt\+S', r'spawn "(?:[^"]*/)?setwall" "pick";', None),
+]
+for key, body, new in rules:
+    pat = re.compile(r'^([ \t]*)' + key + r'\s*\{\s*' + body + r'\s*\}[ \t]*\n', re.M)
+    text = pat.sub((lambda m, new=new: m.group(1) + new + "\n") if new else "", text)
+text = text.replace("// Launcher (rofi)", "// Launcher, window switcher, clipboard")
+open(path, "w").write(text)
+PY
 }
 
 # switches the old screenshot binds (niri's built-in screenshots, grim + swappy) to Monolith's

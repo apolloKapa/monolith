@@ -105,7 +105,7 @@ def describe(action, args):
         if acts:
             return "group:" + group_for(acts[-1]), humanize(acts[-1])
         if "cliphist" in line:
-            return "group:Apps", "Clipboard history (rofi)"
+            return "group:Apps", "Clipboard history"
         # "pgrep -x app || app ...": it's about the app
         progs = [w for w in re.split(r"[|;&]+", line) if w.strip()]
         words = shlex.split(progs[-1]) if progs else []
