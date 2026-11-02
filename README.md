@@ -346,4 +346,6 @@ Monolith is based on Serpantinum, copyright (C) its author [@ilyamiro](https://g
 
 Modified extensively by apolloKapa since May 2026; see the commit history for every change.
 
+The YAMIS icon pack (`config/icons/YAMIS`, "yet another monochrome icon set") is by [Dirn](https://bitbucket.org/dirn-typo/yet-another-monochrome-icon-set), licensed under the GNU GPL-3.0, and ships unchanged.
+
 The login screen theme is based on [Qylock](https://github.com/Darkkal44/qylock) by Darkkal44, licensed under the GNU GPL-3.0.
