@@ -36,6 +36,9 @@ Item {
     property real pad: handleSize / 2
     property real mouseAreaHeight: height < 30 ? height : Math.min(height, Math.max(handleSize * 1.4, bar.s(22)))
     property bool isDragging: mouseArea.pressed
+    // the place to seek to: sent once when you let go (or click), never while dragging. Seeking
+    // on every mouse move flooded players with SetPosition calls and some (Spotify, browsers)
+    // got stuck or skipped around.
     signal moved(real val)
 
     property real ampFactor: playing ? 1.0 : restingLevel
@@ -142,12 +145,15 @@ Item {
             var frac = Math.max(0.0, Math.min(1.0, (mx - bar.pad) / avail));
             var newVal = bar.from + frac * (bar.to - bar.from);
             bar.value = newVal;
-            bar.moved(newVal);
         }
 
         onPressed: mouse => updatePos(mouse.x)
         onPositionChanged: mouse => {
             if (pressed) updatePos(mouse.x);
+        }
+        onReleased: mouse => {
+            updatePos(mouse.x);
+            bar.moved(bar.value);
         }
     }
 }
