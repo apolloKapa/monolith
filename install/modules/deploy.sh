@@ -41,6 +41,30 @@ deploy_shell() {
     echo -e "  ${C_GREEN}shell:${RESET} installed to $SHELL_HOME"
 }
 
+# icon packs that come with Monolith (config/icons/<pack>) go to ~/.local/share/icons, where
+# Settings → Theme → Icons finds them. A pack Monolith put there (it carries .monolith-icon-pack)
+# is refreshed on every install/update; a folder of the same name you put there yourself is kept.
+install_icon_packs() {
+    local project_root="$1" pack name dest
+    local icons_home="${XDG_DATA_HOME:-$HOME/.local/share}/icons"
+    [ -d "$project_root/config/icons" ] || return 0
+    mkdir -p "$icons_home"
+    for pack in "$project_root"/config/icons/*/; do
+        [ -f "$pack/index.theme" ] || continue
+        name="$(basename "$pack")"
+        dest="$icons_home/$name"
+        if [ -e "$dest" ] && [ ! -f "$dest/.monolith-icon-pack" ]; then
+            echo -e "  ${C_GREEN}icons:${RESET} $name is already in $icons_home (yours, kept)"
+            continue
+        fi
+        rm -rf "$dest"
+        cp -a "$pack" "$dest"
+        touch "$dest/.monolith-icon-pack"
+        command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -qf "$dest" 2>/dev/null || true
+        echo -e "  ${C_GREEN}icons:${RESET} $name installed to $icons_home"
+    done
+}
+
 # the helper script Monolith's niri keybinds use (setwall) and a rofi config. Nothing that's
 # already there is replaced: other shells or your own setup may own those files.
 deploy_dotfiles_extras() {
@@ -54,6 +78,7 @@ deploy_dotfiles_extras() {
         [ -f "$HOME/.config/rofi/config.rasi" ] || cp "$project_root/config/rofi/config.rasi" "$HOME/.config/rofi/"
         [ -f "$HOME/.config/rofi/favorites" ] || cp "$project_root/config/rofi/favorites" "$HOME/.config/rofi/"
     fi
+    install_icon_packs "$project_root"
     ensure_bin_on_path
     setup_kitty_fastfetch
     echo -e "  ${C_GREEN}scripts:${RESET} setwall and the rofi config are in place (existing ones kept)"
