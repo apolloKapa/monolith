@@ -470,7 +470,7 @@ PanelWindow {
                         targetY: menuList.hoverItem ? menuList.hoverItem.y : 0
                         targetWidth: menuList.hoverItem ? menuList.hoverItem.width : 0
                         targetHeight: menuList.hoverItem ? menuList.hoverItem.height : 0
-                        radius: ThemeBackend.rad(trayMenuWindow.s(4))
+                        radius: trayMenuWindow.s(4)
                         tintColor: ThemeBackend.surface0
                         tintAmount: 0.3
                         shadow: 0
@@ -774,7 +774,7 @@ PanelWindow {
                             targetY: subListView.hoverItem ? subListView.hoverItem.y : 0
                             targetWidth: subListView.hoverItem ? subListView.hoverItem.width : 0
                             targetHeight: subListView.hoverItem ? subListView.hoverItem.height : 0
-                            radius: ThemeBackend.rad(trayMenuWindow.s(4))
+                            radius: trayMenuWindow.s(4)
                             tintColor: ThemeBackend.surface0
                             tintAmount: 0.3
                             shadow: 0

@@ -9,12 +9,26 @@
 //                 a gradient_tint layer colours it (face.gradientOn, set when the gradient is on and
 //                 Each digit is off).
 // A colour is a theme role ("mauve", "text", ...) so it follows the theme, or a "#rrggbb".
+// The swatches are all theme roles. Before 1.21.3 most swatches were fixed hex codes; those read
+// as the role that replaced them, so clocks set up back then follow the theme too.
+const LEGACY = {
+    "#ffffff": "text", "#000000": "crust", "#ff5c5c": "red", "#ff9f43": "peach", "#ffd43b": "yellow",
+    "#51cf66": "green", "#22c7b8": "teal", "#4dabf7": "sapphire", "#5c7cfa": "blue", "#9775fa": "mauve",
+    "#f06595": "pink"
+};
+
+function normalize(spec) {
+    if (!spec) return "";
+    const r = LEGACY[String(spec)];  // old swatches were saved lower case; typed codes are upper case
+    return r !== undefined ? r : spec;
+}
 
 function list(face) {
     return String(face.digitColors || "").split(",");
 }
 
 function resolve(spec, theme, fallback) {
+    spec = normalize(spec);
     if (!spec) return fallback;
     if (spec.charAt(0) === "#") return spec;
     const c = theme[spec];
