@@ -142,7 +142,7 @@ None of these have keybinds by default, so your niri config stays as it is; bind
   - **Paper**: ink on paper, serif type (Lora), fine rules
   - **Shadow**: grey cards, JetBrains Mono, no colour (after shadoww.dev's DarkShadow's Shell); goes with the **Shadow** widget preset (stacked clock, greeting card, usage cards, calendar)
 - Theme → Apps: GTK, Qt, foot, alacritty, btop and rofi can follow Monolith's colours; switching one off puts its config back exactly as it was
-- Theme → Fastfetchlings: fastfetch looks you switch between with a click, each tile showing what fastfetch prints with it. New and Edit open the preset in a terminal editor; presets live in `~/.config/monolith/fastfetch` and can use theme colours (`{{primary}}`, `{{mauve}}`...)
+- Theme → Fastfetchlings: fastfetch looks you switch between with a click, each tile showing what fastfetch prints with it. New and Edit open the preset in a terminal editor, and Picture shows an image of yours instead of the logo (kitty); presets live in `~/.config/monolith/fastfetch` and can use theme colours (`{{primary}}`, `{{mauve}}`...)
 - Theme → Effects: **Unfold** (popups open from a thin line, like an old screen switching on), **Edge light** (a soft light along each panel's top) and **Grain** (faint film grain on panels), all on by default
 - Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, the same speed for niri's window animations, and **GameMode** (no animations, blur or glass while a fullscreen window has focus)
 - Theme → Windows: niri window borders on/off, width, colours for focused / other / attention windows (theme swatches or any hex), or follow the theme's colours automatically

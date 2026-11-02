@@ -101,6 +101,25 @@ GuideTab {
         }
     }
 
+    // a picture to show instead of the preset's logo (kitty draws it with its image protocol)
+    property string pickingFor: ""
+    readonly property var imageSizes: [{ label: "Small", width: 20 }, { label: "Medium", width: 30 }, { label: "Large", width: 42 }]
+    FilePicker {
+        id: imagePicker
+        rootObj: ffTab.rootObj
+        titleText: "Pick a picture for " + (ffTab.pickingFor || "this preset")
+        nameFilters: ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif", "*.bmp"]
+        places: [
+            { name: "Pictures", icon: "󰉏", path: "file://" + (Quickshell.env("HOME") || "") + "/Pictures" },
+            { name: "Downloads", icon: "󰇚", path: "file://" + (Quickshell.env("HOME") || "") + "/Downloads" },
+            { name: "Home", icon: "󰋜", path: "file://" + (Quickshell.env("HOME") || "") }
+        ]
+        onFileSelected: function(filePath, fileName) {
+            if (filePath && ffTab.pickingFor) ffTab.run(["set-image", ffTab.pickingFor, String(filePath).replace(/^file:\/\//, "")]);
+            ffTab.pickingFor = "";
+        }
+    }
+
     Flickable {
         anchors.fill: parent
         anchors.topMargin: rootObj.s(8)
@@ -126,8 +145,8 @@ GuideTab {
                     icon: "󰍹"
                     title: "Fastfetchlings"
                     description: "Looks for fastfetch, the system summary your terminal shows. Click one to use it. "
-                        + "New and Edit open the preset in a terminal editor: save and close it to see the result. Presets follow your theme colours"
-                    searchKeywords: "fastfetch neofetch terminal system info presets preset logo fetch fastfetchlings"
+                        + "New and Edit open the preset in a terminal editor: save and close it to see the result. Picture shows an image of yours instead of the logo (in kitty). Presets follow your theme colours"
+                    searchKeywords: "fastfetch neofetch terminal system info presets preset logo fetch fastfetchlings picture image photo"
 
                     ClickButton {
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
@@ -185,7 +204,8 @@ GuideTab {
                         readonly property bool hovered: cardHover.hovered
 
                         Layout.fillWidth: true
-                        Layout.preferredHeight: rootObj.s(236)
+                        Layout.preferredHeight: rootObj.s(268)
+                        readonly property string image: modelData.image || ""
                         radius: ThemeBackend.rad(ThemeBackend.borderRadius)
                         color: cardGlass.active ? "transparent" : Qt.alpha(ThemeBackend.surface0, card.hovered ? 0.7 : 0.45)
                         border.width: chosen ? 2 : 1
@@ -281,10 +301,34 @@ GuideTab {
                                 color: Qt.alpha(ThemeBackend.crust, 0.85)
                                 clip: true
 
+                                // the picture, where the logo would be (the text preview has no logo then)
+                                Image {
+                                    id: pic
+                                    visible: card.image !== ""
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: rootObj.s(8)
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: visible ? screen.width * Math.max(0.22, Math.min(0.55, card.modelData.imageWidth / (card.modelData.imageWidth + 40))) : 0
+                                    height: screen.height - rootObj.s(16)
+                                    source: card.image !== "" ? "file://" + card.image : ""
+                                    sourceSize.width: rootObj.s(320)
+                                    fillMode: Image.PreserveAspectFit
+                                    asynchronous: true
+                                    smooth: true
+                                    mipmap: true
+                                }
+
+                                Item {
+                                    id: textArea
+                                    anchors.fill: parent
+                                    anchors.margins: rootObj.s(8)
+                                    anchors.leftMargin: pic.visible ? pic.width + rootObj.s(16) : rootObj.s(8)
+                                }
+
                                 Text {
                                     id: preview
-                                    anchors.centerIn: parent
-                                    readonly property real fit: Math.min(1, (screen.width - rootObj.s(16)) / Math.max(1, implicitWidth), (screen.height - rootObj.s(16)) / Math.max(1, implicitHeight))
+                                    anchors.centerIn: textArea
+                                    readonly property real fit: Math.min(1, textArea.width / Math.max(1, implicitWidth), textArea.height / Math.max(1, implicitHeight))
                                     scale: fit
                                     textFormat: Text.RichText
                                     text: card.modelData.preview || ""
@@ -303,6 +347,71 @@ GuideTab {
                                 }
                             }
 
+                            // picture size and remove, when the preset has a picture
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: rootObj.s(22)
+                                spacing: rootObj.s(4)
+
+                                Text {
+                                    text: card.image !== "" ? "󰋩  Picture" : "󰋩  Logo · Picture swaps it for an image"
+                                    color: ThemeBackend.subtext0
+                                    font.family: ThemeBackend.fontFamily
+                                    font.pixelSize: rootObj.s(11)
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+                                Repeater {
+                                    model: card.image !== "" ? ffTab.imageSizes : []
+                                    Rectangle {
+                                        id: sizeChip
+                                        required property var modelData
+                                        readonly property bool on: card.modelData.imageWidth === modelData.width
+                                        Layout.preferredHeight: rootObj.s(22)
+                                        Layout.preferredWidth: sizeText.implicitWidth + rootObj.s(16)
+                                        radius: ThemeBackend.rad(rootObj.s(6))
+                                        color: on ? ThemeBackend.mauve : Qt.alpha(sizeMouse.containsMouse ? ThemeBackend.surface2 : ThemeBackend.surface1, 0.8)
+                                        Text {
+                                            id: sizeText
+                                            anchors.centerIn: parent
+                                            text: sizeChip.modelData.label
+                                            color: sizeChip.on ? ThemeBackend.crust : ThemeBackend.text
+                                            font.family: ThemeBackend.fontFamily
+                                            font.pixelSize: rootObj.s(10)
+                                        }
+                                        MouseArea {
+                                            id: sizeMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: if (!sizeChip.on) ffTab.run(["image-size", card.name, String(sizeChip.modelData.width)])
+                                        }
+                                    }
+                                }
+                                Rectangle {
+                                    visible: card.image !== ""
+                                    Layout.preferredHeight: rootObj.s(22)
+                                    Layout.preferredWidth: removeText.implicitWidth + rootObj.s(16)
+                                    radius: ThemeBackend.rad(rootObj.s(6))
+                                    color: Qt.alpha(removeMouse.containsMouse ? ThemeBackend.red : ThemeBackend.surface1, removeMouse.containsMouse ? 0.35 : 0.8)
+                                    Text {
+                                        id: removeText
+                                        anchors.centerIn: parent
+                                        text: "Use the logo"
+                                        color: ThemeBackend.text
+                                        font.family: ThemeBackend.fontFamily
+                                        font.pixelSize: rootObj.s(10)
+                                    }
+                                    MouseArea {
+                                        id: removeMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: ffTab.run(["clear-image", card.name])
+                                    }
+                                }
+                            }
+
                             RowLayout {
                                 Layout.fillWidth: true
                                 spacing: rootObj.s(4)
@@ -312,6 +421,7 @@ GuideTab {
                                         { id: "edit", icon: "󰏫", label: "Edit" },
                                         { id: "duplicate", icon: "󰆏", label: "Duplicate" },
                                         { id: "rename", icon: "󰑕", label: "Rename" },
+                                        { id: "image", icon: "󰋩", label: "Picture" },
                                         { id: "delete", icon: "󰆴", label: "Delete" }
                                     ]
 
@@ -360,6 +470,7 @@ GuideTab {
                                                 if (id === "edit") ffTab.edit(card.name);
                                                 else if (id === "duplicate") ffTab.run(["duplicate", card.name]);
                                                 else if (id === "rename") ffTab.renaming = card.name;
+                                                else if (id === "image") { ffTab.pickingFor = card.name; imagePicker.openWithOptionalPath(""); }
                                                 else if (act.armed) { ffTab.confirmDelete = ""; ffTab.run(["delete", card.name]); }
                                                 else ffTab.confirmDelete = card.name;
                                             }

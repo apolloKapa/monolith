@@ -21,6 +21,10 @@ Commands (all print JSON or nothing; errors go to stderr with exit code 1):
   edit NAME            open NAME in a terminal editor; when the editor closes, re-render if it's
                        active and show the result until Enter
   show NAME            (inside that terminal) run fastfetch with NAME and wait for Enter
+  set-image NAME FILE [WIDTH]  show a picture instead of the logo (copied in as PNG, WIDTH in
+                       terminal columns, default 30); kitty draws it with its image protocol
+  image-size NAME WIDTH
+  clear-image NAME     back to the preset's own logo
 """
 import hashlib, html, json, os, re, shutil, subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
@@ -33,6 +37,9 @@ PRESETS = os.path.join(CONF, "monolith", "fastfetch")
 ACTIVE = os.path.join(PRESETS, ".active")
 SEEDED = os.path.join(PRESETS, ".seeded")
 TARGET = os.path.join(CONF, "fastfetch", "config.jsonc")
+IMAGES = os.path.join(PRESETS, "images")
+IMAGE_MAP = os.path.join(PRESETS, ".images.json")
+IMAGE_WIDTH = 30
 COLORS = os.path.join(STATE, "qs_colors.json")
 ASSETS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "fastfetch")
 SHIPPED = os.path.join(ASSETS, "presets")
@@ -176,8 +183,114 @@ def fill(text, pal):
     return re.sub(r"\{\{\s*([a-z0-9_]+)(?:\.(rgb|hex|hex_stripped|red|green|blue))?\s*\}\}", short, text)
 
 
-def rendered(name, pal=None):
+# --- pictures instead of the logo: {preset: {"file": "images/x.png", "width": 30}} -------------
+def images():
+    try:
+        with open(IMAGE_MAP, encoding="utf-8") as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def save_images(d):
+    write(IMAGE_MAP, json.dumps(d, indent=2, sort_keys=True) + "\n")
+
+
+def image_of(name):
+    e = images().get(name)
+    if not isinstance(e, dict) or not e.get("file"):
+        return None
+    p = os.path.join(PRESETS, e["file"])
+    if not os.path.isfile(p):
+        return None
+    try:
+        w = max(8, min(120, int(e.get("width", IMAGE_WIDTH))))
+    except (TypeError, ValueError):
+        w = IMAGE_WIDTH
+    return {"path": p, "width": w}
+
+
+def drop_unused_images():
+    used = {e.get("file") for e in images().values() if isinstance(e, dict)}
+    if os.path.isdir(IMAGES):
+        for f in os.listdir(IMAGES):
+            if "images/" + f not in used:
+                try: os.unlink(os.path.join(IMAGES, f))
+                except OSError: pass
+
+
+def import_image(name, src):
+    """Copies the picture in as a PNG (kitty reads PNG files directly), at most 1024 px."""
+    if not os.path.isfile(src):
+        fail(f"Couldn't find {src}")
+    os.makedirs(IMAGES, exist_ok=True)
+    with open(src, "rb") as f:
+        digest = hashlib.sha1(f.read()).hexdigest()[:10]
+    out = os.path.join(IMAGES, digest + ".png")
+    if not os.path.isfile(out):
+        try:
+            from PIL import Image
+            with Image.open(src) as im:
+                im.seek(0)
+                im = im.convert("RGBA")
+                im.thumbnail((1024, 1024))
+                im.save(out, "PNG")
+        except ImportError:
+            if subprocess.run(["magick", src + "[0]", "-resize", "1024x1024>", out], capture_output=True).returncode != 0:
+                fail("Couldn't read that picture (install python-pillow or imagemagick)")
+        except Exception:
+            fail("Couldn't read that picture; pick a PNG, JPEG, WebP or GIF")
+    return "images/" + os.path.basename(out)
+
+
+def jsonc_load(text):
+    """fastfetch configs are JSON with comments and trailing commas."""
+    out, i, n = [], 0, len(text)
+    while i < n:
+        c = text[i]
+        if c == '"':
+            j = i + 1
+            while j < n and text[j] != '"':
+                j += 2 if text[j] == "\\" else 1
+            out.append(text[i:j + 1])
+            i = j + 1
+        elif text.startswith("//", i):
+            while i < n and text[i] != "\n":
+                i += 1
+        elif text.startswith("/*", i):
+            j = text.find("*/", i + 2)
+            i = n if j < 0 else j + 2
+        else:
+            out.append(c)
+            i += 1
+    clean = re.sub(r",(\s*[}\]])", r"\1", "".join(out))
+    try:
+        d = json.loads(clean)
+        return d if isinstance(d, dict) else None
+    except ValueError:
+        return None
+
+
+def with_image(body, img, preview):
+    """The preset with the picture as its logo (or no logo, for a preview: the tile draws the
+    picture itself, since the preview is text)."""
+    d = jsonc_load(body)
+    if d is None:
+        return body
+    old = d.get("logo") if isinstance(d.get("logo"), dict) else {}
+    pad = old.get("padding") if isinstance(old.get("padding"), dict) else {"top": 1, "right": 3}
+    d["logo"] = {"type": "none"} if preview else {
+        "type": "kitty-direct", "source": img["path"], "width": img["width"],
+        "preserveAspectRatio": True, "padding": pad}
+    return json.dumps(d, indent=2, ensure_ascii=False) + "\n"
+
+
+def rendered(name, pal=None, preview=False):
     body = fill(read(path_of(name)), pal or palette())
+    img = image_of(name)
+    if img:
+        body = with_image(body, img, preview)
     return (f"{MARK}: the \"{name}\" preset in your theme colours, rewritten when the theme changes.\n"
             f"// Edit it in Settings -> Theme -> Fastfetchlings ({path_of(name)}), not here.\n" + body)
 
@@ -295,7 +408,7 @@ def preview(name, pal, key):
     fd, tmp = tempfile.mkstemp(suffix=".jsonc")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(rendered(name, pal))
+            f.write(rendered(name, pal, preview=True))
         r = subprocess.run(preview_cmd(), capture_output=True, text=True, timeout=20,
                            env=dict(os.environ, COLUMNS="200", FF_PRESET=tmp), cwd=HOME)
         out = to_html(r.stdout, pal) if r.returncode == 0 else ""
@@ -315,20 +428,25 @@ def cmd_list():
     ns = names()
     colours = "v2:" + json.dumps(pal, sort_keys=True)   # bump v2 when previews are made differently
 
-    def one(n):
+    def key(n):
         st = os.stat(path_of(n))
-        return preview(n, pal, f"{st.st_mtime_ns}:{st.st_size}:{colours}")
+        return f"{st.st_mtime_ns}:{st.st_size}:{json.dumps(image_of(n))}:{colours}"
+
+    def one(n):
+        return preview(n, pal, key(n))
 
     with ThreadPoolExecutor(max_workers=4) as ex:
         previews = list(ex.map(one, ns))
     # drop previews that no preset uses any more
-    keep = {hashlib.sha1((n + f"{os.stat(path_of(n)).st_mtime_ns}:{os.stat(path_of(n)).st_size}:{colours}").encode()).hexdigest() + ".html" for n in ns}
+    keep = {hashlib.sha1((n + key(n)).encode()).hexdigest() + ".html" for n in ns}
     for f in os.listdir(CACHE) if os.path.isdir(CACHE) else []:
         if f not in keep and f.endswith(".html"):
             try: os.unlink(os.path.join(CACHE, f))
             except OSError: pass
     print(json.dumps({"active": get_active(), "dir": PRESETS, "fastfetch": bool(shutil.which("fastfetch")),
-                      "presets": [{"name": n, "path": path_of(n), "preview": p} for n, p in zip(ns, previews)]}))
+                      "presets": [dict({"name": n, "path": path_of(n), "preview": p, "image": "", "imageWidth": IMAGE_WIDTH},
+                                       **({"image": im["path"], "imageWidth": im["width"]} if (im := image_of(n)) else {}))
+                                  for n, p in zip(ns, previews)]}))
 
 
 def free_name(base):
@@ -412,6 +530,10 @@ def main():
         if not exists(src): fail(f'There is no preset called "{src}"')
         n = free_name(src + " copy")
         shutil.copyfile(path_of(src), path_of(n))
+        im = images()
+        if src in im:
+            im[n] = dict(im[src])
+            save_images(im)
         print(n)
     elif cmd == "rename" and len(a) > 2:
         old, new = check_name(a[1]), check_name(a[2])
@@ -420,6 +542,10 @@ def main():
         if exists(new) and old.lower() != new.lower(): fail(f'There is already a preset called "{new}"')
         was_active = get_active() == old
         os.replace(path_of(old), path_of(new))
+        im = images()
+        if old in im:
+            im[new] = im.pop(old)
+            save_images(im)
         if was_active:
             write(ACTIVE, new + "\n")
             render(new)
@@ -429,9 +555,37 @@ def main():
         was_active = get_active() == n
         try: os.unlink(path_of(n))
         except FileNotFoundError: pass
+        im = images()
+        if im.pop(n, None) is not None:
+            save_images(im)
+            drop_unused_images()
         if was_active:
             write(ACTIVE, get_active() + "\n")
             render()
+    elif cmd == "set-image" and len(a) > 2:
+        n = check_name(a[1])
+        if not exists(n): fail(f'There is no preset called "{n}"')
+        im = images()
+        old = im.get(n) if isinstance(im.get(n), dict) else {}
+        width = int(a[3]) if len(a) > 3 and a[3].isdigit() else int(old.get("width", IMAGE_WIDTH))
+        im[n] = {"file": import_image(n, a[2]), "width": max(8, min(120, width))}
+        save_images(im)
+        drop_unused_images()
+        if get_active() == n: render(n)
+    elif cmd == "image-size" and len(a) > 2 and a[2].isdigit():
+        n = check_name(a[1])
+        im = images()
+        if isinstance(im.get(n), dict):
+            im[n]["width"] = max(8, min(120, int(a[2])))
+            save_images(im)
+            if get_active() == n: render(n)
+    elif cmd == "clear-image" and len(a) > 1:
+        n = check_name(a[1])
+        im = images()
+        if im.pop(n, None) is not None:
+            save_images(im)
+            drop_unused_images()
+            if get_active() == n: render(n)
     elif cmd == "edit" and len(a) > 1:
         cmd_edit(check_name(a[1]))
     elif cmd == "show" and len(a) > 1:
