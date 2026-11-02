@@ -3,10 +3,6 @@
 [config]
 reload_apps = false
 
-[templates.fastfetch]
-input_path = "templates/fastfetch.jsonc.template"
-output_path = "~/.config/fastfetch/config.jsonc"
-
 [templates.quickshell]
 input_path = "templates/monolith_matugen_colors.json.template"
 output_path = "~/.local/state/monolith/qs_colors.json"

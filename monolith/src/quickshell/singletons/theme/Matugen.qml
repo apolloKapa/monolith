@@ -286,20 +286,14 @@ Item {
         matugenProcess.running = true;
     }
 
-    // fastfetch is always Monolith's (kitty and cava follow the toggle above). Matugen only writes
-    // it when the theme changes, so after an update, or when another shell wrote its own config,
-    // write it now from the saved colours. The config that was there first is kept as .pre-monolith.
-    Component.onCompleted: {
-        let stateDir = (typeof Caching !== "undefined" && Caching.stateDir) ? Caching.stateDir : (Quickshell.env("HOME") + "/.local/state/monolith");
-        let script =
-            "F=\"${XDG_CONFIG_HOME:-$HOME/.config}/fastfetch/config.jsonc\"; C=\"$1/qs_colors.json\"; " +
-            "grep -qF 'Monolith fastfetch' \"$F\" 2>/dev/null && exit 0; [ -f \"$C\" ] || exit 0; " +
-            "[ -f \"$F\" ] && [ ! -e \"$F.pre-monolith\" ] && cp \"$F\" \"$F.pre-monolith\"; " +
-            "T=\"$(mktemp)\" && jq '{colors: (with_entries(.value = {default: {hex: .value, color: .value}}) " +
-            "| {primary: .blue, secondary: .green, tertiary: .peach, outline: .subtext1, on_surface_variant: .subtext0, on_surface: .text})}' " +
-            "\"$C\" > \"$T\" && matugen -c \"$2/config-fastfetch.toml\" json \"$T\"; rm -f \"$T\"";
-        Quickshell.execDetached(["bash", "-c", script, "_", stateDir, root.matugenBaseDir]);
+    // fastfetch is always Monolith's: the preset picked in Settings -> Theme -> Fastfetchlings, in
+    // the theme colours (scripts/fastfetch_presets.py). Written at start (e.g. after an update) and
+    // after every theme change. A config that was there first is kept as config.jsonc.pre-monolith.
+    function renderFastfetch() {
+        if (typeof Caching !== "undefined" && Caching.monolithDir)
+            Quickshell.execDetached(["python3", Caching.monolithDir + "/scripts/fastfetch_presets.py", "render"]);
     }
+    Component.onCompleted: renderFastfetch()
 
     Process {
         id: matugenProcess
@@ -323,6 +317,7 @@ Item {
                 } else {
                     Quickshell.execDetached(["bash", "-c", "killall -USR1 .kitty-wrapped 2>/dev/null || pkill -SIGUSR1 kitty 2>/dev/null || true"]);
                 }
+                root.renderFastfetch()
                 // apps switched on in Settings -> Theme -> Apps pick up the new colours
                 if (typeof Caching !== "undefined" && Caching.monolithDir)
                     Quickshell.execDetached(["python3", Caching.monolithDir + "/scripts/app_theming.py", "sync"]);

@@ -1,0 +1,36 @@
+// A new fastfetch preset. Save and close the editor to see it; Settings → Theme → Fastfetchlings
+// applies it when you click its tile.
+//
+// Theme colours: write {{primary}}, {{secondary}}, {{tertiary}}, {{outline}}, {{on_surface}},
+// {{on_surface_variant}}, {{error}} or any Monolith colour ({{mauve}}, {{text}}, {{blue}}...).
+// They become "#rrggbb" and follow your theme. {{primary.rgb}} gives "r;g;b" for raw escape codes:
+// "\u001b[38;2;{{primary.rgb}}m". Matugen's {{colors.primary.default.hex}} works too.
+//
+// Everything fastfetch can do: https://github.com/fastfetch-cli/fastfetch/wiki/Configuration
+// More examples: /usr/share/fastfetch/presets
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
+  "logo": {
+    "padding": { "top": 1, "right": 3 },
+    "color": { "1": "{{primary}}", "2": "{{tertiary}}" }
+  },
+  "display": {
+    "separator": "  ",
+    "color": { "keys": "{{primary}}", "output": "{{on_surface}}" }
+  },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "kernel",
+    "wm",
+    "shell",
+    "terminal",
+    "cpu",
+    "gpu",
+    "memory",
+    "uptime",
+    "break",
+    "colors"
+  ]
+}

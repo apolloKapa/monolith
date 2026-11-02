@@ -9,10 +9,6 @@ output_path = "~/.config/kitty/colors.conf"
 input_path = "templates/cava-colors.ini.template"
 output_path = "~/.config/cava/config"
 
-[templates.fastfetch]
-input_path = "templates/fastfetch.jsonc.template"
-output_path = "~/.config/fastfetch/config.jsonc"
-
 # app theming (Settings -> Theme -> Apps): colour files only; scripts/app_theming.sh hooks
 # them into the apps you switch on
 [templates.app_gtk]

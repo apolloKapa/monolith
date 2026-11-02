@@ -597,7 +597,8 @@ Item {
                 { id: "ThemeWindows", key: "theme_windows", name: "Windows", icon: "󰖲", file: "theme/ThemeWindowsTab.qml", desc: "The border niri draws around your app windows: on or off, thickness and colours" },
                 { id: "ThemeIcons", key: "theme_icons", name: "Icons", icon: "󰀻", file: "theme/ThemeIconsTab.qml", desc: "The icon pack apps and Monolith use (Papirus, Breeze, Adwaita...), picked from the ones installed" },
                 { id: "ThemeCursors", key: "theme_cursors", name: "Cursors", icon: "󰆿", file: "theme/ThemeCursorsTab.qml", desc: "The mouse pointer: pick an installed cursor theme and its size, or add your own (a downloaded theme or an image)" },
-                { id: "ThemeApps", key: "theme_apps", name: "Apps", icon: "󰏘", file: "theme/ThemeAppsTab.qml", desc: "Let other apps (GTK, Qt, terminals, rofi...) use Monolith's colours too" }
+                { id: "ThemeApps", key: "theme_apps", name: "Apps", icon: "󰏘", file: "theme/ThemeAppsTab.qml", desc: "Let other apps (GTK, Qt, terminals...) use Monolith's colours too" },
+                { id: "ThemeFastfetch", key: "theme_fastfetch", name: "Fastfetchlings", icon: "󰍹", file: "theme/ThemeFastfetchTab.qml", desc: "Fastfetch looks you switch between with a click; make your own or edit one in a terminal" }
             ]
         },
         {
