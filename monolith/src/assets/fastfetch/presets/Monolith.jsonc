@@ -1,4 +1,4 @@
-// Monolith fastfetch: written by Monolith in your theme colours (rewritten when the theme changes)
+// Monolith: the big MONOLITH banner and a boxed list, in your theme colours
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
   "logo": {

@@ -1,0 +1,30 @@
+// Classic: your distro's logo on the left and the usual list next to it, in your theme colours
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
+  "logo": {
+    "padding": { "top": 1, "right": 3 },
+    "color": { "1": "{{primary}}", "2": "{{tertiary}}" }
+  },
+  "display": {
+    "separator": " → ",
+    "color": { "keys": "{{primary}}", "title": "{{tertiary}}", "output": "{{on_surface}}" }
+  },
+  "modules": [
+    "title",
+    { "type": "separator", "outputColor": "{{outline}}" },
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "wm",
+    "terminal",
+    "cpu",
+    "gpu",
+    "memory",
+    "disk",
+    "break",
+    { "type": "colors", "symbol": "circle" }
+  ]
+}

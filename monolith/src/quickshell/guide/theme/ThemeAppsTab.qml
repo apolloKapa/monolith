@@ -86,7 +86,7 @@ GuideTab {
                     wrapMode: Text.WordWrap
                     text: "Give other apps your Monolith colours, from your wallpaper or colour preset, and keep them in step whenever the theme changes. "
                         + "Monolith only adds a marked block (or one setting) to the app's config; switching it off puts the file back exactly as it was. "
-                        + "kitty and cava follow the theme too, unless you switch that off below; fastfetch always does."
+                        + "kitty and cava follow the theme too, unless you switch that off below; fastfetch always does (pick its look in Theme → Fastfetchlings)."
                     color: ThemeBackend.subtext0
                     font.family: ThemeBackend.fontFamily
                     font.pixelSize: rootObj.s(12)

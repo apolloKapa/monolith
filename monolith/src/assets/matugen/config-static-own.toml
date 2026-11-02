@@ -3,10 +3,6 @@
 [config]
 reload_apps = false
 
-[templates.fastfetch]
-input_path = "templates/fastfetch.jsonc.template"
-output_path = "~/.config/fastfetch/config.jsonc"
-
 [templates.app_gtk]
 input_path = "templates/gtk-colors.css.template"
 output_path = "~/.local/state/monolith/apps/gtk.css"
