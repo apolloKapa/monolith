@@ -43,7 +43,7 @@ It opens a menu (arrow keys or j/k, Enter, q to quit):
 | Option | Default | What it is |
 |---|---|---|
 | Packages overview | | everything it's about to install, and what you already have |
-| Apps for the keybinds | ON | what the keybinds/autostart call: librewolf, thunar, mission-center, rofi, steam, wooz, awww, swaylock, swappy, grim/slurp, cliphist, playerctl, brightnessctl, fonts, ... |
+| Apps for the keybinds | ON | what the keybinds/autostart call: librewolf, thunar, mission-center, steam, wooz, awww, swaylock, swappy, grim/slurp, cliphist, playerctl, brightnessctl, fonts, ... |
 | niri config | Monolith config | writes the niri config below (your old one is backed up to `~/.config/niri_backup/`); or "keep mine" |
 | Login screen | ON | SDDM theme, with options to replace your current display manager and use Wayland for SDDM |
 | Wallpapers | 3 random | 3 random / full pack / none, from my [wallpapers](https://github.com/apolloKapa/wallpapers) repo (skipped if it doesn't exist; `WALLPAPER_REPO=` to use another) |
@@ -53,7 +53,7 @@ Then it:
 
 1. installs the packages (official repos via pacman, AUR via yay/paru; it builds yay if you have neither), plus the Iosevka Nerd Font
 2. installs the shell into `~/.local/share/monolith` and links `monolith` and `monolithd` into `~/.local/bin`
-3. copies `setwall` (used by a keybind) into `~/.local/bin` and a rofi config into `~/.config/rofi`, only where you don't have your own
+3. puts the bundled icon packs (YAMIS) into `~/.local/share/icons`, keeping any of the same name you added yourself
 4. adds `/etc/pam.d/monolith`, so the lock screen can check your password
 5. writes the niri config (old one backed up) and generates the display and workspace setup from the monitors it finds
 6. sets up SDDM and wallpapers, if picked (the SDDM theme is off by default when you already use another one)
@@ -83,7 +83,7 @@ niri reloads its config as soon as you save, so keybind/monitor/layout edits app
 | **Environment variables** | `env.kdl` |
 | **Shell look**: theme, style, font, bar, dock, launcher, notifications, idle | Settings (`Mod+S`), saved in `~/.config/monolith/settings.json` |
 | **Wallpapers** | `~/Pictures/Wallpapers`, pick with `Mod+W` |
-| **Helper scripts** (focuswin, snap, setwall, ...) | `~/.local/bin` (repo: `bin/`) |
+| **Helper scripts** (focuswin, snap, ...) | `~/.local/bin` (repo: `bin/`) |
 
 After editing a niri file, `niri validate` tells you if something's wrong.
 
@@ -201,9 +201,8 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `Mod+E` | files (Thunar) |
 | `Mod+Escape` | Mission Center |
 | `Mod+Z` / `Mod+Space` | launcher |
-| `Mod+Tab` | window switcher (rofi) |
-| `Mod+Alt+V` | clipboard history (rofi) |
-| `Mod+Alt+S` | pick wallpaper (setwall) |
+| `Mod+Tab` | window switcher |
+| `Mod+Alt+V` | clipboard history |
 | `Mod+Ctrl+Z` | zoom (wooz) |
 | `Mod+Ctrl+scroll` | zoom in (up) and back out (down), at the mouse, like KDE |
 
@@ -296,8 +295,6 @@ The installer reads displays from the running niri. If you install from a TTY, n
 Helper scripts in `bin/` (installed to `~/.local/bin`):
 
 - `focuswin`, `swapwin`, `snap`, `tilehalf`, `maxtoggle`: desktop-style window focus, swapping, half-screen snapping and maximizing for floating windows (not bound by default since Monolith uses normal niri tiling; bind them in `keybinds.kdl` if you want them)
-- `setwall`: wallpaper via awww (`setwall pick` = rofi chooser)
-- `launcher`, `favlauncher`, `rofi-apps`, `rofi-favs`: rofi launcher with favourites (Ctrl+S stars an app)
 
 ## Repo layout
 
@@ -310,7 +307,6 @@ Helper scripts in `bin/` (installed to `~/.local/bin`):
 | `monolith/compositors/niri/` | the niri config |
 | `monolith/sddm/` | the SDDM login theme |
 | `config/monolith/settings.json` | default shell settings |
-| `config/rofi/`, `config/wallpaper` | rofi theme + favourites, setwall state |
 | `bin/` | helper scripts |
 | `docs/media/` | the preview clips in this README (GIF + MP4) |
 

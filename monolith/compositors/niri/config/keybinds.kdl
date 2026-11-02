@@ -164,13 +164,12 @@ binds {
     Ctrl+Alt+Delete { quit; }
     Mod+Shift+P { power-off-monitors; }
 
-    // Launcher (rofi)
+    // Launcher, window switcher, clipboard
     Mod+Z { spawn "monolith" "msg" "toggle" "launcher"; }
     Mod+Space { spawn "monolith" "msg" "toggle" "launcher"; }
     Mod+I { spawn "monolith" "appimages"; }
-    Mod+Tab { spawn "rofi" "-show" "window" "-hover-select" "-me-select-entry" "" "-me-accept-entry" "MousePrimary"; }
-    Mod+Alt+S { spawn "setwall" "pick"; }
-    Mod+Alt+V { spawn-sh "cliphist list | rofi -dmenu | cliphist decode | wl-copy"; }
+    Mod+Tab { spawn "monolith" "msg" "toggle" "switcher"; }
+    Mod+Alt+V { spawn "monolith" "msg" "toggle" "clipboard"; }
 
     // Media keys, brightness, screenshots, lock
     XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
