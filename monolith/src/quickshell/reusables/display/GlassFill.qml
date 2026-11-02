@@ -325,7 +325,7 @@ Item {
         property vector2d itemSize: Qt.vector2d(width, height)
         property vector2d surfaceSize: Qt.vector2d(root.width, root.height)
         property real offset: ThemeBackend.hardShadow
-        property vector4d radii: Qt.vector4d(root.radius, root.radius, root.radius, root.radius)
+        property vector4d radii: Qt.vector4d(root.cornerRadius(0), root.cornerRadius(1), root.cornerRadius(2), root.cornerRadius(3))
         property color shadowColor: ThemeBackend.outlineColor
         fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/hard_shadow.frag.qsb"
     }
@@ -334,7 +334,10 @@ Item {
         anchors.fill: parent
         visible: ThemeBackend.outlined && root.allowed && root.tintColor.a > 0.02
         color: "transparent"
-        radius: root.radius
+        // Per-corner radii would switch this transparent Rectangle into per-corner mode (punches a
+        // hole), so use the shared corner when all four match: GlassLens only sets per-corner radii.
+        radius: (root.topLeftRadius === root.topRightRadius && root.topLeftRadius === root.bottomLeftRadius
+                 && root.topLeftRadius === root.bottomRightRadius) ? root.topLeftRadius : root.radius
         border.width: root.nestLevel === 0 ? ThemeBackend.outlineOuter : ThemeBackend.outlineInner
         border.color: ThemeBackend.outlineColor
     }

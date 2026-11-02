@@ -770,7 +770,7 @@ Item {
                 targetY: listView.hoverItem ? listView.hoverItem.y : 0
                 targetWidth: listView.hoverItem ? listView.hoverItem.width : 0
                 targetHeight: listView.hoverItem ? listView.hoverItem.height : 0
-                radius: ThemeBackend.rad(Math.max(2, Math.min(root.cornerRadius - 4, 16)))
+                radius: Math.max(2, Math.min(root.cornerRadius - 4, 16)) // GlassLens applies rad() itself
                 backdropOverride: root.glassBackdrop
                 followBackdropHover: false
                 forceClear: true

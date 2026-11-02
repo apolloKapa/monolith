@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Quickshell
 import "../"
 import "../reusables"
+import "faces/clock/ClockColors.js" as CC
 
 QtObject {
     id: registry
@@ -793,26 +794,23 @@ QtObject {
             readonly property string current: perDigit ? (digits[selectedDigit] || "")
                 : (gradientShown && selectedStop === 1 ? clockColor2 : clockColor)
 
-            // "" = the clock's own theme colours
-            // "text"/"mauve" follow the theme (text, accent); the rest are real colours, since a
-            // theme's own "blue", "green"... can all be greys (Shadow is monochrome)
-            readonly property var swatches: ["", "text", "mauve", "#ffffff", "#000000", "#ff5c5c", "#ff9f43", "#ffd43b", "#51cf66", "#22c7b8", "#4dabf7", "#5c7cfa", "#9775fa", "#f06595"]
+            // "" = the clock's own theme colours; every other swatch is a theme role, so the clock
+            // recolours with the colour theme (only a typed #hex stays fixed)
+            readonly property var swatches: ["", "text", "subtext0", "subtext1", "surface2", "crust", "red", "peach", "yellow", "green", "teal", "sapphire", "blue", "mauve", "pink"]
 
             function colorOf(spec, fallback) {
-                if (!spec) return fallback;
-                if (spec.charAt(0) === "#") return spec;
-                return ThemeBackend[spec] !== undefined ? ThemeBackend[spec] : fallback;
+                return CC.resolve(spec, ThemeBackend, fallback);
             }
 
             function syncValue() {
                 let w = settingRoot.targetWidget;
                 if (!w) return;
-                settingRoot.clockColor = w.clockColor || "";
+                settingRoot.clockColor = CC.normalize(w.clockColor);
                 settingRoot.perDigit = w.perDigit === true;
                 let a = String(w.digitColors || "").split(",");
-                settingRoot.digits = [a[0] || "", a[1] || "", a[2] || "", a[3] || ""];
+                settingRoot.digits = [CC.normalize(a[0]), CC.normalize(a[1]), CC.normalize(a[2]), CC.normalize(a[3])];
                 settingRoot.gradient = w.clockGradient === true;
-                settingRoot.clockColor2 = w.clockColor2 || "";
+                settingRoot.clockColor2 = CC.normalize(w.clockColor2);
                 settingRoot.direction = w.gradientDirection === "vertical" ? "vertical" : "horizontal";
             }
 
@@ -1084,7 +1082,7 @@ QtObject {
                         text: current.charAt(0) === "#" ? current : ""
                         onAccepted: {
                             let t = text.charAt(0) === "#" ? text : "#" + text;
-                            if (/^#[0-9a-fA-F]{6}$/.test(t)) settingRoot.pick(t.toLowerCase());
+                            if (/^#[0-9a-fA-F]{6}$/.test(t)) settingRoot.pick(t.toUpperCase()); // upper case: never read as an old swatch (ClockColors LEGACY)
                             focus = false;
                         }
 
