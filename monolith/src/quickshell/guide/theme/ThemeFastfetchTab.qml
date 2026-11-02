@@ -24,6 +24,14 @@ GuideTab {
     property string confirmDelete: "" // the preset whose delete was clicked once
     property bool loaded: false
 
+    // a Delete click arms it for a few seconds; a second click within that deletes
+    onConfirmDeleteChanged: if (confirmDelete !== "") disarm.restart()
+    Timer {
+        id: disarm
+        interval: 4000
+        onTriggered: ffTab.confirmDelete = ""
+    }
+
     readonly property string script: Caching.monolithDir + "/scripts/fastfetch_presets.py"
 
     function refresh() {
@@ -304,7 +312,7 @@ GuideTab {
                                         { id: "edit", icon: "󰏫", label: "Edit" },
                                         { id: "duplicate", icon: "󰆏", label: "Duplicate" },
                                         { id: "rename", icon: "󰑕", label: "Rename" },
-                                        { id: "delete", icon: "󰆴", label: ffTab.confirmDelete === card.name ? "Sure?" : "Delete" }
+                                        { id: "delete", icon: "󰆴", label: "Delete" }
                                     ]
 
                                     Rectangle {
@@ -332,7 +340,9 @@ GuideTab {
                                             }
                                             Text {
                                                 anchors.verticalCenter: parent.verticalCenter
-                                                text: act.modelData.label
+                                                // "Sure?" here, not in the model: changing the model rebuilds the buttons,
+                                                // and the old Delete's exit handler disarmed it before the second click
+                                                text: act.armed ? "Sure?" : act.modelData.label
                                                 color: act.armed ? ThemeBackend.crust : ThemeBackend.text
                                                 font.family: ThemeBackend.fontFamily
                                                 font.pixelSize: rootObj.s(11)
@@ -344,7 +354,6 @@ GuideTab {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onExited: if (act.armed) ffTab.confirmDelete = ""
                                             onClicked: {
                                                 const id = act.modelData.id;
                                                 if (id !== "delete") ffTab.confirmDelete = "";
