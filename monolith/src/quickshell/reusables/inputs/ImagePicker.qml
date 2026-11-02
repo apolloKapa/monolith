@@ -11,6 +11,7 @@ FilePicker {
     titleText: typeof I18n !== "undefined" ? I18n.t("guide.file_picker.title") : "Choose image"
     nameFilters: ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.svg", "*.gif"]
     showPreview: true
+    thumbnails: true
     
     places: [
         { name: typeof I18n !== "undefined" ? I18n.t("guide.file_picker.places.home") : "Home", icon: "󰋜", path: "file://" + (Quickshell.env("HOME") || "") },

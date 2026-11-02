@@ -104,7 +104,8 @@ GuideTab {
     // a picture to show instead of the preset's logo (kitty draws it with its image protocol)
     property string pickingFor: ""
     readonly property var imageSizes: [{ label: "Small", width: 20 }, { label: "Medium", width: 30 }, { label: "Large", width: 42 }]
-    FilePicker {
+    // ImagePicker: the file picker with a preview of the picked image beside the list
+    ImagePicker {
         id: imagePicker
         rootObj: ffTab.rootObj
         titleText: "Pick a picture for " + (ffTab.pickingFor || "this preset")
@@ -114,7 +115,7 @@ GuideTab {
             { name: "Downloads", icon: "󰇚", path: "file://" + (Quickshell.env("HOME") || "") + "/Downloads" },
             { name: "Home", icon: "󰋜", path: "file://" + (Quickshell.env("HOME") || "") }
         ]
-        onFileSelected: function(filePath, fileName) {
+        onImageSelected: function(filePath, fileName) {
             if (filePath && ffTab.pickingFor) ffTab.run(["set-image", ffTab.pickingFor, String(filePath).replace(/^file:\/\//, "")]);
             ffTab.pickingFor = "";
         }
