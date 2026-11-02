@@ -36,6 +36,8 @@ Popup {
     property var places: []
     property Component previewComponent: null
     property bool showPreview: false
+    // small thumbnails beside image files in the list (ImagePicker turns this on)
+    property bool thumbnails: false
     property real previewWidth: Scaler.s(360)
 
     property real crLarge: ThemeBackend.borderRadius
@@ -626,7 +628,8 @@ Popup {
                             property bool matchesSearch: searchText === "" || fileName.toLowerCase().indexOf(searchText) !== -1
 
                             width: listView.width
-                            height: matchesSearch ? Scaler.s(32) : 0
+                            readonly property bool isImage: !fileIsDir && /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(fileName)
+                            height: matchesSearch ? Scaler.s(pickerRoot.thumbnails ? 44 : 32) : 0
                             visible: matchesSearch
                             radius: ThemeBackend.rad(pickerRoot.crSmall)
                             color: (pickerRoot.selectedFilePath === pickerRoot.getAbsolutePath(filePath)) ? Qt.alpha(ThemeBackend.mauve, 0.15) : (delegateMa.containsMouse ? ThemeBackend.surface1 : "transparent")
@@ -637,11 +640,31 @@ Popup {
                                 anchors.rightMargin: Scaler.s(8)
                                 spacing: Scaler.s(6)
 
-                                Text {
-                                    text: fileIsDir ? "󰉋" : "󰋩"
-                                    font.family: ThemeBackend.iconFont
-                                    font.pixelSize: Scaler.s(16)
-                                    color: fileIsDir ? ThemeBackend.blue : ThemeBackend.text
+                                Item {
+                                    Layout.preferredWidth: pickerRoot.thumbnails ? Scaler.s(52) : iconText.implicitWidth
+                                    Layout.preferredHeight: pickerRoot.thumbnails ? Scaler.s(36) : iconText.implicitHeight
+
+                                    Text {
+                                        id: iconText
+                                        anchors.centerIn: parent
+                                        visible: !thumb.visible || thumb.status !== Image.Ready
+                                        text: fileIsDir ? "󰉋" : "󰋩"
+                                        font.family: ThemeBackend.iconFont
+                                        font.pixelSize: Scaler.s(16)
+                                        color: fileIsDir ? ThemeBackend.blue : ThemeBackend.text
+                                    }
+
+                                    // loaded small and only while on screen, so big folders stay quick
+                                    Image {
+                                        id: thumb
+                                        anchors.fill: parent
+                                        visible: pickerRoot.thumbnails && delegateItem.isImage && delegateItem.matchesSearch
+                                        source: visible ? fileUrl : ""
+                                        sourceSize: Qt.size(Scaler.s(104), Scaler.s(72))
+                                        fillMode: Image.PreserveAspectCrop
+                                        asynchronous: true
+                                        smooth: true
+                                    }
                                 }
 
                                 Text {
