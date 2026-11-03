@@ -2,7 +2,7 @@
 
 **really good desktop :3**
 
-My Arch Linux desktop: [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri config, keybinds and helper scripts.
+My Linux desktop (Arch or Gentoo): [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri config, keybinds and helper scripts.
 
 Monolith started as a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) by [@ilyamiro](https://github.com/ilyamiro) and has since been reworked.
 
@@ -28,7 +28,7 @@ Sharper MP4 versions are in [`docs/media`](docs/media).
 
 ## Install
 
-One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...), as your normal user:
+One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...) or on Gentoo, as your normal user:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/apolloKapa/monolith/main/install/get.sh | bash
@@ -51,7 +51,9 @@ It opens a menu (arrow keys or j/k, Enter, q to quit):
 
 Then it:
 
-1. installs the packages (official repos via pacman, AUR via yay/paru; it builds yay if you have neither), plus the Iosevka Nerd Font
+1. installs the packages, plus the Iosevka Nerd Font:
+   - **Arch**: official repos via pacman, AUR via yay/paru (it builds yay if you have neither)
+   - **Gentoo**: Portage, all built from source. It enables the `::guru` overlay (niri, Quickshell, matugen, ...) and `::librewolf`, and keeps its Portage settings in `/etc/portage/package.use/monolith`, `package.accept_keywords/monolith` and `zz-monolith-autounmask` files. wooz and wl-gammarelay-rs have no ebuild, so they're built from source into `~/.local`. A fresh install syncs Portage but doesn't run a full `@world` update; run `sudo emerge -avuDN @world` yourself when you like. Settings → Software shows a **Portage** page (world set, `--depclean`, distfiles) in place of Pacman and AUR
 2. installs the shell into `~/.local/share/monolith` and links `monolith` and `monolithd` into `~/.local/bin`
 3. puts the bundled icon packs (YAMIS) into `~/.local/share/icons`, keeping any of the same name you added yourself
 4. adds `/etc/pam.d/monolith`, so the lock screen can check your password

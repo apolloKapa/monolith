@@ -28,7 +28,8 @@ export REPO_SLUG MONOLITH_BRANCH
 die() { printf '\e[31m[ ERROR ]\e[0m %s\n' "$1" >&2; exit 1; }
 
 [ "$EUID" -eq 0 ] && die "Run the installer as your normal user, not root (it asks for sudo when needed)."
-command -v pacman &>/dev/null || die "Monolith's installer supports Arch Linux and Arch-based distros (pacman) only."
+command -v pacman &>/dev/null || command -v emerge &>/dev/null \
+    || die "Monolith's installer supports Arch-based distros (pacman) and Gentoo-based distros (Portage)."
 
 # --- find the repo: the one this script is in, or a cached clone of GitHub -------------------
 PROJECT_ROOT="$(dirname "$INSTALL_DIR")"
@@ -43,7 +44,10 @@ gitx() {
 }
 
 if [ ! -d "$PROJECT_ROOT/monolith/src" ]; then
-    command -v git &>/dev/null || sudo pacman -Sy --noconfirm --needed git
+    if ! command -v git &>/dev/null; then
+        if command -v pacman &>/dev/null; then sudo pacman -Sy --noconfirm --needed git
+        else sudo emerge --ask=n --noreplace dev-vcs/git; fi
+    fi
     if [ -d "$CACHE_REPO/.git" ]; then
         echo "Updating $REPO_SLUG ($MONOLITH_BRANCH)..."
         gitx -C "$CACHE_REPO" fetch --depth 1 origin "$MONOLITH_BRANCH" 2>/dev/null \

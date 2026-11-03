@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
-# Package manager backend. Monolith targets Arch and Arch-based distros (pacman + yay/paru).
+# Package manager backend: Arch and Arch-based distros (pacman + yay/paru), or Gentoo and
+# Gentoo-based distros (Portage, everything built from source; see pm/portage.sh).
 
 PM_MODULES_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/pm"
-PM_NAME="pacman"
+if command -v pacman &>/dev/null; then
+    PM_NAME="pacman"
+elif command -v emerge &>/dev/null; then
+    PM_NAME="portage"
+else
+    PM_NAME="pacman"
+fi
 
 PM_EXTRA_PKGS=()
 PM_SDDM_EXTRA_PKGS=()

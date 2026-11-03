@@ -1,0 +1,120 @@
+# Arch package name -> Gentoo atom(s), for the Portage backend (portage.sh) and
+# Settings -> Software -> Portage (scripts/packages.py).
+#   <arch name>  <atom> [<atom>...]
+#   <arch name>  -            nothing to install (built into another package, or Qt 5, which Gentoo dropped)
+#   <arch name>  src:<name>   not packaged for Gentoo: built from source into ~/.local (portage.sh)
+# Overlays: (guru) needs ::guru, (librewolf) needs ::librewolf; portage.sh enables them.
+
+# --- installer bootstrap ---
+fzf                       app-shells/fzf
+jq                        app-misc/jq
+curl                      net-misc/curl
+git                       dev-vcs/git
+pciutils                  sys-apps/pciutils
+unzip                     app-arch/unzip
+fontconfig                media-libs/fontconfig
+base-devel                -
+
+# --- REQUIRED_PKGS ---
+kitty                     x11-terms/kitty
+cava                      media-sound/cava
+zbar                      media-gfx/zbar
+tesseract                 app-text/tesseract
+tesseract-data-eng        app-text/tessdata_fast
+songrec                   media-sound/songrec                 # (guru)
+pavucontrol               media-sound/pavucontrol
+alsa-utils                media-sound/alsa-utils
+wl-clipboard              gui-apps/wl-clipboard
+fd                        sys-apps/fd
+qt6-multimedia            dev-qt/qtmultimedia
+qt6-5compat               dev-qt/qt5compat
+ripgrep                   sys-apps/ripgrep
+cliphist                  app-misc/cliphist                   # (guru)
+socat                     net-misc/socat
+inotify-tools             sys-fs/inotify-tools
+pamixer                   media-sound/pamixer                 # (guru)
+brightnessctl             app-misc/brightnessctl              # (guru)
+ddcutil                   app-misc/ddcutil
+acpi                      sys-power/acpi
+iw                        net-wireless/iw
+bluez                     net-wireless/bluez
+bluez-utils               -
+libnotify                 x11-libs/libnotify
+networkmanager            net-misc/networkmanager
+lm_sensors                sys-apps/lm-sensors
+bc                        sys-devel/bc
+matugen                   x11-misc/matugen                    # (guru)
+pipewire                  media-video/pipewire
+wireplumber               media-video/wireplumber
+pipewire-pulse            -
+pipewire-alsa             -
+libpulse                  media-libs/libpulse
+python                    dev-lang/python
+imagemagick               media-gfx/imagemagick
+wget                      net-misc/wget
+file                      sys-apps/file
+psmisc                    sys-process/psmisc
+ffmpeg                    media-video/ffmpeg
+quickshell                gui-apps/quickshell                 # (guru)
+python-websockets         dev-python/websockets
+python-jeepney            dev-python/jeepney
+python-pillow             dev-python/pillow
+qt6-websockets            dev-qt/qtwebsockets
+grim                      gui-apps/grim
+playerctl                 media-sound/playerctl
+satty                     gui-apps/satty                      # (guru)
+xdg-desktop-portal-gtk    sys-apps/xdg-desktop-portal-gtk
+slurp                     gui-apps/slurp
+wmctrl                    x11-misc/wmctrl
+power-profiles-daemon     sys-power/power-profiles-daemon
+easyeffects               media-sound/easyeffects
+lsp-plugins-lv2           media-libs/lsp-plugins
+qt5-wayland               -
+qt5-quickcontrols         -
+qt5-quickcontrols2        -
+qt5-graphicaleffects      -
+qt5ct                     -
+qt6-wayland               dev-qt/qtwayland
+qt6ct                     gui-apps/qt6ct
+adwaita-icon-theme        x11-themes/adwaita-icon-theme
+gpu-screen-recorder       media-video/gpu-screen-recorder     # (guru)
+wf-recorder               gui-apps/wf-recorder
+adw-gtk-theme             x11-themes/adw-gtk3                 # (guru)
+wl-gammarelay-rs          src:wl-gammarelay-rs
+fastfetch                 app-misc/fastfetch
+nano                      app-editors/nano
+
+# --- KEYBIND_PKGS ---
+niri                      gui-wm/niri                         # (guru)
+xwayland-satellite        gui-apps/xwayland-satellite         # (guru)
+xdg-desktop-portal-gnome  sys-apps/xdg-desktop-portal-gnome
+swaylock                  gui-apps/swaylock
+thunar                    xfce-base/thunar
+mission-center            sys-apps/mission-center             # (guru)
+librewolf                 www-client/librewolf                # (librewolf)
+librewolf-bin             www-client/librewolf                # (librewolf) built from source, never -bin
+wooz                      src:wooz
+ttf-jetbrains-mono        media-fonts/jetbrains-mono
+noto-fonts-cjk            media-fonts/noto-cjk
+breeze                    kde-plasma/breeze
+
+# --- login screen (sddm.sh) ---
+sddm                      gui-apps/sddm
+qt6-declarative           dev-qt/qtdeclarative
+qt6-svg                   dev-qt/qtsvg
+weston                    dev-libs/weston
+xorg-server               x11-base/xorg-server
+
+# --- other display managers (only looked up, to switch them off) ---
+gdm                       gnome-base/gdm
+gdm3                      -
+lightdm                   x11-misc/lightdm
+lxdm                      lxde-base/lxdm
+lxdm-gtk3                 -
+ly                        -
+greetd                    gui-libs/greetd
+emptty                    -
+
+# --- Portage tools the backend itself uses ---
+eselect-repository        app-eselect/eselect-repository
+gentoolkit                app-portage/gentoolkit

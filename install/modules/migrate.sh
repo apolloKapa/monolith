@@ -9,7 +9,7 @@ OTHER_SHELL="serpantinum"
 other_shell_installed() {
     [ -d "$HOME/.local/share/$OTHER_SHELL" ] || [ -d "$HOME/.config/$OTHER_SHELL" ] \
         || command -v "${OTHER_SHELL}d" &>/dev/null || [ -e "/usr/local/bin/${OTHER_SHELL}d" ] \
-        || pacman -Qq "$OTHER_SHELL" "$OTHER_SHELL-git" &>/dev/null
+        || { command -v pacman &>/dev/null && pacman -Qq "$OTHER_SHELL" "$OTHER_SHELL-git" &>/dev/null; }
 }
 
 # Serpantinum themes kitty and cava too (fastfetch is always Monolith's): on a new Monolith settings file, leave those to

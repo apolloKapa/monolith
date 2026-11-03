@@ -6,14 +6,14 @@ import "../"
 import "../reusables"
 import "../reusables/guide"
 
-// Settings -> Software -> Pacman / AUR / Flatpak (CleanupPacmanTab.qml & co. set `section`):
+// Settings -> Software -> Pacman / AUR / Portage / Flatpak (CleanupPacmanTab.qml & co. set `section`):
 // remove software and find what installing and removing it leaves behind. The page only counts
 // (scripts/packages.py status); each button opens a terminal that lists what it found and asks
 // before removing anything (packages.py clean <check>).
 GuideTab {
     id: cleanupTab
 
-    // "pacman", "aur" or "flatpak": which checks this page shows
+    // "pacman", "aur", "portage" or "flatpak": which checks this page shows
     property string section: "pacman"
     property var st: ({})
     property bool loading: false
@@ -64,6 +64,16 @@ GuideTab {
         { id: "aurcache", section: "aur", icon: "󰃢", title: "AUR build folders", need: "pacman",
           desc: "What yay / paru downloaded and built. Safe to empty: packages are downloaded again when they update",
           found: st.aurcache ? (st.aurcache.size === 0 ? "Empty" : human(st.aurcache.size)) : "" },
+        { id: "world", section: "portage", icon: "󰏓", title: "Installed packages", need: "portage",
+          desc: "Packages in your world set (the ones you asked for), biggest first. Pick any to remove. System packages and what Monolith needs aren't listed",
+          found: counted(st.world, "package", "packages") },
+        { id: "depclean", section: "portage", icon: "󰏗", title: "Unneeded packages", need: "portage",
+          desc: "Packages pulled in as dependencies that nothing in your world set needs any more (emerge --depclean)",
+          found: st.depclean ? (st.depclean.count === 0 ? "None" : st.depclean.count + (st.depclean.count === 1 ? " package" : " packages")) : "" },
+        { id: "distfiles", section: "portage", icon: "󰃢", title: "Old source downloads", need: "portage",
+          desc: st.eclean ? "Source tarballs in Portage's distfiles that no installed version needs any more (eclean-dist)"
+                          : "Portage's distfiles folder. Install app-portage/gentoolkit to keep the ones installed packages still need",
+          found: st.distfiles ? (st.distfiles.size === 0 ? "Empty" : human(st.distfiles.size)) : "" },
         { id: "flatapps", section: "flatpak", icon: "󰏖", title: "Flatpak apps", need: "flatpakInstalled",
           desc: "Your installed Flatpak apps, biggest first. Pick any to remove, with or without their settings and files",
           found: counted(st.flatapps, "app", "apps") },
@@ -114,6 +124,7 @@ GuideTab {
                     wrapMode: Text.WordWrap
                     text: (cleanupTab.section === "flatpak" ? "Remove Flatpak apps and what they leave behind. "
                            : cleanupTab.section === "aur" ? "Remove AUR packages and what building them leaves behind. "
+                           : cleanupTab.section === "portage" ? "Remove packages and what building them leaves behind. "
                            : "Remove packages and what installing them leaves behind. ")
                         + "Each check opens a terminal that lists what it found and asks before removing anything"
                         + (cleanupTab.section === "flatpak" ? "." : "; removing packages asks for your password.")
@@ -132,7 +143,7 @@ GuideTab {
                     icon: "󰑐"
                     title: "Checks"
                     description: cleanupTab.loading ? "Looking..." : "Press Refresh after cleaning to update the counts"
-                    searchKeywords: "clean up cleanup installed uninstall remove orphan packages flatpak unused runtimes cache leftover data pacman aur"
+                    searchKeywords: "clean up cleanup installed uninstall remove orphan packages flatpak unused runtimes cache leftover data pacman aur portage emerge depclean distfiles"
 
                     ClickButton {
                         Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
@@ -161,7 +172,8 @@ GuideTab {
                         description: modelData.desc
                         searchKeywords: "clean up cleanup remove " + modelData.title.toLowerCase()
                         hiddenByConfig: cleanupTab.st[modelData.need] === false
-                        unavailableReason: modelData.need === "pacman" ? "Needs pacman (Arch-based systems)" : "Flatpak isn't installed"
+                        unavailableReason: modelData.need === "pacman" ? "Needs pacman (Arch-based systems)"
+                                         : modelData.need === "portage" ? "Needs Portage (Gentoo)" : "Flatpak isn't installed"
 
                         ClickButton {
                             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
