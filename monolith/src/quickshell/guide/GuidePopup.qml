@@ -556,6 +556,20 @@ Item {
         }
     }
 
+    // Gentoo (and Gentoo-based systems): Software shows Portage instead of Pacman and AUR.
+    // Read synchronously so the tab list is right before anything indexes into it.
+    FileView {
+        id: osReleaseView
+        path: "/etc/os-release"
+        blockLoading: true
+    }
+    readonly property bool portageSystem: /^ID(_LIKE)?="?[^\n]*\bgentoo\b/m.test(osReleaseView.text() || "")
+
+    readonly property var systemPackageSubtabs: portageSystem
+        ? [ { id: "Portage", key: "portage", name: "Portage", icon: "󰣨", file: "CleanupPortageTab.qml", desc: "Packages from Portage: remove ones you added to your world set, unneeded dependencies and old source downloads. Always asks first" } ]
+        : [ { id: "Pacman", key: "pacman", name: "Pacman", icon: "󰮯", file: "CleanupPacmanTab.qml", desc: "Packages from the Arch repos: remove ones you installed, orphan packages and old downloads. Always asks first" },
+            { id: "AUR", key: "aur", name: "AUR", icon: "󰣇", file: "CleanupAurTab.qml", desc: "Packages from the AUR: remove ones you installed and empty yay / paru's build folders. Always asks first" } ]
+
     property var tabsModel: [
         { id: "Welcome", key: "welcome", name: "Welcome", icon: "󰋜", file: "WelcomeTab.qml" },
         { id: "General", key: "general", name: "General", icon: "󰒓", file: "general/GeneralTab.qml", desc: "Language, sounds, online extras and other things that apply everywhere" },
@@ -633,8 +647,7 @@ Item {
             file: "AppImagesTab.qml",
             subtabs: [
                 { id: "AppImages", key: "appimages", name: "AppImages", icon: "󰏗", file: "AppImagesTab.qml", desc: "Drop an AppImage and it's set up like an installed app: kept in one folder, with its own name and icon in the launcher, dock and menus" },
-                { id: "Pacman", key: "pacman", name: "Pacman", icon: "󰮯", file: "CleanupPacmanTab.qml", desc: "Packages from the Arch repos: remove ones you installed, orphan packages and old downloads. Always asks first" },
-                { id: "AUR", key: "aur", name: "AUR", icon: "󰣇", file: "CleanupAurTab.qml", desc: "Packages from the AUR: remove ones you installed and empty yay / paru's build folders. Always asks first" },
+                ...systemPackageSubtabs,
                 { id: "Flatpak", key: "flatpak", name: "Flatpak", icon: "󰏖", file: "CleanupFlatpakTab.qml", desc: "Flatpak apps: remove them, their unused runtimes and data left by removed apps. Always asks first" }
             ]
         },

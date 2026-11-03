@@ -7,6 +7,10 @@
 spawn-at-startup "bash" "-c" "wl-paste --type text --watch cliphist store"
 spawn-at-startup "bash" "-c" "wl-paste --type image --watch cliphist store"
 
+// sound on OpenRC systems (Gentoo): PipeWire has no systemd user units there, so start it with
+// the session. Does nothing under systemd, or when PipeWire is already running
+spawn-at-startup "sh" "-c" "[ -d /run/systemd/system ] || ! command -v gentoo-pipewire-launcher >/dev/null || pgrep -x pipewire >/dev/null || exec gentoo-pipewire-launcher restart"
+
 // the shell
 // by full path, with ~/.local/bin on PATH for everything it starts: on a fresh PC niri's PATH
 // may not have it yet, and a bare "monolithd" left the plain grey niri screen

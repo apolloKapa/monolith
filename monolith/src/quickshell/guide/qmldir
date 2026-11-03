@@ -8,3 +8,4 @@ CleanupTab 1.0 CleanupTab.qml
 CleanupPacmanTab 1.0 CleanupPacmanTab.qml
 CleanupAurTab 1.0 CleanupAurTab.qml
 CleanupFlatpakTab 1.0 CleanupFlatpakTab.qml
+CleanupPortageTab 1.0 CleanupPortageTab.qml

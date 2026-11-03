@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Settings -> Software -> Pacman / AUR / Flatpak: remove software, and find what installing and
+"""Settings -> Software -> Pacman / AUR / Portage / Flatpak: remove software, and find what installing and
 removing it leaves behind.
 
   packages.py status          JSON: what each check finds (for the Settings pages; quick, no root)
@@ -11,6 +11,9 @@ Checks:
   cache       pacman's downloaded packages (keeps the newest 2 of each with paccache)
   aur         AUR packages you installed yourself: pick any to remove
   aurcache    the AUR helper's (yay's/paru's) download and build folders
+  world       Portage: packages in your world set (system ones left out): pick any to remove
+  depclean    Portage: dependencies nothing needs any more (emerge --depclean asks)
+  distfiles   Portage: source downloads no installed version needs (eclean-dist)
   flatapps    installed Flatpak apps: pick any to remove, with or without their data
   flatpak     Flatpak runtimes and extensions no installed app uses
   flatdata    data folders in ~/.var/app of Flatpak apps that aren't installed any more
@@ -26,6 +29,8 @@ import sys
 HOME = os.path.expanduser("~")
 VAR_APP = os.path.join(HOME, ".var", "app")
 PACMAN_CACHE = "/var/cache/pacman/pkg"
+PORTAGE_VDB = "/var/db/pkg"
+PORTAGE_WORLD = "/var/lib/portage/world"
 AUR_CACHES = [os.path.join(HOME, ".cache", "yay"), os.path.join(HOME, ".cache", "paru", "clone")]
 
 
@@ -213,8 +218,109 @@ def aur_cache():
     return out
 
 
+# ---- Portage (Gentoo) ----
+
+# never offered for removal on Gentoo: what boots the PC and runs the desktop
+PORTAGE_SYSTEM_CATS = ("sys-kernel/", "sys-boot/", "sys-firmware/", "virtual/", "acct-user/", "acct-group/",
+                       "app-portage/", "app-eselect/", "sys-libs/", "sys-devel/", "dev-build/")
+PORTAGE_SYSTEM = {
+    "app-admin/sudo", "app-admin/doas", "sys-apps/portage", "sys-apps/systemd", "sys-apps/openrc",
+    "sys-fs/btrfs-progs", "sys-fs/dosfstools", "sys-fs/e2fsprogs", "sys-fs/xfsprogs", "sys-fs/ntfs3g",
+    "sys-fs/lvm2", "sys-fs/cryptsetup", "sys-apps/zram-generator", "net-misc/networkmanager",
+    "net-wireless/iwd", "net-wireless/wpa_supplicant", "net-misc/dhcpcd", "net-misc/openssh",
+    "media-libs/mesa", "x11-drivers/nvidia-drivers", "media-video/pipewire", "media-video/wireplumber",
+    "gui-wm/niri", "gui-apps/quickshell", "gui-apps/xwayland-satellite", "gui-apps/sddm", "x11-base/xorg-server",
+    "x11-base/xwayland", "sys-apps/xdg-desktop-portal", "sys-apps/xdg-desktop-portal-gnome",
+    "sys-apps/xdg-desktop-portal-gtk", "sys-auth/polkit", "sys-apps/dbus", "dev-vcs/git", "dev-lang/python",
+    "sys-apps/flatpak", "net-wireless/bluez", "app-shells/bash",
+}
+
+
+def portage_map():
+    """Arch name -> [Gentoo atoms] from install/modules/pm/portage-map.txt"""
+    here = os.path.dirname(os.path.abspath(__file__))
+    for rel in ("../../install/modules/pm/portage-map.txt", "../../../install/modules/pm/portage-map.txt"):
+        try:
+            lines = open(os.path.normpath(os.path.join(here, rel)), encoding="utf-8").read().splitlines()
+        except OSError:
+            continue
+        out = {}
+        for line in lines:
+            f = line.split("#", 1)[0].split()
+            if len(f) > 1:
+                out[f[0]] = [a for a in f[1:] if "/" in a]
+        return out
+    return {}
+
+
+def bare_atom(atom):
+    """'>=app-misc/foo-1.2-r1:3::guru' -> 'app-misc/foo' (world entries are usually bare already)"""
+    a = atom.split("::")[0].split("[")[0]
+    versioned = bool(re.match(r"^[<>=~]", a))
+    a = re.sub(r"^[<>=~!]+", "", a).split(":")[0].rstrip("*")
+    return re.sub(r"-\d[^-/]*(-r\d+)?$", "", a) if versioned else a
+
+
+def vdb_entries(atom):
+    """the /var/db/pkg folders of an installed atom (one per slot)"""
+    cat, _, pn = atom.partition("/")
+    d = os.path.join(PORTAGE_VDB, cat)
+    try:
+        names = os.listdir(d)
+    except OSError:
+        return []
+    return [os.path.join(d, n) for n in names if re.fullmatch(re.escape(pn) + r"-\d.*", n)]
+
+
+def vdb_read(entry, key):
+    try:
+        return open(os.path.join(entry, key), encoding="utf-8", errors="replace").read().strip()
+    except OSError:
+        return ""
+
+
+def world_packages():
+    """[(atom, size, description, False)] of your world set, system ones left out, biggest first"""
+    try:
+        atoms = [l.strip() for l in open(PORTAGE_WORLD, encoding="utf-8") if l.strip() and not l.startswith("#")]
+    except OSError:
+        return []
+    pmap = portage_map()
+    keep = set()                    # what Monolith needs, as Gentoo atoms
+    for n in monolith_deps():
+        keep.update(pmap.get(n, []))
+    out = []
+    for atom in atoms:
+        a = bare_atom(atom)
+        if a in PORTAGE_SYSTEM or a.startswith(PORTAGE_SYSTEM_CATS):
+            continue
+        if a in keep:
+            continue
+        entries = vdb_entries(a)
+        size = 0
+        for e in entries:
+            try:
+                size += int(vdb_read(e, "SIZE") or 0)
+            except ValueError:
+                pass
+        desc = vdb_read(entries[0], "DESCRIPTION") if entries else ""
+        out.append((a, size, desc, False))
+    return sorted(out, key=lambda p: -p[1])
+
+
+def distdir():
+    d = run(["portageq", "envvar", "DISTDIR"]).strip()
+    return d or "/var/cache/distfiles"
+
+
 def status():
-    st = {"pacman": have("pacman"), "flatpakInstalled": have("flatpak"), "paccache": have("paccache")}
+    st = {"pacman": have("pacman"), "flatpakInstalled": have("flatpak"), "paccache": have("paccache"),
+          "portage": have("emerge") and not have("pacman"), "eclean": have("eclean-dist")}
+    if st["portage"]:
+        w = world_packages()
+        st["world"] = {"count": len(w), "size": sum(p[1] for p in w)}
+        # what --depclean would remove takes emerge a while to work out: counted only in the terminal
+        st["distfiles"] = {"size": du(distdir())}
     if st["pacman"]:
         o = orphans()
         st["orphans"] = {"count": len(o), "size": sum(s for _, s in o)}
@@ -407,13 +513,60 @@ def clean_aurcache():
         print(f"\n{GREEN}No AUR helper folders.{RESET}")
 
 
+def clean_world():
+    title("Installed packages")
+    print(f"{DIM}The packages in your world set (the ones you asked Portage for), biggest first. System ones\n"
+          f"(kernel, toolchain, drivers, login, sound) and what Monolith needs aren't listed.{RESET}")
+    pkgs = world_packages()
+    if not pkgs:
+        print("\nNone found.")
+        return
+    picked = pick_lines_portage(pkgs)
+    if not picked:
+        print("\nNothing picked, nothing removed.")
+        return
+    print(f"\n{BOLD}Picked:{RESET} " + ", ".join(picked))
+    print(f"{DIM}They leave your world set, then Portage removes the ones nothing else needs (and asks first).\n"
+          f"A package something else still depends on stays installed.{RESET}\n")
+    subprocess.run(["sudo", "emerge", "--ask", "--deselect", *picked])
+    subprocess.run(["sudo", "emerge", "--ask", "--depclean", *picked])
+
+
+def pick_lines_portage(pkgs):
+    return pick([f"{n:<40} {human(sz):>9}  {d}" for n, sz, d, _ in pkgs], "equery -q meta {1} 2>/dev/null || echo {1}")
+
+
+def clean_depclean():
+    title("Unneeded packages")
+    print(f"{DIM}Dependencies of packages you've since removed: nothing in your world set needs them.\n"
+          f"Portage works out the list (this takes a moment), shows it and asks before removing.{RESET}\n")
+    subprocess.run(["sudo", "emerge", "--ask", "--depclean"])
+
+
+def clean_distfiles():
+    title("Old source downloads")
+    d = distdir()
+    size = du(d)
+    print(f"{DIM}Portage keeps the source tarballs it downloads in {d}.{RESET}")
+    print(f"\nDistfiles: {human(size)}")
+    if have("eclean-dist"):
+        print(f"{DIM}eclean-dist keeps what installed packages still need and lists the rest:{RESET}\n")
+        subprocess.run(["sudo", "eclean-dist", "--deep", "--pretend"])
+        if ask("Remove those files?"):
+            subprocess.run(["sudo", "eclean-dist", "--deep"])
+    elif size and ask("Empty it? Sources are downloaded again when a package rebuilds"):
+        subprocess.run(["sudo", "find", d, "-mindepth", "1", "-maxdepth", "1", "-type", "f", "-delete"])
+        print(f"{GREEN}Emptied.{RESET} {DIM}Install app-portage/gentoolkit to keep the ones still needed next time.{RESET}")
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     if cmd == "status":
         status()
         return
     checks = {"explicit": clean_explicit, "orphans": clean_orphans, "cache": clean_cache, "aur": clean_aur,
-              "aurcache": clean_aurcache, "flatapps": clean_flatapps, "flatpak": clean_flatpak, "flatdata": clean_flatdata}
+              "aurcache": clean_aurcache, "flatapps": clean_flatapps, "flatpak": clean_flatpak, "flatdata": clean_flatdata,
+              "world": clean_world, "depclean": clean_depclean, "distfiles": clean_distfiles}
     if cmd != "clean" or len(sys.argv) < 3 or sys.argv[2] not in checks:
         raise SystemExit(__doc__)
     try:

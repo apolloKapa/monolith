@@ -32,6 +32,11 @@ pm_missing_pkgs() {
     pacman -T "$@" 2>/dev/null || true
 }
 
+# is the package in the repos (not the AUR)?
+pm_has_pkg() {
+    pacman -Si "$1" &>/dev/null
+}
+
 pm_is_installed() {
     pacman -Q "$1" &>/dev/null
 }

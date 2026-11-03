@@ -83,7 +83,7 @@ resolve_pkg() {
     local spec="$1"
     [[ "$spec" == *"|"* ]] || { echo "$spec"; return; }
     local repo="${spec%%|*}" aur="${spec##*|}"
-    if pacman -Si "$repo" &>/dev/null || pm_is_installed "$repo"; then echo "$repo"; else echo "$aur"; fi
+    if pm_has_pkg "$repo" || pm_is_installed "$repo"; then echo "$repo"; else echo "$aur"; fi
 }
 
 # the full list for the current menu choices
