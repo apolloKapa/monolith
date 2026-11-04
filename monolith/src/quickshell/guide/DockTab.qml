@@ -52,6 +52,20 @@ GuideTab {
     property bool currentBackground: dockSettings && dockSettings.background !== undefined ? Boolean(dockSettings.background) : true
     property bool currentFloating: dockSettings && dockSettings.floating !== undefined ? dockSettings.floating : false
     property bool currentExclusive: dockSettings && (dockSettings.exclusive !== undefined ? dockSettings.exclusive : (dockSettings.exclusiveMode !== undefined ? dockSettings.exclusiveMode : false)) ? true : false
+    // -1: follow the theme; 0 (square) to 100 (round ends)
+    property int currentCornerRoundness: (dockSettings && dockSettings.cornerRoundness !== undefined && !isNaN(Number(dockSettings.cornerRoundness))) ? Math.round(Number(dockSettings.cornerRoundness)) : -1
+    // where the slider sits while the dock follows the theme: the theme's corner as a share of
+    // half the dock's thickness (the dock's own formula, see DockWindowState.cornerRadius)
+    readonly property int themeCornerRoundness: {
+        const half = (currentElementSize + 16) / 2;
+        const br = ThemeBackend.borderRadius;
+        let r = br;
+        if (!currentFloating) {
+            const c = br <= 16 ? br * 2 : Math.min(32, 32 - 16 * Math.exp(-(br - 16) / 12));
+            r = Math.min(ThemeBackend.rad(c), half);
+        }
+        return Math.max(0, Math.min(100, Math.round(r / half * 100)));
+    }
     property int currentElementSize: (dockSettings && dockSettings.elementSize !== undefined && !isNaN(parseInt(dockSettings.elementSize))) ? parseInt(dockSettings.elementSize) : 44
     property bool currentOverrideBoundsCorrection: dockSettings && dockSettings.overrideBoundsCorrection !== undefined ? dockSettings.overrideBoundsCorrection : false
     property int currentHoverScale: (dockSettings && dockSettings.hoverScale !== undefined && !isNaN(parseInt(dockSettings.hoverScale))) ? parseInt(dockSettings.hoverScale) : 120
@@ -80,6 +94,7 @@ GuideTab {
         dockTabRoot.currentBackground = s.background !== undefined ? Boolean(s.background) : true;
         dockTabRoot.currentFloating = s.floating !== undefined ? s.floating : false;
         dockTabRoot.currentExclusive = s.exclusive !== undefined ? s.exclusive : (s.exclusiveMode !== undefined ? Boolean(s.exclusiveMode) : false);
+        dockTabRoot.currentCornerRoundness = (s.cornerRoundness !== undefined && !isNaN(Number(s.cornerRoundness))) ? Math.round(Number(s.cornerRoundness)) : -1;
         dockTabRoot.currentElementSize = (s.elementSize !== undefined && !isNaN(parseInt(s.elementSize))) ? parseInt(s.elementSize) : 44;
         dockTabRoot.currentOverrideBoundsCorrection = s.overrideBoundsCorrection !== undefined ? s.overrideBoundsCorrection : false;
         dockTabRoot.currentHoverScale = (s.hoverScale !== undefined && !isNaN(parseInt(s.hoverScale))) ? parseInt(s.hoverScale) : 120;
@@ -992,6 +1007,51 @@ GuideTab {
                                 dockDebounceTimer.stop();
                                 dockTabRoot.updateDockSetting("elementSize", Math.round(sizeSlider.value));
                             }
+                        }
+                    }
+                }
+
+                SettingsRow {
+                    id: cornerRoundnessRow
+                    Layout.fillWidth: true
+                    visible: dockTabRoot.currentEnabled
+                    settingId: "dock_corner_roundness"
+                    rootObj: dockTabRoot.rootObj
+                    icon: "󰢡"
+                    configKey: "dock.cornerRoundness"
+                    defaultValue: -1
+                    title: I18n.t("guide.dock.roundness.title", "Corner roundness")
+                    description: I18n.t("guide.dock.roundness.desc", "How round the dock's corners are, from square (0%) to fully round ends (100%). ↺ follows the theme again")
+                    searchKeywords: "dock corner radius round square rounded shape"
+
+                    Draggable {
+                        id: roundnessSlider
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                        implicitWidth: dockTabRoot.rootObj.s(220)
+                        implicitHeight: dockTabRoot.rootObj.s(18)
+                        from: 0
+                        to: 100
+                        stepSize: 1
+                        defaultValue: dockTabRoot.themeCornerRoundness
+                        showValueBubble: true
+                        valueFormatter: function(v) { return dockTabRoot.currentCornerRoundness < 0 ? "Theme" : Math.round(v) + "%" }
+                        value: dockTabRoot.currentCornerRoundness < 0 ? dockTabRoot.themeCornerRoundness : dockTabRoot.currentCornerRoundness
+                        backgroundColor: ThemeBackend.surface0
+                        accentColor: ThemeBackend.mauve
+                        handleColor: ThemeBackend.text
+                        handleBorderColor: ThemeBackend.mantle
+                        onMoved: function(val) {
+                            let rounded = Math.round(val);
+                            if (dockTabRoot.currentCornerRoundness !== rounded) {
+                                dockTabRoot.currentCornerRoundness = rounded;
+                                dockTabRoot.triggerDebounced(function() {
+                                    dockTabRoot.updateDockSetting("cornerRoundness", rounded);
+                                });
+                            }
+                        }
+                        onDragFinished: {
+                            dockDebounceTimer.stop();
+                            dockTabRoot.updateDockSetting("cornerRoundness", Math.round(roundnessSlider.value));
                         }
                     }
                 }

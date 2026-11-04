@@ -25,6 +25,16 @@ enable_system_service() {
             sudo systemctl enable --now "$svc.service" 2>/dev/null || sudo systemctl enable -f "$svc.service" 2>/dev/null || sudo systemctl enable "$svc.service" 2>/dev/null || true
             ;;
         openrc)
+            if [ ! -e "/etc/init.d/$svc" ] && [ -e /etc/init.d/display-manager ] && [ -f "/usr/bin/$svc" ]; then
+                # Gentoo has no per-display-manager service: it's "display-manager", told which one
+                # to run in /etc/conf.d/display-manager
+                if grep -q '^DISPLAYMANAGER=' /etc/conf.d/display-manager 2>/dev/null; then
+                    sudo sed -i "s/^DISPLAYMANAGER=.*/DISPLAYMANAGER=\"$svc\"/" /etc/conf.d/display-manager
+                else
+                    echo "DISPLAYMANAGER=\"$svc\"" | sudo tee -a /etc/conf.d/display-manager >/dev/null
+                fi
+                svc=display-manager
+            fi
             sudo rc-update add "$svc" default 2>/dev/null || true
             sudo rc-service "$svc" start 2>/dev/null || true
             ;;

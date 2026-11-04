@@ -9,6 +9,8 @@ Item {
 
     property bool isVisible: false
     property var screen: null
+    // what it opens on: "apps", or "emoji" for the emoji picker (monolith msg toggle emoji)
+    property string mode: "apps"
 
     function getFocusedScreen() {
         try {
@@ -61,7 +63,8 @@ Item {
         return getFocusedScreen() || scr;
     }
 
-    function show(scr) {
+    function show(scr, openMode) {
+        controller.mode = openMode || "apps";
         let target = getScreen(scr);
         if (target !== null && target !== undefined) {
             controller.screen = target;
@@ -78,18 +81,21 @@ Item {
         controller.isVisible = false;
     }
 
-    function toggle(scr) {
+    function toggle(scr, openMode) {
         let target = getScreen(scr);
         let resolved = target !== null && target !== undefined ? target : getFocusedScreen();
+        let wanted = openMode || "apps";
 
         if (controller.isVisible) {
-            if (resolved !== undefined && resolved !== null && controller.screen !== resolved) {
+            if (controller.mode !== wanted) {
+                controller.mode = wanted;    // open on apps, the emoji key switches to emojis (and back)
+            } else if (resolved !== undefined && resolved !== null && controller.screen !== resolved) {
                 controller.screen = resolved;
             } else {
                 hide();
             }
         } else {
-            show(resolved);
+            show(resolved, wanted);
         }
     }
 }

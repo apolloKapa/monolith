@@ -24,14 +24,28 @@ GuideTab {
     property string error: ""
 
     // ---- one app's icon ----
-    readonly property var apps: {
+    // a plain list rebuilt a moment after the app list settles. As a binding it ran again each
+    // time the desktop-entry list grew while Settings opened (about 20 times, 0.2 s each with ~170
+    // apps: localeCompare builds a collator per call), and Settings froze for ~5 seconds
+    property var apps: []
+    function rebuildApps() {
         let seen = {}, out = [];
         for (const e of DesktopEntries.applications.values) {
             if (!e || e.noDisplay || seen[e.id]) continue;
             seen[e.id] = true;
-            out.push(e);
+            out.push([String(e.name).toLowerCase(), e]);
         }
-        return out.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+        out.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+        apps = out.map(p => p[1]);
+    }
+    Timer {
+        id: appsRebuild
+        interval: 300
+        onTriggered: iconsTab.rebuildApps()
+    }
+    Connections {
+        target: DesktopEntries.applications
+        function onValuesChanged() { appsRebuild.restart(); }
     }
     property string appQuery: ""
     readonly property var shownApps: {
@@ -196,7 +210,7 @@ GuideTab {
             Caching.monolithDir + "/scripts/settings.sh"])
     }
 
-    Component.onCompleted: { refresh(); readOverrides(); }
+    Component.onCompleted: { refresh(); readOverrides(); appsRebuild.restart(); }
 
     Flickable {
         anchors.fill: parent

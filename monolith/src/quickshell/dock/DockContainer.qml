@@ -21,8 +21,12 @@ Item {
         }
     }
 
+    // a roundness picked in Settings is drawn as is: the theme's scaling (and the square style)
+    // only apply while the dock follows the theme
+    function cr(r) { return dockWindow.customRoundness ? r : ThemeBackend.rad(r); }
+
     property real dynamicCornerRadius: (dockWindow.dockFloating || dockWindow.editMode)
-        ? ThemeBackend.borderRadius
+        ? (dockWindow.customRoundness ? fullThickness / 2 * dockWindow.cornerRoundness / 100 : ThemeBackend.borderRadius)
         : Math.max(0, Math.min(dockWindow.outerCornerRadius, (dockWindow.isVertical ? width : height) * 0.5))
 
     readonly property real dockSideRadius: dynamicCornerRadius * (1.0 - outerCornerProgress)
@@ -264,7 +268,7 @@ Item {
         card: dockBg
         surfaceEnabled: dockWindow.dockBackground && filletRadius > 0.5
         opacity: (dockWindow.sameSideAsBar ? containerRoot.revealProgress : 1.0) * (ThemeBackend.liquidGlass ? 1.0 : containerRoot.outerCornerProgress)
-        filletRadius: ThemeBackend.rad(!containerRoot.fanFillets ? 0 : (ThemeBackend.liquidGlass ? dockWindow.outerCornerRadius * containerRoot.outerCornerProgress : (containerRoot.outerCornerProgress > 0.001 ? dockWindow.outerCornerRadius : 0)))
+        filletRadius: containerRoot.cr(!containerRoot.fanFillets ? 0 : (ThemeBackend.liquidGlass ? dockWindow.outerCornerRadius * containerRoot.outerCornerProgress : (containerRoot.outerCornerProgress > 0.001 ? dockWindow.outerCornerRadius : 0)))
         filletDir: dockWindow.dockPosition === "bottom" ? Qt.vector2d(0, 1)
                  : dockWindow.dockPosition === "top" ? Qt.vector2d(0, -1)
                  : dockWindow.dockPosition === "left" ? Qt.vector2d(-1, 0)
@@ -277,12 +281,12 @@ Item {
 
         WallpaperBlur {
             anchors.fill: parent
-            topLeftRadius: ThemeBackend.rad(containerRoot.topLeftCorner)
-            topRightRadius: ThemeBackend.rad(containerRoot.topRightCorner)
-            bottomLeftRadius: ThemeBackend.rad(containerRoot.bottomLeftCorner)
-            bottomRightRadius: ThemeBackend.rad(containerRoot.bottomRightCorner)
+            topLeftRadius: containerRoot.cr(containerRoot.topLeftCorner)
+            topRightRadius: containerRoot.cr(containerRoot.topRightCorner)
+            bottomLeftRadius: containerRoot.cr(containerRoot.bottomLeftCorner)
+            bottomRightRadius: containerRoot.cr(containerRoot.bottomRightCorner)
             surfaceEnabled: dockWindow.dockBackground
-            filletRadius: ThemeBackend.rad(dockFillets.filletRadius)
+            filletRadius: containerRoot.cr(dockFillets.filletRadius)
             filletDir: dockFillets.filletDir
         }
     }
@@ -307,11 +311,11 @@ Item {
         Rectangle {
             id: dockBg
             anchors.fill: parent
-            radius: ThemeBackend.rad(containerRoot.dynamicCornerRadius)
-            topLeftRadius: ThemeBackend.rad(containerRoot.topLeftCorner)
-            topRightRadius: ThemeBackend.rad(containerRoot.topRightCorner)
-            bottomLeftRadius: ThemeBackend.rad(containerRoot.bottomLeftCorner)
-            bottomRightRadius: ThemeBackend.rad(containerRoot.bottomRightCorner)
+            radius: containerRoot.cr(containerRoot.dynamicCornerRadius)
+            topLeftRadius: containerRoot.cr(containerRoot.topLeftCorner)
+            topRightRadius: containerRoot.cr(containerRoot.topRightCorner)
+            bottomLeftRadius: containerRoot.cr(containerRoot.bottomLeftCorner)
+            bottomRightRadius: containerRoot.cr(containerRoot.bottomRightCorner)
             // joined to the Frame it takes the frame's colour (glass in the see-through styles)
             color: containerRoot.joinsFrame ? ThemeBackend.frameColor : (ThemeBackend.liquidGlass ? "transparent" : ThemeBackend.base)
             border.width: (!ThemeBackend.liquidGlass && (dockWindow.dockFloating || dockWindow.editMode || containerRoot.outerCornerProgress < 0.99)) ? 1 : 0

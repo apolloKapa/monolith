@@ -260,6 +260,10 @@ if [ "$COMMAND" == "start" ]; then
     setsid quickshell -p "$MAIN_QML" 9>&- &
     QS_PID=$!
 
+    # the apps picked in Settings -> Software -> Autostart (~/.config/autostart): niri doesn't
+    # start them itself. Once per login, so a shell restart doesn't open them again
+    ( sleep 2; python3 "$MONOLITH_DIR/scripts/autostart.py" run ) 9>&- >/dev/null 2>&1 &
+
     # load the settings window in the background once the shell is up, so it opens instantly
     # Settings isn't preloaded any more: it starts when opened and quits when closed (saves ~500 MB)
 

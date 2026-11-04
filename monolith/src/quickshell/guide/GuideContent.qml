@@ -185,8 +185,8 @@ Item {
                 }
 
                 Component.onCompleted: {
-                    // only the page being opened: the rest load one by one once the window is up
-                    // (searchLoadTimer), so Settings doesn't build every page before it appears
+                    // only the page being opened: the rest load one by one when search opens
+                    // (searchLoadTimer), so Settings doesn't build every page up front
                     if (popup.currentTab === tabContentWrapper.parentTabIndex) ensureLoaded();
                 }
 

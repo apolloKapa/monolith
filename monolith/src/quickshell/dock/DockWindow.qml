@@ -40,7 +40,9 @@ DockWindowApps {
     // the curve joining the dock to the screen edge and the dock's own corner share its thickness:
     // a big border radius (20+) made the curve taller than what the corner leaves (the corner is
     // capped at half the thickness), and its tip poked out above the corner as a thin spike
-    outerCornerRadius: Math.min(ThemeBackend.rad(cornerRadius), dockContainerItem.fullThickness / 2)
+    outerCornerRadius: customRoundness
+        ? dockContainerItem.fullThickness / 2 * cornerRoundness / 100
+        : Math.min(ThemeBackend.rad(cornerRadius), dockContainerItem.fullThickness / 2)
 
     Connections {
         target: (typeof DockAppMenuController !== "undefined") ? DockAppMenuController : null

@@ -16,6 +16,7 @@ GuideTab {
         "smartRanking": true,
         "favorites": [],
         "showRail": true,
+        "showTabs": true,
         "gridView": false,
         "gridColumns": 5,
         "favColumns": 4,
@@ -39,6 +40,7 @@ GuideTab {
     property bool currentSmartRanking: launcherSettings && launcherSettings.smartRanking !== undefined ? launcherSettings.smartRanking : true
 
     property bool currentShowRail: !(launcherSettings && launcherSettings.showRail === false)
+    property bool currentShowTabs: !(launcherSettings && launcherSettings.showTabs === false)
     property bool currentGridView: !!(launcherSettings && launcherSettings.gridView === true)
     property int currentGridColumns: (launcherSettings && Number(launcherSettings.gridColumns) >= 3) ? Number(launcherSettings.gridColumns) : 5
     property int currentFavColumns: (launcherSettings && Number(launcherSettings.favColumns) >= 2) ? Number(launcherSettings.favColumns) : 4
@@ -56,6 +58,7 @@ GuideTab {
         launcherTabRoot.currentTerminalCommand = s.terminalCommand !== undefined ? s.terminalCommand : "kitty -e";
         launcherTabRoot.currentSmartRanking = s.smartRanking !== undefined ? s.smartRanking : true;
         launcherTabRoot.currentShowRail = s.showRail !== false;
+        launcherTabRoot.currentShowTabs = s.showTabs !== false;
         launcherTabRoot.currentGridView = s.gridView === true;
         launcherTabRoot.currentGridColumns = Number(s.gridColumns) >= 3 ? Number(s.gridColumns) : 5;
         launcherTabRoot.currentShowDescriptions = s.showDescriptions !== false;
@@ -411,6 +414,22 @@ GuideTab {
                         key: "showRail"
                         checked: launcherTabRoot.currentShowRail
                         onToggled: function(val) { launcherTabRoot.currentShowRail = val; }
+                    }
+                }
+
+                SettingsRow {
+                    rootObj: launcherTabRoot.rootObj
+                    settingId: "launcher_tabs"
+                    icon: "󰓩"
+                    configKey: "launcher.showTabs"
+                    defaultValue: true
+                    title: I18n.t("guide.launcher.tabs.title", "Tabs")
+                    description: I18n.t("guide.launcher.tabs.desc", "The Applications / Files / Emojis switch. Off, the launcher always opens on your apps; the emoji picker opens on its own with Meta+.")
+                    searchKeywords: "tabs files emojis emoji picker applications launcher switch"
+                    LauncherToggle {
+                        key: "showTabs"
+                        checked: launcherTabRoot.currentShowTabs
+                        onToggled: function(val) { launcherTabRoot.currentShowTabs = val; }
                     }
                 }
 

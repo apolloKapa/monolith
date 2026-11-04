@@ -157,7 +157,7 @@ Item {
                         Repeater {
                             model: grp.lens
                             Rectangle {
-                                readonly property bool separate: prev.style === "modular" || (prev.style === "solid" && prev.distinctPills)
+                                readonly property bool separate: prev.style === "modular" || ((prev.style === "solid" || prev.style === "fill" || prev.style === "frame") && prev.distinctPills)
                                 width: modelData * prev.k
                                 height: separate ? prev.barH : prev.barH * 0.34
                                 radius: ThemeBackend.square ? 0 : height / 2

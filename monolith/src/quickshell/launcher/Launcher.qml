@@ -211,6 +211,7 @@ PanelWindow {
         "smartRanking": true,
         "favorites": [],
         "showRail": true,
+        "showTabs": true,
         "gridView": false,
         "gridColumns": 5,
         "favColumns": 4,
@@ -236,7 +237,12 @@ PanelWindow {
     property bool smartRanking: (rawLauncherSettings && rawLauncherSettings.smartRanking !== undefined) ? rawLauncherSettings.smartRanking : true
     // Settings -> Launcher: the left rail (tabs + favourite apps), grid view, descriptions
     property var favorites: (rawLauncherSettings && Array.isArray(rawLauncherSettings.favorites)) ? rawLauncherSettings.favorites : []
-    property bool showRail: !(rawLauncherSettings && rawLauncherSettings.showRail === false)
+    // the favourites rail, except in the emoji picker (Meta+.), which shows only emojis
+    readonly property bool showRailSetting: !(rawLauncherSettings && rawLauncherSettings.showRail === false)
+    readonly property bool showRail: showRailSetting && LauncherController.mode !== "emoji"
+    // Settings -> Launcher -> Tabs: the Applications / Files / Emojis switch. Off, the launcher opens
+    // on Applications, and the emoji picker has its own key (monolith msg toggle emoji)
+    property bool showTabs: !(rawLauncherSettings && rawLauncherSettings.showTabs === false)
     property bool gridView: !!(rawLauncherSettings && rawLauncherSettings.gridView === true)
     property int gridColumns: (rawLauncherSettings && Number(rawLauncherSettings.gridColumns) >= 3) ? Math.min(8, Number(rawLauncherSettings.gridColumns)) : 5
     property bool showDescriptions: !(rawLauncherSettings && rawLauncherSettings.showDescriptions === false)
@@ -432,11 +438,13 @@ PanelWindow {
 
     property real baseLauncherWidth: s(customWidth) + (showRail ? railW + s(13) : 0)
     property real collapsedCenterHeight: s(110)
+    // the emoji group tabs above the grid (only in the emoji picker)
+    readonly property real emojiTabsH: currentTabIndex === 2 ? s(34) + s(6) : 0
 
     readonly property real gridCellH: s(92)
-    readonly property real railMinH: showRail ? (s(28) + s(10) + favRows * favCellH) : 0
+    readonly property real railMinH: showRail ? ((showTabs ? s(28) + s(10) : 0) + favRows * favCellH) : 0
     property real targetLauncherHeight: {
-        let headerH = s(36) + (showRail ? 0 : s(28) + s(8)) + s(28);
+        let headerH = s(36) + (showRail || !showTabs ? 0 : s(28) + s(8)) + s(28);
         let listMin = railMinH > 0 ? s(36) + s(8) + railMinH + s(28) : 0;
         if (appGridActive) {
             let rows = Math.ceil(appModel.count / gridColumns);
@@ -448,7 +456,7 @@ PanelWindow {
             if (totalRows <= 0) {
                 return headerH;
             }
-            return Math.max(listMin, headerH + s(8) + (Math.min(totalRows, customItemCount) * s(60)));
+            return Math.max(listMin, headerH + s(8) + emojiTabsH + (Math.min(totalRows, customItemCount) * s(60)));
         }
         let count = Math.min(appModel.count, customItemCount);
         if (count <= 0) {
@@ -624,8 +632,19 @@ PanelWindow {
         }
     }
 
+    function applyOpenMode() {
+        if (LauncherController.mode === "emoji") launcherWindow.currentTabIndex = 2;
+        else if (!launcherWindow.showTabs || LauncherController.mode === "apps") launcherWindow.currentTabIndex = 0;
+    }
+
+    Connections {
+        target: LauncherController
+        function onModeChanged() { if (launcherWindow.isVisible) launcherWindow.applyOpenMode(); }
+    }
+
     onIsVisibleChanged: {
         if (isVisible) {
+            launcherWindow.applyOpenMode();
             tabSwitch.currentIndex = launcherWindow.currentTabIndex;
             restartItemsIntro();
             if (!launcherWindow.appsLoaded) {
@@ -872,11 +891,27 @@ PanelWindow {
         emojiDebounceTimer.restart();
     }
 
+    // the emoji picker's tabs: Unicode's groups. Typing searches every group
+    readonly property var emojiCategories: EmojiData.categories
+    readonly property var emojiCategoryIcons: ({
+        "Smileys & Emotion": "😀", "People & Body": "👋", "Animals & Nature": "🐻", "Food & Drink": "🍔",
+        "Travel & Places": "✈️", "Activities": "⚽", "Objects": "💡", "Symbols": "❤️", "Flags": "🏁"
+    })
+    property string emojiCategory: EmojiData.categories[0]
+    onEmojiCategoryChanged: if (currentTabIndex === 2) executeEmojiFilter(searchInput.text)
+    function cycleEmojiCategory(step) {
+        const list = emojiCategories;
+        const i = Math.max(0, list.indexOf(emojiCategory));
+        emojiCategory = list[(i + step + list.length) % list.length];
+    }
+
     function executeEmojiFilter(query) {
         launcherWindow.isKeyboardNav = false;
         if (keyboardNavTimer.running) keyboardNavTimer.stop();
 
-        let results = EmojiData.search(query ? query.trim() : "", 150);
+        const q = query ? query.trim() : "";
+        // a whole group when browsing (People has ~400); the best 300 matches when searching
+        let results = q === "" ? EmojiData.search("", 0, launcherWindow.emojiCategory) : EmojiData.search(q, 300);
         applyEmojiModelItems(results);
     }
 
@@ -1482,11 +1517,16 @@ PanelWindow {
                     }
 
                     Keys.onTabPressed: function(event) {
+                        // Shift+Tab can arrive as Tab with Shift held (not as Backtab): go back then
+                        if (launcherWindow.currentTabIndex === 2 && !launcherWindow.showTabs) { launcherWindow.cycleEmojiCategory((event.modifiers & Qt.ShiftModifier) ? -1 : 1); event.accepted = true; return; }
+                        if (!launcherWindow.showTabs) { event.accepted = true; return; }
                         launcherWindow.currentTabIndex = (launcherWindow.currentTabIndex + 1) % 3;
                         tabSwitch.currentIndex = launcherWindow.currentTabIndex;
                         event.accepted = true;
                     }
                     Keys.onBacktabPressed: function(event) {
+                        if (launcherWindow.currentTabIndex === 2 && !launcherWindow.showTabs) { launcherWindow.cycleEmojiCategory(-1); event.accepted = true; return; }
+                        if (!launcherWindow.showTabs) { event.accepted = true; return; }
                         launcherWindow.currentTabIndex = (launcherWindow.currentTabIndex + 2) % 3;
                         tabSwitch.currentIndex = launcherWindow.currentTabIndex;
                         event.accepted = true;
@@ -1569,6 +1609,7 @@ PanelWindow {
                 Switch {
                     id: tabSwitch
                     z: 10
+                    visible: launcherWindow.showTabs
                     x: 0
                     width: launcherWindow.showRail ? launcherWindow.railW : parent.width
                     y: launcherWindow.showRail
@@ -1576,7 +1617,7 @@ PanelWindow {
                        : (contentContainer.isSearchAtBottom
                           ? (searchInput.y - height - launcherWindow.s(8))
                           : (searchInput.y + searchInput.height + launcherWindow.s(8)))
-                    height: launcherWindow.s(28)
+                    height: launcherWindow.showTabs ? launcherWindow.s(28) : 0
                     cornerRadius: ThemeBackend.borderRadius
                     fontPixelSize: launcherWindow.s(11)
                     baseColor: ThemeBackend.surface0
@@ -1600,9 +1641,10 @@ PanelWindow {
                     id: favPane
                     visible: launcherWindow.showRail
                     x: 0
-                    y: contentContainer.isSearchAtBottom ? listContainer.y : tabSwitch.y + tabSwitch.height + launcherWindow.s(10)
+                    readonly property real tabGap: launcherWindow.showTabs ? launcherWindow.s(10) : 0
+                    y: contentContainer.isSearchAtBottom ? listContainer.y : tabSwitch.y + tabSwitch.height + tabGap
                     width: launcherWindow.railW
-                    height: contentContainer.isSearchAtBottom ? tabSwitch.y - launcherWindow.s(10) - y : listContainer.y + listContainer.height - y
+                    height: contentContainer.isSearchAtBottom ? tabSwitch.y - tabGap - y : listContainer.y + listContainer.height - y
                     clip: true
 
                     readonly property real cellW: width / launcherWindow.favColumns
@@ -1863,9 +1905,9 @@ PanelWindow {
                     anchors.leftMargin: launcherWindow.showRail ? launcherWindow.railW + launcherWindow.s(13) : 0
                     anchors.right: parent.right
                     y: contentContainer.isSearchAtBottom ? 0
-                       : (launcherWindow.showRail ? searchInput.y + searchInput.height + launcherWindow.s(8) : (tabSwitch.y + tabSwitch.height + launcherWindow.s(8)))
+                       : (launcherWindow.showRail || !launcherWindow.showTabs ? searchInput.y + searchInput.height + launcherWindow.s(8) : (tabSwitch.y + tabSwitch.height + launcherWindow.s(8)))
                     height: contentContainer.isSearchAtBottom
-                            ? Math.max(0, (launcherWindow.showRail ? searchInput.y : tabSwitch.y) - launcherWindow.s(8))
+                            ? Math.max(0, (launcherWindow.showRail || !launcherWindow.showTabs ? searchInput.y : tabSwitch.y) - launcherWindow.s(8))
                             : Math.max(0, parent.height - y)
                     clip: true
 
@@ -2474,9 +2516,66 @@ PanelWindow {
                         WheelScroll {}
                     }
 
+                    // the emoji groups, one tab each; Tab / Shift+Tab move between them
+                    Row {
+                        id: emojiTabs
+                        visible: launcherWindow.currentTabIndex === 2
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: launcherWindow.s(34)
+                        spacing: launcherWindow.s(2)
+                        readonly property bool searching: searchInput.text.trim() !== ""
+                        Repeater {
+                            model: launcherWindow.emojiCategories
+                            Rectangle {
+                                id: catTab
+                                required property var modelData
+                                readonly property bool active: !emojiTabs.searching && launcherWindow.emojiCategory === modelData
+                                width: (emojiTabs.width - emojiTabs.spacing * (launcherWindow.emojiCategories.length - 1)) / launcherWindow.emojiCategories.length
+                                height: emojiTabs.height
+                                radius: ThemeBackend.borderRadius
+                                color: active ? Qt.alpha(ThemeBackend.mauve, 0.35) : (catMouse.containsMouse ? Qt.alpha(ThemeBackend.surface1, 0.7) : "transparent")
+                                Behavior on color { ColorAnimation { duration: 120 * ThemeBackend.animScale } }
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: launcherWindow.emojiCategoryIcons[catTab.modelData] || "•"
+                                    font.pixelSize: launcherWindow.s(17)
+                                    opacity: catTab.active || catMouse.containsMouse ? 1.0 : 0.6
+                                }
+                                Rectangle {
+                                    visible: catTab.active
+                                    anchors.bottom: parent.bottom
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width * 0.5
+                                    height: launcherWindow.s(2)
+                                    radius: height / 2
+                                    color: ThemeBackend.mauve
+                                }
+                                MouseArea {
+                                    id: catMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        // a tab while searching: leave the search and show that group
+                                        if (emojiTabs.searching) searchInput.text = "";
+                                        launcherWindow.emojiCategory = catTab.modelData;
+                                        launcherWindow.executeEmojiFilter("");
+                                        launcherWindow.grabInputFocus();
+                                    }
+                                }
+                                ToolTip.visible: catMouse.containsMouse
+                                ToolTip.delay: 500
+                                ToolTip.text: catTab.modelData
+                            }
+                        }
+                    }
+
                     GridView {
                         id: emojiGrid
                         anchors.fill: parent
+                        anchors.topMargin: emojiTabs.visible ? emojiTabs.height + launcherWindow.s(6) : 0
                         visible: launcherWindow.currentTabIndex === 2
                         clip: true
                         model: emojiModel

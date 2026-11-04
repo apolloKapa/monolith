@@ -433,6 +433,13 @@ PanelWindow {
         return (typeof Scaler !== "undefined" && Scaler.s) ? Scaler.s(val) : val;
     }
 
+    // Settings -> Dock -> Corner roundness: 0 (square) to 100 (round ends, half the dock's
+    // thickness); -1 or missing follows the theme's border radius
+    readonly property int cornerRoundness: {
+        const v = Number(rawDockSettings.cornerRoundness);
+        return (rawDockSettings.cornerRoundness === undefined || isNaN(v) || v < 0) ? -1 : Math.min(100, Math.round(v));
+    }
+    readonly property bool customRoundness: cornerRoundness >= 0
     property real cornerRadius: ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 2 : Math.min(32, 32 - 16 * Math.exp(-(ThemeBackend.borderRadius - 16) / 12))
     property real outerCornerRadius: ThemeBackend.rad(cornerRadius)
 }
