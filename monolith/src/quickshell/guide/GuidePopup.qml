@@ -580,7 +580,7 @@ Item {
             icon: "󰃠",
             file: "display/DisplayMainTab.qml",
             subtabs: [
-                { id: "DisplayGeneral", key: "display_general", name: "Display", icon: "󰍹", file: "display/DisplayMainTab.qml", desc: "Your monitors: resolution, refresh rate, rotation, scale and night light" },
+                { id: "DisplayGeneral", key: "display_general", name: "Display", icon: "󰍹", file: "display/DisplayMainTab.qml", desc: "Your monitors: arrangement, resolution, refresh rate, rotation, scale and night light" },
                 { id: "DisplayWidgets", key: "display_widgets", name: "Widgets", icon: "󰕰", file: "display/DisplayWidgetsTab.qml", desc: "Clocks, weather, music and other widgets you can place on the desktop" },
                 { id: "DisplayLockscreen", key: "display_lockscreen", name: "Lock screen", icon: "󰌾", file: "display/DisplayLockscreenTab.qml", desc: "What the lock screen shows and how it looks. Open the editor to move things around" }
             ]
