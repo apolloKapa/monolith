@@ -24,10 +24,22 @@ repo_commit() {
 }
 
 # the shell: ~/.local/share/monolith/{bin,src,install}, commands linked into ~/.local/bin
+# Monolith's own data that lives next to the shell; an update replaces the shell but keeps these
+# (they used to be deleted on every update: AppImage icons went missing, OCR languages too)
+SHELL_HOME_DATA=(appimage-icons app-icons tessdata)
+
 deploy_shell() {
-    local project_root="$1"
+    local project_root="$1" keep d
+    keep="$(mktemp -d)"
+    for d in "${SHELL_HOME_DATA[@]}"; do
+        [ -d "$SHELL_HOME/$d" ] && mv "$SHELL_HOME/$d" "$keep/"
+    done
     rm -rf "$SHELL_HOME"
     mkdir -p "$SHELL_HOME" "$BIN_DIR"
+    for d in "${SHELL_HOME_DATA[@]}"; do
+        [ -d "$keep/$d" ] && mv "$keep/$d" "$SHELL_HOME/"
+    done
+    rmdir "$keep" 2>/dev/null
     cp -r "$project_root/monolith/bin" "$project_root/monolith/src" "$project_root/monolith/version.txt" "$SHELL_HOME/"
     # the shipped settings, for the Reset buttons in Settings
     cp "$project_root/config/monolith/settings.json" "$SHELL_HOME/src/assets/default_settings.json" 2>/dev/null || true
