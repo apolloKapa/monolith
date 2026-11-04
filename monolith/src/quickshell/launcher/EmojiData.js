@@ -1,5 +1,8 @@
 .pragma library
 
+// Every emoji in Unicode 18.0 (no skin-tone variants), in Unicode's own order and groups, from
+// https://unicode.org/Public/emoji/latest/emoji-test.txt; search keywords kept from the old list,
+// the newest ones get the words of their name
 var emojis = [
   {
     "emoji": "😀",
@@ -141,6 +144,15 @@ var emojis = [
       "face",
       "melting",
       "sarcasm"
+    ]
+  },
+  {
+    "emoji": "🫫",
+    "name": "cracking face",
+    "category": "Smileys & Emotion",
+    "keywords": [
+      "cracking",
+      "face"
     ]
   },
   {
@@ -604,6 +616,26 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🙂‍↔️",
+    "name": "head shaking horizontally",
+    "category": "Smileys & Emotion",
+    "keywords": [
+      "head",
+      "shaking",
+      "horizontally"
+    ]
+  },
+  {
+    "emoji": "🙂‍↕️",
+    "name": "head shaking vertically",
+    "category": "Smileys & Emotion",
+    "keywords": [
+      "head",
+      "shaking",
+      "vertically"
+    ]
+  },
+  {
     "emoji": "😌",
     "name": "relieved face",
     "category": "Smileys & Emotion",
@@ -649,6 +681,18 @@ var emojis = [
       "face",
       "sleeping",
       "zzz"
+    ]
+  },
+  {
+    "emoji": "🫩",
+    "name": "face with bags under eyes",
+    "category": "Smileys & Emotion",
+    "keywords": [
+      "face",
+      "with",
+      "bags",
+      "under",
+      "eyes"
     ]
   },
   {
@@ -944,6 +988,15 @@ var emojis = [
     "keywords": [
       "face",
       "flushed"
+    ]
+  },
+  {
+    "emoji": "🫪",
+    "name": "distorted face",
+    "category": "Smileys & Emotion",
+    "keywords": [
+      "distorted",
+      "face"
     ]
   },
   {
@@ -1739,6 +1792,15 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🫯",
+    "name": "fight cloud",
+    "category": "Smileys & Emotion",
+    "keywords": [
+      "fight",
+      "cloud"
+    ]
+  },
+  {
     "emoji": "💥",
     "name": "collision",
     "category": "Smileys & Emotion",
@@ -2166,6 +2228,26 @@ var emojis = [
       "down",
       "thumbs",
       "thumbsdown"
+    ]
+  },
+  {
+    "emoji": "🫹",
+    "name": "leftwards thumb sign",
+    "category": "People & Body",
+    "keywords": [
+      "leftwards",
+      "thumb",
+      "sign"
+    ]
+  },
+  {
+    "emoji": "🫺",
+    "name": "rightwards thumb sign",
+    "category": "People & Body",
+    "keywords": [
+      "rightwards",
+      "thumb",
+      "sign"
     ]
   },
   {
@@ -3912,7 +3994,7 @@ var emojis = [
   },
   {
     "emoji": "🧑‍🎄",
-    "name": "mx claus",
+    "name": "Mx Claus",
     "category": "People & Body",
     "keywords": [
       "claus",
@@ -4163,6 +4245,15 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🫈",
+    "name": "hairy creature",
+    "category": "People & Body",
+    "keywords": [
+      "hairy",
+      "creature"
+    ]
+  },
+  {
     "emoji": "💆",
     "name": "person getting massage",
     "category": "People & Body",
@@ -4254,6 +4345,39 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🚶‍➡️",
+    "name": "person walking facing right",
+    "category": "People & Body",
+    "keywords": [
+      "person",
+      "walking",
+      "facing",
+      "right"
+    ]
+  },
+  {
+    "emoji": "🚶‍♀️‍➡️",
+    "name": "woman walking facing right",
+    "category": "People & Body",
+    "keywords": [
+      "woman",
+      "walking",
+      "facing",
+      "right"
+    ]
+  },
+  {
+    "emoji": "🚶‍♂️‍➡️",
+    "name": "man walking facing right",
+    "category": "People & Body",
+    "keywords": [
+      "man",
+      "walking",
+      "facing",
+      "right"
+    ]
+  },
+  {
     "emoji": "🧍",
     "name": "person standing",
     "category": "People & Body",
@@ -4308,6 +4432,39 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🧎‍➡️",
+    "name": "person kneeling facing right",
+    "category": "People & Body",
+    "keywords": [
+      "person",
+      "kneeling",
+      "facing",
+      "right"
+    ]
+  },
+  {
+    "emoji": "🧎‍♀️‍➡️",
+    "name": "woman kneeling facing right",
+    "category": "People & Body",
+    "keywords": [
+      "woman",
+      "kneeling",
+      "facing",
+      "right"
+    ]
+  },
+  {
+    "emoji": "🧎‍♂️‍➡️",
+    "name": "man kneeling facing right",
+    "category": "People & Body",
+    "keywords": [
+      "man",
+      "kneeling",
+      "facing",
+      "right"
+    ]
+  },
+  {
     "emoji": "🧑‍🦯",
     "name": "person with white cane",
     "category": "People & Body",
@@ -4317,6 +4474,19 @@ var emojis = [
       "probing",
       "white",
       "with"
+    ]
+  },
+  {
+    "emoji": "🧑‍🦯‍➡️",
+    "name": "person with white cane facing right",
+    "category": "People & Body",
+    "keywords": [
+      "person",
+      "with",
+      "white",
+      "cane",
+      "facing",
+      "right"
     ]
   },
   {
@@ -4332,6 +4502,19 @@ var emojis = [
     ]
   },
   {
+    "emoji": "👨‍🦯‍➡️",
+    "name": "man with white cane facing right",
+    "category": "People & Body",
+    "keywords": [
+      "man",
+      "with",
+      "white",
+      "cane",
+      "facing",
+      "right"
+    ]
+  },
+  {
     "emoji": "👩‍🦯",
     "name": "woman with white cane",
     "category": "People & Body",
@@ -4341,6 +4524,19 @@ var emojis = [
       "white",
       "with",
       "woman"
+    ]
+  },
+  {
+    "emoji": "👩‍🦯‍➡️",
+    "name": "woman with white cane facing right",
+    "category": "People & Body",
+    "keywords": [
+      "woman",
+      "with",
+      "white",
+      "cane",
+      "facing",
+      "right"
     ]
   },
   {
@@ -4355,6 +4551,19 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🧑‍🦼‍➡️",
+    "name": "person in motorized wheelchair facing right",
+    "category": "People & Body",
+    "keywords": [
+      "person",
+      "in",
+      "motorized",
+      "wheelchair",
+      "facing",
+      "right"
+    ]
+  },
+  {
     "emoji": "👨‍🦼",
     "name": "man in motorized wheelchair",
     "category": "People & Body",
@@ -4363,6 +4572,19 @@ var emojis = [
       "man",
       "motorized",
       "wheelchair"
+    ]
+  },
+  {
+    "emoji": "👨‍🦼‍➡️",
+    "name": "man in motorized wheelchair facing right",
+    "category": "People & Body",
+    "keywords": [
+      "man",
+      "in",
+      "motorized",
+      "wheelchair",
+      "facing",
+      "right"
     ]
   },
   {
@@ -4377,6 +4599,19 @@ var emojis = [
     ]
   },
   {
+    "emoji": "👩‍🦼‍➡️",
+    "name": "woman in motorized wheelchair facing right",
+    "category": "People & Body",
+    "keywords": [
+      "woman",
+      "in",
+      "motorized",
+      "wheelchair",
+      "facing",
+      "right"
+    ]
+  },
+  {
     "emoji": "🧑‍🦽",
     "name": "person in manual wheelchair",
     "category": "People & Body",
@@ -4385,6 +4620,19 @@ var emojis = [
       "manual",
       "person",
       "wheelchair"
+    ]
+  },
+  {
+    "emoji": "🧑‍🦽‍➡️",
+    "name": "person in manual wheelchair facing right",
+    "category": "People & Body",
+    "keywords": [
+      "person",
+      "in",
+      "manual",
+      "wheelchair",
+      "facing",
+      "right"
     ]
   },
   {
@@ -4399,6 +4647,19 @@ var emojis = [
     ]
   },
   {
+    "emoji": "👨‍🦽‍➡️",
+    "name": "man in manual wheelchair facing right",
+    "category": "People & Body",
+    "keywords": [
+      "man",
+      "in",
+      "manual",
+      "wheelchair",
+      "facing",
+      "right"
+    ]
+  },
+  {
     "emoji": "👩‍🦽",
     "name": "woman in manual wheelchair",
     "category": "People & Body",
@@ -4407,6 +4668,19 @@ var emojis = [
       "manual",
       "wheelchair",
       "woman"
+    ]
+  },
+  {
+    "emoji": "👩‍🦽‍➡️",
+    "name": "woman in manual wheelchair facing right",
+    "category": "People & Body",
+    "keywords": [
+      "woman",
+      "in",
+      "manual",
+      "wheelchair",
+      "facing",
+      "right"
     ]
   },
   {
@@ -4444,6 +4718,48 @@ var emojis = [
       "running",
       "woman",
       "workout"
+    ]
+  },
+  {
+    "emoji": "🏃‍➡️",
+    "name": "person running facing right",
+    "category": "People & Body",
+    "keywords": [
+      "person",
+      "running",
+      "facing",
+      "right"
+    ]
+  },
+  {
+    "emoji": "🏃‍♀️‍➡️",
+    "name": "woman running facing right",
+    "category": "People & Body",
+    "keywords": [
+      "woman",
+      "running",
+      "facing",
+      "right"
+    ]
+  },
+  {
+    "emoji": "🏃‍♂️‍➡️",
+    "name": "man running facing right",
+    "category": "People & Body",
+    "keywords": [
+      "man",
+      "running",
+      "facing",
+      "right"
+    ]
+  },
+  {
+    "emoji": "🧑‍🩰",
+    "name": "ballet dancer",
+    "category": "People & Body",
+    "keywords": [
+      "ballet",
+      "dancer"
     ]
   },
   {
@@ -5199,17 +5515,6 @@ var emojis = [
     ]
   },
   {
-    "emoji": "👪",
-    "name": "family",
-    "category": "People & Body",
-    "keywords": [
-      "child",
-      "family",
-      "home",
-      "parents"
-    ]
-  },
-  {
     "emoji": "👨‍👩‍👦",
     "name": "family: man, woman, boy",
     "category": "People & Body",
@@ -5512,6 +5817,57 @@ var emojis = [
     ]
   },
   {
+    "emoji": "👪",
+    "name": "family",
+    "category": "People & Body",
+    "keywords": [
+      "child",
+      "family",
+      "home",
+      "parents"
+    ]
+  },
+  {
+    "emoji": "🧑‍🧑‍🧒",
+    "name": "family: adult, adult, child",
+    "category": "People & Body",
+    "keywords": [
+      "family",
+      "adult",
+      "child"
+    ]
+  },
+  {
+    "emoji": "🧑‍🧑‍🧒‍🧒",
+    "name": "family: adult, adult, child, child",
+    "category": "People & Body",
+    "keywords": [
+      "family",
+      "adult",
+      "child"
+    ]
+  },
+  {
+    "emoji": "🧑‍🧒",
+    "name": "family: adult, child",
+    "category": "People & Body",
+    "keywords": [
+      "family",
+      "adult",
+      "child"
+    ]
+  },
+  {
+    "emoji": "🧑‍🧒‍🧒",
+    "name": "family: adult, child, child",
+    "category": "People & Body",
+    "keywords": [
+      "family",
+      "adult",
+      "child"
+    ]
+  },
+  {
     "emoji": "👣",
     "name": "footprints",
     "category": "People & Body",
@@ -5519,6 +5875,14 @@ var emojis = [
       "feet",
       "footprints",
       "tracks"
+    ]
+  },
+  {
+    "emoji": "🫆",
+    "name": "fingerprint",
+    "category": "People & Body",
+    "keywords": [
+      "fingerprint"
     ]
   },
   {
@@ -6267,6 +6631,14 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🐦‍🔥",
+    "name": "phoenix",
+    "category": "Animals & Nature",
+    "keywords": [
+      "phoenix"
+    ]
+  },
+  {
     "emoji": "🐸",
     "name": "frog",
     "category": "Animals & Nature",
@@ -6373,6 +6745,14 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🫍",
+    "name": "orca",
+    "category": "Animals & Nature",
+    "keywords": [
+      "orca"
+    ]
+  },
+  {
     "emoji": "🦭",
     "name": "seal",
     "category": "Animals & Nature",
@@ -6449,6 +6829,46 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🦀",
+    "name": "crab",
+    "category": "Animals & Nature",
+    "keywords": [
+      "crab"
+    ]
+  },
+  {
+    "emoji": "🦞",
+    "name": "lobster",
+    "category": "Animals & Nature",
+    "keywords": [
+      "lobster"
+    ]
+  },
+  {
+    "emoji": "🦐",
+    "name": "shrimp",
+    "category": "Animals & Nature",
+    "keywords": [
+      "shrimp"
+    ]
+  },
+  {
+    "emoji": "🦑",
+    "name": "squid",
+    "category": "Animals & Nature",
+    "keywords": [
+      "squid"
+    ]
+  },
+  {
+    "emoji": "🦪",
+    "name": "oyster",
+    "category": "Animals & Nature",
+    "keywords": [
+      "oyster"
+    ]
+  },
+  {
     "emoji": "🐌",
     "name": "snail",
     "category": "Animals & Nature",
@@ -6462,6 +6882,15 @@ var emojis = [
     "name": "butterfly",
     "category": "Animals & Nature",
     "keywords": [
+      "butterfly"
+    ]
+  },
+  {
+    "emoji": "🫌",
+    "name": "monarch butterfly",
+    "category": "Animals & Nature",
+    "keywords": [
+      "monarch",
       "butterfly"
     ]
   },
@@ -6840,6 +7269,15 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🪾",
+    "name": "leafless tree",
+    "category": "Animals & Nature",
+    "keywords": [
+      "leafless",
+      "tree"
+    ]
+  },
+  {
     "emoji": "🍇",
     "name": "grapes",
     "category": "Food & Drink",
@@ -6879,6 +7317,14 @@ var emojis = [
     "category": "Food & Drink",
     "keywords": [
       "lemon"
+    ]
+  },
+  {
+    "emoji": "🍋‍🟩",
+    "name": "lime",
+    "category": "Food & Drink",
+    "keywords": [
+      "lime"
     ]
   },
   {
@@ -7071,6 +7517,14 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🫝",
+    "name": "pickle",
+    "category": "Food & Drink",
+    "keywords": [
+      "pickle"
+    ]
+  },
+  {
     "emoji": "🥬",
     "name": "leafy green",
     "category": "Food & Drink",
@@ -7143,6 +7597,24 @@ var emojis = [
     "keywords": [
       "pea",
       "pod"
+    ]
+  },
+  {
+    "emoji": "🍄‍🟫",
+    "name": "brown mushroom",
+    "category": "Food & Drink",
+    "keywords": [
+      "brown",
+      "mushroom"
+    ]
+  },
+  {
+    "emoji": "🫜",
+    "name": "root vegetable",
+    "category": "Food & Drink",
+    "keywords": [
+      "root",
+      "vegetable"
     ]
   },
   {
@@ -7600,46 +8072,6 @@ var emojis = [
     "keywords": [
       "box",
       "takeout"
-    ]
-  },
-  {
-    "emoji": "🦀",
-    "name": "crab",
-    "category": "Food & Drink",
-    "keywords": [
-      "crab"
-    ]
-  },
-  {
-    "emoji": "🦞",
-    "name": "lobster",
-    "category": "Food & Drink",
-    "keywords": [
-      "lobster"
-    ]
-  },
-  {
-    "emoji": "🦐",
-    "name": "shrimp",
-    "category": "Food & Drink",
-    "keywords": [
-      "shrimp"
-    ]
-  },
-  {
-    "emoji": "🦑",
-    "name": "squid",
-    "category": "Food & Drink",
-    "keywords": [
-      "squid"
-    ]
-  },
-  {
-    "emoji": "🦪",
-    "name": "oyster",
-    "category": "Food & Drink",
-    "keywords": [
-      "oyster"
     ]
   },
   {
@@ -8136,6 +8568,14 @@ var emojis = [
     "category": "Travel & Places",
     "keywords": [
       "mountain"
+    ]
+  },
+  {
+    "emoji": "🛘",
+    "name": "landslide",
+    "category": "Travel & Places",
+    "keywords": [
+      "landslide"
     ]
   },
   {
@@ -9101,6 +9541,14 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🛙",
+    "name": "lighthouse",
+    "category": "Travel & Places",
+    "keywords": [
+      "lighthouse"
+    ]
+  },
+  {
     "emoji": "⚓",
     "name": "anchor",
     "category": "Travel & Places",
@@ -10058,6 +10506,14 @@ var emojis = [
     "category": "Travel & Places",
     "keywords": [
       "comet"
+    ]
+  },
+  {
+    "emoji": "🪋",
+    "name": "meteor",
+    "category": "Travel & Places",
+    "keywords": [
+      "meteor"
     ]
   },
   {
@@ -11536,6 +11992,22 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🎺",
+    "name": "trumpet",
+    "category": "Objects",
+    "keywords": [
+      "trumpet"
+    ]
+  },
+  {
+    "emoji": "🪊",
+    "name": "trombone",
+    "category": "Objects",
+    "keywords": [
+      "trombone"
+    ]
+  },
+  {
     "emoji": "🪗",
     "name": "accordion",
     "category": "Objects",
@@ -11560,14 +12032,6 @@ var emojis = [
       "keyboard",
       "musical",
       "piano"
-    ]
-  },
-  {
-    "emoji": "🎺",
-    "name": "trumpet",
-    "category": "Objects",
-    "keywords": [
-      "trumpet"
     ]
   },
   {
@@ -11619,6 +12083,14 @@ var emojis = [
     "keywords": [
       "flute",
       "recorder"
+    ]
+  },
+  {
+    "emoji": "🪉",
+    "name": "harp",
+    "category": "Objects",
+    "keywords": [
+      "harp"
     ]
   },
   {
@@ -12126,6 +12598,14 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🪙",
+    "name": "coin",
+    "category": "Objects",
+    "keywords": [
+      "coin"
+    ]
+  },
+  {
     "emoji": "💰",
     "name": "money bag",
     "category": "Objects",
@@ -12138,11 +12618,12 @@ var emojis = [
     ]
   },
   {
-    "emoji": "🪙",
-    "name": "coin",
+    "emoji": "🪎",
+    "name": "treasure chest",
     "category": "Objects",
     "keywords": [
-      "coin"
+      "treasure",
+      "chest"
     ]
   },
   {
@@ -12418,6 +12899,14 @@ var emojis = [
       "memo",
       "note",
       "pencil"
+    ]
+  },
+  {
+    "emoji": "🪌",
+    "name": "eraser",
+    "category": "Objects",
+    "keywords": [
+      "eraser"
     ]
   },
   {
@@ -12710,6 +13199,16 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🪍",
+    "name": "net with handle",
+    "category": "Objects",
+    "keywords": [
+      "net",
+      "with",
+      "handle"
+    ]
+  },
+  {
     "emoji": "🔨",
     "name": "hammer",
     "category": "Objects",
@@ -12887,6 +13386,15 @@ var emojis = [
     ]
   },
   {
+    "emoji": "⛓️‍💥",
+    "name": "broken chain",
+    "category": "Objects",
+    "keywords": [
+      "broken",
+      "chain"
+    ]
+  },
+  {
     "emoji": "⛓️",
     "name": "chains",
     "category": "Objects",
@@ -12924,6 +13432,14 @@ var emojis = [
     "category": "Objects",
     "keywords": [
       "ladder"
+    ]
+  },
+  {
+    "emoji": "🪏",
+    "name": "shovel",
+    "category": "Objects",
+    "keywords": [
+      "shovel"
     ]
   },
   {
@@ -14712,6 +15228,14 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🫟",
+    "name": "splatter",
+    "category": "Symbols",
+    "keywords": [
+      "splatter"
+    ]
+  },
+  {
     "emoji": "#️⃣",
     "name": "keycap: #",
     "category": "Symbols",
@@ -16167,6 +16691,15 @@ var emojis = [
     ]
   },
   {
+    "emoji": "🇨🇶",
+    "name": "flag: Sark",
+    "category": "Flags",
+    "keywords": [
+      "flag",
+      "sark"
+    ]
+  },
+  {
     "emoji": "🇨🇷",
     "name": "flag: Costa Rica",
     "category": "Flags",
@@ -16643,7 +17176,7 @@ var emojis = [
   },
   {
     "emoji": "🇭🇲",
-    "name": "flag: Heard & McDonald Islands",
+    "name": "flag: Heard Island & McDonald Islands",
     "category": "Flags",
     "keywords": [
       "&",
@@ -17624,7 +18157,7 @@ var emojis = [
   },
   {
     "emoji": "🇸🇭",
-    "name": "flag: St. Helena",
+    "name": "flag: St. Helena, Ascension & Tristan da Cunha",
     "category": "Flags",
     "keywords": [
       "flag",
@@ -17807,7 +18340,7 @@ var emojis = [
   },
   {
     "emoji": "🇹🇫",
-    "name": "flag: French Southern Territories",
+    "name": "flag: French Southern and Antarctic Lands",
     "category": "Flags",
     "keywords": [
       "flag",
@@ -17892,7 +18425,7 @@ var emojis = [
   },
   {
     "emoji": "🇹🇷",
-    "name": "flag: Turkey",
+    "name": "flag: Türkiye",
     "category": "Flags",
     "keywords": [
       "flag",
@@ -18184,9 +18717,13 @@ var emojis = [
   }
 ];
 
-function search(query, limit) {
+// the groups in order, for the emoji picker's tabs
+var categories = ["Smileys & Emotion","People & Body","Animals & Nature","Food & Drink","Travel & Places","Activities","Objects","Symbols","Flags"];
+
+function search(query, limit, category) {
     if (!query || query.trim() === '') {
-        return limit ? emojis.slice(0, limit) : emojis;
+        var list = category ? emojis.filter(function(e) { return e.category === category; }) : emojis;
+        return limit ? list.slice(0, limit) : list;
     }
     var q = query.toLowerCase().trim();
     var words = q.split(/\s+/).filter(function(w) { return w.length > 0; });

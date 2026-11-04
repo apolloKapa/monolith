@@ -123,6 +123,20 @@ PanelWindow {
                 return;
             }
 
+            // the launcher's emoji picker on its own: picking one copies it (monolith msg toggle emoji)
+            if (cmd === "emoji" || targetWidget === "emoji" || cmd === "emojis" || targetWidget === "emojis") {
+                if (cmd === "close") {
+                    LauncherController.hide();
+                } else if (cmd === "open") {
+                    ClipboardController.hide();
+                    LauncherController.show(null, "emoji");
+                } else {
+                    ClipboardController.hide();
+                    LauncherController.toggle(null, "emoji");
+                }
+                return;
+            }
+
             if (cmd === "clipboard" || targetWidget === "clipboard" || cmd === "clip" || targetWidget === "clip") {
                 if (cmd === "close") {
                     ClipboardController.hide();

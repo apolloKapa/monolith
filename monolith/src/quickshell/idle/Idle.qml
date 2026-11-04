@@ -219,7 +219,7 @@ Item {
         interval: 200
         repeat: false
         onTriggered: {
-            Quickshell.execDetached(["systemctl", "suspend"]);
+            Quickshell.execDetached(["sh", "-c", "systemctl suspend 2>/dev/null || loginctl suspend"]);
         }
     }
 

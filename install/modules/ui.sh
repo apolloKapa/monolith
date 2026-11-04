@@ -91,6 +91,19 @@ manage_sddm_menu() {
             break
         fi
     done
+    # OpenRC: Gentoo runs every display manager through one "display-manager" service and names it
+    # in /etc/conf.d/display-manager; other distros have a service per display manager
+    if [ -z "$current_dm" ] && [ -d /run/openrc ]; then
+        local conf_dm=""
+        [ -f /etc/conf.d/display-manager ] && conf_dm="$(sed -n 's/^DISPLAYMANAGER="\{0,1\}\([^"]*\)"\{0,1\}/\1/p' /etc/conf.d/display-manager | tail -1)"
+        if [ -n "$conf_dm" ] && rc-update show default 2>/dev/null | grep -qw display-manager; then
+            current_dm="$conf_dm"
+        else
+            for dm in "${dms[@]}"; do
+                if rc-update show default 2>/dev/null | grep -qw "$dm"; then current_dm="$dm"; break; fi
+            done
+        fi
+    fi
 
     if [ -n "$current_dm" ]; then
         printf "$(t "installer.ui.sddm_detected_active" "dm=${BOLD}${C_YELLOW}%s${RESET}")\n\n" "$current_dm"
@@ -323,6 +336,6 @@ draw_completion_screen() {
     elif [ -e /dev/tty ]; then
         read -r -p "  Restart your computer now? [y/N] " choice < /dev/tty
     fi
-    [[ "$choice" =~ ^[Yy]$ ]] && systemctl reboot
+    [[ "$choice" =~ ^[Yy]$ ]] && { systemctl reboot 2>/dev/null || loginctl reboot 2>/dev/null || sudo reboot; }
     return 0
 }

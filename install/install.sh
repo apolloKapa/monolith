@@ -171,7 +171,7 @@ if [ "$UPDATE_ONLY" = true ]; then
             "Monolith updated to $TARGET_VERSION" "Restart now so everything uses the new version?" 2>/dev/null)
     fi
     if [[ "$answer" =~ ^[Yy] ]]; then
-        systemctl reboot
+        systemctl reboot 2>/dev/null || loginctl reboot 2>/dev/null || sudo reboot
     else
         printf "OK, the new version is active; restart whenever you like.\n"
         command -v notify-send >/dev/null 2>&1 && notify-send -a "Monolith" "Monolith updated to $TARGET_VERSION" "Restart later so keybinds, login screen and services pick it up." 2>/dev/null || true

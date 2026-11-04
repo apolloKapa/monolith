@@ -14,7 +14,7 @@ SettingsBlob {
         icon: "󰏘"
         title: I18n.t("guide.bar.style.title")
         description: I18n.t("guide.bar.style.desc_long", "Modular: separate floating pills. Solid: one bar. Fill: a bar joined to the screen edge. Island: one pill in the middle. Frame: the bar plus a border round the whole screen")
-        expanded: section.tab.barStyle === "solid" || section.tab.barStyle === "fill"
+        expanded: section.tab.barStyle === "solid" || section.tab.barStyle === "fill" || section.tab.barStyle === "frame"
         wrapText: true
 
         subSettings: [

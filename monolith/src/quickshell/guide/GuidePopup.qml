@@ -647,6 +647,7 @@ Item {
             file: "AppImagesTab.qml",
             subtabs: [
                 { id: "AppImages", key: "appimages", name: "AppImages", icon: "󰏗", file: "AppImagesTab.qml", desc: "Drop an AppImage and it's set up like an installed app: kept in one folder, with its own name and icon in the launcher, dock and menus" },
+                { id: "Autostart", key: "autostart", name: "Autostart", icon: "󰐥", file: "AutostartTab.qml", desc: "Apps that open by themselves when you log in: switch any installed app on or off" },
                 ...systemPackageSubtabs,
                 { id: "Flatpak", key: "flatpak", name: "Flatpak", icon: "󰏖", file: "CleanupFlatpakTab.qml", desc: "Flatpak apps: remove them, their unused runtimes and data left by removed apps. Always asks first" }
             ]
@@ -724,10 +725,8 @@ Item {
         introBase = 0.0;
         startupSequence.restart();
         Updater.checkUpdate();
-        if (searchLoadCursor < totalTabSlots && !searchLoadTimer.running) {
-            searchLoadTimer.interval = root.standalone ? 400 : 1400;
-            searchLoadTimer.restart();
-        }
+        // the other pages are built only once search opens (openSearch): building all of them
+        // right after the window appeared kept Settings from answering clicks for ~5 seconds
     }
 
     function nextTab() {
@@ -860,7 +859,8 @@ Item {
         repeat: true
         onTriggered: {
             if (startupSequence.running || closeSequence.running) return;
-            interval = root.standalone ? 30 : 100;
+            // each page is built on the UI thread: leave room between them for clicks and typing
+            interval = 120;
             if (root.searchLoadCursor >= root.totalTabSlots) {
                 stop();
                 return;
@@ -903,10 +903,7 @@ Item {
     }
 
     Component.onCompleted: {
-        if (searchLoadCursor < totalTabSlots && !searchLoadTimer.running) {
-            searchLoadTimer.interval = root.standalone ? 120 : 300;
-            searchLoadTimer.restart();
-        }
+        // the other pages are built when search opens (openSearch), not here: see resetAndPlayIntro
         if (visible) {
             forceActiveFocus();
             focusTimer.restart();
