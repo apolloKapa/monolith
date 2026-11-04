@@ -277,6 +277,9 @@ install_dependencies() {
         pm_full_upgrade
     fi
 
+    # Portage: installed packages pick up the USE flags Monolith needs
+    if declare -f pm_apply_use >/dev/null; then pm_apply_use; fi
+
     local missing_raw
     missing_raw=$(pm_missing_pkgs "${target_list[@]}")
 

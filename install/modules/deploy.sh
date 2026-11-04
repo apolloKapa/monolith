@@ -71,7 +71,26 @@ deploy_dotfiles_extras() {
     mkdir -p "$BIN_DIR" "$HOME/.config"
     install_icon_packs "$project_root"
     ensure_bin_on_path
+    setup_kitty_config "$project_root"
     setup_kitty_fastfetch
+}
+
+# kitty: Monolith's matugen writes ~/.config/kitty/colors.conf, but kitty only reads kitty.conf.
+# No kitty.conf: install Monolith's (font, size, colours). One of your own: kept, and only the
+# include line for the colours is added when it's missing.
+setup_kitty_config() {
+    local project_root="$1"
+    local dir="${XDG_CONFIG_HOME:-$HOME/.config}/kitty"
+    local conf="$dir/kitty.conf" src="$project_root/config/kitty/kitty.conf"
+    mkdir -p "$dir"
+    if [ ! -e "$conf" ]; then
+        [ -f "$src" ] || return 0
+        cp "$src" "$conf"
+        echo -e "  ${C_GREEN}kitty:${RESET} config installed ($conf)"
+    elif ! grep -qsE '^[[:space:]]*include[[:space:]]+(~/\.config/kitty/|\./)?colors\.conf' "$conf"; then
+        printf '\n# Added by the Monolith installer: colours from your wallpaper\ninclude colors.conf\n' >> "$conf"
+        echo -e "  ${C_GREEN}kitty:${RESET} Monolith's colours added to $conf"
+    fi
 }
 
 # kitty greets you with Monolith's fastfetch: your login shell runs it when it starts inside kitty.
