@@ -563,7 +563,10 @@ GuideTab {
     function applyMonitorPower(monName, enabled) {
         if (!monName) return;
         if (displayTabRoot.compositor === "niri") {
-            Quickshell.execDetached(["bash", "-c", enabled ? "niri msg output " + monName + " on" : "niri msg output " + monName + " off"]);
+            // written to niri's config (`off` in the output block): `niri msg output ... off` only
+            // lasted until the next login or restart, then the monitor came back on
+            outputQueue = outputQueue.concat([["bash", Caching.monolithDir + "/scripts/niri_outputs.sh", "set", monName, "power=" + (enabled ? "on" : "off")]]);
+            runNextOutput();
         } else if (displayTabRoot.compositor === "sway") {
             Quickshell.execDetached(["bash", "-c", "swaymsg output " + monName + (enabled ? " enable" : " disable")]);
         } else if (displayTabRoot.compositor === "mango") {

@@ -4,6 +4,7 @@
 #             transform=normal|90|180|270|flipped|flipped-90|flipped-180|flipped-270
 #             position=X,Y        (logical pixels, top-left corner of the monitor)
 #             scale=S
+#             power=on|off     (off: the monitor stays off, also after a restart)
 # Sets monitors' resolution, refresh rate, rotation, position and scale in Monolith's niri
 # config (config/output.kdl, or whichever config file already has that output), keeping their
 # other lines (vrr, ...). Several monitors ("+" between them) are written in one go, so niri
@@ -49,6 +50,10 @@ for a in argv:
             if not m:
                 sys.exit(f"not a position: {v}")
             w["position"] = (int(m.group(1)), int(m.group(2)))
+        elif k == "power":
+            if v not in ("on", "off"):
+                sys.exit(f"not on/off: {v}")
+            w["power"] = v
         elif k == "scale":
             try:
                 s = float(v)
@@ -112,6 +117,12 @@ for g in groups:
     if "mode" in want:
         lines = [l for l in lines if not re.match(r"^\s*off\s*;?\s*$", l)]
         set_line("mode", f'mode "{want["mode"]}"')
+    if want.get("power") == "off":
+        if not any(re.match(r"^\s*off\s*;?\s*$", l) for l in lines):
+            last = max((i for i, l in enumerate(lines) if l.strip()), default=0)
+            lines.insert(last + 1, "    off")
+    elif want.get("power") == "on":
+        lines = [l for l in lines if not re.match(r"^\s*off\s*;?\s*$", l)]
     if "transform" in want:
         if want["transform"] == "normal":
             lines = [l for l in lines if not re.match(r"^\s*transform\s", l)]
@@ -140,6 +151,7 @@ for g in groups:
     mo, tf = get(r'^\s*mode\s+"([^"]+)"'), get(r'^\s*transform\s+"([^"]+)"')
     po, sc = get(r"^\s*position\s+x=(-?\d+)\s+y=(-?\d+)"), get(r"^\s*scale\s+([0-9.]+)")
     results[name] = {
+        "power": "off" if re.search(r"^\s*off\s*;?\s*$", new_body, re.M) else "on",
         "mode": mo.group(1) if mo else "",
         "transform": tf.group(1) if tf else "normal",
         "position": [int(po.group(1)), int(po.group(2))] if po else None,

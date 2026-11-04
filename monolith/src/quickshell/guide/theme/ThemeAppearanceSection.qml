@@ -77,6 +77,7 @@ SettingsBlob {
     }
 
     SettingsRow {
+        id: radiusRow
         rootObj: section.tab.rootObj
         settingId: "border_radius"
         visible: !ThemeBackend.styles[section.tab.currentBlurStyle].square
@@ -85,39 +86,52 @@ SettingsBlob {
         description: I18n.t("guide.theme.radius.desc")
         searchKeywords: "border radius corner round curvature rounding px"
 
-        NumberSelector {
-            id: radiusSelector
-            implicitWidth: rootObj.s(150)
-            implicitHeight: rootObj.s(32)
+        controlSpacing: rootObj.s(10)
+
+        // what the current style actually draws: every style scales the radius (Shadow x1.6, ...)
+        readonly property real radiusScale: {
+            let st = ThemeBackend.styles[section.tab.currentBlurStyle];
+            return st && st.radiusScale !== undefined ? st.radiusScale : 1.0;
+        }
+        function radiusLabel(v) { return Math.round(Math.round(v) * radiusScale) + " px"; }
+
+        Text {
+            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredWidth: rootObj.s(44)
+            horizontalAlignment: Text.AlignRight
+            text: radiusRow.radiusLabel(radiusSlider.effectiveValue)
+            color: ThemeBackend.subtext0
+            font.family: ThemeBackend.fontFamily
+            font.pixelSize: rootObj.s(11)
+        }
+
+        Draggable {
+            id: radiusSlider
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: rootObj.s(220)
+            implicitHeight: rootObj.s(18)
             from: 0
-            to: 64
+            to: 48
             stepSize: 1
-            decimals: 0
-            suffix: "px"
+            defaultValue: 10
+            showValueBubble: true
+            valueFormatter: function(v) { return radiusRow.radiusLabel(v); }
             value: section.tab.currentBorderRadius
-            baseColor: ThemeBackend.surface0
+            backgroundColor: ThemeBackend.surface0
             accentColor: ThemeBackend.mauve
-            buttonColor: ThemeBackend.surface1
-            buttonTextColor: ThemeBackend.text
-            textColor: ThemeBackend.text
-            subTextColor: ThemeBackend.subtext0
-            borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-            cornerRadius: ThemeBackend.borderRadius
-            fontFamily: ThemeBackend.fontFamily
-            fontPixelSize: rootObj.s(11)
-            onValueChanged: function(val) {
-                let num = (typeof val === "number" && !isNaN(val)) ? val : value;
-                let rounded = Math.round(num);
-                let snapped = section.tab.getSnappedRadius(rounded);
-                if (!isNaN(snapped) && snapped >= 0 && snapped <= 64 && section.tab.currentBorderRadius !== snapped) {
-                    section.tab.currentBorderRadius = snapped;
+            handleColor: ThemeBackend.text
+            handleBorderColor: ThemeBackend.mantle
+            // live while dragging (debounced), saved for good on release
+            onMoved: function(val) {
+                let r = Math.round(val);
+                if (section.tab.currentBorderRadius !== r) {
+                    section.tab.currentBorderRadius = r;
                     section.tab.borderRadiusDebounceTimer.restart();
                 }
             }
-            onTriggered: {
-                let rounded = Math.round(radiusSelector.value);
-                let snapped = section.tab.getSnappedRadius(rounded);
-                section.tab.currentBorderRadius = snapped;
+            onDragFinished: {
+                section.tab.borderRadiusDebounceTimer.stop();
+                section.tab.currentBorderRadius = Math.round(radiusSlider.value);
                 section.tab.updateBorderRadiusSetting();
             }
         }
