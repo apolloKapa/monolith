@@ -285,7 +285,15 @@ GuideTab {
                                 modeList.push({ width: md.width, height: md.height, hz: md.refresh_rate / 1000, preferred: md.is_preferred === true });
                             }
                             let tf = item.logical ? item.logical.transform : "Normal";
+                            let lg = item.logical || null;
                             mList.push({
+                                // where it sits on the desktop, in logical pixels (after scale and
+                                // rotation), for the arrangement preview; null when it's off
+                                x: lg ? lg.x : 0,
+                                y: lg ? lg.y : 0,
+                                lw: lg ? lg.width : 0,
+                                lh: lg ? lg.height : 0,
+                                label: (item.model && item.model !== "Unknown") ? item.model : (item.make || ""),
                                 name: k,
                                 dimensions: w + "x" + h,
                                 framerate: rr.toString(),
@@ -401,6 +409,69 @@ GuideTab {
         if (p && p.prev.mode && Caching.monolithDir)
             Quickshell.execDetached(["bash", Caching.monolithDir + "/scripts/niri_outputs.sh", "set", p.name,
                 "mode=" + p.prev.mode, "transform=" + p.prev.transform]);
+        let l = pendingLayout;
+        if (l && Caching.monolithDir)
+            Quickshell.execDetached(layoutArgs(l.prev));
+    }
+
+    // ---- Arrangement: where the monitors sit next to each other (niri) ----
+    // Moved in the preview, written as `position x= y=` for every monitor in one go, and kept
+    // only if confirmed, like the modes above.
+    property var pendingLayout: null      // { prev: { NAME: [x, y] }, left }
+
+    function layoutArgs(positions) {
+        let args = ["bash", Caching.monolithDir + "/scripts/niri_outputs.sh", "set"];
+        let names = Object.keys(positions);
+        for (let i = 0; i < names.length; i++) {
+            if (i > 0) args.push("+");
+            args.push(names[i], "position=" + Math.round(positions[names[i]][0]) + "," + Math.round(positions[names[i]][1]));
+        }
+        return args;
+    }
+
+    // positions: { NAME: [x, y] } for the monitors that are on
+    function applyLayout(positions) {
+        if (compositor !== "niri" || Object.keys(positions).length === 0) return;
+        let prev = pendingLayout ? pendingLayout.prev : null;
+        if (!prev) {
+            prev = {};
+            for (const m of monitorsList)
+                if (m.active && positions[m.name] !== undefined) prev[m.name] = [m.x, m.y];
+        }
+        pendingLayout = { prev: prev, left: confirmSeconds };
+        layoutTimer.restart();
+        outputQueue = outputQueue.concat([layoutArgs(positions)]);
+        runNextOutput();
+    }
+
+    function keepLayout() {
+        layoutTimer.stop();
+        pendingLayout = null;
+    }
+
+    function revertLayout() {
+        layoutTimer.stop();
+        let l = pendingLayout;
+        pendingLayout = null;
+        if (l) {
+            outputQueue = outputQueue.concat([layoutArgs(l.prev)]);
+            runNextOutput();
+        }
+    }
+
+    Timer {
+        id: layoutTimer
+        interval: 1000
+        repeat: true
+        onTriggered: {
+            let l = displayTabRoot.pendingLayout;
+            if (!l) { stop(); return; }
+            if (l.left <= 1) {
+                displayTabRoot.revertLayout();
+                return;
+            }
+            displayTabRoot.pendingLayout = Object.assign({}, l, { left: l.left - 1 });
+        }
     }
 
     function keepOutput() {
@@ -426,6 +497,8 @@ GuideTab {
                 if (displayTabRoot.outputQueue.length === 0) {
                     confirmTimer.stop();
                     displayTabRoot.pendingOutput = null;
+                    layoutTimer.stop();
+                    displayTabRoot.pendingLayout = null;
                 }
             }
             outputRefresh.restart();
@@ -520,7 +593,10 @@ GuideTab {
     function applyMonitorScale(monName, scaleVal) {
         if (!monName || !scaleVal) return;
         if (displayTabRoot.compositor === "niri") {
-            Quickshell.execDetached(["bash", "-c", "niri msg output " + monName + " scale " + scaleVal.toString()]);
+            // written to the config: `niri msg output ... scale` only lasted until niri next
+            // reloaded its config (any other display change) or you logged in again
+            outputQueue = outputQueue.concat([["bash", Caching.monolithDir + "/scripts/niri_outputs.sh", "set", monName, "scale=" + scaleVal.toString()]]);
+            runNextOutput();
         } else if (displayTabRoot.compositor === "sway") {
             Quickshell.execDetached(["bash", "-c", "swaymsg output " + monName + " scale " + scaleVal.toString()]);
         } else if (displayTabRoot.compositor !== "mango") {

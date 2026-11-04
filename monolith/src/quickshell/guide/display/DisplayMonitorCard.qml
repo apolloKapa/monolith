@@ -18,7 +18,10 @@ Rectangle {
     property string monName: modelData.name
     property var monSettings: (monDelegate.tab && monDelegate.tab.displaySettings && monDelegate.tab.displaySettings.monitors && monDelegate.tab.displaySettings.monitors[monName]) ? monDelegate.tab.displaySettings.monitors[monName] : ({})
 
-    property bool monitorPowered: monSettings && monSettings.powerEnabled !== undefined ? monSettings.powerEnabled : (modelData && modelData.active !== undefined ? modelData.active : true)
+    // what the compositor says wins: a saved "off" from another session (or another PC with the
+    // same output name) used to show a monitor that's on as off, and hide its mode settings
+    property bool monitorPowered: modelData && modelData.active !== undefined ? modelData.active
+        : (monSettings && monSettings.powerEnabled !== undefined ? monSettings.powerEnabled : true)
     property bool filterEnabled: monSettings && monSettings.enabled !== undefined ? monSettings.enabled : false
     property bool filterAuto: monSettings && monSettings.auto !== undefined ? monSettings.auto : false
     property real currentTemp: monSettings && monSettings.temperature !== undefined ? monSettings.temperature : 50
@@ -102,7 +105,7 @@ Rectangle {
 
     onMonSettingsChanged: {
         if (!monSettings) return;
-        if (monSettings.powerEnabled !== undefined) {
+        if (monSettings.powerEnabled !== undefined && (!modelData || modelData.active === undefined)) {
             monitorPowered = monSettings.powerEnabled;
         }
         filterEnabled = monSettings.enabled !== undefined ? monSettings.enabled : false;
@@ -113,7 +116,7 @@ Rectangle {
     }
 
     onModelDataChanged: {
-        if (monSettings.powerEnabled === undefined && modelData.active !== undefined) {
+        if (modelData.active !== undefined) {
             monitorPowered = modelData.active;
         }
         if (monDelegate.tab.pendingMonScaleName !== monName) {

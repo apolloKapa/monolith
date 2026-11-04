@@ -35,6 +35,8 @@ DisplayMainState {
             width: parent.width - (parent.contentHeight > parent.height ? rootObj.s(6) : 0)
             spacing: rootObj.s(12)
 
+            DisplayLayoutPreview { tab: displayTabRoot }
+
             Repeater {
                 model: displayTabRoot.monitorsList
                 delegate: DisplayMonitorCard { tab: displayTabRoot }
