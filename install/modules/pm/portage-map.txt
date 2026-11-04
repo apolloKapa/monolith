@@ -90,6 +90,8 @@ xwayland-satellite        gui-apps/xwayland-satellite         # (guru)
 xdg-desktop-portal-gnome  sys-apps/xdg-desktop-portal-gnome
 swaylock                  gui-apps/swaylock
 thunar                    xfce-base/thunar
+tumbler                   xfce-base/tumbler                  # Thunar's image/video previews
+ffmpegthumbnailer         media-video/ffmpegthumbnailer
 mission-center            sys-apps/mission-center             # (guru)
 librewolf                 www-client/librewolf                # (librewolf)
 librewolf-bin             www-client/librewolf                # (librewolf) built from source, never -bin
