@@ -64,7 +64,7 @@ KEYBIND_PKGS=(
     "niri" "xwayland-satellite" "xdg-desktop-portal-gnome"
     "jq" "cliphist" "wl-clipboard" "playerctl" "brightnessctl"
     "grim" "slurp" "swaylock" "wireplumber"
-    "kitty" "thunar" "mission-center" "librewolf|librewolf-bin" "wooz"
+    "kitty" "thunar" "tumbler" "ffmpegthumbnailer" "mission-center" "librewolf|librewolf-bin" "wooz"
     "ttf-jetbrains-mono" "noto-fonts-cjk" "breeze"
 )
 
