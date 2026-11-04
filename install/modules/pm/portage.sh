@@ -87,15 +87,43 @@ portage_conf_file() {
     echo "$dir/$2"
 }
 
+# The LLVM slot the newest installed dev-lang/rust was built against ("" if unknown).
+portage_rust_llvm_slot() {
+    local d
+    d="$(compgen -G "$PORTAGE_VDB/dev-lang/rust-[0-9]*" | sort -V | tail -n 1)"
+    [ -n "$d" ] && [ -f "$d/USE" ] || return 0
+    tr ' ' '\n' < "$d/USE" | sed -n 's/^llvm_slot_\([0-9]\+\)$/\1/p' | sort -n | tail -n 1
+}
+
+# LibreWolf has to use the same LLVM as Rust. Its ebuild defaults to the oldest LLVM it supports,
+# and when the installed Rust uses a newer one Portage tries to build every older Rust slot back
+# to one it can bootstrap. With rust-bin masked that ends in a circular dependency
+# (rust-1.90 needs itself). Pin LibreWolf to Rust's LLVM when its ebuild supports it.
+portage_librewolf_llvm_line() {
+    local slot cpv
+    slot="$(portage_rust_llvm_slot)"
+    [ -n "$slot" ] || return 0
+    cpv="$(portageq best_visible / ebuild www-client/librewolf 2>/dev/null)"
+    [ -n "$cpv" ] || return 0
+    portageq metadata / ebuild "$cpv" IUSE 2>/dev/null | tr ' ' '\n' | sed 's/^[+-]//' \
+        | grep -qx "llvm_slot_$slot" || return 0
+    echo "www-client/librewolf LLVM_SLOT: -* $slot"
+}
+
 portage_write_conf() {
     local f
     if f="$(portage_conf_file package.use monolith)"; then
         local pipewire_server="media-video/pipewire sound-server pipewire-alsa"
         # someone running PulseAudio's own daemon keeps it: pipewire's sound server would block it
         portage_atom_installed media-sound/pulseaudio-daemon && pipewire_server="#$pipewire_server (pulseaudio-daemon installed)"
+        local librewolf_llvm
+        librewolf_llvm="$(portage_librewolf_llvm_line)"
         printf '%s\n' \
             "# Written by the Monolith installer. What Monolith's features need from these packages." \
+            "# Rewritten on every install and update: put your own lines in another file in this folder." \
             "$pipewire_server" \
+            "# setpriv, which Monolith starts its idle/lock, clipboard and file watchers with" \
+            "sys-apps/util-linux caps" \
             "gui-wm/niri screencast dbus" \
             "gui-apps/quickshell pipewire mpris pam policykit upower notifications bluetooth networkmanager" \
             "media-gfx/imagemagick jpeg png webp svg" \
@@ -106,6 +134,8 @@ portage_write_conf() {
             "dev-cpp/cpptrace unwind" \
             "dev-libs/libdbusmenu gtk3" \
             "media-libs/libvpx postproc" \
+            ${librewolf_llvm:+"# LibreWolf on the same LLVM as the installed Rust (no old Rust bootstrap chain)"} \
+            ${librewolf_llvm:+"$librewolf_llvm"} \
             | sudo tee "$f" >/dev/null
     fi
     # GURU and LibreWolf ebuilds are testing-only (~arch)
@@ -113,7 +143,9 @@ portage_write_conf() {
         local arch; arch="$(portageq envvar ARCH 2>/dev/null || echo amd64)"
         {
             echo "# Written by the Monolith installer: overlay packages Monolith uses (testing keyword only)."
-            grep -E '\((guru|librewolf)\)' "$PORTAGE_MAP_FILE" | awk -v k="~$arch" '{print $2, k}' | sort -u
+            # map lines only: a comment that mentions "(guru)" isn't a package
+            grep -E '^[^#[:space:]]+[[:space:]]+[a-z0-9-]+/[^[:space:]]+.*\((guru|librewolf)\)' "$PORTAGE_MAP_FILE" \
+                | awk -v k="~$arch" '{print $2, k}' | sort -u
         } | sudo tee "$f" >/dev/null
     fi
     # autounmask writes into the last file of each folder: give it ours
@@ -163,6 +195,20 @@ pm_bootstrap_install() {
 
 # no AUR helper on Gentoo
 pm_bootstrap_helper() { return 0; }
+
+# Packages that are already installed don't pick up the USE flags Monolith sets until they're
+# rebuilt (util-linux's setpriv, for one, is part of every Gentoo system). Rebuild the installed
+# ones whose flags changed; --newuse leaves the rest alone.
+pm_apply_use() {
+    local f=/etc/portage/package.use/monolith atoms=() a
+    [ -f "$f" ] || return 0
+    while read -r a _; do
+        portage_atom_installed "$a" && atoms+=("$a")
+    done < <(sed -e 's/#.*//' "$f" | awk 'NF>1')
+    [ ${#atoms[@]} -gt 0 ] || return 0
+    echo -e "\e[36m[ INFO ]\e[0m Rebuilding packages whose USE flags Monolith changed (if any)"
+    portage_emerge --oneshot --update --newuse "${atoms[@]}" || true
+}
 
 pm_full_upgrade() {
     echo -e "\n\e[36m[ INFO ]\e[0m $(t "installer.deps.syncing")"
