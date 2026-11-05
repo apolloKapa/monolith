@@ -186,7 +186,7 @@ def to_html(out):
         lines.append("".join(parts))
     while lines and not lines[-1].strip():
         lines.pop()
-    return "<pre>" + "\n".join(lines) + "</pre>"
+    return "<pre style=\"font-family: '%s'\">" % terminal_font() + "\n".join(lines) + "</pre>"
 
 
 def span(key, text):
@@ -195,6 +195,32 @@ def span(key, text):
     if bold:
         t = "<b>" + t + "</b>"
     return '<span style="color:%s">%s</span>' % (fg, t) if fg else t
+
+
+def terminal_font():
+    """kitty's font, so a preview looks like the terminal it greets (fixed width lines up)."""
+    try:
+        for line in open(CONF + "/kitty/kitty.conf", encoding="utf-8"):
+            m = re.match(r"\s*font_family\s+(.+)", line)
+            if m:
+                return m.group(1).strip()
+    except OSError:
+        pass
+    return "monospace"
+
+
+def terminal_name():
+    """Your terminal (Settings → Launcher's terminal, else Monolith's), for the preview's
+    "Terminal" line: run from the shell, fastfetch would see the shell there instead."""
+    for path, keys in ((CONF + "/monolith/next.json", ("search", "terminal")), (CONF + "/monolith/settings.json", ("launcher", "terminalCommand"))):
+        try:
+            d = json.load(open(path))
+            v = d.get(keys[0], {}).get(keys[1], "")
+            if v:
+                return os.path.basename(v.split()[0])
+        except (OSError, ValueError, AttributeError):
+            pass
+    return "kitty"
 
 
 def preview(name):
@@ -206,8 +232,18 @@ def preview(name):
         # image queries; asked without one, fastfetch waits)
         env = {k: v for k, v in os.environ.items() if not k.startswith(("KITTY", "TERM", "WEZTERM", "GHOSTTY", "KONSOLE", "VTE"))}
         env.update(TERM="xterm-256color", COLORTERM="truecolor", COLUMNS="110", LINES="40")
-        out = subprocess.run(["fastfetch", "-c", tmp, "--pipe", "false"], capture_output=True, text=True, timeout=4,
+        # through your login shell, so the "Shell" line names it
+        shell = "/bin/sh"
+        try:
+            import pwd
+            shell = pwd.getpwuid(os.getuid()).pw_shell or shell
+        except (ImportError, KeyError):
+            pass
+        env["FF_PREVIEW_CONF"] = tmp
+        out = subprocess.run([shell, "-c", 'fastfetch -c "$FF_PREVIEW_CONF" --pipe false'], capture_output=True, text=True, timeout=6,
                              stdin=subprocess.DEVNULL, env=env).stdout
+        # (colour codes sit right against the name, so no word boundary before it)
+        out = re.sub(r"(quickshell|python3(?:\.\d+)?)(?=[\s\x1b]|$)", terminal_name(), out)
         return to_html(out)
     except (OSError, subprocess.TimeoutExpired):
         return ""
