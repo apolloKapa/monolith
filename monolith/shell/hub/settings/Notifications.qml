@@ -5,6 +5,7 @@ import "../../core"
 import "../../ui"
 
 ColumnLayout {
+    id: notifSec
     spacing: 8
     SettingRow {
         icon: "do_not_disturb_on"; title: "Do not disturb"; desc: "Only urgent notifications pop up; the rest wait in Notifications"
@@ -30,22 +31,21 @@ ColumnLayout {
         icon: "science"; title: "Try it"; desc: "Send a test notification"
         Button { text: "Send"; icon: "send"; onClicked: Quickshell.execDetached(["notify-send", "-a", "Monolith", "This is how it looks", "Notifications pop up like this."]) }
     }
+    // where new ones pop up: out of the island, or as cards on any edge or corner
+    readonly property string where: Store.get("notifications.style", "island") === "corner" ? Store.get("notifications.position", "top-right") : "island"
     SettingRow {
-        icon: "notifications_active"; title: "How they pop up"; desc: "Out of the island on the screen you're using, or as cards in a corner"
-        Segmented {
-            opts: [["island", "Island"], ["corner", "Corner"]]
-            value: Store.get("notifications.style", "island")
-            onPicked: v => Store.set("notifications.style", v)
-        }
-    }
-    SettingRow {
-        visible: Store.get("notifications.style", "island") === "corner"
-        icon: "picture_in_picture"; title: "Which corner"
-        Segmented {
-            width: 300
-            opts: [["top-left", "↖"], ["top-right", "↗"], ["bottom-left", "↙"], ["bottom-right", "↘"]]
-            value: Store.get("notifications.position", "top-right")
-            onPicked: v => Store.set("notifications.position", v)
+        icon: "notifications_active"; title: "Where they pop up"; desc: "On the screen you're using"
+        Dropdown {
+            width: 260
+            opts: [["island", "Out of the bar (island)", "The bar grows to show it"],
+                   ["top-left", "Top left"], ["top", "Top"], ["top-right", "Top right"],
+                   ["left", "Left"], ["right", "Right"],
+                   ["bottom-left", "Bottom left"], ["bottom", "Bottom"], ["bottom-right", "Bottom right"]]
+            value: notifSec.where
+            onPicked: v => {
+                if (v === "island") Store.set("notifications.style", "island");
+                else { Store.set("notifications.style", "corner"); Store.set("notifications.position", v); }
+            }
         }
     }
 }
