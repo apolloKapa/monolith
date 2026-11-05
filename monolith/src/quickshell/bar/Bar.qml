@@ -266,11 +266,13 @@ Variants {
             implicitHeight: barWindowRoot.isVertical ? 0 : (barHeight + (isFill ? cornerRadius : edgePadding))
             implicitWidth: barWindowRoot.isVertical ? (barHeight + (isFill ? cornerRadius : edgePadding)) : 0
 
+            // Orbit: the bar floats like the launcher, a clear gap from the screen's edges
+            readonly property real floatGap: ThemeBackend.orbit ? s(10) : s(4)
             margins {
-                top: isFill ? 0 : (barPosition === "bottom" ? 0 : (autohide ? 0 : s(4)))
-                bottom: isFill ? 0 : (barPosition === "top" ? 0 : (autohide ? 0 : s(4)))
-                left: isFill ? 0 : (barPosition === "right" ? 0 : (autohide ? 0 : s(4)))
-                right: isFill ? 0 : (barPosition === "left" ? 0 : (autohide ? 0 : s(4)))
+                top: isFill ? 0 : (barPosition === "bottom" ? 0 : (autohide ? 0 : floatGap))
+                bottom: isFill ? 0 : (barPosition === "top" ? 0 : (autohide ? 0 : floatGap))
+                left: isFill ? 0 : (barPosition === "right" ? 0 : (autohide ? 0 : floatGap))
+                right: isFill ? 0 : (barPosition === "left" ? 0 : (autohide ? 0 : floatGap))
             }
 
             exclusiveZone: (!barConfigReady || autohide || shouldHideForRedact) ? 0 : barHeight

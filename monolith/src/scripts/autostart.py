@@ -7,6 +7,7 @@ desktops and is understood by other tools:
                any autostart entry that has no installed app, e.g. one written by hand)
   on  ID       start this app (its .desktop file id, e.g. "discord.desktop") at login
   off ID       stop starting it at login
+  minimized ID on|off   start it in the tray (the app's own option, e.g. Steam's -silent)
   run          start every app that's on; called by monolithd once per login
 
 Only the user's own folder is run, not /etc/xdg/autostart: those are system helpers (keyring,
@@ -91,6 +92,66 @@ def exec_key(value):
     return prog
 
 
+# Settings -> Software -> Autostart -> Minimized: niri has no minimized windows, so this is each
+# app's own start-in-the-tray option, added to its autostart entry. Only apps with one get the switch
+MINIMIZE_FLAGS = {
+    "steam": "-silent",
+    "discord": "--start-minimized", "discord-canary": "--start-minimized", "discord-ptb": "--start-minimized",
+    "flatpak:com.discordapp.Discord": "--start-minimized",
+    "vesktop": "--start-minimized", "flatpak:dev.vencord.Vesktop": "--start-minimized",
+    "legcord": "--start-minimized", "flatpak:app.legcord.Legcord": "--start-minimized",
+    "openrgb": "--startminimized", "flatpak:org.openrgb.OpenRGB": "--startminimized",
+    "telegram-desktop": "-startintray", "flatpak:org.telegram.desktop": "-startintray",
+}
+
+
+def exec_tokens(value):
+    try:
+        return shlex.split(value.replace("\\$", "$").replace("\\`", "`"))
+    except ValueError:
+        return None
+
+
+def exec_join(tokens):
+    """Tokens back into an Exec line, quoted the way the desktop-entry spec wants (double quotes)."""
+    out = []
+    for t in tokens:
+        if t and not any(c in t for c in ' \t\n"\'\\><~|&;$*?#()`'):
+            out.append(t)
+        else:
+            out.append('"' + "".join("\\" + c if c in '"`$\\' else c for c in t) + '"')
+    return " ".join(out)
+
+
+def program_index(tokens):
+    """Where the program (or a Flatpak's app id) is in the Exec tokens: options go right after it."""
+    i = 0
+    while i < len(tokens) and (tokens[i] == "env" or ("=" in tokens[i] and not tokens[i].startswith("/"))):
+        i += 1
+    if i < len(tokens) and os.path.basename(tokens[i]) == "flatpak":
+        for j in range(i + 1, len(tokens)):
+            t = tokens[j]
+            if not t.startswith("-") and t != "run" and "." in t:
+                return j
+    return i if i < len(tokens) else -1
+
+
+def minimize_info(exec_value, entry_exec):
+    """(can it start minimized, does its autostart entry do so)"""
+    flag = MINIMIZE_FLAGS.get(exec_key(exec_value or entry_exec or ""))
+    if not flag:
+        return False, False
+    # the app itself, not a shortcut into it: every Steam game's entry runs
+    # "steam steam://rungameid/..." and has nothing to start minimized
+    base = exec_tokens(exec_value or entry_exec or "") or []
+    at = program_index(base)
+    extra = [t for t in base[at + 1:] if not t.startswith("-") and not t.startswith("%") and not t.startswith("@@")] if at >= 0 else []
+    if extra:
+        return False, False
+    toks = exec_tokens(entry_exec or "") or []
+    return True, flag in toks
+
+
 def enabled(keys):
     return bool(keys) and not is_true(keys.get("Hidden")) \
         and keys.get("X-GNOME-Autostart-enabled", "true").lower() != "false"
@@ -136,15 +197,17 @@ def cmd_list():
                 entry = None    # one entry belongs to one app
         if entry:
             used.add(entry)
+        can_min, is_min = minimize_info(keys.get("Exec", ""), (auto[entry] or {}).get("Exec", "") if entry else "")
         rows.append({"id": app_id, "name": keys.get("Name", app_id), "icon": keys.get("Icon", ""),
                      "comment": keys.get("Comment", ""), "on": bool(entry) and enabled(auto[entry]),
-                     "entry": entry or ""})
+                     "entry": entry or "", "canMinimize": can_min, "minimized": is_min})
     for name, keys in auto.items():
         if name in used or not keys:
             continue
+        can_min, is_min = minimize_info(keys.get("Exec", ""), keys.get("Exec", ""))
         rows.append({"id": name, "name": keys.get("Name", name), "icon": keys.get("Icon", ""),
                      "comment": keys.get("Comment", "") or keys.get("Exec", ""),
-                     "on": enabled(keys), "entry": name})
+                     "on": enabled(keys), "entry": name, "canMinimize": can_min, "minimized": is_min})
     rows.sort(key=lambda r: str(r["name"]).lower())
     print(json.dumps(rows))
 
@@ -220,6 +283,30 @@ def cmd_off(app_id):
         set_key(path, "Hidden", "true")
 
 
+def cmd_minimized(app_id, on):
+    """Add or remove the app's start-minimized option in its autostart entry (made if missing)."""
+    path = find_entry(app_id)
+    if not path:
+        cmd_on(app_id)
+        path = find_entry(app_id)
+    if not path:
+        sys.exit(f"no autostart entry for {app_id}")
+    keys = read_entry(path) or {}
+    flag = MINIMIZE_FLAGS.get(exec_key(keys.get("Exec", "")))
+    if not flag:
+        sys.exit("this app has no option to start minimized")
+    toks = exec_tokens(keys.get("Exec", ""))
+    if toks is None:
+        sys.exit("can't read the app's Exec line")
+    toks = [t for t in toks if t != flag]
+    if on:
+        at = program_index(toks)
+        if at < 0:
+            sys.exit("can't find the program in the Exec line")
+        toks.insert(at + 1, flag)
+    set_key(path, "Exec", exec_join(toks))
+
+
 def exec_argv(value, keys, path):
     """The Exec line as an argument list, without the spec's %f/%u/... field codes."""
     try:
@@ -292,6 +379,8 @@ def main():
         cmd_list()
     elif cmd in ("on", "off") and len(sys.argv) == 3:
         (cmd_on if cmd == "on" else cmd_off)(sys.argv[2])
+    elif cmd == "minimized" and len(sys.argv) == 4 and sys.argv[3] in ("on", "off"):
+        cmd_minimized(sys.argv[2], sys.argv[3] == "on")
     elif cmd == "run":
         cmd_run()
     else:

@@ -35,8 +35,9 @@ Item {
 
     readonly property bool isDesktop: UPower.displayDevice.ready ? !UPower.displayDevice.isLaptopBattery : SystemInfo.isDesktop
 
-    readonly property real boxRadius: ThemeBackend.material ? root.s(24) : Math.min(ThemeBackend.borderRadius, root.s(20))
-    readonly property real cardRadius: ThemeBackend.material ? root.s(16) : Math.min(ThemeBackend.borderRadius, root.s(14))
+    // Orbit: the outer box's corner is the cards' plus the gap between them (concentric, from your radius)
+    readonly property real boxRadius: ThemeBackend.orbit ? Math.min(ThemeBackend.borderRadius + root.s(8), root.s(30)) : (ThemeBackend.material ? root.s(24) : Math.min(ThemeBackend.borderRadius, root.s(20)))
+    readonly property real cardRadius: ThemeBackend.orbit ? Math.min(ThemeBackend.borderRadius, root.s(22)) : (ThemeBackend.material ? root.s(16) : Math.min(ThemeBackend.borderRadius, root.s(14)))
 
     readonly property color briColor: Qt.lighter(ThemeBackend.mauve, 1.1)
     readonly property color volColor: Qt.lighter(ThemeBackend.sapphire, 1.5)
@@ -404,11 +405,12 @@ Item {
         id: sidebarPanel
         anchors.fill: parent
         color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-        radius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, root.s(28)))
-        topLeftRadius: ThemeBackend.rad(root.isLeftAnchored ? 0 : radius)
-        bottomLeftRadius: ThemeBackend.rad(root.isLeftAnchored ? 0 : radius)
-        topRightRadius: ThemeBackend.rad(root.isLeftAnchored ? radius : 0)
-        bottomRightRadius: ThemeBackend.rad(root.isLeftAnchored ? radius : 0)
+        // Orbit: it floats off the screen edge (Main.qml), so every corner is round
+        radius: ThemeBackend.orbit ? root.boxRadius : ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, root.s(28)))
+        topLeftRadius: ThemeBackend.rad((root.isLeftAnchored && !ThemeBackend.orbit) ? 0 : radius)
+        bottomLeftRadius: ThemeBackend.rad((root.isLeftAnchored && !ThemeBackend.orbit) ? 0 : radius)
+        topRightRadius: ThemeBackend.rad((root.isLeftAnchored || ThemeBackend.orbit) ? radius : 0)
+        bottomRightRadius: ThemeBackend.rad((root.isLeftAnchored || ThemeBackend.orbit) ? radius : 0)
         border.width: 0
         clip: true
         opacity: root.introContent
@@ -432,8 +434,94 @@ Item {
                 spacing: root.s(10)
 
                 // header: the time and date, then you (avatar) with settings and log out
+                // Orbit: the header is a pill like the launcher's search row: you in a bubble,
+                // the time and date, and the settings / log out buttons at its end
+                Rectangle {
+                    id: orbitHeader
+                    visible: ThemeBackend.orbit
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: root.s(60)
+                    radius: Math.min(height / 2, root.cardRadius + root.s(2))
+                    color: ThemeBackend.surfaceContainerHigh
+                    opacity: root.introTop
+                    transform: Translate { x: (root.isLeftAnchored ? -root.rowSlideDistance : root.rowSlideDistance) * (1.0 - root.introTop) }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: root.s(8)
+                        anchors.rightMargin: root.s(8)
+                        spacing: root.s(12)
+
+                        ImageBox {
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.preferredWidth: root.s(44)
+                            Layout.preferredHeight: root.s(44)
+                            size: root.s(44)
+                            cornerRadius: Math.max(0, orbitHeader.radius - root.s(8))
+                            imageRadius: Math.max(0, orbitHeader.radius - root.s(8))
+                            source: SystemInfo.avatarUrl
+                            backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.primaryContainer : "transparent"
+                            Text {
+                                anchors.centerIn: parent
+                                text: (SystemInfo.username || "?").charAt(0).toUpperCase()
+                                font.family: ThemeBackend.fontFamily
+                                font.weight: Font.DemiBold
+                                font.pixelSize: root.s(18)
+                                color: ThemeBackend.onPrimaryContainer
+                                visible: SystemInfo.avatarPath === ""
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+                            spacing: 0
+                            Text {
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                text: DateTime.hour + ":" + DateTime.minute + (DateTime.amPm !== "" ? " " + DateTime.amPm : "")
+                                font.family: ThemeBackend.fontFamily
+                                font.weight: Font.Medium
+                                font.pixelSize: root.s(20)
+                                color: ThemeBackend.text
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                text: DateTime.fullDate + (SystemInfo.username ? "  ·  " + SystemInfo.username : "")
+                                font.family: ThemeBackend.fontFamily
+                                font.pixelSize: root.s(11)
+                                color: ThemeBackend.subtext0
+                            }
+                        }
+
+                        IconButton {
+                            Layout.alignment: Qt.AlignVCenter
+                            size: root.s(40)
+                            buttonIcon: "󰒓"
+                            iconFontSize: root.s(17)
+                            accentColor: ThemeBackend.surfaceContainerHighest
+                            textColor: ThemeBackend.text
+                            onClicked: {
+                                closeSequence.start();
+                                Quickshell.execDetached(["bash", Caching.monolithDir + "/scripts/qs_manager.sh", "open", "settings", ""]);
+                            }
+                        }
+                        IconButton {
+                            Layout.alignment: Qt.AlignVCenter
+                            size: root.s(40)
+                            buttonIcon: "󰍃"
+                            iconFontSize: root.s(17)
+                            accentColor: ThemeBackend.surfaceContainerHighest
+                            textColor: ThemeBackend.text
+                            onClicked: logoutOpenTimer.start()
+                        }
+                    }
+                }
+
                 Item {
                     id: userBox
+                    visible: !ThemeBackend.orbit
                     Layout.fillWidth: true
                     Layout.preferredHeight: root.s(64)
                     Layout.maximumHeight: root.s(64)
@@ -511,7 +599,7 @@ Item {
                             size: root.s(40)
                             cornerRadius: ThemeBackend.square ? 0 : root.s(20)
                             imageRadius: ThemeBackend.square ? 0 : root.s(20)
-                            source: SystemInfo.avatarPath !== "" ? "file://" + SystemInfo.avatarPath : ""
+                            source: SystemInfo.avatarUrl
                             backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.primaryContainer : "transparent"
 
                             Text {

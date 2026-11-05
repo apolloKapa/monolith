@@ -13,6 +13,15 @@ Item {
 
     property string hostname: ""
     property string avatarPath: ""
+    // the avatar as an image URL. A bare "file://" + path broke on names with # (the rest became
+    // a URL fragment: "#cats #picrew....jpg" opened the folder), ? or %, so every part is encoded
+    readonly property string avatarUrl: fileUrl(avatarPath)
+    function fileUrl(path) {
+        if (!path) return "";
+        path = String(path);
+        if (path.startsWith("file://") || path.startsWith("image://") || path.startsWith("http")) return path;
+        return "file://" + path.split("/").map(encodeURIComponent).join("/");
+    }
     property string osName: ""
     property string kernelVersion: ""
     property string uptime: ""

@@ -229,6 +229,8 @@ PanelWindow {
         intersection: masterWindow.isCurrentDraggable ? Intersection.Combine : Intersection.Xor
     }
 
+    // the bar's thickness in pixels (Orbit keeps panels this far plus a gap from the bar's edge)
+    readonly property real barHeightPx: ((rawBarSettings && Number(rawBarSettings.height) > 0) ? Number(rawBarSettings.height) : 46) * (masterWindow.globalUiScale || 1.0)
     property var rawBarSettings: (typeof Config !== "undefined" && Config.rawSettings && Config.rawSettings.bar) ? Config.rawSettings.bar : ({})
     property string barPosition: (rawBarSettings && rawBarSettings.position !== undefined) ? rawBarSettings.position : "top"
     property bool barAutohide: (rawBarSettings && rawBarSettings.autohide !== undefined) ? Boolean(rawBarSettings.autohide) : false
@@ -501,6 +503,32 @@ PanelWindow {
             return f;
         }
 
+        // Orbit: panels are floating cards like the launcher, the same gap from every screen
+        // edge they sit against and from the bar (full-height ones like System included)
+        if (ThemeBackend.orbit && !fullScreen) {
+            let gap = Math.round(12 * scale);
+            let near = Math.round(64 * scale);
+            let barSpace = effHidden ? 0 : Math.round((masterWindow.barHeightPx || 46 * scale)) + gap;
+            let topIn = gap + (bp === "top" ? barSpace : 0), botIn = gap + (bp === "bottom" ? barSpace : 0);
+            let leftIn = gap + (bp === "left" ? barSpace : 0), rightIn = gap + (bp === "right" ? barSpace : 0);
+            let f = { w: result.w, h: result.h, rx: result.rx, ry: result.ry, comp: result.comp, draggable: result.draggable };
+            // panels Orbit lays out differently, at their Orbit size (kept centred where they were)
+            const orbitSizes = { "calendar": [1000, 740], "music": [1000, 560] };
+            if (orbitSizes[name]) {
+                let cx = f.rx + f.w / 2;
+                f.w = Math.round(orbitSizes[name][0] * scale);
+                f.h = Math.round(orbitSizes[name][1] * scale);
+                f.rx = Math.round(cx - f.w / 2);
+            }
+            if (f.h >= scrH - 1) { f.h = scrH - topIn - botIn; f.ry = topIn; }
+            if (f.w >= scrW - 1) { f.w = scrW - leftIn - rightIn; f.rx = leftIn; }
+            if (f.ry < near) f.ry = Math.max(f.ry, topIn);
+            else if (scrH - (f.ry + f.h) < near) f.ry = Math.min(f.ry, scrH - f.h - botIn);
+            if (f.rx < near) f.rx = Math.max(f.rx, leftIn);
+            else if (scrW - (f.rx + f.w) < near) f.rx = Math.min(f.rx, scrW - f.w - rightIn);
+            return f;
+        }
+
         if (effHidden && !isFixed) {
             let offsetAdjustment = Math.round(46 * scale);
             let adjusted = {
@@ -639,14 +667,22 @@ PanelWindow {
             x: (animContainer.width - width) / 2
             y: (animContainer.height - height) / 2
             transformOrigin: Item.Center
+            // Orbit: panels arrive like the launcher, a short slide away from the bar's edge
+            transform: Translate {
+                readonly property real d: ThemeBackend.orbit && !contentStage.inDrawer ? (1 - contentStage.unfold) * Math.round(18 * (masterWindow.globalUiScale || 1)) : 0
+                x: masterWindow.barPosition === "left" ? -d : (masterWindow.barPosition === "right" ? d : 0)
+                y: masterWindow.barPosition === "bottom" ? d : (masterWindow.barPosition === "top" ? -d : 0)
+            }
 
             // Unfold (Theme -> Effects): panels open from a thin line through their middle, like
             // an old screen switching on, and fold back into it; otherwise a small zoom
             property real unfold: masterWindow.isVisible ? 1.0 : 0.0
             Behavior on unfold {
                 NumberAnimation {
-                    duration: (masterWindow.isVisible ? 300 : 170) * ThemeBackend.animScale
-                    easing.type: masterWindow.isVisible ? Easing.OutQuart : Easing.InCubic
+                    duration: (masterWindow.isVisible ? (ThemeBackend.orbit ? 460 : 300) : (ThemeBackend.orbit ? 200 : 170)) * ThemeBackend.animScale
+                    // Orbit: Material's emphasized decelerate in, emphasized accelerate out
+                    easing.type: ThemeBackend.orbit ? Easing.BezierSpline : (masterWindow.isVisible ? Easing.OutQuart : Easing.InCubic)
+                    easing.bezierCurve: masterWindow.isVisible ? [0.05, 0.7, 0.1, 1.0, 1.0, 1.0] : [0.3, 0.0, 0.8, 0.15, 1.0, 1.0]
                 }
             }
             // in a frame drawer the panel slides out of the edge it hangs from instead
@@ -654,11 +690,14 @@ PanelWindow {
             readonly property bool drawerVertical: frameDrawer.from === "top" || frameDrawer.from === "bottom"
             // the reveal (see unfoldMask below): nothing is squashed any more, the panel stays its
             // real size and a window opens over it, so its background, blur and glass stay right
-            readonly property real revealU: (contentStage.inDrawer || ThemeBackend.fxUnfold) ? Math.max(0, Math.min(1, contentStage.unfold)) : 1.0
+            readonly property real revealU: (contentStage.inDrawer || (ThemeBackend.fxUnfold && !ThemeBackend.orbit)) ? Math.max(0, Math.min(1, contentStage.unfold)) : 1.0
             readonly property string revealFrom: contentStage.inDrawer ? frameDrawer.from : "center"
 
-            scale: (ThemeBackend.fxUnfold || masterWindow.isVisible) ? 1.0 : 0.96
+            scale: ThemeBackend.orbit ? (contentStage.inDrawer ? 1.0 : 0.93 + 0.07 * contentStage.unfold)
+                                      : ((ThemeBackend.fxUnfold || masterWindow.isVisible) ? 1.0 : 0.96)
             Behavior on scale {
+                // Orbit's scale already follows the eased unfold
+                enabled: !ThemeBackend.orbit
                 NumberAnimation {
                     duration: (masterWindow.isVisible ? 280 : 160) * ThemeBackend.animScale
                     easing.type: masterWindow.isVisible ? Easing.OutCubic : Easing.InCubic
@@ -679,7 +718,7 @@ PanelWindow {
             // the bright line a panel unfolds from
             Rectangle {
                 z: 100
-                visible: ThemeBackend.fxUnfold && !contentStage.inDrawer && contentStage.unfold < 0.98
+                visible: ThemeBackend.fxUnfold && !ThemeBackend.orbit && !contentStage.inDrawer && contentStage.unfold < 0.98
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width * (0.4 + 0.6 * Math.min(1, contentStage.unfold * 3))

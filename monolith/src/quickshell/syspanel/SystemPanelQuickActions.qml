@@ -19,7 +19,7 @@ Item {
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.preferredWidth: 1
-        radius: ThemeBackend.pill ? height / 2 : ThemeBackend.rad(view.panel.cardRadius)
+        radius: ThemeBackend.orbit ? Math.min(height / 2, view.panel.cardRadius) : (ThemeBackend.pill ? height / 2 : ThemeBackend.rad(view.panel.cardRadius))
 
         property bool isActive: false
         property string iconText: ""
@@ -28,8 +28,9 @@ Item {
         property color activeColor: ThemeBackend.blue
         readonly property bool isHovered: qaMa.containsMouse
         // Material fills an on tile with the primary colour; the other styles tint it
-        readonly property color onFill: ThemeBackend.material ? ThemeBackend.mauve : Qt.alpha(activeColor, 0.3)
-        readonly property color onInk: ThemeBackend.material ? ThemeBackend.onPrimary : activeColor
+        // Orbit: an on tile turns tonal (secondary container) and its icon bubble fills with the accent
+        readonly property color onFill: ThemeBackend.orbit ? ThemeBackend.secondaryContainer : (ThemeBackend.material ? ThemeBackend.mauve : Qt.alpha(activeColor, 0.3))
+        readonly property color onInk: ThemeBackend.orbit ? ThemeBackend.text : (ThemeBackend.material ? ThemeBackend.onPrimary : activeColor)
 
         property real togglePulse: 0.0
 
@@ -46,7 +47,7 @@ Item {
         signal leftClicked()
         signal rightClicked()
 
-        color: qaGlass.active ? "transparent" : (isActive ? onFill : ThemeBackend.faded(qaMa.containsMouse ? ThemeBackend.surfaceContainerHighest : ThemeBackend.surfaceContainerHigh))
+        color: qaGlass.active ? "transparent" : (isActive ? onFill : ThemeBackend.faded((qaMa.containsMouse && !ThemeBackend.orbit) ? ThemeBackend.surfaceContainerHighest : ThemeBackend.surfaceContainerHigh))
 
         GlassFill {
             id: qaGlass
@@ -65,19 +66,64 @@ Item {
             ColorAnimation { duration: (180) * ThemeBackend.animScale }
         }
 
-        scale: qaMa.pressed ? 0.96 : 1.0
+        scale: (qaMa.pressed && !ThemeBackend.orbit) ? 0.96 : 1.0
         Behavior on scale {
             enabled: view.panel.visible
             NumberAnimation { duration: (200) * ThemeBackend.animScale; easing.type: Easing.OutQuart }
         }
 
+        // Orbit: a grid tile like the launcher's apps, a bubble with the name and state under it
+        Column {
+            visible: ThemeBackend.orbit
+            anchors.centerIn: parent
+            width: parent.width - view.panel.s(8)
+            spacing: view.panel.s(4)
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: view.panel.s(44)
+                height: width
+                radius: Math.min(width / 2, ThemeBackend.borderRadius + view.panel.s(4))
+                color: qaBtn.isActive ? ThemeBackend.mauve : ThemeBackend.surfaceContainerHighest
+                Behavior on color { enabled: view.panel.visible; ColorAnimation { duration: (260) * ThemeBackend.animScale } }
+                Text {
+                    anchors.centerIn: parent
+                    font.family: ThemeBackend.iconFont
+                    font.pixelSize: view.panel.s(19)
+                    color: qaBtn.isActive ? ThemeBackend.onPrimary : ThemeBackend.text
+                    text: qaBtn.iconText
+                    Behavior on color { enabled: view.panel.visible; ColorAnimation { duration: (260) * ThemeBackend.animScale } }
+                }
+            }
+            Text {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
+                text: qaBtn.label
+                font.family: ThemeBackend.fontFamily
+                font.weight: Font.Medium
+                font.pixelSize: view.panel.s(11)
+                color: qaBtn.isActive ? qaBtn.onInk : ThemeBackend.text
+            }
+            Text {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
+                text: qaBtn.stateText
+                font.family: ThemeBackend.fontFamily
+                font.pixelSize: view.panel.s(10)
+                color: qaBtn.isActive ? Qt.alpha(qaBtn.onInk, 0.8) : ThemeBackend.subtext0
+            }
+        }
+
         RowLayout {
+            visible: !ThemeBackend.orbit
             anchors.fill: parent
             anchors.leftMargin: view.panel.s(16)
             anchors.rightMargin: view.panel.s(12)
             spacing: view.panel.s(12)
 
             Text {
+                visible: !ThemeBackend.orbit
                 Layout.alignment: Qt.AlignVCenter
                 font.family: ThemeBackend.iconFont
                 font.pixelSize: view.panel.s(20)
@@ -96,7 +142,7 @@ Item {
                     text: qaBtn.label
                     elide: Text.ElideRight
                     font.family: ThemeBackend.fontFamily
-                    font.weight: Font.DemiBold
+                    font.weight: ThemeBackend.orbit ? Font.Medium : Font.DemiBold
                     font.pixelSize: view.panel.s(13)
                     color: qaBtn.isActive ? qaBtn.onInk : ThemeBackend.text
                 }
@@ -111,12 +157,23 @@ Item {
             }
         }
 
+        Ripple {
+            id: qaInk
+            shapeRadius: qaBtn.radius
+            ink: qaBtn.isActive ? qaBtn.onInk : ThemeBackend.text
+            hovered: qaMa.containsMouse
+            pressed: qaMa.pressed
+        }
+
         MouseArea {
             id: qaMa
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onPressed: (mouse) => qaInk.press(mouse.x, mouse.y)
+            onReleased: qaInk.release()
+            onCanceled: qaInk.release()
             onClicked: (mouse) => {
                 if (mouse.button === Qt.RightButton) qaBtn.rightClicked();
                 else qaBtn.leftClicked();
@@ -127,14 +184,14 @@ Item {
     id: view
     z: 5
     Layout.fillWidth: true
-    Layout.preferredHeight: view.panel.s(56) * 3 + view.panel.s(8) * 2
+    Layout.preferredHeight: ThemeBackend.orbit ? (view.panel.s(96) * 2 + view.panel.s(8)) : (view.panel.s(56) * 3 + view.panel.s(8) * 2)
     Layout.maximumHeight: Layout.preferredHeight
     opacity: view.panel.introQuickActions
     transform: Translate { x: (view.panel.isLeftAnchored ? -view.panel.rowSlideDistance : view.panel.rowSlideDistance) * (1.0 - view.panel.introQuickActions) }
 
     GridLayout {
         anchors.fill: parent
-        columns: 2
+        columns: ThemeBackend.orbit ? 4 : 2
         rowSpacing: view.panel.s(8)
         columnSpacing: view.panel.s(8)
 

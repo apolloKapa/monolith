@@ -12,7 +12,7 @@ Item {
     readonly property string avatarSource: {
         if (el.ctx && el.ctx.faceIconPath !== undefined && el.ctx.faceIconPath !== "") return el.ctx.faceIconPath;
         if (SystemInfo.avatarPath === "") return "";
-        return SystemInfo.avatarPath.startsWith("file://") ? SystemInfo.avatarPath : "file://" + SystemInfo.avatarPath;
+        return SystemInfo.avatarUrl;
     }
 
     ImageBox {
