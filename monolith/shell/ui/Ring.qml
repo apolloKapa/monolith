@@ -14,7 +14,7 @@ Item {
     implicitHeight: 120
     readonly property real rad: Math.min(width, height) / 2 - thickness / 2
     property real shown: Math.max(0, Math.min(1, value))
-    Behavior on shown { SpringAnimation { spring: Theme.springK; damping: 0.6; epsilon: 0.002 } }
+    Behavior on shown { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
 
     Shape {
         anchors.fill: parent

@@ -72,8 +72,8 @@ PanelWindow {
         r: win.shown ? Theme.islandRadius : height / 2
         x: Math.round((win.width - width) / 2)
         y: win.tucked ? -Theme.islandH + 3 : 0
-        Behavior on bodyW { SpringAnimation { spring: Theme.springK; damping: Theme.springDamp; mass: Theme.springMass; epsilon: 0.5 } }
-        Behavior on height { SpringAnimation { spring: Theme.springK; damping: Theme.springDamp; mass: Theme.springMass; epsilon: 0.5 } }
+        Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on r { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
         Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
 
@@ -170,7 +170,7 @@ PanelWindow {
                         height: parent.height
                         radius: height / 2
                         color: Theme.accentContainer
-                        Behavior on x { SpringAnimation { spring: Theme.springK; damping: Theme.springDamp; epsilon: 0.5 } }
+                        Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                     }
                     Repeater {
                         model: HubState.pages
@@ -184,7 +184,7 @@ PanelWindow {
                             clip: true
                             color: "transparent"
                             radius: height / 2
-                            Behavior on x { SpringAnimation { spring: Theme.springK; damping: Theme.springDamp; epsilon: 0.5 } }
+                            Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                             onClicked: { HubState.page = modelData; query.forceActiveFocus(); }
                             Row {
                                 anchors.centerIn: parent

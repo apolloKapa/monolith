@@ -115,10 +115,10 @@ Singleton {
     readonly property real islandPad: 12        // inside, around the content
     readonly property real islandGap: 8         // between the island and the screen edge when open
     readonly property real islandRadius: Math.max(14, radius + 12)  // its lower corners when open
-    // springs for the island's size (a little overshoot, settles fast)
-    readonly property real springK: 4.2
-    readonly property real springDamp: 0.42
-    readonly property real springMass: 1.0
+    // the island's "spring": a curve that overshoots a little and settles. (Not Qt's
+    // SpringAnimation: that steps every 16 ms, so it moves at 60 fps on any screen.)
+    readonly property var springCurve: [0.22, 1.0, 0.36, 1.1, 1, 1]
+    readonly property int springMs: 520
     // the soft shadow under floating shapes (drawn by the shell, no compositor blur)
     readonly property real shadowBlur: 0.9
     readonly property color shadowColor: Qt.rgba(0, 0, 0, dark ? 0.55 : 0.28)
