@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../../core"
 import "../../ui"
 
@@ -12,6 +13,22 @@ ColumnLayout {
     SettingRow {
         icon: "volume_up"; title: "Sound"; desc: "A short sound when a notification arrives"
         Toggle { checked: Store.get("notifications.sound", true); onToggled: on => Store.set("notifications.sound", on) }
+    }
+    SettingRow {
+        icon: "music_note"; title: "Your own sound"; desc: "A sound file (.oga, .wav, .mp3). Empty: the system's"
+        Row {
+            spacing: 6
+            Field { width: 240; text: Store.get("notifications.soundFile", ""); placeholder: "/path/to/sound.oga"; onAccepted: v => { const p = v.trim().replace(/^~/, Wall.home); if (p !== Store.get("notifications.soundFile", "")) Store.set("notifications.soundFile", p); } }
+            Button { text: "Play"; icon: "play_arrow"; onClicked: Notifs.playSound(false) }
+        }
+    }
+    SettingRow {
+        icon: "timer"; title: "How long they stay"; desc: "Unless the app says otherwise; urgent ones stay until closed"
+        Segmented { width: 260; opts: [["4", "4 s"], ["6", "6 s"], ["10", "10 s"]]; value: String(Store.get("notifications.timeout", 6)); onPicked: v => Store.set("notifications.timeout", Number(v)) }
+    }
+    SettingRow {
+        icon: "science"; title: "Try it"; desc: "Send a test notification"
+        Button { text: "Send"; icon: "send"; onClicked: Quickshell.execDetached(["notify-send", "-a", "Monolith", "This is how it looks", "Notifications pop up like this."]) }
     }
     SettingRow {
         icon: "notifications_active"; title: "How they pop up"; desc: "Out of the island on the screen you're using, or as cards in a corner"

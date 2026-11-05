@@ -10,20 +10,26 @@ import "../ui"
 Page {
     id: page
     pageId: "settings"
-    implicitHeight: 600
+    implicitHeight: 680
     readonly property string section: HubState.settingsSection
 
     readonly property var sections: [
+        ["general", "General", "person", "General"],
         ["appearance", "Appearance", "palette", "Appearance"],
         ["wallpaper", "Wallpaper", "wallpaper", "Wallpaper"],
+        ["colours", "App colours", "format_paint", "Colours"],
+        ["fastfetch", "Fastfetch", "terminal", "Fastfetch"],
         ["status", "Island", "toolbar", "Status"],
         ["dock", "Dock", "dock_to_bottom", "Dock"],
         ["desktop", "Desktop", "widgets", "Desktop"],
+        ["windows", "Windows", "select_window", "Windows"],
         ["search", "Search", "search", "Search"],
         ["notifications", "Notifications", "notifications", "Notifications"],
         ["osd", "On-screen display", "featured_video", "Osd"],
         ["display", "Displays", "monitor", "Display"],
+        ["nightlight", "Night light", "nightlight", "Night"],
         ["input", "Keyboard & mouse", "keyboard", "Input"],
+        ["devices", "Mic & camera", "mic", "Devices"],
         ["idle", "Lock & idle", "lock_clock", "Idle"],
         ["capture", "Screenshots", "screenshot_region", "Capture"],
         ["software", "Software", "apps", "Software"],

@@ -20,10 +20,11 @@ ShellRoot {
     Variants { model: Quickshell.screens; Osd {} }
     Variants { model: Quickshell.screens; CaptureOverlay {} }
     Variants { model: Quickshell.screens; PerfOverlay {} }
+    Variants { model: Quickshell.screens; Dim {} }
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own
-    Component.onCompleted: { Notifs.dnd; Idle.enabled; Wall.path; Wellbeing.loaded; Updates.available; if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
+    Component.onCompleted: { Notifs.dnd; Idle.enabled; Wall.path; Wellbeing.loaded; Updates.available; NightLight.enabled; AppColours.targets; if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
     // first launch: the welcome tour
     Connections {
         target: Store

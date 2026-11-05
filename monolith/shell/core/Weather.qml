@@ -3,12 +3,14 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// The weather from Open-Meteo for your location (from Monolith's settings: General → Location),
-// refreshed every 20 minutes: now, the next hours and the next days.
+// The weather from Open-Meteo for your location (Settings → General: a place you picked, or
+// found from your connection), refreshed every 20 minutes (or as set): now, the next hours,
+// the next days.
 Singleton {
     id: w
-    readonly property var loc: (Prefs.raw.general && Prefs.raw.general.location) ? Prefs.raw.general.location : null
-    readonly property bool metric: !(Prefs.raw.general && Prefs.raw.general.weatherUnit === "imperial")
+    readonly property var loc: Store.get("weather.location", null) || ((Prefs.raw.general && Prefs.raw.general.location) ? Prefs.raw.general.location : null)
+    readonly property bool metric: Store.get("weather.unit", (Prefs.raw.general && Prefs.raw.general.weatherUnit === "imperial") ? "imperial" : "metric") !== "imperial"
+    onMetricChanged: refresh()
     readonly property string city: loc ? (loc.city || "") : ""
     property var current: null      // { temp, code, day }
     property var hours: []          // [{ time, temp, code, rain }]
@@ -65,6 +67,6 @@ Singleton {
             }
         }
     }
-    Timer { interval: 20 * 60 * 1000; running: true; repeat: true; triggeredOnStart: true; onTriggered: w.refresh() }
+    Timer { interval: Number(Store.get("weather.interval", 20)) * 60 * 1000; running: true; repeat: true; triggeredOnStart: true; onTriggered: w.refresh() }
     onLocChanged: refresh()
 }

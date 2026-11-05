@@ -25,7 +25,9 @@ PanelWindow {
     readonly property bool emptyWs: !!activeWs && !Niri.workspaceHasWindows(activeWs.id)
     property bool hovering: false
     readonly property bool enabled: Store.get("dock.enabled", true)
-    readonly property bool shown: enabled && ((emptyWs && Store.get("dock.onEmpty", true)) || hovering || leaveDelay.running || menu.visible)
+    // when it shows: always, on empty workspaces (and at the bottom edge), or only at the edge
+    readonly property string showWhen: Store.get("dock.show", Store.get("dock.onEmpty", true) ? "empty" : "edge")
+    readonly property bool shown: enabled && (showWhen === "always" || (emptyWs && showWhen === "empty") || hovering || leaveDelay.running || menu.visible)
 
     Item { id: hotZone; anchors.bottom: parent.bottom; width: parent.width; height: 3 }
     HoverHandler {
@@ -51,6 +53,8 @@ PanelWindow {
         const pinned = pinnedList.map(a => ({ id: a.id, name: a.name, icon: a.icon, pinned: true }));
         const known = pinned.map(p => p.id.toLowerCase());
         const extra = [];
+        // open apps that aren't pinned (unless that's switched off)
+        if (Store.get("dock.running", true) === false) return pinned;
         for (const k in Niri.windows) {
             const w = Niri.windows[k];
             const id = (w.app_id || "").toLowerCase();
@@ -63,14 +67,14 @@ PanelWindow {
 
     Rectangle {
         id: capsule
-        readonly property real cell: 56
+        readonly property real cell: Number(Store.get("dock.size", 56))
         width: appsRow.width + 16
         height: cell + 16
         anchors.horizontalCenter: parent.horizontalCenter
         y: dock.shown ? parent.height - height - 12 : parent.height + 8
         Behavior on y { NumberAnimation { duration: dock.shown ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         radius: Theme.corner(height, 8)
-        color: Theme.card
+        color: Qt.alpha(Theme.card, Number(Store.get("dock.opacity", 1)))
         border.width: 1
         border.color: Theme.hairline
 
@@ -105,15 +109,16 @@ PanelWindow {
                     }
                     Image {
                         anchors.centerIn: parent
-                        width: 38; height: 38
-                        sourceSize: Qt.size(76, 76)
+                        width: Math.round(capsule.cell * 0.68); height: width
+                        sourceSize: Qt.size(128, 128)
                         source: dock.iconFor(app.modelData.icon)
                         smooth: true; mipmap: true
-                        scale: app.pressed ? 0.9 : (app.hovered ? 1.08 : 1)
+                        scale: app.pressed ? 0.9 : (app.hovered ? (Store.get("dock.magnify", false) === true ? 1.3 : 1.08) : 1)
                         Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                     }
                     // one dot per open window (up to three)
                     Row {
+                        visible: Store.get("dock.dots", true) !== false
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 3

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
+import Quickshell.Io
 import "../core"
 import "../ui"
 
@@ -42,6 +43,38 @@ PanelWindow {
     }
     Timer { id: hold; interval: 1400 }
 
+    // Caps Lock and Num Lock (the keyboard's lights), and airplane mode (every radio off)
+    property string capsPath: ""
+    property string numPath: ""
+    property int caps: -1
+    property int num: -1
+    property int air: -1
+    Process {
+        running: osd.here
+        command: ["sh", "-c", "ls -d /sys/class/leds/*::capslock 2>/dev/null | head -1; ls -d /sys/class/leds/*::numlock 2>/dev/null | head -1"]
+        stdout: StdioCollector { onStreamFinished: { const l = text.trim().split("\n"); osd.capsPath = l[0] || ""; osd.numPath = l[1] || ""; } }
+    }
+    FileView { id: capsF; path: osd.capsPath !== "" ? osd.capsPath + "/brightness" : ""; blockLoading: true; printErrors: false }
+    FileView { id: numF; path: osd.numPath !== "" ? osd.numPath + "/brightness" : ""; blockLoading: true; printErrors: false }
+    Process {
+        id: rfk
+        command: ["sh", "-c", "set -- /sys/class/rfkill/rfkill*/soft; [ -e \"$1\" ] || exit 0; for f; do [ \"$(cat $f)\" = 0 ] && { echo 0; exit; }; done; echo 1"]
+        stdout: StdioCollector { onStreamFinished: { const v = parseInt(text); if (!isNaN(v)) { if (osd.air !== -1 && v !== osd.air) { osd.air = v; osd.flash("airplane"); } else osd.air = v; } } }
+    }
+    function check(f, old) {
+        f.reload();
+        const v = parseInt(f.text());
+        return isNaN(v) ? old : (v > 0 ? 1 : 0);
+    }
+    Timer {
+        interval: 250; repeat: true; running: osd.here && Store.get("osd.enabled", true) !== false
+        onTriggered: {
+            if (osd.capsPath !== "") { const c = osd.check(capsF, osd.caps); if (osd.caps !== -1 && c !== osd.caps) { osd.caps = c; osd.flash("caps"); } else osd.caps = c; }
+            if (osd.numPath !== "") { const n = osd.check(numF, osd.num); if (osd.num !== -1 && n !== osd.num) { osd.num = n; osd.flash("num"); } else osd.num = n; }
+        }
+    }
+    Timer { interval: 2000; repeat: true; running: osd.here && Store.get("osd.enabled", true) !== false; onTriggered: rfk.running = true }
+
     Rectangle {
         id: pill
         anchors.fill: parent
@@ -60,13 +93,17 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             size: 40
             on: true
-            icon: osd.kind === "layout" ? "keyboard" : (osd.audio && (osd.audio.muted || osd.audio.volume === 0) ? "volume_off" : "volume_up")
+            icon: ({ layout: "keyboard", caps: "keyboard_capslock", num: "pin", airplane: osd.air === 1 ? "airplanemode_active" : "airplanemode_inactive" })[osd.kind]
+                || (osd.audio && (osd.audio.muted || osd.audio.volume === 0) ? "volume_off" : "volume_up")
         }
         Label {
-            visible: osd.kind === "layout"
+            visible: osd.kind !== "volume"
             anchors.left: ob.right; anchors.leftMargin: 14
             anchors.verticalCenter: parent.verticalCenter
-            text: Niri.layoutName
+            text: osd.kind === "layout" ? Niri.layoutName
+                : (osd.kind === "caps" ? "Caps Lock " + (osd.caps === 1 ? "on" : "off")
+                : (osd.kind === "num" ? "Num Lock " + (osd.num === 1 ? "on" : "off")
+                : "Airplane mode " + (osd.air === 1 ? "on" : "off")))
             strong: true
         }
         Item {

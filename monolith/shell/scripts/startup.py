@@ -13,6 +13,7 @@ import configparser
 import glob
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -110,7 +111,19 @@ def cmd_run():
 
 
 def appimage_entry(f):
-    return DATA + "/applications/appimage-" + os.path.splitext(os.path.basename(f))[0].replace(" ", "_") + ".desktop"
+    """The app entry for this AppImage: one that runs it (whoever made it), else the name
+    one made here gets."""
+    own = DATA + "/applications/appimage-" + os.path.splitext(os.path.basename(f))[0].replace(" ", "_") + ".desktop"
+    if os.path.exists(own):
+        return own
+    for d in glob.glob(DATA + "/applications/*.desktop"):
+        try:
+            text = open(d, encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        if f in text and re.search(r"^(Exec|X-Monolith-AppImage)=.*" + re.escape(f), text, re.M):
+            return d
+    return own
 
 
 def appimage_icon(f, name):

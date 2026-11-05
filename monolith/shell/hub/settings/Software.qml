@@ -74,4 +74,29 @@ ColumnLayout {
             }
         }
     }
+
+    // ── cleanup: what can go (Portage, pacman, AUR, Flatpak, whichever are here) ──
+    readonly property string cleanScript: Qt.resolvedUrl("../../scripts/cleanup.sh").toString().replace("file://", "")
+    property var checks: []
+    Process {
+        id: checkProc
+        running: true
+        command: ["sh", sec.cleanScript, "status"]
+        stdout: StdioCollector { onStreamFinished: sec.checks = text.split("\n").filter(l => l).map(l => l.split("\t")) }
+    }
+    Label { text: "Clean up"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
+    Repeater {
+        model: sec.checks
+        SettingRow {
+            required property var modelData
+            icon: ({ world: "list_alt", depclean: "account_tree", distfiles: "download", orphans: "account_tree", pkgcache: "inventory_2", aurcache: "build", flatunused: "deployed_code", flatdata: "folder_delete" })[modelData[0]] || "cleaning_services"
+            title: modelData[1]; desc: modelData[2]
+            // the cleaning runs in a terminal and asks before removing anything
+            Button {
+                text: modelData[0] === "world" ? "Show" : "Clean…"
+                onClicked: { HubState.close(); Quickshell.execDetached(["sh", "-c", Prefs.terminal + " sh \"$1\" run \"$2\"", "_", sec.cleanScript, modelData[0]]); }
+            }
+        }
+    }
+    Button { text: "Check again"; icon: "refresh"; onClicked: checkProc.running = true }
 }

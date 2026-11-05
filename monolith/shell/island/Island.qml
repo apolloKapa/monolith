@@ -19,7 +19,8 @@ PanelWindow {
     readonly property bool shown: HubState.open && here
 
     WlrLayershell.namespace: "monolith-island"
-    WlrLayershell.layer: WlrLayer.Top
+    // above fullscreen windows while open (a keybind over a game or video still shows it)
+    WlrLayershell.layer: shown || wasOpen || toastOn ? WlrLayer.Overlay : WlrLayer.Top
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
