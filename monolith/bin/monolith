@@ -3,7 +3,8 @@
 #   monolith start [--login] | restart | stop     the shell (--login: also the startup apps)
 #   monolith msg toggle|open <page>               what the keybinds call
 #   monolith hub <page> | search <text> | settings <section> | appimages | lock
-#   monolith screenshot [--full] [--edit]
+#   monolith screenshot [--full] [--edit]     the capture overlay (--full alone: whole screen now)
+#   monolith record-menu                      the capture overlay, set to video
 #   monolith zoom in | out
 #   monolith timer <minutes> | record [region]
 #   monolith set <setting> <json> | get <setting>
@@ -83,14 +84,11 @@ case "$1" in
     screenshot)
         full=0; edit=0
         for a in "$@"; do case "$a" in --full) full=1 ;; --edit) edit=1 ;; esac; done
-        if [ $edit = 1 ]; then
-            mkdir -p "$shots"
-            f="$shots/Screenshot_$(date +%Y%m%d_%H%M%S).png"
-            if [ $full = 1 ]; then grim "$f"; else g=$(slurp) || exit 0; grim -g "$g" "$f"; fi
-            exec satty --filename "$f" --output-filename "$f"
-        fi
-        [ $full = 1 ] && exec niri msg action screenshot-screen
-        exec niri msg action screenshot
+        # the whole screen straight away; otherwise the capture overlay (its menu: photo/video,
+        # save, copy, edit, text, QR), on the whole screen with --full --edit
+        [ $full = 1 ] && [ $edit = 0 ] && exec niri msg action screenshot-screen
+        edit_b=$([ $edit = 1 ] && echo true || echo false)
+        ipc capture start photo "$([ $full = 1 ] && echo screen || echo region)" "$edit_b"
         ;;
     zoom)
         # wooz: a zoomable picture of the screen. The first step opens it (scroll in it to zoom,
@@ -101,6 +99,7 @@ case "$1" in
         esac
         ;;
     timer) ipc tasks timer "${2:-0}" ;;
+    record-menu) ipc capture start video region false ;;
     record) ipc tasks record "$([ "$2" = region ] && echo true || echo false)" ;;
     set) ipc store set "$2" "$3" ;;
     get) ipc store get "$2" ;;
@@ -113,5 +112,5 @@ case "$1" in
         echo "No installer found." >&2; exit 1
         ;;
     migrate) migrate ;;
-    *) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//' ;;
+    *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//' ;;
 esac

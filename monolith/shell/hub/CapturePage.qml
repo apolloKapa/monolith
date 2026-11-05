@@ -60,8 +60,8 @@ Page {
             columns: 3
             rowSpacing: 8
             columnSpacing: 8
-            Action { icon: "screenshot_region"; title: "Region"; sub: "Pick an area"; onClicked: page.later(["niri", "msg", "action", "screenshot"]) }
-            Action { icon: "screenshot_monitor"; title: "Screen"; sub: "The whole screen"; onClicked: page.later(["niri", "msg", "action", "screenshot-screen"]) }
+            Action { icon: "screenshot_region"; title: "Region"; sub: "Pick an area"; onClicked: Capture.start({ mode: "region" }) }
+            Action { icon: "screenshot_monitor"; title: "Screen"; sub: "The whole screen"; onClicked: Capture.start({ mode: "screen" }) }
             Action { icon: "select_window"; title: "Window"; sub: "The focused window"; onClicked: page.later(["niri", "msg", "action", "screenshot-window"]) }
             Action {
                 icon: "document_scanner"; title: "Text from region"; sub: "Recognise text, copy it"
@@ -70,13 +70,13 @@ Page {
             Action {
                 icon: page.recording ? "stop_circle" : "videocam"; on: page.recording
                 title: page.recording ? "Stop recording" : "Record region"; sub: page.recording ? "Saves to ~/Videos/Recordings" : "Pick an area"
-                onClicked: page.recording ? Tasks.stopRecording() : page.startRecording(true)
+                onClicked: page.recording ? Tasks.stopRecording() : Capture.start({ kind: "video", mode: "region" })
             }
             Action {
                 icon: "screen_record"; title: "Record screen"; sub: "The whole screen"
                 enabledInput: !page.recording
                 opacity: page.recording ? 0.5 : 1
-                onClicked: page.startRecording(false)
+                onClicked: Capture.start({ kind: "video", mode: "screen" })
             }
         }
 
