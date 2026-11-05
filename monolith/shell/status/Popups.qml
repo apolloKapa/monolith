@@ -18,7 +18,7 @@ PanelWindow {
     // where they stack (Settings → Notifications): top-right, top-left, bottom-right, bottom-left
     readonly property string corner: Store.get("notifications.position", "top-right")
     anchors { top: corner.startsWith("top"); bottom: corner.startsWith("bottom"); right: corner.endsWith("right"); left: corner.endsWith("left") }
-    margins { top: 46; bottom: 16; right: 12; left: 12 }
+    margins { top: Theme.islandH + 16; bottom: 16; right: 12; left: 12 }
     // a fixed size (resizing a layer surface while it draws lost frames); only the cards take clicks
     implicitWidth: 390
     implicitHeight: 720

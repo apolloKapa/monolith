@@ -16,7 +16,7 @@ Page {
     readonly property var sections: [
         ["appearance", "Appearance", "palette", "Appearance"],
         ["wallpaper", "Wallpaper", "wallpaper", "Wallpaper"],
-        ["status", "Status line", "toolbar", "Status"],
+        ["status", "Island", "toolbar", "Status"],
         ["dock", "Dock", "dock_to_bottom", "Dock"],
         ["desktop", "Desktop", "widgets", "Desktop"],
         ["search", "Search", "search", "Search"],

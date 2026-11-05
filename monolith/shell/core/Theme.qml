@@ -47,7 +47,10 @@ Singleton {
     // font and corner radius: this shell's setting, else Monolith's
     property string oldFont: "sans-serif"
     property real oldRadius: 12
-    readonly property string fontFamily: Store.get("theme.font", "") !== "" ? Store.get("theme.font", "") : oldFont
+    // the default is Google Sans when it's installed (the look is built around it)
+    readonly property bool hasGoogleSans: Qt.fontFamilies().indexOf("Google Sans") !== -1
+    readonly property string defaultFont: hasGoogleSans ? "Google Sans" : oldFont
+    readonly property string fontFamily: Store.get("theme.font", "") !== "" ? Store.get("theme.font", "") : defaultFont
     readonly property real radiusSetting: Number(Store.get("theme.radius", oldRadius))
     FileView {
         path: theme.configFile
@@ -88,6 +91,7 @@ Singleton {
     readonly property color onAccentContainer: m("on_primary_container", text)
     // a selection: Material's secondary container
     readonly property color selected: m("secondary_container", mix(_s1, accent, 0.22))
+    readonly property color ringTrack: Qt.alpha(text, 0.14)   // the empty part of rings and bars
     readonly property color danger: m("error", c("red", "#ffb4ab"))
 
     // ── shape ──
@@ -103,10 +107,30 @@ Singleton {
     readonly property int exitMs: 200
     readonly property int moveMs: 380
 
+    // ── the island (status line + hub in one shape hanging from the top edge) ──
+    readonly property color frame: m("surface", mix(_base, _s0, 0.35))   // the island's fill
+    readonly property real islandH: 40          // collapsed: the bar's height
+    readonly property real islandMinW: 460      // collapsed: never narrower
+    readonly property real islandEar: 20        // the concave curve joining the screen edge
+    readonly property real islandPad: 12        // inside, around the content
+    readonly property real islandGap: 8         // between the island and the screen edge when open
+    readonly property real islandRadius: Math.max(14, radius + 12)  // its lower corners when open
+    // springs for the island's size (a little overshoot, settles fast)
+    readonly property real springK: 4.2
+    readonly property real springDamp: 0.42
+    readonly property real springMass: 1.0
+    // the soft shadow under floating shapes (drawn by the shell, no compositor blur)
+    readonly property real shadowBlur: 0.9
+    readonly property color shadowColor: Qt.rgba(0, 0, 0, dark ? 0.55 : 0.28)
+    readonly property real shadowY: 6
+
     // ── type ──
+    readonly property int sizeTiny: 9
     readonly property int sizeSmall: 11
     readonly property int sizeBody: 13
     readonly property int sizeTitle: 16
+    readonly property int sizeHeadline: 24
+    readonly property int sizeDisplay: 44
     // Google's Material Symbols (ligatures: Icon { name: "wifi" })
     readonly property string iconFont: "Material Symbols Rounded"
 }

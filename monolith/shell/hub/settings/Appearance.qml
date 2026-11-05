@@ -65,8 +65,8 @@ ColumnLayout {
         }
     }
     SettingRow {
-        icon: "font_download"; title: "Font"; desc: "Empty: the font from Monolith's settings (" + Theme.oldFont + ")"
-        Field { text: Store.get("theme.font", ""); placeholder: Theme.oldFont; onAccepted: v => Store.set("theme.font", v.trim()) }
+        icon: "font_download"; title: "Font"; desc: "Empty: " + Theme.defaultFont
+        Field { text: Store.get("theme.font", ""); placeholder: Theme.defaultFont; onAccepted: v => Store.set("theme.font", v.trim()) }
     }
 
     SettingRow { icon: "interests"; title: "Icons"; desc: "The icon theme apps use" + (sec.iconTheme ? " (now " + sec.iconTheme + ")" : "") }

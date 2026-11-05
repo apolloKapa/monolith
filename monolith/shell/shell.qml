@@ -3,16 +3,17 @@ import QtQuick
 import Quickshell
 import "core"
 import "status"
+import "island"
 import "hub"
 import "dock"
 import "wall"
 import "lock"
 
-// Monolith: a status line on every screen, the hub, the dock, notification popups, the OSD.
+// Monolith: the island on every screen (bar + every page), the dock, notification popups, the OSD.
 ShellRoot {
     Variants { model: Quickshell.screens; Background {} }
-    Variants { model: Quickshell.screens; StatusLine {} }
-    Variants { model: Quickshell.screens; Hub {} }
+    Variants { model: Quickshell.screens; Reserve {} }
+    Variants { model: Quickshell.screens; Island {} }
     Variants { model: Quickshell.screens; Dock {} }
     Variants { model: Quickshell.screens; Popups {} }
     Variants { model: Quickshell.screens; Osd {} }

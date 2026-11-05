@@ -26,6 +26,8 @@ Singleton {
     property string preset: ""
     signal presetRequested()
     function search(text) { show("search"); preset = text; presetRequested(); }
+    // the control center's tab: controls | overview | monitor
+    property string ccTab: "controls"
     // Settings opened at a section (keybinds, the island, other pages)
     property string settingsSection: "appearance"
     function openSettings(section, screen) { if (section) settingsSection = section; show("settings", screen); }
@@ -37,6 +39,8 @@ Singleton {
         function open(page: string): void { hub.show(page); }
         function close(): void { hub.close(); }
         function search(text: string): void { hub.search(text); }
+        // the control center at a tab: controls | overview | monitor
+        function controlcenter(tab: string): void { if (tab) hub.ccTab = tab; hub.show("quick"); }
     }
     IpcHandler {
         target: "settings"
