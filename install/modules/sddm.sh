@@ -97,7 +97,7 @@ setup_sddm() {
         sudo rm -f /etc/sddm.conf
     fi
 
-    local sddm_theme_src="$project_root/monolith/sddm/themes/monolith"
+    local sddm_theme_src="$project_root/sddm/themes/monolith"
     local sddm_theme_dest="/usr/share/sddm/themes/monolith"
 
     if [ -d "$sddm_theme_src" ]; then

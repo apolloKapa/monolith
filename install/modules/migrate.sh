@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Other shells on the same PC. Monolith is its own shell with its own files (~/.local/share/monolith,
-# ~/.config/monolith, ~/.local/state/monolith, monolith/monolithd): it never stops, moves or edits
+# ~/.config/monolith, ~/.local/state/monolith, the monolith command): it never stops, moves or edits
 # another shell, its files, or the configs of other compositors. When Serpantinum is installed it
 # keeps running in its own sessions (e.g. Hyprland) and Monolith runs in niri next to it.
 

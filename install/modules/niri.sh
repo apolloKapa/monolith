@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# niri setup: modular config from monolith/compositors/niri, plus output.kdl and
+# niri setup: modular config from config/niri, plus output.kdl and
 # workspaces.kdl generated from the monitors on this machine.
 
 NIRI_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/niri"
@@ -83,7 +83,7 @@ personal_startup_lines() {
     local defaults
     defaults="$(grep -rhE '^\s*spawn(-sh)?-at-startup' "$src" 2>/dev/null | sed 's/^\s*//')"
     grep -rhE '^\s*spawn(-sh)?-at-startup' "$NIRI_DIR" --include='*.kdl' 2>/dev/null | sed 's/^\s*//' \
-        | grep -v -e serpantinum -e monolithd \
+        | grep -v -e serpantinum -e monolithd -e '/monolith" "start"' -e '"monolith" "start"' \
         | grep -vxF -f <(printf '%s\n' "$defaults") \
         | awk '!seen[$0]++'
 }
@@ -97,7 +97,7 @@ upgrade_local_bin_commands() {
     for f in "$NIRI_DIR"/config.kdl "$NIRI_DIR"/config/*.kdl; do
         [ -f "$f" ] || continue
         sed -i \
-            -e 's|^\([[:space:]]*\)spawn-at-startup "monolithd" "start".*$|\1spawn-at-startup "bash" "-c" "export PATH=\\"$HOME/.local/bin:$PATH\\"; exec \\"$HOME/.local/bin/monolithd\\" start"|' \
+            -e "s|^\\([[:space:]]*\\)spawn-at-startup \"monolith\" \"start\"|\\1spawn-at-startup \"$bin/monolith\" \"start\"|" \
             -e "s|spawn \"monolith\"|spawn \"$bin/monolith\"|g" \
             "$f"
     done
@@ -168,12 +168,12 @@ PY
 setup_niri_config() {
     local project_root="$1"
     local mode="${2:-replace}"   # replace | keep
-    local src="$project_root/monolith/compositors/niri"
+    local src="$project_root/config/niri"
 
     if [ "$mode" = "keep" ] && [ -f "$NIRI_DIR/config.kdl" ]; then
         echo -e "  ${C_CYAN}niri:${RESET} keeping your existing config"
-        grep -q "monolithd" -r "$NIRI_DIR" 2>/dev/null || \
-            echo -e "  ${C_YELLOW}niri:${RESET} add  spawn-at-startup \"monolithd\" \"start\"  to it so the shell starts"
+        grep -q -e "monolithd" -e '/monolith" "start"' -r "$NIRI_DIR" 2>/dev/null || \
+            echo -e "  ${C_YELLOW}niri:${RESET} add  spawn-at-startup \"$HOME/.local/bin/monolith\" \"start\" \"--login\"  to it so the shell starts"
         return 0
     fi
 

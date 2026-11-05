@@ -43,7 +43,7 @@ gitx() {
     fi
 }
 
-if [ ! -d "$PROJECT_ROOT/monolith/src" ]; then
+if [ ! -d "$PROJECT_ROOT/monolith/shell" ]; then
     if ! command -v git &>/dev/null; then
         if command -v pacman &>/dev/null; then sudo pacman -Sy --noconfirm --needed git
         else sudo emerge --ask=n --noreplace dev-vcs/git; fi
@@ -81,17 +81,15 @@ source "$MODULES_DIR/sddm.sh"
 source "$MODULES_DIR/wallpapers.sh"
 source "$MODULES_DIR/migrate.sh"
 source "$MODULES_DIR/ui.sh"
+source "$MODULES_DIR/strings.sh"
 
-# read the install state before i18n.sh: sourcing it creates Monolith's state dir + version stamp
+# read the install state first (later steps create the state folder)
 INSTALL_STATE="$(detect_install_state)"
 OLD_VERSION="$(installed_version)"
 TARGET_VERSION="$(repo_version "$PROJECT_ROOT")"
 TARGET_COMMIT="$(repo_commit "$PROJECT_ROOT")"
 
 bootstrap_installer_deps
-export MONOLITH_DIR="$PROJECT_ROOT/monolith/src"
-export I18N_DIR="$MONOLITH_DIR/assets/languages"
-source "$MONOLITH_DIR/scripts/i18n.sh"
 
 
 if [ "$UPDATE_ONLY" = true ]; then
@@ -110,12 +108,12 @@ install_dependencies "$PROJECT_ROOT" "$INSTALL_STATE"
 
 step "Monolith shell"
 SHELL_WAS_RUNNING=false
-monolithd status >/dev/null 2>&1 && SHELL_WAS_RUNNING=true
+# this shell, or (on an older install) the classic one
 pgrep -f 'quickshell -p [^ ]*/shell/shell\.qml' >/dev/null && SHELL_WAS_RUNNING=true
-monolithd stop >/dev/null 2>&1 || true
+pgrep -f 'quickshell -p [^ ]*/quickshell/Shell\.qml' >/dev/null && SHELL_WAS_RUNNING=true
 pkill -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null || true
+command -v monolithd >/dev/null 2>&1 && monolithd stop >/dev/null 2>&1 || true
 deploy_shell "$PROJECT_ROOT"
-deploy_next_shell "$PROJECT_ROOT"
 install_desktop_entry "$PROJECT_ROOT"
 deploy_dotfiles_extras "$PROJECT_ROOT"
 setup_pam_service
@@ -125,9 +123,9 @@ setup_niri_config "$PROJECT_ROOT" "$NIRI_MODE"
 # screenshot binds -> Monolith's screenshot tool, and let its keys (e.g. Meta+C copy) through niri
 upgrade_screenshot_binds "$NIRI_DIR/config/keybinds.kdl" >/dev/null
 upgrade_rofi_binds "$NIRI_DIR/config/keybinds.kdl"
-bash "$SHELL_HOME/src/scripts/niri_screenshot_keys.sh" >/dev/null 2>&1 || true
 upgrade_local_bin_commands
-apply_shell_choice "$SHELL_CHOICE"
+# an older config (the classic shell's monolithd, its zoom script) moves over to this shell
+"$BIN_DIR/monolith" migrate
 
 if [ "$OPT_SDDM" = true ]; then
     step "Login screen"
@@ -140,7 +138,7 @@ if [ "$WALLPAPERS" != none ]; then
 fi
 
 step "Settings"
-[ "$IS_REINSTALL" = true ] && rm -f "$SETTINGS_FILE"
+[ "$IS_REINSTALL" = true ] && rm -f "$SETTINGS_FILE" "$HOME/.config/monolith/next.json"
 init_settings "$PROJECT_ROOT" "$(get_wallpaper_dir)"
 # another shell (Serpantinum) on this PC: leave it and its app colours alone
 share_with_other_shell
@@ -148,18 +146,12 @@ share_with_other_shell
 step "Services"
 setup_services
 write_version_state "$PROJECT_ROOT"
-# fresh installs get the intro
-[[ "$INSTALL_STATE" == fresh || "$IS_REINSTALL" == true ]] && rm -f "$STATE_DIR/first_launch.done"
 
 # switch over right away when we're inside a niri session (no reboot needed). niri only runs
 # spawn-at-startup at login, so a fresh install has to start the shell itself. In any other
 # session (Hyprland with Serpantinum, ...) Monolith waits until you log into niri.
 if [ -n "$WAYLAND_DISPLAY" ] && [ -n "$NIRI_SOCKET" ] && { [ "$UPDATE_ONLY" != true ] || [ "$SHELL_WAS_RUNNING" = true ]; }; then
-    if [ "$SHELL_CHOICE" = next ] && [ -x "$BIN_DIR/monolith-next" ]; then
-        "$BIN_DIR/monolith-next" start >/dev/null 2>&1 < /dev/null
-    else
-        setsid "$BIN_DIR/monolithd" start >/dev/null 2>&1 < /dev/null &
-    fi
+    "$BIN_DIR/monolith" start >/dev/null 2>&1 < /dev/null
     MONOLITH_STARTED=true
 fi
 

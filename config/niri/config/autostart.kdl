@@ -1,0 +1,16 @@
+// Autostart
+// Part of Monolith's niri setup (included from ../config.kdl).
+// Only what Monolith needs: add your own apps below, e.g.
+//   spawn-at-startup "steam" "-silent"
+
+// clipboard history (Monolith's clipboard panel reads it)
+spawn-at-startup "bash" "-c" "wl-paste --type text --watch cliphist store"
+spawn-at-startup "bash" "-c" "wl-paste --type image --watch cliphist store"
+
+// sound on OpenRC systems (Gentoo): PipeWire has no systemd user units there, so start it with
+// the session. Does nothing under systemd, or when PipeWire is already running
+spawn-at-startup "sh" "-c" "[ -d /run/systemd/system ] || ! command -v gentoo-pipewire-launcher >/dev/null || pgrep -x pipewire >/dev/null || exec gentoo-pipewire-launcher restart"
+
+// the shell, and your startup apps (the installer writes the full path: niri's PATH may not
+// have ~/.local/bin)
+spawn-at-startup "monolith" "start" "--login"

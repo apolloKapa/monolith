@@ -23,63 +23,22 @@ repo_commit() {
     git -C "$1" rev-parse --short HEAD 2>/dev/null || echo "local"
 }
 
-# the shell: ~/.local/share/monolith/{bin,src,install}, commands linked into ~/.local/bin
-# Monolith's own data that lives next to the shell; an update replaces the shell but keeps these
-# (they used to be deleted on every update: AppImage icons went missing, OCR languages too)
-SHELL_HOME_DATA=(appimage-icons app-icons tessdata)
-
+# the shell: ~/.local/share/monolith/{bin,shell,install}, `monolith` linked into ~/.local/bin.
+# Whatever was there (the classic shell on an older install) is replaced.
 deploy_shell() {
-    local project_root="$1" keep d
-    keep="$(mktemp -d)"
-    for d in "${SHELL_HOME_DATA[@]}"; do
-        [ -d "$SHELL_HOME/$d" ] && mv "$SHELL_HOME/$d" "$keep/"
-    done
+    local project_root="$1"
     rm -rf "$SHELL_HOME"
     mkdir -p "$SHELL_HOME" "$BIN_DIR"
-    for d in "${SHELL_HOME_DATA[@]}"; do
-        [ -d "$keep/$d" ] && mv "$keep/$d" "$SHELL_HOME/"
-    done
-    rmdir "$keep" 2>/dev/null
-    cp -r "$project_root/monolith/bin" "$project_root/monolith/src" "$project_root/monolith/version.txt" "$SHELL_HOME/"
-    # the shipped settings, for the Reset buttons in Settings
-    cp "$project_root/config/monolith/settings.json" "$SHELL_HOME/src/assets/default_settings.json" 2>/dev/null || true
+    cp -r "$project_root/monolith/bin" "$project_root/monolith/shell" "$project_root/monolith/LICENSE" "$project_root/monolith/version.txt" "$SHELL_HOME/"
     # a copy of the installer, so `monolith installer` works without the repo around
     cp -r "$project_root/install" "$SHELL_HOME/install"
     printf 'REPO_SLUG="%s"\nMONOLITH_BRANCH="%s"\n' "$REPO_SLUG" "$MONOLITH_BRANCH" > "$SHELL_HOME/install/source.env"
-    chmod +x "$SHELL_HOME"/bin/* "$SHELL_HOME"/install/*.sh
-    find "$SHELL_HOME/src/scripts" -type f -name "*.sh" -exec chmod +x {} +
+    chmod +x "$SHELL_HOME"/bin/* "$SHELL_HOME"/install/*.sh "$SHELL_HOME"/shell/scripts/*
     ln -sf "$SHELL_HOME/bin/monolith" "$BIN_DIR/monolith"
-    ln -sf "$SHELL_HOME/bin/monolithd" "$BIN_DIR/monolithd"
+    # the classic shell's daemon and the new shell's trial copy are gone
+    rm -f "$BIN_DIR/monolithd" "$BIN_DIR/monolith-next"
+    rm -rf "$HOME/.local/share/monolith-next"
     echo -e "  ${C_GREEN}shell:${RESET} installed to $SHELL_HOME"
-}
-
-# the new shell (the GPL-3.0 rewrite in next/): ~/.local/share/monolith-next, `monolith-next`
-# in ~/.local/bin. Installed next to the classic one either way, so switching is one command.
-NEXT_HOME="$HOME/.local/share/monolith-next"
-deploy_next_shell() {
-    local project_root="$1"
-    [ -d "$project_root/next/shell" ] || return 0
-    rm -rf "$NEXT_HOME"
-    mkdir -p "$NEXT_HOME" "$BIN_DIR"
-    cp -r "$project_root/next/bin" "$project_root/next/shell" "$project_root/next/LICENSE" "$NEXT_HOME/"
-    chmod +x "$NEXT_HOME"/bin/* "$NEXT_HOME"/shell/scripts/*
-    ln -sf "$NEXT_HOME/bin/monolith-next" "$BIN_DIR/monolith-next"
-    echo -e "  ${C_GREEN}new shell:${RESET} installed to $NEXT_HOME"
-}
-
-# point the keybinds and login at the chosen shell (only Monolith's own lines change)
-apply_shell_choice() {
-    local choice="$1"
-    mkdir -p "$STATE_DIR"
-    echo "$choice" > "$STATE_DIR/shell"
-    [ -x "$BIN_DIR/monolith-next" ] || return 0
-    if [ "$choice" = next ]; then
-        "$BIN_DIR/monolith-next" adopt
-        echo -e "  ${C_GREEN}shell:${RESET} the new shell (keybinds and login point at it)"
-    else
-        "$BIN_DIR/monolith-next" release
-        echo -e "  ${C_GREEN}shell:${RESET} the classic shell"
-    fi
 }
 
 # icon packs that come with Monolith (config/icons/<pack>) go to ~/.local/share/icons, where
@@ -172,14 +131,14 @@ fi
 }
 
 # niri (via niri-session) gets its PATH from the systemd user manager, which on a fresh PC has
-# no ~/.local/bin: `spawn-at-startup "monolithd"` found nothing and the shell never started
+# no ~/.local/bin: `spawn-at-startup "monolith"` found nothing and the shell never started
 # (the plain grey niri screen), and every `spawn "monolith" ...` keybind did nothing.
 # environment.d puts it on the PATH of everything the session starts, from the next login.
 ensure_bin_on_path() {
     local conf="${XDG_CONFIG_HOME:-$HOME/.config}/environment.d/60-monolith-path.conf"
     if [ ! -f "$conf" ]; then
         mkdir -p "$(dirname "$conf")"
-        printf '# Added by the Monolith installer: its commands (monolith, monolithd) live here\nPATH=$HOME/.local/bin:${PATH}\n' > "$conf"
+        printf '# Added by the Monolith installer: its command (monolith) lives here\nPATH=$HOME/.local/bin:${PATH}\n' > "$conf"
         echo -e "  ${C_CYAN}path:${RESET} $BIN_DIR added to the session PATH ($conf)"
     fi
 }
@@ -219,20 +178,15 @@ SELECTED_COMPOSITORS="niri"
 EOF
 }
 
-# "Monolith Settings" in the app launcher: opens the settings window on its own
+# "Monolith Settings" in the app launcher: opens Settings in the hub
 install_desktop_entry() {
-    local project_root="$1"
-    local src_dir="$project_root/monolith/packaging/desktop"
-    local data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
-    local apps_dir="$data_home/applications"
-    local icons_dir="$data_home/icons/hicolor/scalable/apps"
-    [ -f "$src_dir/monolith-settings.desktop" ] || return 0
-    mkdir -p "$apps_dir" "$icons_dir"
-    sed "s|^Exec=.*|Exec=\"$BIN_DIR/monolith\" settings|" "$src_dir/monolith-settings.desktop" > "$apps_dir/monolith-settings.desktop"
-    [ -f "$src_dir/monolith-settings.svg" ] && cp "$src_dir/monolith-settings.svg" "$icons_dir/monolith-settings.svg"
-    # the AppImages window ("AppImages" in the launcher)
-    [ -f "$src_dir/monolith-appimages.desktop" ] && \
-        sed "s|^Exec=.*|Exec=\"$BIN_DIR/monolith\" appimages|" "$src_dir/monolith-appimages.desktop" > "$apps_dir/monolith-appimages.desktop"
+    local apps_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    mkdir -p "$apps_dir"
+    rm -f "$apps_dir/monolith-appimages.desktop"
+    printf '%s\n' "[Desktop Entry]" "Type=Application" "Name=Monolith Settings" \
+        "Comment=Appearance, displays, keyboard and mouse, startup apps and more" \
+        "Exec=\"$BIN_DIR/monolith\" settings" "Icon=preferences-system" "Categories=Settings;" \
+        > "$apps_dir/monolith-settings.desktop"
     command -v update-desktop-database >/dev/null && update-desktop-database "$apps_dir" >/dev/null 2>&1
     return 0
 }
