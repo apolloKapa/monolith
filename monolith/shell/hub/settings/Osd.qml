@@ -6,7 +6,7 @@ import "../../ui"
 ColumnLayout {
     spacing: 8
     SettingRow {
-        icon: "featured_video"; title: "On-screen display"; desc: "A small pill when the volume or keyboard layout changes"
+        icon: "featured_video"; title: "Show a pop-up"; desc: "A small pill when you change the volume, keyboard layout, Caps Lock or Num Lock"
         Toggle { checked: Store.get("osd.enabled", true) !== false; onToggled: on => Store.set("osd.enabled", on) }
     }
     SettingRow {

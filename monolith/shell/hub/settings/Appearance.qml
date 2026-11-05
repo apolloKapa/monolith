@@ -85,7 +85,7 @@ ColumnLayout {
     }
 
     SettingRow {
-        icon: "dark_mode"; title: "Colours"; desc: "Made from your wallpaper, dark or light"
+        icon: "dark_mode"; title: "Dark or light"; desc: "The shell's colours in dark or light (the style and colour theme are in Style & colours)"
         Segmented {
             opts: [["dark", "Dark"], ["light", "Light"]]; value: Theme.modeName
             onPicked: v => {
@@ -95,51 +95,84 @@ ColumnLayout {
         }
     }
     SettingRow {
-        icon: "apps"; title: "Apps follow"; desc: "Tell apps (GTK, Qt with a portal, browsers) to be dark or light with the shell"
+        icon: "apps"; title: "Apps switch too"; desc: "Apps (GTK, browsers, Qt with a portal) go dark or light with the shell"
         Toggle { checked: Store.get("theme.appsFollow", true) !== false; onToggled: on => Store.set("theme.appsFollow", on) }
     }
     SettingRow {
-        icon: "rounded_corner"; title: "Corner radius"; desc: "How round everything is"
+        icon: "rounded_corner"; title: "Roundness"; desc: "How round the corners of everything are (the style multiplies it)"
         NumberBox { from: 0; to: 60; slideTo: 40; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
     }
-    // ── font: the families rendered in themselves ──
+    // ── font: every family by name; the preview shows the one under the pointer (or the
+    // one in use) ──
     property string fontFilter: ""
+    property string fontHover: ""
     readonly property var families: {
         const f = fontFilter.toLowerCase();
-        // one entry per family (no "… Bold", "… NL" variants), the chosen one first
-        const all = Qt.fontFamilies().filter(n => !/ (Thin|Light|ExtraLight|Medium|SemiBold|Bold|ExtraBold|Black|Heavy|Obl|Italic|NL)\b/.test(n) && !/Material Symbols|Noto Color|Emoji|Awesome|Symbol|Dingbat|D050000L|Math|Nerd Font Propo|^Iosevka N?F/.test(n));
-        return all.filter(n => f === "" || n.toLowerCase().includes(f)).slice(0, f === "" ? 14 : 40);
+        // one entry per family (no "… Bold", "… NL" variants) and no symbol fonts
+        const all = Qt.fontFamilies().filter(n => !/ (Thin|Light|ExtraLight|Medium|SemiBold|Bold|ExtraBold|Black|Heavy|Obl|Italic|NL)\b/.test(n)
+            && !/Material Symbols|Noto Color|Emoji|Awesome|Symbol|Dingbat|D050000L|Math|Nerd Font Propo|Nerd Font Mono|^Iosevka N?F$/.test(n));
+        return all.filter(n => f === "" || n.toLowerCase().includes(f));
     }
+    readonly property string previewFont: fontHover !== "" ? fontHover : Theme.fontFamily
     SettingRow {
-        icon: "font_download"; title: "Font"; desc: "Now " + Theme.fontFamily + (Store.get("theme.font", "") === "" ? " (the default)" : "")
-        Field { width: 200; placeholder: "Find a font"; onAccepted: v => sec.fontFilter = v.trim() }
+        icon: "font_download"; title: "Font"
+        desc: "Used everywhere in the shell. Now " + Theme.fontFamily + (Store.get("theme.font", "") === "" ? " (the style's or the default)" : "")
+        Field { width: 220; placeholder: "Search " + sec.families.length + " fonts"; onAccepted: v => sec.fontFilter = v.trim() }
+    }
+    // the preview
+    Rectangle {
+        Layout.fillWidth: true
+        implicitHeight: pcol.implicitHeight + 28
+        radius: Theme.corner(80, 6)
+        color: Theme.container
+        border.width: Theme.outlineW
+        border.color: Theme.outlineColor
+        Column {
+            id: pcol
+            x: 18; y: 14
+            width: parent.width - 36
+            spacing: 4
+            Label { text: sec.fontHover !== "" ? "Preview: " + sec.fontHover : "In use: " + Theme.fontFamily; muted: true; font.pixelSize: Theme.sizeSmall }
+            Text { width: parent.width; text: "The quick brown fox jumps over the lazy dog"; elide: Text.ElideRight; color: Theme.text; font.family: sec.previewFont; font.pixelSize: 26 }
+            Text { width: parent.width; text: "Settings  ·  21:47  ·  Wi-Fi on  ·  0123456789  ·  Ελληνικά"; elide: Text.ElideRight; color: Theme.subtext; font.family: sec.previewFont; font.pixelSize: 15 }
+        }
     }
     Rectangle {
         Layout.fillWidth: true
-        implicitHeight: fontFlow.implicitHeight + 20
+        implicitHeight: Math.min(260, fontFlow.implicitHeight + 20)
         radius: Theme.corner(56, 2)
         color: Theme.containerHigh
-        Flow {
-            id: fontFlow
-            x: 10; y: 10
-            width: parent.width - 20
-            spacing: 6
-            Pressable {
-                height: 40; width: dl.implicitWidth + 28
-                color: Store.get("theme.font", "") === "" ? Theme.accentContainer : Theme.control
-                onClicked: Store.set("theme.font", "")
-                Label { id: dl; anchors.centerIn: parent; text: "Default"; strong: true; font.family: Theme.defaultFont }
-            }
-            Repeater {
-                model: sec.families
+        clip: true
+        Flickable {
+            anchors.fill: parent
+            anchors.margins: 10
+            contentHeight: fontFlow.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            Flow {
+                id: fontFlow
+                width: parent.width
+                spacing: 6
                 Pressable {
-                    required property string modelData
-                    readonly property bool on: Store.get("theme.font", "") === modelData
-                    height: 40
-                    width: Math.min(fontFlow.width, fl.implicitWidth + 28)
+                    readonly property bool on: Store.get("theme.font", "") === ""
+                    height: 34; width: dl.implicitWidth + 28
                     color: on ? Theme.accentContainer : Theme.control
-                    onClicked: Store.set("theme.font", modelData)
-                    Label { id: fl; anchors.centerIn: parent; text: parent.modelData; font.family: parent.modelData; font.pixelSize: Theme.sizeBody + 1; color: parent.on ? Theme.onAccentContainer : Theme.text }
+                    onClicked: Store.set("theme.font", "")
+                    onHoveredChanged: sec.fontHover = hovered ? (Theme.styleFont || Theme.defaultFont) : ""
+                    Label { id: dl; anchors.centerIn: parent; text: "Default"; strong: true; color: parent.on ? Theme.onAccentContainer : Theme.text; font.pixelSize: Theme.sizeSmall + 1 }
+                }
+                Repeater {
+                    model: sec.families
+                    Pressable {
+                        required property string modelData
+                        readonly property bool on: Store.get("theme.font", "") === modelData
+                        height: 34
+                        width: Math.min(fontFlow.width, fl.implicitWidth + 28)
+                        color: on ? Theme.accentContainer : Theme.control
+                        onClicked: Store.set("theme.font", modelData)
+                        onHoveredChanged: sec.fontHover = hovered ? modelData : (sec.fontHover === modelData ? "" : sec.fontHover)
+                        Label { id: fl; anchors.centerIn: parent; text: parent.modelData; strong: parent.on; color: parent.on ? Theme.onAccentContainer : Theme.text; font.pixelSize: Theme.sizeSmall + 1 }
+                    }
                 }
             }
         }

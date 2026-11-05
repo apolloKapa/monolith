@@ -82,7 +82,8 @@ ColumnLayout {
         Icon { visible: sc.on; x: parent.width - 28; y: 92; name: "check_circle"; filled: true; size: 18; color: Theme.accent }
     }
 
-    SettingRow { icon: "style"; title: "Style"; desc: "The whole look: shapes, outlines, shadows, type and its colours. Now " + Look.style.name }
+    Label { text: "Style"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.leftMargin: 4 }
+    SettingRow { icon: "style"; title: "The shell's look"; desc: "Shapes, outlines, shadows and type, with colours to match. Now " + Look.style.name + ". You can still pick other colours below" }
     GridLayout {
         Layout.fillWidth: true
         columns: 3
@@ -94,47 +95,74 @@ ColumnLayout {
     }
 
     // ── colours ──
+    function lum(hex) { const c = Qt.color(hex || "#000"); return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; }
+    readonly property var darkThemes: themes.filter(t => lum(t.colors.base) < 0.5)
+    readonly property var lightThemes: themes.filter(t => lum(t.colors.base) >= 0.5)
+
+    Label { text: "Colours"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.leftMargin: 4; Layout.topMargin: 10 }
     SettingRow {
-        icon: "palette"; title: "Colours"
-        desc: "Now: " + (Look.paletteName === "wallpaper" ? "from your wallpaper" : (Look.paletteName === "style" ? Look.style.name + "'s own" : Look.paletteName))
+        icon: "palette"; title: "Where the colours come from"
+        desc: "Now: " + (Look.paletteName === "wallpaper" ? "your wallpaper" : (Look.paletteName === "style" ? "the " + Look.style.name + " style" : "the " + Look.paletteName + " theme")) + ". A colour theme below works with any style"
         Row {
             spacing: 6
-            Button { text: "Wallpaper"; primary: Look.paletteName === "wallpaper"; onClicked: Look.pickPalette("wallpaper") }
-            Button { visible: !!Look.style.colors; text: Look.style.name + "'s own"; primary: Look.paletteName === "style"; onClicked: Look.pickPalette("style") }
+            Button { text: "From the wallpaper"; icon: "wallpaper"; primary: Look.paletteName === "wallpaper"; onClicked: Look.pickPalette("wallpaper") }
+            Button { visible: !!Look.style.colors; text: Look.style.name + "'s colours"; primary: Look.paletteName === "style"; onClicked: Look.pickPalette("style") }
         }
     }
-    Rectangle {
+
+    // a colour theme: a little window in its colours, named in its own text colour
+    component ThemeCard: Pressable {
+        id: tc
+        property var th: ({ name: "", colors: {} })
+        readonly property var k: th.colors
+        readonly property bool on: Look.paletteName === th.name
         Layout.fillWidth: true
-        implicitHeight: flow.implicitHeight + 20
-        radius: Theme.corner(56, 2)
-        color: Theme.containerHigh
-        Flow {
-            id: flow
-            x: 10; y: 10
-            width: parent.width - 20
+        Layout.preferredHeight: 92
+        radius: Theme.corner(92, 4)
+        color: k.base || Theme.containerHigh
+        border.width: on ? 3 : 1
+        border.color: on ? Theme.accent : Qt.alpha(k.text || Theme.text, 0.15)
+        onClicked: Look.pickPalette(th.name)
+        Column {
+            x: 12; y: 10
+            width: parent.width - 24
             spacing: 6
-            Repeater {
-                model: sec.themes
-                Pressable {
-                    required property var modelData
-                    readonly property bool on: Look.paletteName === modelData.name
-                    height: 34
-                    width: tn.implicitWidth + 74
-                    color: on ? Theme.accentContainer : Theme.control
-                    onClicked: Look.pickPalette(modelData.name)
-                    // its colours: background, panel, accent, text
-                    Row {
-                        x: 8
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: -5
-                        Repeater {
-                            model: ["base", "surface1", "mauve", "text"]
-                            Rectangle { required property string modelData; width: 16; height: 16; radius: 8; color: parent.parent.modelData.colors[modelData] || "#888"; border.width: 1; border.color: Qt.alpha("#000", 0.3) }
-                        }
-                    }
-                    Label { id: tn; x: 58; anchors.verticalCenter: parent.verticalCenter; text: parent.modelData.name; strong: parent.on; font.pixelSize: Theme.sizeSmall }
+            Row {
+                width: parent.width
+                spacing: 6
+                Text { width: parent.width - 30; text: tc.th.name; elide: Text.ElideRight; color: tc.k.text || Theme.text; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeBody; font.weight: Font.DemiBold }
+                Icon { visible: tc.on; name: "check_circle"; filled: true; size: 18; color: tc.k.mauve || Theme.accent }
+            }
+            // a panel with an accent button and a line of text
+            Rectangle {
+                width: parent.width; height: 26
+                radius: 6
+                color: tc.k.surface0 || Theme.container
+                Rectangle { x: 6; anchors.verticalCenter: parent.verticalCenter; width: 34; height: 14; radius: 7; color: tc.k.mauve || Theme.accent }
+                Rectangle { x: 48; anchors.verticalCenter: parent.verticalCenter; width: parent.width * 0.4; height: 5; radius: 2.5; color: Qt.alpha(tc.k.text || Theme.text, 0.6) }
+            }
+            // its accents
+            Row {
+                spacing: 4
+                Repeater {
+                    model: ["red", "peach", "yellow", "green", "teal", "blue", "pink"]
+                    Rectangle { required property string modelData; width: 12; height: 12; radius: 6; color: tc.k[modelData] || "transparent" }
                 }
             }
         }
+    }
+    Label { text: "Dark themes  ·  " + sec.darkThemes.length; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6 }
+    GridLayout {
+        Layout.fillWidth: true
+        columns: 4
+        rowSpacing: 8; columnSpacing: 8
+        Repeater { model: sec.darkThemes; ThemeCard { required property var modelData; th: modelData } }
+    }
+    Label { text: "Light themes  ·  " + sec.lightThemes.length; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 6 }
+    GridLayout {
+        Layout.fillWidth: true
+        columns: 4
+        rowSpacing: 8; columnSpacing: 8
+        Repeater { model: sec.lightThemes; ThemeCard { required property var modelData; th: modelData } }
     }
 }

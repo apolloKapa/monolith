@@ -35,6 +35,12 @@ deploy_shell() {
     printf 'REPO_SLUG="%s"\nMONOLITH_BRANCH="%s"\n' "$REPO_SLUG" "$MONOLITH_BRANCH" > "$SHELL_HOME/install/source.env"
     chmod +x "$SHELL_HOME"/bin/* "$SHELL_HOME"/install/*.sh "$SHELL_HOME"/shell/scripts/*
     ln -sf "$SHELL_HOME/bin/monolith" "$BIN_DIR/monolith"
+    # the fonts that come with Monolith (Settings → Theme → Colours & icons → Font)
+    if [ -d "$project_root/monolith/fonts" ]; then
+        mkdir -p "${XDG_DATA_HOME:-$HOME/.local/share}/fonts/monolith"
+        cp "$project_root"/monolith/fonts/* "${XDG_DATA_HOME:-$HOME/.local/share}/fonts/monolith/"
+        command -v fc-cache >/dev/null && fc-cache -f "${XDG_DATA_HOME:-$HOME/.local/share}/fonts/monolith" >/dev/null 2>&1
+    fi
     # the classic shell's daemon and the new shell's trial copy are gone
     rm -f "$BIN_DIR/monolithd" "$BIN_DIR/monolith-next"
     rm -rf "$HOME/.local/share/monolith-next"
