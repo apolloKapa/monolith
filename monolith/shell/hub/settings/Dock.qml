@@ -20,7 +20,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "photo_size_select_large"; title: "Size"
-        Slider { width: 240; implicitHeight: 36; icon: "apps"; value: (Number(Store.get("dock.size", 56)) - 40) / 36; label: Math.round(Store.get("dock.size", 56)) + " px"; onMoved: v => Store.set("dock.size", Math.round(40 + v * 36)) }
+        NumberBox { from: 24; to: 160; step: 2; unit: "px"; value: Number(Store.get("dock.size", 56)); onMoved: v => Store.set("dock.size", v) }
     }
     SettingRow {
         icon: "zoom_in"; title: "Magnify on hover"; desc: "The app under the pointer grows"
@@ -36,7 +36,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "opacity"; title: "Background"; desc: "How solid the dock is"
-        Slider { width: 240; implicitHeight: 36; icon: "opacity"; value: Number(Store.get("dock.opacity", 1)); label: Math.round(Number(Store.get("dock.opacity", 1)) * 100) + "%"; onMoved: v => Store.set("dock.opacity", Math.round(v * 20) / 20) }
+        NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Number(Store.get("dock.opacity", 1)); onMoved: v => Store.set("dock.opacity", v) }
     }
     SettingRow {
         icon: "push_pin"; title: "Pinned apps"; desc: "Right-click an app in the dock to pin or unpin it. Start over from the default list:"

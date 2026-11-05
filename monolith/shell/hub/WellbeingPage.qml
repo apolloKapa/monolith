@@ -5,10 +5,11 @@ import "../core"
 import "../ui"
 
 // Wellbeing: today's screen time by app, and the last seven days. Right-click an app to give
-// it a daily limit (off → 30 min → 1 h → 2 h → off).
+// it a daily limit (any number of minutes; 0 for none).
 Page {
     id: page
     pageId: "wellbeing"
+    property string editing: ""      // the app whose limit is being set
     implicitHeight: 480
 
     readonly property var apps: Object.keys(Wellbeing.todayMap).map(k => ({ id: k, s: Wellbeing.todayMap[k] })).sort((a, b) => b.s - a.s)
@@ -57,7 +58,8 @@ Page {
                     width: ListView.view.width
                     height: 54
                     color: Theme.containerHigh
-                    onRightClicked: Wellbeing.setLimit(modelData.id, limit === 0 ? 30 : (limit === 30 ? 60 : (limit === 60 ? 120 : 0)))
+                    // right-click: set its daily limit right in the row
+                    onRightClicked: page.editing = page.editing === modelData.id ? "" : modelData.id
                     Image { id: ai; x: 10; anchors.verticalCenter: parent.verticalCenter; width: 30; height: 30; sourceSize: Qt.size(60, 60); source: page.iconOf(row.modelData.id) }
                     Column {
                         anchors.left: ai.right; anchors.leftMargin: 12
@@ -67,7 +69,15 @@ Page {
                         RowLayout {
                             width: parent.width
                             Label { text: page.nameOf(row.modelData.id); strong: true; Layout.fillWidth: true }
-                            Label { text: Wellbeing.fmt(row.modelData.s) + (row.limit > 0 ? "  /  " + row.limit + " min" : ""); muted: true; font.pixelSize: Theme.sizeSmall }
+                            Label { visible: page.editing !== row.modelData.id; text: Wellbeing.fmt(row.modelData.s) + (row.limit > 0 ? "  /  " + row.limit + " min" : ""); muted: true; font.pixelSize: Theme.sizeSmall }
+                            Label { visible: page.editing === row.modelData.id; text: "Daily limit"; muted: true; font.pixelSize: Theme.sizeSmall }
+                            NumberBox {
+                                visible: page.editing === row.modelData.id
+                                width: 170; height: 30
+                                from: 0; to: 1440; step: 5; unit: "min"; zeroText: "None"
+                                value: row.limit
+                                onMoved: v => Wellbeing.setLimit(row.modelData.id, v)
+                            }
                         }
                         Rectangle {
                             width: parent.width; height: 5; radius: 3

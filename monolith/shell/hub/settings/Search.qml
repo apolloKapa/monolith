@@ -19,7 +19,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "format_list_numbered"; title: "Results shown"
-        Segmented { width: 260; opts: [["5", "5"], ["7", "7"], ["10", "10"]]; value: String(Store.get("search.rows", 7)); onPicked: v => Store.set("search.rows", Number(v)) }
+        NumberBox { from: 1; to: 30; value: Number(Store.get("search.rows", 7)); onMoved: v => Store.set("search.rows", v) }
     }
     SettingRow {
         icon: "keyboard"; title: "Typing"

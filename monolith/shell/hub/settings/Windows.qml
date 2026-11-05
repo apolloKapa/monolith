@@ -33,7 +33,7 @@ ColumnLayout {
 
     SettingRow {
         icon: "padding"; title: "Gaps"; desc: "Space between windows and around them"
-        Slider { width: 240; implicitHeight: 36; icon: "padding"; value: sec.num("layout|gaps", 16) / 40; label: Math.round(sec.num("layout|gaps", 16)) + " px"; onMoved: x => sec.put("layout", "gaps", Math.round(x * 40)) }
+        NumberBox { from: 0; to: 200; unit: "px"; value: sec.num("layout|gaps", 16); onMoved: x => sec.put("layout", "gaps", x) }
     }
     SettingRow {
         icon: "border_outer"; title: "Borders"; desc: "A line around each window, brighter on the focused one"
@@ -41,7 +41,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "line_weight"; title: "Border width"
-        Slider { width: 240; implicitHeight: 36; icon: "line_weight"; value: (sec.num("layout/border|width", 2) - 1) / 7; label: Math.round(sec.num("layout/border|width", 2)) + " px"; onMoved: x => sec.put("layout/border", "width", Math.round(1 + x * 7)) }
+        NumberBox { from: 1; to: 50; unit: "px"; value: sec.num("layout/border|width", 2); onMoved: x => sec.put("layout/border", "width", x) }
     }
     SettingRow {
         icon: "center_focus_strong"; title: "Focus ring"; desc: "A ring outside the focused window (on top of the border)"
@@ -49,13 +49,8 @@ ColumnLayout {
     }
     SettingRow {
         icon: "rounded_corner"; title: "Window corners"; desc: "How round the windows are"
-        Slider {
-            width: 240; implicitHeight: 36; icon: "rounded_corner"
-            value: sec.num("window-rule|geometry-corner-radius", 0) / 24
-            label: Math.round(sec.num("window-rule|geometry-corner-radius", 0)) + " px"
-            // (windows are cut to the rounded shape too: clip-to-geometry)
-            onMoved: x => { sec.put("window-rule", "geometry-corner-radius", Math.round(x * 24)); sec.put("window-rule", "clip-to-geometry", "true"); }
-        }
+        // (windows are cut to the rounded shape too: clip-to-geometry)
+        NumberBox { from: 0; to: 100; unit: "px"; value: sec.num("window-rule|geometry-corner-radius", 0); onMoved: x => { sec.put("window-rule", "geometry-corner-radius", x); sec.put("window-rule", "clip-to-geometry", "true"); } }
     }
     SettingRow {
         icon: "animation"; title: "Animations"
@@ -63,6 +58,6 @@ ColumnLayout {
     }
     SettingRow {
         icon: "speed"; title: "Animation speed"; desc: "niri's slowdown: lower is faster"
-        Slider { width: 240; implicitHeight: 36; icon: "speed"; value: (sec.num("animations|slowdown", 1) - 0.2) / 1.8; label: sec.num("animations|slowdown", 1).toFixed(2) + "×"; onMoved: x => sec.put("animations", "slowdown", (0.2 + x * 1.8).toFixed(2)) }
+        NumberBox { from: 0.05; to: 10; step: 0.05; decimals: 2; unit: "×"; value: sec.num("animations|slowdown", 1); onMoved: x => sec.put("animations", "slowdown", x.toFixed(2)) }
     }
 }

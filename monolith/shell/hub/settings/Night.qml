@@ -12,12 +12,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "thermostat"; title: "Warmth"; desc: "Lower is warmer"
-        Slider {
-            width: 240; implicitHeight: 36; icon: "wb_twilight"
-            value: (6000 - NightLight.temp) / 3500
-            label: NightLight.temp + " K"
-            onMoved: v => Store.set("nightlight.temp", Math.round((6000 - v * 3500) / 100) * 100)
-        }
+        NumberBox { from: 1000; to: 6500; step: 100; unit: "K"; value: NightLight.temp; onMoved: v => Store.set("nightlight.temp", v) }
     }
     SettingRow {
         icon: "schedule"; title: "When"

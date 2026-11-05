@@ -24,7 +24,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "timer"; title: "How long they stay"; desc: "Unless the app says otherwise; urgent ones stay until closed"
-        Segmented { width: 260; opts: [["4", "4 s"], ["6", "6 s"], ["10", "10 s"]]; value: String(Store.get("notifications.timeout", 6)); onPicked: v => Store.set("notifications.timeout", Number(v)) }
+        NumberBox { from: 1; to: 300; unit: "s"; value: Number(Store.get("notifications.timeout", 6)); onMoved: v => Store.set("notifications.timeout", v) }
     }
     SettingRow {
         icon: "science"; title: "Try it"; desc: "Send a test notification"

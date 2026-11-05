@@ -11,31 +11,19 @@ ColumnLayout {
     }
     SettingRow {
         icon: "lock"; title: "Lock after"
-        Slider {
-            width: 220; implicitHeight: 36
-            icon: "lock"
-            value: Idle.lockAfter / 1800
-            label: Math.round(Idle.lockAfter / 60) + " min"
-            onMoved: v => Store.set("idle.lockAfter", Math.max(60, Math.round(v * 30) * 60))
-        }
+        NumberBox { from: 1; to: 1440; unit: "min"; value: Math.round(Idle.lockAfter / 60); onMoved: v => Store.set("idle.lockAfter", v * 60) }
     }
     SettingRow {
         icon: "desktop_access_disabled"; title: "Screens off after"
-        Slider {
-            width: 220; implicitHeight: 36
-            icon: "monitor"
-            value: Idle.screenOffAfter / 3600
-            label: Math.round(Idle.screenOffAfter / 60) + " min"
-            onMoved: v => Store.set("idle.screenOffAfter", Math.max(60, Math.round(v * 60) * 60))
-        }
+        NumberBox { from: 0; to: 1440; unit: "min"; zeroText: "Never"; value: Math.round(Idle.screenOffAfter / 60); onMoved: v => Store.set("idle.screenOffAfter", v * 60) }
     }
     SettingRow {
         icon: "brightness_low"; title: "Dim first"; desc: "The screens darken this long before locking (move to stop it)"
-        Segmented { width: 300; opts: [["0", "Off"], ["10", "10 s"], ["20", "20 s"], ["60", "1 min"]]; value: String(Idle.dimBefore); onPicked: v => Store.set("idle.dimBefore", Number(v)) }
+        NumberBox { from: 0; to: 600; step: 5; unit: "s"; zeroText: "Off"; value: Idle.dimBefore; onMoved: v => Store.set("idle.dimBefore", v) }
     }
     SettingRow {
         icon: "bedtime"; title: "Suspend after"; desc: "Put the PC to sleep when you've been away this long"
-        Segmented { width: 330; opts: [["0", "Never"], ["1800", "30 min"], ["3600", "1 hour"], ["7200", "2 hours"]]; value: String(Idle.suspendAfter); onPicked: v => Store.set("idle.suspendAfter", Number(v)) }
+        NumberBox { from: 0; to: 1440; step: 5; unit: "min"; zeroText: "Never"; value: Idle.suspendAfter / 60; onMoved: v => Store.set("idle.suspendAfter", Math.round(v * 60)) }
     }
     SettingRow {
         icon: "play_circle"; title: "Not while playing"; desc: "Music or video playing counts as being here"
