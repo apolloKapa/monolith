@@ -4,22 +4,26 @@ import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Quickshell.Services.SystemTray
 import Quickshell.Services.Mpris
+import Quickshell.Services.UPower
 import "../core"
 import "../ui"
 
-// The island's bar row: what shows while it's collapsed (and stays on top while it's open).
-// Left: control center, search, now playing, the clock, workspaces. Right: what's running
-// (recording / timer / update), tray, stats, notifications, network, sound, power.
-// Every part opens its page in the island.
+// The island's bar: three zones (left, centre, right), each a list of modules you arrange in
+// Settings → Bar. Every module opens its page in the island.
 Item {
     id: bar
     property string screenName: ""
     property var trayWindow: null                       // the window tray menus open from
-    implicitWidth: left.width + mid.width + right.width + 2 * gap + 2 * Theme.islandPad
-    implicitHeight: Theme.islandH
     readonly property real gap: 14
-    function shows(part) { return Store.get("status.show." + part, true) !== false; }
+    implicitWidth: leftZone.width + midZone.width + rightZone.width + (midZone.width > 0 ? 2 * gap : gap) + 2 * Theme.islandPad
+    implicitHeight: Theme.islandH
     function open(p) { HubState.toggle(p, bar.screenName); }
+
+    // the modules in each zone, and every module there is
+    readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
+    readonly property var zones: Store.get("bar.modules", null) || defaults
+    readonly property string clockStyle: Store.get("bar.clockStyle", "stacked")      // stacked | simple | full | seconds
+    readonly property string wsStyle: Store.get("bar.workspaces", "pills")           // pills | dots | numbers
 
     PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
     readonly property var sink: Pipewire.defaultAudioSink
@@ -27,7 +31,7 @@ Item {
     readonly property bool muted: sink && sink.audio ? sink.audio.muted : false
     readonly property var player: Mpris.players.values.find(p => p.isPlaying) || null
 
-    SystemClock { id: clock; precision: SystemClock.Minutes }
+    SystemClock { id: clock; precision: bar.clockStyle === "seconds" ? SystemClock.Seconds : SystemClock.Minutes }
 
     // a module: a hover pill with a ripple
     component Mod: Pressable {
@@ -36,87 +40,129 @@ Item {
         property real pad: 9
         height: Theme.islandH - 10
         width: inner.implicitWidth + 2 * pad
-        anchors.verticalCenter: parent ? parent.verticalCenter : undefined
         color: hovered ? Theme.containerHigh : "transparent"
         Row { id: inner; x: m.pad; anchors.verticalCenter: parent.verticalCenter; spacing: 6 }
     }
     // a round icon module
     component Glyph: Mod {
+        id: g
         property string icon: ""
         property bool on: false
         property color tint: Theme.text
         pad: 7
-        Icon { name: parent.parent.icon; size: 18; filled: parent.parent.on; color: parent.parent.tint; anchors.verticalCenter: parent.verticalCenter }
+        Icon { name: g.icon; size: 18; filled: g.on; color: g.tint; anchors.verticalCenter: parent.verticalCenter }
     }
 
-    Row {
-        id: left
-        x: Theme.islandPad
-        height: parent.height
+    // ── the zones ──
+    component Zone: Row {
+        property var keys: []
+        height: bar.height
         spacing: 2
-
-        // the control center: a filled accent bubble, the island's anchor
-        Pressable {
-            width: 30; height: 30
-            anchors.verticalCenter: parent.verticalCenter
-            color: HubState.open && HubState.page === "quick" ? Theme.accent : Theme.accentContainer
-            ink: Theme.onAccent
-            radius: 15
-            onClicked: bar.open("quick")
-            Icon { anchors.centerIn: parent; name: "page_info"; size: 18; filled: true; color: HubState.open && HubState.page === "quick" ? Theme.onAccent : Theme.onAccentContainer }
+        Repeater {
+            model: parent.keys
+            Loader {
+                required property string modelData
+                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                sourceComponent: bar.mods[modelData] || null
+                // a module with nothing to show (`want: false`) takes no room
+                visible: !!item && item.want !== false
+            }
         }
-        Glyph { icon: "search"; onClicked: bar.open("search") }
+    }
+    Zone { id: leftZone; x: Theme.islandPad; keys: bar.zones.left || [] }
+    // a full-width bar spreads them: left edge, middle, right edge
+    Zone { id: midZone; x: Theme.fullBar ? Math.round((bar.width - width) / 2) : leftZone.x + leftZone.width + bar.gap; keys: bar.zones.center || [] }
+    Zone { id: rightZone; x: Theme.fullBar ? bar.width - width - Theme.islandPad : midZone.x + midZone.width + (midZone.width > 0 ? bar.gap : 0); keys: bar.zones.right || [] }
 
-        // the clock: the time, with the weekday and date stacked beside it
+    readonly property var mods: ({
+        cc: ccC, search: searchC, clock: clockC, weather: weatherC, workspaces: wsC, media: mediaC, title: titleC,
+        live: liveC, tray: trayC, stats: statsC, notifications: notifC, network: netC, sound: soundC,
+        battery: batC, keyboard: kbC, gaming: gameC, power: powerC
+    })
+
+    // the control center: a filled accent bubble
+    Component {
+        id: ccC
+        Pressable {
+            readonly property bool on: HubState.open && HubState.page === "quick"
+            width: 30; height: 30
+            color: on ? Theme.accent : Theme.accentContainer
+            ink: Theme.onAccent
+            radius: Theme.corner(30)
+            onClicked: bar.open("quick")
+            Icon { anchors.centerIn: parent; name: "page_info"; size: 18; filled: true; color: parent.on ? Theme.onAccent : Theme.onAccentContainer }
+        }
+    }
+    Component { id: searchC; Glyph { icon: "search"; onClicked: bar.open("search") } }
+
+    // the clock, in its style
+    Component {
+        id: clockC
         Mod {
             onClicked: bar.open("calendar")
             Text {
-                text: Qt.formatTime(clock.date, "HH:mm")
+                text: Qt.formatTime(clock.date, bar.clockStyle === "seconds" ? "HH:mm:ss" : "HH:mm")
                 color: Theme.text
-                font.family: Theme.fontFamily; font.pixelSize: 16; font.weight: Font.Bold
+                font.family: Theme.fontFamily; font.pixelSize: bar.clockStyle === "stacked" ? 16 : 14; font.weight: Font.Bold
                 anchors.verticalCenter: parent.verticalCenter
             }
             Column {
+                visible: bar.clockStyle === "stacked"
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: -2
                 Text { text: Qt.formatDate(clock.date, "dddd"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1; font.weight: Font.Medium }
                 Text { text: Qt.formatDate(clock.date, "d MMM"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1 }
             }
-            Icon {
-                visible: Weather.ready && bar.shows("weather")
-                name: Weather.ready ? Weather.icon(Weather.current.code, Weather.current.day) : ""
-                size: 16; color: Theme.accent
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            Label {
-                visible: Weather.ready && bar.shows("weather")
-                text: Weather.ready ? Math.round(Weather.current.temp) + "°" : ""
-                font.pixelSize: Theme.sizeSmall
+            Text {
+                visible: bar.clockStyle === "full"
+                text: Qt.formatDate(clock.date, "ddd d MMM")
+                color: Theme.subtext
+                font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
+    }
+    Component {
+        id: weatherC
+        Mod {
+            property bool want: Weather.ready
+            onClicked: bar.open("calendar")
+            Icon { name: Weather.ready ? Weather.icon(Weather.current.code, Weather.current.day) : ""; size: 16; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+            Label { text: Weather.ready ? Math.round(Weather.current.temp) + "°" : ""; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+        }
+    }
 
-        // workspaces on this screen: the active one a long accent pill
+    // workspaces on this screen, in their style
+    Component {
+        id: wsC
         Item {
             width: ws.width + 14
-            height: parent.height
+            height: Theme.islandH - 10
             Row {
                 id: ws
                 anchors.centerIn: parent
-                spacing: 5
+                spacing: bar.wsStyle === "numbers" ? 3 : 5
                 Repeater {
                     model: Niri.workspacesOn(bar.screenName)
                     Rectangle {
                         required property var modelData
                         readonly property bool active: modelData.is_active
                         readonly property bool busy: Niri.workspaceHasWindows(modelData.id)
-                        width: active ? 26 : 9
-                        height: 9
-                        radius: 4.5
+                        width: bar.wsStyle === "numbers" ? 22 : (bar.wsStyle === "dots" ? 9 : (active ? 26 : 9))
+                        height: bar.wsStyle === "numbers" ? 22 : 9
+                        radius: Theme.corner(height)
                         anchors.verticalCenter: parent.verticalCenter
-                        color: active ? Theme.accent : (busy ? Theme.subtext : Theme.control)
+                        color: active ? Theme.accent : (bar.wsStyle === "numbers" ? "transparent" : (busy ? Theme.subtext : Theme.control))
+                        border.width: bar.wsStyle === "dots" && !active && busy ? 0 : 0
                         Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                         Behavior on color { ColorAnimation { duration: 200 } }
+                        Text {
+                            visible: bar.wsStyle === "numbers"
+                            anchors.centerIn: parent
+                            text: parent.modelData.idx
+                            color: parent.active ? Theme.onAccent : (parent.busy ? Theme.text : Theme.faint)
+                            font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall; font.weight: Font.DemiBold
+                        }
                         MouseArea { anchors.fill: parent; anchors.margins: -4; cursorShape: Qt.PointingHandCursor; onClicked: Niri.focusWorkspace(parent.modelData.idx) }
                     }
                 }
@@ -124,19 +170,13 @@ Item {
         }
     }
 
-    // ── middle: now playing (the album art spins while it plays), or the window title ──
-    Item {
-        id: mid
-        x: left.x + left.width + bar.gap
-        width: midRow.visible ? midRow.width : 0
-        height: parent.height
+    // now playing (the album art spins while it plays)
+    Component {
+        id: mediaC
         Mod {
-            id: midRow
-            visible: bar.player !== null && bar.shows("media") || (Niri.focusedTitle !== "" && bar.shows("title"))
-            readonly property bool music: bar.player !== null && bar.shows("media")
-            onClicked: bar.open(music ? "media" : "windows")
+            property bool want: bar.player !== null
+            onClicked: bar.open("media")
             Rectangle {
-                visible: midRow.music
                 width: 22; height: 22; radius: 11
                 color: Theme.control
                 clip: true
@@ -146,31 +186,29 @@ Item {
                     source: bar.player ? (bar.player.trackArtUrl || "") : ""
                     fillMode: Image.PreserveAspectCrop
                     sourceSize: Qt.size(64, 64)
-                    RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: midRow.music }
+                    RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: bar.player !== null }
                 }
             }
-            Icon { visible: !midRow.music; name: "select_window"; size: 16; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
-            Label {
-                text: midRow.music ? bar.player.trackTitle : Niri.focusedTitle
-                font.pixelSize: Theme.sizeSmall
-                muted: !midRow.music
-                width: Math.min(implicitWidth, 200)
-                anchors.verticalCenter: parent.verticalCenter
-            }
+            Label { text: bar.player ? bar.player.trackTitle : ""; font.pixelSize: Theme.sizeSmall; width: Math.min(implicitWidth, 200); anchors.verticalCenter: parent.verticalCenter }
+        }
+    }
+    Component {
+        id: titleC
+        Mod {
+            property bool want: Niri.focusedTitle !== ""
+            onClicked: bar.open("windows")
+            Icon { name: "select_window"; size: 16; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
+            Label { text: Niri.focusedTitle; muted: true; font.pixelSize: Theme.sizeSmall; width: Math.min(implicitWidth, 220); anchors.verticalCenter: parent.verticalCenter }
         }
     }
 
-    Row {
-        id: right
-        x: mid.x + mid.width + (mid.width > 0 ? bar.gap : 0)
-        height: parent.height
-        spacing: 2
-
-        // what's running: a recording (click stops it), the timer, an update
+    // what's running: a recording (click stops it), the timer, an update
+    Component {
+        id: liveC
         Mod {
             id: live
-            readonly property string mode: Tasks.recording ? "rec" : (Tasks.total > 0 && Tasks.remaining > 0 ? "timer" : (Updates.available > 0 && bar.shows("updates") ? "update" : ""))
-            visible: mode !== ""
+            readonly property string mode: Tasks.recording ? "rec" : (Tasks.total > 0 && Tasks.remaining > 0 ? "timer" : (Updates.available > 0 ? "update" : ""))
+            property bool want: mode !== ""
             color: mode === "rec" ? Qt.alpha(Theme.danger, hovered ? 0.32 : 0.2) : (hovered ? Theme.selected : Theme.containerHigh)
             onClicked: {
                 if (mode === "rec") Tasks.stopRecording();
@@ -190,36 +228,50 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
+    }
+    Component { id: gameC; Glyph { property bool want: GameMode.active; icon: "sports_esports"; on: true; tint: Theme.accent; onClicked: bar.open("gaming") } }
 
-        Glyph { visible: GameMode.active; icon: "sports_esports"; on: true; tint: Theme.accent; onClicked: bar.open("gaming") }
-        Repeater {
-            model: bar.shows("tray") ? SystemTray.items : []
-            Pressable {
-                required property var modelData
-                width: 28; height: 28
-                anchors.verticalCenter: parent.verticalCenter
-                color: hovered ? Theme.containerHigh : "transparent"
-                Image { anchors.centerIn: parent; width: 16; height: 16; source: modelData.icon; sourceSize: Qt.size(32, 32) }
-                onClicked: modelData.activate()
-                onRightClicked: { if (bar.trayWindow) { const p = mapToItem(null, 0, height); modelData.display(bar.trayWindow, p.x, p.y + 4); } }
+    Component {
+        id: trayC
+        Row {
+            spacing: 2
+            Repeater {
+                model: SystemTray.items
+                Pressable {
+                    required property var modelData
+                    width: 28; height: 28
+                    anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                    color: hovered ? Theme.containerHigh : "transparent"
+                    Image { anchors.centerIn: parent; width: 16; height: 16; source: modelData.icon; sourceSize: Qt.size(32, 32) }
+                    onClicked: modelData.activate()
+                    onRightClicked: { if (bar.trayWindow) { const p = mapToItem(null, 0, height); modelData.display(bar.trayWindow, p.x, p.y + 4); } }
+                }
             }
         }
+    }
 
+    // system stats: which ones (Settings → Bar)
+    Component {
+        id: statsC
         Mod {
-            visible: bar.shows("stats")
+            readonly property var which: Store.get("bar.stats", ["cpu", "temp"])
             onClicked: { HubState.ccTab = "monitor"; bar.open("quick"); }
             Repeater {
-                model: [["memory", Math.round(Stats.cpu * 100) + "%"], ["thermostat", Math.round(Stats.temp) + "°"]]
+                model: [["cpu", "memory", Math.round(Stats.cpu * 100) + "%"], ["mem", "data_usage", Math.round(Stats.mem * 100) + "%"],
+                        ["temp", "thermostat", Math.round(Stats.temp) + "°"], ["gpu", "videogame_asset", Math.round(Stats.gpu * 100) + "%"]].filter(x => parent.parent.which.indexOf(x[0]) !== -1)
                 Row {
                     required property var modelData
                     spacing: 3
                     anchors.verticalCenter: parent ? parent.verticalCenter : undefined
-                    Icon { name: modelData[0]; size: 15; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
-                    Label { text: modelData[1]; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+                    Icon { name: modelData[1]; size: 15; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
+                    Label { text: modelData[2]; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
                 }
             }
         }
+    }
 
+    Component {
+        id: notifC
         Mod {
             pad: 7
             onClicked: bar.open("notifications")
@@ -231,7 +283,10 @@ Item {
             }
             Label { visible: Notifs.list.length > 0; text: Notifs.list.length; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
         }
-        Glyph { icon: bar.netIcon; on: true; onClicked: bar.open("network") }
+    }
+    Component { id: netC; Glyph { icon: bar.netIcon; on: true; onClicked: bar.open("network") } }
+    Component {
+        id: soundC
         Mod {
             pad: 7
             onClicked: bar.open("sound")
@@ -240,10 +295,36 @@ Item {
                 size: 18; filled: true; color: bar.muted ? Theme.subtext : Theme.text
                 anchors.verticalCenter: parent.verticalCenter
             }
-            Label { text: Math.round(bar.volume * 100); font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+            Label { visible: Store.get("bar.soundPercent", true) !== false; text: Math.round(bar.volume * 100); font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
         }
-        Glyph { icon: "power_settings_new"; tint: Theme.danger; onClicked: { HubState.ccTab = "controls"; bar.open("quick"); } }
     }
+    // the battery (laptops; hidden when there's none)
+    Component {
+        id: batC
+        Mod {
+            readonly property var dev: UPower.displayDevice
+            property bool want: !!dev && dev.isLaptopBattery
+            pad: 7
+            onClicked: bar.open("quick")
+            Icon {
+                name: !parent.parent.dev ? "battery_full" : (parent.parent.dev.state === UPowerDeviceState.Charging ? "battery_charging_full" : (parent.parent.dev.percentage < 0.2 ? "battery_alert" : "battery_full"))
+                size: 18; filled: true
+                color: parent.parent.dev && parent.parent.dev.percentage < 0.2 ? Theme.danger : Theme.text
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Label { text: parent.parent.dev ? Math.round(parent.parent.dev.percentage * 100) + "%" : ""; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+        }
+    }
+    Component {
+        id: kbC
+        Mod {
+            property bool want: Niri.layoutName !== ""
+            onClicked: Niri.action(["switch-layout", "next"])
+            Icon { name: "keyboard"; size: 16; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
+            Label { text: Niri.layoutName.substring(0, 2).toUpperCase(); font.pixelSize: Theme.sizeSmall; strong: true; anchors.verticalCenter: parent.verticalCenter }
+        }
+    }
+    Component { id: powerC; Glyph { icon: "power_settings_new"; tint: Theme.danger; onClicked: { HubState.ccTab = "controls"; bar.open("quick"); } } }
 
     // the connection, for the network glyph (wired wins over Wi-Fi)
     property string netIcon: "signal_disconnected"

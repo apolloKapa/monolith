@@ -11,8 +11,8 @@ Rectangle {
     height: 40
     radius: Theme.corner(height)
     color: Theme.container
-    border.width: input.activeFocus ? 2 : 0
-    border.color: Theme.accent
+    border.width: input.activeFocus ? 2 : Theme.outlineW
+    border.color: input.activeFocus ? Theme.accent : Theme.outlineColor
     TextInput {
         id: input
         anchors.fill: parent

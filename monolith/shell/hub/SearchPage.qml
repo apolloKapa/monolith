@@ -15,7 +15,20 @@ Page {
 
     readonly property real rowH: 52
     readonly property int maxRows: Number(Store.get("search.rows", 7))
-    implicitHeight: Math.max(1, Math.min(results.length, maxRows)) * rowH
+    implicitHeight: favArea.height + Math.max(1, Math.min(results.length, maxRows)) * rowH
+
+    // ── favourites: pinned apps, shown as a grid while nothing is typed ──
+    // (desktop ids; the earlier Monolith's list to start with). Right-click an app to pin or unpin.
+    readonly property var favIds: Store.get("search.favorites", null) || Prefs.favorites
+    readonly property var favs: favIds.map(id => DesktopEntries.byId(id) || DesktopEntries.byId(id + ".desktop")).filter(e => e)
+    readonly property int favColumns: Number(Store.get("search.favColumns", 6))
+    readonly property bool showFavs: query.trim() === "" && favs.length > 0 && Store.get("search.showFavorites", true) !== false
+    function isFav(entry) { return favIds.some(id => id === entry.id || id + ".desktop" === entry.id || id === entry.id.replace(/\.desktop$/, "")); }
+    function toggleFav(entry) {
+        const id = entry.id.replace(/\.desktop$/, "");
+        Store.set("search.favorites", isFav(entry) ? favIds.filter(x => x !== id && x + ".desktop" !== entry.id && x !== entry.id) : favIds.concat([id]));
+    }
+    function launch(entry) { entry.execute(); Store.set("launches." + entry.id.replace(/\./g, "_"), uses(entry.id) + 1); page.done(); }
 
     // how often each app was opened from here, for the order
     // how often each app was opened (ranks them first), unless that's switched off
@@ -103,9 +116,49 @@ Page {
     Keys.onReturnPressed: activate(list.currentIndex)
     Keys.onEnterPressed: activate(list.currentIndex)
 
+    Item {
+        id: favArea
+        width: parent.width
+        height: page.showFavs ? favGrid.height + 12 : 0
+        visible: page.showFavs
+        Grid {
+            id: favGrid
+            width: parent.width
+            columns: page.favColumns
+            rowSpacing: 4
+            readonly property real cellW: width / page.favColumns
+            Repeater {
+                model: page.favs
+                Pressable {
+                    required property var modelData
+                    width: favGrid.cellW - 4
+                    height: 84
+                    color: hovered ? Theme.containerHigh : "transparent"
+                    onClicked: page.launch(modelData)
+                    onRightClicked: page.toggleFav(modelData)
+                    Column {
+                        anchors.centerIn: parent
+                        width: parent.width - 8
+                        spacing: 6
+                        Image {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: 40; height: 40
+                            sourceSize: Qt.size(80, 80)
+                            source: Quickshell.iconPath(parent.parent.modelData.icon, "application-x-executable")
+                            asynchronous: true; smooth: true; mipmap: true
+                        }
+                        Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: parent.parent.modelData.name; font.pixelSize: Theme.sizeSmall }
+                    }
+                }
+            }
+        }
+        Rectangle { anchors.bottom: parent.bottom; anchors.bottomMargin: 5; width: parent.width; height: 1; color: Theme.ringTrack }
+    }
+
     ListView {
         id: list
         anchors.fill: parent
+        anchors.topMargin: favArea.height
         clip: true
         model: page.results
         boundsBehavior: Flickable.StopAtBounds
@@ -125,6 +178,8 @@ Page {
             height: page.rowH
             color: "transparent"
             onClicked: page.activate(index)
+            // right-click an app: pin it to the favourites, or unpin it
+            onRightClicked: if (isApp) page.toggleFav(modelData.entry)
 
             readonly property bool isApp: modelData.kind === "app"
             readonly property string title: isApp ? modelData.entry.name : modelData.name
@@ -170,9 +225,10 @@ Page {
                 anchors.rightMargin: 14
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 1
-                Label { width: parent.width; text: row.title; strong: row.index === list.currentIndex }
+                Label { width: parent.width - 24; text: row.title; strong: row.index === list.currentIndex }
                 Label { width: parent.width; text: row.sub; muted: true; font.pixelSize: Theme.sizeSmall; visible: text !== "" }
             }
+            Icon { visible: row.isApp && page.isFav(row.modelData.entry); anchors.right: parent.right; anchors.rightMargin: 14; anchors.verticalCenter: parent.verticalCenter; name: "star"; filled: true; size: 16; color: Theme.accent }
         }
     }
 }

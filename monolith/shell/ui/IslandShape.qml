@@ -24,7 +24,7 @@ Item {
         shadowBlur: Theme.shadowBlur
         shadowColor: Theme.shadowColor
         shadowVerticalOffset: Theme.shadowY
-        shadowHorizontalOffset: 0
+        shadowHorizontalOffset: Theme.shadowX
     }
 
     Shape {
@@ -32,8 +32,9 @@ Item {
         preferredRendererType: Shape.CurveRenderer
         ShapePath {
             fillColor: s.fill
-            strokeColor: "transparent"
-            strokeWidth: 0
+            // the style's outline (none by default)
+            strokeColor: Theme.outlineW > 0 ? Theme.outlineColor : "transparent"
+            strokeWidth: Theme.outlineW
             // along the screen edge, left to right
             startX: 0; startY: 0
             PathLine { x: s.width; y: 0 }

@@ -10,6 +10,8 @@ Rectangle {
     property real pad: 14
     radius: Theme.corner(80, 10)
     color: Theme.container
+    border.width: Theme.outlineW
+    border.color: Theme.outlineColor
     Row {
         id: head
         visible: card.title !== ""

@@ -14,6 +14,8 @@ Rectangle {
     implicitHeight: Math.max(64, texts.implicitHeight + 24)
     radius: Theme.corner(56, 2)
     color: Theme.containerHigh
+    border.width: Theme.outlineW
+    border.color: Theme.outlineColor
     Bubble { id: b; x: 12; anchors.verticalCenter: parent.verticalCenter; size: 38; icon: row.icon }
     Column {
         id: texts

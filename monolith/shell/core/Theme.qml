@@ -16,7 +16,8 @@ Singleton {
     // Monolith's palette until there is one, or a neutral fallback ──
     property var roles: ({})
     property var pal: ({})
-    function c(name, fallback) { return pal[name] ? pal[name] : fallback; }
+    // a palette colour: the style's or colour theme's (Look), else the earlier Monolith's file
+    function c(name, fallback) { const src = Look.colors || pal; return src[name] ? src[name] : fallback; }
     function role(name, fallback) {
         const r = roles[name];
         return r ? (r.color || r) : fallback;
@@ -37,6 +38,7 @@ Singleton {
     }
     // Material roles come as { dark: {color}, light: {color}, default: {color} }
     function m(name, fallback) {
+        if (Look.colors) return fallback;      // a palette is picked: no wallpaper roles
         const r = roles[name];
         if (!r) return fallback;
         const pick = r[theme.modeName] || r["default"];
@@ -50,7 +52,9 @@ Singleton {
     // the default is Google Sans when it's installed (the look is built around it)
     readonly property bool hasGoogleSans: Qt.fontFamilies().indexOf("Google Sans") !== -1
     readonly property string defaultFont: hasGoogleSans ? "Google Sans" : oldFont
-    readonly property string fontFamily: Store.get("theme.font", "") !== "" ? Store.get("theme.font", "") : defaultFont
+    // your font, else the style's (when installed), else the default
+    readonly property string styleFont: Look.style.font && Qt.fontFamilies().indexOf(Look.style.font) !== -1 ? Look.style.font : ""
+    readonly property string fontFamily: Store.get("theme.font", "") !== "" ? Store.get("theme.font", "") : (styleFont || defaultFont)
     readonly property real radiusSetting: Number(Store.get("theme.radius", oldRadius))
     FileView {
         path: theme.configFile
@@ -74,10 +78,13 @@ Singleton {
     readonly property color _s2: c("surface2", "#32363e")
 
     // the layers, lowest to highest
-    readonly property color card: m("surface_container_low", mix(_base, _s0, 0.55))      // the hub, the dock
-    readonly property color container: m("surface_container", _s0)                        // groups inside a card
-    readonly property color containerHigh: m("surface_container_high", _s1)               // rows, tiles
-    readonly property color control: m("surface_container_highest", _s2)                  // bubbles, tracks, chips
+    readonly property bool oled: Look.style.oled === true
+    readonly property real see: Look.style.opaque === false ? 0.74 : 1      // see-through styles
+    readonly property color card: Qt.alpha(oled ? "#000000" : m("surface_container_low", mix(_base, _s0, 0.55)), see)  // the hub, the dock
+    // (with a palette: mantle, surface0, surface1; surface2 is ink in some styles)
+    readonly property color container: oled ? "#0d0d0d" : m("surface_container", Look.colors ? c("mantle", _s0) : _s0)            // groups inside a card
+    readonly property color containerHigh: oled ? "#171717" : m("surface_container_high", Look.colors ? _s0 : _s1)                 // rows, tiles
+    readonly property color control: oled ? "#242424" : m("surface_container_highest", Look.colors ? _s1 : _s2)                    // bubbles, tracks, chips
     readonly property bool dark: lum(card) < 0.5
     readonly property color hairline: Qt.alpha(m("outline_variant", dark ? "#ffffff" : "#000000"), roles.outline_variant ? 0.55 : 0.08)
 
@@ -96,7 +103,11 @@ Singleton {
 
     // ── shape ──
     // the base radius is the setting; nested shapes take it minus the gap (concentric)
-    readonly property real radius: Math.max(0, radiusSetting)
+    readonly property real radius: Look.style.square ? 0 : Math.max(0, radiusSetting * (Look.style.radiusScale || 1))
+    // the style's outlines: on panels, cards and controls
+    readonly property real outlineW: Look.style.outline ? Look.style.outline[0] : 0
+    readonly property color outlineColor: ({ accent: accent, accentSoft: Qt.alpha(accent, 0.5), ink: text, text: text,
+                                             rule: Qt.alpha(text, 0.22) })[Look.style.outlineRole || "rule"] || Qt.alpha(text, 0.22)
     function corner(height, extra) { return Math.max(0, Math.min(height / 2, radius + (extra || 0))); }
 
     // ── motion (Material: emphasized decelerate in, emphasized accelerate out) ──
@@ -108,8 +119,9 @@ Singleton {
     readonly property int moveMs: 380
 
     // ── the island (status line + hub in one shape hanging from the top edge) ──
-    readonly property color frame: m("surface", mix(_base, _s0, 0.35))   // the island's fill
-    readonly property real islandH: 40          // collapsed: the bar's height
+    readonly property color frame: Qt.alpha(oled ? "#000000" : m("surface", mix(_base, _s0, 0.35)), see)   // the island's fill
+    readonly property real islandH: Number(Store.get("bar.height", 40))   // collapsed: the bar's height (Settings → Bar)
+    readonly property bool fullBar: Store.get("bar.shape", "island") === "full"  // a full-width bar instead of the island
     readonly property real islandMinW: 460      // collapsed: never narrower
     readonly property real islandEar: 20        // the concave curve joining the screen edge
     readonly property real islandPad: 12        // inside, around the content
@@ -120,9 +132,12 @@ Singleton {
     readonly property var springCurve: [0.22, 1.0, 0.36, 1.1, 1, 1]
     readonly property int springMs: 520
     // the soft shadow under floating shapes (drawn by the shell, no compositor blur)
-    readonly property real shadowBlur: 0.9
-    readonly property color shadowColor: Qt.rgba(0, 0, 0, dark ? 0.55 : 0.28)
-    readonly property real shadowY: 6
+    // (styles with a hard shadow: a solid offset copy in the ink colour)
+    readonly property real hardShadow: Look.style.hardShadow || 0
+    readonly property real shadowBlur: hardShadow > 0 ? 0 : 0.9
+    readonly property color shadowColor: hardShadow > 0 ? text : Qt.rgba(0, 0, 0, dark ? 0.55 : 0.28)
+    readonly property real shadowY: hardShadow > 0 ? hardShadow : 6
+    readonly property real shadowX: hardShadow
 
     // ── type ──
     readonly property int sizeTiny: 9
