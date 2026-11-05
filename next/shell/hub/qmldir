@@ -1,0 +1,17 @@
+Hub 1.0 Hub.qml
+Page 1.0 Page.qml
+SearchPage 1.0 SearchPage.qml
+QuickPage 1.0 QuickPage.qml
+MediaPage 1.0 MediaPage.qml
+CalendarPage 1.0 CalendarPage.qml
+NotificationsPage 1.0 NotificationsPage.qml
+SoundPage 1.0 SoundPage.qml
+NetworkPage 1.0 NetworkPage.qml
+ClipboardPage 1.0 ClipboardPage.qml
+WallpaperPage 1.0 WallpaperPage.qml
+SettingsPage 1.0 SettingsPage.qml
+WindowsPage 1.0 WindowsPage.qml
+CapturePage 1.0 CapturePage.qml
+KeysPage 1.0 KeysPage.qml
+ToolsPage 1.0 ToolsPage.qml
+WellbeingPage 1.0 WellbeingPage.qml

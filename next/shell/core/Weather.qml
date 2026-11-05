@@ -1,0 +1,70 @@
+pragma Singleton
+import QtQuick
+import Quickshell
+import Quickshell.Io
+
+// The weather from Open-Meteo for your location (from Monolith's settings: General → Location),
+// refreshed every 20 minutes: now, the next hours and the next days.
+Singleton {
+    id: w
+    readonly property var loc: (Prefs.raw.general && Prefs.raw.general.location) ? Prefs.raw.general.location : null
+    readonly property bool metric: !(Prefs.raw.general && Prefs.raw.general.weatherUnit === "imperial")
+    readonly property string city: loc ? (loc.city || "") : ""
+    property var current: null      // { temp, code, day }
+    property var hours: []          // [{ time, temp, code, rain }]
+    property var days: []           // [{ date, max, min, code }]
+    readonly property bool ready: current !== null
+
+    function icon(code, day) {
+        if (code === 0) return day === false ? "clear_night" : "clear_day";
+        if (code <= 2) return day === false ? "partly_cloudy_night" : "partly_cloudy_day";
+        if (code === 3) return "cloud";
+        if (code <= 48) return "foggy";
+        if (code <= 57) return "rainy_light";
+        if (code <= 67) return "rainy";
+        if (code <= 77) return "weather_snowy";
+        if (code <= 82) return "rainy_heavy";
+        if (code <= 86) return "snowing_heavy";
+        return "thunderstorm";
+    }
+    function describe(code) {
+        if (code === 0) return "Clear";
+        if (code <= 2) return "Partly cloudy";
+        if (code === 3) return "Cloudy";
+        if (code <= 48) return "Fog";
+        if (code <= 57) return "Drizzle";
+        if (code <= 67) return "Rain";
+        if (code <= 77) return "Snow";
+        if (code <= 82) return "Showers";
+        if (code <= 86) return "Snow showers";
+        return "Thunderstorm";
+    }
+    readonly property string unit: metric ? "°C" : "°F"
+
+    function refresh() {
+        if (!loc) return;
+        const u = "https://api.open-meteo.com/v1/forecast?latitude=" + loc.latitude + "&longitude=" + loc.longitude
+            + "&timezone=" + encodeURIComponent(loc.timezone || "auto")
+            + "&current=temperature_2m,weather_code,is_day"
+            + "&hourly=temperature_2m,weather_code,precipitation_probability&forecast_hours=24"
+            + "&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=6"
+            + (metric ? "" : "&temperature_unit=fahrenheit");
+        fetch.command = ["curl", "-sf", "--max-time", "15", u];
+        fetch.running = true;
+    }
+    Process {
+        id: fetch
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const d = JSON.parse(text);
+                    w.current = { temp: d.current.temperature_2m, code: d.current.weather_code, day: d.current.is_day === 1 };
+                    w.hours = d.hourly.time.map((t, i) => ({ time: t.substring(11, 16), temp: d.hourly.temperature_2m[i], code: d.hourly.weather_code[i], rain: d.hourly.precipitation_probability[i] }));
+                    w.days = d.daily.time.map((t, i) => ({ date: t, max: d.daily.temperature_2m_max[i], min: d.daily.temperature_2m_min[i], code: d.daily.weather_code[i] }));
+                } catch (e) {}
+            }
+        }
+    }
+    Timer { interval: 20 * 60 * 1000; running: true; repeat: true; triggeredOnStart: true; onTriggered: w.refresh() }
+    onLocChanged: refresh()
+}
