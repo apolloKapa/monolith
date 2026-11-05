@@ -42,6 +42,7 @@ ColumnLayout {
     property point dragPos: Qt.point(0, 0)
     property string overZone: ""        // the zone under the pointer while dragging
     readonly property var zoneItems: [zoneL, zoneC, zoneR]
+    readonly property Item editorItem: editor
 
     function zoneAt(p) {
         for (const z of zoneItems) {
@@ -78,10 +79,12 @@ ColumnLayout {
     // a module chip: grab it and move it
     component Chip: Rectangle {
         id: chip
+        // the editor (inline components can't see the file's ids from their handlers)
+        property var ed: null
         property string key: ""
         property string zone: ""
         property int pos: -1            // its place in the zone
-        readonly property bool moving: sec.dragging && sec.dragKey === key && sec.dragFrom === zone
+        readonly property bool moving: chip.ed.dragging && chip.ed.dragKey === key && chip.ed.dragFrom === zone
         height: 36
         width: Math.min(cr.implicitWidth + 24, parent ? parent.width : 400)
         radius: Theme.corner(36)
@@ -94,8 +97,8 @@ ColumnLayout {
             id: cr
             anchors.centerIn: parent
             spacing: 6
-            Icon { name: (sec.names[chip.key] || ["", "help"])[1]; size: 17; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
-            Label { text: (sec.names[chip.key] || [chip.key])[0]; font.pixelSize: Theme.sizeSmall + 1; anchors.verticalCenter: parent.verticalCenter }
+            Icon { name: (chip.ed.names[chip.key] || ["", "help"])[1]; size: 17; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+            Label { text: (chip.ed.names[chip.key] || [chip.key])[0]; font.pixelSize: Theme.sizeSmall + 1; anchors.verticalCenter: parent.verticalCenter }
         }
         MouseArea {
             anchors.fill: parent
@@ -105,33 +108,34 @@ ColumnLayout {
             onPressed: mouse => start = Qt.point(mouse.x, mouse.y)
             onPositionChanged: mouse => {
                 if (!pressed) return;
-                if (!sec.dragging && Math.abs(mouse.x - start.x) + Math.abs(mouse.y - start.y) > 6) {
-                    sec.dragKey = chip.key; sec.dragFrom = chip.zone; sec.dragIndex = chip.pos; sec.dragging = true;
+                if (!chip.ed.dragging && Math.abs(mouse.x - start.x) + Math.abs(mouse.y - start.y) > 6) {
+                    chip.ed.dragKey = chip.key; chip.ed.dragFrom = chip.zone; chip.ed.dragIndex = chip.pos; chip.ed.dragging = true;
                 }
-                if (sec.dragging) {
-                    sec.dragPos = mapToItem(editor, mouse.x, mouse.y);
-                    const z = sec.zoneAt(sec.dragPos);
-                    sec.overZone = z ? z.zone : "";
+                if (chip.ed.dragging) {
+                    chip.ed.dragPos = mapToItem(chip.ed.editorItem, mouse.x, mouse.y);
+                    const z = chip.ed.zoneAt(chip.ed.dragPos);
+                    chip.ed.overZone = z ? z.zone : "";
                 }
             }
-            onReleased: { if (sec.dragging) { sec.dropAt(sec.dragPos); sec.dragging = false; sec.overZone = ""; } }
-            onCanceled: { sec.dragging = false; sec.overZone = ""; }
+            onReleased: { if (chip.ed.dragging) { chip.ed.dropAt(chip.ed.dragPos); chip.ed.dragging = false; chip.ed.overZone = ""; } }
+            onCanceled: { chip.ed.dragging = false; chip.ed.overZone = ""; }
         }
     }
 
     // a zone of the bar: its chips in order
     component BarZone: Rectangle {
         id: bz
+        property var ed: null
         property string zone: ""
         property string label: ""
         property alias flow: zflow
         property alias rep: zrep
-        readonly property var list: sec.zones[zone] || []
+        readonly property var list: bz.ed.zones[zone] || []
         height: Math.max(64, zflow.implicitHeight + 34)
         radius: Theme.corner(64, 4)
-        color: sec.overZone === zone ? Qt.alpha(Theme.accent, 0.14) : Theme.container
-        border.width: sec.overZone === zone ? 2 : 1
-        border.color: sec.overZone === zone ? Theme.accent : Theme.ringTrack
+        color: bz.ed.overZone === zone ? Qt.alpha(Theme.accent, 0.14) : Theme.container
+        border.width: bz.ed.overZone === zone ? 2 : 1
+        border.color: bz.ed.overZone === zone ? Theme.accent : Theme.ringTrack
         Behavior on color { ColorAnimation { duration: 120 } }
         Label { x: 12; y: 6; text: bz.label; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
         Flow {
@@ -142,7 +146,7 @@ ColumnLayout {
             Repeater {
                 id: zrep
                 model: bz.list
-                Chip { required property string modelData; required property int index; key: modelData; zone: bz.zone; pos: index }
+                Chip { required property string modelData; required property int index; ed: bz.ed; key: modelData; zone: bz.zone; pos: index }
             }
         }
         Label { visible: bz.list.length === 0; anchors.centerIn: parent; anchors.verticalCenterOffset: 8; text: "Drop modules here"; muted: true; font.pixelSize: Theme.sizeSmall }
@@ -171,9 +175,9 @@ ColumnLayout {
                     width: parent.width - 16
                     spacing: 8
                     readonly property real zw: (width - 16) / 3
-                    BarZone { id: zoneL; width: zrow.zw; zone: "left"; label: "Left" }
-                    BarZone { id: zoneC; width: zrow.zw; zone: "center"; label: "Middle" }
-                    BarZone { id: zoneR; width: zrow.zw; zone: "right"; label: "Right" }
+                    BarZone { id: zoneL; ed: sec; width: zrow.zw; zone: "left"; label: "Left" }
+                    BarZone { id: zoneC; ed: sec; width: zrow.zw; zone: "center"; label: "Middle" }
+                    BarZone { id: zoneR; ed: sec; width: zrow.zw; zone: "right"; label: "Right" }
                 }
             }
             // what isn't on the bar
@@ -192,7 +196,7 @@ ColumnLayout {
                     spacing: 6
                     Repeater {
                         model: sec.unused
-                        Chip { required property string modelData; key: modelData; zone: "tray" }
+                        Chip { required property string modelData; ed: sec; key: modelData; zone: "tray" }
                     }
                 }
                 Label { visible: sec.unused.length === 0; x: 12; y: 30; text: "Everything is on the bar"; muted: true; font.pixelSize: Theme.sizeSmall }
