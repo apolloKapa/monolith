@@ -14,7 +14,7 @@ Item {
     id: bar
     property string screenName: ""
     property var trayWindow: null                       // the window tray menus open from
-    readonly property real gap: 14
+    readonly property real gap: Number(Store.get("bar.sectionGap", 14))
     implicitWidth: leftZone.width + midZone.width + rightZone.width + (midZone.width > 0 ? 2 * gap : gap) + 2 * Theme.islandPad
     implicitHeight: Theme.islandH
     function open(p) { HubState.toggle(p, bar.screenName); }
@@ -40,7 +40,8 @@ Item {
         property real pad: 9
         height: Theme.islandH - 10
         width: inner.implicitWidth + 2 * pad
-        color: hovered ? Theme.containerHigh : "transparent"
+        // on a see-through bar, modules can sit on their own pills
+        color: hovered ? Theme.containerHigh : (Theme.barPills ? Qt.alpha(Theme.frame, Math.max(0.85, Theme.frame.a)) : "transparent")
         Row { id: inner; x: m.pad; anchors.verticalCenter: parent.verticalCenter; spacing: 6 }
     }
     // a round icon module
@@ -57,7 +58,7 @@ Item {
     component Zone: Row {
         property var keys: []
         height: bar.height
-        spacing: 2
+        spacing: Number(Store.get("bar.gap", 2))
         Repeater {
             model: parent.keys
             Loader {

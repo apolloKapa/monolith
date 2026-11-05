@@ -39,7 +39,7 @@ PanelWindow {
     MouseArea { anchors.fill: parent; enabled: win.shown; onClicked: HubState.close() }
 
     readonly property var pageInfo: ({
-        "search":        { icon: "search",         title: "Search",        w: 640 },
+        "search":        { icon: "search",         title: "Search",        w: Number(Store.get("search.width", 640)) },
         "quick":         { icon: "page_info",      title: "Control center", w: 1040 },
         "notifications": { icon: "notifications",  title: "Notifications", w: 680 },
         "media":         { icon: "music_note",     title: "Media",         w: 720 },
@@ -66,7 +66,11 @@ PanelWindow {
     // the body's size: the bar's when collapsed, the page's when open
     readonly property real openW: Math.max(bar.implicitWidth, (pageInfo[HubState.page] || pageInfo.search).w)
     readonly property real openH: Math.min(height - 40, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
-    readonly property real restW: Theme.fullBar ? width : Math.max(Theme.islandMinW, bar.implicitWidth)
+    readonly property real restW: Theme.fullBar ? Math.round(width * Theme.barLength) : Math.max(Theme.islandMinW, bar.implicitWidth)
+    // the bar can be off on some screens (Settings → Bar); menus still open there
+    readonly property bool barHere: (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) === -1
+    // the bar's own background shows when it's open, or per its opacity setting
+    readonly property bool barSolid: shown || toastOn || Theme.barOpacity >= 0.99
 
     // where menus open (Settings → Menus): out of the island (top), or as a floating card in
     // the middle of the screen or on the right; then the island stays a bar
@@ -89,7 +93,10 @@ PanelWindow {
         id: island
         bodyW: win.grown ? win.openW : (win.toastOn ? Math.max(win.restW, 520) : win.restW)
         height: win.grown ? win.openH : (win.toastOn ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
-        r: win.grown || win.toastOn ? Theme.islandRadius : (Theme.fullBar ? 0 : height / 2)
+        r: win.grown || win.toastOn ? Theme.islandRadius : (Theme.fullBar ? (Theme.barLength < 0.999 ? Theme.islandRadius / 2 : 0) : height / 2)
+        fill: win.barSolid ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+        shadow: win.barSolid || Theme.barOpacity > 0.3
+        opacity: win.barHere || win.shown || win.toastOn ? 1 : 0
         ear: Theme.fullBar && !win.grown ? 0 : Theme.islandEar
         onHeightChanged: if (!win.shown && height <= Theme.islandH + 1) win.wasOpen = false
         x: Math.round((win.width - width) / 2)
@@ -342,5 +349,15 @@ PanelWindow {
     Connections {
         target: HubState
         function onPresetRequested() { if (win.shown && HubState.preset !== "") { query.text = HubState.preset; HubState.preset = ""; } }
+    }
+
+    // blur behind it (Theme → Effects), shaped like it
+    BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
+    Region {
+        id: blurShape
+        item: body
+        radius: island.rr
+        Region { item: win.dropped || drop.height > 1 ? dropBody : null; radius: drop.rr }
+        Region { item: floatCard.visible ? floatCard : null; radius: floatCard.radius }
     }
 }

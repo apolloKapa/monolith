@@ -4,6 +4,7 @@ import "../../core"
 import "../../ui"
 
 ColumnLayout {
+    id: idleSec
     spacing: 8
     SettingRow {
         icon: "timer"; title: "Lock when idle"; desc: "Lock, then turn the screens off, when you're away (videos and Stay awake pause this)"
@@ -36,5 +37,36 @@ ColumnLayout {
     SettingRow {
         icon: "lock"; title: "Lock now"
         Button { text: "Lock"; onClicked: { HubState.close(); LockState.lock(); } }
+    }
+
+    // ── your own idle actions ──
+    readonly property var acts: Store.get("idle.actions", [])
+    function setAct(i, k, v) { const l = acts.map(x => Object.assign({}, x)); l[i][k] = v; Store.set("idle.actions", l); }
+    Label { text: "Your own actions"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
+    SettingRow {
+        icon: "terminal"; title: "Run a command when you're away"; desc: "After the time you set; the second command runs when you're back (optional)"
+        Button { text: "Add"; icon: "add"; onClicked: Store.set("idle.actions", idleSec.acts.concat([{ name: "Action " + (idleSec.acts.length + 1), after: 600, command: "", resume: "" }])) }
+    }
+    Repeater {
+        model: idleSec.acts
+        Card {
+            required property var modelData
+            required property int index
+            Layout.fillWidth: true
+            Layout.preferredHeight: 196
+            icon: "bolt"; title: modelData.name || "Action"
+            Column {
+                width: parent.width
+                spacing: 8
+                Row {
+                    spacing: 8
+                    Label { width: 90; text: "After"; anchors.verticalCenter: parent.verticalCenter; muted: true }
+                    NumberBox { width: 320; from: 5; to: 86400; slideTo: 3600; step: 5; unit: "s"; value: Number(modelData.after); onMoved: v => idleSec.setAct(index, "after", v) }
+                    Pressable { width: 36; height: 36; color: hovered ? Qt.alpha(Theme.danger, 0.2) : "transparent"; onClicked: Store.set("idle.actions", idleSec.acts.filter((x, i) => i !== index)); Icon { anchors.centerIn: parent; name: "delete"; size: 19; color: Theme.danger } }
+                }
+                Row { spacing: 8; Label { width: 90; text: "Command"; anchors.verticalCenter: parent.verticalCenter; muted: true } Field { width: 420; text: modelData.command || ""; placeholder: "e.g. playerctl pause"; onAccepted: v => idleSec.setAct(index, "command", v) } }
+                Row { spacing: 8; Label { width: 90; text: "When back"; anchors.verticalCenter: parent.verticalCenter; muted: true } Field { width: 420; text: modelData.resume || ""; placeholder: "optional"; onAccepted: v => idleSec.setAct(index, "resume", v) } }
+            }
+        }
     }
 }

@@ -20,6 +20,19 @@ ColumnLayout {
         Button { text: "Reset"; onClicked: Store.set("launches", {}) }
     }
     SettingRow {
+        icon: "width"; title: "Width"
+        NumberBox { from: 400; to: 1400; slideTo: 1100; step: 10; unit: "px"; value: Number(Store.get("search.width", 640)); onMoved: v => Store.set("search.width", v) }
+    }
+    SettingRow {
+        icon: "apps"; title: "All apps as a grid"; desc: "While nothing is typed: icons instead of a list"
+        Toggle { checked: Store.get("search.grid", false) === true; onToggled: on => Store.set("search.grid", on) }
+    }
+    SettingRow {
+        visible: Store.get("search.grid", false) === true
+        icon: "grid_view"; title: "Grid columns"
+        NumberBox { from: 3; to: 12; value: Number(Store.get("search.gridColumns", 6)); onMoved: v => Store.set("search.gridColumns", v) }
+    }
+    SettingRow {
         icon: "format_list_numbered"; title: "Results shown"
         NumberBox { from: 1; to: 30; slideTo: 20; value: Number(Store.get("search.rows", 7)); onMoved: v => Store.set("search.rows", v) }
     }

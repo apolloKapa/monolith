@@ -89,4 +89,12 @@ PanelWindow {
             source: "quick/" + ({ calc: "Calc", convert: "Convert", notes: "Notes", timer: "Timer", draw: "Draw", usage: "Usage" })[qa.tool] + ".qml"
         }
     }
+
+    // blur behind it (Theme → Effects), shaped like it
+    BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
+    Region {
+        id: blurShape
+        item: qa.out ? panel : null
+        radius: panel.radius
+    }
 }

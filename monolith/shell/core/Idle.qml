@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import QtQml.Models
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Mpris
@@ -43,5 +44,21 @@ Singleton {
         timeout: idle.suspendAfter
         respectInhibitors: true
         onIsIdleChanged: if (isIdle) { LockState.lock(); Quickshell.execDetached(["loginctl", "suspend"]); }
+    }
+
+    // your own idle actions (Settings → Lock & idle): [{ name, after (s), command, resume }]
+    readonly property var actions: Store.get("idle.actions", [])
+    Instantiator {
+        model: idle.actions
+        delegate: IdleMonitor {
+            required property var modelData
+            enabled: idle.on && Number(modelData.after) > 0 && (modelData.command || "") !== ""
+            timeout: Math.max(1, Number(modelData.after))
+            respectInhibitors: true
+            onIsIdleChanged: {
+                if (isIdle) Quickshell.execDetached(["sh", "-c", modelData.command]);
+                else if ((modelData.resume || "") !== "") Quickshell.execDetached(["sh", "-c", modelData.resume]);
+            }
+        }
     }
 }

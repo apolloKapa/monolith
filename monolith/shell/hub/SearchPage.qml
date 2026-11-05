@@ -15,7 +15,10 @@ Page {
 
     readonly property real rowH: 52
     readonly property int maxRows: Number(Store.get("search.rows", 7))
-    implicitHeight: favArea.height + Math.max(1, Math.min(results.length, maxRows)) * rowH
+    implicitHeight: favArea.height + (showGrid ? Math.min(maxRows * rowH, appGrid.contentHeight) : Math.max(1, Math.min(results.length, maxRows)) * rowH)
+    // all apps as a grid of icons while nothing is typed (Settings → Launcher)
+    readonly property bool showGrid: Store.get("search.grid", false) === true && query.trim() === ""
+    readonly property int gridColumns: Number(Store.get("search.gridColumns", 6))
 
     // ── favourites: pinned apps, shown as a grid while nothing is typed ──
     // (desktop ids; the earlier Monolith's list to start with). Right-click an app to pin or unpin.
@@ -155,8 +158,36 @@ Page {
         Rectangle { anchors.bottom: parent.bottom; anchors.bottomMargin: 5; width: parent.width; height: 1; color: Theme.ringTrack }
     }
 
+    GridView {
+        id: appGrid
+        visible: page.showGrid
+        anchors.fill: parent
+        anchors.topMargin: favArea.height
+        clip: true
+        cellWidth: width / page.gridColumns
+        cellHeight: 92
+        boundsBehavior: Flickable.StopAtBounds
+        model: page.showGrid ? page.apps : []
+        delegate: Pressable {
+            required property var modelData
+            width: appGrid.cellWidth - 4
+            height: 88
+            color: hovered ? Theme.containerHigh : "transparent"
+            onClicked: page.launch(modelData)
+            onRightClicked: page.toggleFav(modelData)
+            Column {
+                anchors.centerIn: parent
+                width: parent.width - 8
+                spacing: 6
+                Image { anchors.horizontalCenter: parent.horizontalCenter; width: 40; height: 40; sourceSize: Qt.size(80, 80); source: Quickshell.iconPath(parent.parent.modelData.icon, "application-x-executable"); asynchronous: true; smooth: true; mipmap: true }
+                Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: parent.parent.modelData.name; font.pixelSize: Theme.sizeSmall }
+            }
+        }
+    }
+
     ListView {
         id: list
+        visible: !page.showGrid
         anchors.fill: parent
         anchors.topMargin: favArea.height
         clip: true

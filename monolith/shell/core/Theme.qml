@@ -79,7 +79,11 @@ Singleton {
 
     // the layers, lowest to highest
     readonly property bool oled: Look.style.oled === true
-    readonly property real see: Look.style.opaque === false ? 0.74 : 1      // see-through styles
+    // how solid panels are: see-through styles, and your setting (Theme → Effects)
+    readonly property real panelOpacity: Number(Store.get("theme.panelOpacity", 1))
+    readonly property real see: (Look.style.opaque === false ? 0.74 : 1) * panelOpacity
+    // blur behind the shell's panels (the compositor does it; strength in niri's config)
+    readonly property bool blur: Store.get("theme.blur", false) === true
     readonly property color card: Qt.alpha(oled ? "#000000" : m("surface_container_low", mix(_base, _s0, 0.55)), see)  // the hub, the dock
     // (with a palette: mantle, surface0, surface1; surface2 is ink in some styles)
     readonly property color container: oled ? "#0d0d0d" : m("surface_container", Look.colors ? c("mantle", _s0) : _s0)            // groups inside a card
@@ -114,15 +118,21 @@ Singleton {
     readonly property var enterCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
     readonly property var exitCurve: [0.3, 0.0, 0.8, 0.15, 1.0, 1.0]
     readonly property var standardCurve: [0.2, 0.0, 0.0, 1.0, 1.0, 1.0]
-    readonly property int enterMs: 500
-    readonly property int exitMs: 200
-    readonly property int moveMs: 380
+    // animation speed (Theme → Effects): a multiplier on every duration; off = instant
+    readonly property bool animOn: Store.get("theme.animations", true) !== false
+    readonly property real animScale: animOn ? 1 / Math.max(0.2, Number(Store.get("theme.animSpeed", 1))) : 0
+    readonly property int enterMs: Math.round(500 * animScale)
+    readonly property int exitMs: Math.round(200 * animScale)
+    readonly property int moveMs: Math.round(380 * animScale)
 
     // ── the island (status line + hub in one shape hanging from the top edge) ──
     readonly property color frame: Qt.alpha(oled ? "#000000" : m("surface", mix(_base, _s0, 0.35)), see)   // the island's fill
     readonly property real islandH: Number(Store.get("bar.height", 40))   // collapsed: the bar's height (Settings → Bar)
     readonly property bool fullBar: Store.get("bar.shape", "island") === "full"  // a full-width bar instead of the island
-    readonly property real islandMinW: 460      // collapsed: never narrower
+    readonly property real islandMinW: Number(Store.get("bar.minWidth", 460))   // collapsed island: never narrower
+    readonly property real barLength: Number(Store.get("bar.length", 1))        // the full-width bar's length (share of the screen)
+    readonly property real barOpacity: Number(Store.get("bar.opacity", 1))      // the bar's own background (0: only its modules)
+    readonly property bool barPills: Store.get("bar.pills", false) === true     // each module on its own pill
     readonly property real islandEar: 20        // the concave curve joining the screen edge
     readonly property real islandPad: 12        // inside, around the content
     readonly property real islandGap: 8         // between the island and the screen edge when open
@@ -130,7 +140,7 @@ Singleton {
     // the island's "spring": a curve that overshoots a little and settles. (Not Qt's
     // SpringAnimation: that steps every 16 ms, so it moves at 60 fps on any screen.)
     readonly property var springCurve: [0.22, 1.0, 0.36, 1.1, 1, 1]
-    readonly property int springMs: 520
+    readonly property int springMs: Math.round(520 * animScale)
     // the soft shadow under floating shapes (drawn by the shell, no compositor blur)
     // (styles with a hard shadow: a solid offset copy in the ink colour)
     readonly property real hardShadow: Look.style.hardShadow || 0
