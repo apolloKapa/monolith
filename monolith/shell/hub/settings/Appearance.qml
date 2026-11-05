@@ -100,7 +100,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "rounded_corner"; title: "Corner radius"; desc: "How round everything is"
-        NumberBox { from: 0; to: 60; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
+        NumberBox { from: 0; to: 60; slideTo: 40; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
     }
     // ── font: the families rendered in themselves ──
     property string fontFilter: ""
@@ -167,7 +167,12 @@ ColumnLayout {
     // ── cursors: the pointers on a light tile, so dark and light themes both show ──
     SettingRow {
         icon: "arrow_selector_tool"; title: "Cursor"; desc: "Theme and size, for niri and apps" + (sec.cursorTheme ? " (now " + sec.cursorTheme + ")" : "")
-        NumberBox { from: 8; to: 128; step: 2; unit: "px"; value: sec.cursorSize; onMoved: v => sec.setCursor(sec.cursorTheme || "default", v) }
+        // applied once you stop dragging
+        NumberBox {
+            from: 8; to: 128; slideTo: 96; step: 2; unit: "px"; value: sec.cursorSize
+            onMoved: v => { sec.cursorSize = v; cursorLater.restart(); }
+            Timer { id: cursorLater; interval: 500; onTriggered: sec.setCursor(sec.cursorTheme || "default", sec.cursorSize) }
+        }
     }
     GridLayout {
         Layout.fillWidth: true

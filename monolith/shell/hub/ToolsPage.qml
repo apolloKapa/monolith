@@ -86,7 +86,7 @@ Page {
                     Chip { required property int modelData; text: modelData + " min"; onClicked: Tasks.startTimer(modelData) }
                 }
                 // any length
-                NumberBox { id: customMin; width: 150; height: 34; from: 1; to: 1440; unit: "min"; value: 15; onMoved: v => value = v }
+                NumberBox { id: customMin; width: parent.width - 80; from: 1; to: 600; slideTo: 120; unit: "min"; value: 15; onMoved: v => value = v }
                 Chip { text: "Start"; on: true; onClicked: Tasks.startTimer(customMin.value) }
                 Chip {
                     visible: Tasks.total > 0

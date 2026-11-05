@@ -65,16 +65,20 @@ Singleton {
     }
     property string focused: ""
 
-    function cancel() { active = false; sel = Qt.rect(0, 0, 0, 0); }
+    // the overlay closes after the click or key that closed it has been handled: hiding its
+    // windows inside their own event handler destroyed them mid-event and crashed the shell
+    property bool closing: false
+    function hide() { closing = true; Qt.callLater(() => { cap.active = false; cap.closing = false; }); }
+    function cancel() { hide(); sel = Qt.rect(0, 0, 0, 0); }
 
     // ── finish ──
     // action: save | copy | edit | text | qr  (photo), or record (video)
     function finish(action) {
-        if (!hasSel) return;
+        if (!hasSel || !active || closing) return;
         const scr = Quickshell.screens.find(s => s.name === screenName);
         if (!scr) return;
         const r = mode === "screen" ? Qt.rect(0, 0, scr.width, scr.height) : sel;
-        active = false;
+        hide();
         if (kind === "video") {
             // wf-recorder takes the layout's (logical) coordinates
             if (mode === "screen") Tasks.startRecording({ output: screenName });

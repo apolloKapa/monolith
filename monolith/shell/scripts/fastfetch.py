@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Fastfetch presets (Settings -> Fastfetch). Presets are fastfetch configs in
-~/.config/monolith/fastfetch/NAME.jsonc; {{colors.ROLE.VARIANT.hex}} or {{ROLE}} in them becomes the
+~/.config/monolith/fastfetch/NAME.jsonc; {{colors.ROLE.VARIANT.hex}} (.red, .green, .blue too) or {{ROLE}} in them becomes the
 shell's colour (the wallpaper palette). The one in use is written to fastfetch's own config.
 
     fastfetch.py list              JSON: each preset, whether it's in use, and a preview (HTML)
@@ -50,7 +50,13 @@ def coloured(text):
         v = roles.get(role, {})
         pick = v.get(variant) or v.get("default") or v.get("dark") or {}
         return pick.get("color", "#888888") if isinstance(pick, dict) else "#888888"
-    text = re.sub(r"\{\{\s*colors\.(\w+)\.(\w+)\.hex\s*\}\}", lambda m: colour(m.group(1), m.group(2)), text)
+    def field(role, variant, what):
+        c = colour(role, variant)
+        r, g, b = int(c[1:3], 16), int(c[3:5], 16), int(c[5:7], 16)
+        return {"hex": c, "hex_stripped": c[1:], "red": str(r), "green": str(g), "blue": str(b),
+                "rgb": "rgb(%d, %d, %d)" % (r, g, b)}.get(what, c)
+    # {{colors.ROLE.VARIANT.hex}} (or .red / .green / .blue / .hex_stripped / .rgb)
+    text = re.sub(r"\{\{\s*colors\.(\w+)\.(\w+)\.(\w+)\s*\}\}", lambda m: field(m.group(1), m.group(2), m.group(3)), text)
     # the short form: {{primary}}
     return re.sub(r"\{\{\s*(\w+)\s*\}\}", lambda m: colour(m.group(1)), text)
 
