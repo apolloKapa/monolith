@@ -71,7 +71,7 @@ Rectangle {
                     size: popup.s(40)
                     cornerRadius: ThemeBackend.square ? 0 : popup.s(20)
                     imageRadius: ThemeBackend.square ? 0 : popup.s(20)
-                    source: SystemInfo.avatarPath !== "" ? "file://" + SystemInfo.avatarPath : ""
+                    source: SystemInfo.avatarUrl
                     backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.primaryContainer : "transparent"
                     Text {
                         anchors.centerIn: parent

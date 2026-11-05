@@ -37,6 +37,10 @@ Item {
     readonly property var styles: ({
         "material":   { "name": "Material", "opaque": true, "radiusScale": 1.8, "font": "Google Sans Flex", "matugen": true, "pill": true,
                         "desc": "Soft, round, your wallpaper's colours" },
+        // the launcher's look for the whole shell: tonal layers lifted off the wallpaper's
+        // colours, hairline edges, corners that follow your border radius, floating cards
+        "orbit":      { "name": "Orbit", "opaque": true, "radiusScale": 1.0, "matugen": true,
+                        "desc": "Tonal layers, hairline edges, floating cards" },
         "blur":       { "name": "Blur",         "opaque": false },
         "liquid":     { "name": "Liquid glass", "opaque": false },
         "minimalist": { "name": "Minimalist", "opaque": true, "square": true, "outline": [2, 1], "font": "JetBrains Mono",
@@ -115,7 +119,7 @@ Item {
                                     "blue": "#2f6fdb", "sapphire": "#2a8fc4", "teal": "#1e9e8a", "mauve": "#e0457b", "pink": "#f06aa4", "green": "#3a9e3a",
                                     "yellow": "#f2c230", "peach": "#f28a30", "red": "#e03c3c", "maroon": "#b52d2d" } }
     })
-    readonly property var styleOrder: ["material", "blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper", "arcade",
+    readonly property var styleOrder: ["material", "orbit", "blur", "liquid", "minimalist", "terminal", "brutal", "luxe", "poster", "bubbly", "paper", "arcade",
                                        "oled", "mainframe", "sakura", "fjord", "doodle", "shadow"]
     readonly property var style: styles[blurStyle] || styles["material"]
     // OLED style: black backgrounds over any palette (applyColorObject); re-read the colours
@@ -123,7 +127,10 @@ Item {
     readonly property bool oledStyle: style.oled === true
     onOledStyleChanged: reloadColors()
     // Material: Google-style tonal surfaces, pill controls and filled containers instead of outlines
-    readonly property bool material: blurStyle === "material"
+    // Orbit builds on Material's tonal treatment (filled containers, secondary-container
+    // selection), with its own palette lift, hairline edges and radius-following corners
+    readonly property bool orbit: blurStyle === "orbit"
+    readonly property bool material: blurStyle === "material" || orbit
     // controls are full pills (buttons, chips, segmented switches) unless the style is square
     readonly property bool pill: style.pill === true
     // type weights: Material sets lighter type than the shell's heavy defaults
@@ -240,9 +247,11 @@ Item {
     readonly property color surfaceContainerHighest: surface2
     readonly property color onPrimary: _lum(mauve) > 0.5 ? Qt.darker(mauve, 3.2) : "#ffffff"
     readonly property color primaryContainer: matugenPalette ? sapphire : Qt.tint(surface0, Qt.alpha(mauve, 0.32))
-    readonly property color onPrimaryContainer: darkMode ? Qt.tint(text, Qt.alpha(mauve, 0.35)) : Qt.darker(mauve, 2.4)
+    readonly property color onPrimaryContainer: _lum(primaryContainer) < 0.5 ? Qt.tint(text, Qt.alpha(mauve, 0.35)) : Qt.darker(mauve, 2.4)
     readonly property color secondaryContainer: matugenPalette ? yellow : Qt.tint(surface1, Qt.alpha(mauve, 0.16))
-    readonly property color onSecondaryContainer: darkMode ? Qt.tint(text, Qt.alpha(green, 0.25)) : Qt.darker(mauve, 2.6)
+    // light or dark ink by how light the container actually is (a wallpaper palette can make it
+    // dark in a light theme or light in a dark one)
+    readonly property color onSecondaryContainer: _lum(secondaryContainer) < 0.5 ? Qt.tint(text, Qt.alpha(green, 0.25)) : Qt.darker(mauve, 2.6)
     readonly property color outlineVariant: surface2
 
     property string configPath: Quickshell.env("QS_COLORS_JSON") ?? "~/.local/state/monolith/qs_colors.json"
@@ -495,6 +504,9 @@ Item {
         }
     }
 
+    readonly property bool orbitStyleOn: orbit
+    onOrbitStyleOnChanged: reloadColors()
+
     function applyColorObject(c) {
         if (!c) return;
 
@@ -508,6 +520,9 @@ Item {
             }
             return val.toString();
         };
+
+        const baseHex = resolveHex(c.base);
+        const orbitLifting = root.orbit && baseHex !== "" && root._lum(Qt.color(baseHex)) < 0.5;
 
         let names = ["base", "mantle", "crust", "surface0", "surface1", "surface2",
                      "overlay0", "overlay1", "overlay2", "text", "subtext0", "subtext1",
@@ -524,6 +539,18 @@ Item {
             if (root.oledStyle) {
                 if (names[i] === "base" || names[i] === "mantle" || names[i] === "crust") nextColor = Qt.color("#000000");
                 else if (names[i] === "surface0" || names[i] === "surface1" || names[i] === "surface2") nextColor = Qt.darker(nextColor, 1.7);
+            }
+            // Orbit: every layer one tonal step up (dark palettes), so panels sit as lifted
+            // cards and what's inside them as the next layers, the way the launcher looks
+            if (orbitLifting) {
+                const lift = { "base": "surface0", "surface0": "surface1", "surface1": "surface2" };
+                if (lift[names[i]] && resolveHex(c[lift[names[i]]])) {
+                    const from = Qt.color(hexColor), to = Qt.color(resolveHex(c[lift[names[i]]]));
+                    // most of the way: the backdrop stays a touch darker than the next layer
+                    nextColor = Qt.rgba(from.r + (to.r - from.r) * 0.8, from.g + (to.g - from.g) * 0.8, from.b + (to.b - from.b) * 0.8, 1);
+                } else if (names[i] === "surface2") {
+                    nextColor = Qt.lighter(nextColor, 1.22);
+                }
             }
             let slot = (names[i] === "text" || names[i] === "subtext0" || names[i] === "subtext1") ? "_" + names[i] : names[i];
             if (root[slot].toString() !== nextColor.toString()) {

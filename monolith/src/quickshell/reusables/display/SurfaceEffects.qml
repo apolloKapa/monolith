@@ -45,6 +45,20 @@ Item {
     }
 
 
+    // ── Orbit: a hairline edge round the whole surface, like the launcher's card. Only on
+    // floating surfaces (all four corners round); ones attached to a screen edge or the bar
+    // would get a line along that edge too
+    Rectangle {
+        visible: ThemeBackend.orbit && !ThemeBackend.outlined && !!fx.target
+                 && fx.target.topLeftRadius > 0 && fx.target.topRightRadius > 0
+                 && fx.target.bottomLeftRadius > 0 && fx.target.bottomRightRadius > 0
+        anchors.fill: parent
+        color: "transparent"
+        radius: fx.r
+        border.width: 1
+        border.color: Qt.alpha(ThemeBackend.outlineVariant, 0.6)
+    }
+
     // ── corner marks (Theme -> Effects): square brackets or round arcs inside the corners ──
     Repeater {
         model: ThemeBackend.fxMarks !== "off" && fx.width > Scaler.s(140) && fx.height > Scaler.s(70) ? 4 : 0

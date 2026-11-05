@@ -86,7 +86,7 @@ FocusScope {
     }
 
     property string currentUser: SystemInfo.username !== "" ? SystemInfo.username : I18n.t("lock.default_user")
-    property string faceIconPath: SystemInfo.avatarPath !== "" ? (SystemInfo.avatarPath.startsWith("file://") ? SystemInfo.avatarPath : "file://" + SystemInfo.avatarPath) : ""
+    property string faceIconPath: SystemInfo.avatarUrl
     property string weatherIcon: Weather.currentIcon
     property string weatherTemp: Weather.currentTempFormatted
 

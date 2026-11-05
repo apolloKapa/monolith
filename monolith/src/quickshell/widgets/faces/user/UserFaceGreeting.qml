@@ -51,7 +51,7 @@ Item {
                 size: side
                 cornerRadius: ThemeBackend.rad(Math.min(ThemeBackend.borderRadius, side / 4))
                 imageRadius: ThemeBackend.rad(cornerRadius)
-                source: SystemInfo.avatarPath !== "" ? "file://" + SystemInfo.avatarPath : ""
+                source: SystemInfo.avatarUrl
                 backgroundColor: SystemInfo.avatarPath === "" ? ThemeBackend.surface1 : "transparent"
 
                 Text {

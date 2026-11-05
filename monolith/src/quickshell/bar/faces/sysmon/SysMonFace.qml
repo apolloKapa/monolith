@@ -257,7 +257,10 @@ Item {
         readonly property string fontFamily: (ThemeBackend.fontFamily !== undefined && ThemeBackend.fontFamily !== "") ? ThemeBackend.fontFamily : "sans-serif"
         readonly property color valueColor: (ThemeBackend.text !== undefined && ThemeBackend.text !== "") ? ThemeBackend.text : "#ffffff"
 
-        implicitWidth: root.isVertical ? Math.max(labelText.implicitWidth, valueLabel.implicitWidth) : textRow.implicitWidth
+        // Orbit: each stat is a small tonal chip, an accent glyph and the value (no "CPU |" text)
+        readonly property bool orbitChip: ThemeBackend.orbit && !root.isVertical
+        readonly property string glyph: ({ "CPU": "󰍛", "RAM": "󰘚", "TEMP": "󰔏", "GPU": "󰢮", "DISK": "󰋊", "SWAP": "󰾴", "VRAM": "󰾲" })[String(textRoot.label).toUpperCase()] || ""
+        implicitWidth: root.isVertical ? Math.max(labelText.implicitWidth, valueLabel.implicitWidth) : (orbitChip ? orbitRow.implicitWidth + (barWindow ? barWindow.cs(16) : 16) : textRow.implicitWidth)
         implicitHeight: root.isVertical ? (labelText.implicitHeight + valueLabel.implicitHeight) : root.circleSize
         width: implicitWidth
         height: implicitHeight
@@ -292,9 +295,38 @@ Item {
             anchors.top: labelText.bottom
         }
 
+        Rectangle {
+            visible: textRoot.orbitChip
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width
+            height: Math.round(root.circleSize * 0.82)
+            radius: Math.min(height / 2, ThemeBackend.borderRadius)
+            color: ThemeBackend.surfaceContainerHighest
+            Row {
+                id: orbitRow
+                anchors.centerIn: parent
+                spacing: barWindow ? barWindow.cs(6) : 6
+                Text {
+                    text: textRoot.glyph !== "" ? textRoot.glyph : textRoot.label
+                    font.pixelSize: textRoot.glyph !== "" ? Math.round(textRoot.fontSize * 1.25) : textRoot.fontSize
+                    font.family: textRoot.glyph !== "" ? ThemeBackend.iconFont : textRoot.fontFamily
+                    color: ThemeBackend.mauve
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Text {
+                    text: textRoot.valueText
+                    font.pixelSize: textRoot.fontSize
+                    font.family: textRoot.fontFamily
+                    font.weight: Font.Medium
+                    color: textRoot.valueColor
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
+
         Row {
             id: textRow
-            visible: !root.isVertical
+            visible: !root.isVertical && !textRoot.orbitChip
             anchors.verticalCenter: parent.verticalCenter
             spacing: barWindow ? barWindow.cs(5) : 5
             Text {
@@ -326,7 +358,7 @@ Item {
         id: sysLayout
         vertical: root.isVertical
         anchors.centerIn: parent
-        spacing: root.isMinimal
+        spacing: (ThemeBackend.orbit && root.isMinimal && !root.isVertical) ? (barWindow ? barWindow.cs(4) : 4) : root.isMinimal
             ? (barWindow ? barWindow.cs(root.isCompact ? 10 : 12) : (root.isCompact ? 10 : 12))
             : (barWindow ? barWindow.cs(root.isCompact ? 5 : 6) : (root.isCompact ? 5 : 6))
         property int circleSize: root.circleSize

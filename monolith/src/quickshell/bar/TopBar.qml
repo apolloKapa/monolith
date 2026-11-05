@@ -582,7 +582,8 @@ Item {
         height: barWindow ? barWindow.barHeight : 0
         y: barWindow ? barWindow.baseOffsetY : 0
         color: frameGlass ? "transparent" : Qt.alpha(ThemeBackend.base, (barWindow && barWindow.barOpacity !== undefined) ? barWindow.barOpacity : 1.0)
-        radius: ThemeBackend.rad(isFill ? 0 : ThemeBackend.borderRadius)
+        // Orbit: a floating strip whose corner wraps its pills' (pill radius + their inset)
+        radius: ThemeBackend.orbit && !isFill ? Math.min(height / 2, width / 2, ThemeBackend.borderRadius + 6) : ThemeBackend.rad(isFill ? 0 : ThemeBackend.borderRadius)
         topLeftRadius: ThemeBackend.rad(isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
         topRightRadius: ThemeBackend.rad(isFill ? (contentWrapper.barAtBottom ? contentWrapper.fillFarRadius : 0) : radius)
         bottomLeftRadius: ThemeBackend.rad(isFill ? (contentWrapper.barAtBottom ? 0 : contentWrapper.fillFarRadius) : radius)
@@ -776,7 +777,7 @@ Item {
                 let firstX = -1;
                 let lastX = -1;
                 let lastW = 0;
-                let groupH = barWindow ? ((contentWrapper.isSolid && contentWrapper.distinctPills) ? barWindow.barHeight - 6 : barWindow.barHeight) : ((contentWrapper.isSolid && contentWrapper.distinctPills) ? 24 : 30);
+                let groupH = barWindow ? ((contentWrapper.isSolid && contentWrapper.distinctPills) ? barWindow.barHeight - (ThemeBackend.orbit ? 12 : 6) : barWindow.barHeight) : ((contentWrapper.isSolid && contentWrapper.distinctPills) ? 24 : 30);
                 for (let i = 0; i < groupIds.length; i++) {
                     let id = groupIds[i];
                     let widget = contentWrapper.getPositionedWidget(id);

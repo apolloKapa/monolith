@@ -583,10 +583,15 @@ Item {
                             radius: ThemeBackend.borderRadius
 
                             property bool isHovered: cardMa.containsMouse && !isActiveNode
+                            // Orbit: tonal rows; the default device is the secondary container, no outlines
+                            readonly property bool orbit: ThemeBackend.orbit && !delegateGlass.active
+                            readonly property color inkColor: orbit ? ThemeBackend.text
+                                                                   : (isActiveNode && !delegateGlass.active ? ThemeBackend.crust : ThemeBackend.text)
 
-                            color: delegateGlass.active ? "transparent" : (isActiveNode ? window.tabColor : (isHovered ? ThemeBackend.surface1 : ThemeBackend.surface0))
+                            color: delegateGlass.active ? "transparent" : (orbit ? (isActiveNode ? ThemeBackend.secondaryContainer : ThemeBackend.surfaceContainerHigh)
+                                                                                 : (isActiveNode ? window.tabColor : (isHovered ? ThemeBackend.surface1 : ThemeBackend.surface0)))
                             border.color: isActiveNode ? window.tabColor : ThemeBackend.surface1
-                            border.width: delegateGlass.active ? 0 : (isActiveNode ? 2 : 1)
+                            border.width: (delegateGlass.active || orbit) ? 0 : (isActiveNode ? 2 : 1)
                             Behavior on border.color { ColorAnimation { duration: (300) * ThemeBackend.animScale } }
                             Behavior on color { ColorAnimation { duration: (300) * ThemeBackend.animScale } }
 
@@ -601,11 +606,23 @@ Item {
                                 Behavior on tintAmount { NumberAnimation { duration: (300) * ThemeBackend.animScale } }
                             }
 
+                            Ripple {
+                                id: cardInk
+                                active: delegateRoot.orbit && window.activeTab !== "apps"
+                                shapeRadius: delegateRoot.radius
+                                ink: delegateRoot.inkColor
+                                hovered: delegateRoot.isHovered
+                                pressed: cardMa.pressed && !delegateRoot.isActiveNode
+                            }
+
                             MouseArea {
                                 id: cardMa
                                 anchors.fill: parent
                                 hoverEnabled: window.activeTab !== "apps"
                                 cursorShape: window.activeTab !== "apps" ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onPressed: (mouse) => cardInk.press(mouse.x, mouse.y)
+                                onReleased: cardInk.release()
+                                onCanceled: cardInk.release()
                                 onClicked: {
                                     if (window.activeTab !== "apps" && !delegateRoot.isActiveNode) {
                                         if (window.activeTab === "outputs") Audio.setDefaultOutput(delegateRoot.node);
@@ -626,7 +643,15 @@ Item {
                                     Layout.fillWidth: true
                                     spacing: window.s(10)
 
+                                    IconBubble {
+                                        visible: delegateRoot.orbit
+                                        size: window.s(34)
+                                        active: delegateRoot.isActiveNode
+                                        glyph: devGlyph.text
+                                    }
                                     Text {
+                                        id: devGlyph
+                                        visible: !delegateRoot.orbit
                                         font.family: ThemeBackend.iconFont; font.pixelSize: window.s(18)
                                         color: isActiveNode && !delegateGlass.active ? ThemeBackend.crust : ThemeBackend.text
                                         Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
@@ -643,14 +668,14 @@ Item {
                                         spacing: window.s(2)
                                         Text {
                                             Layout.fillWidth: true; elide: Text.ElideRight
-                                            font.family: ThemeBackend.fontFamily; font.weight: Font.Bold; font.pixelSize: window.s(13)
-                                            color: isActiveNode && !delegateGlass.active ? ThemeBackend.crust : ThemeBackend.text
+                                            font.family: ThemeBackend.fontFamily; font.weight: delegateRoot.orbit ? Font.Medium : Font.Bold; font.pixelSize: window.s(13)
+                                            color: delegateRoot.inkColor
                                             text: delegateRoot.nodeDesc
                                         }
                                         Text {
                                             Layout.fillWidth: true; elide: Text.ElideRight
                                             font.family: ThemeBackend.fontFamily; font.pixelSize: window.s(10.5)
-                                            color: isActiveNode && !delegateGlass.active ? Qt.darker(ThemeBackend.crust, 1.5) : ThemeBackend.subtext0
+                                            color: delegateRoot.orbit ? Qt.alpha(delegateRoot.inkColor, 0.72) : (isActiveNode && !delegateGlass.active ? Qt.darker(ThemeBackend.crust, 1.5) : ThemeBackend.subtext0)
                                             text: isActiveNode ? I18n.t("volumepopup.active_default") : delegateRoot.nodeNameStr
                                         }
                                     }

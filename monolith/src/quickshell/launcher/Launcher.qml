@@ -43,7 +43,9 @@ PanelWindow {
     property bool isVisible: LauncherController.isVisible
     property int configRevision: 0
     property bool appsLoaded: false
-    property real introItems: 0.0
+    // the app list was rebuilt after the last close, so opening needn't redo it
+    property bool listFresh: false
+    property real introItems: 1.0
     property int currentTabIndex: 0
 
     property string tabAppsTitle: (typeof I18n !== "undefined") ? I18n.t("applauncher.tab_applications", "Applications") : "Applications"
@@ -91,41 +93,43 @@ PanelWindow {
         }
     }
 
+    // the apps' entrance: each item starts a little after the one before (a gentle wave,
+    // capped so long lists don't wait) and its own fade and rise overlap a lot, so it reads
+    // as one smooth motion instead of items popping in one by one
+    function introAt(idx, span) {
+        let start = Math.min(idx, 12) * 0.032;
+        return Math.min(1.0, Math.max(0.0, (introItems - start) / span));
+    }
     function getItemProgress(idx) {
         if (introItems >= 1.0) return 1.0;
         if (introItems <= 0.0) return 0.0;
-        let start = Math.min(idx, 10) * 0.04;
-        let p = Math.min(1.0, Math.max(0.0, (introItems - start) / 0.42));
-        if (p <= 0.0) return 0.0;
-        if (p >= 1.0) return 1.0;
-        let c1 = 0.85;
-        let c3 = c1 + 1;
-        return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
+        let p = introAt(idx, 0.62);
+        return 1 - Math.pow(1 - p, 3);
     }
 
     function getItemOpacity(idx) {
         if (introItems >= 1.0) return 1.0;
         if (introItems <= 0.0) return 0.0;
-        let start = Math.min(idx, 10) * 0.04;
-        let p = Math.min(1.0, Math.max(0.0, (introItems - start) / 0.28));
-        return p;
+        let p = introAt(idx, 0.5);
+        return p * p * (3 - 2 * p);
     }
 
+    // the apps used to ripple in on open; now they're simply there when the card appears
     function restartItemsIntro() {
-        introItems = 0.0;
-        itemsIntroSequence.restart();
+        itemsIntroSequence.stop();
+        introItems = 1.0;
     }
 
     SequentialAnimation {
         id: itemsIntroSequence
         running: false
-        PauseAnimation { duration: (60) * ThemeBackend.animScale }
+        PauseAnimation { duration: (50) * ThemeBackend.animScale }
         NumberAnimation {
             target: launcherWindow
             property: "introItems"
             from: 0.0
             to: 1.0
-            duration: (520) * ThemeBackend.animScale
+            duration: (820) * ThemeBackend.animScale
             easing.type: Easing.Linear
         }
     }
@@ -251,8 +255,7 @@ PanelWindow {
     // the favourites pane: the left part of the launcher, a grid of pinned apps under the tabs
     property int favColumns: (rawLauncherSettings && Number(rawLauncherSettings.favColumns) >= 2) ? Math.min(6, Number(rawLauncherSettings.favColumns)) : 4
     property var appOrder: (rawLauncherSettings && Array.isArray(rawLauncherSettings.appOrder)) ? rawLauncherSettings.appOrder : []
-    readonly property real railW: showRail ? Math.round(s(customWidth) * 0.72) : 0
-    readonly property real favCellH: s(86)
+    readonly property real favCellH: s(84)
     readonly property int favRows: Math.max(1, Math.ceil(favoriteApps.length / favColumns))
 
     function saveLauncher(patch) {
@@ -433,44 +436,84 @@ PanelWindow {
         LauncherController.hide();
     }
 
-    property real cornerRadius: ThemeBackend.borderRadius <= 16 ? ThemeBackend.borderRadius * 2 : Math.min(32, 32 - 16 * Math.exp(-(ThemeBackend.borderRadius - 16) / 12))
-    property real outerCornerRadius: cornerRadius
+    // ── the launcher's shape: one floating rounded surface. The search row sits at its top
+    // (its bottom at the bottom edge) and the pinned apps, the results and a footer unfold out
+    // of it. Nothing is attached to a screen edge: the position setting only says where it floats.
+    readonly property real launcherW: Math.round(s(customWidth) + s(60))
+    readonly property real capsuleH: s(64)
+    readonly property real footerH: s(42)
+    // the search pill sits inset in the search row; the card's corner is the pill's
+    // radius plus that inset, so the two curves run side by side
+    readonly property real pillInset: s(8)
+    readonly property real pillH: capsuleH - 2 * pillInset
+    readonly property real sectionGap: s(10)
+    readonly property real bodyPad: s(16)
+    readonly property real bodyPadTop: s(8)
+    // roundness follows Settings -> Theme -> border radius (0 in the square styles): nothing is
+    // rounder than that, and the card's corner is the search pill's plus its inset (concentric)
+    readonly property real roundBase: ThemeBackend.borderRadius
+    function rr(h) { return Math.max(0, Math.min(h / 2, roundBase)); }
+    readonly property real pillR: rr(pillH)
+    function innerR(inset) { return Math.max(0, pillR - inset); }
+    readonly property real bodyRadius: roundBase <= 0 ? 0 : pillR + pillInset
+    readonly property real edgeMargin: s(16)
+    readonly property real rowH: s(50)
+    readonly property real rowSpacing: s(4)
+    readonly property real rowStep: rowH + rowSpacing
+    readonly property real gridCellH: s(100)
+    readonly property int emojiColumns: 7
+    readonly property real emojiCellH: s(62)
+    readonly property real emojiTabsH: currentTabIndex === 2 ? s(38) + s(8) : 0
+    readonly property real innerW: launcherW - 2 * bodyPad
 
-    property real baseLauncherWidth: s(customWidth) + (showRail ? railW + s(13) : 0)
-    property real collapsedCenterHeight: s(110)
-    // the emoji group tabs above the grid (only in the emoji picker)
-    readonly property real emojiTabsH: currentTabIndex === 2 ? s(34) + s(6) : 0
+    // the colours every round thing uses
+    // Material 3 roles: tonal surfaces, secondary-container selection, primary accents
+    readonly property bool glassy: ThemeBackend.liquidGlass
+    readonly property color accent: ThemeBackend.primary
+    // Orbit already lifts the panel colour (base) to this layer
+    readonly property color surfaceColor: Qt.alpha(ThemeBackend.orbit ? ThemeBackend.base : ThemeBackend.surfaceContainer, ThemeBackend.elementOpacity)
+    readonly property color searchFill: glassy ? Qt.alpha("#ffffff", 0.10) : Qt.alpha(ThemeBackend.surfaceContainerHighest, Math.max(0.7, ThemeBackend.elementOpacity))
+    readonly property color selectColor: glassy ? Qt.alpha("#ffffff", 0.18) : ThemeBackend.secondaryContainer
+    readonly property color onSelect: glassy ? "#ffffff" : ThemeBackend.onSecondaryContainer
+    readonly property color hoverColor: Qt.alpha(ThemeBackend.text, 0.08)
+    readonly property color bubbleColor: glassy ? Qt.alpha("#ffffff", 0.10) : ThemeBackend.surfaceContainerHighest
+    readonly property color dividerColor: glassy ? Qt.alpha("#ffffff", 0.16) : ThemeBackend.outlineVariant
 
-    readonly property real gridCellH: s(92)
-    readonly property real railMinH: showRail ? ((showTabs ? s(28) + s(10) : 0) + favRows * favCellH) : 0
-    property real targetLauncherHeight: {
-        let headerH = s(36) + (showRail || !showTabs ? 0 : s(28) + s(8)) + s(28);
-        let listMin = railMinH > 0 ? s(36) + s(8) + railMinH + s(28) : 0;
+    // smooth easing used everywhere: no overshoot, long soft tail
+    readonly property int easeMain: Easing.OutQuint
+    function dur(ms) { return ms * ThemeBackend.animScale; }
+
+    // pinned apps show on the Applications tab while nothing is typed (and while a row is
+    // being dragged, so it can be dropped on them)
+    readonly property bool queryEmpty: searchInput.text.trim() === ""
+    readonly property bool favShown: showRail && currentTabIndex === 0 && (queryEmpty || listDrag.active)
+    readonly property real favCellW: innerW / favColumns
+    readonly property int favRowsShown: Math.min(2, favRows + (favPane.dropSlot >= favoriteApps.length && favoriteApps.length % favColumns === 0 ? 1 : 0))
+    // where the results' entrance wave starts: after the pinned rows
+    readonly property real introOffset: favShown && favoriteApps.length > 0 ? favRowsShown : 0
+    readonly property real favAreaH: favShown ? ((favoriteApps.length > 0 ? favRowsShown * favCellH : s(48)) + s(17)) : 0
+
+    readonly property real resultsH: {
+        if (currentTabIndex === 2) {
+            let rows = Math.ceil(emojiModel.count / emojiColumns);
+            if (rows <= 0) return emojiTabsH + s(80);
+            let maxRows = Math.max(3, Math.round(customItemCount * rowStep / emojiCellH));
+            return emojiTabsH + Math.min(rows, maxRows) * emojiCellH;
+        }
+        if (appModel.count <= 0) return (queryEmpty && favShown) ? 0 : s(70);
         if (appGridActive) {
             let rows = Math.ceil(appModel.count / gridColumns);
             let shown = Math.min(rows, Math.max(2, Math.round(customItemCount * s(48) / gridCellH)));
-            return Math.max(listMin, headerH + s(8) + Math.max(1, shown) * gridCellH);
+            return Math.max(1, shown) * gridCellH;
         }
-        if (currentTabIndex === 2) {
-            let totalRows = Math.ceil(emojiModel.count / 5);
-            if (totalRows <= 0) {
-                return headerH;
-            }
-            return Math.max(listMin, headerH + s(8) + emojiTabsH + (Math.min(totalRows, customItemCount) * s(60)));
-        }
-        let count = Math.min(appModel.count, customItemCount);
-        if (count <= 0) {
-            return Math.max(listMin, headerH);
-        }
-        return Math.max(listMin, headerH + s(8) + (count * s(48)));
+        return Math.min(appModel.count, customItemCount) * rowStep - rowSpacing;
     }
+    readonly property real targetBodyH: (favAreaH + resultsH) > 0 ? bodyPadTop + footerH + favAreaH + resultsH : 0
 
-    property real animatedLauncherHeight: targetLauncherHeight
-    Behavior on animatedLauncherHeight {
-        NumberAnimation {
-            duration: (300) * ThemeBackend.animScale
-            easing.type: Easing.OutCubic
-        }
+    property real animatedBodyH: targetBodyH
+    Behavior on animatedBodyH {
+        enabled: launcherWindow.isVisible
+        NumberAnimation { duration: launcherWindow.dur(380); easing.type: Easing.OutQuint }
     }
 
     visible: isVisible || container.animProgress > 0.001
@@ -632,6 +675,18 @@ PanelWindow {
         }
     }
 
+    // after the close animation: empty the search and rebuild the list for next time
+    function resetAfterClose() {
+        if (launcherWindow.isVisible) return;
+        if (searchInput.text !== "") searchInput.clear();
+        appList.resetScroll();
+        emojiGrid.resetScroll();
+        loadApps();
+        launcherWindow.appsLoaded = true;
+        executeFilter("");
+        launcherWindow.listFresh = true;
+    }
+
     function applyOpenMode() {
         if (LauncherController.mode === "emoji") launcherWindow.currentTabIndex = 2;
         else if (!launcherWindow.showTabs || LauncherController.mode === "apps") launcherWindow.currentTabIndex = 0;
@@ -646,7 +701,8 @@ PanelWindow {
         if (isVisible) {
             launcherWindow.applyOpenMode();
             tabSwitch.currentIndex = launcherWindow.currentTabIndex;
-            restartItemsIntro();
+            const fresh = launcherWindow.listFresh && launcherWindow.appsLoaded && searchInput.text === "";
+            launcherWindow.listFresh = false;
             if (!launcherWindow.appsLoaded) {
                 launcherWindow.loadApps();
                 launcherWindow.appsLoaded = true;
@@ -662,7 +718,7 @@ PanelWindow {
                 emojiDebounceTimer.stop();
             }
             if (launcherWindow.currentTabIndex === 0) {
-                executeFilter("");
+                if (!fresh) executeFilter("");
             } else if (launcherWindow.currentTabIndex === 1) {
                 executeFileSearch("");
             } else {
@@ -676,11 +732,6 @@ PanelWindow {
             focusRetryTimer.restart();
             focusFinalTimer.restart();
         } else {
-            itemsIntroSequence.stop();
-            introItems = 0.0;
-            launcherWindow.appsLoaded = false;
-            appList.resetScroll();
-            emojiGrid.resetScroll();
             filterDebounceTimer.stop();
             fileDebounceTimer.stop();
             emojiDebounceTimer.stop();
@@ -690,10 +741,6 @@ PanelWindow {
             keyboardNavTimer.stop();
             if (fileSearchProcess.running) {
                 fileSearchProcess.running = false;
-            }
-            if (launcherWindow.smartRanking) {
-                loadApps();
-                executeFilter("");
             }
         }
     }
@@ -986,7 +1033,6 @@ PanelWindow {
                 || cur.description !== target.description
                 || cur.icon !== target.icon
                 || cur.fontIcon !== target.fontIcon
-                || cur.score !== target.score
                 || cur.command !== target.command
                 || cur.calcResult !== target.calcResult
                 || cur.isCommand !== target.isCommand
@@ -1268,31 +1314,10 @@ PanelWindow {
         property string bp: launcherWindow.barPosition
         property bool activeBar: !launcherWindow.isBarEffectivelyHidden
 
-        x: {
-            if (!activeBar) return 0;
-            if (bp === "left") return 0;
-            if (bp === "right") return launcherWindow.width - barThickness;
-            return 0;
-        }
-
-        y: {
-            if (!activeBar) return 0;
-            if (bp === "top") return 0;
-            if (bp === "bottom") return launcherWindow.height - barThickness;
-            return 0;
-        }
-
-        width: {
-            if (!activeBar) return 0;
-            if (bp === "left" || bp === "right") return barThickness;
-            return launcherWindow.width;
-        }
-
-        height: {
-            if (!activeBar) return 0;
-            if (bp === "top" || bp === "bottom") return barThickness;
-            return launcherWindow.height;
-        }
+        x: (activeBar && bp === "right") ? launcherWindow.width - barThickness : 0
+        y: (activeBar && bp === "bottom") ? launcherWindow.height - barThickness : 0
+        width: !activeBar ? 0 : ((bp === "left" || bp === "right") ? barThickness : launcherWindow.width)
+        height: !activeBar ? 0 : ((bp === "top" || bp === "bottom") ? barThickness : launcherWindow.height)
     }
 
     MouseArea {
@@ -1301,353 +1326,528 @@ PanelWindow {
         onClicked: closeLauncher()
     }
 
+    // a rounded surface: the theme's panel colour over the wallpaper glass
+    component RoundSurface: Rectangle {
+        color: launcherWindow.surfaceColor
+        // Orbit draws this hairline on every surface itself (SurfaceEffects)
+        border.width: ThemeBackend.orbit ? 0 : 1
+        border.color: ThemeBackend.liquidGlass ? Qt.alpha("#ffffff", 0.14) : Qt.alpha(ThemeBackend.outlineVariant, 0.5)
+        WallpaperBlur {
+            z: -1
+            anchors.fill: parent
+            radius: parent.radius
+        }
+    }
+
+    // a key in the footer's hints: a small round keycap and a word
+    component KeyHint: Row {
+        id: keyHint
+        property string key: ""
+        property string label: ""
+        spacing: launcherWindow.s(5)
+        Rectangle {
+            anchors.verticalCenter: parent.verticalCenter
+            height: launcherWindow.s(18)
+            width: Math.max(height, keyText.implicitWidth + launcherWindow.s(12))
+            radius: launcherWindow.rr(height)
+            color: "transparent"
+            border.width: 1
+            border.color: launcherWindow.dividerColor
+            Text {
+                id: keyText
+                anchors.centerIn: parent
+                text: keyHint.key
+                font.family: ThemeBackend.fontFamily
+                font.pixelSize: launcherWindow.s(9)
+                font.weight: Font.DemiBold
+                color: ThemeBackend.subtext0
+            }
+        }
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: keyHint.label
+            font.family: ThemeBackend.fontFamily
+            font.pixelSize: launcherWindow.s(10)
+            color: Qt.alpha(ThemeBackend.subtext0, 0.85)
+        }
+    }
+
+
+    // an app icon (theme icon or a font glyph when there is none)
+    component AppIcon: Item {
+        id: appIcon
+        property string icon: ""
+        property string fontIcon: ""
+        property string fallback: "󰵆"
+        property color glyphColor: ThemeBackend.subtext0
+        Image {
+            id: appIconImg
+            anchors.fill: parent
+            readonly property bool ready: status === Image.Ready
+            readonly property bool failed: appIcon.fontIcon !== "" || appIcon.icon === "" || status === Image.Error || status === Image.Null
+            visible: !failed
+            opacity: ready ? 1 : 0
+            scale: ready ? 1 : 0.8
+            Behavior on opacity { NumberAnimation { duration: launcherWindow.dur(220); easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: launcherWindow.dur(320); easing.type: Easing.OutQuint } }
+            source: appIcon.fontIcon !== "" ? "" : launcherWindow.iconUrl(appIcon.icon)
+            sourceSize: Qt.size(96, 96)
+            fillMode: Image.PreserveAspectFit
+            asynchronous: true
+            smooth: true
+            mipmap: true
+            // white-glyph icons vanish in light styles
+            layer.enabled: !ThemeBackend.darkMode
+            layer.mipmap: true
+            layer.smooth: true
+            layer.effect: InkIcon {}
+        }
+        Text {
+            anchors.centerIn: parent
+            visible: appIconImg.failed
+            text: appIcon.fontIcon !== "" ? appIcon.fontIcon : appIcon.fallback
+            font.family: ThemeBackend.iconFont
+            font.pixelSize: Math.round(appIcon.height * 0.72)
+            color: appIcon.glyphColor
+            Behavior on color { ColorAnimation { duration: launcherWindow.dur(200) } }
+        }
+    }
+
     Item {
         id: container
 
-        MouseArea {
-            anchors.fill: parent
-        }
+        MouseArea { anchors.fill: parent }
 
-        property real animProgress: launcherWindow.isVisible ? 1.0 : 0.0
-        Behavior on animProgress {
-            NumberAnimation {
-                duration: (launcherWindow.isVisible ? (launcherWindow.isCentered ? 420 : 340) : (launcherWindow.isCentered ? 200 : 150)) * ThemeBackend.animScale
-                easing.type: launcherWindow.isVisible ? Easing.OutBack : Easing.InQuad
-                easing.overshoot: launcherWindow.isVisible ? 1.28 : 1.0
+        // 0 → 1 while opening; everything below derives its entrance from it
+        // driven by openAnim / closeAnim below, not a Behavior: the window needs a couple of
+        // frames to appear on screen after it's shown, and a Behavior started right away spent
+        // most of its motion before anything was visible
+        property real animProgress: 0.0
+        // Material 3 motion: emphasized decelerate to enter, emphasized accelerate to leave
+        NumberAnimation {
+            id: openAnim
+            target: container
+            property: "animProgress"
+            to: 1.0
+            duration: 500
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+        }
+        NumberAnimation {
+            id: closeAnim
+            target: container
+            property: "animProgress"
+            to: 0.0
+            duration: 200
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: [0.3, 0.0, 0.8, 0.15, 1.0, 1.0]
+        }
+        // start the opening once the surface is up (two frames)
+        Timer {
+            id: openKick
+            interval: 34
+            onTriggered: { openAnim.restart(); launcherWindow.restartItemsIntro(); }
+        }
+        Connections {
+            target: launcherWindow
+            function onIsVisibleChanged() { container.syncOpen(); }
+        }
+        Component.onCompleted: syncOpen()
+        // the launcher's own animation speed: your animation settings, but not Game Mode. Game
+        // Mode turns on while a fullscreen app is focused (and can flip while the launcher takes
+        // focus), which made the opening jump or vanish half-way. Taken once per open/close.
+        function motionScale() {
+            return ThemeBackend.animationsEnabled ? 1.0 / Math.max(0.25, ThemeBackend.animationSpeed) : 0;
+        }
+        function syncOpen() {
+            const sc = motionScale();
+            openAnim.duration = 500 * sc;
+            closeAnim.duration = 200 * sc;
+            if (launcherWindow.isVisible) {
+                closeAnim.stop();
+                if (animProgress < 0.01 && sc > 0) {
+                    animProgress = 0;
+                    openKick.restart();
+                } else {
+                    openAnim.restart();
+                    launcherWindow.restartItemsIntro();
+                }
+            } else {
+                openKick.stop();
+                openAnim.stop();
+                if (animProgress <= 0.001) launcherWindow.resetAfterClose();
+                else closeAnim.restart();
             }
         }
+        readonly property real bodyProgress: launcherWindow.isVisible ? Math.max(0, Math.min(1, (animProgress - 0.05) / 0.6)) : 1
+        // closed and faded out: now reset the list for next time (doing it while it faded
+        // made the items vanish and the card jump)
+        onAnimProgressChanged: if (!launcherWindow.isVisible && animProgress <= 0.001) launcherWindow.resetAfterClose()
+        readonly property bool atBottom: launcherWindow.attachEdge === "bottom"
+        readonly property real enterDir: atBottom ? 1 : -1
 
-        property real dynamicCornerRadius: Math.round(Math.max(0, Math.min(launcherWindow.outerCornerRadius, (launcherWindow.isSideAttached ? width : height) * 0.5)))
+        function barOn(edge) {
+            return launcherWindow.barPosition === edge && !launcherWindow.isBarEffectivelyHidden ? launcherWindow.barHeight : 0;
+        }
+        // where the search capsule sits; the card grows away from it
+        readonly property real capsuleY: {
+            if (launcherWindow.attachEdge === "top") return launcherWindow.edgeMargin + barOn("top");
+            if (atBottom) return launcherWindow.height - launcherWindow.edgeMargin - barOn("bottom") - launcherWindow.capsuleH;
+            return Math.round(launcherWindow.height * 0.22);
+        }
+        readonly property real shownBodyH: launcherWindow.animatedBodyH
 
+        width: launcherWindow.launcherW
+        height: launcherWindow.capsuleH + shownBodyH
+        opacity: launcherWindow.isVisible ? Math.min(1, animProgress * 1.4) : animProgress
+        scale: launcherWindow.isVisible ? 0.9 + 0.1 * animProgress : 0.96 + 0.04 * animProgress
+        transformOrigin: atBottom ? Item.Bottom : Item.Top
+        transform: Translate { y: container.enterDir * launcherWindow.s(launcherWindow.isVisible ? 32 : 12) * (1 - container.animProgress) }
         x: {
-            if (launcherWindow.attachEdge === "left") {
-                return launcherWindow.barMatchesLauncher ? launcherWindow.barHeight : 0;
-            }
-            if (launcherWindow.attachEdge === "right") {
-                let offset = launcherWindow.barMatchesLauncher ? launcherWindow.barHeight : 0;
-                return (launcherWindow.width - offset) - width;
-            }
+            if (launcherWindow.attachEdge === "left") return launcherWindow.edgeMargin + barOn("left");
+            if (launcherWindow.attachEdge === "right") return launcherWindow.width - launcherWindow.edgeMargin - barOn("right") - width;
             return Math.floor((launcherWindow.width - width) / 2);
         }
+        y: atBottom ? capsuleY - shownBodyH : capsuleY
 
-        y: {
-            if (launcherWindow.attachEdge === "top") {
-                return launcherWindow.barMatchesLauncher ? launcherWindow.barHeight : 0;
-            }
-            if (launcherWindow.attachEdge === "bottom") {
-                let offset = launcherWindow.barMatchesLauncher ? launcherWindow.barHeight : 0;
-                return (launcherWindow.height - offset) - height;
-            }
-            return Math.floor((launcherWindow.height - height) / 2);
-        }
-
-        width: launcherWindow.isSideAttached
-               ? Math.round(launcherWindow.baseLauncherWidth * animProgress)
-               : Math.round(launcherWindow.baseLauncherWidth)
-
-        height: {
-            if (launcherWindow.isCentered) {
-                let baseH = launcherWindow.collapsedCenterHeight;
-                let targetH = Math.max(baseH, launcherWindow.animatedLauncherHeight);
-                return baseH + (targetH - baseH) * animProgress;
-            }
-            if (!launcherWindow.isSideAttached) {
-                return launcherWindow.animatedLauncherHeight * animProgress;
-            }
-            return launcherWindow.animatedLauncherHeight;
-        }
-
-        opacity: launcherWindow.isCentered
-                 ? Math.max(0.0, Math.min(1.0, animProgress * 1.5))
-                 : ((launcherWindow.isVisible || animProgress > 0.001) ? 1.0 : 0.0)
-
-        transformOrigin: Item.Center
-
-        GlassFillets {
-            id: launcherFillets
-            card: bgCard
-            filletRadius: ThemeBackend.rad(launcherWindow.isCentered ? 0 : container.dynamicCornerRadius)
-            filletDir: launcherWindow.attachEdge === "top" ? Qt.vector2d(0, -1)
-                     : launcherWindow.attachEdge === "bottom" ? Qt.vector2d(0, 1)
-                     : launcherWindow.attachEdge === "left" ? Qt.vector2d(-1, 0)
-                     : Qt.vector2d(1, 0)
-        }
-
-        ShaderEffect {
-            visible: !launcherWindow.isCentered && container.dynamicCornerRadius > 0.5
-            x: {
-                if (launcherWindow.attachEdge === "left") return 0;
-                if (launcherWindow.attachEdge === "right") return parent.width - container.dynamicCornerRadius;
-                return -container.dynamicCornerRadius;
-            }
-            y: {
-                if (launcherWindow.attachEdge === "bottom") return parent.height - container.dynamicCornerRadius;
-                if (launcherWindow.attachEdge === "left" || launcherWindow.attachEdge === "right") return -container.dynamicCornerRadius;
-                return 0;
-            }
-            width: container.dynamicCornerRadius
-            height: container.dynamicCornerRadius
-            property vector2d itemSize: Qt.vector2d(width, height)
-            property real cornerIndex: {
-                if (launcherWindow.attachEdge === "bottom") return 3.0;
-                if (launcherWindow.attachEdge === "left") return 2.0;
-                if (launcherWindow.attachEdge === "right") return 3.0;
-                return 1.0;
-            }
-            property color color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-            fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/corner_cutout.frag.qsb"
-        }
-
-        ShaderEffect {
-            visible: !launcherWindow.isCentered && container.dynamicCornerRadius > 0.5
-            x: {
-                if (launcherWindow.attachEdge === "left") return 0;
-                if (launcherWindow.attachEdge === "right") return parent.width - container.dynamicCornerRadius;
-                return parent.width;
-            }
-            y: {
-                if (launcherWindow.attachEdge === "bottom") return parent.height - container.dynamicCornerRadius;
-                if (launcherWindow.attachEdge === "left" || launcherWindow.attachEdge === "right") return parent.height;
-                return 0;
-            }
-            width: container.dynamicCornerRadius
-            height: container.dynamicCornerRadius
-            property vector2d itemSize: Qt.vector2d(width, height)
-            property real cornerIndex: {
-                if (launcherWindow.attachEdge === "bottom") return 2.0;
-                if (launcherWindow.attachEdge === "left") return 0.0;
-                if (launcherWindow.attachEdge === "right") return 1.0;
-                return 0.0;
-            }
-            property color color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-            fragmentShader: "file://" + Caching.monolithDir + "/assets/shaders/ui/corner_cutout.frag.qsb"
-        }
-
-        Rectangle {
-            id: bgCard
+        // the one surface behind everything: a pill while it holds only the search row,
+        // a rounded card once the results unfold
+        RoundSurface {
+            id: launcherSurface
             anchors.fill: parent
-            radius: ThemeBackend.rad(container.dynamicCornerRadius)
-            readonly property bool flatCorners: !launcherWindow.isCentered
-            topLeftRadius: ThemeBackend.rad((flatCorners && (launcherWindow.attachEdge === "top" || launcherWindow.attachEdge === "left")) ? 0 : container.dynamicCornerRadius)
-            topRightRadius: ThemeBackend.rad((flatCorners && (launcherWindow.attachEdge === "top" || launcherWindow.attachEdge === "right")) ? 0 : container.dynamicCornerRadius)
-            bottomLeftRadius: ThemeBackend.rad((flatCorners && (launcherWindow.attachEdge === "bottom" || launcherWindow.attachEdge === "left")) ? 0 : container.dynamicCornerRadius)
-            bottomRightRadius: ThemeBackend.rad((flatCorners && (launcherWindow.attachEdge === "bottom" || launcherWindow.attachEdge === "right")) ? 0 : container.dynamicCornerRadius)
-            color: Qt.alpha(ThemeBackend.base, ThemeBackend.elementOpacity)
-            border.width: 0
-            border.color: launcherWindow.isCentered ? Qt.alpha(ThemeBackend.surface2, 0.6) : "transparent"
+            radius: Math.min(launcherWindow.bodyRadius, height / 2)
+        }
+
+        // ── the search row ──────────────────────────────────────────────────
+        Item {
+            id: capsule
+            z: 2
+            width: parent.width
+            height: launcherWindow.capsuleH
+            y: container.atBottom ? parent.height - height : 0
+
+            // the filled search pill (Material's search bar)
+            Rectangle {
+                id: searchPill
+                x: launcherWindow.pillInset
+                y: launcherWindow.pillInset
+                width: parent.width - 2 * x
+                height: launcherWindow.pillH
+                radius: launcherWindow.pillR
+                color: launcherWindow.searchFill
+            }
+
+            // the round mode bubble on the left
+            Rectangle {
+                id: modeBubble
+                x: searchPill.x + launcherWindow.s(6)
+                anchors.verticalCenter: parent.verticalCenter
+                width: launcherWindow.pillH - launcherWindow.s(12)
+                height: width
+                radius: launcherWindow.innerR(launcherWindow.s(6))
+                color: launcherWindow.glassy ? Qt.alpha("#ffffff", 0.16) : ThemeBackend.primaryContainer
+                Text {
+                    id: modeGlyph
+                    anchors.centerIn: parent
+                    text: launcherWindow.currentTabIndex === 1 ? "󰉋" : (launcherWindow.currentTabIndex === 2 ? "󰞅" : "󰍉")
+                    font.family: ThemeBackend.iconFont
+                    font.pixelSize: launcherWindow.s(18)
+                    color: launcherWindow.glassy ? "#ffffff" : ThemeBackend.onPrimaryContainer
+                }
+                SequentialAnimation {
+                    id: bubblePulse
+                    NumberAnimation { target: modeGlyph; property: "scale"; to: 0.55; duration: launcherWindow.dur(110); easing.type: Easing.InCubic }
+                    NumberAnimation { target: modeGlyph; property: "scale"; to: 1.0; duration: launcherWindow.dur(380); easing.type: Easing.OutQuint }
+                }
+                Connections {
+                    target: launcherWindow
+                    function onCurrentTabIndexChanged() { bubblePulse.restart(); }
+                }
+            }
+
+            Input {
+                id: searchInput
+                z: 10
+                focus: true
+                Keys.priority: Keys.BeforeItem
+                anchors.left: modeBubble.right
+                anchors.leftMargin: launcherWindow.s(8)
+                anchors.right: emojiHint.visible ? emojiHint.left : tabSwitch.left
+                anchors.rightMargin: launcherWindow.s(6)
+                anchors.verticalCenter: parent.verticalCenter
+                height: launcherWindow.s(38)
+
+                baseColor: "transparent"
+                bgOpacity: 0.0
+                accentColor: launcherWindow.accent
+                textColor: ThemeBackend.text
+                subTextColor: ThemeBackend.subtext0
+                borderColor: "transparent"
+                cornerRadius: height / 2
+                fontPixelSize: launcherWindow.s(15)
+                charSpacing: 1
+
+                placeholderText: {
+                    if (launcherWindow.currentTabIndex === 1) {
+                        return typeof I18n !== "undefined" ? I18n.t("applauncher.placeholder_files", "Search files or enter path...") : "Search files or enter path...";
+                    } else if (launcherWindow.currentTabIndex === 2) {
+                        return typeof I18n !== "undefined" ? I18n.t("applauncher.placeholder_emojis", "Search emojis by name or keyword...") : "Search emojis by name or keyword...";
+                    }
+                    return typeof I18n !== "undefined" ? I18n.t("applauncher.placeholder", "Start with > for a command...") : "Start with > for a command...";
+                }
+                showClearButton: true
+
+                onHasFocusChanged: {
+                    if (!searchInput.hasFocus && launcherWindow.isVisible) {
+                        if (launcherWindow.currentTabIndex === 2) emojiGrid.forceActiveFocus();
+                        else appList.forceActiveFocus();
+                    }
+                }
+
+                onTextEdited: function(newText) {
+                    if (launcherWindow.currentTabIndex === 0) filterApps(newText);
+                    else if (launcherWindow.currentTabIndex === 1) filterFiles(newText);
+                    else filterEmojis(newText);
+                }
+                onCleared: {
+                    if (launcherWindow.currentTabIndex === 0) filterApps("");
+                    else if (launcherWindow.currentTabIndex === 1) filterFiles("");
+                    else filterEmojis("");
+                }
+
+                Keys.onTabPressed: function(event) {
+                    // Shift+Tab can arrive as Tab with Shift held (not as Backtab): go back then
+                    if (launcherWindow.currentTabIndex === 2 && !launcherWindow.showTabs) { launcherWindow.cycleEmojiCategory((event.modifiers & Qt.ShiftModifier) ? -1 : 1); event.accepted = true; return; }
+                    if (!launcherWindow.showTabs) { event.accepted = true; return; }
+                    launcherWindow.currentTabIndex = (launcherWindow.currentTabIndex + 1) % 3;
+                    event.accepted = true;
+                }
+                Keys.onBacktabPressed: function(event) {
+                    if (launcherWindow.currentTabIndex === 2 && !launcherWindow.showTabs) { launcherWindow.cycleEmojiCategory(-1); event.accepted = true; return; }
+                    if (!launcherWindow.showTabs) { event.accepted = true; return; }
+                    launcherWindow.currentTabIndex = (launcherWindow.currentTabIndex + 2) % 3;
+                    event.accepted = true;
+                }
+                Keys.onDownPressed: function(event) {
+                    launcherWindow.isKeyboardNav = true;
+                    keyboardNavTimer.restart();
+                    const cols = launcherWindow.emojiColumns;
+                    if (launcherWindow.currentTabIndex === 2) {
+                        if (emojiGrid.currentIndex + cols < emojiModel.count) emojiGrid.currentIndex += cols;
+                        else if (emojiGrid.currentIndex < emojiModel.count - 1) emojiGrid.currentIndex = emojiModel.count - 1;
+                    } else if (launcherWindow.appGridActive) {
+                        appList.currentIndex = Math.min(appModel.count - 1, appList.currentIndex + launcherWindow.gridColumns);
+                    } else if (appList.currentIndex < appModel.count - 1) {
+                        appList.currentIndex++;
+                    }
+                    event.accepted = true;
+                }
+                Keys.onUpPressed: function(event) {
+                    launcherWindow.isKeyboardNav = true;
+                    keyboardNavTimer.restart();
+                    const cols = launcherWindow.emojiColumns;
+                    if (launcherWindow.currentTabIndex === 2) {
+                        if (emojiGrid.currentIndex >= cols) emojiGrid.currentIndex -= cols;
+                    } else if (launcherWindow.appGridActive) {
+                        appList.currentIndex = Math.max(0, appList.currentIndex - launcherWindow.gridColumns);
+                    } else if (appList.currentIndex > 0) {
+                        appList.currentIndex--;
+                    }
+                    event.accepted = true;
+                }
+                Keys.onLeftPressed: function(event) {
+                    if (launcherWindow.appGridActive && searchInput.text === "") {
+                        appList.currentIndex = Math.max(0, appList.currentIndex - 1);
+                        event.accepted = true;
+                    } else if (launcherWindow.currentTabIndex === 2) {
+                        launcherWindow.isKeyboardNav = true;
+                        keyboardNavTimer.restart();
+                        if (emojiGrid.currentIndex > 0) emojiGrid.currentIndex--;
+                        event.accepted = true;
+                    }
+                }
+                Keys.onRightPressed: function(event) {
+                    if (launcherWindow.appGridActive && searchInput.text === "") {
+                        appList.currentIndex = Math.min(appModel.count - 1, appList.currentIndex + 1);
+                        event.accepted = true;
+                    } else if (launcherWindow.currentTabIndex === 2) {
+                        launcherWindow.isKeyboardNav = true;
+                        keyboardNavTimer.restart();
+                        if (emojiGrid.currentIndex < emojiModel.count - 1) emojiGrid.currentIndex++;
+                        event.accepted = true;
+                    }
+                }
+                Keys.onReturnPressed: function(event) {
+                    if (launcherWindow.currentTabIndex === 2) activateEmoji(emojiGrid.currentIndex);
+                    else activateIndex(appList.currentIndex);
+                    event.accepted = true;
+                }
+                Keys.onEscapePressed: function(event) {
+                    closeLauncher();
+                    event.accepted = true;
+                }
+            }
+
+            // the name of the highlighted emoji, quietly on the right
+            Text {
+                id: emojiHint
+                visible: launcherWindow.currentTabIndex === 2 && text !== ""
+                anchors.right: tabSwitch.left
+                anchors.rightMargin: launcherWindow.s(10)
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(implicitWidth, launcherWindow.s(150))
+                elide: Text.ElideRight
+                text: (emojiGrid.currentIndex >= 0 && emojiGrid.currentIndex < emojiModel.count) ? emojiModel.get(emojiGrid.currentIndex).name : ""
+                font.family: ThemeBackend.fontFamily
+                font.pixelSize: launcherWindow.s(11)
+                color: ThemeBackend.subtext0
+            }
+
+            // the tabs: three round buttons with a dot of colour that glides between them
+            Item {
+                id: tabSwitch
+                property int currentIndex: launcherWindow.currentTabIndex
+                readonly property real chip: launcherWindow.pillH - launcherWindow.s(12)
+                readonly property real gap: launcherWindow.s(4)
+                visible: launcherWindow.showTabs
+                anchors.right: parent.right
+                anchors.rightMargin: visible ? launcherWindow.pillInset + launcherWindow.s(6) : launcherWindow.pillInset
+                anchors.verticalCenter: parent.verticalCenter
+                width: visible ? chip * 3 + gap * 2 : 0
+                height: chip
+
+                Rectangle {
+                    id: tabDot
+                    width: tabSwitch.chip
+                    height: width
+                    radius: launcherWindow.innerR(launcherWindow.s(6))
+                    x: launcherWindow.currentTabIndex * (tabSwitch.chip + tabSwitch.gap)
+                    color: launcherWindow.selectColor
+                    Behavior on x { NumberAnimation { duration: launcherWindow.dur(420); easing.type: Easing.OutQuint } }
+                }
+
+                Repeater {
+                    model: [
+                        { glyph: "󰀻", title: launcherWindow.tabAppsTitle },
+                        { glyph: "󰉋", title: launcherWindow.tabFilesTitle },
+                        { glyph: "󰞅", title: launcherWindow.tabEmojisTitle }
+                    ]
+                    Item {
+                        id: tabChip
+                        required property var modelData
+                        required property int index
+                        readonly property bool active: launcherWindow.currentTabIndex === index
+                        x: index * (tabSwitch.chip + tabSwitch.gap)
+                        width: tabSwitch.chip
+                        height: tabSwitch.chip
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: launcherWindow.innerR(launcherWindow.s(6))
+                            color: launcherWindow.hoverColor
+                            opacity: chipMa.containsMouse && !tabChip.active ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: launcherWindow.dur(180) } }
+                        }
+                        Text {
+                            anchors.centerIn: parent
+                            text: tabChip.modelData.glyph
+                            font.family: ThemeBackend.iconFont
+                            font.pixelSize: launcherWindow.s(15)
+                            color: tabChip.active ? launcherWindow.onSelect : ThemeBackend.subtext0
+                            scale: chipMa.pressed ? 0.85 : 1
+                            Behavior on color { ColorAnimation { duration: launcherWindow.dur(260) } }
+                            Behavior on scale { NumberAnimation { duration: launcherWindow.dur(220); easing.type: Easing.OutQuint } }
+                        }
+                        MouseArea {
+                            id: chipMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: launcherWindow.currentTabIndex = tabChip.index
+                        }
+                        ToolTip.visible: chipMa.containsMouse
+                        ToolTip.delay: 500
+                        ToolTip.text: tabChip.modelData.title
+                    }
+                }
+            }
+        }
+
+        // ── the results card ────────────────────────────────────────────────
+        Item {
+            id: bgCard
+            z: 1
+            width: parent.width
+            visible: height > 1
+            height: container.shownBodyH
+            y: container.atBottom ? 0 : launcherWindow.capsuleH
+            opacity: container.bodyProgress
             clip: true
 
-            WallpaperBlur {
-                z: -1
-                anchors.fill: parent
-                topLeftRadius: ThemeBackend.rad(parent.topLeftRadius)
-                topRightRadius: ThemeBackend.rad(parent.topRightRadius)
-                bottomLeftRadius: ThemeBackend.rad(parent.bottomLeftRadius)
-                bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
-                filletRadius: ThemeBackend.rad(launcherFillets.filletRadius)
-                filletDir: launcherFillets.filletDir
+            // the footer: how many results, and round key hints
+            Item {
+                id: footer
+                x: launcherWindow.s(24)
+                width: parent.width - 2 * x
+                height: launcherWindow.footerH
+                y: container.atBottom ? contentContainer.y - height : contentContainer.y + contentContainer.height
+
+                Text {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    readonly property int n: launcherWindow.currentTabIndex === 2 ? emojiModel.count : appModel.count
+                    text: {
+                        if (launcherWindow.currentTabIndex === 2) return I18n.t("applauncher.count_emojis", "%1 emojis").replace("%1", n);
+                        if (launcherWindow.currentTabIndex === 1) return I18n.t("applauncher.count_files", "%1 files").replace("%1", n);
+                        return I18n.t("applauncher.count_results", "%1 apps").replace("%1", n + (launcherWindow.favShown ? launcherWindow.favoriteApps.length : 0));
+                    }
+                    font.family: ThemeBackend.fontFamily
+                    font.pixelSize: launcherWindow.s(10)
+                    color: Qt.alpha(ThemeBackend.subtext0, 0.75)
+                }
+
+                Row {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: launcherWindow.s(14)
+                    KeyHint {
+                        key: "↵"
+                        label: launcherWindow.currentTabIndex === 2 ? I18n.t("applauncher.hint_copy", "copy") : I18n.t("applauncher.hint_open", "open")
+                    }
+                    KeyHint {
+                        visible: launcherWindow.showTabs || launcherWindow.currentTabIndex === 2
+                        key: "Tab"
+                        label: launcherWindow.showTabs ? I18n.t("applauncher.hint_switch", "switch") : I18n.t("applauncher.hint_group", "group")
+                    }
+                    KeyHint {
+                        visible: launcherWindow.currentTabIndex === 0 && launcherWindow.showRail
+                        key: "R-click"
+                        label: I18n.t("applauncher.hint_pin", "pin")
+                    }
+                }
             }
 
             Item {
                 id: contentContainer
-                anchors.fill: parent
-                anchors.margins: launcherWindow.s(14)
-                visible: width > 0 && height > 0
+                x: launcherWindow.bodyPad
+                y: container.atBottom ? parent.height - launcherWindow.bodyPadTop - height : launcherWindow.bodyPadTop
+                width: launcherWindow.innerW
+                // laid out at full size; the card reveals it as it grows
+                height: Math.max(0, launcherWindow.animatedBodyH - launcherWindow.bodyPadTop - launcherWindow.footerH)
                 clip: true
 
-                readonly property bool isSearchAtBottom: launcherWindow.attachEdge === "bottom"
-
-                Input {
-                    id: searchInput
-                    z: 10
-                    focus: true
-                    Keys.priority: Keys.BeforeItem
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    y: contentContainer.isSearchAtBottom ? Math.max(0, parent.height - height) : 0
-                    height: launcherWindow.s(36)
-
-                    baseColor: ThemeBackend.surface0
-                    bgOpacity: ThemeBackend.glassActive ? 0.0 : 1.0
-                    accentColor: ThemeBackend.mauve
-                    textColor: ThemeBackend.text
-                    subTextColor: ThemeBackend.subtext0
-                    borderColor: Qt.alpha(ThemeBackend.surface2, 0.6)
-                    cornerRadius: ThemeBackend.borderRadius
-                    fontPixelSize: launcherWindow.s(12)
-                    charSpacing: 1
-
-                    placeholderText: {
-                        if (launcherWindow.currentTabIndex === 1) {
-                            return typeof I18n !== "undefined" ? I18n.t("applauncher.placeholder_files", "Search files or enter path...") : "Search files or enter path...";
-                        } else if (launcherWindow.currentTabIndex === 2) {
-                            return typeof I18n !== "undefined" ? I18n.t("applauncher.placeholder_emojis", "Search emojis by name or keyword...") : "Search emojis by name or keyword...";
-                        }
-                        return typeof I18n !== "undefined" ? I18n.t("applauncher.placeholder", "Start with > for a command...") : "Start with > for a command...";
-                    }
-                    showClearButton: true
-
-                    onHasFocusChanged: {
-                        if (!searchInput.hasFocus && launcherWindow.isVisible) {
-                            if (launcherWindow.currentTabIndex === 2) {
-                                emojiGrid.forceActiveFocus();
-                            } else {
-                                appList.forceActiveFocus();
-                            }
-                        }
-                    }
-
-                    onTextEdited: function(newText) {
-                        if (launcherWindow.currentTabIndex === 0) {
-                            filterApps(newText);
-                        } else if (launcherWindow.currentTabIndex === 1) {
-                            filterFiles(newText);
-                        } else {
-                            filterEmojis(newText);
-                        }
-                    }
-                    onCleared: {
-                        if (launcherWindow.currentTabIndex === 0) {
-                            filterApps("");
-                        } else if (launcherWindow.currentTabIndex === 1) {
-                            filterFiles("");
-                        } else {
-                            filterEmojis("");
-                        }
-                    }
-
-                    Keys.onTabPressed: function(event) {
-                        // Shift+Tab can arrive as Tab with Shift held (not as Backtab): go back then
-                        if (launcherWindow.currentTabIndex === 2 && !launcherWindow.showTabs) { launcherWindow.cycleEmojiCategory((event.modifiers & Qt.ShiftModifier) ? -1 : 1); event.accepted = true; return; }
-                        if (!launcherWindow.showTabs) { event.accepted = true; return; }
-                        launcherWindow.currentTabIndex = (launcherWindow.currentTabIndex + 1) % 3;
-                        tabSwitch.currentIndex = launcherWindow.currentTabIndex;
-                        event.accepted = true;
-                    }
-                    Keys.onBacktabPressed: function(event) {
-                        if (launcherWindow.currentTabIndex === 2 && !launcherWindow.showTabs) { launcherWindow.cycleEmojiCategory(-1); event.accepted = true; return; }
-                        if (!launcherWindow.showTabs) { event.accepted = true; return; }
-                        launcherWindow.currentTabIndex = (launcherWindow.currentTabIndex + 2) % 3;
-                        tabSwitch.currentIndex = launcherWindow.currentTabIndex;
-                        event.accepted = true;
-                    }
-                    Keys.onDownPressed: function(event) {
-                        launcherWindow.isKeyboardNav = true;
-                        keyboardNavTimer.restart();
-                        if (launcherWindow.currentTabIndex === 2) {
-                            if (emojiGrid.currentIndex + 5 < emojiModel.count) {
-                                emojiGrid.currentIndex += 5;
-                            } else if (emojiGrid.currentIndex < emojiModel.count - 1) {
-                                emojiGrid.currentIndex = emojiModel.count - 1;
-                            }
-                        } else if (launcherWindow.appGridActive) {
-                            appList.currentIndex = Math.min(appModel.count - 1, appList.currentIndex + launcherWindow.gridColumns);
-                        } else {
-                            if (appList.currentIndex < appModel.count - 1) {
-                                appList.currentIndex++;
-                            }
-                        }
-                        event.accepted = true;
-                    }
-                    Keys.onUpPressed: function(event) {
-                        launcherWindow.isKeyboardNav = true;
-                        keyboardNavTimer.restart();
-                        if (launcherWindow.currentTabIndex === 2) {
-                            if (emojiGrid.currentIndex >= 5) {
-                                emojiGrid.currentIndex -= 5;
-                            }
-                        } else if (launcherWindow.appGridActive) {
-                            appList.currentIndex = Math.max(0, appList.currentIndex - launcherWindow.gridColumns);
-                        } else {
-                            if (appList.currentIndex > 0) {
-                                appList.currentIndex--;
-                            }
-                        }
-                        event.accepted = true;
-                    }
-                    Keys.onLeftPressed: function(event) {
-                        if (launcherWindow.appGridActive && searchInput.text === "") {
-                            appList.currentIndex = Math.max(0, appList.currentIndex - 1);
-                            event.accepted = true;
-                        } else if (launcherWindow.currentTabIndex === 2) {
-                            launcherWindow.isKeyboardNav = true;
-                            keyboardNavTimer.restart();
-                            if (emojiGrid.currentIndex > 0) {
-                                emojiGrid.currentIndex--;
-                            }
-                            event.accepted = true;
-                        }
-                    }
-                    Keys.onRightPressed: function(event) {
-                        if (launcherWindow.appGridActive && searchInput.text === "") {
-                            appList.currentIndex = Math.min(appModel.count - 1, appList.currentIndex + 1);
-                            event.accepted = true;
-                        } else if (launcherWindow.currentTabIndex === 2) {
-                            launcherWindow.isKeyboardNav = true;
-                            keyboardNavTimer.restart();
-                            if (emojiGrid.currentIndex < emojiModel.count - 1) {
-                                emojiGrid.currentIndex++;
-                            }
-                            event.accepted = true;
-                        }
-                    }
-                    Keys.onReturnPressed: function(event) {
-                        if (launcherWindow.currentTabIndex === 2) {
-                            activateEmoji(emojiGrid.currentIndex);
-                        } else {
-                            activateIndex(appList.currentIndex);
-                        }
-                        event.accepted = true;
-                    }
-                    Keys.onEscapePressed: function(event) {
-                        closeLauncher();
-                        event.accepted = true;
-                    }
-                }
-
-                // the tabs: a row here, or icons in the rail when it's on
-                Switch {
-                    id: tabSwitch
-                    z: 10
-                    visible: launcherWindow.showTabs
-                    x: 0
-                    width: launcherWindow.showRail ? launcherWindow.railW : parent.width
-                    y: launcherWindow.showRail
-                       ? (contentContainer.isSearchAtBottom ? listContainer.y + listContainer.height - height : listContainer.y)
-                       : (contentContainer.isSearchAtBottom
-                          ? (searchInput.y - height - launcherWindow.s(8))
-                          : (searchInput.y + searchInput.height + launcherWindow.s(8)))
-                    height: launcherWindow.showTabs ? launcherWindow.s(28) : 0
-                    cornerRadius: ThemeBackend.borderRadius
-                    fontPixelSize: launcherWindow.s(11)
-                    baseColor: ThemeBackend.surface0
-                    bgOpacity: ThemeBackend.glassActive ? 0.0 : 1.0
-                    accentColor: ThemeBackend.mauve
-                    textColor: ThemeBackend.text
-                    activeTextColor: ThemeBackend.crust
-                    options: [launcherWindow.tabAppsTitle, launcherWindow.tabFilesTitle, launcherWindow.tabEmojisTitle]
-                    currentIndex: launcherWindow.currentTabIndex
-                    onValueChanged: function(index, value) {
-                        launcherWindow.currentTabIndex = index;
-                    }
-                    onToggled: function(index) {
-                        launcherWindow.currentTabIndex = index;
-                    }
-                }
-
-                // the favourites pane: under the tabs, a grid of pinned apps. Drag tiles to reorder;
-                // drag a row from the list onto it to pin; right-click a tile to unpin.
+                // ── pinned apps: round bubbles, drag to reorder, right-click to unpin
                 Item {
                     id: favPane
-                    visible: launcherWindow.showRail
                     x: 0
-                    readonly property real tabGap: launcherWindow.showTabs ? launcherWindow.s(10) : 0
-                    y: contentContainer.isSearchAtBottom ? listContainer.y : tabSwitch.y + tabSwitch.height + tabGap
-                    width: launcherWindow.railW
-                    height: contentContainer.isSearchAtBottom ? tabSwitch.y - tabGap - y : listContainer.y + listContainer.height - y
+                    y: 0
+                    width: parent.width
+                    height: Math.max(0, launcherWindow.favAreaH - launcherWindow.s(17))
+                    visible: opacity > 0.01
+                    opacity: launcherWindow.favShown ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: launcherWindow.dur(260); easing.type: Easing.OutCubic } }
                     clip: true
 
-                    readonly property real cellW: width / launcherWindow.favColumns
+                    readonly property real cellW: launcherWindow.favCellW
                     property int dragFrom: -1
                     property int dragTo: -1
                     // a list row being dragged over the pane: where it would land
@@ -1669,16 +1869,24 @@ PanelWindow {
                         return i;
                     }
 
-                    Text {
-                        anchors.centerIn: parent
-                        width: parent.width - launcherWindow.s(24)
+                    // nothing pinned yet: a soft round hint
+                    Rectangle {
+                        anchors.fill: parent
                         visible: launcherWindow.favoriteApps.length === 0
-                        horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.WordWrap
-                        text: I18n.t("applauncher.favorites_empty", "Drag apps here, or right-click one, to pin it")
-                        font.family: ThemeBackend.fontFamily
-                        font.pixelSize: launcherWindow.s(12)
-                        color: ThemeBackend.subtext0
+                        radius: launcherWindow.rr(height)
+                        color: favPane.dropSlot >= 0 ? Qt.alpha(launcherWindow.accent, 0.14) : "transparent"
+                        border.width: 1
+                        border.color: favPane.dropSlot >= 0 ? launcherWindow.accent : Qt.alpha(ThemeBackend.text, 0.12)
+                        Text {
+                            anchors.centerIn: parent
+                            width: parent.width - launcherWindow.s(24)
+                            horizontalAlignment: Text.AlignHCenter
+                            elide: Text.ElideRight
+                            text: I18n.t("applauncher.favorites_empty", "Drag apps here, or right-click one, to pin it")
+                            font.family: ThemeBackend.fontFamily
+                            font.pixelSize: launcherWindow.s(11)
+                            color: ThemeBackend.subtext0
+                        }
                     }
 
                     Flickable {
@@ -1696,66 +1904,52 @@ PanelWindow {
                                 required property int index
                                 readonly property int slot: favPane.shownSlot(index)
                                 readonly property bool dragging: favPane.dragFrom === index
+                                readonly property real wave: Math.floor(index / launcherWindow.favColumns) + (index % launcherWindow.favColumns) * 0.35
+                                readonly property real intro: launcherWindow.getItemProgress(wave)
                                 width: favPane.cellW
                                 height: launcherWindow.favCellH
                                 x: dragging ? favDragX : (slot % launcherWindow.favColumns) * favPane.cellW
                                 y: dragging ? favDragY : Math.floor(slot / launcherWindow.favColumns) * launcherWindow.favCellH
                                 z: dragging ? 10 : 1
+                                opacity: launcherWindow.getItemOpacity(wave)
                                 property real favDragX: 0
                                 property real favDragY: 0
-                                Behavior on x { enabled: !favTile.dragging; NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-                                Behavior on y { enabled: !favTile.dragging; NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
+                                Behavior on x { enabled: !favTile.dragging; NumberAnimation { duration: launcherWindow.dur(320); easing.type: Easing.OutQuint } }
+                                Behavior on y { enabled: !favTile.dragging; NumberAnimation { duration: launcherWindow.dur(320); easing.type: Easing.OutQuint } }
 
                                 Rectangle {
-                                    anchors.fill: parent
-                                    anchors.margins: launcherWindow.s(3)
-                                    radius: ThemeBackend.pill ? launcherWindow.s(22) : ThemeBackend.borderRadius
-                                    color: favTile.dragging ? (ThemeBackend.material ? ThemeBackend.secondaryContainer : ThemeBackend.surface1)
-                                                            : (favMa.containsMouse ? Qt.alpha(ThemeBackend.text, 0.07) : "transparent")
-                                    scale: favTile.dragging ? 1.06 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: (120) * ThemeBackend.animScale } }
-                                }
+                                    id: favBubble
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    y: launcherWindow.s(4)
+                                    width: launcherWindow.s(52)
+                                    height: width
+                                    radius: launcherWindow.rr(width)
+                                    color: favTile.dragging ? Qt.alpha(launcherWindow.accent, 0.3)
+                                         : (favMa.containsMouse ? ThemeBackend.secondaryContainer : launcherWindow.bubbleColor)
+                                    scale: (favTile.dragging ? 1.12 : (favMa.pressed ? 0.92 : (favMa.containsMouse ? 1.06 : 1.0))) * (0.86 + 0.14 * favTile.intro)
+                                    Behavior on color { ColorAnimation { duration: launcherWindow.dur(220) } }
+                                    Behavior on scale { NumberAnimation { duration: launcherWindow.dur(280); easing.type: Easing.OutQuint } }
 
-                                Column {
-                                    anchors.centerIn: parent
-                                    width: parent.width - launcherWindow.s(8)
-                                    spacing: launcherWindow.s(5)
-                                    Item {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        width: launcherWindow.s(40)
+                                    AppIcon {
+                                        anchors.centerIn: parent
+                                        width: launcherWindow.s(30)
                                         height: width
-                                        Image {
-                                            id: favIcon
-                                            anchors.fill: parent
-                                            visible: !favTile.modelData.fontIcon && status === Image.Ready
-                                            source: favTile.modelData.fontIcon ? "" : launcherWindow.iconUrl(favTile.modelData.icon || "")
-                                            sourceSize: Qt.size(96, 96)
-                                            asynchronous: true
-                                            smooth: true
-                                            mipmap: true
-                                            layer.enabled: !ThemeBackend.darkMode
-                                            layer.mipmap: true
-                                            layer.smooth: true
-                                            layer.effect: InkIcon {}
-                                        }
-                                        Text {
-                                            anchors.centerIn: parent
-                                            visible: !favIcon.visible
-                                            text: favTile.modelData.fontIcon || "󰵆"
-                                            font.family: ThemeBackend.iconFont
-                                            font.pixelSize: launcherWindow.s(24)
-                                            color: ThemeBackend.subtext0
-                                        }
+                                        icon: favTile.modelData.icon || ""
+                                        fontIcon: favTile.modelData.fontIcon || ""
                                     }
-                                    Text {
-                                        width: parent.width
-                                        horizontalAlignment: Text.AlignHCenter
-                                        text: favTile.modelData.name
-                                        elide: Text.ElideRight
-                                        font.family: ThemeBackend.fontFamily
-                                        font.pixelSize: launcherWindow.s(11)
-                                        color: ThemeBackend.text
-                                    }
+                                }
+                                Text {
+                                    anchors.top: favBubble.bottom
+                                    anchors.topMargin: launcherWindow.s(5)
+                                    width: parent.width - launcherWindow.s(6)
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    text: favTile.modelData.name
+                                    elide: Text.ElideRight
+                                    font.family: ThemeBackend.fontFamily
+                                    font.pixelSize: launcherWindow.s(10)
+                                    color: favMa.containsMouse ? ThemeBackend.text : ThemeBackend.subtext0
+                                    Behavior on color { ColorAnimation { duration: launcherWindow.dur(200) } }
                                 }
 
                                 MouseArea {
@@ -1810,43 +2004,43 @@ PanelWindow {
                             }
                         }
 
-                        // where a dragged list row would be pinned
+                        // where a dragged list row would be pinned: an empty ring
                         Rectangle {
-                            visible: favPane.dropSlot >= 0
-                            x: (favPane.dropSlot % launcherWindow.favColumns) * favPane.cellW + launcherWindow.s(3)
-                            y: Math.floor(favPane.dropSlot / launcherWindow.favColumns) * launcherWindow.favCellH + launcherWindow.s(3)
-                            width: favPane.cellW - launcherWindow.s(6)
-                            height: launcherWindow.favCellH - launcherWindow.s(6)
-                            radius: ThemeBackend.pill ? launcherWindow.s(22) : ThemeBackend.borderRadius
-                            color: "transparent"
+                            visible: favPane.dropSlot >= 0 && launcherWindow.favoriteApps.length > 0
+                            width: launcherWindow.s(52)
+                            height: width
+                            radius: launcherWindow.rr(width)
+                            x: (favPane.dropSlot % launcherWindow.favColumns) * favPane.cellW + (favPane.cellW - width) / 2
+                            y: Math.floor(favPane.dropSlot / launcherWindow.favColumns) * launcherWindow.favCellH + launcherWindow.s(4)
+                            color: Qt.alpha(launcherWindow.accent, 0.12)
                             border.width: 2
-                            border.color: ThemeBackend.mauve
+                            border.color: launcherWindow.accent
                         }
 
                         WheelScroll {}
                     }
                 }
 
-                // the line between the favourites and the list
+                // a short rounded divider under the pinned apps
                 Rectangle {
-                    visible: launcherWindow.showRail
-                    x: launcherWindow.railW + launcherWindow.s(6)
-                    y: Math.min(tabSwitch.y, listContainer.y) + launcherWindow.s(4)
-                    width: 1
-                    height: Math.max(0, Math.max(listContainer.y + listContainer.height, favPane.y + favPane.height) - y - launcherWindow.s(4))
-                    color: Qt.alpha(ThemeBackend.text, 0.12)
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: listContainer.y - launcherWindow.s(9)
+                    width: parent.width - launcherWindow.s(16)
+                    height: 1
+                    color: launcherWindow.dividerColor
+                    opacity: favPane.opacity * (appModel.count > 0 && launcherWindow.favoriteApps.length > 0 ? 1 : 0)
                 }
 
-                // a list row being dragged (to reorder the list, or onto the favourites to pin it)
+                // a list row being dragged (to reorder the list, or onto the pinned apps)
                 Rectangle {
                     id: rowGhost
                     z: 50
                     visible: listDrag.active
-                    width: launcherWindow.s(220)
+                    width: launcherWindow.s(200)
                     height: launcherWindow.s(40)
                     x: listDrag.pos.x - width / 2
                     y: listDrag.pos.y - height / 2
-                    radius: height / 2
+                    radius: launcherWindow.rr(height)
                     color: ThemeBackend.material ? ThemeBackend.secondaryContainer : ThemeBackend.surface1
                     opacity: 0.95
                     Text {
@@ -1872,7 +2066,7 @@ PanelWindow {
                     property point pos: Qt.point(0, 0)
                     // reordering only makes sense in the plain list (no search typed)
                     readonly property bool canReorder: searchInput.text.trim() === "" && launcherWindow.currentTabIndex === 0
-                    function overPane() { return launcherWindow.showRail && pos.x < launcherWindow.railW + launcherWindow.s(6); }
+                    function overPane() { return launcherWindow.favShown && pos.y < listContainer.y - launcherWindow.s(2); }
                     function update(p) {
                         pos = p;
                         if (overPane()) {
@@ -1883,7 +2077,7 @@ PanelWindow {
                             favPane.dropSlot = -1;
                             if (canReorder) {
                                 let l = appList.mapFromItem(contentContainer, p.x, p.y);
-                                to = Math.max(0, Math.min(appModel.count - 1, Math.floor((l.y + appList.contentY) / (launcherWindow.s(44) + appList.spacing))));
+                                to = Math.max(0, Math.min(appModel.count - 1, Math.floor((l.y + appList.contentY) / launcherWindow.rowStep)));
                             }
                         }
                     }
@@ -1898,65 +2092,43 @@ PanelWindow {
                     }
                 }
 
+                // ── the results ──────────────────────────────────────────────
                 Item {
                     id: listContainer
                     z: 1
-                    anchors.left: parent.left
-                    anchors.leftMargin: launcherWindow.showRail ? launcherWindow.railW + launcherWindow.s(13) : 0
-                    anchors.right: parent.right
-                    y: contentContainer.isSearchAtBottom ? 0
-                       : (launcherWindow.showRail || !launcherWindow.showTabs ? searchInput.y + searchInput.height + launcherWindow.s(8) : (tabSwitch.y + tabSwitch.height + launcherWindow.s(8)))
-                    height: contentContainer.isSearchAtBottom
-                            ? Math.max(0, (launcherWindow.showRail || !launcherWindow.showTabs ? searchInput.y : tabSwitch.y) - launcherWindow.s(8))
-                            : Math.max(0, parent.height - y)
+                    width: parent.width
+                    y: launcherWindow.favAreaH
+                    Behavior on y { NumberAnimation { duration: launcherWindow.dur(420); easing.type: Easing.OutQuint } }
+                    height: Math.max(0, launcherWindow.resultsH)
                     clip: true
-
-                    opacity: launcherWindow.isCentered
-                             ? Math.max(0.0, Math.min(1.0, (container.animProgress - 0.2) / 0.8))
-                             : 1.0
 
                     NumberAnimation {
                         id: scrollAnim
                         target: appList
                         property: "contentY"
-                        duration: (260) * ThemeBackend.animScale
-                        easing.type: Easing.OutCubic
+                        duration: launcherWindow.dur(320)
+                        easing.type: Easing.OutQuint
                     }
 
-                    Item {
-                        id: highlightGlassLayer
-                        visible: ThemeBackend.liquidGlass && appList.visible && morphHighlight.visible
-                        width: appList.width
-                        height: morphHighlight.height
-                        x: morphHighlight.x + launcherWindow.s(-20) * (1.0 - launcherWindow.getItemProgress(appList.currentIndex))
-                        y: morphHighlight.y - appList.contentY
-                        opacity: morphHighlight.opacity
-
-                        readonly property bool isMoving: Math.abs(morphHighlight.y - morphHighlight.targetY) > 0.5
-                        property real lift: (highlightLayerGlass.active && isMoving) ? 1.0 : 0.0
-                        Behavior on lift { NumberAnimation { duration: (240) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-                        transform: Scale {
-                            origin.x: highlightGlassLayer.width / 2
-                            origin.y: highlightGlassLayer.height / 2
-                            xScale: 1.0 + 0.015 * highlightGlassLayer.lift
-                            yScale: 1.0 + 0.1 * highlightGlassLayer.lift
+                    // nothing matched
+                    Column {
+                        anchors.centerIn: parent
+                        visible: launcherWindow.currentTabIndex !== 2 && appModel.count === 0 && !(launcherWindow.queryEmpty && launcherWindow.favShown)
+                        spacing: launcherWindow.s(4)
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "󰍉"
+                            font.family: ThemeBackend.iconFont
+                            font.pixelSize: launcherWindow.s(20)
+                            color: Qt.alpha(ThemeBackend.subtext0, 0.7)
                         }
-
-                        GlassFill {
-                            id: highlightLayerGlass
-                            anchors.fill: parent
-                            radius: ThemeBackend.rad(morphHighlight.radius)
-                            forceOpaque: true
-                            tintColor: ThemeBackend.text
-                            tintAmount: 0
-                            tintStrength: 1.0
-                            press: 0.6 + 0.4 * highlightGlassLayer.lift
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: I18n.t("applauncher.no_results", "Nothing found")
+                            font.family: ThemeBackend.fontFamily
+                            font.pixelSize: launcherWindow.s(12)
+                            color: ThemeBackend.subtext0
                         }
-                    }
-
-                    HoverHandler {
-                        id: listHover
-                        enabled: appList.visible
                     }
 
                     ListView {
@@ -1966,7 +2138,7 @@ PanelWindow {
                         interactive: !listDrag.active
                         clip: true
                         model: appModel
-                        spacing: launcherWindow.s(4)
+                        spacing: launcherWindow.rowSpacing
                         currentIndex: 0
                         boundsBehavior: Flickable.StopAtBounds
                         cacheBuffer: launcherWindow.s(500)
@@ -1982,336 +2154,117 @@ PanelWindow {
                             }
                         }
 
-                        function getItemY(idx) {
-                            return idx * (launcherWindow.s(44) + spacing);
-                        }
-
                         function resetScroll() {
                             scrollAnim.stop();
                             contentY = 0;
                         }
 
-                        property bool scrolling: false
-
-                        Timer {
-                            id: scrollSettleTimer
-                            interval: 200
-                            onTriggered: appList.scrolling = false
-                        }
-
-                        function refreshHover() {
-                            if (!listHover.hovered || !visible) {
-                                hoverItem = null;
-                                return;
-                            }
-                            const px = contentX + listHover.point.position.x;
-                            const py = contentY + listHover.point.position.y;
-                            const item = itemAt(px, py) || itemAt(px, py - spacing);
-                            hoverItem = (item && !item.isSelected) ? item : null;
-                        }
-
-                        onCountChanged: refreshHover()
-
-                        readonly property point cursorPos: listHover.point.position
-                        onCursorPosChanged: refreshHover()
-
-                        Connections {
-                            target: listHover
-                            function onHoveredChanged() { appList.refreshHover(); }
-                        }
-
                         onContentYChanged: {
-                            scrolling = true;
-                            scrollSettleTimer.restart();
-                            refreshHover();
-                            if (contentY < 0 && !moving && !flicking) {
-                                contentY = 0;
-                            }
+                            if (contentY < 0 && !moving && !flicking) contentY = 0;
                         }
 
                         function ensureVisible(idx, animated) {
                             if (idx < 0 || appModel.count === 0) return;
-                            let itemH = launcherWindow.s(44);
-                            let step = itemH + spacing;
+                            let step = launcherWindow.rowStep;
                             let itemTop = idx * step;
-                            let itemBottom = itemTop + itemH;
-
+                            let itemBottom = itemTop + launcherWindow.rowH;
                             let curContentY = scrollAnim.running ? scrollAnim.to : contentY;
                             let totalH = Math.max(0, appModel.count * step - spacing);
                             let maxScroll = Math.max(0, totalH - height);
                             let newContentY = curContentY;
-
-                            if (itemTop < curContentY) {
-                                newContentY = itemTop;
-                            } else if (itemBottom > curContentY + height) {
-                                newContentY = itemBottom - height;
-                            }
-
+                            if (itemTop < curContentY) newContentY = itemTop;
+                            else if (itemBottom > curContentY + height) newContentY = itemBottom - height;
                             newContentY = Math.max(0, Math.min(maxScroll, newContentY));
-
                             if (Math.abs(newContentY - contentY) > 0.5) {
+                                scrollAnim.stop();
                                 if (animated) {
-                                    scrollAnim.stop();
                                     scrollAnim.from = contentY;
                                     scrollAnim.to = newContentY;
                                     scrollAnim.start();
                                 } else {
-                                    scrollAnim.stop();
                                     contentY = newContentY;
                                 }
                             }
                         }
 
                         onCurrentIndexChanged: {
-                            if (currentIndex >= 0) {
-                                ensureVisible(currentIndex, launcherWindow.isKeyboardNav);
-                            }
-                            refreshHover();
+                            if (currentIndex >= 0) ensureVisible(currentIndex, launcherWindow.isKeyboardNav);
                         }
 
-                        property Item hoverItem: null
-
-                        GlassLens {
-                            id: rowHoverLens
-                            parent: appList.contentItem
-                            z: -1
-                            instant: appList.scrolling
-                            targetX: appList.hoverItem ? appList.hoverItem.x : 0
-                            targetY: appList.hoverItem ? appList.hoverItem.y : 0
-                            targetWidth: appList.hoverItem ? appList.hoverItem.width : 0
-                            targetHeight: appList.hoverItem ? appList.hoverItem.height : 0
-                            radius: ThemeBackend.borderRadius
-                            tintColor: ThemeBackend.surface0
-                            tintAmount: 0.3
-                            shadow: 0
-                            restPress: 0.2
-                            magnify: launcherWindow.s(4)
-                            press: appList.hoverItem && appList.hoverItem.pressed ? 0.8 : 0
-                        }
-
+                        // the selection: one pill that glides from row to row
                         Rectangle {
                             id: morphHighlight
                             parent: appList.contentItem
                             z: 0
+                            readonly property bool valid: appList.count > 0 && appList.currentIndex >= 0
                             visible: opacity > 0.001
-                            opacity: (appList.count > 0 && appList.currentIndex >= 0)
-                                     ? launcherWindow.getItemOpacity(appList.currentIndex)
-                                     : 0.0
-                            Behavior on opacity {
-                                enabled: !itemsIntroSequence.running
-                                NumberAnimation {
-                                    duration: (170) * ThemeBackend.animScale
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
+                            opacity: valid ? launcherWindow.getItemOpacity(appList.currentIndex + launcherWindow.introOffset) : 0.0
                             x: 0
                             width: appList.width
-                            height: launcherWindow.s(44)
-                            radius: ThemeBackend.pill ? height / 2 : ThemeBackend.borderRadius
-                            color: ThemeBackend.liquidGlass ? "transparent" : (ThemeBackend.material ? ThemeBackend.secondaryContainer : Qt.alpha(ThemeBackend.mauve, 0.16))
-
-                            // Monolith's selection spine (Material marks the row by filling it)
-                            Rectangle {
-                                visible: !ThemeBackend.material
-                                x: I18n.rtl ? parent.width - width - launcherWindow.s(4) : launcherWindow.s(4)
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: launcherWindow.s(3)
-                                height: parent.height * 0.56
-                                radius: ThemeBackend.rad(width / 2)
-                                color: ThemeBackend.mauve
-                            }
-
-                            property real targetY: (appList.currentIndex >= 0 && appModel.count > 0)
-                                                   ? appList.getItemY(appList.currentIndex)
-                                                   : 0
-                            y: targetY
-
-                            transform: Translate {
-                                x: launcherWindow.s(-20) * (1.0 - launcherWindow.getItemProgress(appList.currentIndex))
-                            }
-
-                            Behavior on y {
-                                enabled: launcherWindow.isKeyboardNav
-                                NumberAnimation {
-                                    duration: (260) * ThemeBackend.animScale
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
+                            height: launcherWindow.rowH
+                            radius: launcherWindow.rr(height)
+                            color: launcherWindow.selectColor
+                            y: valid ? appList.currentIndex * launcherWindow.rowStep : 0
+                            Behavior on y { NumberAnimation { duration: launcherWindow.dur(340); easing.type: Easing.OutQuint } }
                         }
 
                         delegate: Item {
                             id: delegateRoot
                             width: ListView.view ? ListView.view.width : 0
-                            height: launcherWindow.s(44)
-                            clip: false
+                            height: launcherWindow.rowH
                             z: 1
+                            readonly property bool isSelected: index === appList.currentIndex
+                            readonly property real intro: launcherWindow.getItemProgress(index + launcherWindow.introOffset)
                             // the row being dragged fades; a line shows where it will go
-                            opacity: (listDrag.active && listDrag.from === index) ? 0.35 : launcherWindow.getItemOpacity(index)
-
-                            property bool isSelected: index === appList.currentIndex
-                            readonly property bool pressed: ma.pressed
-                            Component.onDestruction: {
-                                if (appList.hoverItem === delegateRoot) appList.hoverItem = null;
-                            }
+                            opacity: (listDrag.active && listDrag.from === index) ? 0.35 : launcherWindow.getItemOpacity(index + launcherWindow.introOffset)
+                            transform: Translate { y: launcherWindow.s(10) * (1.0 - delegateRoot.intro) }
 
                             Rectangle {
                                 visible: listDrag.active && listDrag.to === index && listDrag.from !== index
                                 z: 20
-                                width: parent.width
+                                x: launcherWindow.s(20)
+                                width: parent.width - launcherWindow.s(40)
                                 height: launcherWindow.s(3)
                                 radius: height / 2
-                                color: ThemeBackend.mauve
+                                color: launcherWindow.accent
                                 y: listDrag.to > listDrag.from ? parent.height + appList.spacing / 2 - height / 2 : -appList.spacing / 2 - height / 2
-                            }
-                            transform: Translate {
-                                x: launcherWindow.s(-20) * (1.0 - launcherWindow.getItemProgress(index))
                             }
 
                             Item {
-                                id: delegateContent
                                 anchors.fill: parent
-
-                                scale: ma.pressed ? 0.98 : 1.0
-                                Behavior on scale { NumberAnimation { duration: (180) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                                scale: ma.pressed ? 0.97 : 1.0
+                                Behavior on scale { NumberAnimation { duration: launcherWindow.dur(240); easing.type: Easing.OutQuint } }
 
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: ThemeBackend.borderRadius
-                                    color: (ThemeBackend.liquidGlass || rowHoverGlass.active) ? "transparent" : ThemeBackend.surface0
-                                    opacity: ma.containsMouse && !delegateRoot.isSelected ? (ThemeBackend.liquidGlass ? 1.0 : 0.45) : 0
-
-                                    GlassFill {
-                                        id: rowHoverGlass
-                                        anchors.fill: parent
-                                        radius: ThemeBackend.rad(parent.radius)
-                                        allowed: ma.containsMouse && !delegateRoot.isSelected && !rowHoverLens.glassActive
-                                        tintColor: ThemeBackend.surface0
-                                        tintAmount: 0.3
-                                        press: ma.pressed ? 0.8 : 0.2
-                                    }
-                                    Behavior on opacity { NumberAnimation { duration: (120) * ThemeBackend.animScale; easing.type: Easing.OutSine } }
+                                    radius: launcherWindow.rr(height)
+                                    color: launcherWindow.hoverColor
+                                    opacity: ma.containsMouse && !delegateRoot.isSelected ? 1 : 0
+                                    Behavior on opacity { NumberAnimation { duration: launcherWindow.dur(200); easing.type: Easing.OutCubic } }
                                 }
 
                                 RowLayout {
                                     layoutDirection: I18n.layoutDirection
                                     anchors.fill: parent
-                                    anchors.margins: launcherWindow.s(6)
-                                    anchors.leftMargin: I18n.rtl ? launcherWindow.s(10) : (launcherWindow.s(10) + (delegateRoot.isSelected ? launcherWindow.s(2) : 0))
-                                    anchors.rightMargin: I18n.rtl ? (launcherWindow.s(10) + (delegateRoot.isSelected ? launcherWindow.s(2) : 0)) : launcherWindow.s(10)
-                                    spacing: launcherWindow.s(10)
+                                    anchors.leftMargin: launcherWindow.s(7)
+                                    anchors.rightMargin: launcherWindow.s(16)
+                                    spacing: launcherWindow.s(12)
 
-                                    Behavior on anchors.leftMargin {
-                                        NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
-                                    }
-                                    Behavior on anchors.rightMargin {
-                                        NumberAnimation { duration: (220) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
-                                    }
-
-                                    Item {
-                                        id: delegateIconArea
-                                        Layout.preferredWidth: launcherWindow.s(32)
-                                        Layout.preferredHeight: launcherWindow.s(32)
+                                    Rectangle {
+                                        Layout.preferredWidth: launcherWindow.rowH - launcherWindow.s(12)
+                                        Layout.preferredHeight: Layout.preferredWidth
                                         Layout.alignment: Qt.AlignVCenter
-
-                                        readonly property real boxRadius: launcherWindow.s(8)
-                                        readonly property real boxPadding: launcherWindow.s(4)
-
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            anchors.topMargin: launcherWindow.s(1.5)
-                                            anchors.bottomMargin: -launcherWindow.s(1.5)
-                                            radius: ThemeBackend.rad(parent.boxRadius)
-                                            color: Qt.rgba(0, 0, 0, 0.12)
-                                            visible: !iconBoxGlass.active
-                                        }
-
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            radius: ThemeBackend.rad(parent.boxRadius)
-                                            color: iconBoxGlass.active ? "transparent" : (delegateRoot.isSelected ? Qt.tint(ThemeBackend.surface2, Qt.rgba(ThemeBackend.mauve.r, ThemeBackend.mauve.g, ThemeBackend.mauve.b, 0.2)) : ThemeBackend.surface2)
-
-                                            GlassFill {
-                                                id: iconBoxGlass
-                                                anchors.fill: parent
-                                                radius: ThemeBackend.rad(parent.radius)
-                                                forceClear: delegateRoot.isSelected
-                                                tintColor: delegateRoot.isSelected ? ThemeBackend.text : ThemeBackend.surface2
-                                                tintAmount: delegateRoot.isSelected ? 0.1 : 0.3
-                                            }
-
-                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-                                        }
-
-                                        Rectangle {
-                                            id: iconContainer
-                                            anchors.fill: parent
-                                            anchors.margins: parent.boxPadding
-                                            radius: ThemeBackend.rad(Math.max(0, parent.boxRadius - parent.boxPadding))
-                                            color: "transparent"
-                                            clip: true
-
-                                            Image {
-                                                id: delegateIcon
-                                                anchors.fill: parent
-                                                property bool failedLoad: false
-                                                cache: false
-
-                                                visible: (!model.fontIcon || model.fontIcon === "") && source !== "" && status === Image.Ready && !failedLoad
-
-                                                source: {
-                                                    if (model.fontIcon && model.fontIcon !== "") return "";
-                                                    let ic = model.icon || "";
-                                                    if (!ic) return "";
-                                                    if (ic.startsWith("file://") || ic.startsWith("image://") || ic.startsWith("http://") || ic.startsWith("https://")) return ic;
-                                                    if (ic.startsWith("/")) return "file://" + ic;
-
-                                                    let baseName = ic.replace(/\.(png|svg|xpm|ico)$/i, "");
-                                                    if (typeof Quickshell !== "undefined" && typeof Quickshell.iconPath === "function") {
-                                                        let resolved = Quickshell.iconPath(ic) || Quickshell.iconPath(baseName);
-                                                        if (resolved && resolved.length > 0) {
-                                                            return resolved.startsWith("/") ? ("file://" + resolved) : resolved;
-                                                        }
-                                                    }
-
-                                                    return "image://icon/" + baseName;
-                                                }
-
-                                                sourceSize: Qt.size(64, 64)
-                                                fillMode: Image.PreserveAspectFit
-                                                asynchronous: true
-                                                smooth: true
-                                                mipmap: true
-                                                // white-glyph icons vanish in light styles
-                                                layer.enabled: !ThemeBackend.darkMode
-                                                layer.mipmap: true
-                                                layer.smooth: true
-                                                layer.effect: InkIcon {}
-
-                                                onStatusChanged: {
-                                                    if (status === Image.Error) {
-                                                        failedLoad = true;
-                                                    }
-                                                }
-                                            }
-
-                                            Text {
-                                                id: delegateFontIcon
-                                                anchors.centerIn: parent
-                                                visible: !delegateIcon.visible
-                                                text: {
-                                                    if (model.fontIcon && model.fontIcon !== "") return model.fontIcon;
-                                                    if (model.isCalc) return "󰃬";
-                                                    if (model.isCommand) return "󰆍";
-                                                    return "󰵆";
-                                                }
-                                                font.family: ThemeBackend.fontFamily
-                                                font.pixelSize: launcherWindow.s(16)
-                                                color: delegateRoot.isSelected ? ThemeBackend.mauve : ThemeBackend.subtext0
-                                                verticalAlignment: Text.AlignVCenter
-                                                horizontalAlignment: Text.AlignHCenter
-
-                                                Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
-                                            }
+                                        radius: launcherWindow.rr(width)
+                                        color: delegateRoot.isSelected ? Qt.alpha(launcherWindow.accent, 0.18) : launcherWindow.bubbleColor
+                                        Behavior on color { ColorAnimation { duration: launcherWindow.dur(260) } }
+                                        AppIcon {
+                                            anchors.centerIn: parent
+                                            width: launcherWindow.s(22)
+                                            height: width
+                                            icon: model.icon || ""
+                                            fontIcon: model.fontIcon || ""
+                                            fallback: model.isCalc ? "󰃬" : (model.isCommand ? "󰆍" : "󰵆")
+                                            glyphColor: delegateRoot.isSelected ? launcherWindow.accent : ThemeBackend.subtext0
                                         }
                                     }
 
@@ -2319,51 +2272,55 @@ PanelWindow {
                                         Layout.fillWidth: true
                                         Layout.alignment: Qt.AlignVCenter
                                         spacing: launcherWindow.s(1)
-
                                         Text {
-                                            id: delegateText
                                             Layout.fillWidth: true
                                             text: model.name
                                             font.family: ThemeBackend.fontFamily
-                                            font.pixelSize: launcherWindow.s(12)
-                                            font.weight: delegateRoot.isSelected ? Font.Bold : Font.Medium
-                                            color: ThemeBackend.text
+                                            font.pixelSize: launcherWindow.s(13)
+                                            font.weight: delegateRoot.isSelected ? Font.DemiBold : Font.Normal
+                                            color: delegateRoot.isSelected ? launcherWindow.onSelect : ThemeBackend.text
                                             horizontalAlignment: I18n.textAlignment
                                             elide: Text.ElideRight
-                                            verticalAlignment: Text.AlignVCenter
-
-                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                         }
-
                                         Text {
-                                            id: delegateDesc
                                             Layout.fillWidth: true
                                             visible: launcherWindow.showDescriptions && model.description !== undefined && model.description !== null && model.description !== ""
                                             text: model.description || ""
                                             font.family: ThemeBackend.fontFamily
                                             font.pixelSize: launcherWindow.s(10)
-                                            font.weight: Font.Normal
-                                            color: delegateRoot.isSelected ? ThemeBackend.subtext1 : ThemeBackend.subtext0
+                                            color: ThemeBackend.subtext0
+                                            opacity: 0.85
                                             horizontalAlignment: I18n.textAlignment
-                                            opacity: delegateRoot.isSelected ? 0.9 : 0.85
                                             elide: Text.ElideRight
-                                            verticalAlignment: Text.AlignVCenter
-
-                                            Behavior on color { ColorAnimation { duration: (150) * ThemeBackend.animScale; easing.type: Easing.OutCubic } }
                                         }
                                     }
-                                }
 
-                                // pinned to favourites
-                                Text {
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: launcherWindow.s(12)
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    visible: launcherWindow.showRail && launcherWindow.isFavorite(model.desktop_id || "")
-                                    text: "󰐃"
-                                    font.family: ThemeBackend.iconFont
-                                    font.pixelSize: launcherWindow.s(12)
-                                    color: ThemeBackend.subtext0
+                                    // pinned (when not selected) or "Enter opens it" (when selected)
+                                    Item {
+                                        Layout.preferredWidth: launcherWindow.s(18)
+                                        Layout.fillHeight: true
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "󰐃"
+                                            visible: launcherWindow.showRail && launcherWindow.isFavorite(model.desktop_id || "")
+                                            opacity: delegateRoot.isSelected ? 0 : 0.7
+                                            font.family: ThemeBackend.iconFont
+                                            font.pixelSize: launcherWindow.s(12)
+                                            color: ThemeBackend.subtext0
+                                            Behavior on opacity { NumberAnimation { duration: launcherWindow.dur(200) } }
+                                        }
+                                        Text {
+                                            anchors.centerIn: parent
+                                            anchors.horizontalCenterOffset: delegateRoot.isSelected ? 0 : -launcherWindow.s(8)
+                                            text: "󰌑"
+                                            opacity: delegateRoot.isSelected ? 0.8 : 0
+                                            font.family: ThemeBackend.iconFont
+                                            font.pixelSize: launcherWindow.s(14)
+                                            color: launcherWindow.accent
+                                            Behavior on opacity { NumberAnimation { duration: launcherWindow.dur(260) } }
+                                            Behavior on anchors.horizontalCenterOffset { NumberAnimation { duration: launcherWindow.dur(360); easing.type: Easing.OutQuint } }
+                                        }
+                                    }
                                 }
 
                                 MouseArea {
@@ -2388,9 +2345,7 @@ PanelWindow {
                                         }
                                         if (listDrag.active) listDrag.update(p);
                                     }
-                                    onReleased: {
-                                        if (listDrag.active) listDrag.finish();
-                                    }
+                                    onReleased: { if (listDrag.active) listDrag.finish(); }
                                     onCanceled: { listDrag.active = false; favPane.dropSlot = -1; }
                                     onClicked: (mouse) => {
                                         if (dragged) return;
@@ -2409,7 +2364,8 @@ PanelWindow {
                         WheelScroll {}
                     }
 
-                    // apps as a grid (Settings -> Launcher -> Grid view); shares appList's selection
+                    // apps as a grid of round bubbles (Settings -> Launcher -> Grid view);
+                    // shares appList's selection
                     GridView {
                         id: appGrid
                         anchors.fill: parent
@@ -2420,79 +2376,87 @@ PanelWindow {
                         cellHeight: launcherWindow.gridCellH
                         currentIndex: appList.currentIndex
                         boundsBehavior: Flickable.StopAtBounds
-                        highlightFollowsCurrentItem: true
-                        highlightMoveDuration: (160) * ThemeBackend.animScale
-                        highlight: Rectangle {
-                            radius: ThemeBackend.pill ? launcherWindow.s(22) : ThemeBackend.borderRadius
-                            color: ThemeBackend.material ? ThemeBackend.secondaryContainer : Qt.alpha(ThemeBackend.mauve, 0.16)
-                        }
+                        highlightFollowsCurrentItem: false
+                        cacheBuffer: launcherWindow.s(800)
+                        reuseItems: false
                         Keys.forwardTo: [searchInput]
+                        onCurrentIndexChanged: if (currentIndex >= 0) positionViewAtIndex(currentIndex, GridView.Contain)
+
+                        readonly property real bubble: launcherWindow.s(60)
+
+                        // the selection: a round bubble that glides between icons
+                        Rectangle {
+                            parent: appGrid.contentItem
+                            z: 0
+                            readonly property bool valid: appGrid.count > 0 && appList.currentIndex >= 0
+                            visible: opacity > 0.001
+                            opacity: valid ? launcherWindow.getItemOpacity(launcherWindow.introOffset + Math.floor(appList.currentIndex / launcherWindow.gridColumns) + (appList.currentIndex % launcherWindow.gridColumns) * 0.35) : 0
+                            width: appGrid.bubble
+                            height: width
+                            radius: launcherWindow.rr(width)
+                            color: launcherWindow.selectColor
+                            x: valid ? (appList.currentIndex % launcherWindow.gridColumns) * appGrid.cellWidth + (appGrid.cellWidth - width) / 2 : 0
+                            y: valid ? Math.floor(appList.currentIndex / launcherWindow.gridColumns) * appGrid.cellHeight + launcherWindow.s(8) : 0
+                            Behavior on x { NumberAnimation { duration: launcherWindow.dur(360); easing.type: Easing.OutQuint } }
+                            Behavior on y { NumberAnimation { duration: launcherWindow.dur(360); easing.type: Easing.OutQuint } }
+                        }
 
                         delegate: Item {
                             id: gridCell
                             width: appGrid.cellWidth
                             height: appGrid.cellHeight
+                            z: 1
                             readonly property bool selected: index === appList.currentIndex
+                            readonly property real wave: launcherWindow.introOffset + Math.floor(index / launcherWindow.gridColumns) + (index % launcherWindow.gridColumns) * 0.35
+                            readonly property real intro: launcherWindow.getItemProgress(wave)
+                            opacity: launcherWindow.getItemOpacity(wave)
+                            scale: 0.94 + 0.06 * gridCell.intro
+                            transform: Translate { y: launcherWindow.s(14) * (1.0 - gridCell.intro) }
 
                             Rectangle {
-                                anchors.fill: parent
-                                radius: ThemeBackend.pill ? launcherWindow.s(22) : ThemeBackend.borderRadius
-                                color: Qt.alpha(ThemeBackend.surface1, 0.6)
-                                visible: gma.containsMouse && !gridCell.selected
-                            }
-
-                            Column {
-                                anchors.centerIn: parent
-                                width: parent.width - launcherWindow.s(10)
-                                spacing: launcherWindow.s(6)
-
-                                Item {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: launcherWindow.s(44)
+                                id: gridBubble
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                y: launcherWindow.s(8)
+                                width: appGrid.bubble
+                                height: width
+                                radius: launcherWindow.rr(width)
+                                color: gma.containsMouse && !gridCell.selected ? launcherWindow.hoverColor : "transparent"
+                                scale: gma.pressed ? 0.9 : (gma.containsMouse ? 1.05 : 1.0)
+                                Behavior on color { ColorAnimation { duration: launcherWindow.dur(200) } }
+                                Behavior on scale { NumberAnimation { duration: launcherWindow.dur(280); easing.type: Easing.OutQuint } }
+                                AppIcon {
+                                    anchors.centerIn: parent
+                                    width: launcherWindow.s(38)
                                     height: width
-                                    Image {
-                                        id: gridIcon
-                                        anchors.fill: parent
-                                        visible: (!model.fontIcon || model.fontIcon === "") && status === Image.Ready
-                                        source: (model.fontIcon && model.fontIcon !== "") ? "" : launcherWindow.iconUrl(model.icon || "")
-                                        sourceSize: Qt.size(96, 96)
-                                        asynchronous: true
-                                        smooth: true
-                                        mipmap: true
-                                        layer.enabled: !ThemeBackend.darkMode
-                                        layer.mipmap: true
-                                        layer.smooth: true
-                                        layer.effect: InkIcon {}
-                                    }
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !gridIcon.visible
-                                        text: (model.fontIcon && model.fontIcon !== "") ? model.fontIcon : (model.isCalc ? "󰃬" : (model.isCommand ? "󰆍" : "󰵆"))
-                                        font.family: ThemeBackend.iconFont
-                                        font.pixelSize: launcherWindow.s(26)
-                                        color: ThemeBackend.subtext0
-                                    }
-                                    Text {
-                                        anchors.right: parent.right
-                                        anchors.top: parent.top
-                                        anchors.margins: -launcherWindow.s(4)
-                                        visible: launcherWindow.showRail && launcherWindow.isFavorite(model.desktop_id || "")
-                                        text: "󰐃"
-                                        font.family: ThemeBackend.iconFont
-                                        font.pixelSize: launcherWindow.s(11)
-                                        color: ThemeBackend.subtext0
-                                    }
+                                    icon: model.icon || ""
+                                    fontIcon: model.fontIcon || ""
+                                    fallback: model.isCalc ? "󰃬" : (model.isCommand ? "󰆍" : "󰵆")
+                                    glyphColor: gridCell.selected ? launcherWindow.accent : ThemeBackend.subtext0
                                 }
-                                Text {
-                                    width: parent.width
-                                    horizontalAlignment: Text.AlignHCenter
-                                    text: model.name
-                                    elide: Text.ElideRight
-                                    font.family: ThemeBackend.fontFamily
-                                    font.pixelSize: launcherWindow.s(11)
-                                    font.weight: gridCell.selected ? Font.DemiBold : Font.Normal
-                                    color: gridCell.selected && ThemeBackend.material ? ThemeBackend.onSecondaryContainer : ThemeBackend.text
+                                // pinned: a small dot on the bubble's rim
+                                Rectangle {
+                                    visible: launcherWindow.showRail && launcherWindow.isFavorite(model.desktop_id || "")
+                                    width: launcherWindow.s(7)
+                                    height: width
+                                    radius: width / 2
+                                    color: launcherWindow.accent
+                                    x: parent.width * 0.85 - width / 2
+                                    y: parent.height * 0.15 - height / 2
                                 }
+                            }
+                            Text {
+                                anchors.top: gridBubble.bottom
+                                anchors.topMargin: launcherWindow.s(6)
+                                width: parent.width - launcherWindow.s(8)
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                horizontalAlignment: Text.AlignHCenter
+                                text: model.name
+                                elide: Text.ElideRight
+                                font.family: ThemeBackend.fontFamily
+                                font.pixelSize: launcherWindow.s(11)
+                                font.weight: gridCell.selected ? Font.DemiBold : Font.Normal
+                                color: gridCell.selected ? ThemeBackend.text : ThemeBackend.subtext0
+                                Behavior on color { ColorAnimation { duration: launcherWindow.dur(220) } }
                             }
 
                             MouseArea {
@@ -2516,41 +2480,47 @@ PanelWindow {
                         WheelScroll {}
                     }
 
-                    // the emoji groups, one tab each; Tab / Shift+Tab move between them
-                    Row {
+                    // the emoji groups: round buttons with a gliding dot; Tab / Shift+Tab move between them
+                    Item {
                         id: emojiTabs
                         visible: launcherWindow.currentTabIndex === 2
                         anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: launcherWindow.s(34)
-                        spacing: launcherWindow.s(2)
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        readonly property real chip: launcherWindow.s(38)
+                        readonly property real gap: Math.max(launcherWindow.s(2), Math.min(launcherWindow.s(8), (parent.width - chip * launcherWindow.emojiCategories.length) / Math.max(1, launcherWindow.emojiCategories.length - 1)))
+                        width: chip * launcherWindow.emojiCategories.length + gap * (launcherWindow.emojiCategories.length - 1)
+                        height: chip
                         readonly property bool searching: searchInput.text.trim() !== ""
+                        readonly property int activeIndex: launcherWindow.emojiCategories.indexOf(launcherWindow.emojiCategory)
+
+                        Rectangle {
+                            visible: !emojiTabs.searching
+                            width: emojiTabs.chip
+                            height: width
+                            radius: launcherWindow.rr(width)
+                            color: launcherWindow.selectColor
+                            x: Math.max(0, emojiTabs.activeIndex) * (emojiTabs.chip + emojiTabs.gap)
+                            Behavior on x { NumberAnimation { duration: launcherWindow.dur(420); easing.type: Easing.OutQuint } }
+                        }
+
                         Repeater {
                             model: launcherWindow.emojiCategories
-                            Rectangle {
+                            Item {
                                 id: catTab
                                 required property var modelData
+                                required property int index
                                 readonly property bool active: !emojiTabs.searching && launcherWindow.emojiCategory === modelData
-                                width: (emojiTabs.width - emojiTabs.spacing * (launcherWindow.emojiCategories.length - 1)) / launcherWindow.emojiCategories.length
-                                height: emojiTabs.height
-                                radius: ThemeBackend.borderRadius
-                                color: active ? Qt.alpha(ThemeBackend.mauve, 0.35) : (catMouse.containsMouse ? Qt.alpha(ThemeBackend.surface1, 0.7) : "transparent")
-                                Behavior on color { ColorAnimation { duration: 120 * ThemeBackend.animScale } }
+                                x: index * (emojiTabs.chip + emojiTabs.gap)
+                                width: emojiTabs.chip
+                                height: emojiTabs.chip
                                 Text {
                                     anchors.centerIn: parent
                                     text: launcherWindow.emojiCategoryIcons[catTab.modelData] || "•"
                                     font.pixelSize: launcherWindow.s(17)
-                                    opacity: catTab.active || catMouse.containsMouse ? 1.0 : 0.6
-                                }
-                                Rectangle {
-                                    visible: catTab.active
-                                    anchors.bottom: parent.bottom
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: parent.width * 0.5
-                                    height: launcherWindow.s(2)
-                                    radius: height / 2
-                                    color: ThemeBackend.mauve
+                                    opacity: catTab.active || catMouse.containsMouse ? 1.0 : 0.55
+                                    scale: catMouse.pressed ? 0.85 : (catMouse.containsMouse ? 1.1 : 1.0)
+                                    Behavior on opacity { NumberAnimation { duration: launcherWindow.dur(200) } }
+                                    Behavior on scale { NumberAnimation { duration: launcherWindow.dur(260); easing.type: Easing.OutQuint } }
                                 }
                                 MouseArea {
                                     id: catMouse
@@ -2575,12 +2545,12 @@ PanelWindow {
                     GridView {
                         id: emojiGrid
                         anchors.fill: parent
-                        anchors.topMargin: emojiTabs.visible ? emojiTabs.height + launcherWindow.s(6) : 0
+                        anchors.topMargin: emojiTabs.visible ? emojiTabs.height + launcherWindow.s(8) : 0
                         visible: launcherWindow.currentTabIndex === 2
                         clip: true
                         model: emojiModel
-                        cellWidth: width / 5
-                        cellHeight: launcherWindow.s(60)
+                        cellWidth: width / launcherWindow.emojiColumns
+                        cellHeight: launcherWindow.emojiCellH
                         currentIndex: 0
                         boundsBehavior: Flickable.StopAtBounds
                         cacheBuffer: launcherWindow.s(400)
@@ -2602,176 +2572,92 @@ PanelWindow {
                         }
 
                         onContentYChanged: {
-                            if (contentY < 0 && !moving && !flicking) {
-                                contentY = 0;
-                            }
+                            if (contentY < 0 && !moving && !flicking) contentY = 0;
                         }
 
                         function ensureVisible(idx, animated) {
                             if (idx < 0 || emojiModel.count === 0) return;
-                            let row = Math.floor(idx / 5);
+                            const cols = launcherWindow.emojiColumns;
                             let rowH = cellHeight;
-                            let itemTop = row * rowH;
+                            let itemTop = Math.floor(idx / cols) * rowH;
                             let itemBottom = itemTop + rowH;
-
                             let curContentY = emojiScrollAnim.running ? emojiScrollAnim.to : contentY;
-                            let totalRows = Math.ceil(emojiModel.count / 5);
-                            let totalH = Math.max(0, totalRows * rowH);
+                            let totalH = Math.max(0, Math.ceil(emojiModel.count / cols) * rowH);
                             let maxScroll = Math.max(0, totalH - height);
                             let newContentY = curContentY;
-
-                            if (itemTop < curContentY) {
-                                newContentY = itemTop;
-                            } else if (itemBottom > curContentY + height) {
-                                newContentY = itemBottom - height;
-                            }
-
+                            if (itemTop < curContentY) newContentY = itemTop;
+                            else if (itemBottom > curContentY + height) newContentY = itemBottom - height;
                             newContentY = Math.max(0, Math.min(maxScroll, newContentY));
-
                             if (Math.abs(newContentY - contentY) > 0.5) {
+                                emojiScrollAnim.stop();
                                 if (animated) {
-                                    emojiScrollAnim.stop();
                                     emojiScrollAnim.from = contentY;
                                     emojiScrollAnim.to = newContentY;
                                     emojiScrollAnim.start();
                                 } else {
-                                    emojiScrollAnim.stop();
                                     contentY = newContentY;
                                 }
                             }
                         }
 
                         onCurrentIndexChanged: {
-                            if (currentIndex >= 0) {
-                                ensureVisible(currentIndex, launcherWindow.isKeyboardNav);
-                            }
-                        }
-
-                        GlassLens {
-                            id: emojiLens
-                            z: -1
-                            readonly property bool valid: emojiGrid.currentIndex >= 0 && emojiGrid.currentIndex < emojiGrid.count
-                            targetX: valid ? (emojiGrid.currentIndex % 5) * emojiGrid.cellWidth + launcherWindow.s(3) : 0
-                            targetY: valid ? Math.floor(emojiGrid.currentIndex / 5) * emojiGrid.cellHeight + launcherWindow.s(3) : 0
-                            targetWidth: valid ? Math.max(0, emojiGrid.cellWidth - launcherWindow.s(6)) : 0
-                            targetHeight: valid ? Math.max(0, emojiGrid.cellHeight - launcherWindow.s(6)) : 0
-                            radius: ThemeBackend.borderRadius
-                            forceOpaque: true
-                            tintColor: ThemeBackend.text
-                            tintAmount: 0
-                            tintStrength: 1.0
-                            shadow: 0
-                            restPress: 0.6
-                            followBackdropHover: false
-                            fastDuration: 260
-                            slowDuration: 260
+                            if (currentIndex >= 0) ensureVisible(currentIndex, launcherWindow.isKeyboardNav);
                         }
 
                         NumberAnimation {
                             id: emojiScrollAnim
                             target: emojiGrid
                             property: "contentY"
-                            duration: (220) * ThemeBackend.animScale
-                            easing.type: Easing.OutCubic
+                            duration: launcherWindow.dur(300)
+                            easing.type: Easing.OutQuint
+                        }
+
+                        // the selection: a round bubble that glides between emojis
+                        Rectangle {
+                            parent: emojiGrid.contentItem
+                            z: 0
+                            readonly property bool valid: emojiGrid.currentIndex >= 0 && emojiGrid.currentIndex < emojiGrid.count
+                            visible: valid
+                            width: Math.min(emojiGrid.cellWidth, emojiGrid.cellHeight) - launcherWindow.s(8)
+                            height: width
+                            radius: launcherWindow.rr(width)
+                            color: launcherWindow.selectColor
+                            x: valid ? (emojiGrid.currentIndex % launcherWindow.emojiColumns) * emojiGrid.cellWidth + (emojiGrid.cellWidth - width) / 2 : 0
+                            y: valid ? Math.floor(emojiGrid.currentIndex / launcherWindow.emojiColumns) * emojiGrid.cellHeight + (emojiGrid.cellHeight - height) / 2 : 0
+                            Behavior on x { NumberAnimation { duration: launcherWindow.dur(300); easing.type: Easing.OutQuint } }
+                            Behavior on y { NumberAnimation { duration: launcherWindow.dur(300); easing.type: Easing.OutQuint } }
                         }
 
                         delegate: Item {
                             id: emojiDelegateRoot
                             width: emojiGrid.cellWidth
                             height: emojiGrid.cellHeight
-                            clip: false
-
+                            z: 1
                             readonly property bool isSelected: index === emojiGrid.currentIndex
-                            readonly property bool lensHandled: isSelected && emojiLens.glassActive
+                            readonly property real intro: launcherWindow.getItemProgress(Math.floor(index / launcherWindow.emojiColumns))
+                            opacity: launcherWindow.getItemOpacity(Math.floor(index / launcherWindow.emojiColumns))
+                            transform: Translate { y: launcherWindow.s(12) * (1.0 - emojiDelegateRoot.intro) }
 
-                            opacity: launcherWindow.getItemOpacity(Math.floor(index / 5))
-                            transform: Translate {
-                                y: launcherWindow.s(15) * (1.0 - launcherWindow.getItemProgress(Math.floor(index / 5)))
+                            Text {
+                                anchors.centerIn: parent
+                                text: model.emoji
+                                font.pixelSize: launcherWindow.s(24)
+                                scale: emojiMa.pressed ? 0.85 : (emojiDelegateRoot.isSelected ? 1.15 : 1.0)
+                                Behavior on scale { NumberAnimation { duration: launcherWindow.dur(300); easing.type: Easing.OutQuint } }
                             }
 
-                            Item {
-                                id: emojiDelegateContent
+                            MouseArea {
+                                id: emojiMa
                                 anchors.fill: parent
-                                anchors.margins: launcherWindow.s(3)
-
-                                scale: emojiMa.pressed ? 0.92 : (emojiDelegateRoot.isSelected ? 1.04 : (emojiMa.containsMouse ? 1.02 : 1.0))
-                                Behavior on scale {
-                                    NumberAnimation { duration: (160) * ThemeBackend.animScale; easing.type: Easing.OutBack; easing.overshoot: 1.25 }
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    launcherWindow.isKeyboardNav = false;
+                                    emojiGrid.currentIndex = index;
+                                    activateEmoji(index);
                                 }
-
-                                Rectangle {
-                                    id: emojiBg
-                                    anchors.fill: parent
-                                    radius: ThemeBackend.borderRadius
-                                    color: (emojiGlass.active || emojiDelegateRoot.lensHandled) ? "transparent" : (emojiDelegateRoot.isSelected
-                                           ? ThemeBackend.mauve
-                                           : (emojiMa.containsMouse ? Qt.alpha(ThemeBackend.surface1, 0.7) : Qt.alpha(ThemeBackend.surface0, 0.45)))
-                                    border.width: (emojiDelegateRoot.isSelected || ThemeBackend.liquidGlass) ? 0 : 1
-
-                                    GlassFill {
-                                        id: emojiGlass
-                                        anchors.fill: parent
-                                        radius: ThemeBackend.rad(parent.radius)
-                                        allowed: !emojiDelegateRoot.lensHandled
-                                        forceOpaque: emojiDelegateRoot.isSelected
-                                        tintColor: emojiDelegateRoot.isSelected ? ThemeBackend.text : ThemeBackend.surface0
-                                        tintStrength: emojiDelegateRoot.isSelected ? 1.0 : 0.5
-                                        tintAmount: emojiDelegateRoot.isSelected ? 0 : 0.25
-                                        press: emojiMa.pressed ? 0.8 : (emojiDelegateRoot.isSelected ? 0.6 : (emojiMa.containsMouse ? 0.25 : 0))
-                                    }
-                                    border.color: emojiDelegateRoot.isSelected ? "transparent" : Qt.alpha(ThemeBackend.surface2, 0.3)
-
-                                    Behavior on color {
-                                        ColorAnimation { duration: (140) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: launcherWindow.s(4)
-                                    spacing: launcherWindow.s(1)
-
-                                    Text {
-                                        Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                                        text: model.emoji
-                                        font.pixelSize: launcherWindow.s(22)
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        Layout.alignment: Qt.AlignHCenter | Qt.AlignBottom
-                                        text: model.name
-                                        font.family: ThemeBackend.fontFamily
-                                        font.pixelSize: launcherWindow.s(9)
-                                        font.weight: emojiDelegateRoot.isSelected ? Font.Bold : Font.Normal
-                                        color: emojiDelegateRoot.isSelected ? ((emojiGlass.active || emojiDelegateRoot.lensHandled) ? ThemeBackend.text : ThemeBackend.crust) : ThemeBackend.subtext0
-                                        elide: Text.ElideRight
-                                        horizontalAlignment: Text.AlignHCenter
-                                        maximumLineCount: 1
-
-                                        Behavior on color {
-                                            ColorAnimation { duration: (140) * ThemeBackend.animScale; easing.type: Easing.OutCubic }
-                                        }
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: emojiMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        launcherWindow.isKeyboardNav = false;
-                                        emojiGrid.currentIndex = index;
-                                        activateEmoji(index);
-                                    }
-                                    onEntered: {
-                                        if (!launcherWindow.isKeyboardNav) {
-                                            emojiGrid.currentIndex = index;
-                                        }
-                                    }
+                                onEntered: {
+                                    if (!launcherWindow.isKeyboardNav) emojiGrid.currentIndex = index;
                                 }
                             }
                         }
@@ -2779,27 +2665,24 @@ PanelWindow {
                         WheelScroll {}
                     }
 
-                    Item {
+                    Column {
                         anchors.centerIn: parent
+                        anchors.verticalCenterOffset: emojiTabs.height / 2
                         visible: launcherWindow.currentTabIndex === 2 && emojiModel.count === 0
-                        width: parent.width
-                        height: launcherWindow.s(60)
-
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: launcherWindow.s(6)
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "🔍"
-                                font.pixelSize: launcherWindow.s(24)
-                            }
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: typeof I18n !== "undefined" ? I18n.t("applauncher.no_emojis_found", "No emojis found") : "No emojis found"
-                                font.family: ThemeBackend.fontFamily
-                                font.pixelSize: launcherWindow.s(12)
-                                color: ThemeBackend.subtext0
-                            }
+                        spacing: launcherWindow.s(4)
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "󰞅"
+                            font.family: ThemeBackend.iconFont
+                            font.pixelSize: launcherWindow.s(20)
+                            color: Qt.alpha(ThemeBackend.subtext0, 0.7)
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: typeof I18n !== "undefined" ? I18n.t("applauncher.no_emojis_found", "No emojis found") : "No emojis found"
+                            font.family: ThemeBackend.fontFamily
+                            font.pixelSize: launcherWindow.s(12)
+                            color: ThemeBackend.subtext0
                         }
                     }
                 }

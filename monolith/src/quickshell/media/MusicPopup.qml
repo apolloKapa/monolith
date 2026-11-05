@@ -421,15 +421,23 @@ MusicEqualizerState {
                 }
             }
 
-            ColumnLayout {
+            // Orbit: two columns, the art and the player on the left, the tabs and their views
+            // on the right; otherwise the player above the tabs
+            GridLayout {
                 anchors.fill: parent
                 anchors.margins: popupRoot.s(18)
-                spacing: 0
+                columns: ThemeBackend.orbit ? 2 : 1
+                rowSpacing: 0
+                columnSpacing: popupRoot.s(22)
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: popupRoot.s(224)
-                    spacing: popupRoot.s(16)
+                GridLayout {
+                    columns: ThemeBackend.orbit ? 1 : 2
+                    Layout.fillWidth: !ThemeBackend.orbit
+                    Layout.preferredWidth: ThemeBackend.orbit ? popupRoot.s(300) : -1
+                    Layout.preferredHeight: ThemeBackend.orbit ? -1 : popupRoot.s(224)
+                    Layout.fillHeight: ThemeBackend.orbit
+                    rowSpacing: popupRoot.s(14)
+                    columnSpacing: popupRoot.s(16)
 
                     MusicCover {
                         root: popupRoot
@@ -441,6 +449,7 @@ MusicEqualizerState {
                 }
 
                 Rectangle {
+                    visible: !ThemeBackend.orbit
                     Layout.fillWidth: true
                     Layout.preferredHeight: popupRoot.s(2)
                     Layout.topMargin: popupRoot.s(4)
@@ -455,6 +464,8 @@ MusicEqualizerState {
 
                 ColumnLayout {
                     Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
+                    Layout.topMargin: ThemeBackend.orbit ? popupRoot.s(6) : 0
                     spacing: popupRoot.s(12)
 
                     MusicBottomHeader {

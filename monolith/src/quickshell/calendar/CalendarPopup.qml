@@ -17,8 +17,9 @@ Item {
         return Scaler.s(val);
     }
 
-    property real targetMasterHeight: window.s(510)
-    property real targetMasterWidth: window.s(1360)
+    // Orbit: a taller, narrower panel (Today across the top, Month and Weather under it)
+    property real targetMasterHeight: ThemeBackend.orbit ? window.s(740) : window.s(510)
+    property real targetMasterWidth: ThemeBackend.orbit ? window.s(1000) : window.s(1360)
     implicitWidth: targetMasterWidth
     implicitHeight: targetMasterHeight
     width: targetMasterWidth
@@ -517,16 +518,21 @@ Item {
                 bottomRightRadius: ThemeBackend.rad(parent.bottomRightRadius)
             }
 
-            RowLayout {
+            GridLayout {
                 anchors.fill: parent
                 anchors.margins: window.s(18)
-                spacing: window.s(14)
+                columns: ThemeBackend.orbit ? 2 : 3
+                rowSpacing: window.s(14)
+                columnSpacing: window.s(14)
                 layoutDirection: I18n.layoutDirection
 
                 // ---------- Today ----------
                 Card {
-                    Layout.preferredWidth: window.s(360)
-                    Layout.fillHeight: true
+                    Layout.columnSpan: ThemeBackend.orbit ? 2 : 1
+                    Layout.preferredWidth: ThemeBackend.orbit ? -1 : window.s(360)
+                    Layout.fillWidth: ThemeBackend.orbit
+                    Layout.preferredHeight: ThemeBackend.orbit ? window.s(270) : -1
+                    Layout.fillHeight: !ThemeBackend.orbit
                     opacity: introClock
                     transform: Translate { y: window.s(20) * (1.0 - introClock) }
 

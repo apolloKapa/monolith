@@ -43,6 +43,16 @@ GuideTab {
         setter.running = true;
     }
 
+    // start in the tray instead of a window (Steam's -silent, Discord's --start-minimized, ...)
+    function setMinimized(app, on) {
+        if (setter.running) return;
+        busy = app.id;
+        error = "";
+        apps = apps.map(a => a.id === app.id ? Object.assign({}, a, { minimized: on, on: true }) : a);
+        setter.command = ["python3", script(), "minimized", app.id, on ? "on" : "off"];
+        setter.running = true;
+    }
+
     function iconUrl(ic) {
         if (!ic) return "image://icon/application-x-executable";
         ic = String(ic);
@@ -100,7 +110,7 @@ GuideTab {
                     description: autostartTab.apps.length === 0 ? "Looking for installed apps..."
                         : (autostartTab.onCount === 0 ? "No apps start when you log in. "
                             : (autostartTab.onCount === 1 ? "1 app starts" : autostartTab.onCount + " apps start") + " when you log in. ")
-                          + "Turn an app on and it opens by itself next time"
+                          + "Turn an app on and it opens by itself next time. Steam, Discord and a few others can start minimized, in the tray"
                     searchKeywords: "autostart startup start login boot launch open automatically apps"
 
                     Input {
@@ -200,6 +210,20 @@ GuideTab {
                                 font.family: ThemeBackend.fontFamily
                                 font.pixelSize: rootObj.s(10)
                             }
+                        }
+                        // only for apps that have their own start-in-the-tray option
+                        ClickButton {
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            visible: row.modelData.canMinimize === true && row.modelData.on
+                            enabled: autostartTab.busy === "" || autostartTab.busy === row.modelData.id
+                            implicitHeight: rootObj.s(26)
+                            horizontalPadding: rootObj.s(12)
+                            cornerRadius: ThemeBackend.borderRadius
+                            buttonText: row.modelData.minimized ? "󰖰  Minimized" : "󰖯  Opens a window"
+                            textFontSize: rootObj.s(10)
+                            accentColor: row.modelData.minimized ? ThemeBackend.mauve : ThemeBackend.surface1
+                            textColor: row.modelData.minimized ? ThemeBackend.crust : ThemeBackend.text
+                            onClicked: autostartTab.setMinimized(row.modelData, !row.modelData.minimized)
                         }
                         Toggle {
                             Layout.alignment: Qt.AlignRight | Qt.AlignVCenter

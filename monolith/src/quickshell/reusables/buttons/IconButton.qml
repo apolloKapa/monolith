@@ -12,7 +12,9 @@ Item {
     property int size: 44
     property int cornerRadius: 12
     // Material makes every button a pill (or a circle)
-    readonly property real shapeRadius: ThemeBackend.pill ? Math.min(width, height) / 2 : ThemeBackend.rad(cornerRadius)
+    // Orbit: corners follow the border radius setting (never rounder than a circle)
+    readonly property real shapeRadius: ThemeBackend.orbit ? Math.min(Math.min(width, height) / 2, ThemeBackend.borderRadius)
+                                      : (ThemeBackend.pill ? Math.min(width, height) / 2 : ThemeBackend.rad(cornerRadius))
 
     property string buttonIcon: ""
     property string iconFont: ThemeBackend.iconFont
@@ -58,7 +60,7 @@ Item {
         id: btnContainer
         anchors.fill: parent
 
-        scale: (!root.enabled ? 1.0 : (btnMa.pressed ? 0.96 : (root.isHoveredOrHighlighted ? 1.04 : 1.0))) * root.popScale
+        scale: ThemeBackend.orbit ? 1.0 : (!root.enabled ? 1.0 : (btnMa.pressed ? 0.96 : (root.isHoveredOrHighlighted ? 1.04 : 1.0))) * root.popScale
         Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         SequentialAnimation {
@@ -72,7 +74,7 @@ Item {
             anchors.fill: parent
             radius: root.shapeRadius
             clip: !glass.active
-            color: ThemeBackend.liquidGlass ? "transparent" : (!root.enabled ? root.accentColor : (btnMa.pressed ? Qt.darker(root.accentColor, 1.12) : (root.isHoveredOrHighlighted ? Qt.lighter(root.accentColor, 1.12) : root.accentColor)))
+            color: ThemeBackend.liquidGlass ? "transparent" : ((!root.enabled || ThemeBackend.orbit) ? root.accentColor : (btnMa.pressed ? Qt.darker(root.accentColor, 1.12) : (root.isHoveredOrHighlighted ? Qt.lighter(root.accentColor, 1.12) : root.accentColor)))
             opacity: (root.enabled ? 1.0 : 0.5) * root.bgOpacity
 
             Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
@@ -108,8 +110,16 @@ Item {
             radius: root.shapeRadius
             color: "#ffffff"
             opacity: root.flashOpacity
-            visible: !glass.active
+            visible: !glass.active && !ThemeBackend.orbit
             PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: (400) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
+        }
+
+        Ripple {
+            id: ink
+            shapeRadius: root.shapeRadius
+            ink: root.displayTextColor
+            hovered: root.isHoveredOrHighlighted
+            pressed: btnMa.pressed && root.enabled
         }
 
         MouseArea {
@@ -119,6 +129,9 @@ Item {
             enabled: root.enabled
             acceptedButtons: root.acceptedButtons
             cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onPressed: (mouse) => ink.press(mouse.x, mouse.y)
+            onReleased: ink.release()
+            onCanceled: ink.release()
 
             onClicked: (mouse) => {
                 if (!root.enabled) return;

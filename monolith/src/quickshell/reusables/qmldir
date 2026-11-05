@@ -25,6 +25,8 @@ GlassFill 1.0 display/GlassFill.qml
 InkIcon 1.0 display/InkIcon.qml
 MaterialDigitGrid 1.0 display/MaterialDigitGrid.qml
 GlassLens 1.0 display/GlassLens.qml
+Ripple 1.0 display/Ripple.qml
+IconBubble 1.0 display/IconBubble.qml
 
 LyricsView 1.0 media/LyricsView.qml
 WavySeekBar 1.0 media/WavySeekBar.qml

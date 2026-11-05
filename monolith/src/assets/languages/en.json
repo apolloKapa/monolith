@@ -57,7 +57,7 @@
     "launcher": {
       "position": {
         "title": "Screen position",
-        "desc": "Select which screen edge the launcher attaches to",
+        "desc": "Where the launcher floats: near an edge of the screen, or in the middle",
         "top": "Top",
         "bottom": "Bottom",
         "left": "Left",

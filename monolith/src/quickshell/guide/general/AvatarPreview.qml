@@ -67,7 +67,7 @@ Rectangle {
         visible: false
         active: avatarPreviewRect.tab.currentAvatarSourcePath !== ""
         sourceComponent: Image {
-            source: avatarPreviewRect.tab.currentAvatarSourcePath !== "" ? "file://" + avatarPreviewRect.tab.currentAvatarSourcePath : ""
+            source: SystemInfo.fileUrl(avatarPreviewRect.tab.currentAvatarSourcePath)
             fillMode: Image.PreserveAspectCrop
             cache: false
         }

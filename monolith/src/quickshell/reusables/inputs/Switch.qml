@@ -25,10 +25,18 @@ Item {
     // Material: the whole switch is a pill and the selection a smaller pill floating inside it
     // floating: the pill look in any (non-square) style, not only Material
     property bool floating: false
-    readonly property bool pillMode: (ThemeBackend.pill || floating) && !ThemeBackend.square
-    readonly property real pillInset: pillMode ? 3 : 0
-    readonly property real outerRadius: pillMode ? height / 2 : cornerRadius
-    readonly property real innerRadius: pillMode ? Math.max(0, height / 2 - pillInset) : (ThemeBackend.liquidGlass ? cornerRadius : smallRadius)
+    readonly property bool pillMode: (ThemeBackend.pill || floating || ThemeBackend.orbit) && !ThemeBackend.square
+    readonly property real pillInset: pillMode ? (ThemeBackend.orbit ? 4 : 3) : 0
+    // Orbit: a tonal track with the selection floating inside it; corners from the radius
+    // setting, the track's wrapping the selection's (concentric)
+    readonly property real outerRadius: ThemeBackend.orbit ? Math.min(height / 2, ThemeBackend.borderRadius + pillInset)
+                                      : (pillMode ? height / 2 : cornerRadius)
+    readonly property real innerRadius: ThemeBackend.orbit ? Math.max(0, Math.min(height / 2 - pillInset, ThemeBackend.borderRadius))
+                                      : (pillMode ? Math.max(0, height / 2 - pillInset) : (ThemeBackend.liquidGlass ? cornerRadius : smallRadius))
+    // Orbit's colour roles: the track is a container, the selection Material's secondary container
+    readonly property color effAccent: ThemeBackend.orbit ? ThemeBackend.secondaryContainer : accentColor
+    readonly property color effBase: ThemeBackend.orbit ? ThemeBackend.surfaceContainerHigh : baseColor
+    readonly property color effActiveText: ThemeBackend.orbit ? ThemeBackend.onSecondaryContainer : activeTextColor
     readonly property real endRadius: pillMode ? innerRadius : cornerRadius
     property int fontPixelSize: 11
     property int minFontPixelSize: 7
@@ -126,21 +134,21 @@ Item {
         id: bgShape
         anchors.fill: parent
         radius: ThemeBackend.rad(root.outerRadius)
-        color: ThemeBackend.liquidGlass ? "transparent" : root.withBgOpacity(root.baseColor)
+        color: ThemeBackend.liquidGlass ? "transparent" : root.withBgOpacity(root.effBase)
         clip: !baseGlass.active
         opacity: root.enabled ? 1.0 : 0.5
 
         Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
         Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
-        scale: root.popScale
+        scale: ThemeBackend.orbit ? 1.0 : root.popScale
         Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         GlassFill {
             id: baseGlass
             anchors.fill: parent
             radius: ThemeBackend.rad(root.outerRadius)
-            tintColor: root.baseColor
+            tintColor: root.effBase
             tintAmount: 0.22 * root.bgOpacity
         }
 
@@ -190,7 +198,7 @@ Item {
             Behavior on topRightRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
             Behavior on bottomRightRadius { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
-            color: ThemeBackend.liquidGlass ? "transparent" : root.accentColor
+            color: ThemeBackend.liquidGlass ? "transparent" : root.effAccent
 
             Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
 
@@ -201,7 +209,7 @@ Item {
                 topRightRadius: ThemeBackend.rad(activeTabHighlight.topRightRadius)
                 bottomLeftRadius: ThemeBackend.rad(activeTabHighlight.bottomLeftRadius)
                 bottomRightRadius: ThemeBackend.rad(activeTabHighlight.bottomRightRadius)
-                tintColor: root.accentColor
+                tintColor: root.effAccent
                 tintAmount: 0.4
                 shadow: 1
                 press: 0.35 + 0.65 * activeTabHighlight.lift
@@ -282,7 +290,7 @@ Item {
                         font.pixelSize: root.fontPixelSize
                         fontSizeMode: Text.Fit
                         minimumPixelSize: root.minFontPixelSize
-                        color: (root.currentIndex === optionItem.index && !ThemeBackend.liquidGlass) ? root.activeTextColor : root.textColor
+                        color: (root.currentIndex === optionItem.index && !ThemeBackend.liquidGlass) ? root.effActiveText : root.textColor
                         Behavior on color { ColorAnimation { duration: (200) * ThemeBackend.animScale } }
                     }
 
@@ -318,7 +326,7 @@ Item {
             radius: ThemeBackend.rad(root.outerRadius)
             color: "#ffffff"
             opacity: root.flashOpacity
-            visible: !baseGlass.active
+            visible: !baseGlass.active && !ThemeBackend.orbit
             z: 2
             PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
         }

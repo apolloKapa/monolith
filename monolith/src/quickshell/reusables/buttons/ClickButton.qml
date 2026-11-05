@@ -10,7 +10,9 @@ Item {
     property int horizontalPadding: 12
     property int cornerRadius: 10
     // Material makes every button a pill (or a circle)
-    readonly property real shapeRadius: ThemeBackend.pill ? Math.min(width, height) / 2 : ThemeBackend.rad(cornerRadius)
+    // Orbit: corners follow the border radius setting (never rounder than a pill)
+    readonly property real shapeRadius: ThemeBackend.orbit ? Math.min(height / 2, ThemeBackend.borderRadius)
+                                      : (ThemeBackend.pill ? Math.min(width, height) / 2 : ThemeBackend.rad(cornerRadius))
 
     property string buttonText: ""
     property string subText: ""
@@ -72,7 +74,8 @@ Item {
         anchors.fill: parent
         radius: root.shapeRadius
         clip: !glass.active
-        color: glass.active ? "transparent" : root.withBgOpacity((btnMa.pressed && root.enabled) ? Qt.darker(root.accentColor, 1.28) : (root.isHoveredOrHighlighted ? Qt.darker(root.accentColor, 1.14) : root.accentColor))
+        // Orbit: the fill stays put; hover and press are the ripple's state layer
+        color: glass.active ? "transparent" : root.withBgOpacity((ThemeBackend.orbit || !root.enabled) ? root.accentColor : (btnMa.pressed ? Qt.darker(root.accentColor, 1.28) : (root.isHoveredOrHighlighted ? Qt.darker(root.accentColor, 1.14) : root.accentColor)))
         opacity: 1.0
 
         GlassFill {
@@ -91,7 +94,7 @@ Item {
         Behavior on color { ColorAnimation { duration: (180) * ThemeBackend.animScale } }
         Behavior on opacity { NumberAnimation { duration: (180) * ThemeBackend.animScale } }
 
-        scale: ((btnMa.pressed && root.enabled) ? 0.985 : (root.isHoveredOrHighlighted ? 1.015 : 1.0)) * root.popScale
+        scale: ThemeBackend.orbit ? 1.0 : ((btnMa.pressed && root.enabled) ? 0.985 : (root.isHoveredOrHighlighted ? 1.015 : 1.0)) * root.popScale
         Behavior on scale { NumberAnimation { duration: (250) * ThemeBackend.animScale; easing.type: Easing.OutQuint } }
 
         SequentialAnimation {
@@ -157,12 +160,20 @@ Item {
             }
         }
 
+        Ripple {
+            id: ink
+            shapeRadius: root.shapeRadius
+            ink: root.displayTextColor
+            hovered: root.isHoveredOrHighlighted && root.enabled
+            pressed: btnMa.pressed && root.enabled
+        }
+
         Rectangle {
             anchors.fill: parent
             radius: root.shapeRadius
             color: "#ffffff"
             opacity: root.flashOpacity
-            visible: !glass.active
+            visible: !glass.active && !ThemeBackend.orbit
             PropertyAnimation on opacity { id: btnFlashAnim; to: 0; duration: (350) * ThemeBackend.animScale; easing.type: Easing.OutExpo }
         }
     }
@@ -183,6 +194,9 @@ Item {
         hoverEnabled: true
         acceptedButtons: root.acceptedButtons
         cursorShape: root.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onPressed: mouse => { if (root.enabled) ink.press(mouse.x, mouse.y); }
+        onReleased: ink.release()
+        onCanceled: ink.release()
 
         onClicked: mouse => {
             if (!root.enabled) return;

@@ -192,7 +192,8 @@ PanelWindow {
     property bool isBottomBar: barPosition === "bottom"
     property bool isFill: barStyle === "fill"
     property bool isSolid: barStyle === "solid" || barStyle === "fill"
-    readonly property bool isAttached: attachToBar && isSolid && !isBarEffectivelyHidden && (!isSideBar || !isToggleKind) && (isSideBar ? isVertical : !isVertical)
+    // Orbit: the OSD is always its own floating pill (at Settings -> OSD's position)
+    readonly property bool isAttached: !ThemeBackend.orbit && attachToBar && isSolid && !isBarEffectivelyHidden && (!isSideBar || !isToggleKind) && (isSideBar ? isVertical : !isVertical)
     readonly property bool isVerticalLayout: isAttached ? isSideBar : isVertical
 
     property real barHeight: {

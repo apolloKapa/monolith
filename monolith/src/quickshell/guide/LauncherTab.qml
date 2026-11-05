@@ -252,7 +252,7 @@ GuideTab {
                     icon: "󰍹"
                     configKey: "launcher.position"
                     title: I18n.t("guide.launcher.position.title", "Screen Position")
-                    description: I18n.t("guide.launcher.position.desc", "Select which screen edge the launcher attaches to")
+                    description: I18n.t("guide.launcher.position.desc", "Where the launcher floats: near an edge of the screen, or in the middle")
 
                     Dropdown {
                         id: posDropdown
@@ -408,7 +408,7 @@ GuideTab {
                     configKey: "launcher.showRail"
                     defaultValue: true
                     title: I18n.t("guide.launcher.rail.title", "Favourites grid")
-                    description: I18n.t("guide.launcher.rail.desc", "The left side of the launcher: the tabs and a grid of your favourite apps. Drag an app onto it (or right-click it) to pin it, drag tiles to reorder them")
+                    description: I18n.t("guide.launcher.rail.desc", "Your pinned apps, as round icons above the list. Drag an app onto them (or right-click it) to pin it, drag them to reorder")
                     searchKeywords: "favourites favorites pinned rail sidebar launcher"
                     LauncherToggle {
                         key: "showRail"

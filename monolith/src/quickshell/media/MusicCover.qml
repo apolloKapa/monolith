@@ -11,9 +11,9 @@ Item {
     id: coverHost
     // the artwork is a rounded square (it used to be a spinning vinyl disc)
     function coverR(w) { return ThemeBackend.square ? 0 : w * 0.14; }
-    Layout.preferredWidth: root.s(224)
-    Layout.preferredHeight: root.s(224)
-    Layout.alignment: Qt.AlignVCenter
+    Layout.preferredWidth: ThemeBackend.orbit ? root.s(300) : root.s(224)
+    Layout.preferredHeight: ThemeBackend.orbit ? root.s(300) : root.s(224)
+    Layout.alignment: ThemeBackend.orbit ? Qt.AlignHCenter : Qt.AlignVCenter
 
     opacity: root.introCover
     transform: Translate { x: root.s(-35) * (1 - root.introCover); y: root.s(9) * (1 - root.introCover) }
