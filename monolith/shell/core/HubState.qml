@@ -37,6 +37,11 @@ Singleton {
     property string preset: ""
     signal presetRequested()
     function search(text) { show("search"); preset = text; presetRequested(); }
+    // the widget editor: "" (closed), "desktop" or "lock", on this screen
+    property string editWidgets: ""
+    property string editScreen: ""
+    function editWidgetsOn(mode, screen) { open = false; wallOpen = false; editScreen = target(screen); editWidgets = mode || "desktop"; }
+
     // the control center's tab: controls | overview | monitor
     property string ccTab: "controls"
     // Settings opened at a section (keybinds, the island, other pages)
@@ -61,5 +66,11 @@ Singleton {
         target: "status"
         // auto-hide on/off (Super+A)
         function toggle(): void { Store.set("status.autohide", Store.get("status.autohide", false) !== true); }
+    }
+    IpcHandler {
+        target: "widgets"
+        // the widget editor: desktop | lock
+        function edit(mode: string): void { hub.editWidgetsOn(mode); }
+        function done(): void { hub.editWidgets = ""; }
     }
 }

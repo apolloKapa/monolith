@@ -1,32 +1,26 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../../core"
 import "../../ui"
 
+// Desktop widgets and the lock screen's: both arranged in the widget editor, a full-screen
+// area where you drag, resize, restyle, add and remove them.
 ColumnLayout {
     spacing: 8
     SettingRow {
-        icon: "drag_pan"; title: "Move widgets"; desc: "Drag the widgets on your desktop where you want them, then turn this off"
-        Toggle { checked: Store.get("widgets.editing", false); onToggled: on => Store.set("widgets.editing", on) }
-    }
-    Repeater {
-        model: [
-            ["clock", "Clock", "schedule", "", true],
-            ["weather", "Weather", "partly_cloudy_day", "", true],
-            ["media", "Now playing", "music_note", "Shows while something plays", true],
-            ["calendar", "Calendar", "calendar_month", "This month", false],
-            ["usage", "System usage", "memory", "CPU, memory and temperature", false],
-            ["notes", "Notes", "sticky_note_2", "The same notes as in Tools", false],
-            ["image", "Picture", "image", "A picture of yours", false]
-        ]
-        SettingRow {
-            required property var modelData
-            icon: modelData[2]; title: modelData[1]; desc: modelData[3]
-            Toggle { checked: Store.get("widgets.hidden." + modelData[0], !modelData[4]) !== true; onToggled: on => Store.set("widgets.hidden." + modelData[0], !on) }
-        }
+        icon: "dashboard_customize"; title: "Desktop widgets"
+        desc: WidgetLayout.items("desktop").length + " on your desktops. Opens the editor on the screen you're on"
+        Button { text: "Edit the desktop"; primary: true; icon: "edit"; onClicked: HubState.editWidgetsOn("desktop") }
     }
     SettingRow {
-        icon: "image"; title: "Picture"; desc: "The file the picture widget shows"
+        icon: "lock"; title: "Lock screen widgets"
+        desc: WidgetLayout.items("lock").length + " on the lock screen (the password box stays where it is)"
+        Button { text: "Edit the lock screen"; primary: true; icon: "edit"; onClicked: HubState.editWidgetsOn("lock") }
+    }
+    SettingRow {
+        icon: "image"; title: "The picture widget's picture"; desc: "An image file"
         Field { text: Store.get("widgets.imagePath", ""); placeholder: "/path/to/picture.png"; onAccepted: v => { const p = v.trim().replace(/^~/, Wall.home); if (p !== Store.get("widgets.imagePath", "")) Store.set("widgets.imagePath", p); } }
     }
+    SettingRow { icon: "keyboard"; title: "From a keybind"; desc: "monolith widgets  ·  monolith widgets lock" }
 }

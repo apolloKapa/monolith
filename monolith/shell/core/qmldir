@@ -20,3 +20,4 @@ singleton GameMode 1.0 GameMode.qml
 singleton NightLight 1.0 NightLight.qml
 singleton AppColours 1.0 AppColours.qml
 singleton Look 1.0 Look.qml
+singleton WidgetLayout 1.0 WidgetLayout.qml

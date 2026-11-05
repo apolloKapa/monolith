@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import Quickshell.Services.Mpris
 import "../core"
 import "../ui"
+import "../wall"
 
 // The lock screen, in the island's language: the wallpaper blurred under a soft fade, a small
 // island hanging from the top (date, weather), a big clock, your latest notifications on the
@@ -69,97 +70,18 @@ WlSessionLock {
             }
         }
 
-        // ── the clock: hours in the text colour, minutes in the accent ──
-        Column {
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height * 0.17
-            opacity: surface.enter
-            transform: Translate { y: 30 * (1 - surface.enter) }
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 0
-                Text { text: Qt.formatTime(clock.date, "HH"); color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: Math.min(200, surface.height * 0.2); font.weight: Font.Bold }
-                Text { text: ":"; color: Qt.alpha(Theme.text, 0.5); font.family: Theme.fontFamily; font.pixelSize: Math.min(200, surface.height * 0.2); font.weight: Font.Light }
-                Text { text: Qt.formatTime(clock.date, "mm"); color: Theme.accent; font.family: Theme.fontFamily; font.pixelSize: Math.min(200, surface.height * 0.2); font.weight: Font.Bold }
-            }
-            Label {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: Notifs.list.length > 0 ? Notifs.list.length + (Notifs.list.length === 1 ? " notification" : " notifications") : "No new notifications"
-                muted: true
-                font.pixelSize: Theme.sizeTitle
-            }
-        }
-
-        // ── bottom left: the latest notifications, as pills ──
-        Column {
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            anchors.margins: 40
-            width: Math.min(380, parent.width * 0.28)
-            spacing: 8
-            opacity: surface.enter
-            Repeater {
-                model: Notifs.list.slice(0, 3)
-                Rectangle {
-                    required property var modelData
-                    width: parent.width
-                    height: 54
-                    radius: Theme.corner(54, 6)
-                    color: Qt.alpha(Theme.frame, 0.82)
-                    Rectangle {
-                        id: nb
-                        x: 8; width: 38; height: 38; radius: 19
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: Theme.accentContainer
-                        Icon { anchors.centerIn: parent; name: "notifications"; size: 19; filled: true; color: Theme.onAccentContainer }
-                    }
-                    Column {
-                        anchors.left: nb.right; anchors.leftMargin: 10
-                        anchors.right: parent.right; anchors.rightMargin: 14
-                        anchors.verticalCenter: parent.verticalCenter
-                        Label { width: parent.width; text: modelData.appName || "Notification"; muted: true; font.pixelSize: Theme.sizeSmall }
-                        Label { width: parent.width; text: modelData.summary || ""; strong: true }
-                    }
-                }
-            }
-        }
-
-        // ── bottom right: what's playing ──
-        readonly property var player: Mpris.players.values.find(p => p.isPlaying) || null
-        Rectangle {
-            visible: !!surface.player && Store.get("lock.media", true) !== false
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.margins: 40
-            width: 380
-            height: 120
-            radius: Theme.corner(120, 10)
-            color: Qt.alpha(Theme.frame, 0.85)
-            clip: true
-            opacity: surface.enter
-            Rectangle {
-                id: art
-                x: 12; width: 96; height: 96
-                anchors.verticalCenter: parent.verticalCenter
-                radius: Theme.corner(96, 4)
-                color: Theme.control
-                clip: true
-                Image { anchors.fill: parent; source: surface.player ? (surface.player.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(192, 192) }
-            }
-            Column {
-                anchors.left: art.right; anchors.leftMargin: 14
-                anchors.right: parent.right; anchors.rightMargin: 14
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 4
-                Label { width: parent.width; text: surface.player ? surface.player.trackTitle : ""; strong: true; font.pixelSize: Theme.sizeTitle }
-                Label { width: parent.width; text: surface.player ? surface.player.trackArtist : ""; muted: true }
-                Row {
-                    spacing: 6
-                    topPadding: 4
-                    Pressable { width: 38; height: 38; color: Theme.containerHigh; onClicked: surface.player.previous(); Icon { anchors.centerIn: parent; name: "skip_previous"; size: 20; filled: true } }
-                    Pressable { width: 52; height: 38; color: Theme.accent; ink: Theme.onAccent; onClicked: surface.player.togglePlaying(); Icon { anchors.centerIn: parent; name: surface.player && surface.player.isPlaying ? "pause" : "play_arrow"; size: 22; filled: true; color: Theme.onAccent } }
-                    Pressable { width: 38; height: 38; color: Theme.containerHigh; onClicked: surface.player.next(); Icon { anchors.centerIn: parent; name: "skip_next"; size: 20; filled: true } }
-                }
+        // ── the widgets, where the widget editor put them (its Lock screen tab) ──
+        Repeater {
+            model: WidgetLayout.on("lock", "")
+            WidgetFace {
+                required property var modelData
+                type: modelData.type
+                face: modelData.face || ""
+                scale: modelData.scale || 1
+                transformOrigin: Item.TopLeft
+                x: Math.max(0, Math.min(modelData.x * surface.width, surface.width - width * scale))
+                y: Math.max(0, Math.min(modelData.y * surface.height, surface.height - height * scale))
+                opacity: surface.enter
             }
         }
 

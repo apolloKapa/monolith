@@ -12,7 +12,8 @@ PanelWindow {
     WlrLayershell.namespace: "monolith-wallpaper"
     WlrLayershell.layer: WlrLayer.Background
     // the notes widget takes typing when clicked
-    WlrLayershell.keyboardFocus: Store.get("widgets.hidden.notes", true) !== true ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    // a notes widget takes typing when clicked
+    WlrLayershell.keyboardFocus: WidgetLayout.items("desktop").some(i => i.type === "notes") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: Theme.card
@@ -65,8 +66,5 @@ PanelWindow {
     }
 
     // the desktop widgets, only on the first screen for now
-    Widgets {
-        visible: Quickshell.screens.length > 0 && bg.modelData === Quickshell.screens[0]
-        screenName: bg.modelData.name
-    }
+    Widgets { screenName: bg.modelData.name }
 }
