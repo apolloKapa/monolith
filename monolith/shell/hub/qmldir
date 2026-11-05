@@ -7,7 +7,6 @@ NotificationsPage 1.0 NotificationsPage.qml
 SoundPage 1.0 SoundPage.qml
 NetworkPage 1.0 NetworkPage.qml
 ClipboardPage 1.0 ClipboardPage.qml
-WallpaperPage 1.0 WallpaperPage.qml
 SettingsPage 1.0 SettingsPage.qml
 WindowsPage 1.0 WindowsPage.qml
 CapturePage 1.0 CapturePage.qml
