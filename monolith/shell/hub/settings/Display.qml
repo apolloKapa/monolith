@@ -163,7 +163,7 @@ ColumnLayout {
             readonly property var sizes: {
                 const seen = {}, out = [];
                 for (const m of o.modes) { const k = m.width + "x" + m.height; if (!seen[k]) { seen[k] = 1; out.push(k); } }
-                return out.sort((a, b) => Number(b.split("x")[0]) * Number(b.split("x")[1]) - Number(a.split("x")[0]) * Number(a.split("x")[1])).slice(0, 6);
+                return out.sort((a, b) => Number(b.split("x")[0]) * Number(b.split("x")[1]) - Number(a.split("x")[0]) * Number(a.split("x")[1]));
             }
             // the rates at the current size, one per whole Hz (119.88 and 120 are both "120 Hz")
             readonly property var rates: {
@@ -177,7 +177,7 @@ ColumnLayout {
                 }
                 // the current one is always there
                 if (!out.some(m => m.refresh_rate === cur.refresh_rate)) out[out.findIndex(m => Math.round(m.refresh_rate / 1000) === Math.round(cur.refresh_rate / 1000))] = cur;
-                return out.slice(0, 5);
+                return out;
             }
             Layout.fillWidth: true
             implicitHeight: col.implicitHeight + 24
@@ -198,40 +198,36 @@ ColumnLayout {
                         onToggled: on => { if (on || sec.onCount() > 1) NiriConf.flag(sec.block(card.o), "off", !on); }
                     }
                 }
-                SettingRow {
-                    visible: card.on
-                    icon: "aspect_ratio"; title: "Resolution"
-                    Segmented {
-                        width: Math.min(420, 110 * card.sizes.length)
-                        opts: card.sizes.map(s => [s, s.replace("x", "×")])
+                // every size and rate the screen offers
+                SettingRow { visible: card.on; icon: "aspect_ratio"; title: "Resolution" }
+                ChipFlow {
+                        visible: card.on
+                        opts: card.sizes.map(s => [s, s.replace("x", " × ")])
                         value: card.cur ? card.cur.width + "x" + card.cur.height : ""
                         onPicked: v => {
                             const best = card.o.modes.filter(m => m.width + "x" + m.height === v).sort((a, b) => b.refresh_rate - a.refresh_rate)[0];
                             if (best) NiriConf.set(sec.block(card.o), "mode", NiriConf.quote(sec.modeStr(best)));
                         }
-                    }
                 }
-                SettingRow {
-                    visible: card.on && card.rates.length > 1
-                    icon: "speed"; title: "Refresh rate"
-                    Segmented {
-                        width: Math.min(360, 90 * card.rates.length)
+                SettingRow { visible: card.on && card.rates.length > 1; icon: "speed"; title: "Refresh rate" }
+                ChipFlow {
+                        visible: card.on && card.rates.length > 1
                         opts: card.rates.map(m => [String(m.refresh_rate), Math.round(m.refresh_rate / 1000) + " Hz"])
                         value: card.cur ? String(card.cur.refresh_rate) : ""
                         onPicked: v => {
                             const m = card.rates.find(r => String(r.refresh_rate) === v);
                             if (m) NiriConf.set(sec.block(card.o), "mode", NiriConf.quote(sec.modeStr(m)));
                         }
-                    }
                 }
                 SettingRow {
                     visible: card.on
                     icon: "zoom_in"; title: "Scale"; desc: "Bigger text and controls on this screen"
-                    Segmented {
-                        width: 300
-                        opts: [["1", "100%"], ["1.25", "125%"], ["1.5", "150%"], ["2", "200%"]]
-                        value: card.o.logical ? String(card.o.logical.scale) : "1"
-                        onPicked: v => NiriConf.set(sec.block(card.o), "scale", v)
+                    // any scale, in 5% steps (niri rounds it to what the screen can show sharply)
+                    NumberBox {
+                        from: 0.5; to: 4; step: 0.05; decimals: 2; factor: 100; unit: "%"
+                        value: card.o.logical ? card.o.logical.scale : 1
+                        onMoved: v => scaleLater.go(v)
+                        Timer { id: scaleLater; property real v: 1; interval: 700; function go(x) { v = x; restart(); } onTriggered: NiriConf.set(sec.block(card.o), "scale", v.toFixed(2)) }
                     }
                 }
             }

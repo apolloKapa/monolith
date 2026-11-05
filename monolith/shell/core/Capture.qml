@@ -19,7 +19,8 @@ Singleton {
     readonly property bool hasSel: mode === "screen" ? screenName !== "" : (sel.width >= 4 && sel.height >= 4)
 
     readonly property string runDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/monolith-capture"
-    function frozen(name) { return runDir + "/" + name + ".png"; }
+    // uncompressed (PPM): grim writes it in ~30 ms, a PNG took ~400 ms per screen
+    function frozen(name) { return runDir + "/" + name + ".ppm"; }
     property int stamp: 0                // changes with each freeze, so the pictures reload
 
     // where screenshots go: the folder of niri's screenshot-path, else ~/Pictures/Screenshots
@@ -48,7 +49,7 @@ Singleton {
     Timer { id: freezeLater; interval: 450; onTriggered: cap.freezeNow() }
     function freezeNow() {
         // every screen at once; the overlay waits for all of them
-        freeze.command = ["sh", "-c", "mkdir -p \"$1\"; d=\"$1\"; shift; for o; do grim -o \"$o\" \"$d/$o.png\" & done; wait", "_", runDir]
+        freeze.command = ["sh", "-c", "mkdir -p \"$1\"; d=\"$1\"; shift; for o; do grim -t ppm -o \"$o\" \"$d/$o.ppm\" & done; wait", "_", runDir]
             .concat(Quickshell.screens.map(s => s.name));
         freeze.running = true;
     }

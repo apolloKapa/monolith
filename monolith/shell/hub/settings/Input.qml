@@ -36,21 +36,11 @@ ColumnLayout {
     }
     SettingRow {
         icon: "timer"; title: "Repeat delay"; desc: "How long a key is held before it repeats"
-        Slider {
-            width: 220; implicitHeight: 36; icon: "keyboard"
-            readonly property int ms: Number(sec.val("input/keyboard|repeat-delay", 600))
-            value: (ms - 150) / 850; label: ms + " ms"
-            onMoved: x => sec.put("input/keyboard", "repeat-delay", Math.round(150 + x * 850))
-        }
+        NumberBox { from: 50; to: 3000; step: 25; unit: "ms"; value: Number(sec.val("input/keyboard|repeat-delay", 600)); onMoved: x => sec.put("input/keyboard", "repeat-delay", x) }
     }
     SettingRow {
         icon: "fast_forward"; title: "Repeat rate"
-        Slider {
-            width: 220; implicitHeight: 36; icon: "keyboard"
-            readonly property int r: Number(sec.val("input/keyboard|repeat-rate", 25))
-            value: (r - 5) / 75; label: r + " /s"
-            onMoved: x => sec.put("input/keyboard", "repeat-rate", Math.round(5 + x * 75))
-        }
+        NumberBox { from: 1; to: 200; unit: "/s"; value: Number(sec.val("input/keyboard|repeat-rate", 25)); onMoved: x => sec.put("input/keyboard", "repeat-rate", x) }
     }
     SettingRow {
         icon: "dialpad"; title: "Num Lock on at login"
@@ -60,12 +50,7 @@ ColumnLayout {
     Label { text: "Mouse"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 6 }
     SettingRow {
         icon: "mouse"; title: "Speed"
-        Slider {
-            width: 220; implicitHeight: 36; icon: "mouse"
-            readonly property real sp: Number(sec.val("input/mouse|accel-speed", 0))
-            value: (sp + 1) / 2; label: (sp >= 0 ? "+" : "") + sp.toFixed(2)
-            onMoved: x => sec.put("input/mouse", "accel-speed", (x * 2 - 1).toFixed(2))
-        }
+        NumberBox { from: -1; to: 1; step: 0.05; decimals: 2; value: Number(sec.val("input/mouse|accel-speed", 0)); onMoved: x => sec.put("input/mouse", "accel-speed", x.toFixed(2)) }
     }
     SettingRow {
         icon: "trending_flat"; title: "No acceleration"; desc: "The pointer moves exactly as far as the mouse (good for games)"
@@ -91,11 +76,6 @@ ColumnLayout {
     }
     SettingRow {
         icon: "speed"; title: "Touchpad speed"
-        Slider {
-            width: 220; implicitHeight: 36; icon: "touch_app"
-            readonly property real sp: Number(sec.val("input/touchpad|accel-speed", 0))
-            value: (sp + 1) / 2; label: (sp >= 0 ? "+" : "") + sp.toFixed(2)
-            onMoved: x => sec.put("input/touchpad", "accel-speed", (x * 2 - 1).toFixed(2))
-        }
+        NumberBox { from: -1; to: 1; step: 0.05; decimals: 2; value: Number(sec.val("input/touchpad|accel-speed", 0)); onMoved: x => sec.put("input/touchpad", "accel-speed", x.toFixed(2)) }
     }
 }

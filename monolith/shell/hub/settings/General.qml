@@ -94,6 +94,6 @@ ColumnLayout {
     }
     SettingRow {
         icon: "update"; title: "Weather refresh"; desc: "How often it looks again"
-        Segmented { width: 260; opts: [["10", "10 min"], ["20", "20 min"], ["60", "1 hour"]]; value: String(Store.get("weather.interval", 20)); onPicked: v => Store.set("weather.interval", Number(v)) }
+        NumberBox { from: 5; to: 720; step: 5; unit: "min"; value: Number(Store.get("weather.interval", 20)); onMoved: v => Store.set("weather.interval", v) }
     }
 }

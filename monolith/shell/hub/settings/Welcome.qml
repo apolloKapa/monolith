@@ -35,11 +35,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "rounded_corner"; title: "Corners"
-        Slider {
-            width: 220; implicitHeight: 36; icon: "rounded_corner"
-            value: Theme.radiusSetting / 32; label: Math.round(Theme.radiusSetting) + " px"
-            onMoved: v => Store.set("theme.radius", Math.round(v * 32))
-        }
+        NumberBox { from: 0; to: 60; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
     }
     SettingRow {
         icon: "keyboard"; title: "Getting around"
