@@ -85,15 +85,14 @@ After editing a niri file, `niri validate` tells you if something's wrong.
 
 Two things on screen:
 
-- **The status line**: a thin row across the top (or bottom) of each screen, on a soft fade instead of a bar: time, date and weather, workspaces, the focused window, now playing, system stats, tray, network, notifications and volume. Each part opens its page. Its middle is the **island**: while a recording runs or the timer counts down it shows that (click a recording to stop it), and it says when there's an update.
-- **The hub**: one floating card that holds every page. Opening another page morphs the card into it instead of opening a new panel. Type on any page to search; Tab / Shift+Tab move between pages, Esc closes.
+- **The island**: one dark shape hanging from the top edge of each screen, joined to it by concave curves. Collapsed it's the bar: the control center button, search, the clock and weather, workspaces, now playing (or the window title), what's running (a recording, the timer, an update, game mode), tray, stats, notifications, network, volume and power. Each part opens its page: the island grows into it (the bar stays on top), and shrinks back when you close it. New notifications drop out of it on the screen you're using. Type on any page to search; Tab / Shift+Tab move between pages, Esc closes.
 
 The pages:
 
 | Page | What's on it |
 |---|---|
 | Search | apps (the ones you open most come first), `>` a command in the terminal, `:` emojis, `/` or `~` files, a calculator |
-| Quick | volume and mic, Wi-Fi, Bluetooth, night light, stay awake, airplane mode, keyboard layout, lock / suspend / log out / reboot / power off |
+| Control center | **Controls**: volume, mic and brightness, toggle tiles (Wi-Fi, Bluetooth, do not disturb, night light, stay awake, airplane mode, power mode, keyboard layout, record), now playing, lock / suspend / log out / restart / power off. **Overview**: weather, this month, the clipboard, this PC. **Monitor**: CPU, memory, GPU and temperature rings, disks, ping |
 | Notifications | history, actions, do not disturb |
 | Media | the player, synced lyrics (LRCLIB), a 10-band equaliser (EasyEffects) |
 | Calendar | the month, the weather now, by hour and by day |
@@ -101,14 +100,19 @@ The pages:
 | Network | Wi-Fi (connect, forget, passwords), Ethernet, Bluetooth devices |
 | Clipboard | text and image history |
 | Windows | every window, switch or close |
-| Capture | screenshots (region, screen, window), text from a region (OCR), screen recording |
+| Capture | screenshots and recordings through the capture menu (below), the focused window, recent screenshots |
+| Gaming | game mode (performance profile, do not disturb, screen kept awake, optionally the island tucked away), CPU and GPU load, temperatures, clock, power and memory with two-minute graphs, a performance overlay, ending a stuck program, LACT and Steam |
 | Tools | timer, notes, unit converter |
 | Wellbeing | screen time per app, the week, daily limits |
 | Keys | every niri keybind, searchable |
-| Wallpaper | pictures and videos (also per screen); the colours come from the wallpaper (matugen) |
+| Wallpaper | a coverflow (or grid) of your pictures and videos, also per screen; the colours come from the wallpaper (matugen) |
 | Settings | appearance, wallpaper, status line, dock, desktop widgets, search, notifications, on-screen display, displays, keyboard & mouse, lock & idle, screenshots, software (startup apps, AppImages), wellbeing, about |
 
-Also: the dock (pinned and open apps, right-click menu), notification pop-ups, the on-screen display, desktop widgets (clock, weather, now playing, calendar, system usage, notes, a picture), the lock screen, idle lock and screens off, and a polkit agent. The first start shows a short welcome.
+**The capture menu** (Print): the screens freeze and dim; drag an area (move it, resize it by the corners) or pick a whole screen, then save and copy (Enter), copy (Ctrl+C), edit (E), read the text (T), scan a QR code (Q), or switch to video (Tab) and record it.
+
+**The lock screen**: the wallpaper blurred, a small island with the date and weather, a big clock, your latest notifications, what's playing, and the password pill with your picture.
+
+Also: the dock (pinned and open apps, right-click menu), the on-screen display, desktop widgets (clock, weather, now playing, calendar, system usage, notes, a picture), idle lock and screens off, and a polkit agent. Settings shows previews: the screens' arrangement (drag to move), icon packs with their icons, cursor themes with their pointers, fonts in themselves. The first start shows a short welcome.
 
 ---
 

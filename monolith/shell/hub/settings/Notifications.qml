@@ -14,7 +14,16 @@ ColumnLayout {
         Toggle { checked: Store.get("notifications.sound", true); onToggled: on => Store.set("notifications.sound", on) }
     }
     SettingRow {
-        icon: "picture_in_picture"; title: "Where they pop up"
+        icon: "notifications_active"; title: "How they pop up"; desc: "Out of the island on the screen you're using, or as cards in a corner"
+        Segmented {
+            opts: [["island", "Island"], ["corner", "Corner"]]
+            value: Store.get("notifications.style", "island")
+            onPicked: v => Store.set("notifications.style", v)
+        }
+    }
+    SettingRow {
+        visible: Store.get("notifications.style", "island") === "corner"
+        icon: "picture_in_picture"; title: "Which corner"
         Segmented {
             width: 300
             opts: [["top-left", "↖"], ["top-right", "↗"], ["bottom-left", "↙"], ["bottom-right", "↘"]]

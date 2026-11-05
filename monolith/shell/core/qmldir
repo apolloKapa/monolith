@@ -16,3 +16,4 @@ singleton Tasks 1.0 Tasks.qml
 singleton Updates 1.0 Updates.qml
 singleton NiriConf 1.0 NiriConf.qml
 singleton Capture 1.0 Capture.qml
+singleton GameMode 1.0 GameMode.qml

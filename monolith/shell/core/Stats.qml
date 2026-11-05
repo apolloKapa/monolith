@@ -17,6 +17,12 @@ Singleton {
     property real gpuTemp: 0      // °C
     property string gpuDir: ""    // /sys/class/drm/cardN/device
     property string gpuTempPath: ""
+    property real gpuWatts: 0     // the GPU's power draw
+    property real gpuClock: 0     // its core clock, MHz
+    // the last two minutes, one sample every two seconds (0..1), for the gaming page's graphs
+    property var cpuHist: []
+    property var gpuHist: []
+    readonly property string gpuHwmon: gpuTempPath.replace(/\/temp1_input$/, "")
     property var _prev: null
     property string tempPath: ""
 
@@ -26,6 +32,8 @@ Singleton {
     FileView { id: gpuBusy; path: stats.gpuDir !== "" ? stats.gpuDir + "/gpu_busy_percent" : ""; blockLoading: true; printErrors: false }
     FileView { id: vramUsedF; path: stats.gpuDir !== "" ? stats.gpuDir + "/mem_info_vram_used" : ""; blockLoading: true; printErrors: false }
     FileView { id: gpuTempF; path: stats.gpuTempPath; blockLoading: true; printErrors: false }
+    FileView { id: gpuPowF; path: stats.gpuHwmon !== "" ? stats.gpuHwmon + "/power1_average" : ""; blockLoading: true; printErrors: false }
+    FileView { id: gpuClkF; path: stats.gpuHwmon !== "" ? stats.gpuHwmon + "/freq1_input" : ""; blockLoading: true; printErrors: false }
     Process {
         running: true
         command: ["sh", "-c", "for c in /sys/class/drm/card*/device; do [ -f $c/gpu_busy_percent ] && { echo $c; cat $c/mem_info_vram_total 2>/dev/null; break; }; done; for d in /sys/class/hwmon/hwmon*; do [ \"$(cat $d/name 2>/dev/null)\" = amdgpu ] && { echo $d/temp1_input; break; }; done"]
@@ -70,7 +78,13 @@ Singleton {
             const b = parseInt(gpuBusy.text()); if (!isNaN(b)) gpu = b / 100;
             const v = Number(vramUsedF.text()); if (!isNaN(v)) vramUsed = v;
         }
-        if (gpuTempPath !== "") { gpuTempF.reload(); const g = parseInt(gpuTempF.text()); if (!isNaN(g)) gpuTemp = g / 1000; }
+        if (gpuTempPath !== "") {
+            gpuTempF.reload(); const g = parseInt(gpuTempF.text()); if (!isNaN(g)) gpuTemp = g / 1000;
+            gpuPowF.reload(); const pw = Number(gpuPowF.text()); if (!isNaN(pw)) gpuWatts = pw / 1e6;
+            gpuClkF.reload(); const f = Number(gpuClkF.text()); if (!isNaN(f)) gpuClock = f / 1e6;
+        }
+        cpuHist = cpuHist.concat([cpu]).slice(-60);
+        gpuHist = gpuHist.concat([gpu]).slice(-60);
         if (tempPath !== "") {
             tempFile.reload();
             const v = parseInt(tempFile.text());

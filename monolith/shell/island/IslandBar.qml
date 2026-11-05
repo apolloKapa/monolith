@@ -191,6 +191,7 @@ Item {
             }
         }
 
+        Glyph { visible: GameMode.active; icon: "sports_esports"; on: true; tint: Theme.accent; onClicked: bar.open("gaming") }
         Repeater {
             model: bar.shows("tray") ? SystemTray.items : []
             Pressable {

@@ -6,20 +6,23 @@ import Quickshell.Services.Mpris
 import "../core"
 import "../ui"
 
-// The lock screen: the wallpaper softly blurred, a large clock, and you with a password pill
-// at the bottom (the same pill as the hub's search). Shakes on a wrong password.
+// The lock screen, in the island's language: the wallpaper blurred under a soft fade, a small
+// island hanging from the top (date, weather), a big clock, your latest notifications on the
+// left and what's playing on the right, and the password pill (your picture inside it) with
+// the power buttons under it. Shakes on a wrong password.
 WlSessionLock {
     id: lock
     locked: LockState.locked
 
     WlSessionLockSurface {
         id: surface
-        color: Theme.card
+        color: Theme.frame
 
+        // ── the wallpaper, blurred and faded ──
         Image {
             id: wp
             anchors.fill: parent
-            source: Wall.url(Wall.path)
+            source: Wall.path !== "" && !Wall.isVideo(Wall.path) ? Wall.url(Wall.pathFor(surface.screen ? surface.screen.name : "")) : ""
             fillMode: Image.PreserveAspectCrop
             sourceSize: Qt.size(surface.width / 2, surface.height / 2)
             visible: false
@@ -29,116 +32,175 @@ WlSessionLock {
             source: wp
             blurEnabled: true
             blur: 1.0
-            blurMax: 48
-            saturation: -0.1
+            blurMax: 64
+            saturation: 0.1
+            brightness: -0.08
         }
-        Rectangle { anchors.fill: parent; color: Qt.alpha(Theme.card, 0.45) }
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.alpha(Theme.frame, 0.25) }
+                GradientStop { position: 0.6; color: Qt.alpha(Theme.frame, 0.35) }
+                GradientStop { position: 1.0; color: Qt.alpha(Theme.frame, 0.8) }
+            }
+        }
 
         SystemClock { id: clock; precision: SystemClock.Seconds }
         property real enter: 0
         Component.onCompleted: enter = 1
-        Behavior on enter { NumberAnimation { duration: 700; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve } }
+        Behavior on enter { NumberAnimation { duration: 800; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve } }
 
-        // the clock, upper left third
-        Column {
-            x: parent.width * 0.08
-            y: parent.height * 0.14
-            opacity: surface.enter
-            transform: Translate { y: 30 * (1 - surface.enter) }
-            Label { text: Qt.formatDate(clock.date, "dddd, d MMMM"); font.pixelSize: 26; color: Theme.text }
-            Label { text: Qt.formatTime(clock.date, "HH:mm"); font.pixelSize: 168; font.weight: Font.Light; color: Theme.text }
+        // ── the island: locked, the date, the weather ──
+        IslandShape {
+            id: isl
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: -Theme.islandH * (1 - surface.enter)
+            height: Theme.islandH
+            bodyW: islRow.implicitWidth + 2 * Theme.islandPad + 10
+            r: height / 2
+            Row {
+                id: islRow
+                anchors.centerIn: parent
+                spacing: 10
+                Icon { name: "lock"; size: 17; filled: true; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: Qt.formatDate(clock.date, "dddd d MMMM"); strong: true; anchors.verticalCenter: parent.verticalCenter }
+                Icon { visible: Weather.ready; name: Weather.ready ? Weather.icon(Weather.current.code, Weather.current.day) : ""; size: 17; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+                Label { visible: Weather.ready; text: Weather.ready ? Math.round(Weather.current.temp) + Weather.unit : ""; anchors.verticalCenter: parent.verticalCenter }
+            }
         }
 
-        // now playing, top right
+        // ── the clock: hours in the text colour, minutes in the accent ──
+        Column {
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: parent.height * 0.17
+            opacity: surface.enter
+            transform: Translate { y: 30 * (1 - surface.enter) }
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 0
+                Text { text: Qt.formatTime(clock.date, "HH"); color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: Math.min(200, surface.height * 0.2); font.weight: Font.Bold }
+                Text { text: ":"; color: Qt.alpha(Theme.text, 0.5); font.family: Theme.fontFamily; font.pixelSize: Math.min(200, surface.height * 0.2); font.weight: Font.Light }
+                Text { text: Qt.formatTime(clock.date, "mm"); color: Theme.accent; font.family: Theme.fontFamily; font.pixelSize: Math.min(200, surface.height * 0.2); font.weight: Font.Bold }
+            }
+            Label {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: Notifs.list.length > 0 ? Notifs.list.length + (Notifs.list.length === 1 ? " notification" : " notifications") : "No new notifications"
+                muted: true
+                font.pixelSize: Theme.sizeTitle
+            }
+        }
+
+        // ── bottom left: the latest notifications, as pills ──
+        Column {
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.margins: 40
+            width: Math.min(380, parent.width * 0.28)
+            spacing: 8
+            opacity: surface.enter
+            Repeater {
+                model: Notifs.list.slice(0, 3)
+                Rectangle {
+                    required property var modelData
+                    width: parent.width
+                    height: 54
+                    radius: Theme.corner(54, 6)
+                    color: Qt.alpha(Theme.frame, 0.82)
+                    Rectangle {
+                        id: nb
+                        x: 8; width: 38; height: 38; radius: 19
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: Theme.accentContainer
+                        Icon { anchors.centerIn: parent; name: "notifications"; size: 19; filled: true; color: Theme.onAccentContainer }
+                    }
+                    Column {
+                        anchors.left: nb.right; anchors.leftMargin: 10
+                        anchors.right: parent.right; anchors.rightMargin: 14
+                        anchors.verticalCenter: parent.verticalCenter
+                        Label { width: parent.width; text: modelData.appName || "Notification"; muted: true; font.pixelSize: Theme.sizeSmall }
+                        Label { width: parent.width; text: modelData.summary || ""; strong: true }
+                    }
+                }
+            }
+        }
+
+        // ── bottom right: what's playing ──
         readonly property var player: Mpris.players.values.find(p => p.isPlaying) || null
         Rectangle {
             visible: !!surface.player && Store.get("lock.media", true) !== false
             anchors.right: parent.right
-            anchors.top: parent.top
+            anchors.bottom: parent.bottom
             anchors.margins: 40
-            width: 360
-            height: 84
-            radius: Theme.corner(height, 8)
-            color: Qt.alpha(Theme.card, 0.85)
-            Row {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 12
-                Rectangle {
-                    width: 64; height: 64
-                    radius: Theme.corner(64, 4)
-                    color: Theme.control
-                    clip: true
-                    Image { anchors.fill: parent; source: surface.player ? (surface.player.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop }
-                }
-                Column {
-                    width: parent.width - 64 - 12 - 50
-                    anchors.verticalCenter: parent.verticalCenter
-                    Label { width: parent.width; text: surface.player ? surface.player.trackTitle : ""; strong: true }
-                    Label { width: parent.width; text: surface.player ? surface.player.trackArtist : ""; muted: true; font.pixelSize: Theme.sizeSmall }
-                }
-                Pressable {
-                    width: 40; height: 40
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: Theme.accent
-                    ink: Theme.onAccent
-                    onClicked: surface.player.togglePlaying()
-                    Icon { anchors.centerIn: parent; name: "pause"; size: 22; filled: true; color: Theme.onAccent }
+            width: 380
+            height: 120
+            radius: Theme.corner(120, 10)
+            color: Qt.alpha(Theme.frame, 0.85)
+            clip: true
+            opacity: surface.enter
+            Rectangle {
+                id: art
+                x: 12; width: 96; height: 96
+                anchors.verticalCenter: parent.verticalCenter
+                radius: Theme.corner(96, 4)
+                color: Theme.control
+                clip: true
+                Image { anchors.fill: parent; source: surface.player ? (surface.player.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(192, 192) }
+            }
+            Column {
+                anchors.left: art.right; anchors.leftMargin: 14
+                anchors.right: parent.right; anchors.rightMargin: 14
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 4
+                Label { width: parent.width; text: surface.player ? surface.player.trackTitle : ""; strong: true; font.pixelSize: Theme.sizeTitle }
+                Label { width: parent.width; text: surface.player ? surface.player.trackArtist : ""; muted: true }
+                Row {
+                    spacing: 6
+                    topPadding: 4
+                    Pressable { width: 38; height: 38; color: Theme.containerHigh; onClicked: surface.player.previous(); Icon { anchors.centerIn: parent; name: "skip_previous"; size: 20; filled: true } }
+                    Pressable { width: 52; height: 38; color: Theme.accent; ink: Theme.onAccent; onClicked: surface.player.togglePlaying(); Icon { anchors.centerIn: parent; name: surface.player && surface.player.isPlaying ? "pause" : "play_arrow"; size: 22; filled: true; color: Theme.onAccent } }
+                    Pressable { width: 38; height: 38; color: Theme.containerHigh; onClicked: surface.player.next(); Icon { anchors.centerIn: parent; name: "skip_next"; size: 20; filled: true } }
                 }
             }
         }
 
-        // you and the password
+        // ── the password pill, your picture inside it, the power buttons under it ──
         Column {
             id: who
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: parent.height * 0.12
+            anchors.bottomMargin: parent.height * 0.08
             spacing: 14
             opacity: surface.enter
             transform: Translate { y: 40 * (1 - surface.enter) }
-
             readonly property string avatar: (Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face")
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 96; height: 96
-                radius: Theme.corner(96, 16)
-                color: Theme.accentContainer
-                clip: true
-                Image { id: av; anchors.fill: parent; source: Wall.url(who.avatar); fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(192, 192) }
-                Icon { anchors.centerIn: parent; visible: av.status !== Image.Ready; name: "person"; size: 48; filled: true; color: Theme.onAccentContainer }
-            }
-            Label {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: Quickshell.env("USER") || ""
-                font.pixelSize: Theme.sizeTitle + 2
-                strong: true
-            }
 
             Rectangle {
                 id: field
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: 380
-                height: 56
-                radius: Theme.corner(height)
-                color: Qt.alpha(Theme.containerHigh, 0.92)
+                width: 420
+                height: 64
+                radius: height / 2
+                color: Qt.alpha(Theme.frame, 0.9)
+                border.width: pw.activeFocus ? 2 : 0
+                border.color: LockState.message !== "" ? Theme.danger : Theme.accent
                 property real shake: 0
                 transform: Translate { x: Math.sin(field.shake * Math.PI * 6) * 14 * (1 - field.shake) }
                 NumberAnimation { id: shakeAnim; target: field; property: "shake"; from: 0; to: 1; duration: 480 }
                 Connections { target: LockState; function onFailed() { shakeAnim.restart(); pw.text = ""; } }
 
-                Bubble {
-                    id: lb
-                    x: 8
+                Rectangle {
+                    id: face
+                    x: 8; width: 48; height: 48; radius: 24
                     anchors.verticalCenter: parent.verticalCenter
-                    size: 40
-                    icon: LockState.busy ? "hourglass_top" : "lock"
-                    on: true
+                    color: Theme.accentContainer
+                    clip: true
+                    Image { id: av; anchors.fill: parent; source: Wall.url(who.avatar); fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(96, 96) }
+                    Icon { anchors.centerIn: parent; visible: av.status !== Image.Ready; name: "person"; size: 26; filled: true; color: Theme.onAccentContainer }
                 }
                 TextInput {
                     id: pw
-                    anchors.left: lb.right; anchors.leftMargin: 14
-                    anchors.right: parent.right; anchors.rightMargin: 18
+                    anchors.left: face.right; anchors.leftMargin: 14
+                    anchors.right: go.left; anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
                     echoMode: TextInput.Password
                     passwordCharacter: "●"
@@ -152,12 +214,36 @@ WlSessionLock {
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
                         visible: pw.text === ""
-                        text: LockState.message !== "" ? LockState.message : "Password"
+                        text: LockState.message !== "" ? LockState.message : (Quickshell.env("USER") || "") + "  ·  password"
                         color: LockState.message !== "" ? Theme.danger : Theme.subtext
                         font.pixelSize: Theme.sizeTitle - 1
                     }
                 }
+                Pressable {
+                    id: go
+                    anchors.right: parent.right; anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 48; height: 48
+                    color: Theme.accent; ink: Theme.onAccent
+                    onClicked: if (pw.text !== "") LockState.tryPassword(pw.text)
+                    Icon { anchors.centerIn: parent; name: LockState.busy ? "hourglass_top" : "arrow_forward"; size: 22; color: Theme.onAccent }
+                }
                 Component.onCompleted: pw.forceActiveFocus()
+            }
+
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 10
+                Repeater {
+                    model: [["bedtime", ["loginctl", "suspend"]], ["restart_alt", ["loginctl", "reboot"]], ["power_settings_new", ["loginctl", "poweroff"]]]
+                    Pressable {
+                        required property var modelData
+                        width: 44; height: 44
+                        color: Qt.alpha(Theme.frame, 0.75)
+                        onClicked: Quickshell.execDetached(modelData[1])
+                        Icon { anchors.centerIn: parent; name: parent.modelData[0]; size: 20 }
+                    }
+                }
             }
         }
     }

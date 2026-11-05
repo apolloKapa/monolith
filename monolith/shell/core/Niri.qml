@@ -19,6 +19,8 @@ Singleton {
     readonly property string focusedAppId: focusedWindow ? (focusedWindow.app_id || "") : ""
     // niri 26.04 does not report fullscreen; kept for when it does
     readonly property bool focusedFullscreen: !!(focusedWindow && focusedWindow.is_fullscreen === true)
+    // the screen with the focused workspace
+    readonly property string focusedOutput: { const w = workspaces.find(w => w.is_focused); return w ? (w.output || "") : ""; }
     readonly property string layoutName: layouts.length > layoutIndex ? layouts[layoutIndex] : ""
 
     function workspacesOn(output) {
