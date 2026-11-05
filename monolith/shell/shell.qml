@@ -23,6 +23,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; Dim {} }
     Variants { model: Quickshell.screens; WallpaperPicker {} }
     Variants { model: Quickshell.screens; QuickAccess {} }
+    Variants { model: Quickshell.screens; WidgetEditor {} }
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own
