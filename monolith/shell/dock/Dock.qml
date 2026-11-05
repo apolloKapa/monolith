@@ -20,12 +20,13 @@ PanelWindow {
     exclusionMode: exclusive ? ExclusionMode.Normal : ExclusionMode.Ignore
     exclusiveZone: exclusive ? (vertical ? capsule.width : capsule.height) + dock.margin : 0
     anchors { bottom: side !== "top"; top: side !== "bottom"; left: side !== "right"; right: side !== "left" }
-    implicitHeight: vertical ? 0 : 280
-    implicitWidth: vertical ? 300 : 0
+    implicitHeight: vertical ? 0 : (editing ? 620 : 280)
+    implicitWidth: vertical ? (editing ? 620 : 300) : 0
+    WlrLayershell.keyboardFocus: editing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     readonly property real margin: Number(Store.get("dock.margin", 12))
     color: "transparent"
     visible: enabled
-    mask: Region { item: menu.visible ? fullArea : (shown ? capsule : hotZone) }
+    mask: Region { item: menu.visible || dock.editing ? fullArea : (shown ? capsule : hotZone) }
     Item { id: fullArea; anchors.fill: parent }
 
     readonly property var activeWs: Niri.workspacesOn(modelData.name).find(w => w.is_active)
@@ -35,7 +36,26 @@ PanelWindow {
     readonly property bool enabled: Store.get("dock.enabled", true) && (Store.get("dock.hiddenScreens", []) || []).indexOf(modelData.name) === -1
     // when it shows: always, on empty workspaces (and at the bottom edge), or only at the edge
     readonly property string showWhen: Store.get("dock.show", Store.get("dock.onEmpty", true) ? "empty" : "edge")
-    readonly property bool shown: enabled && (showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || hovering || leaveDelay.running || menu.visible)
+    // the dock editor (hold an app or the dock for a moment): reorder, unpin, add apps
+    property bool editing: false
+    property int dragIndex: -1
+    property point dragPos: Qt.point(0, 0)
+    property string pickQuery: ""
+    function movePinned(from, to) {
+        if (from === to || from < 0) return;
+        const l = pinnedList.slice();
+        const it = l.splice(from, 1)[0];
+        l.splice(Math.max(0, Math.min(to, l.length)), 0, it);
+        Store.set("dock.pinned", l);
+    }
+    function indexAt(p) {
+        const step = capsule.cell + appsRow.spacing;
+        return Math.max(0, Math.min(pinnedList.length - 1, Math.floor((vertical ? p.y : p.x) / step)));
+    }
+    Connections { target: HubState; function onDockEditChanged() { if (HubState.dockEdit === dock.modelData.name) { dock.editing = true; HubState.dockEdit = ""; } } }
+    onEditingChanged: { pickQuery = ""; picker.visible = false; if (editing) editKeys.forceActiveFocus(); }
+
+    readonly property bool shown: enabled && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || hovering || leaveDelay.running || menu.visible)
 
     // the strip along its edge that brings it back
     Item {
@@ -64,7 +84,8 @@ PanelWindow {
         for (const k in Niri.windows) if ((Niri.windows[k].app_id || "").toLowerCase() === appId.toLowerCase()) out.push(Niri.windows[k]);
         return out;
     }
-    readonly property var items: {
+    readonly property var items: dock.editing ? pinnedList.map(a => ({ id: a.id, name: a.name, icon: a.icon, pinned: true })) : allItems
+    readonly property var allItems: {
         const pinned = pinnedList.map(a => ({ id: a.id, name: a.name, icon: a.icon, pinned: true }));
         const known = pinned.map(p => p.id.toLowerCase());
         const extra = [];
@@ -105,16 +126,54 @@ PanelWindow {
         border.width: Store.get("dock.border", true) !== false && opacityBg > 0.02 ? Math.max(1, Theme.outlineW) : 0
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
 
+        MouseArea {
+            anchors.fill: parent
+            pressAndHoldInterval: 700
+            onPressAndHold: dock.editing = true
+        }
         Grid {
             id: appsRow
             anchors.centerIn: parent
             spacing: Number(Store.get("dock.spacing", 4))
-            columns: dock.vertical ? 1 : Math.max(1, dock.items.length)
+            columns: dock.vertical ? 1 : Math.max(1, dock.items.length + (dock.editing ? 2 : 0))
             Repeater {
                 model: dock.items
                 Pressable {
                     id: app
                     required property var modelData
+                    required property int index
+                    opacity: dock.dragIndex === index ? 0.3 : 1
+                    // hold for a moment: the dock editor
+                    Timer { id: hold; interval: 700; onTriggered: { app.held = true; dock.editing = true; } }
+                    property bool held: false
+                    onPressedChanged: { if (pressed && !dock.editing) { held = false; hold.restart(); } else hold.stop(); }
+                    // editing: drag to reorder
+                    MouseArea {
+                        anchors.fill: parent
+                        enabled: dock.editing
+                        preventStealing: true
+                        cursorShape: dock.dragIndex === app.index ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                        property point start
+                        property bool moved: false
+                        onPressed: mouse => { start = Qt.point(mouse.x, mouse.y); moved = false; }
+                        onPositionChanged: mouse => {
+                            if (!pressed) return;
+                            if (!moved && Math.abs(mouse.x - start.x) + Math.abs(mouse.y - start.y) > 6) { moved = true; dock.dragIndex = app.index; }
+                            if (moved) dock.dragPos = mapToItem(appsRow, mouse.x, mouse.y);
+                        }
+                        onReleased: { if (moved) dock.movePinned(app.index, dock.indexAt(dock.dragPos)); dock.dragIndex = -1; }
+                        onCanceled: dock.dragIndex = -1
+                    }
+                    // editing: unpin
+                    Rectangle {
+                        visible: dock.editing
+                        z: 5
+                        x: parent.width - 18; y: -4
+                        width: 22; height: 22; radius: 11
+                        color: Theme.danger
+                        Icon { anchors.centerIn: parent; name: "close"; size: 15; color: Theme.card }
+                        MouseArea { anchors.fill: parent; anchors.margins: -4; cursorShape: Qt.PointingHandCursor; onClicked: dock.unpin(app.modelData) }
+                    }
                     readonly property var wins: dock.windowsOf(modelData.id)
                     readonly property bool focused: wins.some(w => w.id === Niri.focusedWindowId)
                     width: capsule.cell
@@ -122,10 +181,12 @@ PanelWindow {
                     radius: Theme.corner(height, 4)
                     color: focused ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
                     onRightClicked: {
+                        if (dock.editing) return;
                         const p = mapToItem(dock.contentItem, width / 2, height / 2);
                         menu.openFor(modelData, wins, p.x, p.y);
                     }
                     onClicked: {
+                        if (dock.editing || held) { held = false; return; }
                         if (wins.length > 0) {
                             // cycle through the app's windows
                             const i = wins.findIndex(w => w.id === Niri.focusedWindowId);
@@ -156,6 +217,81 @@ PanelWindow {
                             Rectangle { width: app.focused ? 10 : 5; height: 4; radius: 2; color: app.focused ? Theme.accent : Theme.subtext }
                         }
                     }
+                }
+            }
+            // editing: add apps, and done
+            Pressable {
+                visible: dock.editing
+                width: capsule.cell; height: capsule.cell
+                color: picker.visible ? Theme.accentContainer : Theme.containerHigh
+                onClicked: picker.visible = !picker.visible
+                Icon { anchors.centerIn: parent; name: "add"; size: 26; color: Theme.accent }
+            }
+            Pressable {
+                visible: dock.editing
+                width: capsule.cell; height: capsule.cell
+                color: Theme.accent; ink: Theme.onAccent
+                onClicked: dock.editing = false
+                Icon { anchors.centerIn: parent; name: "check"; size: 26; color: Theme.onAccent }
+            }
+        }
+    }
+
+    // holding the dock's background also opens the editor; while editing, a click outside ends it
+    MouseArea { anchors.fill: parent; visible: dock.editing && !picker.visible; onClicked: dock.editing = false }
+    Item {
+        id: editKeys
+        focus: dock.editing
+        Keys.onEscapePressed: { if (picker.visible) picker.visible = false; else dock.editing = false; }
+    }
+
+    // the app picker: every app that isn't pinned, with a search
+    Rectangle {
+        id: picker
+        visible: false
+        z: 20
+        width: dock.vertical ? Math.min(dock.width - capsule.width - 40, 520) : Math.min(dock.width - 40, 640)
+        height: dock.vertical ? Math.min(dock.height - 80, 520) : Math.min(dock.height - capsule.height - 40, 480)
+        x: dock.side === "left" ? capsule.x + capsule.width + 12 : (dock.side === "right" ? capsule.x - width - 12 : Math.round((dock.width - width) / 2))
+        y: dock.vertical ? Math.round((dock.height - height) / 2) : (dock.side === "top" ? capsule.y + capsule.height + 12 : capsule.y - height - 12)
+        radius: Theme.corner(80, 12)
+        color: Theme.frame
+        border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
+        MouseArea { anchors.fill: parent }
+        readonly property var apps: DesktopEntries.applications.values
+            .filter(a => !a.noDisplay && !dock.pinnedList.some(p => p.id === a.id || p.id + ".desktop" === a.id))
+            .filter(a => dock.pickQuery === "" || a.name.toLowerCase().includes(dock.pickQuery.toLowerCase()))
+            .sort((a, b) => a.name.localeCompare(b.name))
+        Label { x: 16; y: 14; text: "Add to the dock"; strong: true; font.pixelSize: Theme.sizeTitle }
+        Field {
+            id: pickField
+            x: 16; y: 44
+            width: parent.width - 32
+            placeholder: "Search apps"
+            onAccepted: v => dock.pickQuery = v
+            onTextChanged: dock.pickQuery = text
+        }
+        GridView {
+            x: 12; y: 96
+            width: parent.width - 24
+            height: parent.height - y - 12
+            clip: true
+            cellWidth: width / 5
+            cellHeight: 88
+            model: picker.apps
+            SmoothWheel {}
+            delegate: Pressable {
+                required property var modelData
+                width: GridView.view.cellWidth - 4
+                height: 84
+                color: hovered ? Theme.containerHigh : "transparent"
+                onClicked: dock.pin({ id: modelData.id, name: modelData.name, icon: modelData.icon })
+                Column {
+                    anchors.centerIn: parent
+                    width: parent.width - 8
+                    spacing: 6
+                    Image { anchors.horizontalCenter: parent.horizontalCenter; width: 38; height: 38; sourceSize: Qt.size(76, 76); source: dock.iconFor(parent.parent.modelData.icon); asynchronous: true }
+                    Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: parent.parent.modelData.name; font.pixelSize: Theme.sizeSmall }
                 }
             }
         }

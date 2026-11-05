@@ -42,6 +42,10 @@ Singleton {
     property string editScreen: ""
     function editWidgetsOn(mode, screen) { open = false; wallOpen = false; editScreen = target(screen); editWidgets = mode || "desktop"; }
 
+    // the dock editor, on a screen (Settings → Dock, `monolith dock`)
+    property string dockEdit: ""
+    function editDock(screen) { open = false; dockEdit = ""; dockEdit = target(screen); }
+
     // the control center's tab: controls | overview | monitor
     property string ccTab: "controls"
     // Settings opened at a section (keybinds, the island, other pages)
@@ -66,6 +70,10 @@ Singleton {
         target: "status"
         // auto-hide on/off (Super+A)
         function toggle(): void { Store.set("status.autohide", Store.get("status.autohide", false) !== true); }
+    }
+    IpcHandler {
+        target: "dock"
+        function edit(): void { hub.editDock(); }
     }
     IpcHandler {
         target: "widgets"

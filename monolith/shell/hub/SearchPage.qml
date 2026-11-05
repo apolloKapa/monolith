@@ -31,6 +31,22 @@ Page {
         const id = entry.id.replace(/\.desktop$/, "");
         Store.set("search.favorites", isFav(entry) ? favIds.filter(x => x !== id && x + ".desktop" !== entry.id && x !== entry.id) : favIds.concat([id]));
     }
+    // drag a favourite to another place in the grid
+    property int favDrag: -1
+    property point favPos: Qt.point(0, 0)
+    function favIdOf(entry) { return favIds.find(id => id === entry.id || id + ".desktop" === entry.id || id === entry.id.replace(/\.desktop$/, "")) || entry.id.replace(/\.desktop$/, ""); }
+    function moveFav(from, to) {
+        if (from === to || from < 0) return;
+        const shown = favs.map(e => favIdOf(e));
+        const id = shown.splice(from, 1)[0];
+        shown.splice(Math.max(0, Math.min(to, shown.length)), 0, id);
+        Store.set("search.favorites", shown.concat(favIds.filter(x => shown.indexOf(x) === -1)));
+    }
+    function favIndexAt(p) {
+        const col = Math.max(0, Math.min(favColumns - 1, Math.floor(p.x / favGrid.cellW)));
+        const row = Math.max(0, Math.floor(p.y / (84 + favGrid.rowSpacing)));
+        return Math.min(favs.length - 1, row * favColumns + col);
+    }
     function launch(entry) { entry.execute(); Store.set("launches." + entry.id.replace(/\./g, "_"), uses(entry.id) + 1); page.done(); }
 
     // how often each app was opened from here, for the order
@@ -133,12 +149,40 @@ Page {
             Repeater {
                 model: page.favs
                 Pressable {
+                    id: favTile
                     required property var modelData
+                    required property int index
                     width: favGrid.cellW - 4
                     height: 84
-                    color: hovered ? Theme.containerHigh : "transparent"
+                    readonly property bool dragged: page.favDrag === index
+                    readonly property bool target: page.favDrag >= 0 && page.favDrag !== index && page.favIndexAt(page.favPos) === index
+                    color: target ? Qt.alpha(Theme.accent, 0.18) : (hovered ? Theme.containerHigh : "transparent")
+                    border.width: target ? 2 : 0
+                    border.color: Theme.accent
+                    opacity: dragged ? 0.3 : 1
                     onClicked: page.launch(modelData)
                     onRightClicked: page.toggleFav(modelData)
+                    // drag it (move a little while holding) to put it somewhere else
+                    MouseArea {
+                        anchors.fill: parent
+                        preventStealing: true
+                        acceptedButtons: Qt.LeftButton
+                        cursorShape: page.favDrag === favTile.index ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+                        property point start
+                        property bool moved: false
+                        onPressed: mouse => { start = Qt.point(mouse.x, mouse.y); moved = false; }
+                        onPositionChanged: mouse => {
+                            if (!pressed) return;
+                            if (!moved && Math.abs(mouse.x - start.x) + Math.abs(mouse.y - start.y) > 8) { moved = true; page.favDrag = favTile.index; }
+                            if (moved) page.favPos = mapToItem(favGrid, mouse.x, mouse.y);
+                        }
+                        onReleased: {
+                            if (moved) page.moveFav(favTile.index, page.favIndexAt(page.favPos));
+                            else page.launch(favTile.modelData);
+                            page.favDrag = -1;
+                        }
+                        onCanceled: page.favDrag = -1
+                    }
                     Column {
                         anchors.centerIn: parent
                         width: parent.width - 8
@@ -156,6 +200,23 @@ Page {
             }
         }
         Rectangle { anchors.bottom: parent.bottom; anchors.bottomMargin: 5; width: parent.width; height: 1; color: Theme.ringTrack }
+        // the favourite being carried
+        Rectangle {
+            visible: page.favDrag >= 0
+            z: 50
+            width: 64; height: 64
+            radius: Theme.corner(64, 6)
+            x: page.favPos.x - width / 2
+            y: page.favPos.y - height / 2
+            color: Theme.accentContainer
+            border.width: 2; border.color: Theme.accent
+            Image {
+                anchors.centerIn: parent
+                width: 40; height: 40
+                sourceSize: Qt.size(80, 80)
+                source: page.favDrag >= 0 && page.favs[page.favDrag] ? Quickshell.iconPath(page.favs[page.favDrag].icon, "application-x-executable") : ""
+            }
+        }
     }
 
     GridView {

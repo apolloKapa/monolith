@@ -6,6 +6,7 @@
 #   monolith screenshot [--full] [--edit]     the capture overlay (--full alone: whole screen now)
 #   monolith record-menu                      the capture overlay, set to video
 #   monolith zoom in | out
+#   monolith dock                                the dock editor (or hold an app in the dock)
 #   monolith widgets [lock]                      arrange the desktop's (or lock screen's) widgets
 #   monolith timer <minutes> | record [region]
 #   monolith set <setting> <json> | get <setting>
@@ -99,6 +100,7 @@ case "$1" in
             *) pgrep -x wooz >/dev/null || exec wooz ;;
         esac
         ;;
+    dock) ipc dock edit ;;
     widgets) ipc widgets edit "${2:-desktop}" ;;
     timer) ipc tasks timer "${2:-0}" ;;
     record-menu) ipc capture start video region false ;;
@@ -114,5 +116,5 @@ case "$1" in
         echo "No installer found." >&2; exit 1
         ;;
     migrate) migrate ;;
-    *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//' ;;
+    *) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//' ;;
 esac
