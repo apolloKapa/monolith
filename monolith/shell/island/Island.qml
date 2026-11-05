@@ -72,7 +72,9 @@ PanelWindow {
     // the middle of the screen or on the right; then the island stays a bar
     readonly property string place: Store.get("menus.position", "top")
     readonly property bool docked: place === "top"
-    readonly property bool grown: shown && docked
+    // the island grows into the menu; a full-width bar stays put and the menu drops out of it
+    readonly property bool grown: shown && docked && !Theme.fullBar
+    readonly property bool dropped: shown && docked && Theme.fullBar
 
     // a new notification drops out of the island (on the screen you're using) while it's closed
     readonly property bool toastScreen: Niri.focusedOutput !== "" ? Niri.focusedOutput === modelData.name : (Quickshell.screens.length > 0 && modelData === Quickshell.screens[0])
@@ -151,9 +153,9 @@ PanelWindow {
             Item {
                 id: openArea
                 // in the island, or in the floating card
-                parent: win.docked ? body : floatCard
+                parent: !win.docked ? floatCard : (Theme.fullBar ? dropBody : body)
                 x: win.pad
-                y: win.docked ? Theme.islandH + 2 : win.pad
+                y: win.docked && !Theme.fullBar ? Theme.islandH + 2 : win.pad
                 width: parent.width - 2 * win.pad
                 height: parent.height - y - win.pad
                 opacity: win.shown ? 1 : 0
@@ -288,6 +290,22 @@ PanelWindow {
                 }
             }
         }
+    }
+
+    // ── the menu dropping out of a full-width bar: a shape hanging from the bar's bottom edge ──
+    IslandShape {
+        id: drop
+        visible: Theme.fullBar && height > 1
+        bodyW: win.dropped ? win.openW : 160
+        height: win.dropped ? win.openH - Theme.islandH : 0
+        r: Theme.islandRadius
+        x: Math.round((win.width - width) / 2)
+        y: Theme.islandH - 1
+        Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+        Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : 220; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springCurve : Theme.exitCurve } }
+        onHeightChanged: if (!win.shown && height <= 1) win.wasOpen = false
+        MouseArea { anchors.fill: parent }
+        Item { id: dropBody; x: drop.e; width: drop.bodyW; height: drop.height; clip: true }
     }
 
     // ── the floating card (menus in the middle or on the right) ──

@@ -16,20 +16,20 @@ Page {
     // categories down the left; each has tabs along the top (its sub-pages). A tab is
     // [id, title, file in settings/]. HubState.settingsSection is a tab id.
     readonly property var categories: [
-        { id: "general", title: "General", icon: "person", tabs: [["general", "You & location", "General"], ["about", "About", "About"]] },
-        { id: "theme", title: "Theme", icon: "palette", tabs: [["style", "Style", "Styles"], ["appearance", "Colours & icons", "Appearance"], ["wallpaper", "Wallpaper", "Wallpaper"], ["colours", "App colours", "Colours"], ["fastfetch", "Fastfetch", "Fastfetch"]] },
-        { id: "bar", title: "Bar", icon: "toolbar", tabs: [["bar", "Layout & modules", "BarLayout"], ["status", "Behaviour", "Status"]] },
-        { id: "menus", title: "Menus & launcher", icon: "apps", tabs: [["menus", "Where menus open", "Menus"], ["search", "Launcher", "Search"]] },
+        { id: "general", title: "General", icon: "person", tabs: [["general", "You, location & weather", "General"], ["about", "About & updates", "About"]] },
+        { id: "theme", title: "Theme", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Font, icons & cursor", "Appearance"], ["wallpaper", "Wallpaper", "Wallpaper"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Terminal greeting", "Fastfetch"]] },
+        { id: "bar", title: "Bar", icon: "toolbar", tabs: [["bar", "What's on the bar", "BarLayout"], ["status", "Auto-hide", "Status"]] },
+        { id: "menus", title: "Menus & launcher", icon: "apps", tabs: [["menus", "Where menus open", "Menus"], ["search", "Launcher & favourites", "Search"]] },
         { id: "dock", title: "Dock", icon: "dock_to_bottom", tabs: [["dock", "Dock", "Dock"]] },
-        { id: "desktop", title: "Desktop", icon: "widgets", tabs: [["desktop", "Widgets", "Desktop"], ["quickaccess", "Quick access", "QuickAccess"]] },
-        { id: "windows", title: "Windows", icon: "select_window", tabs: [["windows", "Gaps, borders, animations", "Windows"]] },
-        { id: "display", title: "Display", icon: "monitor", tabs: [["display", "Monitors", "Display"], ["nightlight", "Night light", "Night"]] },
-        { id: "alerts", title: "Notifications", icon: "notifications", tabs: [["notifications", "Notifications", "Notifications"], ["osd", "On-screen display", "Osd"]] },
-        { id: "devices", title: "Devices", icon: "keyboard", tabs: [["input", "Keyboard & mouse", "Input"], ["devices", "Mic & camera", "Devices"]] },
-        { id: "lock", title: "Lock & idle", icon: "lock_clock", tabs: [["idle", "Lock & idle", "Idle"]] },
-        { id: "capture", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots", "Capture"]] },
-        { id: "software", title: "Software", icon: "deployed_code", tabs: [["software", "Startup, AppImages, cleanup", "Software"]] },
-        { id: "wellbeing", title: "Wellbeing", icon: "self_improvement", tabs: [["wellbeing", "Wellbeing", "Wellbeing"]] }
+        { id: "desktop", title: "Desktop", icon: "widgets", tabs: [["desktop", "Desktop widgets", "Desktop"], ["quickaccess", "Quick access panel", "QuickAccess"]] },
+        { id: "windows", title: "Windows", icon: "select_window", tabs: [["windows", "Gaps, borders & animations", "Windows"]] },
+        { id: "display", title: "Display", icon: "monitor", tabs: [["display", "Monitors & scale", "Display"], ["nightlight", "Night light", "Night"]] },
+        { id: "alerts", title: "Notifications", icon: "notifications", tabs: [["notifications", "Pop-ups & sound", "Notifications"], ["osd", "Volume & key pop-up", "Osd"]] },
+        { id: "devices", title: "Devices", icon: "keyboard", tabs: [["input", "Keyboard, mouse & touchpad", "Input"], ["devices", "Microphone & camera", "Devices"]] },
+        { id: "lock", title: "Lock & idle", icon: "lock_clock", tabs: [["idle", "Locking, dimming & sleep", "Idle"]] },
+        { id: "capture", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots & recordings", "Capture"]] },
+        { id: "software", title: "Software", icon: "deployed_code", tabs: [["software", "Startup apps, AppImages & cleanup", "Software"]] },
+        { id: "wellbeing", title: "Wellbeing", icon: "self_improvement", tabs: [["wellbeing", "Screen time & limits", "Wellbeing"]] }
     ]
     // the open category and tab (an unknown id shows the first)
     readonly property var category: categories.find(c => c.tabs.some(t => t[0] === section)) || categories[0]
@@ -83,12 +83,12 @@ Page {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 10
-        Row {
+        Flow {
             id: subTabs
             Layout.fillWidth: true
             visible: page.section !== "welcome"
             spacing: 6
-            Label { text: page.category.title; strong: true; font.pixelSize: Theme.sizeTitle + 2; anchors.verticalCenter: parent.verticalCenter; rightPadding: 10 }
+            Label { text: page.category.title; strong: true; font.pixelSize: Theme.sizeTitle + 2; height: 34; verticalAlignment: Text.AlignVCenter; rightPadding: 10 }
             Repeater {
                 model: page.category.tabs.length > 1 ? page.category.tabs : []
                 Pressable {
