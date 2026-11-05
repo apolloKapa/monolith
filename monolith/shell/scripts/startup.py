@@ -113,6 +113,34 @@ def appimage_entry(f):
     return DATA + "/applications/appimage-" + os.path.splitext(os.path.basename(f))[0].replace(" ", "_") + ".desktop"
 
 
+def appimage_icon(f, name):
+    """The AppImage's own icon (its .DirIcon, unpacked by its runtime: the app doesn't run),
+    put in the user's icon theme folder. Returns the icon name, or None."""
+    import shutil, tempfile
+    dest_dir = DATA + "/icons/hicolor/256x256/apps"
+    tmp = tempfile.mkdtemp()
+    try:
+        run = lambda what: subprocess.run([f, "--appimage-extract", what], cwd=tmp, timeout=60,
+                                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        run(".DirIcon")
+        link = os.path.join(tmp, "squashfs-root", ".DirIcon")
+        if os.path.islink(link):
+            run(os.readlink(link))
+        src = os.path.realpath(link)
+        if not os.path.isfile(src):
+            return None
+        # SVG icons go to scalable/, the rest to 256x256/
+        svg = open(src, "rb").read(256).lstrip().startswith(b"<")
+        folder = DATA + "/icons/hicolor/scalable/apps" if svg else dest_dir
+        os.makedirs(folder, exist_ok=True)
+        shutil.copyfile(src, os.path.join(folder, name + (".svg" if svg else ".png")))
+        return name
+    except Exception:
+        return None
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def cmd_appimages(d):
     files = sorted(glob.glob(os.path.join(os.path.expanduser(d), "*.AppImage")) + glob.glob(os.path.join(os.path.expanduser(d), "*.appimage")))
     print(json.dumps([{"file": f, "name": os.path.splitext(os.path.basename(f))[0], "added": os.path.exists(appimage_entry(f)),
@@ -124,10 +152,11 @@ def cmd_appimage(action, f):
     if action == "add":
         os.chmod(f, os.stat(f).st_mode | 0o111)
         name = os.path.splitext(os.path.basename(f))[0].replace("-", " ").replace("_", " ")
+        icon = appimage_icon(f, os.path.splitext(os.path.basename(dst))[0]) or "application-x-executable"
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         open(dst, "w", encoding="utf-8").write(
-            "[Desktop Entry]\nType=Application\nName=%s\nExec=%s %%U\nIcon=application-x-executable\nCategories=Utility;\n%s=appimage\n"
-            % (name, shlex.quote(f), TAG))
+            "[Desktop Entry]\nType=Application\nName=%s\nExec=%s %%U\nIcon=%s\nCategories=Utility;\n%s=appimage\n"
+            % (name, shlex.quote(f), icon, TAG))
     elif os.path.exists(dst):
         os.remove(dst)
 
