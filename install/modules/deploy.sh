@@ -53,6 +53,35 @@ deploy_shell() {
     echo -e "  ${C_GREEN}shell:${RESET} installed to $SHELL_HOME"
 }
 
+# the new shell (the GPL-3.0 rewrite in next/): ~/.local/share/monolith-next, `monolith-next`
+# in ~/.local/bin. Installed next to the classic one either way, so switching is one command.
+NEXT_HOME="$HOME/.local/share/monolith-next"
+deploy_next_shell() {
+    local project_root="$1"
+    [ -d "$project_root/next/shell" ] || return 0
+    rm -rf "$NEXT_HOME"
+    mkdir -p "$NEXT_HOME" "$BIN_DIR"
+    cp -r "$project_root/next/bin" "$project_root/next/shell" "$project_root/next/LICENSE" "$NEXT_HOME/"
+    chmod +x "$NEXT_HOME"/bin/* "$NEXT_HOME"/shell/scripts/*
+    ln -sf "$NEXT_HOME/bin/monolith-next" "$BIN_DIR/monolith-next"
+    echo -e "  ${C_GREEN}new shell:${RESET} installed to $NEXT_HOME"
+}
+
+# point the keybinds and login at the chosen shell (only Monolith's own lines change)
+apply_shell_choice() {
+    local choice="$1"
+    mkdir -p "$STATE_DIR"
+    echo "$choice" > "$STATE_DIR/shell"
+    [ -x "$BIN_DIR/monolith-next" ] || return 0
+    if [ "$choice" = next ]; then
+        "$BIN_DIR/monolith-next" adopt
+        echo -e "  ${C_GREEN}shell:${RESET} the new shell (keybinds and login point at it)"
+    else
+        "$BIN_DIR/monolith-next" release
+        echo -e "  ${C_GREEN}shell:${RESET} the classic shell"
+    fi
+}
+
 # icon packs that come with Monolith (config/icons/<pack>) go to ~/.local/share/icons, where
 # Settings → Theme → Icons finds them. A pack Monolith put there (it carries .monolith-icon-pack)
 # is refreshed on every install/update; a folder of the same name you put there yourself is kept.

@@ -111,8 +111,11 @@ install_dependencies "$PROJECT_ROOT" "$INSTALL_STATE"
 step "Monolith shell"
 SHELL_WAS_RUNNING=false
 monolithd status >/dev/null 2>&1 && SHELL_WAS_RUNNING=true
+pgrep -f 'quickshell -p [^ ]*/shell/shell\.qml' >/dev/null && SHELL_WAS_RUNNING=true
 monolithd stop >/dev/null 2>&1 || true
+pkill -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null || true
 deploy_shell "$PROJECT_ROOT"
+deploy_next_shell "$PROJECT_ROOT"
 install_desktop_entry "$PROJECT_ROOT"
 deploy_dotfiles_extras "$PROJECT_ROOT"
 setup_pam_service
@@ -124,6 +127,7 @@ upgrade_screenshot_binds "$NIRI_DIR/config/keybinds.kdl" >/dev/null
 upgrade_rofi_binds "$NIRI_DIR/config/keybinds.kdl"
 bash "$SHELL_HOME/src/scripts/niri_screenshot_keys.sh" >/dev/null 2>&1 || true
 upgrade_local_bin_commands
+apply_shell_choice "$SHELL_CHOICE"
 
 if [ "$OPT_SDDM" = true ]; then
     step "Login screen"
@@ -151,7 +155,11 @@ write_version_state "$PROJECT_ROOT"
 # spawn-at-startup at login, so a fresh install has to start the shell itself. In any other
 # session (Hyprland with Serpantinum, ...) Monolith waits until you log into niri.
 if [ -n "$WAYLAND_DISPLAY" ] && [ -n "$NIRI_SOCKET" ] && { [ "$UPDATE_ONLY" != true ] || [ "$SHELL_WAS_RUNNING" = true ]; }; then
-    setsid "$BIN_DIR/monolithd" start >/dev/null 2>&1 < /dev/null &
+    if [ "$SHELL_CHOICE" = next ] && [ -x "$BIN_DIR/monolith-next" ]; then
+        "$BIN_DIR/monolith-next" start >/dev/null 2>&1 < /dev/null
+    else
+        setsid "$BIN_DIR/monolithd" start >/dev/null 2>&1 < /dev/null &
+    fi
     MONOLITH_STARTED=true
 fi
 

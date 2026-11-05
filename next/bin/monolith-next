@@ -1,0 +1,135 @@
+#!/bin/sh
+# The new shell's command line.
+#   monolith-next try        stop the current Monolith, start the new shell, point the keybinds at it
+#   monolith-next keep       like try, and start the new shell at login too
+#   monolith-next back       go back to the current Monolith (keybinds and login too)
+#   monolith-next adopt | release   only point the keybinds and login at the new shell (or back)
+#   monolith-next start | restart | stop
+#   monolith-next msg toggle <name>        what the keybinds call (same names as the current Monolith's)
+#   monolith-next hub <page> | search <text> | settings <section> | lock
+#   monolith-next screenshot [--full] [--edit]
+#   monolith-next zoom in | out
+#   monolith-next timer <minutes> | record [region] | set <setting> <json> | get <setting>
+here=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
+me="$here/bin/monolith-next"
+qml="$here/shell/shell.qml"
+niri_conf="${XDG_CONFIG_HOME:-$HOME/.config}/niri/config"
+old="$HOME/.local/bin/monolith"
+old_zoom='$HOME/.local/share/monolith/src/scripts/zoom.sh'
+shots="$HOME/Pictures/Screenshots"
+
+ipc() { quickshell ipc -p "$qml" call "$@"; }
+# the installer's record of which shell you use (so an update doesn't switch you back)
+choice() { d="${XDG_STATE_HOME:-$HOME/.local/state}/monolith"; mkdir -p "$d" && echo "$1" > "$d/shell"; }
+# any copy of the new shell (this one, or a dev checkout / the installed one)
+any_qml='quickshell -p [^ ]*/shell/shell\.qml'
+running() { pgrep -f "quickshell -p $qml" >/dev/null; }
+start() { running || niri msg action spawn -- quickshell -p "$qml"; }
+stop() { pkill -f "$any_qml" 2>/dev/null; }
+
+# keybinds: the binds spawn the current Monolith by its full path; swap that for this script
+# (and back). Only those exact strings change, so binds you added stay as they are. A path to
+# another copy of this script (dev checkout ↔ installed) counts as this one.
+next_any='"[^"]*/bin/monolith-next"'
+binds_to_next() {
+    f="$niri_conf/keybinds.kdl"; [ -f "$f" ] || return 0
+    cp -n "$f" "$f.before-next"
+    sed -i -e "s|\"$old\"|\"$me\"|g" -e "s|$next_any|\"$me\"|g" \
+        -e "s|$old_zoom|$me zoom|g" -e "s|[^\" ]*/bin/monolith-next zoom|$me zoom|g" "$f"
+}
+binds_to_old() {
+    f="$niri_conf/keybinds.kdl"; [ -f "$f" ] || return 0
+    sed -i -e "s|$next_any|\"$old\"|g" -e "s|[^\" ]*/bin/monolith-next zoom|$old_zoom|g" "$f"
+}
+# login: the autostart line that starts monolithd, commented out while the new shell is kept
+login_to_next() {
+    f="$niri_conf/autostart.kdl"; [ -f "$f" ] || return 0
+    if grep -q "monolith-next back undoes" "$f"; then
+        sed -i "s|^spawn-at-startup $next_any \"start\"|spawn-at-startup \"$me\" \"start\"|" "$f"
+        return 0
+    fi
+    cp -n "$f" "$f.before-next"
+    sed -i 's|^\(spawn-at-startup .*monolithd.* start"\)$|// (monolith-next) \1|' "$f"
+    [ -n "$(tail -c1 "$f")" ] && echo >> "$f"
+    printf '// the new shell (monolith-next back undoes this)\nspawn-at-startup "%s" "start" "--login"\n' "$me" >> "$f"
+}
+login_to_old() {
+    f="$niri_conf/autostart.kdl"; [ -f "$f" ] || return 0
+    sed -i -e 's|^// (monolith-next) ||' -e '/the new shell (monolith-next back undoes this)/d' -e "\\|^spawn-at-startup $next_any \"start\"|d" "$f"
+}
+
+# the current Monolith's panel names → the new shell's hub pages
+page_for() {
+    case "$1" in
+        launcher) echo search ;;  system|dashboard) echo quick ;;  volume|audio) echo sound ;;
+        music|media) echo media ;;  cheatsheet) echo keys ;;  switcher|overview) echo windows ;;
+        calendar|clock) echo calendar ;;  notifications|notifs) echo notifications ;;
+        *) echo "$1" ;;
+    esac
+}
+
+case "$1" in
+    try)
+        command -v monolithd >/dev/null && monolithd stop
+        stop; binds_to_next; start
+        echo "The new shell is running and the keybinds call it. Go back with: monolith-next back"
+        ;;
+    keep)
+        "$me" try >/dev/null; login_to_next; choice next
+        echo "The new shell now starts at login. Go back with: monolith-next back"
+        ;;
+    # only the config, nothing started or stopped (the installer uses these)
+    adopt) binds_to_next; login_to_next ;;
+    release) binds_to_old; login_to_old ;;
+    back)
+        stop; binds_to_old; login_to_old; choice classic
+        niri msg action spawn -- "$HOME/.local/bin/monolithd" start
+        ;;
+    start)
+        start
+        # at login (the autostart line): also the startup apps (Settings → Software)
+        [ "$2" = "--login" ] && (sleep 2; python3 "$here/shell/scripts/startup.py" run) &
+        ;;
+    stop) stop ;;
+    restart) stop; sleep 0.3; start ;;
+    msg)
+        # msg toggle <name>  (also: msg open <name>)
+        name="$3"
+        case "$name" in
+            emoji) ipc hub search ":" ;;
+            autohide) ipc status toggle ;;
+            appimages|autostart) ipc settings open software ;;
+            *) ipc hub "${2:-toggle}" "$(page_for "$name")" ;;
+        esac
+        ;;
+    hub) ipc hub toggle "$(page_for "${2:-search}")" ;;
+    search) ipc hub search "$2" ;;
+    settings) ipc settings open "${2:-appearance}" ;;
+    appimages) ipc settings open software ;;
+    lock) ipc lock lock ;;
+    screenshot)
+        full=0; edit=0
+        for a in "$@"; do case "$a" in --full) full=1 ;; --edit) edit=1 ;; esac; done
+        if [ $edit = 1 ]; then
+            mkdir -p "$shots"
+            f="$shots/Screenshot_$(date +%Y%m%d_%H%M%S).png"
+            if [ $full = 1 ]; then grim "$f"; else g=$(slurp) || exit 0; grim -g "$g" "$f"; fi
+            exec satty --filename "$f" --output-filename "$f"
+        fi
+        [ $full = 1 ] && exec niri msg action screenshot-screen
+        exec niri msg action screenshot
+        ;;
+    timer) ipc tasks timer "${2:-0}" ;;
+    record) ipc tasks record "$([ "$2" = region ] && echo true || echo false)" ;;
+    set) ipc store set "$2" "$3" ;;
+    get) ipc store get "$2" ;;
+    zoom)
+        # wooz: a zoomable picture of the screen. The first step opens it (scroll in it to zoom,
+        # Esc or zooming out closes it).
+        case "$2" in
+            out|off) pkill -x wooz ;;
+            *) pgrep -x wooz >/dev/null || exec wooz ;;
+        esac
+        ;;
+    *) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//' ;;
+esac
