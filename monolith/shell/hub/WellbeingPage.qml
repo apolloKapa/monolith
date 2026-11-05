@@ -73,8 +73,8 @@ Page {
                             Label { visible: page.editing === row.modelData.id; text: "Daily limit"; muted: true; font.pixelSize: Theme.sizeSmall }
                             NumberBox {
                                 visible: page.editing === row.modelData.id
-                                width: 170; height: 30
-                                from: 0; to: 1440; step: 5; unit: "min"; zeroText: "None"
+                                width: 260; height: 30
+                                from: 0; to: 1440; slideTo: 480; step: 5; unit: "min"; zeroText: "None"
                                 value: row.limit
                                 onMoved: v => Wellbeing.setLimit(row.modelData.id, v)
                             }

@@ -94,6 +94,6 @@ ColumnLayout {
     }
     SettingRow {
         icon: "update"; title: "Weather refresh"; desc: "How often it looks again"
-        NumberBox { from: 5; to: 720; step: 5; unit: "min"; value: Number(Store.get("weather.interval", 20)); onMoved: v => Store.set("weather.interval", v) }
+        NumberBox { from: 5; to: 720; slideTo: 120; step: 5; unit: "min"; value: Number(Store.get("weather.interval", 20)); onMoved: v => Store.set("weather.interval", v) }
     }
 }

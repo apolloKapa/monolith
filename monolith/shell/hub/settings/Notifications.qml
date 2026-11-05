@@ -24,7 +24,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "timer"; title: "How long they stay"; desc: "Unless the app says otherwise; urgent ones stay until closed"
-        NumberBox { from: 1; to: 300; unit: "s"; value: Number(Store.get("notifications.timeout", 6)); onMoved: v => Store.set("notifications.timeout", v) }
+        NumberBox { from: 1; to: 300; slideTo: 30; unit: "s"; value: Number(Store.get("notifications.timeout", 6)); onMoved: v => Store.set("notifications.timeout", v) }
     }
     SettingRow {
         icon: "science"; title: "Try it"; desc: "Send a test notification"

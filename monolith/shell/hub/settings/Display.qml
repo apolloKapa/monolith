@@ -224,7 +224,7 @@ ColumnLayout {
                     icon: "zoom_in"; title: "Scale"; desc: "Bigger text and controls on this screen"
                     // any scale, in 5% steps (niri rounds it to what the screen can show sharply)
                     NumberBox {
-                        from: 0.5; to: 4; step: 0.05; decimals: 2; factor: 100; unit: "%"
+                        from: 0.5; to: 4; slideTo: 2.5; step: 0.05; decimals: 2; factor: 100; unit: "%"
                         value: card.o.logical ? card.o.logical.scale : 1
                         onMoved: v => scaleLater.go(v)
                         Timer { id: scaleLater; property real v: 1; interval: 700; function go(x) { v = x; restart(); } onTriggered: NiriConf.set(sec.block(card.o), "scale", v.toFixed(2)) }

@@ -20,7 +20,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "photo_size_select_large"; title: "Size"
-        NumberBox { from: 24; to: 160; step: 2; unit: "px"; value: Number(Store.get("dock.size", 56)); onMoved: v => Store.set("dock.size", v) }
+        NumberBox { from: 24; to: 160; slideTo: 120; step: 2; unit: "px"; value: Number(Store.get("dock.size", 56)); onMoved: v => Store.set("dock.size", v) }
     }
     SettingRow {
         icon: "zoom_in"; title: "Magnify on hover"; desc: "The app under the pointer grows"

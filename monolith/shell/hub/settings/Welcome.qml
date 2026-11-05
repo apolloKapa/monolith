@@ -35,7 +35,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "rounded_corner"; title: "Corners"
-        NumberBox { from: 0; to: 60; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
+        NumberBox { from: 0; to: 60; slideTo: 40; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
     }
     SettingRow {
         icon: "keyboard"; title: "Getting around"

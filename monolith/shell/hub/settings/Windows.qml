@@ -33,7 +33,7 @@ ColumnLayout {
 
     SettingRow {
         icon: "padding"; title: "Gaps"; desc: "Space between windows and around them"
-        NumberBox { from: 0; to: 200; unit: "px"; value: sec.num("layout|gaps", 16); onMoved: x => sec.put("layout", "gaps", x) }
+        NumberBox { from: 0; to: 200; slideTo: 60; unit: "px"; value: sec.num("layout|gaps", 16); onMoved: x => sec.put("layout", "gaps", x) }
     }
     SettingRow {
         icon: "border_outer"; title: "Borders"; desc: "A line around each window, brighter on the focused one"
@@ -41,7 +41,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "line_weight"; title: "Border width"
-        NumberBox { from: 1; to: 50; unit: "px"; value: sec.num("layout/border|width", 2); onMoved: x => sec.put("layout/border", "width", x) }
+        NumberBox { from: 1; to: 50; slideTo: 12; unit: "px"; value: sec.num("layout/border|width", 2); onMoved: x => sec.put("layout/border", "width", x) }
     }
     SettingRow {
         icon: "center_focus_strong"; title: "Focus ring"; desc: "A ring outside the focused window (on top of the border)"
@@ -50,7 +50,7 @@ ColumnLayout {
     SettingRow {
         icon: "rounded_corner"; title: "Window corners"; desc: "How round the windows are"
         // (windows are cut to the rounded shape too: clip-to-geometry)
-        NumberBox { from: 0; to: 100; unit: "px"; value: sec.num("window-rule|geometry-corner-radius", 0); onMoved: x => { sec.put("window-rule", "geometry-corner-radius", x); sec.put("window-rule", "clip-to-geometry", "true"); } }
+        NumberBox { from: 0; to: 100; slideTo: 40; unit: "px"; value: sec.num("window-rule|geometry-corner-radius", 0); onMoved: x => { sec.put("window-rule", "geometry-corner-radius", x); sec.put("window-rule", "clip-to-geometry", "true"); } }
     }
     SettingRow {
         icon: "animation"; title: "Animations"
@@ -58,6 +58,6 @@ ColumnLayout {
     }
     SettingRow {
         icon: "speed"; title: "Animation speed"; desc: "niri's slowdown: lower is faster"
-        NumberBox { from: 0.05; to: 10; step: 0.05; decimals: 2; unit: "×"; value: sec.num("animations|slowdown", 1); onMoved: x => sec.put("animations", "slowdown", x.toFixed(2)) }
+        NumberBox { from: 0.05; to: 10; slideTo: 3; step: 0.05; decimals: 2; unit: "×"; value: sec.num("animations|slowdown", 1); onMoved: x => sec.put("animations", "slowdown", x.toFixed(2)) }
     }
 }

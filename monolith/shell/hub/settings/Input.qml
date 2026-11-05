@@ -36,11 +36,11 @@ ColumnLayout {
     }
     SettingRow {
         icon: "timer"; title: "Repeat delay"; desc: "How long a key is held before it repeats"
-        NumberBox { from: 50; to: 3000; step: 25; unit: "ms"; value: Number(sec.val("input/keyboard|repeat-delay", 600)); onMoved: x => sec.put("input/keyboard", "repeat-delay", x) }
+        NumberBox { from: 50; to: 3000; slideTo: 1500; step: 25; unit: "ms"; value: Number(sec.val("input/keyboard|repeat-delay", 600)); onMoved: x => sec.put("input/keyboard", "repeat-delay", x) }
     }
     SettingRow {
         icon: "fast_forward"; title: "Repeat rate"
-        NumberBox { from: 1; to: 200; unit: "/s"; value: Number(sec.val("input/keyboard|repeat-rate", 25)); onMoved: x => sec.put("input/keyboard", "repeat-rate", x) }
+        NumberBox { from: 1; to: 200; slideTo: 100; unit: "/s"; value: Number(sec.val("input/keyboard|repeat-rate", 25)); onMoved: x => sec.put("input/keyboard", "repeat-rate", x) }
     }
     SettingRow {
         icon: "dialpad"; title: "Num Lock on at login"
