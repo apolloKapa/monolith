@@ -7,9 +7,14 @@ import "../../ui"
 ColumnLayout {
     id: sec
     spacing: 8
-    readonly property var places: [["top", "Top (out of the bar)", "The bar grows down into the menu"],
+    readonly property var places: [["top", "Out of the bar", "The bar grows down into the menu"],
                                    ["center", "Middle of the screen", "A card floating in the middle"],
-                                   ["right", "Right side", "A card along the right edge"]]
+                                   ["top-center", "Top, under the bar", "A card at the top, the bar stays as it is"],
+                                   ["bottom", "Bottom", "Slides up from the bottom edge"],
+                                   ["left", "Left side", "Slides in from the left edge"],
+                                   ["right", "Right side", "Slides in from the right edge"],
+                                   ["top-left", "Top left corner", ""], ["top-right", "Top right corner", ""],
+                                   ["bottom-left", "Bottom left corner", ""], ["bottom-right", "Bottom right corner", ""]]
     // each menu can follow the default or have its own place
     readonly property var withDefault: [["", "Same as the default", ""]].concat(places)
     readonly property var menus: [

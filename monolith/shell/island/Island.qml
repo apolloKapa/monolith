@@ -324,15 +324,27 @@ PanelWindow {
         height: win.openH - Theme.islandH + win.pad
         Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-        x: win.place === "right" ? win.width - width - 16 : Math.round((win.width - width) / 2)
-        y: win.place === "right" ? Theme.islandH + 14 : Math.round((win.height - height) / 2)
+        // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
+        readonly property bool onLeft: win.place.indexOf("left") !== -1
+        readonly property bool onRight: win.place.indexOf("right") !== -1
+        readonly property bool onTop: win.place.startsWith("top")
+        readonly property bool onBottom: win.place.startsWith("bottom")
+        x: onLeft ? 16 : (onRight ? win.width - width - 16 : Math.round((win.width - width) / 2))
+        y: onTop ? Theme.islandH + 14 : (onBottom ? win.height - height - 16 : Math.max(Theme.islandH + 14, Math.round((win.height - height) / 2)))
         radius: Theme.islandRadius
         color: Theme.frame
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
         opacity: win.shown ? 1 : 0
         scale: win.shown ? 1 : 0.94
-        transformOrigin: win.place === "right" ? Item.TopRight : Item.Center
+        transformOrigin: onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
+        // it slides in from its side
+        transform: Translate {
+            x: (win.shown ? 0 : 1) * (floatCard.onLeft ? -40 : (floatCard.onRight ? 40 : 0))
+            y: (win.shown ? 0 : 1) * (floatCard.onTop ? -30 : (floatCard.onBottom ? 40 : 0))
+            Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+            Behavior on y { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+        }
         Behavior on opacity { NumberAnimation { duration: win.shown ? 220 : 160 } }
         Behavior on scale { NumberAnimation { duration: win.shown ? Theme.springMs : 160; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.springCurve : Theme.exitCurve } }
         layer.enabled: true
