@@ -15,12 +15,15 @@ Singleton {
     // the wallpaper picker is its own panel in the middle of the screen (wall/WallpaperPicker)
     property bool wallOpen: false
     property string wallScreen: ""
-    function showWall(screen) { wallScreen = screen || screenName; open = false; wallOpen = true; }
+    // keybinds and commands pass no screen: then it's the one you're on (the focused output),
+    // not whichever screen was clicked last
+    function target(screen) { return screen || Niri.focusedOutput || screenName; }
+    function showWall(screen) { wallScreen = target(screen); open = false; wallOpen = true; }
 
     function show(p, screen) {
         if (p === "wallpaper") { showWall(screen); return; }
         if (p && pages.indexOf(p) !== -1) page = p;
-        if (screen) screenName = screen;
+        screenName = target(screen);
         wallOpen = false;
         open = true;
     }
