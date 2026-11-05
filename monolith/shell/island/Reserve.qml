@@ -13,7 +13,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Bottom
     anchors { top: true; left: true; right: true }
     implicitHeight: 1
-    exclusiveZone: Store.get("status.autohide", false) === true ? 0 : Theme.islandH + 4
+    exclusiveZone: Store.get("status.autohide", false) === true || (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) !== -1 ? 0 : Theme.islandH + 4
     color: "transparent"
     mask: Region {}
     // stay awake (control center), held by the first screen's strip

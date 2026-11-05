@@ -11,16 +11,21 @@ PanelWindow {
     id: osd
     required property var modelData
     screen: modelData
-    readonly property bool here: Quickshell.screens.length > 0 && modelData === Quickshell.screens[0]
+    // on the screen you're on
+    readonly property bool here: Niri.focusedOutput !== "" ? Niri.focusedOutput === modelData.name : (Quickshell.screens.length > 0 && modelData === Quickshell.screens[0])
 
     WlrLayershell.namespace: "monolith-osd"
     WlrLayershell.layer: WlrLayer.Overlay
     exclusionMode: ExclusionMode.Ignore
-    readonly property bool atTop: Store.get("osd.position", "bottom") === "top"
-    anchors { bottom: !atTop; top: atTop }
-    margins { bottom: 110; top: 90 }
-    implicitWidth: 340
-    implicitHeight: 60
+    // where (Settings → Notifications → Volume & key pop-up): across and down, as a share of
+    // the screen; across or upright
+    readonly property bool vertical: Store.get("osd.orientation", "horizontal") === "vertical"
+    readonly property real px: Number(Store.get("osd.x", 0.5))
+    readonly property real py: Number(Store.get("osd.y", Store.get("osd.position", "bottom") === "top" ? 0.08 : 0.88))
+    anchors { left: true; top: true }
+    margins { left: Math.round(px * (modelData.width - implicitWidth)); top: Math.round(py * (modelData.height - implicitHeight)) }
+    implicitWidth: vertical ? 64 : 340
+    implicitHeight: vertical ? 300 : 60
     color: "transparent"
     mask: Region {}
     visible: here && (hold.running || pill.opacity > 0.01)
@@ -78,6 +83,27 @@ PanelWindow {
     Rectangle {
         id: pill
         anchors.fill: parent
+        // upright: the level as a bar filling upwards, the number under it
+        Item {
+            visible: osd.vertical
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 64; width: 10; height: parent.height - 64 - 40
+            Rectangle { anchors.fill: parent; radius: 5; color: Theme.control }
+            Rectangle {
+                anchors.bottom: parent.bottom
+                width: parent.width; radius: 5
+                height: osd.kind === "volume" ? parent.height * Math.min(1, osd.audio ? osd.audio.volume : 0) : parent.height
+                color: osd.audio && osd.audio.muted && osd.kind === "volume" ? Theme.faint : Theme.accent
+                Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+            }
+        }
+        Label {
+            visible: osd.vertical
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom; anchors.bottomMargin: 12
+            text: osd.kind === "volume" ? (osd.audio ? Math.round(osd.audio.volume * 100) : "") : ({ caps: osd.caps === 1 ? "On" : "Off", num: osd.num === 1 ? "On" : "Off", airplane: osd.air === 1 ? "On" : "Off" })[osd.kind] || Niri.layoutName.substring(0, 2).toUpperCase()
+            font.pixelSize: Theme.sizeSmall; strong: true
+        }
         radius: Theme.corner(height, 8)
         color: Theme.card
         border.width: 1
@@ -89,15 +115,15 @@ PanelWindow {
 
         Bubble {
             id: ob
-            x: 10
-            anchors.verticalCenter: parent.verticalCenter
+            x: osd.vertical ? (parent.width - width) / 2 : 10
+            y: osd.vertical ? 12 : (parent.height - height) / 2
             size: 40
             on: true
             icon: ({ layout: "keyboard", caps: "keyboard_capslock", num: "pin", airplane: osd.air === 1 ? "airplanemode_active" : "airplanemode_inactive" })[osd.kind]
                 || (osd.audio && (osd.audio.muted || osd.audio.volume === 0) ? "volume_off" : "volume_up")
         }
         Label {
-            visible: osd.kind !== "volume"
+            visible: osd.kind !== "volume" && !osd.vertical
             anchors.left: ob.right; anchors.leftMargin: 14
             anchors.verticalCenter: parent.verticalCenter
             text: osd.kind === "layout" ? Niri.layoutName
@@ -107,7 +133,7 @@ PanelWindow {
             strong: true
         }
         Item {
-            visible: osd.kind === "volume"
+            visible: osd.kind === "volume" && !osd.vertical
             anchors.left: ob.right; anchors.leftMargin: 14
             anchors.right: pct.left; anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
@@ -123,11 +149,19 @@ PanelWindow {
         }
         Label {
             id: pct
-            visible: osd.kind === "volume"
+            visible: osd.kind === "volume" && !osd.vertical
             anchors.right: parent.right; anchors.rightMargin: 16
             anchors.verticalCenter: parent.verticalCenter
             text: osd.audio ? Math.round(osd.audio.volume * 100) + "%" : ""
             font.pixelSize: Theme.sizeSmall
         }
+    }
+
+    // blur behind it (Theme → Effects), shaped like it
+    BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
+    Region {
+        id: blurShape
+        item: osd.visible ? pill : null
+        radius: pill.radius
     }
 }

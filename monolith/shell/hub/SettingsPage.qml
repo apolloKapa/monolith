@@ -17,7 +17,7 @@ Page {
     // [id, title, file in settings/]. HubState.settingsSection is a tab id.
     readonly property var categories: [
         { id: "general", title: "General", icon: "person", tabs: [["general", "You, location & weather", "General"], ["about", "About & updates", "About"]] },
-        { id: "theme", title: "Theme", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Font, icons & cursor", "Appearance"], ["wallpaper", "Wallpaper", "Wallpaper"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Terminal greeting", "Fastfetch"]] },
+        { id: "theme", title: "Theme", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Font, icons & cursor", "Appearance"], ["wallpaper", "Wallpaper", "Wallpaper"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Terminal greeting", "Fastfetch"], ["effects", "Blur & animations", "Effects"]] },
         { id: "bar", title: "Bar", icon: "toolbar", tabs: [["bar", "What's on the bar", "BarLayout"], ["status", "Auto-hide", "Status"]] },
         { id: "menus", title: "Menus & launcher", icon: "apps", tabs: [["menus", "Where menus open", "Menus"], ["search", "Launcher & favourites", "Search"]] },
         { id: "dock", title: "Dock", icon: "dock_to_bottom", tabs: [["dock", "Dock", "Dock"]] },

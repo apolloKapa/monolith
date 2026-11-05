@@ -246,4 +246,12 @@ PanelWindow {
             }
         }
     }
+
+    // blur behind it (Theme → Effects), shaped like it
+    BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
+    Region {
+        id: blurShape
+        item: win.visible ? panel : null
+        radius: panel.radius
+    }
 }

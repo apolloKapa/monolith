@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../../core"
 import "../../ui"
 
@@ -32,6 +33,50 @@ ColumnLayout {
     SettingRow {
         icon: "height"; title: "Height"
         NumberBox { from: 28; to: 72; slideTo: 60; unit: "px"; value: Theme.islandH; onMoved: v => Store.set("bar.height", v) }
+    }
+    SettingRow {
+        visible: Theme.fullBar
+        icon: "width"; title: "Length"; desc: "How much of the screen's width the bar takes (centred)"
+        NumberBox { from: 0.3; to: 1; step: 0.01; decimals: 2; factor: 100; unit: "%"; value: Theme.barLength; onMoved: v => Store.set("bar.length", v) }
+    }
+    SettingRow {
+        visible: !Theme.fullBar
+        icon: "width"; title: "Island width"; desc: "At least this wide (it grows with its modules)"
+        NumberBox { from: 200; to: 2000; slideTo: 1400; step: 10; unit: "px"; value: Theme.islandMinW; onMoved: v => Store.set("bar.minWidth", v) }
+    }
+    SettingRow {
+        icon: "opacity"; title: "Background"; desc: "0 %: the bar disappears and only its modules stay"
+        NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Theme.barOpacity; onMoved: v => Store.set("bar.opacity", v) }
+    }
+    SettingRow {
+        icon: "capsule"; title: "Modules on their own pills"; desc: "Each module gets a small background (good with a see-through bar)"
+        Toggle { checked: Theme.barPills; onToggled: on => Store.set("bar.pills", on) }
+    }
+    SettingRow {
+        icon: "space_bar"; title: "Space between modules"
+        NumberBox { from: 0; to: 30; unit: "px"; value: Number(Store.get("bar.gap", 2)); onMoved: v => Store.set("bar.gap", v) }
+    }
+    SettingRow {
+        icon: "horizontal_distribute"; title: "Space between left, middle and right"
+        NumberBox { from: 0; to: 120; slideTo: 60; unit: "px"; value: Number(Store.get("bar.sectionGap", 14)); onMoved: v => Store.set("bar.sectionGap", v) }
+    }
+    SettingRow {
+        icon: "monitor"; title: "Screens with a bar"; desc: "Menus still open on a screen without one"
+        Row {
+            spacing: 4
+            Repeater {
+                model: Quickshell.screens
+                Pressable {
+                    required property var modelData
+                    readonly property var hidden: Store.get("bar.hiddenScreens", []) || []
+                    readonly property bool on: hidden.indexOf(modelData.name) === -1
+                    height: 32; width: scl.implicitWidth + 24
+                    color: on ? Theme.accentContainer : Theme.control
+                    onClicked: Store.set("bar.hiddenScreens", on ? hidden.concat([modelData.name]) : hidden.filter(x => x !== modelData.name))
+                    Label { id: scl; anchors.centerIn: parent; text: parent.modelData.name; strong: parent.on; font.pixelSize: Theme.sizeSmall }
+                }
+            }
+        }
     }
 
     // ── drag and drop: the bar's three zones, and the modules that aren't on it ──
