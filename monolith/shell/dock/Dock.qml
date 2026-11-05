@@ -31,7 +31,8 @@ PanelWindow {
     readonly property var activeWs: Niri.workspacesOn(modelData.name).find(w => w.is_active)
     readonly property bool emptyWs: !!activeWs && !Niri.workspaceHasWindows(activeWs.id)
     property bool hovering: false
-    readonly property bool enabled: Store.get("dock.enabled", true)
+    // on, and on this screen (Bar → Screens)
+    readonly property bool enabled: Store.get("dock.enabled", true) && (Store.get("dock.hiddenScreens", []) || []).indexOf(modelData.name) === -1
     // when it shows: always, on empty workspaces (and at the bottom edge), or only at the edge
     readonly property string showWhen: Store.get("dock.show", Store.get("dock.onEmpty", true) ? "empty" : "edge")
     readonly property bool shown: enabled && (showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || hovering || leaveDelay.running || menu.visible)

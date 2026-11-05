@@ -44,6 +44,7 @@ Page {
     Label { anchors.centerIn: parent; visible: page.shown.length === 0; text: page.entries.length === 0 ? "The clipboard history is empty" : "Nothing matches"; muted: true }
 
     ListView {
+        SmoothWheel {}
         id: list
         anchors.fill: parent
         clip: true

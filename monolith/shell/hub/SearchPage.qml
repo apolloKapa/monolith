@@ -159,6 +159,7 @@ Page {
     }
 
     GridView {
+        SmoothWheel {}
         id: appGrid
         visible: page.showGrid
         anchors.fill: parent
@@ -186,6 +187,7 @@ Page {
     }
 
     ListView {
+        SmoothWheel {}
         id: list
         visible: !page.showGrid
         anchors.fill: parent

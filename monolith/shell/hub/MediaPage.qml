@@ -79,6 +79,7 @@ Page {
 
     // ── lyrics: the current line big and bright, the rest fading out ──
     ListView {
+        SmoothWheel {}
         id: lyricList
         visible: page.view === "lyrics" && !!page.player
         y: 48
@@ -111,6 +112,7 @@ Page {
         }
     }
     Flickable {
+        SmoothWheel {}
         visible: page.view === "lyrics" && !!page.player && Lyrics.lines.length === 0
         y: 48
         width: parent.width

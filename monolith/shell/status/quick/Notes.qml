@@ -13,6 +13,7 @@ ColumnLayout {
         radius: Theme.corner(80, 4)
         color: Theme.container
         Flickable {
+            SmoothWheel {}
             anchors.fill: parent
             anchors.margins: 12
             contentHeight: nt.implicitHeight
