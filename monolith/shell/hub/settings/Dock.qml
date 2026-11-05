@@ -39,6 +39,10 @@ ColumnLayout {
         NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Number(Store.get("dock.opacity", 1)); onMoved: v => Store.set("dock.opacity", v) }
     }
     SettingRow {
+        icon: "edit"; title: "Edit the dock"; desc: "Reorder (drag), unpin (×) and add apps (+). Or hold an app in the dock for a moment"
+        Button { text: "Edit"; primary: true; icon: "edit"; onClicked: { HubState.editDock(); } }
+    }
+    SettingRow {
         icon: "push_pin"; title: "Pinned apps"; desc: "Right-click an app in the dock to pin or unpin it. Start over from the default list:"
         Button { text: "Reset"; onClicked: Store.set("dock.pinned", null) }
     }
