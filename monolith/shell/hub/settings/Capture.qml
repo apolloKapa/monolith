@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import "../../core"
 import "../../ui"
 
@@ -23,6 +24,40 @@ ColumnLayout {
                 if (f === "" || f === sec.folder) return;
                 sec.path = f + "/" + (sec.pattern || "Screenshot_%Y%m%d_%H%M%S.png");
                 NiriConf.set("-", "screenshot-path", NiriConf.quote(sec.path));
+            }
+        }
+    }
+    // reading text (T in the capture menu): which languages tesseract looks for
+    property var langs: []
+    readonly property var picked: Store.get("capture.ocr", "eng").split("+")
+    Process {
+        running: true
+        command: ["sh", "-c", "tesseract --list-langs 2>/dev/null | tail -n +2"]
+        stdout: StdioCollector { onStreamFinished: sec.langs = text.split("\n").filter(l => l && l !== "osd") }
+    }
+    SettingRow { icon: "translate"; title: "Text languages"; desc: "What reading text looks for (more is slower). Others come with tesseract's language packs" }
+    Rectangle {
+        Layout.fillWidth: true
+        implicitHeight: langFlow.implicitHeight + 20
+        radius: Theme.corner(56, 2)
+        color: Theme.containerHigh
+        Flow {
+            id: langFlow
+            x: 10; y: 10; width: parent.width - 20; spacing: 6
+            Repeater {
+                model: sec.langs
+                Pressable {
+                    required property string modelData
+                    readonly property bool on: sec.picked.indexOf(modelData) !== -1
+                    height: 32; width: ll.implicitWidth + 24
+                    color: on ? Theme.accentContainer : Theme.control
+                    onClicked: {
+                        let p = sec.picked.filter(x => x !== modelData);
+                        if (!on) p = p.concat([modelData]);
+                        if (p.length > 0) Store.set("capture.ocr", p.join("+"));
+                    }
+                    Label { id: ll; anchors.centerIn: parent; text: parent.modelData; strong: parent.on; font.pixelSize: Theme.sizeSmall }
+                }
             }
         }
     }

@@ -10,8 +10,16 @@ ColumnLayout {
         Field { text: Prefs.terminal; placeholder: "kitty -e"; onAccepted: v => { if (v.trim() !== "" && v.trim() !== Prefs.terminal) Store.set("search.terminal", v.trim()); } }
     }
     SettingRow {
-        icon: "trending_up"; title: "Usage ranking"; desc: "Apps you open often come first. Forget what it has learned:"
+        icon: "trending_up"; title: "Usage ranking"; desc: "Apps you open often come first"
+        Toggle { checked: Store.get("search.ranking", true) !== false; onToggled: on => Store.set("search.ranking", on) }
+    }
+    SettingRow {
+        icon: "delete_sweep"; title: "Forget what it learned"; desc: "Start the ranking over"
         Button { text: "Reset"; onClicked: Store.set("launches", {}) }
+    }
+    SettingRow {
+        icon: "format_list_numbered"; title: "Results shown"
+        Segmented { width: 260; opts: [["5", "5"], ["7", "7"], ["10", "10"]]; value: String(Store.get("search.rows", 7)); onPicked: v => Store.set("search.rows", Number(v)) }
     }
     SettingRow {
         icon: "keyboard"; title: "Typing"

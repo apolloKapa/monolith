@@ -14,11 +14,12 @@ Page {
     signal done()
 
     readonly property real rowH: 52
-    readonly property int maxRows: 7
+    readonly property int maxRows: Number(Store.get("search.rows", 7))
     implicitHeight: Math.max(1, Math.min(results.length, maxRows)) * rowH
 
     // how often each app was opened from here, for the order
-    function uses(id) { return Number(Store.get("launches." + id.replace(/\./g, "_"), 0)); }
+    // how often each app was opened (ranks them first), unless that's switched off
+    function uses(id) { return Store.get("search.ranking", true) === false ? 0 : Number(Store.get("launches." + id.replace(/\./g, "_"), 0)); }
     readonly property var apps: { let _ = Store.revision; return DesktopEntries.applications.values.filter(a => !a.noDisplay)
         .slice().sort((a, b) => (uses(b.id) - uses(a.id)) || a.name.localeCompare(b.name)); }
 

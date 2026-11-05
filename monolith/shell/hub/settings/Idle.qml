@@ -30,6 +30,18 @@ ColumnLayout {
         }
     }
     SettingRow {
+        icon: "brightness_low"; title: "Dim first"; desc: "The screens darken this long before locking (move to stop it)"
+        Segmented { width: 300; opts: [["0", "Off"], ["10", "10 s"], ["20", "20 s"], ["60", "1 min"]]; value: String(Idle.dimBefore); onPicked: v => Store.set("idle.dimBefore", Number(v)) }
+    }
+    SettingRow {
+        icon: "bedtime"; title: "Suspend after"; desc: "Put the PC to sleep when you've been away this long"
+        Segmented { width: 330; opts: [["0", "Never"], ["1800", "30 min"], ["3600", "1 hour"], ["7200", "2 hours"]]; value: String(Idle.suspendAfter); onPicked: v => Store.set("idle.suspendAfter", Number(v)) }
+    }
+    SettingRow {
+        icon: "play_circle"; title: "Not while playing"; desc: "Music or video playing counts as being here"
+        Toggle { checked: Idle.mediaPauses; onToggled: on => Store.set("idle.mediaPauses", on) }
+    }
+    SettingRow {
         icon: "music_note"; title: "Media on the lock screen"; desc: "Show what's playing, with play/pause"
         Toggle { checked: Store.get("lock.media", true) !== false; onToggled: on => Store.set("lock.media", on) }
     }

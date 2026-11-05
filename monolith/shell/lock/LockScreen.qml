@@ -172,7 +172,7 @@ WlSessionLock {
             spacing: 14
             opacity: surface.enter
             transform: Translate { y: 40 * (1 - surface.enter) }
-            readonly property string avatar: (Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face")
+            readonly property string avatar: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face"))
 
             Rectangle {
                 id: field

@@ -22,12 +22,10 @@ RowLayout {
 
     // ── state read from the system (polled while open) ──
     property bool wifiOn: false
-    property bool nightOn: false
     property real brightness: -1          // -1: no backlight (desktop)
     property string profile: ""           // power-profiles-daemon: power-saver | balanced | performance
-    function poll() { wifiProc.running = true; nightProc.running = true; briProc.running = true; profProc.running = true; }
+    function poll() { wifiProc.running = true; briProc.running = true; profProc.running = true; }
     Process { id: wifiProc; command: ["nmcli", "-t", "radio", "wifi"]; stdout: StdioCollector { onStreamFinished: cc.wifiOn = text.trim() === "enabled" } }
-    Process { id: nightProc; command: ["pgrep", "-x", "wlsunset"]; onExited: code => cc.nightOn = code === 0 }
     Process {
         id: briProc
         command: ["sh", "-c", "brightnessctl -c backlight -m 2>/dev/null | head -1 | cut -d, -f4"]
@@ -132,11 +130,10 @@ RowLayout {
                 onClicked: Notifs.dnd = !Notifs.dnd
             }
             Tile {
-                icon: "nightlight"; title: "Night light"; on: cc.nightOn
-                onClicked: {
-                    cc.nightOn = !cc.nightOn;
-                    Quickshell.execDetached(cc.nightOn ? ["sh", "-c", "setsid -f wlsunset -t 4000 -T 6500 >/dev/null 2>&1"] : ["pkill", "-x", "wlsunset"]);
-                }
+                icon: "nightlight"; title: "Night light"; on: NightLight.enabled
+                state: NightLight.enabled ? NightLight.temp + " K" : "Off"
+                onClicked: NightLight.toggle()
+                onRightClicked: HubState.openSettings("nightlight")
             }
             Tile {
                 icon: "coffee"; title: "Stay awake"; on: Tasks.awake

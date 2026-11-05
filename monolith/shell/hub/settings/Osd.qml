@@ -17,8 +17,12 @@ ColumnLayout {
         icon: "volume_up"; title: "Volume"
         Toggle { checked: Store.get("osd.show.volume", true) !== false; onToggled: on => Store.set("osd.show.volume", on) }
     }
-    SettingRow {
-        icon: "keyboard"; title: "Keyboard layout"
-        Toggle { checked: Store.get("osd.show.layout", true) !== false; onToggled: on => Store.set("osd.show.layout", on) }
+    Repeater {
+        model: [["layout", "Keyboard layout", "keyboard"], ["caps", "Caps Lock", "keyboard_capslock"], ["num", "Num Lock", "pin"], ["airplane", "Airplane mode", "airplanemode_active"]]
+        SettingRow {
+            required property var modelData
+            icon: modelData[2]; title: modelData[1]
+            Toggle { checked: Store.get("osd.show." + modelData[0], true) !== false; onToggled: on => Store.set("osd.show." + modelData[0], on) }
+        }
     }
 }

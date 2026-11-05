@@ -27,6 +27,13 @@ Singleton {
         popups = popups.filter(p => p.urgency === NotificationUrgency.Critical || (_until[p.id] || 0) > now);
     }
     Timer { interval: 400; repeat: true; running: notifs.popups.length > 0; onTriggered: notifs._expire() }
+    // the sound: your own file (Settings → Notifications), or the system's
+    function playSound(urgent) {
+        const own = Store.get("notifications.soundFile", "");
+        Quickshell.execDetached(["pw-play", own !== "" && !urgent ? own : (urgent
+            ? "/usr/share/sounds/freedesktop/stereo/dialog-warning.oga"
+            : "/usr/share/sounds/freedesktop/stereo/message.oga")]);
+    }
     function clearAll() {
         for (const n of server.trackedNotifications.values.slice()) n.dismiss();
         popups = [];
@@ -44,13 +51,11 @@ Singleton {
             n.tracked = true;
             if (!notifs.dnd || n.urgency === NotificationUrgency.Critical) {
                 const u = Object.assign({}, notifs._until);
-                u[n.id] = Date.now() + (n.expireTimeout > 0 ? n.expireTimeout * 1000 : 6000);
+                u[n.id] = Date.now() + (n.expireTimeout > 0 ? n.expireTimeout * 1000 : Number(Store.get("notifications.timeout", 6)) * 1000);
                 notifs._until = u;
                 notifs.popups = [n].concat(notifs.popups).slice(0, 4);
                 if (Store.get("notifications.sound", true) && !n.hints["suppress-sound"])
-                    Quickshell.execDetached(["pw-play", n.urgency === NotificationUrgency.Critical
-                        ? "/usr/share/sounds/freedesktop/stereo/dialog-warning.oga"
-                        : "/usr/share/sounds/freedesktop/stereo/message.oga"]);
+                    notifs.playSound(n.urgency === NotificationUrgency.Critical);
             }
             n.closed.connect(() => notifs.dismissPopup(n));
         }
