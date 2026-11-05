@@ -52,7 +52,6 @@ PanelWindow {
         "tools":         { icon: "construction",   title: "Tools",         w: 900 },
         "wellbeing":     { icon: "self_improvement", title: "Wellbeing",   w: 860 },
         "keys":          { icon: "keyboard_command_key", title: "Keys",    w: 860 },
-        "wallpaper":     { icon: "wallpaper",      title: "Wallpaper",     w: 860 },
         "settings":      { icon: "settings",       title: "Settings",      w: 860 }
     })
     readonly property Item currentLoader: pages.children.find(l => l.pageId === HubState.page) || null

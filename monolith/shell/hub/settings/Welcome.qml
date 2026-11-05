@@ -31,7 +31,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "wallpaper"; title: "A wallpaper"; desc: "The colours are made from it"
-        Button { text: "Pick one"; onClicked: HubState.page = "wallpaper" }
+        Button { text: "Pick one"; onClicked: HubState.show("wallpaper") }
     }
     SettingRow {
         icon: "rounded_corner"; title: "Corners"

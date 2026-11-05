@@ -25,7 +25,7 @@ ColumnLayout {
             color: Qt.alpha(Theme.frame, 0.85)
             Label { id: wn; anchors.centerIn: parent; text: Wall.path.replace(/^.*\//, "") || "No wallpaper"; font.pixelSize: Theme.sizeSmall }
         }
-        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: HubState.page = "wallpaper" }
+        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: HubState.show("wallpaper") }
     }
     SettingRow {
         icon: "folder"; title: "Folder"; desc: "Where the wallpaper picker looks"
@@ -33,6 +33,6 @@ ColumnLayout {
     }
     SettingRow {
         icon: "wallpaper"; title: "Pick a wallpaper"; desc: Wall.images.length + " pictures and videos. Right-click one there to set it for one screen only"
-        Button { text: "Open"; primary: true; onClicked: HubState.page = "wallpaper" }
+        Button { text: "Open"; primary: true; onClicked: HubState.show("wallpaper") }
     }
 }

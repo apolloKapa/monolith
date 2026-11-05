@@ -21,6 +21,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; CaptureOverlay {} }
     Variants { model: Quickshell.screens; PerfOverlay {} }
     Variants { model: Quickshell.screens; Dim {} }
+    Variants { model: Quickshell.screens; WallpaperPicker {} }
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own

@@ -10,14 +10,22 @@ Singleton {
     property bool open: false
     property string page: "search"
     property string screenName: ""
-    readonly property var pages: ["search", "quick", "notifications", "media", "calendar", "sound", "network", "clipboard", "windows", "capture", "gaming", "tools", "wellbeing", "keys", "wallpaper", "settings"]
+    readonly property var pages: ["search", "quick", "notifications", "media", "calendar", "sound", "network", "clipboard", "windows", "capture", "gaming", "tools", "wellbeing", "keys", "settings"]
+
+    // the wallpaper picker is its own panel in the middle of the screen (wall/WallpaperPicker)
+    property bool wallOpen: false
+    property string wallScreen: ""
+    function showWall(screen) { wallScreen = screen || screenName; open = false; wallOpen = true; }
 
     function show(p, screen) {
+        if (p === "wallpaper") { showWall(screen); return; }
         if (p && pages.indexOf(p) !== -1) page = p;
         if (screen) screenName = screen;
+        wallOpen = false;
         open = true;
     }
     function toggle(p, screen) {
+        if (p === "wallpaper") { if (wallOpen) wallOpen = false; else showWall(screen); return; }
         if (open && (!p || p === page)) { open = false; return; }
         show(p, screen);
     }
