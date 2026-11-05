@@ -1,0 +1,38 @@
+{
+  "installer": {
+    "os": {
+      "error_root": "Error: Do not run this script directly with root/sudo. Run as normal user.",
+      "error_unsupported": "Unsupported OS ({os}). Monolith supports Arch Linux, Gentoo and distros based on them.",
+      "error_not_found": "Cannot detect OS. /etc/os-release not found."
+    },
+    "ui": {
+      "done": "Done",
+      "sddm_title": "=== Display manager (SDDM) setup ===",
+      "sddm_detected_active": "Detected active/enabled display manager: {dm}",
+      "sddm_detected_none": "Detected active/enabled display manager: None",
+      "sddm_opt_install": "Install and configure SDDM (material you theme)",
+      "sddm_opt_disable": "Disable and remove '{dm}'",
+      "sddm_opt_wayland": "Force wayland backend"
+    },
+    "deps": {
+      "syncing": "Synchronizing and updating system packages (pacman -syyu)...",
+      "all_installed": "-> All packages are already installed! Skipping package download phase.",
+      "missing_count": "-> Found {count} missing packages to install.",
+      "installing_title": "Installing system packages and dependencies...",
+      "installing_pkg": "Installing {pkg}...",
+      "install_ok": "Successfully installed {pkg}",
+      "install_failed": "Failed to install {pkg}",
+      "quickshell_outdated": "Quickshell {version} is too old, {minimum} or newer is required. Upgrading...",
+      "quickshell_still_old": "Quickshell is still older than {minimum}. Update it manually, otherwise settings will not open."
+    },
+    "deploy": {
+      "configuring_sddm": "Configuring SDDM display manager...",
+      "disabling_dm": "-> Disabling conflicting display manager: {dm}",
+      "sddm_success": "-> SDDM material you theme installed and service enabled [ OK ]",
+      "sddm_no_wayland_compositor": "No supported Wayland greeter compositor found (kwin_wayland/weston), falling back to X11 for SDDM.",
+      "sddm_no_xorg": "Xorg not found, using {compositor} for SDDM.",
+      "sddm_no_backend": "Neither Xorg nor a supported Wayland greeter compositor (kwin_wayland/weston) was found in /usr/local/bin, /usr/bin or /bin.",
+      "sddm_skipped": "Skipping SDDM setup: no usable display server or greeter compositor found. The current display manager is left unchanged."
+    }
+  }
+}

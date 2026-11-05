@@ -4,25 +4,17 @@
 
 My Linux desktop (Arch or Gentoo): [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri config, keybinds and helper scripts.
 
-Monolith started as a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) by [@ilyamiro](https://github.com/ilyamiro) and has since been reworked.
-
 ---
 
 ## Preview
 
-**Styles**: one click in Settings → Theme → Appearance restyles the whole shell (bar, dock, panels and Settings itself)
+**Quick**: volume, toggles and power, one of the hub's pages
 
-![Switching styles](docs/media/styles.gif)
+![Quick](docs/media/quick.jpg)
 
-**Panels**: launcher, quick settings and notifications, wallpaper picker, music player
+**Settings**, also in the hub
 
-![Panels](docs/media/panels.gif)
-
-**Settings**
-
-![Settings](docs/media/settings.gif)
-
-Sharper MP4 versions are in [`docs/media`](docs/media).
+![Settings](docs/media/settings.jpg)
 
 ---
 
@@ -34,7 +26,7 @@ One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...) or on G
 curl -fsSL https://raw.githubusercontent.com/apolloKapa/monolith/main/install/get.sh | bash
 ```
 
-Once it's installed, **`monolith installer`** opens the installer again to update, reinstall or change options. Settings → About → Update does the same.
+Once it's installed, **`monolith installer`** opens the installer again to update, reinstall or change options. Settings → About → Update does the same, and the status line shows when there's an update.
 
 ### What the installer does
 
@@ -53,17 +45,17 @@ Then it:
 
 1. installs the packages, plus the Iosevka Nerd Font:
    - **Arch**: official repos via pacman, AUR via yay/paru (it builds yay if you have neither)
-   - **Gentoo**: Portage, all built from source. It enables the `::guru` overlay (niri, Quickshell, matugen, ...) and `::librewolf`, and keeps its Portage settings in `/etc/portage/package.use/monolith`, `package.accept_keywords/monolith` and `zz-monolith-autounmask` files. Those `monolith` files are rewritten on every update, so put your own lines in other files. Installed packages whose USE flags Monolith changes are rebuilt (util-linux gets `caps` for `setpriv`), and LibreWolf is pinned to the LLVM your Rust was built with, so it doesn't drag in a chain of older Rust versions. wooz and wl-gammarelay-rs have no ebuild, so they're built from source into `~/.local`. A fresh install syncs Portage but doesn't run a full `@world` update; run `sudo emerge -avuDN @world` yourself when you like. Settings → Software shows a **Portage** page (world set, `--depclean`, distfiles) in place of Pacman and AUR
-2. installs the shell into `~/.local/share/monolith` and links `monolith` and `monolithd` into `~/.local/bin`
+   - **Gentoo**: Portage, all built from source. It enables the `::guru` overlay (niri, Quickshell, matugen, ...) and `::librewolf`, and keeps its Portage settings in `/etc/portage/package.use/monolith`, `package.accept_keywords/monolith` and `zz-monolith-autounmask` files. Those `monolith` files are rewritten on every update, so put your own lines in other files. Installed packages whose USE flags Monolith changes are rebuilt (util-linux gets `caps` for `setpriv`), and LibreWolf is pinned to the LLVM your Rust was built with, so it doesn't drag in a chain of older Rust versions. wooz and wl-gammarelay-rs have no ebuild, so they're built from source into `~/.local`. A fresh install syncs Portage but doesn't run a full `@world` update; run `sudo emerge -avuDN @world` yourself when you like.
+2. installs the shell into `~/.local/share/monolith` and links `monolith` into `~/.local/bin` (an older install's classic shell and `monolithd` are replaced)
 3. puts the bundled icon packs (YAMIS) into `~/.local/share/icons`, keeping any of the same name you added yourself
 4. adds `/etc/pam.d/monolith`, so the lock screen can check your password
 5. writes the niri config (old one backed up) and generates the display and workspace setup from the monitors it finds
 6. sets up SDDM and wallpapers, if picked (the SDDM theme is off by default when you already use another one)
-7. creates `~/.config/monolith/settings.json` from the defaults in `config/monolith/settings.json` (an existing one is kept)
+7. creates `~/.config/monolith/settings.json` from the defaults in `config/monolith/settings.json` (an existing one is kept); the shell reads its dock apps, terminal, font and wallpaper folder from it until you change them in Settings
 8. enables PipeWire, NetworkManager, power-profiles-daemon and EasyEffects
 9. **starts Monolith right away** if you run it from inside niri (from any other session it waits until you log into niri), so no reboot is needed
 
-**Other shells stay as they are.** Monolith is a separate shell with its own files, and it only runs in niri. If Serpantinum (or anything else) is installed, it isn't stopped, moved or edited, and your Hyprland/Sway/other configs aren't touched. If Serpantinum is there, Monolith also leaves kitty and cava's colours to it (you can change that in Settings → Theme → Apps). fastfetch always gets Monolith's look; the config that was there before is kept as `~/.config/fastfetch/config.jsonc.pre-monolith`. The installer also makes kitty show it when it opens: fish gets `~/.config/fish/conf.d/monolith-fastfetch.fish`, bash/zsh a marked block at the end of `~/.bashrc`/`~/.zshrc` (skipped if your shell already runs fastfetch; remove it and updates won't add it back).
+**Other shells stay as they are.** Monolith is a separate shell with its own files, and it only runs in niri. If Serpantinum (or anything else) is installed, it isn't stopped, moved or edited, and your Hyprland/Sway/other configs aren't touched. fastfetch always gets Monolith's look; the config that was there before is kept as `~/.config/fastfetch/config.jsonc.pre-monolith`. The installer also makes kitty show it when it opens: fish gets `~/.config/fish/conf.d/monolith-fastfetch.fish`, bash/zsh a marked block at the end of `~/.bashrc`/`~/.zshrc` (skipped if your shell already runs fastfetch; remove it and updates won't add it back).
 
 There's no telemetry in the installer or the shell.
 
@@ -71,19 +63,19 @@ There's no telemetry in the installer or the shell.
 
 ## Where to change things
 
-niri reloads its config as soon as you save, so keybind/monitor/layout edits apply right away. The files below are in `~/.config/niri/config/`; the repo copies are in `monolith/compositors/niri/config/` (edit those too if you want the change on every machine).
+niri reloads its config as soon as you save, so keybind/monitor/layout edits apply right away. The files below are in `~/.config/niri/config/`; the repo copies are in `config/niri/config/` (edit those too if you want the change on every machine).
 
 | What | Where |
 |---|---|
 | **Keybinds** | `keybinds.kdl` (`Mod+Shift+/` lists them all) |
-| **Monitors**: resolution, refresh rate, position, scale, rotation, on/off | `output.kdl` (`niri msg outputs` shows names and modes). Settings → Display sets resolution, refresh rate and rotation here (applied live, kept only once you confirm, otherwise it goes back after 15 s); `monolith installer` regenerates this file from your current setup |
+| **Monitors**: resolution, refresh rate, position, scale, rotation, on/off | `output.kdl` (`niri msg outputs` shows names and modes). Settings → Displays sets on/off, resolution, refresh rate and scale here; `monolith installer` regenerates this file from your current setup |
 | **Workspaces** (and which monitor they live on) | `workspaces.kdl` |
-| **Keyboard layouts, mouse, touchpad, cursor** | `input.kdl` |
+| **Keyboard layouts, mouse, touchpad, cursor** | `input.kdl`, or Settings → Keyboard & mouse / Appearance |
 | **Apps that start with niri** | `autostart.kdl` |
-| **Gaps, column widths, window borders, animations** | `layout.kdl`, or Settings → Theme → Windows / Animations |
+| **Gaps, column widths, window borders, animations** | `layout.kdl` |
 | **Window rules** (floating, sizes, rounded corners) | `rules.kdl` |
 | **Environment variables** | `env.kdl` |
-| **Shell look**: theme, style, font, bar, dock, launcher, notifications, idle | Settings (`Mod+S`), saved in `~/.config/monolith/settings.json` |
+| **The shell**: colours, corners, font, status line, dock, widgets, notifications, idle, startup apps | Settings (`Mod+S`), saved in `~/.config/monolith/next.json` |
 | **Wallpapers** | `~/Pictures/Wallpapers`, pick with `Mod+W` |
 | **Helper scripts** (focuswin, snap, ...) | `~/.local/bin` (repo: `bin/`) |
 
@@ -91,91 +83,38 @@ After editing a niri file, `niri validate` tells you if something's wrong.
 
 ## The shell
 
-Everything below is built in.
+Two things on screen:
 
-**Bar**: top or side. The default style is **Frame**: the bar runs into a solid frame around the whole screen with rounded inner corners, windows tile inside it, and popups open as drawers pulled out of the frame (attached to the bar and the screen edge, sliding out of it; an attached dock becomes part of the frame too). Other styles: modular / solid / fill, or the **Island**: one pill at the top of each screen with workspaces, the time, what's playing and unread notifications, which unfolds on hover into workspace buttons, the player, the date and shortcuts. Autohide. Modules: workspaces, media, time & date, weather, system info, tray, Wi-Fi, Bluetooth, volume, battery, keyboard layout, system monitor (CPU/RAM/temp/disk), audio visualizer, current window, quick buttons. Editable in Settings → Bar.
+- **The status line**: a thin row across the top (or bottom) of each screen, on a soft fade instead of a bar: time, date and weather, workspaces, the focused window, now playing, system stats, tray, network, notifications and volume. Each part opens its page. Its middle is the **island**: while a recording runs or the timer counts down it shows that (click a recording to stop it), and it says when there's an update.
+- **The hub**: one floating card that holds every page. Opening another page morphs the card into it instead of opening a new panel. Type on any page to search; Tab / Shift+Tab move between pages, Esc closes.
 
-**Dock**: pinned and running apps, any edge. Auto-hide, smart auto-hide (hides while windows are open), or smart auto-hide with **Dodge windows**: stays up with windows open and only hides when a window is over it; while covered, push the cursor to that screen edge to bring it back.
+The pages:
 
-**Launcher** (`Mod+Z` / `Mod+Space`): tabs for apps (with smart ranking), files and emojis.
+| Page | What's on it |
+|---|---|
+| Search | apps (the ones you open most come first), `>` a command in the terminal, `:` emojis, `/` or `~` files, a calculator |
+| Quick | volume and mic, Wi-Fi, Bluetooth, night light, stay awake, airplane mode, keyboard layout, lock / suspend / log out / reboot / power off |
+| Notifications | history, actions, do not disturb |
+| Media | the player, synced lyrics (LRCLIB), a 10-band equaliser (EasyEffects) |
+| Calendar | the month, the weather now, by hour and by day |
+| Sound | outputs, inputs, each app's volume |
+| Network | Wi-Fi (connect, forget, passwords), Ethernet, Bluetooth devices |
+| Clipboard | text and image history |
+| Windows | every window, switch or close |
+| Capture | screenshots (region, screen, window), text from a region (OCR), screen recording |
+| Tools | timer, notes, unit converter |
+| Wellbeing | screen time per app, the week, daily limits |
+| Keys | every niri keybind, searchable |
+| Wallpaper | pictures and videos (also per screen); the colours come from the wallpaper (matugen) |
+| Settings | appearance, wallpaper, status line, dock, desktop widgets, search, notifications, on-screen display, displays, keyboard & mouse, lock & idle, screenshots, software (startup apps, AppImages), wellbeing, about |
 
-**Panels and popups**:
-
-- System panel (`Mod+D`): user card, volume and brightness, toggles (night light, caffeine, Wi-Fi, Bluetooth, airplane), notification centre, lock / suspend / reboot / power off, power profiles
-- Notifications: popups, history, do-not-disturb, sounds
-- Network (`Mod+N`): Wi-Fi, Bluetooth, Ethernet
-- Volume mixer (`Mod+V`)
-- Music (`Mod+Alt+M`): player controls, synced lyrics, cover art
-- Clipboard history (`Mod+Alt+C`)
-- Calendar
-- On-screen display for volume, brightness, caps/num lock, airplane mode and keyboard layout switches (each one can be turned off)
-- Quick actions: calculator, notes, timer, drawing, system usage, dock
-- Workspace overview (`monolith msg toggle overview`): every monitor's workspaces with their windows drawn to scale in niri's columns; click to jump, type to search windows and apps
-- Dashboard (`monolith msg toggle dashboard`): clock, weather, month, what's playing, recent notifications, a pomodoro timer and a todo list
-- Window switcher (`monolith msg toggle switcher`): windows on every workspace, most recent first; Tab / arrows, Enter (or let go of Alt when bound to an Alt combo)
-- Keybind cheatsheet (`monolith msg toggle cheatsheet`): every keybind in your niri config, grouped and searchable
-- Session screen (`monolith msg toggle session`): lock, log out, suspend, hibernate, reboot, shut down (the last ones ask twice)
-
-None of these have keybinds by default, so your niri config stays as it is; bind them in `keybinds.kdl`, e.g. `Mod+Tab { spawn "monolith" "msg" "toggle" "switcher"; }`.
-
-**Wallpapers** (`Mod+W`): picker with transitions, video wallpapers, and online search (DuckDuckGo, only when you search).
-
-**Desktop widgets**: clock, music, system usage, weather, battery, image, GitHub contributions, user, calendar, visualizer. There's a drag-and-drop widget editor.
-
-**Lock screen** (`Mod+L`): password and fingerprint. Layout editor for avatar, user, battery, keyboard layout, notifications and lock status.
-
-**Idle**: dim, screen off, lock and suspend timers, with media/inhibitor awareness.
-
-**Other**: screenshots (region / window / full, with editing, copy text out of them with OCR), polkit password prompts, blue-light filter, brightness (incl. external monitors via ddcutil), first-launch intro and tutorial, 23 languages.
-
-**Settings** (`Mod+S`, or *Monolith Settings* in the app launcher) opens in its own window, with search and full keyboard navigation (Tab, arrows, Enter):
-
-- Welcome
-- General: language, location, weather units, sounds, and **Online** features (all off until you switch them on): song recognition
-- Display: monitors (resolution, refresh rate, rotation, scale, on/off, night light; resolution, refresh rate and rotation are saved to niri's config and go back by themselves unless you confirm them, like KDE), widgets, lock screen
-- Theme: 97 colour presets, colours from your wallpaper (matugen), fonts, corner radius, opacity, and the **style**, picked from a preview grid:
-  - **Blur**, **Liquid glass**: see-through, your colours
-  - **Minimalist**: flat, square, grey outlines (my old Quickshell look)
-  - **Terminal**: phosphor green on black, monospace, thin accent frames
-  - **Brutal**: cream, thick ink outlines, hard shadows, Space Grotesk
-  - **Luxe**: black chassis, ivory text, gold detail
-  - **Poster**: carbon plates, signal yellow, bold square frames
-  - **Bubbly**: extra-round corners, keeps your colours
-  - **Paper**: ink on paper, serif type (Lora), fine rules
-  - **Shadow**: grey cards, JetBrains Mono, no colour (after shadoww.dev's DarkShadow's Shell); goes with the **Shadow** widget preset (stacked clock, greeting card, usage cards, calendar)
-- Theme → Apps: GTK, Qt, foot, alacritty, btop and rofi can follow Monolith's colours; switching one off puts its config back exactly as it was
-- Theme → Fastfetchlings: fastfetch looks you switch between with a click, each tile showing what fastfetch prints with it. New and Edit open the preset in a terminal editor, and Picture shows an image of yours instead of the logo (kitty); presets live in `~/.config/monolith/fastfetch` and can use theme colours (`{{primary}}`, `{{mauve}}`...)
-- Theme → Effects: **Unfold** (popups open from a thin line, like an old screen switching on), **Edge light** (a soft light along each panel's top) and **Grain** (faint film grain on panels), all on by default
-- Theme → Animations: animations on/off, Slow / Normal / Fast, fine speed (50–200%), live preview, the same speed for niri's window animations, and **GameMode** (no animations, blur or glass while a fullscreen window has focus)
-- Theme → Windows: niri window borders on/off, width, colours for focused / other / attention windows (theme swatches or any hex), or follow the theme's colours automatically
-- Theme → Icons: pick the icon pack (Papirus, Breeze, Adwaita... whatever's installed, with a preview of each) for Qt and GTK apps and Monolith's own launcher, dock and overview, or give **one app** its own icon (search every pack, or pick an image file); it goes in that app's `.desktop` copy in `~/.local/share/applications`, so other launchers and menus show it too, and *Use original* undoes it
-- Bar: general and modules
-- Launcher, Dock, On-screen display, Notifications
-- Screenshots → Capture: capture as soon as you let go of the mouse, OCR languages (downloaded only when you install one)
-- Screenshots → Keys: the screenshot tool's keys (capture, copy, edit, cancel, photo/video, whole screen)
-- Wellbeing: screen-time stats, and daily time limits per app (a reminder when you hit one)
-- Idle
-- About: your system, update button
-
-### What Monolith changes
-
-- **Minimalist style**, next to Blur and Liquid glass in Settings → Theme. Flat opaque panels, square corners, 2px `#555` outlines, white accent with inverted hover, JetBrains Mono. It's my old Quickshell look. The squares and outlines only apply while Minimalist is picked; every other style is unchanged.
-- **Private**:
-  - no telemetry
-  - no IP geolocation and no reverse geocoding; weather uses the location you set in Settings → General and only sends those coordinates to open-meteo
-  - online extras are off until you turn them on (Settings → General → Online): **song recognition** records 8 seconds of what your speakers play and sends an audio fingerprint to Shazam (through `songrec`)
-  - lyrics only from lrclib (NetEase removed)
-  - things that still go online only do so when you use them: lyrics, YouTube cover art, the GitHub widget, wallpaper search, the Wi-Fi login-page button
-- **Its own look and voice**: Monolith logo, horizon intro ("really good desktop :3"), Lith the sleepy slab mascot (replaces the Pusheen GIFs), own name and paths
-- **Installer**: niri-focused, with my keybinds as defaults, generated display/workspace config, `monolith installer`
-- **Animation controls**: one speed setting for every shell animation (and optionally niri's), or turn them off
-- **Updates** come from this repo (no automatic update checks)
+Also: the dock (pinned and open apps, right-click menu), notification pop-ups, the on-screen display, desktop widgets (clock, weather, now playing, calendar, system usage, notes, a picture), the lock screen, idle lock and screens off, and a polkit agent. The first start shows a short welcome.
 
 ---
 
 ## niri config
 
-Modular config in `~/.config/niri/` (source: `monolith/compositors/niri/`):
+Modular config in `~/.config/niri/` (source: `config/niri/`):
 
 | File | Contents |
 |---|---|
@@ -185,11 +124,11 @@ Modular config in `~/.config/niri/` (source: `monolith/compositors/niri/`):
 | `config/output.kdl` | **generated**: each monitor's current mode, position, scale, rotation; disabled monitors set to `off` |
 | `config/workspaces.kdl` | **generated**: workspaces 1 to 10 on the main monitor, `d2-1` to `d2-10` on a second one, each pinned to its monitor so they return there after it was off |
 | `config/layout.kdl` | 10px gaps, column presets, 2px white/grey borders, no focus ring, no hot corners, snappy spring animations |
-| `config/autostart.kdl` | only what Monolith needs: clipboard history + `monolithd start`. Add your own apps here; when the installer replaces the niri config it keeps the startup apps you had |
+| `config/autostart.kdl` | only what Monolith needs: clipboard history + `monolith start --login` (the shell, and your startup apps from Settings → Software). Add your own apps here; when the installer replaces the niri config it keeps the startup apps you had |
 | `config/keybinds.kdl` | the keybinds below |
 | `config/rules.kdl` | rounded window corners, Steam toasts as notifications |
 
-The installer reads displays from the running niri. If you install from a TTY, nothing is pinned and niri picks each monitor's preferred mode; run `monolith installer` from inside niri later to pin the layout. The Display page in Settings can also change resolution, refresh rate and rotation, and saves them.
+The installer reads displays from the running niri. If you install from a TTY, nothing is pinned and niri picks each monitor's preferred mode; run `monolith installer` from inside niri later to pin the layout. Settings → Displays can also change resolution, refresh rate and scale, and saves them.
 
 ## Keybinds
 
@@ -203,24 +142,24 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `Mod+B` | browser (LibreWolf) |
 | `Mod+E` | files (Thunar) |
 | `Mod+Escape` | Mission Center |
-| `Mod+Z` / `Mod+Space` | launcher |
-| `Mod+Tab` | window switcher |
+| `Mod+Z` / `Mod+Space` | the hub: search apps, files (`/`, `~`), emojis (`:`), commands (`>`) |
+| `Mod+Tab` | windows (switcher and overview) |
 | `Mod+Alt+V` | clipboard history |
-| `Mod+Ctrl+Z` | zoom (wooz) |
-| `Mod+Ctrl+scroll` | zoom in (up) and back out (down), at the mouse, like KDE |
+| `Mod+Ctrl+scroll` | zoom (wooz): up opens it, scroll inside to zoom, down closes it |
 
 **Monolith**
 
 | Key | Action |
 |---|---|
-| `Mod+D` | system panel |
-| `Mod+S` / `Mod+Alt+H` | settings |
-| `Mod+N` | network |
-| `Mod+V` | volume mixer |
-| `Mod+A` | bar autohide |
-| `Mod+Alt+C` | clipboard |
-| `Mod+Alt+M` | music |
-| `Mod+W` / `Mod+Alt+W` | wallpapers |
+| `Mod+D` | Quick (volume, toggles, power) |
+| `Mod+S` / `Mod+Alt+H` | Settings |
+| `Mod+N` | Network |
+| `Mod+V` | Sound |
+| `Mod+A` | status line auto-hide |
+| `Mod+Alt+C` | Clipboard |
+| `Mod+X` / `Mod+Alt+M` | Media |
+| `Mod+P` | Keys (every keybind) |
+| `Mod+W` / `Mod+Alt+W` | Wallpaper |
 | `Mod+L` / `Mod+Alt+L` | lock |
 | `Mod+Ctrl+Alt+L` | swaylock |
 
@@ -269,7 +208,6 @@ The installer reads displays from the running niri. If you install from a TTY, n
 | `Shift+Print` | screenshot a region and open it in the editor |
 | `Ctrl+Print` / `Mod+Print` | screenshot the whole screen |
 | `Alt+Print` | whole screen, then the editor |
-| inside the screenshot tool | `Enter` save + copy, **`Ctrl+C` copy only**, `Ctrl+E` edit, `Tab` photo/video, `F11` whole screen, `Esc` cancel (change them in Settings → Screenshots) |
 | media / volume / mic / brightness keys | work as labelled (also on the lock screen) |
 | `Mod+M`, `Mod+Shift+E`, `Ctrl+Alt+Delete` | quit niri |
 
@@ -279,21 +217,15 @@ The installer reads displays from the running niri. If you install from a TTY, n
 |---|---|
 | `monolith installer` | open the installer (update, reinstall, change options) |
 | `monolith installer --update` | update without the menu (what Settings → About → Update runs) |
-| `monolithd start` / `stop` / `status` | run / stop the shell |
-| `monolith restart` / `kill` | restart / stop the shell |
-| `monolith settings [tab]` | open the settings window (on a tab, e.g. `monolith settings about`) |
-| `monolith config get\|set\|dump\|edit` | read or change settings from the terminal |
-| `monolith msg toggle <panel>` | open/close `launcher`, `system`, `settings`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `overview`, `dashboard`, `switcher`, `cheatsheet`, `session`, `autohide` |
-| `monolith recognize` | what's this song? (when song recognition is on) |
-| `monolith ipc call island toggle` | unfold / fold the island (Island bar style) |
-| `monolith msg workspace <n> [move]` | go to / move to workspace |
-| `monolith lock` | lock screen |
-| `monolith screenshot [--full] [--edit] [--ocr]` | screenshot (`--ocr` copies the text in it) |
-| `monolith volume raise\|lower\|mute-toggle\|mic-toggle` | volume with on-screen display |
-| `monolith brightness raise\|lower` | brightness with on-screen display |
-| `monolith reload` | reload the shell |
-| `monolith location_manual <lat> <lon> [city]` | set your location for weather |
-| `monolith -v ...` | verbose output |
+| `monolith start` / `stop` / `restart` | run / stop / restart the shell |
+| `monolith msg toggle <page>` | open/close a hub page: `launcher`, `system`, `settings`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `switcher`, `cheatsheet`, `emoji`, `autohide`, … |
+| `monolith settings [section]` | open Settings (e.g. `monolith settings display`) |
+| `monolith search <text>` | open Search with text typed (`:smile`, `~/Documents`) |
+| `monolith lock` | lock the screen |
+| `monolith screenshot [--full] [--edit]` | screenshot |
+| `monolith timer <minutes>` / `record [region]` | start a timer / start or stop recording |
+| `monolith set <setting> <json>` / `get <setting>` | change or read a setting, e.g. `monolith set status.position '"bottom"'` |
+| `monolith migrate` | move an older niri config (the classic shell's `monolithd`) over to this shell |
 
 Helper scripts in `bin/` (installed to `~/.local/bin`):
 
@@ -303,47 +235,48 @@ Helper scripts in `bin/` (installed to `~/.local/bin`):
 
 | Path | Contents |
 |---|---|
-| `install/` | the installer: `get.sh` (one-command), `install.sh`, `modules/` |
+| `install/` | the installer: `get.sh` (one-command), `install.sh`, `modules/`, `strings.json` |
 | `install.sh` | runs `install/install.sh` from a clone |
-| `monolith/bin/` | `monolith` and `monolithd` |
-| `monolith/src/` | the shell: QML (`quickshell/`), scripts, assets (themes, fonts, sounds, languages, shaders) |
-| `monolith/compositors/niri/` | the niri config |
-| `monolith/sddm/` | the SDDM login theme |
-| `config/monolith/settings.json` | default shell settings |
+| `monolith/bin/monolith` | the command |
+| `monolith/shell/` | the shell: `core/` (services), `hub/` (the pages; `hub/settings/` the Settings sections), `status/`, `dock/`, `wall/`, `lock/`, `ui/` (shared parts), `scripts/` |
+| `monolith/SPEC.md` | the design and the feature list |
+| `monolith/dev/nested.sh` | runs the shell in a nested niri window, for trying changes |
+| `config/niri/` | the niri config |
+| `sddm/` | the SDDM login theme |
+| `config/monolith/settings.json` | default settings |
 | `bin/` | helper scripts |
-| `docs/media/` | the preview clips in this README (GIF + MP4) |
+| `docs/media/` | the previews in this README |
 
-Installed files: shell in `~/.local/share/monolith`; settings in `~/.config/monolith`; state, cache and logs in `~/.local/state/monolith`, `~/.cache/monolith` and `$XDG_RUNTIME_DIR/monolith`.
+Installed files: the shell in `~/.local/share/monolith`; settings in `~/.config/monolith` (`next.json`); state in `~/.local/state/monolith`.
 
 ## Updating the repo
 
 **Publishing a Monolith update** (shell or installer changes):
 
 1. edit the files under `monolith/` or `install/`
-2. bump the version in `monolith/version.txt` (e.g. `1.2.0` → `1.3.0`)
-3. commit and push to the branch your machines install from (`monolith` right now; it's in `~/.local/share/monolith/install/source.env`)
+2. bump the version in `monolith/version.txt`
+3. commit and push to the branch your machines install from (it's in `~/.local/share/monolith/install/source.env`)
 
-Every machine checks once an hour. When the version on GitHub is newer, you get a notification and Settings → About shows **Update available**. **Update** opens a terminal and runs `monolith installer --update`: it refreshes the shell and scripts, installs any new dependencies, keeps your settings, niri config, login screen and wallpapers, and restarts the shell. You can also run `monolith installer --update` yourself any time.
+Every machine checks every few hours. When GitHub has a newer commit, the status line says so and Settings → About shows it; **Update** runs `monolith installer --update`, which refreshes the shell, installs any new dependencies, keeps your settings, niri config, login screen and wallpapers, and restarts the shell.
 
 While the repo is private, the update check goes through the GitHub CLI (`gh auth login` once per machine).
 
-**Your own config changes**: niri files live in `monolith/compositors/niri/config/` (don't commit `output.kdl` / `workspaces.kdl`, they're generated per machine); helper scripts in `bin/`.
+**Your own config changes**: niri files live in `config/niri/config/` (don't commit `output.kdl` / `workspaces.kdl`, they're generated per machine); helper scripts in `bin/`.
 
 ## Troubleshooting
 
-- **Bar or panels don't appear:** run `monolith -v restart` in a terminal to see errors. Logs are in `$XDG_RUNTIME_DIR/monolith/logs`.
-- **`qs: command not found`:** `sudo pacman -S quickshell qt6-wayland`.
-- **No weather:** Monolith finds your location automatically from your internet connection (city level, through ipapi.co or ipwho.is; the IP isn't kept) and looks again every few hours. Offline, or if you'd rather not, set it yourself in Settings → General: a location you set is never replaced, except by the Detect button there.
-- **Wrong monitor layout:** run `monolith installer` from inside niri, or edit `~/.config/niri/config/output.kdl`, then `niri validate`.
-- **Lock screen won't accept your password:** check `/etc/pam.d/monolith` exists (the installer adds it). If you're ever stuck, switch to a TTY (Ctrl+Alt+F3), log in, and run `monolithd stop`.
+- **Nothing on screen:** run `quickshell -p ~/.local/share/monolith/shell/shell.qml` in a terminal to see errors.
+- **No weather:** the location comes from your internet connection (city level).
+- **Wrong monitor layout:** Settings → Displays, or run `monolith installer` from inside niri, or edit `~/.config/niri/config/output.kdl`, then `niri validate`.
+- **Lock screen won't accept your password:** check `/etc/pam.d/monolith` exists (the installer adds it). If you're ever stuck, switch to a TTY (Ctrl+Alt+F3), log in, and run `monolith stop`.
 
 ## Licence
 
 Copyright (C) 2026 apolloKapa
 
-Monolith is based on Serpantinum, copyright (C) its author [@ilyamiro](https://github.com/ilyamiro), and is licensed under the [GNU AGPL-3.0](LICENSE), like Serpantinum. You can use, change and share it; if you share a modified version (or run it for others over a network), share its source under the same licence.
+**The shell** (`monolith/`) is written from scratch and licensed under the [GNU GPL-3.0](monolith/LICENSE).
 
-Modified extensively by apolloKapa since May 2026; see the commit history for every change.
+Monolith's earlier versions were a fork of [Serpantinum](https://github.com/ilyamiro/serpantinum) by [@ilyamiro](https://github.com/ilyamiro) (GNU AGPL-3.0). That shell is gone; the installer and the rest of this repo grew out of that version and stay under the [GNU AGPL-3.0](LICENSE).
 
 The YAMIS icon pack (`config/icons/YAMIS`, "yet another monochrome icon set") is by [Dirn](https://bitbucket.org/dirn-typo/yet-another-monochrome-icon-set), licensed under the GNU GPL-3.0, and ships unchanged.
 

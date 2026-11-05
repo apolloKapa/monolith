@@ -12,13 +12,6 @@ C_RED=$'\e[31m'
 IS_REINSTALL=false
 NIRI_MODE=replace
 WALLPAPERS=random
-# which shell runs: "next" (the rewrite, ~/.local/share/monolith-next) or "classic". Fresh
-# installs get the new one; an existing install keeps what it has until you pick otherwise.
-SHELL_CHOICE="$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/monolith/shell" 2>/dev/null)"
-case "$SHELL_CHOICE" in
-    next|classic) ;;
-    *) [ -f "${XDG_STATE_HOME:-$HOME/.local/state}/monolith/version" ] && SHELL_CHOICE=classic || SHELL_CHOICE=next ;;
-esac
 
 OPT_SDDM=true
 # another login screen theme is set up already (e.g. Serpantinum's): leave it unless asked
@@ -253,10 +246,7 @@ run_installer_ui() {
         stty -echo 2>/dev/null || true
         printf "\e[?25l\e[?7l"
 
-        local niri_label wp_label shell_label
-        [ "$SHELL_CHOICE" = next ] \
-            && shell_label="${C_GREEN}[new]${RESET}" \
-            || shell_label="${DIM}[classic]${RESET}"
+        local niri_label wp_label
         [ "$NIRI_MODE" = replace ] \
             && niri_label="${C_GREEN}[replace, backup kept]${RESET}" \
             || niri_label="${DIM}[keep mine]${RESET}"
@@ -268,13 +258,12 @@ run_installer_ui() {
 
         local labels=(
             "Packages overview"
-            "Shell: the new one (one hub card) or the classic one $shell_label"
             "Apps for the keybinds (kitty, librewolf, thunar, mission center) $(on_off "$OPT_KEYBIND_APPS")"
             "niri config (keybinds, displays, workspaces) $niri_label"
             "Login screen (SDDM theme) $(on_off "$OPT_SDDM")"
             "Wallpapers $wp_label"
         )
-        local actions=(packages shell keybind_apps niri sddm wallpapers)
+        local actions=(packages keybind_apps niri sddm wallpapers)
         if [ "$INSTALL_STATE" = current ]; then
             labels+=("${BOLD}${C_GREEN}Update${RESET}" "${BOLD}${C_YELLOW}Reinstall (fresh settings)${RESET}" "${DIM}Exit${RESET}")
             actions+=(install reinstall exit)
@@ -310,7 +299,6 @@ run_installer_ui() {
 
         case "$chosen" in
             packages) show_package_overview ;;
-            shell) SHELL_CHOICE=$([ "$SHELL_CHOICE" = next ] && echo classic || echo next) ;;
             keybind_apps) OPT_KEYBIND_APPS=$([ "$OPT_KEYBIND_APPS" = true ] && echo false || echo true) ;;
             niri) NIRI_MODE=$([ "$NIRI_MODE" = replace ] && echo keep || echo replace) ;;
             sddm) manage_sddm_menu ;;
@@ -340,7 +328,7 @@ draw_completion_screen() {
     else
         printf "  Log in to %sniri%s and Monolith starts by itself.\n" "$BOLD" "$RESET"
     fi
-    [ "$SHELL_CHOICE" = next ] && printf "  You have the %snew shell%s: Super+Space opens the hub. %smonolith-next back%s returns to the classic one.\n" "$BOLD" "$RESET" "$BOLD" "$RESET"
+    printf "  Super+Space opens the hub: search, settings and everything else.\n"
     printf "  Run %smonolith installer%s any time to update or change these choices.\n\n" "$BOLD" "$RESET"
 
     local choice=""

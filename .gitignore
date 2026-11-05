@@ -1,6 +1,6 @@
 # generated per machine by the installer
-monolith/compositors/niri/config/output.kdl
-monolith/compositors/niri/config/workspaces.kdl
+config/niri/config/output.kdl
+config/niri/config/workspaces.kdl
 
 # my personal package lists (kept local, not shared)
 packages.txt
@@ -10,4 +10,5 @@ bin/osu-wine
 bin/cosu-launch.sh
 bin/roblox-studio-mcp
 bin/gparted-dark
+__pycache__/
 __pycache__/
