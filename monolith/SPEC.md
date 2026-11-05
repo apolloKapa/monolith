@@ -110,3 +110,10 @@ Other surfaces
 5. Replaced the classic shell (2026-11-05): `next/` became `monolith/`, `monolith-next` became
    `monolith`, the installer installs only this shell and `monolith migrate` moves older niri
    configs (monolithd, the old zoom script) over.
+6. Restyle (2026-11-05), after studying IridiumShell (MIT; nothing copied): the status line and the
+   hub card became the island (a shape hanging from the top edge, growing into each page);
+   control center with controls / overview / monitor; notifications drop out of the island;
+   compact search; capture menu (frozen screens, selection, photo/video actions); lock screen
+   with blurred wallpaper, island, big clock, notifications and media; coverflow wallpaper
+   picker; gaming page (game mode, telemetry graphs, performance overlay); Settings previews
+   (screen arrangement, icon packs, cursors, fonts, wallpaper). Google Sans by default.

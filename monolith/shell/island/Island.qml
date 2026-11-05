@@ -37,7 +37,7 @@ PanelWindow {
     MouseArea { anchors.fill: parent; enabled: win.shown; onClicked: HubState.close() }
 
     readonly property var pageInfo: ({
-        "search":        { icon: "search",         title: "Search",        w: 680 },
+        "search":        { icon: "search",         title: "Search",        w: 640 },
         "quick":         { icon: "page_info",      title: "Control center", w: 1040 },
         "notifications": { icon: "notifications",  title: "Notifications", w: 680 },
         "media":         { icon: "music_note",     title: "Media",         w: 720 },
@@ -47,6 +47,7 @@ PanelWindow {
         "clipboard":     { icon: "content_paste",  title: "Clipboard",     w: 680 },
         "windows":       { icon: "select_window",  title: "Windows",       w: 860 },
         "capture":       { icon: "screenshot_region", title: "Capture",    w: 680 },
+        "gaming":        { icon: "sports_esports", title: "Gaming",        w: 960 },
         "tools":         { icon: "construction",   title: "Tools",         w: 900 },
         "wellbeing":     { icon: "self_improvement", title: "Wellbeing",   w: 860 },
         "keys":          { icon: "keyboard_command_key", title: "Keys",    w: 860 },
@@ -58,18 +59,28 @@ PanelWindow {
 
     readonly property real pad: Theme.islandPad
     readonly property real fieldH: 46
-    readonly property real tabsH: 38
+    // Search is compact: no tab row (Tab still moves to the other pages, and they show it)
+    readonly property bool compact: HubState.page === "search"
+    readonly property real tabsH: compact ? 0 : 38
     // the body's size: the bar's when collapsed, the page's when open
     readonly property real openW: Math.max(bar.implicitWidth, (pageInfo[HubState.page] || pageInfo.search).w)
-    readonly property real openH: Math.min(height - 40, Theme.islandH + fieldH + 8 + tabsH + 10 + (currentPage ? currentPage.implicitHeight : 200) + pad)
+    readonly property real openH: Math.min(height - 40, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
     readonly property real restW: Math.max(Theme.islandMinW, bar.implicitWidth)
+
+    // a new notification drops out of the island (on the screen you're using) while it's closed
+    readonly property bool toastScreen: Niri.focusedOutput !== "" ? Niri.focusedOutput === modelData.name : (Quickshell.screens.length > 0 && modelData === Quickshell.screens[0])
+    readonly property bool toastOn: !shown && toastScreen && Notifs.popups.length > 0 && Store.get("notifications.style", "island") !== "corner"
+    readonly property var toast: Notifs.popups.length > 0 ? Notifs.popups[0] : null
+    // pages stay loaded while the island shrinks back after being open (not for a toast)
+    property bool wasOpen: false
 
     // ── the island ──
     IslandShape {
         id: island
-        bodyW: win.shown ? win.openW : win.restW
-        height: win.shown ? win.openH : Theme.islandH
-        r: win.shown ? Theme.islandRadius : height / 2
+        bodyW: win.shown ? win.openW : (win.toastOn ? Math.max(win.restW, 520) : win.restW)
+        height: win.shown ? win.openH : (win.toastOn ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
+        r: win.shown || win.toastOn ? Theme.islandRadius : height / 2
+        onHeightChanged: if (!win.shown && height <= Theme.islandH + 1) win.wasOpen = false
         x: Math.round((win.width - width) / 2)
         y: win.tucked ? -Theme.islandH + 3 : 0
         Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
@@ -97,6 +108,35 @@ PanelWindow {
                 trayWindow: win
                 x: Math.round((body.width - width) / 2)
                 width: implicitWidth
+            }
+
+            // ── a new notification, while closed ──
+            Column {
+                id: toastArea
+                x: win.pad
+                y: Theme.islandH
+                width: body.width - 2 * win.pad
+                spacing: 6
+                opacity: win.toastOn ? 1 : 0
+                visible: opacity > 0.01
+                Behavior on opacity { NumberAnimation { duration: win.toastOn ? 260 : 120 } }
+                HoverHandler { onHoveredChanged: Notifs.hold = hovered }
+                Loader {
+                    width: parent.width
+                    active: win.toast !== null
+                    sourceComponent: NotificationCard {
+                        notif: win.toast
+                        onClosed: Notifs.dismissPopup(win.toast)
+                    }
+                }
+                Pressable {
+                    visible: Notifs.popups.length > 1
+                    width: moreLabel.implicitWidth + 24
+                    height: 26
+                    color: Theme.containerHigh
+                    onClicked: HubState.toggle("notifications", win.modelData.name)
+                    Label { id: moreLabel; anchors.centerIn: parent; text: "+" + (Notifs.popups.length - 1) + " more"; font.pixelSize: Theme.sizeSmall; strong: true }
+                }
             }
 
             // ── open: the search field, the page tabs, the page ──
@@ -157,8 +197,10 @@ PanelWindow {
                 Item {
                     id: tabs
                     y: field.height + 8
+                    visible: !win.compact
+                    clip: true
                     width: parent.width
-                    height: win.tabsH
+                    height: 38
                     readonly property real gap: 4
                     readonly property real iconW: Math.min(46, (width - 170 - gap * (HubState.pages.length - 1)) / (HubState.pages.length - 1))
                     readonly property real wideW: width - (HubState.pages.length - 1) * (iconW + gap)
@@ -212,7 +254,7 @@ PanelWindow {
                 // and let go once it closes
                 Item {
                     id: pages
-                    y: tabs.y + tabs.height + 10
+                    y: win.compact ? field.height + 8 : tabs.y + tabs.height + 10
                     width: parent.width
                     height: parent.height - y
                     Repeater {
@@ -239,9 +281,9 @@ PanelWindow {
     }
 
     // open, or still shrinking back
-    readonly property bool open: shown || island.height > Theme.islandH + 2
+    readonly property bool open: shown || wasOpen
 
-    onShownChanged: if (shown) { query.text = HubState.preset; HubState.preset = ""; query.forceActiveFocus(); }
+    onShownChanged: if (shown) { wasOpen = true; query.text = HubState.preset; HubState.preset = ""; query.forceActiveFocus(); }
     Connections {
         target: HubState
         function onPresetRequested() { if (win.shown && HubState.preset !== "") { query.text = HubState.preset; HubState.preset = ""; } }

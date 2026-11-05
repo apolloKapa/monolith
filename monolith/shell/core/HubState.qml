@@ -10,7 +10,7 @@ Singleton {
     property bool open: false
     property string page: "search"
     property string screenName: ""
-    readonly property var pages: ["search", "quick", "notifications", "media", "calendar", "sound", "network", "clipboard", "windows", "capture", "tools", "wellbeing", "keys", "wallpaper", "settings"]
+    readonly property var pages: ["search", "quick", "notifications", "media", "calendar", "sound", "network", "clipboard", "windows", "capture", "gaming", "tools", "wellbeing", "keys", "wallpaper", "settings"]
 
     function show(p, screen) {
         if (p && pages.indexOf(p) !== -1) page = p;

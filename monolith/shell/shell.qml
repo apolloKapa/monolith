@@ -19,6 +19,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; Popups {} }
     Variants { model: Quickshell.screens; Osd {} }
     Variants { model: Quickshell.screens; CaptureOverlay {} }
+    Variants { model: Quickshell.screens; PerfOverlay {} }
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own

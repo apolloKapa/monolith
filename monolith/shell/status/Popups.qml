@@ -24,7 +24,8 @@ PanelWindow {
     implicitHeight: 720
     mask: Region { item: stack }
     color: "transparent"
-    visible: here && Notifs.popups.length > 0
+    // only when they're set to pop up in a corner; by default they drop out of the island
+    visible: here && Notifs.popups.length > 0 && Store.get("notifications.style", "island") === "corner"
 
     HoverHandler { onHoveredChanged: Notifs.hold = hovered }
 
