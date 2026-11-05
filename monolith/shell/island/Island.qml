@@ -70,7 +70,8 @@ PanelWindow {
 
     // where menus open (Settings → Menus): out of the island (top), or as a floating card in
     // the middle of the screen or on the right; then the island stays a bar
-    readonly property string place: Store.get("menus.position", "top")
+    // (each menu can have its own place, Settings → Menus & launcher)
+    readonly property string place: Store.get("menus.positions." + HubState.page, "") || Store.get("menus.position", "top")
     readonly property bool docked: place === "top"
     // the island grows into the menu; a full-width bar stays put and the menu drops out of it
     readonly property bool grown: shown && docked && !Theme.fullBar
