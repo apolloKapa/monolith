@@ -115,7 +115,7 @@ Item {
                         radius: 4.5
                         anchors.verticalCenter: parent.verticalCenter
                         color: active ? Theme.accent : (busy ? Theme.subtext : Theme.control)
-                        Behavior on width { SpringAnimation { spring: Theme.springK; damping: Theme.springDamp; epsilon: 0.3 } }
+                        Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                         Behavior on color { ColorAnimation { duration: 200 } }
                         MouseArea { anchors.fill: parent; anchors.margins: -4; cursorShape: Qt.PointingHandCursor; onClicked: Niri.focusWorkspace(parent.modelData.idx) }
                     }

@@ -22,7 +22,7 @@ input {
         }
     }
 }
-spawn-at-startup "quickshell" "-p" "$here/shell/shell.qml"
+spawn-at-startup "quickshell" "-p" "${SHELL_QML:-$here/shell/shell.qml}"
 spawn-at-startup "kitty"
 prefer-no-csd
 hotkey-overlay {

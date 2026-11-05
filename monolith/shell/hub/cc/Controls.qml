@@ -55,7 +55,7 @@ RowLayout {
             anchors.verticalCenter: parent.verticalCenter
             radius: tile.on ? 14 : 21
             color: tile.on ? Theme.accent : Theme.control
-            Behavior on radius { SpringAnimation { spring: Theme.springK; damping: Theme.springDamp; epsilon: 0.2 } }
+            Behavior on radius { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
             Behavior on color { ColorAnimation { duration: 200 } }
             Icon { anchors.centerIn: parent; name: tile.icon; size: 21; filled: tile.on; color: tile.on ? Theme.onAccent : Theme.text }
         }
