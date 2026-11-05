@@ -214,6 +214,7 @@ PanelWindow {
         color: Theme.frame
         border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
         Flickable {
+            SmoothWheel { horizontal: true }
             anchors.fill: parent; anchors.margins: 12
             contentWidth: pal.implicitWidth
             clip: true

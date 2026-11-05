@@ -144,6 +144,7 @@ ColumnLayout {
         color: Theme.containerHigh
         clip: true
         Flickable {
+            SmoothWheel {}
             anchors.fill: parent
             anchors.margins: 10
             contentHeight: fontFlow.implicitHeight

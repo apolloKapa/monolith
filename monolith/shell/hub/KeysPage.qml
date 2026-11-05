@@ -58,6 +58,7 @@ Page {
     Label { anchors.centerIn: parent; visible: page.shown.length === 0; text: page.binds.length === 0 ? "No keybinds found" : "Nothing matches"; muted: true }
 
     GridView {
+        SmoothWheel {}
         anchors.fill: parent
         clip: true
         cellWidth: width / 2

@@ -100,6 +100,7 @@ Page {
         Card {
             Label { x: 16; y: 14; text: "Notes"; strong: true }
             Flickable {
+                SmoothWheel {}
                 x: 12; y: 40
                 width: parent.width - 24
                 height: parent.height - 52

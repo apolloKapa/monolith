@@ -52,6 +52,7 @@ Page {
     }
 
     ListView {
+        SmoothWheel {}
         id: list
         y: head.height + 8
         width: parent.width

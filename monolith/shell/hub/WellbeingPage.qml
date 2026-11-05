@@ -44,6 +44,7 @@ Page {
                 Label { text: Wellbeing.fmt(Wellbeing.todayTotal); font.pixelSize: 34; font.weight: Font.Light }
             }
             ListView {
+                SmoothWheel {}
                 x: 10
                 y: todayHead.y + todayHead.height + 10
                 width: parent.width - 20

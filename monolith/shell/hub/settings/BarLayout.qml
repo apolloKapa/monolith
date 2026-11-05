@@ -61,22 +61,8 @@ ColumnLayout {
         NumberBox { from: 0; to: 120; slideTo: 60; unit: "px"; value: Number(Store.get("bar.sectionGap", 14)); onMoved: v => Store.set("bar.sectionGap", v) }
     }
     SettingRow {
-        icon: "monitor"; title: "Screens with a bar"; desc: "Menus still open on a screen without one"
-        Row {
-            spacing: 4
-            Repeater {
-                model: Quickshell.screens
-                Pressable {
-                    required property var modelData
-                    readonly property var hidden: Store.get("bar.hiddenScreens", []) || []
-                    readonly property bool on: hidden.indexOf(modelData.name) === -1
-                    height: 32; width: scl.implicitWidth + 24
-                    color: on ? Theme.accentContainer : Theme.control
-                    onClicked: Store.set("bar.hiddenScreens", on ? hidden.concat([modelData.name]) : hidden.filter(x => x !== modelData.name))
-                    Label { id: scl; anchors.centerIn: parent; text: parent.modelData.name; strong: parent.on; font.pixelSize: Theme.sizeSmall }
-                }
-            }
-        }
+        icon: "monitor"; title: "Screens with a bar"; desc: "Bar → Screens"
+        Button { text: "Open"; onClicked: HubState.settingsSection = "barscreens" }
     }
 
     // ── drag and drop: the bar's three zones, and the modules that aren't on it ──

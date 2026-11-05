@@ -214,6 +214,7 @@ PanelWindow {
 
             // ── grid ──
             GridView {
+                SmoothWheel {}
                 id: grid
                 visible: !win.coverflow
                 y: head.height + 12
