@@ -6,7 +6,13 @@ import "../core"
 // with your fingers. (Qt's own wheel scrolling flicks, which feels slow and floaty.)
 WheelHandler {
     id: sw
-    readonly property var flick: parent
+    // the list it scrolls: inside a Flickable a handler ends up on its content item, so this
+    // walks up to the first item that actually scrolls
+    readonly property var flick: {
+        let p = parent;
+        while (p && (p.contentY === undefined || p.flickableDirection === undefined)) p = p.parent;
+        return p;
+    }
     property real step: 110                 // pixels per wheel notch
     property bool horizontal: false
     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
@@ -19,9 +25,9 @@ WheelHandler {
     }
     onWheel: event => {
         const f = flick;
-        if (!f) return;
+        if (!f) { event.accepted = false; return; }
         const [lo, hi] = limits();
-        if (hi <= lo) { event.accepted = false; return; }
+        if (!(hi > lo)) { event.accepted = false; return; }
         const pos = horizontal ? f.contentX : f.contentY;
         let next;
         if (event.pixelDelta.y !== 0 || event.pixelDelta.x !== 0) {
