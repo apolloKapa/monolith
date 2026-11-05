@@ -176,7 +176,7 @@ PanelWindow {
         radius: Theme.corner(height, 12)
         color: Theme.frame
         layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY }
+        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY; shadowHorizontalOffset: Theme.shadowX }
         // drags on the toolbar don't start a selection
         MouseArea { anchors.fill: parent }
         Row {

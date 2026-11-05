@@ -75,8 +75,8 @@ PanelWindow {
         Behavior on y { NumberAnimation { duration: dock.shown ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         radius: Theme.corner(height, 8)
         color: Qt.alpha(Theme.card, Number(Store.get("dock.opacity", 1)))
-        border.width: 1
-        border.color: Theme.hairline
+        border.width: Math.max(1, Theme.outlineW)
+        border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
 
         Row {
             id: appsRow

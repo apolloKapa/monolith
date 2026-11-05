@@ -11,6 +11,8 @@ Rectangle {
     height: 40
     radius: Theme.corner(height)
     color: Theme.container
+    border.width: Theme.outlineW
+    border.color: Theme.outlineColor
     readonly property real cellW: (width - 8) / Math.max(1, opts.length)
     Rectangle {
         y: 4

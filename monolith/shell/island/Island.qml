@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
@@ -65,7 +66,13 @@ PanelWindow {
     // the body's size: the bar's when collapsed, the page's when open
     readonly property real openW: Math.max(bar.implicitWidth, (pageInfo[HubState.page] || pageInfo.search).w)
     readonly property real openH: Math.min(height - 40, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
-    readonly property real restW: Math.max(Theme.islandMinW, bar.implicitWidth)
+    readonly property real restW: Theme.fullBar ? width : Math.max(Theme.islandMinW, bar.implicitWidth)
+
+    // where menus open (Settings → Menus): out of the island (top), or as a floating card in
+    // the middle of the screen or on the right; then the island stays a bar
+    readonly property string place: Store.get("menus.position", "top")
+    readonly property bool docked: place === "top"
+    readonly property bool grown: shown && docked
 
     // a new notification drops out of the island (on the screen you're using) while it's closed
     readonly property bool toastScreen: Niri.focusedOutput !== "" ? Niri.focusedOutput === modelData.name : (Quickshell.screens.length > 0 && modelData === Quickshell.screens[0])
@@ -77,9 +84,10 @@ PanelWindow {
     // ── the island ──
     IslandShape {
         id: island
-        bodyW: win.shown ? win.openW : (win.toastOn ? Math.max(win.restW, 520) : win.restW)
-        height: win.shown ? win.openH : (win.toastOn ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
-        r: win.shown || win.toastOn ? Theme.islandRadius : height / 2
+        bodyW: win.grown ? win.openW : (win.toastOn ? Math.max(win.restW, 520) : win.restW)
+        height: win.grown ? win.openH : (win.toastOn ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
+        r: win.grown || win.toastOn ? Theme.islandRadius : (Theme.fullBar ? 0 : height / 2)
+        ear: Theme.fullBar && !win.grown ? 0 : Theme.islandEar
         onHeightChanged: if (!win.shown && height <= Theme.islandH + 1) win.wasOpen = false
         x: Math.round((win.width - width) / 2)
         y: win.tucked ? -Theme.islandH + 3 : 0
@@ -106,8 +114,8 @@ PanelWindow {
                 id: bar
                 screenName: win.modelData.name
                 trayWindow: win
-                x: Math.round((body.width - width) / 2)
-                width: implicitWidth
+                x: Theme.fullBar ? 0 : Math.round((body.width - width) / 2)
+                width: Theme.fullBar ? body.width : implicitWidth
             }
 
             // ── a new notification, while closed ──
@@ -142,10 +150,12 @@ PanelWindow {
             // ── open: the search field, the page tabs, the page ──
             Item {
                 id: openArea
+                // in the island, or in the floating card
+                parent: win.docked ? body : floatCard
                 x: win.pad
-                y: Theme.islandH + 2
-                width: body.width - 2 * win.pad
-                height: body.height - y - win.pad
+                y: win.docked ? Theme.islandH + 2 : win.pad
+                width: parent.width - 2 * win.pad
+                height: parent.height - y - win.pad
                 opacity: win.shown ? 1 : 0
                 visible: opacity > 0.01
                 Behavior on opacity { NumberAnimation { duration: win.shown ? 260 : 90 } }
@@ -278,6 +288,32 @@ PanelWindow {
                 }
             }
         }
+    }
+
+    // ── the floating card (menus in the middle or on the right) ──
+    Rectangle {
+        id: floatCard
+        visible: !win.docked && opacity > 0.01
+        width: win.openW + 2 * win.pad
+        height: win.openH - Theme.islandH + win.pad
+        Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+        x: win.place === "right" ? win.width - width - 16 : Math.round((win.width - width) / 2)
+        y: win.place === "right" ? Theme.islandH + 14 : Math.round((win.height - height) / 2)
+        radius: Theme.islandRadius
+        color: Theme.frame
+        border.width: Theme.outlineW
+        border.color: Theme.outlineColor
+        opacity: win.shown ? 1 : 0
+        scale: win.shown ? 1 : 0.94
+        transformOrigin: win.place === "right" ? Item.TopRight : Item.Center
+        Behavior on opacity { NumberAnimation { duration: win.shown ? 220 : 160 } }
+        Behavior on scale { NumberAnimation { duration: win.shown ? Theme.springMs : 160; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.springCurve : Theme.exitCurve } }
+        layer.enabled: true
+        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY; shadowHorizontalOffset: Theme.shadowX }
+        MouseArea { anchors.fill: parent }
+        // pages let go once it has faded out
+        onOpacityChanged: if (!win.shown && opacity < 0.01) win.wasOpen = false
     }
 
     // open, or still shrinking back

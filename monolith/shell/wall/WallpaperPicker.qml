@@ -65,7 +65,7 @@ PanelWindow {
         scale: 0.4 + 0.6 * Math.min(1, win.t / 0.2)
         opacity: Math.min(1, win.t * 4)
         layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY }
+        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY; shadowHorizontalOffset: Theme.shadowX }
         MouseArea { anchors.fill: parent }   // clicks on the panel stay on it
 
         // the bubble's icon, until it opens up
