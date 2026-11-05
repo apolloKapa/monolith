@@ -34,6 +34,123 @@ ColumnLayout {
 
     Label { visible: sec.outputs.length === 0; text: "Looking for displays…"; muted: true }
 
+    // ── arrangement: the screens that are on, drawn where they sit; drag one to move it ──
+    SettingRow {
+        icon: "drag_pan"; title: "Arrangement"
+        desc: arr.dirty ? "Moved. Apply to keep it (niri moves the screens at once)" : "Drag a screen; it settles against the others (no gaps, no overlaps)"
+        Row {
+            spacing: 6
+            Button { visible: arr.dirty; text: "Reset"; onClicked: arr.reset() }
+            Button { text: "Apply"; primary: true; enabledInput: arr.dirty; opacity: arr.dirty ? 1 : 0.5; onClicked: arr.apply() }
+        }
+    }
+    Rectangle {
+        id: arr
+        Layout.fillWidth: true
+        Layout.preferredHeight: 240
+        radius: Theme.corner(80, 6)
+        color: Theme.container
+        clip: true
+
+        // the screens that are on: { name, w, h } in logical pixels, and where each one is
+        readonly property var mons: sec.outputs.filter(o => o.logical).map(o => ({ name: o.name, w: o.logical.width, h: o.logical.height, model: (o.make + " " + o.model).trim() }))
+        property var pos: ({})          // name -> [x, y]
+        property bool dirty: false
+        function reset() {
+            const p = {};
+            for (const o of sec.outputs) if (o.logical) p[o.name] = [o.logical.x, o.logical.y];
+            pos = p; dirty = false;
+        }
+        Connections { target: sec; function onOutputsChanged() { if (!arr.dirty) arr.reset(); } }
+
+        // the preview's scale and offset: everything fits with a margin
+        readonly property var box: {
+            let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+            for (const m of mons) { const p = pos[m.name]; if (!p) continue; x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]); x1 = Math.max(x1, p[0] + m.w); y1 = Math.max(y1, p[1] + m.h); }
+            if (x0 > x1) return { x0: 0, y0: 0, s: 0.1 };
+            const s = Math.min((width - 60) / (x1 - x0), (height - 40) / (y1 - y0));
+            return { x0: x0 - ((width - (x1 - x0) * s) / 2) / s, y0: y0 - ((height - (y1 - y0) * s) / 2) / s, s: s };
+        }
+
+        // where `name` (w × h) can go near (x, y): touching another screen along at least 200 px
+        // of edge, overlapping none; the closest such spot
+        function settle(name, x, y) {
+            const me = mons.find(m => m.name === name);
+            const others = mons.filter(m => m.name !== name && pos[m.name]);
+            if (!me || others.length === 0) return [x, y];
+            const w = me.w, h = me.h, share = 200;
+            const cands = [];
+            const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+            for (const o of others) {
+                const [ox, oy] = pos[o.name];
+                for (const cy of [oy, oy + o.h - h, oy + (o.h - h) / 2, clamp(y, oy - h + share, oy + o.h - share)]) {
+                    cands.push([ox - w, cy]); cands.push([ox + o.w, cy]);
+                }
+                for (const cx of [ox, ox + o.w - w, ox + (o.w - w) / 2, clamp(x, ox - w + share, ox + o.w - share)]) {
+                    cands.push([cx, oy - h]); cands.push([cx, oy + o.h]);
+                }
+            }
+            const overlaps = (cx, cy) => others.some(o => { const [ox, oy] = pos[o.name]; return cx < ox + o.w - 0.5 && cx + w > ox + 0.5 && cy < oy + o.h - 0.5 && cy + h > oy + 0.5; });
+            let best = [x, y], bd = 1e18;
+            for (const [cx, cy] of cands) {
+                if (overlaps(cx, cy)) continue;
+                const d = (cx - x) * (cx - x) + (cy - y) * (cy - y);
+                if (d < bd) { bd = d; best = [Math.round(cx), Math.round(cy)]; }
+            }
+            return best;
+        }
+        function moved(name, x, y) {
+            const p = Object.assign({}, pos);
+            p[name] = settle(name, x, y);
+            // the top-left screen at 0,0
+            const minX = Math.min(...Object.values(p).map(v => v[0])), minY = Math.min(...Object.values(p).map(v => v[1]));
+            for (const k in p) p[k] = [p[k][0] - minX, p[k][1] - minY];
+            pos = p; dirty = true;
+        }
+        function apply() {
+            for (const m of mons) if (pos[m.name]) NiriConf.set("output " + NiriConf.quote(m.name), "position", "x=" + Math.round(pos[m.name][0]) + " y=" + Math.round(pos[m.name][1]));
+            dirty = false;
+        }
+
+        Repeater {
+            model: arr.mons
+            Rectangle {
+                id: mon
+                required property var modelData
+                readonly property var p: arr.pos[modelData.name] || [0, 0]
+                readonly property bool dragging: drag.active
+                function place() {
+                    x = Qt.binding(() => (mon.p[0] - arr.box.x0) * arr.box.s);
+                    y = Qt.binding(() => (mon.p[1] - arr.box.y0) * arr.box.s);
+                }
+                Component.onCompleted: place()
+                width: modelData.w * arr.box.s
+                height: modelData.h * arr.box.s
+                radius: 8
+                color: dragging ? Theme.accentContainer : Theme.containerHigh
+                border.width: 2
+                border.color: dragging ? Theme.accent : Theme.ringTrack
+                z: dragging ? 2 : 1
+                Behavior on x { enabled: !mon.dragging; NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
+                Behavior on y { enabled: !mon.dragging; NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
+                Column {
+                    anchors.centerIn: parent
+                    width: parent.width - 12
+                    Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: mon.modelData.name; strong: true }
+                    Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: mon.modelData.w + " × " + mon.modelData.h; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
+                    Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: mon.modelData.model; muted: true; font.pixelSize: Theme.sizeSmall - 2; visible: parent.parent.height > 70 }
+                }
+                DragHandler {
+                    id: drag
+                    target: mon
+                    // the drag sets x/y itself; on release the screen settles and follows the layout again
+                    onActiveChanged: if (!active) { arr.moved(mon.modelData.name, mon.x / arr.box.s + arr.box.x0, mon.y / arr.box.s + arr.box.y0); mon.place(); }
+                }
+            }
+        }
+        Label { visible: arr.mons.length === 0; anchors.centerIn: parent; text: "No screens found"; muted: true }
+    }
+
     Repeater {
         model: sec.outputs
         Rectangle {
@@ -48,7 +165,20 @@ ColumnLayout {
                 for (const m of o.modes) { const k = m.width + "x" + m.height; if (!seen[k]) { seen[k] = 1; out.push(k); } }
                 return out.sort((a, b) => Number(b.split("x")[0]) * Number(b.split("x")[1]) - Number(a.split("x")[0]) * Number(a.split("x")[1])).slice(0, 6);
             }
-            readonly property var rates: cur ? o.modes.filter(m => m.width === cur.width && m.height === cur.height).sort((a, b) => b.refresh_rate - a.refresh_rate).slice(0, 4) : []
+            // the rates at the current size, one per whole Hz (119.88 and 120 are both "120 Hz")
+            readonly property var rates: {
+                if (!cur) return [];
+                const seen = {}, out = [];
+                for (const m of o.modes.filter(m => m.width === cur.width && m.height === cur.height).sort((a, b) => b.refresh_rate - a.refresh_rate)) {
+                    const hz = Math.round(m.refresh_rate / 1000);
+                    if (seen[hz]) continue;
+                    seen[hz] = true;
+                    out.push(m);
+                }
+                // the current one is always there
+                if (!out.some(m => m.refresh_rate === cur.refresh_rate)) out[out.findIndex(m => Math.round(m.refresh_rate / 1000) === Math.round(cur.refresh_rate / 1000))] = cur;
+                return out.slice(0, 5);
+            }
             Layout.fillWidth: true
             implicitHeight: col.implicitHeight + 24
             radius: Theme.corner(80, 8)
@@ -106,8 +236,5 @@ ColumnLayout {
                 }
             }
         }
-    }
-    SettingRow {
-        icon: "drag_pan"; title: "Arrangement"; desc: "Where the screens sit next to each other is kept in niri's config/output.kdl (position x= y=)"
     }
 }
