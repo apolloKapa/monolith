@@ -38,10 +38,17 @@ Singleton {
         onRunningChanged: { tasks.recSeconds = 0; if (!running) tasks.recordingSaved(); }
     }
     Timer { interval: 1000; repeat: true; running: rec.running; onTriggered: tasks.recSeconds++ }
-    // the hub gets out of the way first (the caller closes it), then recording starts
-    function startRecording(region) {
+    // what to record: true = pick a region now (slurp), false = the whole screen, a geometry
+    // string "x,y wxh" (the capture overlay's selection), or { output: "DP-1" }.
+    // The hub gets out of the way first (the caller closes it), then recording starts.
+    function startRecording(target) {
         const name = recDir + "/Recording_" + Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss") + ".mp4";
-        rec.command = ["sh", "-c", "mkdir -p \"$1\" && " + (region ? "g=$(slurp) || exit 1; exec wf-recorder -g \"$g\" -f \"$2\"" : "exec wf-recorder -f \"$2\""), "_", recDir, name];
+        let how = "exec wf-recorder -f \"$2\"";
+        if (target === true) how = "g=$(slurp) || exit 1; exec wf-recorder -g \"$g\" -f \"$2\"";
+        else if (typeof target === "string") how = "exec wf-recorder -g \"$3\" -f \"$2\"";
+        else if (target && target.output) how = "exec wf-recorder -o \"$3\" -f \"$2\"";
+        const arg = typeof target === "string" ? target : (target && target.output ? target.output : "");
+        rec.command = ["sh", "-c", "mkdir -p \"$1\" && " + how, "_", recDir, name, arg];
         recDelay.restart();
     }
     function stopRecording() { if (rec.running) rec.signal(2); }

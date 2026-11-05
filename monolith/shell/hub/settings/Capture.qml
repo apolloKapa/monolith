@@ -27,5 +27,6 @@ ColumnLayout {
         }
     }
     SettingRow { icon: "videocam"; title: "Recordings"; desc: "Screen recordings go to " + Tasks.recDir + ". While one runs, the island at the top shows it; click it to stop." }
-    SettingRow { icon: "keyboard"; title: "Keys"; desc: "Print: region  ·  Ctrl+Print: screen  ·  Shift+Print: region, then edit  ·  Alt+Print: screen, then edit" }
+    SettingRow { icon: "keyboard"; title: "Keys"; desc: "Print: the capture menu (freezes the screen; pick an area, then save, copy, edit, read the text or a QR code, or record it)  ·  Ctrl+Print: the whole screen at once  ·  Shift+Print: the menu, Enter opens the editor  ·  Alt+Print: the whole screen in the menu, Enter opens the editor" }
+    SettingRow { icon: "ads_click"; title: "In the menu"; desc: "Drag: an area  ·  drag inside it: move  ·  corners: resize  ·  F: whole screen  ·  Tab: photo / video  ·  Enter: save (or record)  ·  Ctrl+C: copy  ·  E: edit  ·  T: text  ·  Q: QR code  ·  Esc: cancel" }
 }

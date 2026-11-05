@@ -8,6 +8,7 @@ import "hub"
 import "dock"
 import "wall"
 import "lock"
+import "capture"
 
 // Monolith: the island on every screen (bar + every page), the dock, notification popups, the OSD.
 ShellRoot {
@@ -17,6 +18,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; Dock {} }
     Variants { model: Quickshell.screens; Popups {} }
     Variants { model: Quickshell.screens; Osd {} }
+    Variants { model: Quickshell.screens; CaptureOverlay {} }
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own
