@@ -8,6 +8,9 @@ import Quickshell.Io
 Singleton {
     id: tasks
 
+    // stay awake (control center): an idle inhibitor held by the island's reserve strip
+    property bool awake: false
+
     // ── timer ──
     property int total: 0
     property int remaining: 0

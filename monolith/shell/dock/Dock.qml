@@ -67,9 +67,7 @@ PanelWindow {
         width: appsRow.width + 16
         height: cell + 16
         anchors.horizontalCenter: parent.horizontalCenter
-        // above the status line when that sits at the bottom
-        readonly property real lift: Store.get("status.position", "top") === "bottom" && Store.get("status.autohide", false) !== true ? 40 : 0
-        y: dock.shown ? parent.height - height - 12 - lift : parent.height + 8
+        y: dock.shown ? parent.height - height - 12 : parent.height + 8
         Behavior on y { NumberAnimation { duration: dock.shown ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         radius: Theme.corner(height, 8)
         color: Theme.card

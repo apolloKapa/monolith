@@ -11,3 +11,6 @@ Segmented 1.0 Segmented.qml
 Field 1.0 Field.qml
 Button 1.0 Button.qml
 ChipFlow 1.0 ChipFlow.qml
+IslandShape 1.0 IslandShape.qml
+Card 1.0 Card.qml
+Ring 1.0 Ring.qml

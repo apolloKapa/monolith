@@ -3,19 +3,41 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// CPU, memory and CPU temperature, sampled every two seconds from /proc and hwmon.
+// CPU, memory and CPU temperature, and the GPU's load, memory and temperature (AMD, from
+// sysfs; zero elsewhere), sampled every two seconds.
 Singleton {
     id: stats
 
     property real cpu: 0          // 0..1
     property real mem: 0          // 0..1
     property real temp: 0         // °C
+    property real gpu: 0          // 0..1
+    property real vramUsed: 0     // bytes
+    property real vramTotal: 0
+    property real gpuTemp: 0      // °C
+    property string gpuDir: ""    // /sys/class/drm/cardN/device
+    property string gpuTempPath: ""
     property var _prev: null
     property string tempPath: ""
 
     FileView { id: statFile; path: "/proc/stat"; blockLoading: true }
     FileView { id: memFile; path: "/proc/meminfo"; blockLoading: true }
     FileView { id: tempFile; path: stats.tempPath; blockLoading: true }
+    FileView { id: gpuBusy; path: stats.gpuDir !== "" ? stats.gpuDir + "/gpu_busy_percent" : ""; blockLoading: true; printErrors: false }
+    FileView { id: vramUsedF; path: stats.gpuDir !== "" ? stats.gpuDir + "/mem_info_vram_used" : ""; blockLoading: true; printErrors: false }
+    FileView { id: gpuTempF; path: stats.gpuTempPath; blockLoading: true; printErrors: false }
+    Process {
+        running: true
+        command: ["sh", "-c", "for c in /sys/class/drm/card*/device; do [ -f $c/gpu_busy_percent ] && { echo $c; cat $c/mem_info_vram_total 2>/dev/null; break; }; done; for d in /sys/class/hwmon/hwmon*; do [ \"$(cat $d/name 2>/dev/null)\" = amdgpu ] && { echo $d/temp1_input; break; }; done"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const l = text.trim().split("\n");
+                if (l.length >= 2 && l[0].startsWith("/sys/class/drm")) { stats.gpuDir = l[0]; stats.vramTotal = Number(l[1]) || 0; }
+                const t = l.find(x => x.endsWith("temp1_input"));
+                if (t) stats.gpuTempPath = t;
+            }
+        }
+    }
 
     // the CPU package sensor: k10temp / zenpower (AMD) or coretemp (Intel)
     Process {
@@ -43,6 +65,12 @@ Singleton {
             if (p.length === 2) m[p[0]] = parseInt(p[1]);
         }
         if (m.MemTotal) mem = 1 - (m.MemAvailable || 0) / m.MemTotal;
+        if (gpuDir !== "") {
+            gpuBusy.reload(); vramUsedF.reload();
+            const b = parseInt(gpuBusy.text()); if (!isNaN(b)) gpu = b / 100;
+            const v = Number(vramUsedF.text()); if (!isNaN(v)) vramUsed = v;
+        }
+        if (gpuTempPath !== "") { gpuTempF.reload(); const g = parseInt(gpuTempF.text()); if (!isNaN(g)) gpuTemp = g / 1000; }
         if (tempPath !== "") {
             tempFile.reload();
             const v = parseInt(tempFile.text());
