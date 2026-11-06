@@ -128,7 +128,14 @@ Singleton {
     // ── the island (status line + hub in one shape hanging from the top edge) ──
     readonly property color frame: Qt.alpha(oled ? "#000000" : m("surface", mix(_base, _s0, 0.35)), see)   // the island's fill
     readonly property real islandH: Number(Store.get("bar.height", 40))   // collapsed: the bar's height (Settings → Bar)
-    readonly property bool fullBar: Store.get("bar.shape", "island") === "full"  // a full-width bar instead of the island
+    // the bar's style (Settings → Bar): island (one pill hanging from the top), fill (a bar along
+    // the top edge), frame (that, and a border round the whole screen), solid (one floating bar)
+    // or modular (each section on its own floating pill)
+    readonly property string barStyle: Store.get("bar.style", "") || (Store.get("bar.shape", "island") === "full" ? "fill" : "island")
+    readonly property bool fullBar: barStyle !== "island"                         // spread across the screen
+    readonly property bool barFloats: barStyle === "solid" || barStyle === "modular" // off the edge
+    readonly property real barMargin: barFloats ? Number(Store.get("bar.margin", 8)) : 0
+    readonly property real frameW: barStyle === "frame" ? Number(Store.get("bar.frameWidth", 8)) : 0
     readonly property real islandMinW: Number(Store.get("bar.minWidth", 460))   // collapsed island: never narrower
     readonly property real barLength: Number(Store.get("bar.length", 1))        // the full-width bar's length (share of the screen)
     readonly property real barOpacity: Number(Store.get("bar.opacity", 1))      // the bar's own background (0: only its modules)

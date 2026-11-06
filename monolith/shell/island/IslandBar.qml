@@ -74,6 +74,20 @@ Item {
             }
         }
     }
+    // Modular: each section on a floating pill of its own
+    component ZonePill: Rectangle {
+        property Item zone
+        visible: Theme.barStyle === "modular" && !bar.only && zone.width > 0
+        x: zone.x - 8
+        width: zone.width + 16
+        height: bar.height
+        radius: Math.min(height / 2, Theme.islandRadius + 6)
+        color: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+        CardShadow { visible: Theme.barOpacity > 0.3 }
+    }
+    ZonePill { zone: leftZone }
+    ZonePill { zone: midZone }
+    ZonePill { zone: rightZone }
     Zone { id: leftZone; x: Theme.islandPad; keys: bar.zones.left || [] }
     // a full-width bar spreads them: left edge, middle, right edge
     Zone { id: midZone; x: Theme.fullBar ? Math.round((bar.width - width) / 2) : leftZone.x + leftZone.width + bar.gap; keys: bar.zones.center || [] }
