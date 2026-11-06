@@ -153,7 +153,9 @@ PanelWindow {
             x: island.e
             width: island.bodyW
             height: island.height
-            clip: true
+            // only while it's bigger than the bar (a menu or notification, or shrinking back):
+            // at rest the clip would cut the bar's own shadows (Modular's pills) with a hard edge
+            clip: win.shown || win.toastOn || island.height > Theme.islandH + 0.5
 
             HoverHandler { id: barHover }
             // Theme → Effects (grain, edge light) while it's a menu
