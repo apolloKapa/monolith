@@ -41,6 +41,11 @@ deploy_shell() {
         cp "$project_root"/monolith/fonts/* "${XDG_DATA_HOME:-$HOME/.local/share}/fonts/monolith/"
         command -v fc-cache >/dev/null && fc-cache -f "${XDG_DATA_HOME:-$HOME/.local/share}/fonts/monolith" >/dev/null 2>&1
     fi
+    # the icon font every icon in the shell is drawn with (downloaded: it's 15 MB)
+    if [ -x "$project_root/monolith/shell/scripts/icon-font.sh" ] || [ -f "$project_root/monolith/shell/scripts/icon-font.sh" ]; then
+        sh "$project_root/monolith/shell/scripts/icon-font.sh"
+        [ $? -eq 1 ] && echo "Couldn't download the icon font (Material Symbols); the shell will try again when it starts."
+    fi
     # the classic shell's daemon and the new shell's trial copy are gone
     rm -f "$BIN_DIR/monolithd" "$BIN_DIR/monolith-next"
     rm -rf "$HOME/.local/share/monolith-next"

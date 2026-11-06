@@ -1,6 +1,7 @@
 //@ pragma UseQApplication
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import "core"
 import "status"
 import "island"
@@ -33,6 +34,14 @@ ShellRoot {
     PolkitDialog {}
     // start the services that run on their own
     Component.onCompleted: { Notifs.dnd; Idle.enabled; Wall.path; Wellbeing.loaded; Updates.available; NightLight.enabled; AppColours.targets; NiriShell.passes; if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
+    // the icon font (Material Symbols Rounded): every icon is drawn with it. Not there (a fresh
+    // install, a distro without it): fetch it, then restart so the shell can use it
+    Process {
+        id: iconFont
+        running: Qt.fontFamilies().indexOf("Material Symbols Rounded") === -1
+        command: ["sh", Qt.resolvedUrl("scripts/icon-font.sh").toString().replace("file://", "")]
+        onExited: code => { if (code === 10) Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/monolith", "restart"]); }
+    }
     // first launch: the welcome tour
     Connections {
         target: Store
