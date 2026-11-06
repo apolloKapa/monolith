@@ -53,11 +53,11 @@ ColumnLayout {
         NumberBox { from: 0; to: 100; slideTo: 40; unit: "px"; value: sec.num("window-rule|geometry-corner-radius", 0); onMoved: x => { sec.put("window-rule", "geometry-corner-radius", x); sec.put("window-rule", "clip-to-geometry", "true"); } }
     }
     SettingRow {
-        icon: "animation"; title: "Animations"
+        icon: "animation"; title: "Window animations"
         Toggle { checked: !sec.has("animations|off"); onToggled: on => { const c = Object.assign({}, sec.v); c["animations|off"] = on ? null : ""; sec.v = c; NiriConf.flag("animations", "off", !on); } }
     }
     SettingRow {
-        icon: "speed"; title: "Animation speed"; desc: "niri's slowdown: lower is faster"
+        icon: "speed"; title: "Window animation speed"; desc: "niri's slowdown: lower is faster"
         NumberBox { from: 0.05; to: 10; slideTo: 3; step: 0.05; decimals: 2; unit: "×"; value: sec.num("animations|slowdown", 1); onMoved: x => sec.put("animations", "slowdown", x.toFixed(2)) }
     }
 }

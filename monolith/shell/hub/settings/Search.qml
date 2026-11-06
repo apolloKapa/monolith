@@ -9,7 +9,7 @@ ColumnLayout {
     spacing: 8
     SettingRow {
         key: "search.terminal";
-        icon: "terminal"; title: "Terminal"; desc: "What `> command` runs in, and terminal apps open with"
+        icon: "terminal"; title: "Terminal app"; desc: "What `> command` runs in, and terminal apps open with"
         Field { text: Prefs.terminal; placeholder: "kitty -e"; onAccepted: v => { if (v.trim() !== "" && v.trim() !== Prefs.terminal) Store.set("search.terminal", v.trim()); } }
     }
     SettingRow {
@@ -49,7 +49,7 @@ ColumnLayout {
         NumberBox { from: 1; to: 30; slideTo: 20; value: Number(Store.get("search.rows", 7)); onMoved: v => Store.set("search.rows", v) }
     }
     SettingRow {
-        icon: "keyboard"; title: "Typing"
+        icon: "keyboard"; title: "What you can type"
         desc: "Search: apps.  > runs a command.  : emojis.  / or ~ files.  Any page: just type to search."
     }
 
@@ -70,7 +70,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "search.favColumns"; def: 6;
-        icon: "grid_view"; title: "Per row"
+        icon: "grid_view"; title: "Favourites per row"
         NumberBox { from: 2; to: 12; value: Number(Store.get("search.favColumns", 6)); onMoved: v => Store.set("search.favColumns", v) }
     }
     Repeater {

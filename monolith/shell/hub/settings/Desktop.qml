@@ -25,7 +25,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "widgets.imagePath"; def: "";
-        icon: "image"; title: "The picture widget's picture"; desc: "An image file"
+        icon: "image"; title: "Picture widget"; desc: "An image file"
         Field { text: Store.get("widgets.imagePath", ""); placeholder: "/path/to/picture.png"; onAccepted: v => { const p = v.trim().replace(/^~/, Wall.home); if (p !== Store.get("widgets.imagePath", "")) Store.set("widgets.imagePath", p); } }
     }
     SettingRow { icon: "keyboard"; title: "From a keybind"; desc: "monolith widgets  ·  monolith widgets lock" }

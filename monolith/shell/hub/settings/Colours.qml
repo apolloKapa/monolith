@@ -23,11 +23,11 @@ ColumnLayout {
         }
     }
     SettingRow {
-        icon: "dark_mode"; title: "Dark or light apps"; desc: "Apps that only follow dark/light: Appearance → Apps follow"
+        icon: "dark_mode"; title: "Dark or light apps"; desc: "Apps that only follow dark or light: Appearance → Dark mode, font & icons"
         Button { text: "Appearance"; onClicked: HubState.settingsSection = "appearance" }
     }
     SettingRow {
-        icon: "refresh"; title: "Write them again"; desc: "If an app lost its colours"
+        icon: "refresh"; title: "Reapply colours"; desc: "If an app lost its colours"
         Button { text: "Refresh"; onClicked: AppColours.apply() }
     }
 }

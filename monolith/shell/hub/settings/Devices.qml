@@ -16,7 +16,7 @@ ColumnLayout {
 
     Label { text: "Microphone"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6 }
     SettingRow {
-        icon: sec.mic && sec.mic.audio && sec.mic.audio.muted ? "mic_off" : "mic"; title: "Level"; desc: sec.mic ? (sec.mic.description || sec.mic.name) : "No microphone"
+        icon: sec.mic && sec.mic.audio && sec.mic.audio.muted ? "mic_off" : "mic"; title: "Microphone level"; desc: sec.mic ? (sec.mic.description || sec.mic.name) : "No microphone"
         Slider {
             width: 240; implicitHeight: 36
             icon: sec.mic && sec.mic.audio && sec.mic.audio.muted ? "mic_off" : "mic"

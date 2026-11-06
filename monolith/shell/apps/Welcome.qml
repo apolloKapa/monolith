@@ -465,7 +465,7 @@ PanelWindow {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: Math.min(parent.width, 560); horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap
-                    text: "Enjoy Monolith. Settings has everything else: themes, fonts, widgets, the lock screen, displays, keyboard and more. This tour is in Settings → About whenever you want it again."
+                    text: "Enjoy Monolith. Settings has everything else: themes, fonts, widgets, the lock screen, displays, keyboard and more. This tour is in Settings → General → Updates & about whenever you want it again."
                     color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 15
                 }
                 Row {

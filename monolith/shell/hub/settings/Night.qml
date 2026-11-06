@@ -18,7 +18,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "nightlight.schedule";
-        icon: "schedule"; title: "When"
+        icon: "schedule"; title: "Schedule"
         desc: NightLight.schedule === "sun" && !Weather.loc ? "Sunset to sunrise needs your location (General)" : ""
         Segmented {
             width: 330
@@ -30,7 +30,7 @@ ColumnLayout {
     SettingRow {
         keys: ["nightlight.from", "nightlight.to"];
         visible: NightLight.schedule === "custom"
-        icon: "more_time"; title: "From and to"; desc: "24-hour times, like 21:00 and 07:00"
+        icon: "more_time"; title: "Custom hours"; desc: "24-hour times, like 21:00 and 07:00"
         Row {
             spacing: 6
             Field { width: 100; text: NightLight.from; onAccepted: v => { if (/^\d{1,2}:\d{2}$/.test(v.trim())) Store.set("nightlight.from", v.trim().padStart(5, "0")); } }

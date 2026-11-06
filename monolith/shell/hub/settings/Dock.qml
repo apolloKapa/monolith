@@ -42,7 +42,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "dock.opacity"; def: 1;
-        icon: "opacity"; title: "Background"; desc: "How solid the dock is"
+        icon: "opacity"; title: "Dock opacity"; desc: "How solid the dock is"
         NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Number(Store.get("dock.opacity", 1)); onMoved: v => Store.set("dock.opacity", v) }
     }
     SettingRow {
@@ -57,7 +57,7 @@ ColumnLayout {
     Label { text: "Where and how"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
     SettingRow {
         key: "dock.position"; def: "bottom";
-        icon: "border_bottom"; title: "Edge"
+        icon: "border_bottom"; title: "Position"
         Dropdown { opts: [["bottom", "Bottom"], ["left", "Left"], ["right", "Right"], ["top", "Top"]]; value: Store.get("dock.position", "bottom"); onPicked: v => Store.set("dock.position", v) }
     }
     SettingRow {
@@ -101,12 +101,12 @@ ColumnLayout {
     }
     SettingRow {
         key: "dock.maxApps"; def: 0;
-        icon: "apps"; title: "Most apps shown"; desc: "0: all of them"
+        icon: "apps"; title: "Most apps shown"; desc: "0: no limit"
         NumberBox { from: 0; to: 40; slideTo: 20; zeroText: "All"; value: Number(Store.get("dock.maxApps", 0)); onMoved: v => Store.set("dock.maxApps", v) }
     }
     SettingRow {
         key: "dock.runningScope"; def: "all";
-        icon: "filter_alt"; title: "Which open apps"; desc: "The ones that aren't pinned"
+        icon: "filter_alt"; title: "Unpinned open apps"; desc: "Which of them show"
         Dropdown { opts: [["all", "All of them"], ["screen", "On this screen"], ["workspace", "On this workspace"]]; value: Store.get("dock.runningScope", "all"); onPicked: v => Store.set("dock.runningScope", v) }
     }
 }

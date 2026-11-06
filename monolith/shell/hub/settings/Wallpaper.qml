@@ -29,7 +29,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "wallpaper.dir";
-        icon: "folder"; title: "Folder"; desc: "Where the wallpaper picker looks"
+        icon: "folder"; title: "Wallpaper folder"; desc: "Where the wallpaper picker looks"
         Field { text: Wall.dir; onAccepted: v => { if (v.trim() !== "" && v.trim() !== Wall.dir) Store.set("wallpaper.dir", v.trim()); } }
     }
     SettingRow {

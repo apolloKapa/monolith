@@ -60,7 +60,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "software.appimages";
-        icon: "folder"; title: "Folder"; desc: "Where dropped AppImages go"
+        icon: "folder"; title: "AppImage folder"; desc: "Where dropped AppImages go"
         Field { text: AppImages.folder.replace(Quickshell.env("HOME"), "~"); onAccepted: v => { const p = v.trim().replace(/^~/, Quickshell.env("HOME")); if (p !== "" && p !== AppImages.folder) Store.set("software.appimages", p); } }
     }
     SettingRow {

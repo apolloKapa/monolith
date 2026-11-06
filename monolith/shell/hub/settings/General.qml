@@ -91,7 +91,7 @@ ColumnLayout {
     // ── the weather ──
     SettingRow {
         key: "weather.unit";
-        icon: "thermostat"; title: "Units"
+        icon: "thermostat"; title: "Temperature units"
         Segmented { opts: [["metric", "°C, km/h"], ["imperial", "°F, mph"]]; value: Weather.metric ? "metric" : "imperial"; onPicked: v => Store.set("weather.unit", v) }
     }
     SettingRow {

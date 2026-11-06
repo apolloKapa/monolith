@@ -2,7 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// Interface sounds (Settings → Notifications → Interface sounds): soft blips for clicks, switches,
+// Interface sounds (Settings → Notifications → Sounds): soft blips for clicks, switches,
 // menus opening and closing, and dropping things; made by tools/make_sounds.py, played with
 // pw-play as "event" sounds at their own volume. Off unless switched on.
 Singleton {
