@@ -6,6 +6,7 @@
 #   monolith screenshot [--full] [--edit]     the capture overlay (--full alone: whole screen now)
 #   monolith record-menu                      the capture overlay, set to video
 #   monolith zoom in | out
+#   monolith welcome                             the welcome tour
 #   monolith dock                                the dock editor (or hold an app in the dock)
 #   monolith widgets [lock]                      arrange the desktop's (or lock screen's) widgets
 #   monolith timer <minutes> | record [region]
@@ -84,6 +85,7 @@ case "$1" in
     settings) ipc settings open "${2:-appearance}" ;;
     appimages) ipc appimages open ;;
     lock) ipc lock lock ;;
+    welcome) ipc welcome open ;;
     screenshot)
         full=0; edit=0
         for a in "$@"; do case "$a" in --full) full=1 ;; --edit) edit=1 ;; esac; done
@@ -117,5 +119,5 @@ case "$1" in
         echo "No installer found." >&2; exit 1
         ;;
     migrate) migrate ;;
-    *) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//' ;;
+    *) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' ;;
 esac

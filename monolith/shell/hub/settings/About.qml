@@ -56,7 +56,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "waving_hand"; title: "Welcome tour"; desc: "The first-launch setup again"
-        Button { text: "Start"; onClicked: HubState.openSettings("welcome") }
+        Button { text: "Show it"; onClicked: HubState.openWelcome() }
     }
     SettingRow {
         icon: "keyboard_command_key"; title: "Keys"; desc: "Every keybind is on the Keys page"

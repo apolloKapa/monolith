@@ -26,6 +26,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; WallpaperPicker {} }
     Variants { model: Quickshell.screens; DesktopMenu {} }
     AppImagesWindow {}
+    Variants { model: Quickshell.screens; Welcome {} }
     Variants { model: Quickshell.screens; QuickAccess {} }
     Variants { model: Quickshell.screens; WidgetEditor {} }
     LockScreen {}
@@ -37,5 +38,5 @@ ShellRoot {
         target: Store
         function onLoadedChanged() { if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
     }
-    Timer { id: welcome; interval: 1500; onTriggered: HubState.openSettings("welcome") }
+    Timer { id: welcome; interval: 1800; onTriggered: HubState.openWelcome() }
 }
