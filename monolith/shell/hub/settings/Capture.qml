@@ -35,6 +35,11 @@ ColumnLayout {
         command: ["sh", "-c", "tesseract --list-langs 2>/dev/null | tail -n +2"]
         stdout: StdioCollector { onStreamFinished: sec.langs = text.split("\n").filter(l => l && l !== "osd") }
     }
+    SettingRow {
+        key: "capture.onRelease"; def: false;
+        icon: "ads_click"; title: "Take it when you let go"; desc: "A drawn area is saved and copied (or opened in the editor with Shift+Print) as soon as you release the mouse, without Enter"
+        Toggle { checked: Capture.onRelease; onToggled: on => Store.set("capture.onRelease", on) }
+    }
     SettingRow { icon: "translate"; title: "Text languages"; desc: "What reading text looks for (more is slower). Others come with tesseract's language packs" }
     Rectangle {
         Layout.fillWidth: true

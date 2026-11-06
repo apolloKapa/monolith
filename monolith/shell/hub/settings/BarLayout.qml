@@ -372,6 +372,11 @@ ColumnLayout {
         }
     }
     SettingRow {
+        key: "bar.mediaPeek"; def: true;
+        icon: "music_note"; title: "Now playing peek"; desc: "Hovering the Now playing module shows a small player under it"
+        Toggle { checked: Store.get("bar.mediaPeek", true) !== false; onToggled: on => Store.set("bar.mediaPeek", on) }
+    }
+    SettingRow {
         key: "bar.soundPercent"; def: true;
         icon: "volume_up"; title: "Volume number"; desc: "Beside the sound icon"
         Toggle { checked: Store.get("bar.soundPercent", true) !== false; onToggled: on => Store.set("bar.soundPercent", on) }

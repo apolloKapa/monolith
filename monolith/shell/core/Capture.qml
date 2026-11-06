@@ -16,6 +16,9 @@ Singleton {
     property string screenName: ""       // the screen the selection is on
     property rect sel: Qt.rect(0, 0, 0, 0)  // the selection, in that screen's coordinates
     property string preferred: "save"    // what Enter does: save | edit
+    // take it as soon as the selection is let go (Settings → Screenshots); the old shell's
+    // general.screenshotCaptureOnRelease carries over
+    readonly property bool onRelease: Store.get("capture.onRelease", !!(Prefs.raw.general && Prefs.raw.general.screenshotCaptureOnRelease === true)) === true
     readonly property bool hasSel: mode === "screen" ? screenName !== "" : (sel.width >= 4 && sel.height >= 4)
 
     readonly property string runDir: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/monolith-capture"
@@ -93,8 +96,8 @@ Singleton {
             "geo=$(awk -v s=\"$s\" 'BEGIN{printf \"%dx%d+%d+%d\", " + r.width + "*s, " + r.height + "*s, " + r.x + "*s, " + r.y + "*s}'); " +
             "magick \"$1\" -crop \"$geo\" +repage \"$2\" || exit 1; ";
         const then = {
-            save: "mkdir -p \"$(dirname \"$3\")\" && cp \"$2\" \"$3\" && wl-copy < \"$3\" && notify-send -a Monolith -i \"$3\" 'Screenshot saved' \"Copied too. In $(dirname \"$3\")\"",
-            copy: "wl-copy < \"$2\" && notify-send -a Monolith -i \"$2\" 'Screenshot copied'",
+            save: "mkdir -p \"$(dirname \"$3\")\" && cp \"$2\" \"$3\" && wl-copy --type image/png < \"$3\" && notify-send -a Monolith -i \"$3\" 'Screenshot saved' \"Copied too. In $(dirname \"$3\")\"",
+            copy: "wl-copy --type image/png < \"$2\" && notify-send -a Monolith -i \"$2\" 'Screenshot copied'",
             edit: "mkdir -p \"$(dirname \"$3\")\" && exec satty --filename \"$2\" --output-filename \"$3\" --copy-command wl-copy",
             text: "t=$(tesseract \"$2\" - -l " + Store.get("capture.ocr", "eng") + " 2>/dev/null); if [ -n \"$(printf '%s' \"$t\" | tr -d '[:space:]')\" ]; then printf '%s' \"$t\" | wl-copy; notify-send -a Monolith 'Text copied' \"$(printf '%s' \"$t\" | head -c 160)\"; else notify-send -a Monolith 'No text found' 'Nothing readable in that area'; fi",
             qr: "q=$(zbarimg -q --raw \"$2\" 2>/dev/null); if [ -n \"$q\" ]; then printf '%s' \"$q\" | wl-copy; notify-send -a Monolith 'QR code copied' \"$(printf '%s' \"$q\" | head -c 160)\"; else notify-send -a Monolith 'No QR code found' 'Pick the code with a bit of space around it'; fi"

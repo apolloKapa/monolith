@@ -84,6 +84,12 @@ Singleton {
     readonly property real see: (Look.style.opaque === false ? 0.74 : 1) * panelOpacity
     // blur behind the shell's panels (the compositor does it; strength in niri's config)
     readonly property bool blur: Store.get("theme.blur", false) === true
+    // effects (Theme → Effects): film grain on panels, a light along their top edge, and menus
+    // that unfold from a thin line (the old shell's theme.effects carry over)
+    readonly property var oldFx: Prefs.raw.theme && Prefs.raw.theme.effects ? Prefs.raw.theme.effects : ({})
+    readonly property bool fxGrain: Store.get("theme.effects.grain", oldFx.grain === true) === true
+    readonly property bool fxEdge: Store.get("theme.effects.edge", oldFx.edge === true) === true
+    readonly property bool fxUnfold: Store.get("theme.effects.unfold", oldFx.unfold === true) === true && animOn
     readonly property color card: Qt.alpha(oled ? "#000000" : m("surface_container_low", mix(_base, _s0, 0.55)), see)  // the hub, the dock
     // (with a palette: mantle, surface0, surface1; surface2 is ink in some styles)
     readonly property color container: oled ? "#0d0d0d" : m("surface_container", Look.colors ? c("mantle", _s0) : _s0)            // groups inside a card

@@ -172,6 +172,7 @@ PanelWindow {
             pressAndHoldInterval: 700
             onPressAndHold: dock.editing = true
         }
+        PanelFx { anchors.fill: parent; radius: capsule.radius; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge) }
         Grid {
             id: appsRow
             anchors.centerIn: parent

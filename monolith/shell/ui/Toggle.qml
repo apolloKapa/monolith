@@ -28,5 +28,5 @@ Item {
         Behavior on color { ColorAnimation { duration: 200 } }
         Icon { anchors.centerIn: parent; visible: t.checked; name: "check"; size: 16; color: Theme.accent }
     }
-    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: t.toggled(!t.checked) }
+    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { Sounds.play(t.checked ? "toggle-off" : "toggle-on"); t.toggled(!t.checked); } }
 }

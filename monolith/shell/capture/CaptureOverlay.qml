@@ -119,7 +119,12 @@ PanelWindow {
                 Capture.sel = Qt.rect(Math.min(ox, x), Math.min(oy, y), Math.abs(x - ox), Math.abs(y - oy));
             }
         }
-        onReleased: dragging = ""
+        onReleased: {
+            // a new area drawn for a picture: done right away when that's on
+            const drawn = dragging === "new";
+            dragging = "";
+            if (drawn && Capture.onRelease && Capture.kind === "photo" && Capture.hasSel) Capture.finish(Capture.preferred);
+        }
         onDoubleClicked: if (Capture.hasSel) Capture.finish(Capture.kind === "video" ? "record" : Capture.preferred)
     }
 

@@ -36,6 +36,6 @@ Rectangle {
         onPressed: mouse => ink.press(mouse.x, mouse.y)
         onReleased: ink.release()
         onCanceled: ink.release()
-        onClicked: mouse => { if (mouse.button === Qt.RightButton) root.rightClicked(); else root.clicked(mouse); }
+        onClicked: mouse => { Sounds.play("click"); if (mouse.button === Qt.RightButton) root.rightClicked(); else root.clicked(mouse); }
     }
 }

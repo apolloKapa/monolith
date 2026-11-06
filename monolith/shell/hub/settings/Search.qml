@@ -39,6 +39,11 @@ ColumnLayout {
         NumberBox { from: 3; to: 12; value: Number(Store.get("search.gridColumns", 6)); onMoved: v => Store.set("search.gridColumns", v) }
     }
     SettingRow {
+        key: "search.categories"; def: false;
+        icon: "category"; title: "Category tabs"; desc: "Internet, Games, Media, Office… over the apps while nothing is typed (Alt+←/→ switches)"
+        Toggle { checked: Store.get("search.categories", false) === true; onToggled: on => Store.set("search.categories", on) }
+    }
+    SettingRow {
         key: "search.rows"; def: 7;
         icon: "format_list_numbered"; title: "Results shown"
         NumberBox { from: 1; to: 30; slideTo: 20; value: Number(Store.get("search.rows", 7)); onMoved: v => Store.set("search.rows", v) }

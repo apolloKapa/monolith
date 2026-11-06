@@ -22,6 +22,21 @@ ColumnLayout {
         NumberBox { from: 1; to: 8; value: Number(Store.get("theme.blurStrength", 3)); onMoved: v => Store.set("theme.blurStrength", v) }
     }
     SettingRow {
+        key: "theme.effects.grain"; def: false;
+        icon: "grain"; title: "Grain"; desc: "A faint film grain over menus, floating panels and the dock"
+        Toggle { checked: Theme.fxGrain; onToggled: on => Store.set("theme.effects.grain", on) }
+    }
+    SettingRow {
+        key: "theme.effects.edge"; def: false;
+        icon: "highlight"; title: "Edge light"; desc: "A thin accent light along the top of menus, floating panels and the dock"
+        Toggle { checked: Theme.fxEdge; onToggled: on => Store.set("theme.effects.edge", on) }
+    }
+    SettingRow {
+        key: "theme.effects.unfold"; def: false;
+        icon: "unfold_more"; title: "Unfold"; desc: "Menus open out of a thin line through their middle, and fold back into it"
+        Toggle { checked: Store.get("theme.effects.unfold", Theme.oldFx.unfold === true) === true; onToggled: on => Store.set("theme.effects.unfold", on) }
+    }
+    SettingRow {
         key: "theme.animations";
         icon: "animation"; title: "Animations"; desc: "Off: everything appears at once"
         Toggle { checked: Theme.animOn; onToggled: on => Store.set("theme.animations", on) }

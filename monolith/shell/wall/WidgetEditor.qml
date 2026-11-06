@@ -390,6 +390,7 @@ PanelWindow {
                                     // dropped back on the strip: nothing
                                     if (!palette.contains(p)) {
                                         ed.selected = WidgetLayout.add(ed.mode, card.modelData, ed.modelData.name, ed.dragPos.x / ed.width, ed.dragPos.y / ed.height);
+                                        Sounds.play("drop");
                                         ed.adding = false;
                                     }
                                 } else card.clicked();
