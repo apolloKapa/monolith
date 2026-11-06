@@ -29,12 +29,13 @@ Page {
     readonly property bool showGrid: Store.get("search.grid", false) === true && query.trim() === ""
     readonly property int gridColumns: Number(Store.get("search.gridColumns", 6))
 
-    // ── favourites: pinned apps, shown as a grid while nothing is typed ──
+    // ── favourites: pinned apps, shown as a grid above everything (searching too) ──
     // (desktop ids; the earlier Monolith's list to start with). Right-click an app to pin or unpin.
     readonly property var favIds: Store.get("search.favorites", null) || Prefs.favorites
     readonly property var favs: favIds.map(id => DesktopEntries.byId(id) || DesktopEntries.byId(id + ".desktop")).filter(e => e)
     readonly property int favColumns: Number(Store.get("search.favColumns", 6))
-    readonly property bool showFavs: query.trim() === "" && favs.length > 0 && Store.get("search.showFavorites", true) !== false
+    // favourites stay at the top while you search too (the results list under them)
+    readonly property bool showFavs: favs.length > 0 && Store.get("search.showFavorites", true) !== false
     function isFav(entry) { return favIds.some(id => id === entry.id || id + ".desktop" === entry.id || id === entry.id.replace(/\.desktop$/, "")); }
     function toggleFav(entry) {
         const id = entry.id.replace(/\.desktop$/, "");
