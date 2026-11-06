@@ -14,6 +14,7 @@ Item {
     property real r: 20
     property color fill: Theme.frame
     property bool shadow: true
+    property bool outline: true             // the style's outline (off where something else draws it)
     width: bodyW + 2 * e
     // the curves never grow past what the size allows
     readonly property real e: Math.max(0, Math.min(ear, height / 2))
@@ -35,8 +36,8 @@ Item {
         ShapePath {
             fillColor: s.fill
             // the style's outline (none by default)
-            strokeColor: Theme.outlineW > 0 ? Theme.outlineColor : "transparent"
-            strokeWidth: Theme.outlineW
+            strokeColor: s.outline && Theme.outlineW > 0 ? Theme.outlineColor : "transparent"
+            strokeWidth: s.outline ? Theme.outlineW : 0
             // along the screen edge, left to right
             startX: 0; startY: 0
             PathLine { x: s.width; y: 0 }

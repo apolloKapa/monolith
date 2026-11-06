@@ -137,13 +137,18 @@ Singleton {
     readonly property real barMargin: barFloats ? Number(Store.get("bar.margin", 8)) : 0
     readonly property real frameW: barStyle === "frame" ? Number(Store.get("bar.frameWidth", 8)) : 0
     readonly property real islandMinW: Number(Store.get("bar.minWidth", 460))   // collapsed island: never narrower
-    readonly property real barLength: Number(Store.get("bar.length", 1))        // the full-width bar's length (share of the screen)
+    readonly property real barLength: barStyle === "frame" ? 1 : Number(Store.get("bar.length", 1))   // the bar's length (share of the screen; the Frame's is the whole width)
     readonly property real barOpacity: Number(Store.get("bar.opacity", 1))      // the bar's own background (0: only its modules)
     readonly property bool barPills: Store.get("bar.pills", false) === true     // each module on its own pill
-    readonly property real islandEar: 20        // the concave curve joining the screen edge
+    readonly property bool square: Look.style.square === true                   // square styles: no rounding anywhere
+    readonly property real islandEar: square ? 0 : 20   // the concave curve joining the screen edge
     readonly property real islandPad: 12        // inside, around the content
     readonly property real islandGap: 8         // between the island and the screen edge when open
-    readonly property real islandRadius: Math.max(14, radius + 12)  // its lower corners when open
+    readonly property real islandRadius: square ? 0 : Math.max(14, radius + 12)  // its lower corners when open
+    // a floating bar's (Solid, Modular) corners: a pill, square in square styles
+    function barRound(h) { return square ? 0 : Math.min(h / 2, islandRadius + 6); }
+    // the Frame draws the bar's background itself (one shape, so see-through styles don't double up)
+    readonly property bool frameBand: barStyle === "frame" && Store.get("status.autohide", false) !== true
     // the island's "spring": a curve that overshoots a little and settles. (Not Qt's
     // SpringAnimation: that steps every 16 ms, so it moves at 60 fps on any screen.)
     readonly property var springCurve: [0.22, 1.0, 0.36, 1.1, 1, 1]
