@@ -32,7 +32,8 @@ PanelWindow {
     color: "transparent"
     // collapsed only the island takes the mouse; open, a click anywhere else closes it
     mask: win.pinned ? pinnedMask : plainMask
-    Region { id: plainMask; item: win.shown ? fullArea : (win.tucked ? sensor : island) }
+    // (no bar on this screen: nothing takes clicks there, unless a notification is showing)
+    Region { id: plainMask; item: win.shown ? fullArea : (!(win.barHere || win.toastOn) ? null : (win.tucked ? sensor : island)) }
     Region {
         id: pinnedMask
         item: island
