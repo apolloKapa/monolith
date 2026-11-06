@@ -39,11 +39,18 @@ Item {
             maskEnabled: true
             maskSource: mask
         }
+        // a turned widget: the wallpaper behind its box on screen, turned back the other way
         ShaderEffectSource {
-            anchors.fill: parent
+            readonly property int rot: g.ctx && g.ctx.rot !== undefined ? g.ctx.rot : 0
+            readonly property bool side: rot % 180 !== 0
+            anchors.centerIn: parent
+            width: side ? parent.height : parent.width
+            height: side ? parent.width : parent.height
+            rotation: -rot
             sourceItem: g.backdrop
-            sourceRect: g.backdrop && g.ctx ? Qt.rect(g.ctx.origin.x + g.dx, g.ctx.origin.y + g.dy, g.width, g.height) : Qt.rect(0, 0, 0, 0)
-            textureSize: Qt.size(Math.max(1, Math.round(g.width / g.shrink)), Math.max(1, Math.round(g.height / g.shrink)))
+            sourceRect: !g.backdrop || !g.ctx ? Qt.rect(0, 0, 0, 0)
+                : (rot === 0 ? Qt.rect(g.ctx.origin.x + g.dx, g.ctx.origin.y + g.dy, g.width, g.height) : Qt.rect(g.ctx.origin.x, g.ctx.origin.y, width, height))
+            textureSize: Qt.size(Math.max(1, Math.round(width / g.shrink)), Math.max(1, Math.round(height / g.shrink)))
             smooth: true
             live: true
             hideSource: false

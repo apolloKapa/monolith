@@ -112,8 +112,8 @@ WlSessionLock {
             WidgetFace {
                 required property var modelData
                 item: modelData
-                width: size[0]
-                height: size[1]
+                width: implicitWidth
+                height: implicitHeight
                 x: Math.max(0, Math.min(modelData.x * surface.width, surface.width - width))
                 y: Math.max(0, Math.min(modelData.y * surface.height, surface.height - height))
                 opacity: surface.enter
