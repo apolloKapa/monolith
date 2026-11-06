@@ -20,7 +20,7 @@ PanelWindow {
     // edge (top, bottom, left, right)
     readonly property string corner: Store.get("notifications.position", "top-right")
     anchors { top: corner.startsWith("top"); bottom: corner.startsWith("bottom"); right: corner.endsWith("right"); left: corner.endsWith("left") }
-    margins { top: Theme.islandH + 16; bottom: 16; right: 12; left: 12 }
+    margins { top: Theme.barBottom ? 16 : Theme.islandH + 16; bottom: Theme.barBottom ? Theme.islandH + 16 : 16; right: 12; left: 12 }
     // a fixed size (resizing a layer surface while it draws lost frames); only the cards take clicks
     implicitWidth: 390
     implicitHeight: 720

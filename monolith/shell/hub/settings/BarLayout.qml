@@ -86,9 +86,14 @@ ColumnLayout {
     }
     BarStyles { Layout.fillWidth: true }
     SettingRow {
+        key: "bar.position"; def: "top";
+        icon: "vertical_split"; title: "Position"; desc: "Along the top or the bottom of the screen (menus open out of it either way)"
+        Segmented { width: 200; opts: [["top", "Top"], ["bottom", "Bottom"]]; value: Theme.barBottom ? "bottom" : "top"; onPicked: v => Store.set("bar.position", v) }
+    }
+    SettingRow {
         key: "bar.margin";
         visible: Theme.barFloats
-        icon: "vertical_align_top"; title: "Space from the edge"; desc: "How far the floating bar sits from the top of the screen"
+        icon: "vertical_align_top"; title: "Space from the edge"; desc: "How far the floating bar sits from the edge of the screen"
         NumberBox { from: 0; to: 40; unit: "px"; value: Theme.barMargin; onMoved: v => Store.set("bar.margin", v) }
     }
     SettingRow {

@@ -15,6 +15,7 @@ Item {
     property color fill: Theme.frame
     property bool shadow: true
     property bool outline: true             // the style's outline (off where something else draws it)
+    property bool flipped: false            // standing on the bottom edge instead (the bar at the bottom)
     width: bodyW + 2 * e
     // the curves never grow past what the size allows
     readonly property real e: Math.max(0, Math.min(ear, height / 2))
@@ -23,6 +24,7 @@ Item {
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer
+        transform: Scale { origin.y: s.height / 2; yScale: s.flipped ? -1 : 1 }
         // only the shape goes through the shadow effect: what sits in the island (the bar, a
         // menu, a notification) is drawn directly, so it stays sharp
         layer.enabled: s.shadow

@@ -138,6 +138,9 @@ Singleton {
     // the top edge), frame (that, and a border round the whole screen), solid (one floating bar)
     // or modular (each section on its own floating pill)
     readonly property string barStyle: Store.get("bar.style", "") || (Store.get("bar.shape", "island") === "full" ? "fill" : "island")
+    // the bar along the top (default) or the bottom of the screen (Settings → Bar); at the bottom
+    // the island rises from the bottom edge and its menus grow upwards
+    readonly property bool barBottom: Store.get("bar.position", "top") === "bottom"
     readonly property bool fullBar: barStyle !== "island"                         // spread across the screen
     readonly property bool barFloats: barStyle === "solid" || barStyle === "modular" // off the edge
     readonly property real barMargin: barFloats ? Number(Store.get("bar.margin", 8)) : 0

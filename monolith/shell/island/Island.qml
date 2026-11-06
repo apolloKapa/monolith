@@ -34,7 +34,8 @@ PanelWindow {
     // the pointer touches the top edge
     readonly property bool autohide: Store.get("status.autohide", false) === true
     readonly property bool tucked: autohide && !win.shown && !sensorHover.hovered && !barHover.hovered
-    Item { id: sensor; x: island.x; width: island.width; height: 3; HoverHandler { id: sensorHover } }
+    Item { id: sensor; x: island.x; y: Theme.barBottom ? win.height - 3 : 0; width: island.width; height: 3; HoverHandler { id: sensorHover } }
+    readonly property bool bottom: Theme.barBottom
 
     MouseArea { anchors.fill: parent; enabled: win.shown; onClicked: HubState.close() }
 
@@ -110,7 +111,9 @@ PanelWindow {
         ear: Theme.fullBar && !win.grown ? 0 : Theme.islandEar
         onHeightChanged: if (!win.shown && height <= Theme.islandH + 1) win.wasOpen = false
         x: Math.round((win.width - width) / 2)
-        y: win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin
+        flipped: win.bottom
+        y: win.bottom ? win.height - height - (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
+                      : (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
         Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on r { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
@@ -130,11 +133,11 @@ PanelWindow {
         // already paints the bar's strip; painting it again would show darker in see-through styles)
         Item {
             visible: Theme.frameBand && win.toastOn
-            x: island.e; y: Theme.islandH
+            x: island.e; y: win.bottom ? 0 : Theme.islandH
             width: island.bodyW; height: Math.max(0, island.height - Theme.islandH)
             clip: true
             Rectangle {
-                y: -radius
+                y: win.bottom ? 0 : -radius
                 width: parent.width; height: parent.height + radius
                 radius: Theme.islandRadius
                 color: Theme.frame
@@ -161,6 +164,7 @@ PanelWindow {
                 id: bar
                 screenName: win.modelData.name
                 trayWindow: win
+                y: win.bottom ? body.height - Theme.islandH : 0
                 x: Theme.fullBar ? 0 : Math.round((body.width - width) / 2)
                 width: Theme.fullBar ? body.width : implicitWidth
             }
@@ -169,7 +173,7 @@ PanelWindow {
             Column {
                 id: toastArea
                 x: win.pad
-                y: Theme.islandH
+                y: win.bottom ? body.height - Theme.islandH - height : Theme.islandH
                 width: body.width - 2 * win.pad
                 spacing: 6
                 opacity: win.toastOn ? 1 : 0
@@ -200,9 +204,9 @@ PanelWindow {
                 // in the island, or in the floating card
                 parent: !win.docked ? floatCard : (Theme.fullBar ? dropBody : body)
                 x: win.pad
-                y: win.docked && !Theme.fullBar ? Theme.islandH + 2 : win.pad
+                y: win.docked && !Theme.fullBar && !win.bottom ? Theme.islandH + 2 : win.pad
                 width: parent.width - 2 * win.pad
-                height: parent.height - y - win.pad
+                height: parent.height - y - (win.docked && !Theme.fullBar && win.bottom ? Theme.islandH + 2 : win.pad)
                 opacity: win.shown ? 1 : 0
                 visible: opacity > 0.01
                 Behavior on opacity { NumberAnimation { duration: win.shown ? 260 : 90 } }
@@ -386,7 +390,9 @@ PanelWindow {
         height: win.dropped ? win.openH - Theme.islandH : 0
         r: Theme.islandRadius
         x: Math.round((win.width - width) / 2)
-        y: Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
+        flipped: win.bottom
+        y: win.bottom ? win.height - Theme.islandH - height + (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
+                      : Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
         Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : 220; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springCurve : Theme.exitCurve } }
         onHeightChanged: if (!win.shown && height <= 1) win.wasOpen = false
@@ -404,12 +410,17 @@ PanelWindow {
         Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
-        readonly property bool onLeft: win.place.indexOf("left") !== -1
-        readonly property bool onRight: win.place.indexOf("right") !== -1
-        readonly property bool onTop: win.place.startsWith("top")
-        readonly property bool onBottom: win.place.startsWith("bottom")
+        // "top" means by the bar: next to it at the bottom when the bar is there
+        readonly property string spot: win.bottom && win.place.startsWith("top") ? "bottom" + win.place.slice(3) : win.place
+        readonly property bool onLeft: spot.indexOf("left") !== -1
+        readonly property bool onRight: spot.indexOf("right") !== -1
+        readonly property bool onTop: spot.startsWith("top")
+        readonly property bool onBottom: spot.startsWith("bottom")
         x: onLeft ? 16 : (onRight ? win.width - width - 16 : Math.round((win.width - width) / 2))
-        y: onTop ? Theme.islandH + Theme.barMargin + 14 : (onBottom ? win.height - height - 16 : Math.max(Theme.islandH + 14, Math.round((win.height - height) / 2)))
+        // clear of the bar, wherever it is
+        readonly property real topRoom: win.bottom ? 16 : Theme.islandH + Theme.barMargin + 14
+        readonly property real bottomRoom: win.bottom ? Theme.islandH + Theme.barMargin + 14 : 16
+        y: onTop ? topRoom : (onBottom ? win.height - height - bottomRoom : Math.max(topRoom, Math.min(win.height - height - bottomRoom, Math.round((win.height - height) / 2))))
         radius: Theme.islandRadius
         color: Theme.frame
         border.width: Theme.outlineW

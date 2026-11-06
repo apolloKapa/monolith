@@ -11,7 +11,7 @@ PanelWindow {
     screen: modelData
     WlrLayershell.namespace: "monolith-reserve"
     WlrLayershell.layer: WlrLayer.Bottom
-    anchors { top: true; left: true; right: true }
+    anchors { top: !Theme.barBottom; bottom: Theme.barBottom; left: true; right: true }
     implicitHeight: 1
     exclusiveZone: Store.get("status.autohide", false) === true || (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) !== -1 ? 0 : Theme.islandH + Theme.barMargin + 4
     color: "transparent"

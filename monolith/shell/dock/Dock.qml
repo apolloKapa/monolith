@@ -23,7 +23,9 @@ PanelWindow {
     implicitHeight: vertical ? 0 : (editing ? 620 : 280)
     implicitWidth: vertical ? (editing ? 620 : 300) : 0
     WlrLayershell.keyboardFocus: editing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    readonly property real margin: Number(Store.get("dock.margin", 12))
+    // on the same edge as the bar it sits clear of it (an exclusive dock is already moved by it)
+    readonly property bool barEdge: !exclusive && ((side === "bottom" && Theme.barBottom) || (side === "top" && !Theme.barBottom))
+    readonly property real margin: Number(Store.get("dock.margin", 12)) + (barEdge ? Theme.islandH + Theme.barMargin : 0)
     color: "transparent"
     visible: enabled
     // shown: where the dock ends up (not where it is while sliding in: the pointer at the edge
