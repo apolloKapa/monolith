@@ -26,6 +26,11 @@ ColumnLayout {
     ]
 
     SettingRow {
+        icon: "tab"; title: "Menus share one window with tabs"
+        desc: "Off: the launcher, notifications, control center and the rest each open on their own. On: one window with a tab for each, Tab switches"
+        Toggle { checked: Store.get("menus.tabs", false) === true; onToggled: on => Store.set("menus.tabs", on) }
+    }
+    SettingRow {
         icon: "open_in_new"; title: "Menus open at"; desc: "Where every menu appears, unless you give it its own place below"
         Dropdown { width: 260; opts: sec.places; value: Store.get("menus.position", "top"); onPicked: v => Store.set("menus.position", v) }
     }

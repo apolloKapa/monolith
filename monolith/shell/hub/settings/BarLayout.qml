@@ -49,7 +49,7 @@ ColumnLayout {
         NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Theme.barOpacity; onMoved: v => Store.set("bar.opacity", v) }
     }
     SettingRow {
-        icon: "capsule"; title: "Modules on their own pills"; desc: "Each module gets a small background (good with a see-through bar)"
+        icon: "pill"; title: "Modules on their own pills"; desc: "Each module gets a small background (good with a see-through bar)"
         Toggle { checked: Theme.barPills; onToggled: on => Store.set("bar.pills", on) }
     }
     SettingRow {
