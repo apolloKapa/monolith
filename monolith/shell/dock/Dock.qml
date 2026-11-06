@@ -26,7 +26,14 @@ PanelWindow {
     readonly property real margin: Number(Store.get("dock.margin", 12))
     color: "transparent"
     visible: enabled
-    mask: Region { item: menu.visible || dock.editing ? fullArea : (shown ? capsule : hotZone) }
+    // shown: where the dock ends up (not where it is while sliding in: the pointer at the edge
+    // would be outside that for a moment, the dock would think it had been left and hide again)
+    // stretched to the edge, so moving from the edge to the dock never leaves it; hidden: the strip
+    mask: Region {
+        item: menu.visible || dock.editing ? fullArea : (dock.shown ? reach : hotZone)
+        // the edge strip stays in while shown (resting on the edge away from the dock keeps it)
+        Region { item: dock.shown && !menu.visible && !dock.editing ? hotZone : null }
+    }
     Item { id: fullArea; anchors.fill: parent }
 
     readonly property var activeWs: Niri.workspacesOn(modelData.name).find(w => w.is_active)
@@ -57,6 +64,16 @@ PanelWindow {
 
     readonly property bool shown: enabled && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || hovering || leaveDelay.running || menu.visible)
 
+    // the shown dock's place, from its edge to its far side
+    Item {
+        id: reach
+        readonly property real cw: capsule.width
+        readonly property real ch: capsule.height
+        x: dock.side === "left" ? 0 : (dock.side === "right" ? parent.width - cw - dock.margin : Math.round((parent.width - cw) / 2))
+        y: dock.side === "bottom" ? parent.height - ch - dock.margin : (dock.vertical ? Math.round((parent.height - ch) / 2) : 0)
+        width: dock.vertical ? cw + dock.margin : cw
+        height: dock.vertical ? ch : ch + dock.margin
+    }
     // the strip along its edge that brings it back
     Item {
         id: hotZone
