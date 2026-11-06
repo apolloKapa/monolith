@@ -60,9 +60,13 @@ PanelWindow {
 
     readonly property real pad: Theme.islandPad
     readonly property real fieldH: 46
+    // each menu is its own window; Settings → Menus can put them back together with tabs
+    readonly property bool tabbed: Store.get("menus.tabs", false) === true
     // Search is compact: no tab row (Tab still moves to the other pages, and they show it)
-    readonly property bool compact: HubState.page === "search"
+    readonly property bool compact: HubState.page === "search" || !tabbed
     readonly property real tabsH: compact ? 0 : 38
+    // menus you filter by typing keep the search field; the rest show their name there
+    readonly property bool usesQuery: HubState.page === "search" || !!(currentPage && currentPage.usesQuery)
     // the body's size: the bar's when collapsed, the page's when open
     readonly property real openW: Math.max(bar.implicitWidth, (pageInfo[HubState.page] || pageInfo.search).w)
     readonly property real openH: Math.min(height - 40, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
@@ -175,7 +179,24 @@ PanelWindow {
                     width: parent.width
                     height: win.fieldH
                     radius: Theme.corner(height)
-                    color: Theme.containerHigh
+                    color: win.usesQuery || win.tabbed ? Theme.containerHigh : "transparent"
+                    // a menu of its own: its name instead of a search field
+                    Label {
+                        visible: !win.usesQuery && !win.tabbed
+                        anchors.left: fieldIcon.right; anchors.leftMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: (win.pageInfo[HubState.page] || win.pageInfo.search).title
+                        strong: true
+                        font.pixelSize: Theme.sizeTitle + 2
+                    }
+                    Pressable {
+                        visible: !win.usesQuery && !win.tabbed
+                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                        width: 36; height: 36
+                        color: hovered ? Theme.containerHigh : "transparent"
+                        onClicked: HubState.close()
+                        Icon { anchors.centerIn: parent; name: "close"; size: 20; color: Theme.subtext }
+                    }
                     Icon {
                         id: fieldIcon
                         x: 16
@@ -197,6 +218,8 @@ PanelWindow {
                         selectionColor: Theme.selected
                         clip: true
                         focus: win.shown
+                        // still takes the keys (Esc, arrows for the page) on a menu without a search
+                        opacity: win.usesQuery || win.tabbed ? 1 : 0
                         Label {
                             anchors.fill: parent
                             verticalAlignment: Text.AlignVCenter
@@ -205,10 +228,13 @@ PanelWindow {
                             muted: true
                             font.pixelSize: Theme.sizeTitle
                         }
-                        onTextEdited: if (text !== "" && !(win.currentPage && win.currentPage.usesQuery)) HubState.page = "search"
+                        onTextEdited: {
+                            if (text === "" || win.usesQuery) return;
+                            if (win.tabbed) HubState.page = "search"; else text = "";
+                        }
                         Keys.onEscapePressed: { if (text !== "") text = ""; else HubState.close(); }
-                        Keys.onTabPressed: event => { HubState.step((event.modifiers & Qt.ShiftModifier) ? -1 : 1); event.accepted = true; }
-                        Keys.onBacktabPressed: HubState.step(-1)
+                        Keys.onTabPressed: event => { if (win.tabbed) { HubState.step((event.modifiers & Qt.ShiftModifier) ? -1 : 1); event.accepted = true; } else event.accepted = false; }
+                        Keys.onBacktabPressed: event => { if (win.tabbed) HubState.step(-1); else event.accepted = false; }
                         Keys.forwardTo: win.currentPage ? [win.currentPage] : []
                     }
                 }
