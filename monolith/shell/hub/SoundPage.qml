@@ -10,7 +10,8 @@ import "../ui"
 Page {
     id: page
     pageId: "sound"
-    implicitHeight: Math.min(560, col.implicitHeight)
+    // the tabs, then the list: it scrolls when it's taller than the room left
+    implicitHeight: Math.min(560, 52 + Math.max(60, list.contentHeight))
     property string tab: "out"
 
     readonly property var nodes: Pipewire.nodes.values.filter(n => n.audio)
@@ -85,14 +86,22 @@ Page {
             muted: true
         }
 
-        Repeater {
+        ListView {
+            id: list
+            SmoothWheel {}
+            Layout.fillWidth: true
+            Layout.preferredHeight: page.height - 52
+            visible: page.shown.length > 0
+            clip: true
+            spacing: 8
+            boundsBehavior: Flickable.StopAtBounds
             model: page.shown
-            Pressable {
+            delegate: Pressable {
                 id: row
                 required property var modelData
                 readonly property bool def: page.isDefault(modelData)
-                Layout.fillWidth: true
-                Layout.preferredHeight: 104
+                width: ListView.view.width
+                height: 104
                 radius: Theme.corner(56, 6)
                 color: def ? Theme.selected : Theme.containerHigh
                 enabledInput: !modelData.isStream
