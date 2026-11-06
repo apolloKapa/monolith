@@ -346,8 +346,9 @@ PanelWindow {
     Rectangle {
         id: floatCard
         visible: !win.docked && opacity > 0.01
-        width: win.openW + 2 * win.pad
-        height: win.openH - Theme.islandH + win.pad
+        // whole pixels: a fractional card size blurs what's in it
+        width: Math.round(win.openW + 2 * win.pad)
+        height: Math.round(win.openH - Theme.islandH + win.pad)
         Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
@@ -373,8 +374,7 @@ PanelWindow {
         }
         Behavior on opacity { NumberAnimation { duration: win.shown ? 220 : 160 } }
         Behavior on scale { NumberAnimation { duration: win.shown ? Theme.springMs : 160; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.springCurve : Theme.exitCurve } }
-        layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY; shadowHorizontalOffset: Theme.shadowX }
+        CardShadow {}
         MouseArea { anchors.fill: parent }
         // pages let go once it has faded out
         onOpacityChanged: if (!win.shown && opacity < 0.01) win.wasOpen = false

@@ -62,8 +62,7 @@ PanelWindow {
         radius: Theme.corner(60, 10)
         color: Theme.frame
         border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
-        layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY; shadowHorizontalOffset: Theme.shadowX }
+        CardShadow {}
         MouseArea { anchors.fill: parent }   // clicks on the card don't close it
         scale: dm.shown ? 1 : 0.9
         opacity: dm.shown ? 1 : 0
