@@ -2,8 +2,8 @@ import QtQuick
 import "../../core"
 import "../../ui"
 
-// Lumen: a dark dial where each hand lights up the hour numbers it passes, in its own colour,
-// fading as it moves on; the numbers glow outward a little when lit.
+// Lumen: a twelve-lobed dial (primary container) whose lobe at each hour swells as a hand passes
+// it; the hand lights that hour's number in its own colour, and it fades again as the hand moves on.
 FaceBase {
     id: f
     readonly property real d: Math.min(width, height)
@@ -27,11 +27,45 @@ FaceBase {
         hourA = (t.getHours() % 12) * 30 + m * 0.5 + s / 120;
         minA = m * 6 + s * 0.1;
         secA = (s + t.getMilliseconds() / 1000) * 6;
+        const g = [];
+        for (let k = 0; k < 12; k++) g.push(Math.max(beam(hourA, k * 30, 45), beam(minA, k * 30, 40), secs ? beam(secA, k * 30, 32) * 0.85 : 0));
+        glow = g;
     }
+    property var glow: new Array(12).fill(0)
     Timer { interval: f.secs ? 40 : 1000; running: f.live && f.visible; repeat: true; triggeredOnStart: true; onTriggered: f.tick() }
     Component.onCompleted: tick()
 
-    Rectangle { anchors.centerIn: parent; width: f.d * 0.94; height: width; radius: width / 2; color: Qt.darker(f.dial, 1.6) }
+    // the dial: a circle with a soft lobe towards each hour, bigger where it's lit
+    Canvas {
+        id: dialC
+        anchors.fill: parent
+        property var g: f.glow
+        onGChanged: requestPaint()
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        property color c: f.dial
+        onCChanged: requestPaint()
+        onPaint: {
+            const ctx = getContext("2d");
+            ctx.reset();
+            const cx = width / 2, cy = height / 2, base = f.d * 0.435, amp = f.d * 0.042;
+            ctx.beginPath();
+            const n = 360;
+            for (let i = 0; i <= n; i++) {
+                const deg = i * 360 / n;
+                const h = Math.round(deg / 30) % 12;
+                let diff = Math.abs(deg - h * 30); if (diff > 180) diff = 360 - diff;
+                const bump = 0.5 * (1 + Math.cos(diff / 15 * Math.PI));
+                const r = base + amp * (0.28 + 0.72 * (g[h] || 0)) * bump;
+                const a = deg * Math.PI / 180;
+                const x = cx + r * Math.sin(a), y = cy - r * Math.cos(a);
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = c;
+            ctx.fill();
+        }
+    }
     Repeater {
         model: 12
         Item {
@@ -45,6 +79,7 @@ FaceBase {
             readonly property color col: isec >= ih && isec >= im ? f.secC : (im >= ih ? f.minC : f.hourC)
             readonly property real dist: f.d * (0.382 + 0.028 * lit)
             width: f.d * 0.11; height: width
+            visible: lit > 0.001
             x: f.width / 2 + dist * Math.sin(ang * Math.PI / 180) - width / 2
             y: f.height / 2 - dist * Math.cos(ang * Math.PI / 180) - height / 2
             Rectangle { anchors.centerIn: parent; width: parent.width * 0.92; height: width; radius: width / 2; color: parent.col; opacity: parent.lit * 0.24 }
@@ -53,7 +88,7 @@ FaceBase {
                 text: parent.hour
                 font.family: Theme.fontFamily; font.pixelSize: f.d * 0.054; font.weight: Font.Bold
                 color: parent.lit > 0.5 ? f.numC : parent.col
-                opacity: 0.18 + 0.82 * parent.lit
+                opacity: parent.lit
             }
         }
     }

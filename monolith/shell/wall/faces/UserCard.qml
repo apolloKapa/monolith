@@ -2,114 +2,111 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import "../../core"
 import "../../ui"
 
-// You: glass; your picture, your name, the computer and how long it's been up; along the
-// bottom Settings and Lock, then sleep, restart and power off (hold one for a moment to do it).
+// You: glass; your picture with two buttons beside it (your name: Settings; Lock), and sleep,
+// restart and power off underneath (one, two and three parts wide). Hold one: it fills from the
+// bottom with a wave in its colour and does it when full; let go early and it drains back.
 FaceBase {
     id: f
     readonly property string avatar: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face"))
-    property string uptime: ""
-    FileView { id: host; path: "/etc/hostname" }
-    // how long it's been up (/proc/uptime, read fresh each minute)
-    Process {
-        id: up
-        command: ["cat", "/proc/uptime"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const s = Math.floor(parseFloat((text || "0").split(" ")[0]));
-                const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
-                f.uptime = (d > 0 ? d + "d " : "") + (h > 0 ? h + "h " : "") + m + "m";
-            }
-        }
-    }
-    Timer { interval: 60000; repeat: true; triggeredOnStart: true; running: f.live; onTriggered: up.running = true }
-    Glass { anchors.fill: parent; ctx: f.ctx; radius: Theme.corner(80, 16) }
+    readonly property real r: Theme.corner(80, 14)
+    readonly property real small: Math.min(Theme.corner(80, 8), 8)
+    Glass { anchors.fill: parent; ctx: f.ctx; radius: f.r }
     Fit {
         dw: 280; dh: 150
-        RowLayout {
-            x: 14; y: 14; width: parent.width - 28
-            spacing: 12
-            Rectangle {
-                width: 58; height: 58; radius: Theme.corner(58, 12); color: Theme.accentContainer; clip: true
-                Image { id: av; anchors.fill: parent; source: Wall.url(f.avatar); fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(116, 116); visible: false }
-                MultiEffect { anchors.fill: parent; source: av; visible: av.status === Image.Ready; maskEnabled: true; maskSource: avm }
-                Rectangle { id: avm; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
-                Icon { anchors.centerIn: parent; visible: av.status !== Image.Ready; name: "person"; filled: true; size: 30; color: Theme.onAccentContainer }
-            }
-            ColumnLayout {
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: 0
-                spacing: 4
-                Text { Layout.fillWidth: true; elide: Text.ElideRight; text: Quickshell.env("USER") || ""; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 20 }
-                Row {
-                    Layout.fillWidth: true
-                    clip: true
-                    spacing: 4
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 8
+            RowLayout {
+                Layout.fillWidth: true; Layout.fillHeight: true
+                spacing: 10
+                Rectangle {
+                    Layout.preferredWidth: 70; Layout.preferredHeight: 70
+                    radius: Math.min(Theme.corner(70, 12), 12)
+                    color: Theme.control
+                    Image { id: av; anchors.fill: parent; source: Wall.url(f.avatar); fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(140, 140); visible: false; asynchronous: true }
+                    MultiEffect { anchors.fill: parent; source: av; visible: av.status === Image.Ready; maskEnabled: true; maskSource: avm }
+                    Rectangle { id: avm; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
+                    Icon { anchors.centerIn: parent; visible: av.status !== Image.Ready; name: "person"; filled: true; size: 30; color: Theme.text }
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true; Layout.fillHeight: true
+                    spacing: 6
                     Repeater {
-                        model: [["computer", (host.text() || "").trim() || "localhost"], ["schedule", f.uptime]]
+                        model: [["person", Quickshell.env("USER") || "You", Theme.text, "settings"], ["lock", "Lock", Theme.accent, "lock"]]
                         Rectangle {
+                            id: qb
                             required property var modelData
-                            height: 22; width: cr.implicitWidth + 14; radius: Theme.corner(22, 8)
-                            color: Qt.alpha(Theme.control, 0.8)
-                            Row { id: cr; anchors.centerIn: parent; spacing: 4
-                                Icon { name: parent.parent.modelData[0]; size: 13; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
-                                Text { text: parent.parent.modelData[1]; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter } }
+                            Layout.fillWidth: true; Layout.preferredHeight: 32
+                            radius: f.small
+                            color: Qt.alpha(qma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
+                            Behavior on color { ColorAnimation { duration: 200 } }
+                            Row {
+                                x: 10; anchors.verticalCenter: parent.verticalCenter
+                                width: parent.width - 20
+                                spacing: 8
+                                Icon { name: qb.modelData[0]; size: 15; filled: true; color: qb.modelData[2]; anchors.verticalCenter: parent.verticalCenter }
+                                Text { width: parent.width - 23; elide: Text.ElideRight; text: qb.modelData[1]; color: qb.modelData[2]; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                            }
+                            MouseArea {
+                                id: qma
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                enabled: f.live
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: qb.modelData[3] === "lock" ? LockState.lock() : HubState.openSettings("appearance", "")
+                            }
                         }
                     }
                 }
             }
-        }
-        Row {
-            x: 14; anchors.bottom: parent.bottom; anchors.bottomMargin: 14
-            width: parent.width - 28
-            spacing: 6
-            // Settings and Lock (a click), then sleep, restart, power off (hold)
-            Repeater {
-                model: [["settings", "Settings"], ["lock", "Lock"]]
-                Rectangle {
-                    id: qb
-                    required property var modelData
-                    width: (parent.width - 24) / 5; height: 38
-                    radius: Theme.corner(38, 8)
-                    color: Qt.alpha(qma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
-                    Icon { anchors.centerIn: parent; name: qb.modelData[0]; size: 18; color: qma.containsMouse ? Theme.accent : Theme.subtext }
-                    MouseArea {
-                        id: qma
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        enabled: f.live
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: qb.modelData[0] === "lock" ? LockState.lock() : HubState.openSettings("appearance", "")
-                    }
-                }
-            }
-            Repeater {
-                // [command, icon, colour]
-                model: [["suspend", "bedtime", "#89b4fa"], ["reboot", "restart_alt", "#fab387"], ["poweroff", "power_settings_new", "#f38ba8"]]
-                Rectangle {
-                    id: act
-                    required property var modelData
-                    width: (parent.width - 24) / 5; height: 38
-                    radius: Theme.corner(38, 8)
-                    color: Qt.alpha(ma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
-                    clip: true
-                    property real hold: 0
-                    Rectangle { width: parent.width * act.hold; height: parent.height; color: act.modelData[2]; opacity: 0.85 }
-                    Icon { anchors.centerIn: parent; name: act.modelData[1]; size: 18; color: act.hold > 0.5 ? "#15161a" : (ma.containsMouse ? act.modelData[2] : Theme.subtext) }
-                    NumberAnimation on hold { id: holding; running: false; to: 1; duration: 700; onFinished: if (act.hold >= 1) { Power.run(act.modelData[0]); act.hold = 0; } }
-                    MouseArea {
-                        id: ma
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        enabled: f.live
-                        cursorShape: Qt.PointingHandCursor
-                        onPressed: { act.hold = 0; holding.start(); }
-                        onReleased: { holding.stop(); act.hold = 0; }
-                        onCanceled: { holding.stop(); act.hold = 0; }
+            RowLayout {
+                Layout.fillWidth: true; Layout.preferredHeight: 36
+                spacing: 6
+                Repeater {
+                    // [command, icon, share of the row, colour]
+                    model: [["suspend", "bedtime", 1, "#89b4fa"], ["reboot", "restart_alt", 2, "#fab387"], ["poweroff", "power_settings_new", 3, "#f38ba8"]]
+                    Rectangle {
+                        id: act
+                        required property var modelData
+                        Layout.fillWidth: true; Layout.fillHeight: true
+                        Layout.preferredWidth: modelData[2]
+                        radius: f.small
+                        clip: true
+                        color: Qt.alpha(ma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
+                        Behavior on color { ColorAnimation { duration: 250 } }
+                        scale: ma.pressed ? 0.98 - 0.01 * modelData[2] : (ma.containsMouse ? 1.02 : 1)
+                        Behavior on scale { NumberAnimation { duration: 400; easing.type: Easing.OutQuart } }
+                        property real level: 0
+                        property bool done: false
+                        WaveFill { anchors.fill: parent; radius: act.radius; value: act.level; color: act.modelData[3]; live: f.live; keepMoving: act.level > 0 && act.level < 1; maxAmp: 8 }
+                        Rectangle { id: flash; anchors.fill: parent; radius: act.radius; color: "#ffffff"; opacity: 0 }
+                        Icon { anchors.centerIn: parent; name: act.modelData[1]; size: 16; color: ma.containsMouse ? Theme.text : Theme.subtext }
+                        // the icon turns dark under the liquid
+                        Item {
+                            anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
+                            height: act.height * act.level
+                            clip: true
+                            Icon { anchors.horizontalCenter: parent.horizontalCenter; y: act.height / 2 - height / 2 - (act.height - parent.height); name: act.modelData[1]; size: 16; color: "#15161a" }
+                        }
+                        NumberAnimation { id: filling; target: act; property: "level"; to: 1; duration: 900 * (1 - act.level) + 1; easing.type: Easing.InQuad
+                            onFinished: if (act.level >= 1) { act.done = true; flashAnim.start(); Power.run(act.modelData[0]); reset.start(); } }
+                        NumberAnimation { id: draining; target: act; property: "level"; to: 0; duration: 500; easing.type: Easing.OutCubic }
+                        NumberAnimation { id: flashAnim; target: flash; property: "opacity"; from: 0.6; to: 0; duration: 500; easing.type: Easing.OutExpo }
+                        Timer { id: reset; interval: 1500; onTriggered: { act.done = false; draining.start(); } }
+                        MouseArea {
+                            id: ma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            enabled: f.live
+                            cursorShape: act.done ? Qt.ArrowCursor : Qt.PointingHandCursor
+                            onPressed: if (!act.done) { draining.stop(); filling.start(); }
+                            onReleased: if (!act.done && act.level < 1) { filling.stop(); draining.start(); }
+                            onCanceled: if (!act.done) { filling.stop(); draining.start(); }
+                        }
                     }
                 }
             }

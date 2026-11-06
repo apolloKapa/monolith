@@ -16,13 +16,13 @@ Singleton {
             faces: [["digital", "Digital", "ClockDigital", [1.2, 5]], ["minimal", "Minimal", "ClockMinimal", [1.2, 5]], ["analog", "Analog", "ClockAnalog", [1, 1], [220, 220]],
                     ["material", "Material", "ClockMaterial", [0.7, 1.3], [230, 230]], ["materialAnalog", "Material analog", "ClockMaterialAnalog", [1, 1], [230, 230]],
                     ["lumen", "Lumen", "ClockLumen", [1, 1], [240, 240]], ["lockscreen", "Lock screen", "ClockLockscreen", [0.6, 4], [520, 260]],
-                    ["stretched", "Stretched", "ClockStretched", [1.5, 6], [520, 160]], ["stacked", "Stacked", "ClockStacked", [0.5, 1.2], [180, 260]]] },
+                    ["stretched", "Stretched", "ClockStretched", [0.3, 2.5], [300, 280]], ["stacked", "Stacked", "ClockStacked", [0.5, 1.2], [180, 260]]] },
         date: { name: "Date", icon: "today", size: [300, 100], lim: [100, 40, 900, 400], aspect: [1, 6],
             faces: [["full", "Full", "DateFull"], ["compact", "Compact", "DateCompact"]] },
         weather: { name: "Weather", icon: "partly_cloudy_day", size: [250, 120], lim: [90, 70, 800, 500], aspect: [0.8, 4],
-            faces: [["compact", "Compact", "WeatherCompact", [0.8, 3.5]], ["full", "Full", "WeatherFull", [1.6, 3.5], [400, 170]], ["round", "Round", "WeatherRound", [0.35, 0.7], [110, 220]]] },
+            faces: [["compact", "Compact", "WeatherCompact", [0.8, 3.5]], ["full", "Full", "WeatherFull", [1.6, 3.5], [400, 170]], ["round", "Round", "WeatherRound", [1, 1], [200, 200]]] },
         media: { name: "Music", icon: "music_note", size: [360, 130], lim: [120, 60, 1200, 700], aspect: [0.8, 6],
-            faces: [["full", "Full", "MusicFull", [1.8, 6]], ["round", "Round", "MusicRound", [0.8, 1.25], [300, 300]], ["lyrics", "Lyrics", "MusicLyrics", [0.8, 4], [460, 240]],
+            faces: [["full", "Full", "MusicFull", [2.4, 4.4], [400, 140]], ["round", "Round", "MusicRound", [0.8, 1.25], [300, 300]], ["lyrics", "Lyrics", "MusicLyrics", [0.8, 4], [460, 240]],
                     ["simpleLyrics", "Simple lyrics", "MusicLyricsSimple", [1, 8], [600, 130]], ["cover", "Cover", "MusicCover", [0.8, 1.25], [220, 220]], ["controls", "Controls", "MusicControls", [2, 4], [380, 160]]] },
         visualizer: { name: "Visualiser", icon: "graphic_eq", size: [900, 180], lim: [160, 40, 3840, 600], aspect: [1, 20],
             faces: [["bars", "Bars", "VisualizerBars"], ["continuous", "Continuous", "VisualizerContinuous"]] },
@@ -98,14 +98,42 @@ Singleton {
         if (w / h < a[0]) h = w / a[0];
         return clamp(it.type, it.face, w, h);
     }
-    function aspectOf(t, f) { const x = faceOf(t, f); return x && x[3] ? x[3] : (spec[t] ? spec[t].aspect : [0.2, 10]); }
-    // keep a size inside the widget's limits (and the look's shape)
+    // each look's own limits, as the old widgets had them: [minW, minH, maxW, maxH, min w/h, max w/h]
+    // (a look missing here uses its widget's limits and shape)
+    readonly property var looks: ({
+        "clock/digital": [120, 60, 1400, 700, 1.2, 5], "clock/minimal": [80, 40, 1200, 600, 1.2, 5],
+        "clock/analog": [100, 100, 800, 800, 1, 1], "clock/materialAnalog": [100, 100, 800, 800, 1, 1],
+        "clock/lumen": [100, 100, 800, 800, 1, 1], "clock/material": [100, 100, 900, 900, 0.7, 1.3],
+        "clock/lockscreen": [160, 80, 1600, 800, 0.8, 2.8], "clock/stretched": [100, 120, 900, 1200, 0.3, 2.5],
+        "weather/compact": [90, 90, 600, 600, 0.7, 2.2], "weather/full": [340, 160, 820, 500, 1.5, 2.2], "weather/round": [90, 90, 600, 600, 1, 1],
+        "media/full": [150, 64, 800, 300, 2.4, 4.4], "media/round": [150, 150, 1000, 1000, 1, 1],
+        "media/lyrics": [180, 60, 1200, 600, 1.2, 5], "media/simpleLyrics": [180, 60, 2400, 1200, 0.5, 8],
+        "visualizer/bars": [50, 50, 3840, 1200, 0.1, 80], "visualizer/continuous": [50, 50, 3840, 1200, 0.1, 80],
+        "cpu/default": [100, 70, 600, 400, 0.6, 3], "ram/default": [100, 70, 600, 400, 0.6, 3],
+        "temp/default": [100, 70, 600, 400, 0.6, 3], "disk/default": [100, 70, 600, 400, 0.6, 3],
+        "cpu/circle": [90, 90, 600, 600, 0.5, 2], "ram/circle": [90, 90, 600, 600, 0.5, 2],
+        "temp/circle": [90, 90, 600, 600, 0.5, 2], "disk/circle": [90, 90, 600, 600, 0.5, 2],
+        "battery/default": [160, 60, 600, 200, 1.5, 4.5], "battery/circle": [90, 90, 600, 600, 0.5, 2],
+        "github/default": [520, 140, 1200, 380, 1.4, 8.5], "notes/default": [240, 180, 700, 700, 0.5, 2.5],
+        "text/default": [60, 30, 2000, 800, 0.2, 20], "image/rect": [30, 30, 4000, 4000, 0.02, 50],
+        "image/rounded": [30, 30, 4000, 4000, 0.02, 50], "image/round": [40, 40, 3000, 3000, 1, 1],
+        "user/default": [220, 130, 500, 300, 1.2, 2.8]
+    })
+    function lookOf(t, f) { return looks[t + "/" + faceId(t, f)] || null; }
+    function aspectOf(t, f) {
+        const l = lookOf(t, f);
+        if (l) return [l[4], l[5]];
+        const x = faceOf(t, f); return x && x[3] ? x[3] : (spec[t] ? spec[t].aspect : [0.2, 10]);
+    }
+    function limOf(t, f) { const l = lookOf(t, f); return l ? l.slice(0, 4) : (spec[t] ? spec[t].lim : [40, 40, 4000, 4000]); }
+    // keep a size inside the look's limits and shape
     function clamp(t, f, w, h) {
         const s = spec[t];
         if (!s) return [w, h];
         const a = aspectOf(t, f);
-        w = Math.max(s.lim[0], Math.min(s.lim[2], w));
-        h = Math.max(s.lim[1], Math.min(s.lim[3], h));
+        const lim = limOf(t, f);
+        w = Math.max(lim[0], Math.min(lim[2], w));
+        h = Math.max(lim[1], Math.min(lim[3], h));
         if (w / h > a[1]) w = h * a[1];
         if (w / h < a[0]) h = w / a[0];
         return [Math.round(w), Math.round(h)];
@@ -119,7 +147,7 @@ Singleton {
         if (["cpu", "ram", "temp", "disk", "battery"].indexOf(t) !== -1 && id === "circle")
             o.push(["sineWave", "Wavy ring", "toggle", true], ["lineThickness", "Line thickness", "slider", 8, [3, 16, 1]]);
         if (t === "media" && (id === "lyrics" || id === "simpleLyrics"))
-            o.push(["lyricsLines", "Lines", "slider", 3, [1, 7, 1]], ["lyricsAlignment", "Alignment", "choice", "center", [["left", "Left"], ["center", "Centre"], ["right", "Right"]]],
+            o.push(["lyricsLines", "Lines before and after", "slider", id === "lyrics" ? 2 : 1, [0, 4, 1]], ["lyricsAlignment", "Alignment", "choice", "left", [["left", "Left"], ["center", "Centre"], ["right", "Right"]]],
                    ["showNoLyrics", "Say when there are no lyrics", "toggle", true]);
         if (t === "media" && id === "full")
             o.push(["showBars", "Visualiser behind it", "toggle", true], ["continuous", "Smooth visualiser", "toggle", false]);

@@ -12,7 +12,7 @@ Singleton {
     readonly property bool metric: Store.get("weather.unit", (Prefs.raw.general && Prefs.raw.general.weatherUnit === "imperial") ? "imperial" : "metric") !== "imperial"
     onMetricChanged: refresh()
     readonly property string city: loc ? (loc.city || "") : ""
-    property var current: null      // { temp, code, day }
+    property var current: null      // { temp, feels, code, day }
     property var hours: []          // [{ time, temp, code, rain }]
     property var days: []           // [{ date, max, min, code }]
     readonly property bool ready: current !== null
@@ -47,7 +47,7 @@ Singleton {
         if (!loc) return;
         const u = "https://api.open-meteo.com/v1/forecast?latitude=" + loc.latitude + "&longitude=" + loc.longitude
             + "&timezone=" + encodeURIComponent(loc.timezone || "auto")
-            + "&current=temperature_2m,weather_code,is_day"
+            + "&current=temperature_2m,apparent_temperature,weather_code,is_day"
             + "&hourly=temperature_2m,weather_code,precipitation_probability&forecast_hours=24"
             + "&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=6"
             + (metric ? "" : "&temperature_unit=fahrenheit");
@@ -60,7 +60,7 @@ Singleton {
             onStreamFinished: {
                 try {
                     const d = JSON.parse(text);
-                    w.current = { temp: d.current.temperature_2m, code: d.current.weather_code, day: d.current.is_day === 1 };
+                    w.current = { temp: d.current.temperature_2m, feels: d.current.apparent_temperature, code: d.current.weather_code, day: d.current.is_day === 1 };
                     w.hours = d.hourly.time.map((t, i) => ({ time: t.substring(11, 16), temp: d.hourly.temperature_2m[i], code: d.hourly.weather_code[i], rain: d.hourly.precipitation_probability[i] }));
                     w.days = d.daily.time.map((t, i) => ({ date: t, max: d.daily.temperature_2m_max[i], min: d.daily.temperature_2m_min[i], code: d.daily.weather_code[i] }));
                 } catch (e) {}
