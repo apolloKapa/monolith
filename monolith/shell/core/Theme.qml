@@ -130,6 +130,10 @@ Singleton {
     readonly property int enterMs: Math.round(500 * animScale)
     readonly property int exitMs: Math.round(200 * animScale)
     readonly property int moveMs: Math.round(380 * animScale)
+    readonly property int fastMs: Math.round(160 * animScale)      // hovers, colours, small state changes
+    readonly property int shortMs: Math.round(260 * animScale)     // fades, small moves, switches
+    // any other transition's length, scaled like the rest (0 when animations are off)
+    function ms(n) { return Math.round(n * animScale); }
 
     // ── the island (status line + hub in one shape hanging from the top edge) ──
     readonly property color frame: Qt.alpha(oled ? "#000000" : m("surface", mix(_base, _s0, 0.35)), see)   // the island's fill

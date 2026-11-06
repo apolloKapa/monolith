@@ -42,7 +42,7 @@ FaceBase {
         property color col
         anchors.centerIn: parent
         rotation: angle
-        Behavior on rotation { enabled: f.live; RotationAnimation { duration: 400; direction: RotationAnimation.Clockwise; easing.type: Easing.OutCubic } }
+        Behavior on rotation { enabled: f.live; RotationAnimation { duration: Theme.ms(400); direction: RotationAnimation.Clockwise; easing.type: Easing.OutCubic } }
         Rectangle { width: parent.w; height: parent.len; radius: width / 2; color: parent.col; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.top; anchors.bottomMargin: -width / 2 }
     }
     Hand { angle: (f.now.getHours() % 12) * 30 + f.now.getMinutes() * 0.5; w: f.d * 0.076; len: f.d * 0.24; col: f.hourC }

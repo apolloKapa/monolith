@@ -53,7 +53,7 @@ FloatingWindow {
                 color: drop.containsDrag ? Qt.alpha(Theme.accent, 0.14) : Theme.container
                 border.width: 2
                 border.color: drop.containsDrag ? Theme.accent : Qt.alpha(Theme.text, 0.18)
-                Behavior on color { ColorAnimation { duration: 140 } }
+                Behavior on color { ColorAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
                 // a dashed outline
                 Canvas {
                     anchors.fill: parent

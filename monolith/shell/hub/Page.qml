@@ -14,6 +14,6 @@ FocusScope {
     height: implicitHeight
     visible: opacity > 0.01
     opacity: current ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: current ? 260 : 120; easing.type: Easing.OutCubic } }
-    transform: Translate { y: current ? 0 : 8; Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } } }
+    Behavior on opacity { NumberAnimation { duration: current ? Theme.shortMs : Theme.ms(120); easing.type: Easing.OutCubic } }
+    transform: Translate { y: current ? 0 : 8; Behavior on y { NumberAnimation { duration: Theme.ms(300); easing.type: Easing.OutCubic } } }
 }

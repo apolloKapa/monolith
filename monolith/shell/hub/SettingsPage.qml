@@ -149,7 +149,14 @@ Page {
                 // loaded while the page is open; the section reloads its data each time
                 active: page.current && HubState.open
                 source: "settings/" + page.file + ".qml"
-                onSourceChanged: flick.contentY = 0
+                onSourceChanged: { flick.contentY = 0; pageIn.restart(); }
+                // a page comes in like the menus do: fading up from a little lower
+                transform: Translate { id: lift }
+                ParallelAnimation {
+                    id: pageIn
+                    NumberAnimation { target: loader; property: "opacity"; from: 0; to: 1; duration: Theme.shortMs; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: lift; property: "y"; from: 10; to: 0; duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+                }
             }
         }
         }

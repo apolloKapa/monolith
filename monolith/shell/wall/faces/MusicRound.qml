@@ -38,8 +38,8 @@ FaceBase {
         color: Theme.accent
         opacity: f.playing ? 0.005 + f.bass * 0.035 : 0
         scale: 0.985 + f.bass * 0.0375
-        Behavior on opacity { NumberAnimation { duration: 120 } }
-        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Theme.ms(120); easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
     }
     Rectangle {
         anchors.centerIn: parent; anchors.verticalCenterOffset: f.bounce * 0.8
@@ -47,8 +47,8 @@ FaceBase {
         color: Theme.accent
         opacity: f.playing ? 0.01 + f.kick * 0.055 : 0
         scale: 0.992 + f.kick * 0.026
-        Behavior on opacity { NumberAnimation { duration: 40 } }
-        Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Theme.ms(40); easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.ms(120); easing.type: Easing.OutCubic } }
     }
     // the bars all round
     Repeater {
@@ -79,9 +79,9 @@ FaceBase {
         width: f.ar * 2; height: width
         rotation: f.playing ? (f.bass - 0.3) * 0.9 : 0
         scale: f.playing ? 1 + f.bass * 0.0135 + f.kick * 0.027 : 1
-        Behavior on anchors.verticalCenterOffset { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-        Behavior on rotation { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+        Behavior on anchors.verticalCenterOffset { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
+        Behavior on rotation { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
         Item {
             anchors.fill: parent
             NumberAnimation on rotation { from: 0; to: 360; duration: 24000; loops: Animation.Infinite; running: f.live; paused: !f.playing }
@@ -90,7 +90,7 @@ FaceBase {
             MultiEffect {
                 anchors.fill: parent; source: cov; maskEnabled: true; maskSource: m
                 opacity: f.active && cov.status === Image.Ready ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 600 } }
+                Behavior on opacity { NumberAnimation { duration: Theme.ms(600); easing.type: Easing.OutCubic } }
             }
             Rectangle { id: m; anchors.fill: parent; radius: width / 2; visible: false; layer.enabled: true }
             // nothing playing: a plain dark record with a note
@@ -98,7 +98,7 @@ FaceBase {
                 anchors.fill: parent; radius: width / 2
                 color: Theme.m("surface_container_lowest", "#101014")
                 opacity: f.active && cov.status === Image.Ready ? 0 : 1
-                Behavior on opacity { NumberAnimation { duration: 400 } }
+                Behavior on opacity { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutCubic } }
                 Icon { anchors.centerIn: parent; anchors.verticalCenterOffset: -parent.height * 0.24; name: "music_note"; size: parent.width * 0.16; color: Theme.subtext }
             }
             Rectangle { anchors.fill: parent; radius: width / 2; color: Qt.alpha(Theme.accent, 0.08 + f.kick * 0.08); opacity: f.active && cov.status === Image.Ready ? 1 : 0 }

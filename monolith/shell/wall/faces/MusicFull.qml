@@ -21,6 +21,7 @@ FaceBase {
     readonly property bool showTime: height >= 80
     readonly property bool showArtist: height >= 62
     readonly property bool showBars: height >= 52 && f.opt("showBars", true)
+    PlayPosition { id: pp; player: f.active ? f.p : null; active: f.live && f.visible && f.showTime }
     function mmss(s) { s = Math.max(0, Math.floor(s || 0)); return (s < 600 ? "0" : "") + Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
 
     Glass { anchors.fill: parent; ctx: f.ctx; radius: f.r }
@@ -81,15 +82,15 @@ FaceBase {
                 anchors.top: artist.visible ? artist.bottom : ttl.bottom
                 anchors.bottom: ctl.top
                 spacing: Math.max(4, f.sp * 0.4)
-                Text { text: f.active ? f.mmss(f.p.position) : "--:--"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(7, f.subSize * 0.85) }
+                Text { text: f.active ? f.mmss(pp.shown) : "--:--"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(7, f.subSize * 0.85) }
                 WavySeek {
                     Layout.fillWidth: true
                     Layout.preferredHeight: Math.max(14, Math.round(f.subSize * 1.2))
                     live: f.live
-                    value: f.active ? f.p.position : 0
+                    value: f.active ? pp.shown : 0
                     to: f.active && f.p.length > 0 ? f.p.length : 1
                     playing: f.active && f.p.isPlaying
-                    onMoved: v => { if (f.p && f.p.canSeek) f.p.position = v; }
+                    onMoved: v => { if (f.p && f.p.canSeek) { f.p.position = v; pp.sync(); } }
                 }
                 Text { text: f.active ? f.mmss(f.p.length) : "--:--"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(7, f.subSize * 0.85) }
             }

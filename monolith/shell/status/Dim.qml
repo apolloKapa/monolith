@@ -20,6 +20,6 @@ PanelWindow {
         anchors.fill: parent
         color: "black"
         opacity: Idle.dimming ? 0.55 : 0
-        Behavior on opacity { NumberAnimation { duration: Idle.dimming ? 2500 : 250 } }
+        Behavior on opacity { NumberAnimation { duration: Idle.dimming ? 2500 : Theme.ms(250); easing.type: Easing.OutCubic } }
     }
 }

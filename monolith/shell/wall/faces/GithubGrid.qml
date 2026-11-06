@@ -31,6 +31,7 @@ FaceBase {
         width: 28; height: 28; radius: Theme.corner(28, 8)
         opacity: on ? 1 : 0.35
         color: Qt.alpha(bm.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
+        Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
         Icon { anchors.centerIn: parent; name: b.icon; size: 16; color: bm.containsMouse ? Theme.accent : Theme.subtext }
         MouseArea { id: bm; anchors.fill: parent; hoverEnabled: true; enabled: f.live && b.on; cursorShape: Qt.PointingHandCursor; onClicked: b.hit() }
     }
@@ -47,6 +48,7 @@ FaceBase {
                 anchors.verticalCenter: parent.verticalCenter
                 height: 28; width: un.implicitWidth + 16; radius: Theme.corner(28, 8)
                 color: um.containsMouse ? Qt.alpha(Theme.control, 0.85) : "transparent"
+                Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
                 Text { id: un; anchors.centerIn: parent; text: GitHub.user !== "" ? GitHub.user : "Set your GitHub name"; color: GitHub.user !== "" ? Theme.text : Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 15 }
                 MouseArea { id: um; anchors.fill: parent; hoverEnabled: true; enabled: f.live; cursorShape: Qt.IBeamCursor; onClicked: { f.editing = true; input.text = GitHub.user; input.forceActiveFocus(); input.selectAll(); } }
             }
@@ -118,6 +120,7 @@ FaceBase {
             x: 14; anchors.bottom: parent.bottom; anchors.bottomMargin: 10
             height: 26; width: info.implicitWidth + 16; radius: Theme.corner(26, 8)
             color: im.containsMouse ? Qt.alpha(Theme.control, 0.85) : "transparent"
+            Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
             Text {
                 id: info
                 anchors.centerIn: parent

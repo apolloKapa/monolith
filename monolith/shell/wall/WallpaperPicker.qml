@@ -20,7 +20,7 @@ PanelWindow {
 
     // t: 0 closed … 1 open. The first part is the bubble's fall, the rest its growing into the panel.
     property real t: shown ? 1 : 0
-    Behavior on t { NumberAnimation { duration: win.shown ? 720 : 380; easing.type: win.shown ? Easing.Linear : Easing.InQuad } }
+    Behavior on t { NumberAnimation { duration: win.shown ? Theme.ms(720) : Theme.ms(380); easing.type: win.shown ? Easing.Linear : Easing.InQuad } }
     readonly property real fall: ease(Math.min(1, t / 0.42))
     readonly property real grow: ease(Math.max(0, (t - 0.42) / 0.58))
     function ease(x) { return 1 - Math.pow(1 - x, 3); }
@@ -124,7 +124,7 @@ PanelWindow {
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     opacity: status === Image.Ready ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: 240 } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.ms(240); easing.type: Easing.OutCubic } }
                 }
             }
 

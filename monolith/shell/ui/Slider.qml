@@ -29,7 +29,7 @@ Item {
             width: Math.max(parent.height, parent.width * s.shown)
             radius: track.radius
             color: s.muted ? Theme.faint : Theme.accent
-            Behavior on width { enabled: !s.dragging; NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+            Behavior on width { enabled: !s.dragging; NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
         }
     }
     Icon {

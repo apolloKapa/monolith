@@ -40,12 +40,14 @@ ShellRoot {
     Variants { model: dimL.on ? Quickshell.screens : []; Dim {} }
     Lazy { id: wallL; when: HubState.wallOpen; linger: 1200 }
     Variants { model: wallL.on ? Quickshell.screens : []; WallpaperPicker {} }
-    Variants { model: HubState.deskMenu.screen !== "" ? Quickshell.screens : []; DesktopMenu {} }
+    Lazy { id: menuL; when: HubState.deskMenu.screen !== ""; linger: 400 }
+    Variants { model: menuL.on ? Quickshell.screens : []; DesktopMenu {} }
     LazyLoader { active: AppImages.opened; AppImagesWindow {} }
     Lazy { id: welcomeL; when: HubState.welcomeOpen; linger: 1500 }
     Variants { model: welcomeL.on ? Quickshell.screens : []; Welcome {} }
     Variants { model: Quickshell.screens; QuickAccess {} }
-    Variants { model: HubState.editWidgets !== "" ? Quickshell.screens : []; WidgetEditor {} }
+    Lazy { id: editL; when: HubState.editWidgets !== ""; linger: 400 }
+    Variants { model: editL.on ? Quickshell.screens : []; WidgetEditor {} }
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own

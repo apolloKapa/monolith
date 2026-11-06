@@ -50,7 +50,7 @@ Item {
         width: parent.width
         spacing: ll.gap
         y: ll.browsing ? ll.browseY : ll.autoY
-        Behavior on y { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
+        Behavior on y { NumberAnimation { duration: Theme.ms(650); easing.type: Easing.OutCubic } }
         Repeater {
             id: rep
             model: Lyrics.lines
@@ -76,9 +76,9 @@ Item {
                     scale: row.dist === 0 ? 1 : (Math.abs(row.dist) === 1 ? 0.88 : 0.8)
                     transformOrigin: ll.hAlign === Text.AlignHCenter ? Item.Center : (ll.hAlign === Text.AlignRight ? Item.Right : Item.Left)
                     visible: opacity > 0
-                    Behavior on color { ColorAnimation { duration: 650; easing.type: Easing.OutCubic } }
-                    Behavior on opacity { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
-                    Behavior on scale { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
+                    Behavior on color { ColorAnimation { duration: Theme.ms(650); easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.ms(650); easing.type: Easing.OutCubic } }
+                    Behavior on scale { NumberAnimation { duration: Theme.ms(650); easing.type: Easing.OutCubic } }
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -109,6 +109,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             height: 28; width: pr.implicitWidth + 20; radius: Theme.corner(28, 8)
             color: Qt.alpha(pm.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
+            Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
             Row { id: pr; anchors.centerIn: parent; spacing: 6
                 Icon { name: "folder_open"; size: 15; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
                 Text { text: "Pick a lyrics file"; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter } }

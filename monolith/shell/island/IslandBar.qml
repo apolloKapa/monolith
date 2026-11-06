@@ -179,7 +179,7 @@ Item {
                         color: active ? Theme.accent : (bar.wsStyle === "numbers" ? "transparent" : (busy ? Theme.subtext : Theme.control))
                         border.width: bar.wsStyle === "dots" && !active && busy ? 0 : 0
                         Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-                        Behavior on color { ColorAnimation { duration: 200 } }
+                        Behavior on color { ColorAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
                         Text {
                             visible: bar.wsStyle === "numbers"
                             anchors.centerIn: parent

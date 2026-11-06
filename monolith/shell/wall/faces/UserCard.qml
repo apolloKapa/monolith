@@ -35,7 +35,7 @@ FaceBase {
                             Layout.fillWidth: true; Layout.preferredHeight: 32
                             radius: f.small
                             color: Qt.alpha(qma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
-                            Behavior on color { ColorAnimation { duration: 200 } }
+                            Behavior on color { ColorAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
                             Row {
                                 x: 10; anchors.verticalCenter: parent.verticalCenter
                                 width: parent.width - 20
@@ -69,9 +69,9 @@ FaceBase {
                         radius: f.small
                         clip: true
                         color: Qt.alpha(ma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
-                        Behavior on color { ColorAnimation { duration: 250 } }
+                        Behavior on color { ColorAnimation { duration: Theme.ms(250); easing.type: Easing.OutCubic } }
                         scale: ma.pressed ? 0.98 - 0.01 * modelData[2] : (ma.containsMouse ? 1.02 : 1)
-                        Behavior on scale { NumberAnimation { duration: 400; easing.type: Easing.OutQuart } }
+                        Behavior on scale { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutQuart } }
                         property real level: 0
                         property bool done: false
                         WaveFill { anchors.fill: parent; radius: act.radius; value: act.level; color: act.modelData[3]; live: f.live; keepMoving: act.level > 0 && act.level < 1; maxAmp: 8 }
@@ -86,8 +86,8 @@ FaceBase {
                         }
                         NumberAnimation { id: filling; target: act; property: "level"; to: 1; duration: 900 * (1 - act.level) + 1; easing.type: Easing.InQuad
                             onFinished: if (act.level >= 1) { act.done = true; flashAnim.start(); Power.run(act.modelData[0]); reset.start(); } }
-                        NumberAnimation { id: draining; target: act; property: "level"; to: 0; duration: 500; easing.type: Easing.OutCubic }
-                        NumberAnimation { id: flashAnim; target: flash; property: "opacity"; from: 0.6; to: 0; duration: 500; easing.type: Easing.OutExpo }
+                        NumberAnimation { id: draining; target: act; property: "level"; to: 0; duration: Theme.ms(500); easing.type: Easing.OutCubic }
+                        NumberAnimation { id: flashAnim; target: flash; property: "opacity"; from: 0.6; to: 0; duration: Theme.ms(500); easing.type: Easing.OutExpo }
                         Timer { id: reset; interval: 1500; onTriggered: { act.done = false; draining.start(); } }
                         MouseArea {
                             id: ma

@@ -21,6 +21,13 @@ Scope {
         color: Qt.alpha("#000000", 0.35)
         readonly property var flow: agent.flow
 
+        // the card grows in as the window shows
+        onVisibleChanged: if (visible) appear.restart()
+        ParallelAnimation {
+            id: appear
+            NumberAnimation { target: card; property: "opacity"; from: 0; to: 1; duration: Theme.shortMs; easing.type: Easing.OutCubic }
+            NumberAnimation { target: card; property: "scale"; from: 0.92; to: 1; duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve }
+        }
         Rectangle {
             id: card
             anchors.centerIn: parent
@@ -32,7 +39,7 @@ Scope {
             border.color: Theme.hairline
             property real shake: 0
             transform: Translate { x: Math.sin(card.shake * Math.PI * 6) * 12 * (1 - card.shake) }
-            NumberAnimation { id: shakeAnim; target: card; property: "shake"; from: 0; to: 1; duration: 480 }
+            NumberAnimation { id: shakeAnim; target: card; property: "shake"; from: 0; to: 1; duration: Theme.ms(480); easing.type: Easing.OutCubic }
             Connections {
                 target: win.flow
                 function onAuthenticationFailed() { shakeAnim.restart(); pw.text = ""; }

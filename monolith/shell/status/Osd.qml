@@ -94,7 +94,7 @@ PanelWindow {
                 width: parent.width; radius: 5
                 height: osd.kind === "volume" ? parent.height * Math.min(1, osd.audio ? osd.audio.volume : 0) : parent.height
                 color: osd.audio && osd.audio.muted && osd.kind === "volume" ? Theme.faint : Theme.accent
-                Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                Behavior on height { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
             }
         }
         Label {
@@ -110,7 +110,7 @@ PanelWindow {
         border.color: Theme.hairline
         opacity: hold.running ? 1 : 0
         scale: hold.running ? 1 : 0.94
-        Behavior on opacity { NumberAnimation { duration: hold.running ? 180 : 260 } }
+        Behavior on opacity { NumberAnimation { duration: hold.running ? Theme.ms(180) : Theme.shortMs; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: hold.running ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: hold.running ? Theme.enterCurve : Theme.exitCurve } }
 
         Bubble {
@@ -144,7 +144,7 @@ PanelWindow {
                 height: parent.height
                 radius: 4
                 color: osd.audio && osd.audio.muted ? Theme.faint : Theme.accent
-                Behavior on width { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
             }
         }
         Label {

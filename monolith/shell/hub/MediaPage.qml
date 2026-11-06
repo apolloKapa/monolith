@@ -42,7 +42,7 @@ Page {
     }
     // eases into the next track's colour
     property color tone: picked
-    Behavior on tone { ColorAnimation { duration: 600 } }
+    Behavior on tone { ColorAnimation { duration: Theme.ms(600); easing.type: Easing.OutCubic } }
     readonly property color onTone: tone.hslLightness > 0.6 ? "#15161a" : "#ffffff"
 
     // the default output, for the Audio tab and the output chip
@@ -153,7 +153,7 @@ Page {
                 visible: coverImg.status === Image.Ready
                 maskEnabled: true
                 maskSource: coverMask
-                NumberAnimation on opacity { id: fadeIn; from: 0.2; to: 1; duration: 450; easing.type: Easing.OutCubic }
+                NumberAnimation on opacity { id: fadeIn; from: 0.2; to: 1; duration: Theme.ms(450); easing.type: Easing.OutCubic }
             }
             Rectangle { id: coverMask; visible: false; width: cover.width; height: cover.height; radius: Theme.corner(top.height, 10); layer.enabled: true }
         }
@@ -237,7 +237,7 @@ Page {
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width; height: seek.big ? 8 : 5; radius: height / 2
                     color: Qt.alpha(Theme.text, 0.14)
-                    Behavior on height { NumberAnimation { duration: 140 } }
+                    Behavior on height { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
                     Rectangle { width: Math.max(height, parent.width * seek.frac); height: parent.height; radius: height / 2; color: page.tone }
                 }
                 Rectangle {
@@ -247,7 +247,7 @@ Page {
                     width: seek.big ? 16 : 0; height: width; radius: width / 2
                     color: page.tone
                     border.width: 3; border.color: Theme.frame
-                    Behavior on width { NumberAnimation { duration: 140 } }
+                    Behavior on width { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
                 }
                 MouseArea {
                     id: seekArea
@@ -304,7 +304,7 @@ Page {
                     enabledInput: !!page.player && (page.player.canPause || page.player.canPlay)
                     onClicked: page.player.togglePlaying()
                     scale: pressed ? 0.94 : 1
-                    Behavior on scale { NumberAnimation { duration: 120 } }
+                    Behavior on scale { NumberAnimation { duration: Theme.ms(120); easing.type: Easing.OutCubic } }
                     Icon { anchors.centerIn: parent; name: page.player && page.player.isPlaying ? "pause" : "play_arrow"; size: 34; filled: true; color: page.onTone }
                 }
                 Ctl { icon: "skip_next"; enabledInput: !!page.player && page.player.canGoNext; onClicked: page.player.next() }
@@ -404,7 +404,7 @@ Page {
                 width: parent.width
                 height: parent.height - y
                 opacity: Eq.enabled ? 1 : 0.45
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
                 Repeater {
                     model: 10
                     Item {
@@ -428,8 +428,8 @@ Page {
                                 readonly property real off: Math.abs(bandItem.g) / 12 * track.mid
                                 y: bandItem.g >= 0 ? track.mid - off : track.mid
                                 height: Math.max(2, off)
-                                Behavior on y { NumberAnimation { duration: 160 } }
-                                Behavior on height { NumberAnimation { duration: 160 } }
+                                Behavior on y { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
+                                Behavior on height { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
                             }
                         }
                         // 0 dB
@@ -441,8 +441,8 @@ Page {
                             width: bandArea.containsMouse || bandArea.pressed ? 24 : 20; height: width; radius: width / 2
                             color: Theme.frame
                             border.width: 3; border.color: page.tone
-                            Behavior on y { NumberAnimation { duration: 160 } }
-                            Behavior on width { NumberAnimation { duration: 120 } }
+                            Behavior on y { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
+                            Behavior on width { NumberAnimation { duration: Theme.ms(120); easing.type: Easing.OutCubic } }
                         }
                         MouseArea {
                             id: bandArea
@@ -562,8 +562,8 @@ Page {
                 color: dist === 0 ? Theme.text : Theme.subtext
                 opacity: Math.max(0.22, 1 - dist * 0.2)
                 topPadding: 6; bottomPadding: 6
-                Behavior on font.pixelSize { NumberAnimation { duration: 260 } }
-                Behavior on opacity { NumberAnimation { duration: 260 } }
+                Behavior on font.pixelSize { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
             }
         }
         Column {

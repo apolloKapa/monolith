@@ -16,7 +16,7 @@ PanelWindow {
     readonly property var at: HubState.deskMenu
     readonly property bool shown: at.screen === modelData.name
     readonly property var item: at.widget !== "" ? WidgetLayout.items("desktop").find(i => i.id === at.widget) || null : null
-    visible: shown
+    visible: shown || card.opacity > 0.01
     WlrLayershell.namespace: "monolith-desktop-menu"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
@@ -57,8 +57,12 @@ PanelWindow {
         id: card
         width: 250
         height: col.implicitHeight + 16
-        x: Math.min(dm.at.x, dm.width - width - 8)
-        y: Math.min(dm.at.y, dm.height - height - 8)
+        // where it was opened (kept while it fades out, when the menu's place is already cleared)
+        property point at: Qt.point(0, 0)
+        Connections { target: dm; function onAtChanged() { if (dm.at.screen !== "") card.at = Qt.point(dm.at.x, dm.at.y); } }
+        Component.onCompleted: if (dm.at.screen !== "") at = Qt.point(dm.at.x, dm.at.y)
+        x: Math.min(card.at.x, dm.width - width - 8)
+        y: Math.min(card.at.y, dm.height - height - 8)
         radius: Theme.corner(60, 10)
         color: Theme.frame
         border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
@@ -67,6 +71,7 @@ PanelWindow {
         scale: dm.shown ? 1 : 0.9
         opacity: dm.shown ? 1 : 0
         transformOrigin: Item.TopLeft
+        Behavior on opacity { NumberAnimation { duration: dm.shown ? Theme.fastMs : Theme.exitMs; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
 
         Column {

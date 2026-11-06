@@ -8,6 +8,7 @@ import "../../ui"
 // with times.
 FaceBase {
     id: f
+    PlayPosition { id: pp; player: f.p; active: f.live && f.visible }
     readonly property var p: f.player
     function mmss(t) { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); }
     Glass { anchors.fill: parent; ctx: f.ctx; radius: Theme.corner(80, 16) }
@@ -52,8 +53,8 @@ FaceBase {
         Item {
             x: 14; y: 120; width: parent.width - 28; height: 30
             Rectangle { y: 4; width: parent.width; height: 5; radius: 3; color: Qt.alpha(Theme.text, 0.15)
-                Rectangle { height: parent.height; radius: 3; color: Theme.accent; width: f.p && f.p.length > 0 ? parent.width * Math.min(1, f.p.position / f.p.length) : 0 } }
-            Text { y: 13; text: f.p ? f.mmss(f.p.position) : "0:00"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                Rectangle { height: parent.height; radius: 3; color: Theme.accent; width: f.p && f.p.length > 0 ? parent.width * Math.min(1, pp.shown / f.p.length) : 0 } }
+            Text { y: 13; text: f.p ? f.mmss(pp.shown) : "0:00"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 11 }
             Text { y: 13; anchors.right: parent.right; text: f.p ? f.mmss(f.p.length) : "0:00"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 11 }
         }
     }
