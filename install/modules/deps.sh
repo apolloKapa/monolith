@@ -55,6 +55,7 @@ REQUIRED_PKGS=(
     "ffmpeg" "quickshell" "unzip" "python-websockets" "python-jeepney" "python-pillow" "qt6-websockets"
     "grim" "playerctl" "satty" "xdg-desktop-portal-gtk" "slurp" "wmctrl" "power-profiles-daemon" "easyeffects" "lsp-plugins-lv2" "qt5-wayland" "qt5-quickcontrols" "qt5-quickcontrols2" "qt5-graphicaleffects" "qt6-wayland"
     "qt5ct" "qt6ct" "adwaita-icon-theme" "gpu-screen-recorder" "wf-recorder" "adw-gtk-theme" "wl-gammarelay-rs"
+    "wlsunset" "upower"   # night light, and batteries (the battery widgets, a mouse's or headset's)
     "fastfetch" "nano"   # Theme -> Fastfetchlings: the presets, and an editor to write them in
 )
 
