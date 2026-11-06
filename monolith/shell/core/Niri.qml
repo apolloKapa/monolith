@@ -60,6 +60,11 @@ Singleton {
             m[w.id] = w;
             windows = m;
             if (w.is_focused) focusedWindowId = w.id;
+        } else if (ev.WindowLayoutsChanged) {
+            // windows moved or resized (the dock's "dodge windows" watches these)
+            const m = Object.assign({}, windows);
+            for (const c of ev.WindowLayoutsChanged.changes) if (m[c[0]]) m[c[0]] = Object.assign({}, m[c[0]], { layout: c[1] });
+            windows = m;
         } else if (ev.WindowClosed) {
             const m = Object.assign({}, windows);
             delete m[ev.WindowClosed.id];
