@@ -75,12 +75,11 @@ WlSessionLock {
             model: WidgetLayout.on("lock", "")
             WidgetFace {
                 required property var modelData
-                type: modelData.type
-                face: modelData.face || ""
-                scale: modelData.scale || 1
-                transformOrigin: Item.TopLeft
-                x: Math.max(0, Math.min(modelData.x * surface.width, surface.width - width * scale))
-                y: Math.max(0, Math.min(modelData.y * surface.height, surface.height - height * scale))
+                item: modelData
+                width: size[0]
+                height: size[1]
+                x: Math.max(0, Math.min(modelData.x * surface.width, surface.width - width))
+                y: Math.max(0, Math.min(modelData.y * surface.height, surface.height - height))
                 opacity: surface.enter
             }
         }

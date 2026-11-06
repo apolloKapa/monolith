@@ -8,6 +8,7 @@ Item {
     id: desk
     anchors.fill: parent
     property string screenName: ""
+    property Item backdrop: null          // the wallpaper, for the widgets' glass
     readonly property var list: WidgetLayout.on("desktop", screenName)
     // hidden while the editor shows its own copy
     visible: HubState.editWidgets === ""
@@ -22,12 +23,12 @@ Item {
         model: desk.list
         WidgetFace {
             required property var modelData
-            type: modelData.type
-            face: modelData.face || ""
-            scale: modelData.scale || 1
-            transformOrigin: Item.TopLeft
-            x: Math.max(0, Math.min(modelData.x * desk.width, desk.width - width * scale))
-            y: Math.max(0, Math.min(modelData.y * desk.height, desk.height - height * scale))
+            item: modelData
+            width: size[0]
+            height: size[1]
+            backdrop: desk.backdrop
+            x: Math.max(0, Math.min(modelData.x * desk.width, desk.width - width))
+            y: Math.max(0, Math.min(modelData.y * desk.height, desk.height - height))
             // right-click: this widget's menu (its style, the editor, remove)
             MouseArea {
                 anchors.fill: parent

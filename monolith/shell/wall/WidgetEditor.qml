@@ -7,8 +7,8 @@ import "../core"
 import "../ui"
 
 // The widget editor: a full-screen area on one screen where you arrange the desktop's or the
-// lock screen's widgets. Drag a widget to move it, its corner to resize it, the arrows above
-// it to change its look; add widgets from the bar at the bottom. Esc or Done leaves.
+// lock screen's widgets. Drag a widget to move it, its corner to resize it; the bar above it
+// has its look (a drop-down) and its settings (⚙); add widgets from the bar at the bottom.
 PanelWindow {
     id: ed
     required property var modelData
@@ -76,26 +76,36 @@ PanelWindow {
     MouseArea { anchors.fill: parent; onClicked: { ed.selected = ""; ed.adding = false; } }
 
     // ── the widgets ──
+    property bool optsOpen: false
+    onSelectedChanged: optsOpen = false
+    function setOption(id, k, v) {
+        if (k.startsWith("store:")) Store.set(k.slice(6), v);
+        else WidgetLayout.setOpt(mode, id, k, v);
+    }
+    function optionValue(item, o) { return o[0].startsWith("store:") ? Store.get(o[0].slice(6), o[3]) : WidgetLayout.opt(item, o[0], o[3]); }
     Repeater {
         model: ed.list
         Item {
             id: wrap
             required property var modelData
             readonly property bool sel: ed.selected === modelData.id
-            property real sc: modelData.scale || 1
-            width: face.implicitWidth * sc
-            height: face.implicitHeight * sc
+            readonly property var sz: WidgetLayout.size(modelData)
+            property real ww: sz[0]
+            property real hh: sz[1]
+            onSzChanged: { ww = sz[0]; hh = sz[1]; }
+            width: ww
+            height: hh
             x: Math.max(0, Math.min(modelData.x * ed.width, ed.width - width))
             y: Math.max(0, Math.min(modelData.y * ed.height, ed.height - height))
             z: sel ? 10 : 1
             WidgetFace {
                 id: face
-                type: wrap.modelData.type
-                face: wrap.modelData.face || ""
-                scale: wrap.sc
-                transformOrigin: Item.TopLeft
+                anchors.fill: parent
+                item: wrap.modelData
+                backdrop: ed.lockMode ? null : wp
+                origin: Qt.point(wrap.x, wrap.y)
             }
-            // the frame: dashed-ish outline, solid accent when selected
+            // the frame: a soft outline, solid accent when selected
             Rectangle {
                 anchors.fill: parent; anchors.margins: -6
                 radius: 10
@@ -118,7 +128,7 @@ PanelWindow {
                 }
                 onReleased: WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height })
             }
-            // resize: the corner handle
+            // resize: the corner handle, freely (inside the widget's limits and its look's shape)
             Rectangle {
                 visible: wrap.sel
                 x: parent.width - 8; y: parent.height - 8
@@ -128,21 +138,27 @@ PanelWindow {
                 MouseArea {
                     anchors.fill: parent; anchors.margins: -6
                     cursorShape: Qt.SizeFDiagCursor
-                    property real startX
-                    property real startSc
-                    onPressed: mouse => { startX = mapToItem(ed.contentItem, mouse.x, 0).x; startSc = wrap.sc; }
+                    property point start
+                    property real w0
+                    property real h0
+                    onPressed: mouse => { start = mapToItem(ed.contentItem, mouse.x, mouse.y); w0 = wrap.ww; h0 = wrap.hh; }
                     onPositionChanged: mouse => {
                         if (!pressed) return;
-                        const dx = mapToItem(ed.contentItem, mouse.x, 0).x - startX;
-                        wrap.sc = Math.max(0.4, Math.min(3, startSc * (face.implicitWidth * startSc + dx) / Math.max(1, face.implicitWidth * startSc)));
+                        const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
+                        const c = WidgetLayout.clamp(wrap.modelData.type, wrap.modelData.face, ed.snapTo(w0 + p.x - start.x), ed.snapTo(h0 + p.y - start.y));
+                        wrap.ww = Math.min(c[0], ed.width - wrap.x);
+                        wrap.hh = Math.min(c[1], ed.height - wrap.y);
                     }
-                    onReleased: WidgetLayout.update(ed.mode, wrap.modelData.id, { scale: Math.round(wrap.sc * 100) / 100 })
+                    onReleased: WidgetLayout.update(ed.mode, wrap.modelData.id, { w: Math.round(wrap.ww), h: Math.round(wrap.hh) })
                 }
             }
-            // its own little bar: the look, and remove
+            // its own little bar: the name, the look, its settings, remove
             Rectangle {
+                id: wbar
                 visible: wrap.sel
-                anchors.bottom: parent.top; anchors.bottomMargin: 12
+                anchors.bottom: wrap.y > 70 ? parent.top : undefined
+                anchors.top: wrap.y > 70 ? undefined : parent.bottom
+                anchors.bottomMargin: 12; anchors.topMargin: 12
                 anchors.horizontalCenter: parent.horizontalCenter
                 height: 40; width: wb.implicitWidth + 12
                 radius: 20
@@ -153,17 +169,83 @@ PanelWindow {
                     anchors.centerIn: parent
                     spacing: 2
                     Label { anchors.verticalCenter: parent.verticalCenter; text: WidgetLayout.typeName(wrap.modelData.type); strong: true; font.pixelSize: Theme.sizeSmall + 1; leftPadding: 10; rightPadding: 6 }
-                    // its look, as a drop-down (one entry when the widget has just one)
+                    // its look, as a drop-down (hidden when the widget has just one)
                     Dropdown {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 190; height: 32
+                        width: 180; height: 32
                         visible: (WidgetLayout.faces[wrap.modelData.type] || []).length > 1
                         opts: WidgetLayout.faces[wrap.modelData.type] || []
-                        value: wrap.modelData.face || ((WidgetLayout.faces[wrap.modelData.type] || [[""]])[0][0])
-                        onPicked: v => WidgetLayout.update(ed.mode, wrap.modelData.id, { face: v })
+                        value: WidgetLayout.faceId(wrap.modelData.type, wrap.modelData.face)
+                        onPicked: v => WidgetLayout.setFace(ed.mode, wrap.modelData, v)
+                    }
+                    Pressable {
+                        width: 32; height: 32
+                        color: ed.optsOpen ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
+                        onClicked: ed.optsOpen = !ed.optsOpen
+                        Icon { anchors.centerIn: parent; name: "tune"; size: 19; color: ed.optsOpen ? Theme.onAccentContainer : Theme.text }
                     }
                     Rectangle { width: 1; height: 22; color: Theme.ringTrack; anchors.verticalCenter: parent.verticalCenter }
                     Pressable { width: 32; height: 32; color: hovered ? Qt.alpha(Theme.danger, 0.2) : "transparent"; onClicked: { WidgetLayout.remove(ed.mode, wrap.modelData.id); ed.selected = ""; } Icon { anchors.centerIn: parent; name: "delete"; size: 19; color: Theme.danger } }
+                }
+            }
+            // its settings: under (or over) its little bar
+            Rectangle {
+                visible: wrap.sel && ed.optsOpen
+                z: 20
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: wrap.y > 70 ? -12 - 40 - 8 - height : wrap.height + 12 + 40 + 8
+                width: 340
+                height: optCol.implicitHeight + 24
+                radius: Theme.corner(60, 10)
+                color: Theme.frame
+                border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
+                MouseArea { anchors.fill: parent }
+                Column {
+                    id: optCol
+                    x: 12; y: 12; width: parent.width - 24
+                    spacing: 10
+                    Repeater {
+                        model: WidgetLayout.optionsFor(wrap.modelData.type, wrap.modelData.face)
+                        Column {
+                            id: oc
+                            required property var modelData
+                            readonly property var val: ed.optionValue(wrap.modelData, modelData)
+                            width: optCol.width
+                            spacing: 4
+                            Row {
+                                width: parent.width
+                                visible: oc.modelData[2] === "toggle"
+                                Label { width: parent.width - 52; anchors.verticalCenter: parent.verticalCenter; text: oc.modelData[1]; wrapMode: Text.Wrap }
+                                Toggle { checked: oc.val === true; onToggled: on => ed.setOption(wrap.modelData.id, oc.modelData[0], on) }
+                            }
+                            Label { visible: oc.modelData[2] !== "toggle"; text: oc.modelData[1]; muted: true; font.pixelSize: Theme.sizeSmall }
+                            NumberBox {
+                                visible: oc.modelData[2] === "slider"
+                                width: parent.width
+                                from: oc.modelData[4] ? oc.modelData[4][0] : 0; to: oc.modelData[4] ? oc.modelData[4][1] : 1
+                                step: oc.modelData[4] ? oc.modelData[4][2] : 1
+                                decimals: oc.modelData[0] === "opacity" ? 2 : 0
+                                factor: oc.modelData[0] === "opacity" ? 100 : 1
+                                unit: oc.modelData[0] === "opacity" ? "%" : (oc.modelData[0] === "lineThickness" ? "px" : "")
+                                value: Number(oc.val)
+                                onMoved: v => ed.setOption(wrap.modelData.id, oc.modelData[0], v)
+                            }
+                            Segmented {
+                                visible: oc.modelData[2] === "choice"
+                                width: parent.width; height: 34
+                                opts: oc.modelData[2] === "choice" ? oc.modelData[4] : []
+                                value: String(oc.val)
+                                onPicked: v => ed.setOption(wrap.modelData.id, oc.modelData[0], v)
+                            }
+                            Field {
+                                visible: oc.modelData[2] === "text" || oc.modelData[2] === "file"
+                                width: parent.width
+                                text: String(oc.val || "")
+                                placeholder: oc.modelData[2] === "file" ? "/path/to/picture.png (Enter)" : "Type, then Enter"
+                                onAccepted: v => ed.setOption(wrap.modelData.id, oc.modelData[0], oc.modelData[2] === "file" ? v.trim().replace(/^~/, Wall.home) : v)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -211,7 +293,7 @@ PanelWindow {
     Label {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: bar.bottom; anchors.topMargin: 8
-        text: ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move  ·  corner to resize  ·  arrows above it for its look  ·  Esc when done"
+        text: ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move  ·  corner to resize  ·  its look and settings above it  ·  Esc when done"
         color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.4)
         font.pixelSize: Theme.sizeSmall
     }
