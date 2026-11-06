@@ -11,7 +11,9 @@ FaceBase {
     readonly property string mm: Qt.formatTime(f.now, "mm")
     readonly property string fam: "Google Sans Flex"
     // the widest and tallest ink of any digit at 100 px, so every digit gets the same cell
-    FontMetrics { id: ref; font.family: f.fam; font.pixelSize: 100; font.weight: Font.Black }
+    FontMetrics { id: ref; font.family: f.fam; font.pixelSize: 100; font.weight: Font.Black; font.variableAxes: f.axes }
+    // as heavy and as round as the font goes
+    readonly property var axes: ({ "wght": 1000, "ROND": 100, "wdth": 100 })
     readonly property var ink: { const r = []; for (let i = 0; i < 10; i++) r.push(ref.tightBoundingRect(String(i))); return r; }
     readonly property real refW: Math.max(1, ...ink.map(r => r.width))
     readonly property real refH: Math.max(1, ...ink.map(r => r.height))
@@ -40,7 +42,7 @@ FaceBase {
                         x: cell.tx
                         y: cell.height - baselineOffset + f.px * modelData[0]
                         text: cell.digit
-                        font.family: f.fam; font.pixelSize: f.px; font.weight: Font.Black
+                        font.family: f.fam; font.pixelSize: f.px; font.weight: Font.Black; font.variableAxes: f.axes
                         color: modelData[1] < 0 ? ((cell.row + cell.col) % 2 === 0 ? Theme.text : Theme.accent) : Qt.rgba(0, 0, 0, modelData[1])
                     }
                 }

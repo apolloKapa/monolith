@@ -1,9 +1,11 @@
 import QtQuick
+import QtQuick.Shapes
 import "../../core"
 import "../../ui"
 
 // Material analog: a scalloped dial (twelve soft lobes) in the primary container colour, thick
-// rounded hour and minute hands, and the second shown as a dot running round the rim.
+// rounded hour and minute hands, and the second as a dot near the rim that stretches into a short
+// arc to the next second (its front leads, its back catches up).
 FaceBase {
     id: f
     readonly property real d: Math.min(width, height)
@@ -45,13 +47,53 @@ FaceBase {
     }
     Hand { angle: (f.now.getHours() % 12) * 30 + f.now.getMinutes() * 0.5; w: f.d * 0.076; len: f.d * 0.24; col: f.hourC }
     Hand { angle: f.now.getMinutes() * 6 + f.now.getSeconds() * 0.1; w: f.d * 0.082; len: f.d * 0.36; col: f.minC }
-    // the second: a dot on the rim that glides to the next one
-    Item {
+    // the second: head and tail angles; the head moves first, the tail 100 ms later
+    property real head: 0
+    property real tail: 0
+    property int lastSec: -1
+    function step() {
+        const sec = f.now.getSeconds();
+        if (sec === lastSec) return;
+        const first = lastSec < 0;
+        lastSec = sec;
+        const target = sec * 6;
+        const from = ((tail % 360) + 360) % 360;
+        const diff = (target - from + 360) % 360;
+        morph.stop();
+        if (first || !f.live || diff === 0 || diff > 12) { head = target; tail = target; return; }
+        headAnim.from = from; headAnim.to = from + diff;
+        tailAnim.from = from; tailAnim.to = from + diff;
+        morph.start();
+    }
+    Connections { target: f; function onNowChanged() { f.step(); } }
+    Component.onCompleted: step()
+    ParallelAnimation {
+        id: morph
+        NumberAnimation { id: headAnim; target: f; property: "head"; duration: 250; easing.type: Easing.OutCubic }
+        SequentialAnimation {
+            PauseAnimation { duration: 100 }
+            NumberAnimation { id: tailAnim; target: f; property: "tail"; duration: 250; easing.type: Easing.OutCubic }
+        }
+    }
+    Shape {
+        id: secShape
         visible: f.secs
-        anchors.centerIn: parent
-        rotation: f.now.getSeconds() * 6
-        Behavior on rotation { enabled: f.live; RotationAnimation { duration: 250; direction: RotationAnimation.Clockwise; easing.type: Easing.OutCubic } }
-        Rectangle { width: f.d * 0.05; height: width; radius: width / 2; color: f.secC; anchors.horizontalCenter: parent.horizontalCenter; y: -f.d * 0.41 - height / 2 }
+        anchors.fill: parent
+        preferredRendererType: Shape.CurveRenderer
+        readonly property real dot: f.d * 0.0425
+        readonly property real rad: f.d / 2 - (f.height * 0.075 + dot)
+        ShapePath {
+            strokeColor: f.secC
+            strokeWidth: secShape.dot * 2
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+            PathAngleArc {
+                centerX: f.width / 2; centerY: f.height / 2
+                radiusX: Math.max(1, secShape.rad); radiusY: radiusX
+                startAngle: f.tail - 90
+                sweepAngle: Math.max(0.05, f.head - f.tail)
+            }
+        }
     }
     Rectangle { anchors.centerIn: parent; width: f.d * 0.03; height: width; radius: width / 2; color: f.dial }
 }

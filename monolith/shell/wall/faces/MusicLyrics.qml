@@ -19,11 +19,12 @@ FaceBase {
     LyricLines {
         live: f.live
         anchors.fill: parent
-        anchors.margins: Math.max(10, Math.min(24, f.height * 0.08))
-        lines: f.opt("lyricsLines", 3)
-        align: f.opt("lyricsAlignment", "center")
+        anchors.margins: Math.max(10, Math.min(24, f.height * 0.06))
+        lines: f.opt("lyricsLines", 2)
+        align: f.opt("lyricsAlignment", "left")
         sayMissing: f.opt("showNoLyrics", true)
         hasPlayer: !!f.p
-        size: Math.max(13, Math.min(30, f.height / (lines * 1.6 + 1)))
+        ink: cov.status === Image.Ready ? "#ffffff" : Theme.text
+        size: Math.max(12, Math.min(f.height * 0.2, 17 * Math.pow(Math.max(0.3, Math.sqrt((f.width / 460) * (f.height / 240))), 0.38)))
     }
 }
