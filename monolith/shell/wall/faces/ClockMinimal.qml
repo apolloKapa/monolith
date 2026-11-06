@@ -17,5 +17,6 @@ FaceBase {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         shadowY: 1.5
+        color: f.mainC
     }
 }

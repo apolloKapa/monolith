@@ -26,9 +26,11 @@ Item {
     // cava's bars stretched to `count`, or a still curve in the editor's palette / with no sound
     readonly property var vals: {
         const src = Cava.bars;
+        // silence counts as no sound (the editor then shows the still curve, so you see it)
+        const quiet = !src.length || src.every(x => x < 0.01);
         const out = [];
         for (let i = 0; i < count; i++) {
-            if (!src.length || !live) { out.push(preview ? 0.25 + 0.5 * Math.abs(Math.sin(i / 3)) : 0); continue; }
+            if (quiet || !live) { out.push(preview ? 0.25 + 0.5 * Math.abs(Math.sin(i / 3)) : 0); continue; }
             const p = i / Math.max(1, count - 1) * (src.length - 1);
             const a = Math.floor(p), b = Math.min(src.length - 1, a + 1);
             out.push(src[a] + (src[b] - src[a]) * (p - a));

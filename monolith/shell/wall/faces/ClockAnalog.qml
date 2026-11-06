@@ -20,9 +20,9 @@ FaceBase {
             radius: width / 2
             Behavior on rotation { enabled: f.live; RotationAnimation { duration: 1000; direction: RotationAnimation.Clockwise } }
         }
-        Hand { width: f.d * 0.045; height: f.d * 0.32; color: Theme.text; angle: (f.now.getHours() % 12) * 30 + f.now.getMinutes() * 0.5 + f.now.getSeconds() / 120 }
-        Hand { width: f.d * 0.03; height: f.d * 0.42; color: Theme.subtext; angle: f.now.getMinutes() * 6 + f.now.getSeconds() * 0.1 }
-        Hand { visible: f.secs; width: f.d * 0.015; height: f.d * 0.46; color: Theme.accent; angle: f.now.getSeconds() * 6 }
-        Rectangle { anchors.centerIn: parent; width: f.d * 0.05; height: width; radius: width / 2; color: Theme.accent }
+        Hand { width: f.d * 0.045; height: f.d * 0.32; color: f.mainC; angle: (f.now.getHours() % 12) * 30 + f.now.getMinutes() * 0.5 + f.now.getSeconds() / 120 }
+        Hand { width: f.d * 0.03; height: f.d * 0.42; color: f.subC; angle: f.now.getMinutes() * 6 + f.now.getSeconds() * 0.1 }
+        Hand { visible: f.secs; width: f.d * 0.015; height: f.d * 0.46; color: f.accentC; angle: f.now.getSeconds() * 6 }
+        Rectangle { anchors.centerIn: parent; width: f.d * 0.05; height: width; radius: width / 2; color: f.accentC }
     }
 }

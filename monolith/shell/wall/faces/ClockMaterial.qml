@@ -43,7 +43,7 @@ FaceBase {
                         y: cell.height - baselineOffset + f.px * modelData[0]
                         text: cell.digit
                         font.family: f.fam; font.pixelSize: f.px; font.weight: Font.Black; font.variableAxes: f.axes
-                        color: modelData[1] < 0 ? ((cell.row + cell.col) % 2 === 0 ? Theme.text : Theme.accent) : Qt.rgba(0, 0, 0, modelData[1])
+                        color: modelData[1] < 0 ? ((cell.row + cell.col) % 2 === 0 ? f.mainC : f.accentC) : Qt.rgba(0, 0, 0, modelData[1])
                     }
                 }
             }

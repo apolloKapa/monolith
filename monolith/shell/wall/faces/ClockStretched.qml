@@ -55,7 +55,7 @@ FaceBase {
                     preferredRendererType: Shape.CurveRenderer
                     ShapePath {
                         strokeWidth: f.stroke
-                        strokeColor: Theme.text
+                        strokeColor: f.mainC
                         fillColor: "transparent"
                         capStyle: ShapePath.FlatCap
                         joinStyle: ShapePath.RoundJoin
@@ -67,7 +67,7 @@ FaceBase {
                     Rectangle {
                         required property int index
                         width: f.stroke * 1.1; height: width; radius: width / 2
-                        color: Theme.text
+                        color: f.mainC
                         x: (cell.width - width) / 2
                         y: cell.height * (index === 0 ? 0.35 : 0.65) - height / 2
                     }

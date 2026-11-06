@@ -16,7 +16,7 @@ FaceBase {
         minimumPixelSize: 12
         font.weight: Font.Black
         font.letterSpacing: height * 0.01
-        color: Qt.tint(Theme.text, Qt.alpha(Theme.accent, 0.14))
+        color: f.hasMain ? f.mainC : Qt.tint(Theme.text, Qt.alpha(f.accentC, 0.14))
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         shadowY: 3; shadowStrength: 0.5

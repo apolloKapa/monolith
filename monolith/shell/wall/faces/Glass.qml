@@ -3,8 +3,9 @@ import QtQuick.Effects
 import "../../core"
 import "../../ui"
 
-// A widget's card: the wallpaper behind it blurred, under a tint of the theme's surface.
-// Without a backdrop (the editor's palette) it's just the tinted card.
+// A widget's card, as its Background setting says: "blur" the wallpaper behind it blurred under a
+// tint of the theme's surface, "normal" a solid card, "clear" no card at all.
+// Without a backdrop (the editor's palette) a blurred card is just the tinted card.
 Item {
     id: g
     property var ctx: null
@@ -14,7 +15,8 @@ Item {
     // where this card sits inside its widget (for the part of the wallpaper behind it)
     property real dx: 0
     property real dy: 0
-    readonly property Item backdrop: ctx ? ctx.backdrop : null
+    readonly property string mode: ctx && ctx.opt ? String(ctx.opt("background", "blur")) : "blur"
+    readonly property Item backdrop: ctx && mode === "blur" ? ctx.backdrop : null
 
     ShaderEffectSource {
         id: src
@@ -35,8 +37,9 @@ Item {
     Rectangle { id: mask; anchors.fill: parent; radius: g.radius; visible: false; layer.enabled: true }
     Rectangle {
         anchors.fill: parent
+        visible: g.mode !== "clear"
         radius: g.radius
-        color: Qt.alpha(g.tintColor, g.backdrop ? g.tint : Math.max(g.tint, 0.85))
+        color: g.mode === "normal" ? Qt.alpha(g.tintColor, 1) : Qt.alpha(g.tintColor, g.backdrop ? g.tint : Math.max(g.tint, 0.85))
         border.width: Theme.outlineW
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Qt.alpha(Theme.text, 0.06)
     }
