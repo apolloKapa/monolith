@@ -20,7 +20,7 @@ Item {
     function open(p) { HubState.toggle(p, bar.screenName); }
 
     // the modules in each zone, and every module there is
-    readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
+    readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["updates", "live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
     // previews (Settings → Bar) can show just some modules, in a style of their own
     property var only: null
     property string clockStyleAs: ""
@@ -98,7 +98,7 @@ Item {
     readonly property var mods: ({
         cc: ccC, search: searchC, clock: clockC, weather: weatherC, workspaces: wsC, media: mediaC, title: titleC,
         live: liveC, tray: trayC, stats: statsC, notifications: notifC, network: netC, sound: soundC,
-        battery: batC, keyboard: kbC, gaming: gameC, power: powerC
+        battery: batC, keyboard: kbC, gaming: gameC, power: powerC, updates: updC
     })
 
     // the control center: a filled accent bubble
@@ -250,6 +250,8 @@ Item {
             }
         }
     }
+    // a new version of Monolith: shows only then; opens Settings → About & updates
+    Component { id: updC; Glyph { property bool want: Updates.newer; icon: "upgrade"; on: true; tint: Theme.accent; onClicked: HubState.openSettings("about", bar.screenName) } }
     Component { id: gameC; Glyph { property bool want: GameMode.active; icon: "sports_esports"; on: true; tint: Theme.accent; onClicked: bar.open("gaming") } }
 
     Component {

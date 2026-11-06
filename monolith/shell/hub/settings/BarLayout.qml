@@ -16,9 +16,9 @@ ColumnLayout {
         live: ["Running tasks", "radio_button_checked"], tray: ["Tray", "apps"], stats: ["System stats", "memory"],
         notifications: ["Notifications", "notifications"], network: ["Network", "wifi"], sound: ["Sound", "volume_up"],
         battery: ["Battery", "battery_full"], keyboard: ["Keyboard layout", "keyboard"], gaming: ["Game mode", "sports_esports"],
-        power: ["Power", "power_settings_new"]
+        power: ["Power", "power_settings_new"], updates: ["Monolith updates", "upgrade"]
     })
-    readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
+    readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["updates", "live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
     readonly property var zones: Store.get("bar.modules", null) || defaults
     readonly property var zoneKeys: [["left", "Left"], ["center", "Centre"], ["right", "Right"]]
     readonly property var used: [].concat(zones.left || [], zones.center || [], zones.right || [])

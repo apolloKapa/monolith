@@ -37,17 +37,100 @@ ColumnLayout {
             }
         }
     }
-    SettingRow {
-        icon: "upgrade"; title: "Updates"
-        desc: Updates.state === "checking" ? "Checking…"
-            : (Updates.state === "updating" ? "Updating…"
-            : (Updates.state === "error" ? "Couldn't update: " + Updates.error
-            : (Updates.available > 0 ? Updates.available + " new: " + Updates.log.slice(0, 3).join("; ") + (Updates.available > 3 ? "…" : "")
-            : "Up to date" + (Updates.checkedAt.getTime() > 0 ? ", checked " + Qt.formatTime(Updates.checkedAt, "HH:mm") : ""))))
-        Row {
-            spacing: 6
-            Button { text: "Check"; onClicked: Updates.check() }
-            Button { visible: Updates.available > 0; text: "Update"; primary: true; onClicked: Updates.update() }
+    // ── updates ──
+    Rectangle {
+        id: upd
+        Layout.fillWidth: true
+        implicitHeight: ucol.implicitHeight + 36
+        radius: Theme.corner(96, 8)
+        color: Updates.newer ? Theme.accentContainer : Theme.containerHigh
+        border.width: Theme.outlineW; border.color: Theme.outlineColor
+        readonly property color ink: Updates.newer ? Theme.onAccentContainer : Theme.text
+        Column {
+            id: ucol
+            x: 18; y: 18; width: parent.width - 36
+            spacing: 12
+            RowLayout {
+                width: parent.width
+                spacing: 14
+                Rectangle {
+                    width: 52; height: 52; radius: Theme.corner(52)
+                    color: Updates.newer ? Theme.accent : Theme.control
+                    Icon {
+                        id: updIcon
+                        anchors.centerIn: parent
+                        name: Updates.state === "checking" || Updates.state === "updating" ? "progress_activity" : (Updates.newer ? "upgrade" : (Updates.state === "offline" ? "cloud_off" : "verified"))
+                        filled: true; size: 28
+                        color: Updates.newer ? Theme.onAccent : Theme.accent
+                        RotationAnimation on rotation { running: Updates.state === "checking" || Updates.state === "updating"; from: 0; to: 360; duration: 900; loops: Animation.Infinite; onRunningChanged: if (!running) updIcon.rotation = 0 }
+                    }
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+                    Text {
+                        Layout.fillWidth: true
+                        text: Updates.state === "updating" ? "Updating…"
+                            : Updates.state === "checking" ? "Looking for updates…"
+                            : Updates.newer ? "A new version is here" + (Updates.newVersion && ["new", "git", Updates.version].indexOf(Updates.newVersion) === -1 ? ": " + Updates.newVersion : "")
+                            : Updates.state === "offline" ? "Couldn't reach GitHub"
+                            : "Monolith is up to date"
+                        color: upd.ink; font.family: Theme.fontFamily; font.pixelSize: 19; font.weight: Font.Bold
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        text: Updates.state === "updating" ? "It's running in the terminal that opened; Monolith restarts when it's done."
+                            : "You have " + (Updates.version || "?") + (Updates.newer ? (Updates.available > 1 || Updates.log.length ? "  ·  " + Updates.log.length + (Updates.log.length === 1 ? " change" : " changes") + " since" : "") : "")
+                              + (Updates.checkedAt.getTime() > 0 ? "  ·  checked " + Qt.formatTime(Updates.checkedAt, "HH:mm") : "")
+                              + (Updates.state === "offline" ? "  ·  check your connection" : "")
+                        color: Qt.alpha(upd.ink, 0.75); font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall + 1
+                    }
+                }
+                Button {
+                    visible: !Updates.newer
+                    text: "Check for updates"; icon: "refresh"
+                    enabled: Updates.state !== "checking"
+                    onClicked: Updates.check()
+                }
+                Button {
+                    visible: Updates.newer
+                    text: Updates.state === "updating" ? "Updating…" : "Update now"; icon: "download"; primary: true
+                    enabled: Updates.state !== "updating"
+                    onClicked: Updates.update()
+                }
+            }
+            // what changed, newest first
+            Rectangle {
+                visible: Updates.newer && Updates.log.length > 0
+                width: parent.width
+                height: Math.min(changes.implicitHeight + 20, 220)
+                radius: Theme.corner(60, 6)
+                color: Qt.alpha(Theme.frame, 0.55)
+                Flickable {
+                    anchors.fill: parent; anchors.margins: 10
+                    contentHeight: changes.implicitHeight
+                    clip: true
+                    SmoothWheel {}
+                    Column {
+                        id: changes
+                        width: parent.width
+                        spacing: 6
+                        Label { text: "What's new"; strong: true; font.pixelSize: Theme.sizeSmall; color: upd.ink }
+                        Repeater {
+                            model: Updates.log.slice().reverse()
+                            Row {
+                                required property string modelData
+                                width: changes.width
+                                spacing: 8
+                                Rectangle { width: 6; height: 6; radius: 3; color: Theme.accent; y: 7 }
+                                Text { width: parent.width - 14; text: modelData; wrapMode: Text.Wrap; color: upd.ink; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     SettingRow {
