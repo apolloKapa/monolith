@@ -45,6 +45,10 @@ Singleton {
     function openDeskMenu(screen, x, y, widget) { open = false; deskMenu = { screen: screen, x: x, y: y, widget: widget || "" }; }
     function closeDeskMenu() { deskMenu = { screen: "", x: 0, y: 0, widget: "" }; }
     property string editSelect: ""      // the widget the editor opens with selected
+    // the welcome tour (apps/Welcome.qml): first start, `monolith welcome`, Settings → About
+    property bool welcomeOpen: false
+    property string welcomeScreen: ""
+    function openWelcome(screen) { open = false; welcomeScreen = target(screen); welcomeOpen = true; }
     function editWidgetsOn(mode, screen) { open = false; wallOpen = false; editScreen = target(screen); editWidgets = mode || "desktop"; }
 
     // the dock editor, on a screen (Settings → Dock, `monolith dock`)
@@ -79,6 +83,11 @@ Singleton {
     IpcHandler {
         target: "dock"
         function edit(): void { hub.editDock(); }
+    }
+    IpcHandler {
+        target: "welcome"
+        function open(): void { hub.openWelcome(); }
+        function close(): void { hub.welcomeOpen = false; }
     }
     IpcHandler {
         target: "desktop"
