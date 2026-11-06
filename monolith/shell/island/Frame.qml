@@ -33,7 +33,8 @@ Scope {
         mask: Region {}
 
         // the inside (the screen your windows get)
-        Item { id: hole; x: fr.w; y: fr.top; width: win.width - 2 * fr.w; height: win.height - fr.top - fr.w }
+        // (the bar's band is along the bottom when the bar is)
+        Item { id: hole; x: fr.w; y: Theme.barBottom ? fr.w : fr.top; width: win.width - 2 * fr.w; height: win.height - fr.top - fr.w }
 
         // the frame: the screen minus the inside
         Shape {
@@ -103,5 +104,5 @@ Scope {
     }
     Edge { anchors { left: true; top: true; bottom: true } }
     Edge { anchors { right: true; top: true; bottom: true } }
-    Edge { anchors { bottom: true; left: true; right: true } }
+    Edge { anchors { bottom: !Theme.barBottom; top: Theme.barBottom; left: true; right: true } }
 }

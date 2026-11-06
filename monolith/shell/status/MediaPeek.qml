@@ -31,7 +31,7 @@ PanelWindow {
         id: card
         width: 360; height: 128
         x: Math.max(12, Math.min(pk.width - width - 12, HubState.peekX - width / 2))
-        y: HubState.peekY + 10 + (pk.shown ? 0 : -8)
+        y: Theme.barBottom ? HubState.peekY - height - 10 + (pk.shown ? 0 : 8) : HubState.peekY + 10 + (pk.shown ? 0 : -8)
         radius: Theme.corner(80, 14)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor

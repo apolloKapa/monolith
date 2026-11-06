@@ -212,7 +212,8 @@ Item {
                 interval: 350
                 onTriggered: {
                     if (!mediaHover.hovered || HubState.open) return;
-                    const p = mediaMod.mapToItem(null, mediaMod.width / 2, mediaMod.height);
+                    // under it, or over it when the bar is at the bottom
+                    const p = mediaMod.mapToItem(null, mediaMod.width / 2, Theme.barBottom ? 0 : mediaMod.height);
                     HubState.peekX = p.x; HubState.peekY = p.y;
                     HubState.peekScreen = bar.screenName;
                 }

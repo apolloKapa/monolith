@@ -151,10 +151,14 @@ Page {
                 Label { text: Weather.city; muted: true; font.pixelSize: Theme.sizeSmall }
             }
             Row {
+                id: hoursRow
                 Layout.fillWidth: true
                 spacing: 6
+                clip: true
+                // as many 3-hour steps as fit (it ran under the days list on narrower pages)
+                readonly property int fits: Math.max(1, Math.min(8, Math.floor((width + spacing) / (54 + spacing))))
                 Repeater {
-                    model: Weather.hours.filter((h, i) => i % 3 === 0).slice(0, 8)
+                    model: Weather.hours.filter((h, i) => i % 3 === 0).slice(0, hoursRow.fits)
                     Rectangle {
                         required property var modelData
                         width: 54
