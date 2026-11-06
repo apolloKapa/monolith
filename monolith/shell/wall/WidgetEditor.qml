@@ -413,10 +413,12 @@ PanelWindow {
                                 width: parent.width
                                 from: oc.modelData[4] ? oc.modelData[4][0] : 0; to: oc.modelData[4] ? oc.modelData[4][1] : 1
                                 step: oc.modelData[4] ? oc.modelData[4][2] : 1
-                                decimals: oc.modelData[0] === "opacity" ? 2 : 0
-                                factor: oc.modelData[0] === "opacity" ? 100 : 1
-                                unit: oc.modelData[0] === "opacity" ? "%" : (oc.modelData[0] === "lineThickness" ? "px" : "")
-                                value: Number(oc.val)
+                                readonly property bool pct: oc.modelData[0] === "opacity" || oc.modelData[0] === "blurStrength"
+                                decimals: pct ? 2 : 0
+                                factor: pct ? 100 : 1
+                                unit: pct ? "%" : (oc.modelData[0] === "lineThickness" || oc.modelData[0] === "radius" ? "px" : "")
+                                // Rounding not set yet: the look's own (shown as the style's corner size)
+                                value: oc.modelData[0] === "radius" && Number(oc.val) < 0 ? Math.round(Theme.corner(80, 12)) : Number(oc.val)
                                 onMoved: v => ed.setOption(wrap.modelData.id, oc.modelData[0], v)
                             }
                             Segmented {
