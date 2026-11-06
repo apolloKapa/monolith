@@ -49,14 +49,7 @@ ColumnLayout {
         icon: "account_circle"; title: "Your picture"; desc: "On the lock screen. An image file"
         Row {
             spacing: 10
-            Rectangle {
-                width: 40; height: 40; radius: 20
-                color: Theme.accentContainer
-                clip: true
-                anchors.verticalCenter: parent.verticalCenter
-                Image { id: av; anchors.fill: parent; source: Wall.url(sec.avatar); fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(80, 80); cache: false }
-                Icon { anchors.centerIn: parent; visible: av.status !== Image.Ready; name: "person"; size: 22; filled: true; color: Theme.onAccentContainer }
-            }
+            Avatar { size: 40; anchors.verticalCenter: parent.verticalCenter }
             Field { width: 260; text: Store.get("general.avatar", ""); placeholder: sec.avatar.replace(Quickshell.env("HOME"), "~"); onAccepted: v => { const p = v.trim().replace(/^~/, Quickshell.env("HOME")); if (p !== Store.get("general.avatar", "")) Store.set("general.avatar", p); } }
         }
     }
