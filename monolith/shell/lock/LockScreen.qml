@@ -19,37 +19,73 @@ WlSessionLock {
         id: surface
         color: Theme.frame
 
-        // ── the wallpaper, blurred and faded ──
+        // ── your desktop as it was when you locked (LockState takes the picture): the lock screen
+        // starts as it and blurs into itself, and unlocking goes back to it ──
+        readonly property string shotName: surface.screen ? surface.screen.name : ""
         Image {
-            id: wp
+            id: shot
             anchors.fill: parent
-            source: Wall.path !== "" && !Wall.isVideo(Wall.path) ? Wall.url(Wall.pathFor(surface.screen ? surface.screen.name : "")) : ""
-            fillMode: Image.PreserveAspectCrop
-            sourceSize: Qt.size(surface.width / 2, surface.height / 2)
             visible: false
+            asynchronous: false
+            cache: false
+            // (each lock makes new surfaces, so with no cache it's always the fresh picture)
+            source: LockState.hasShot && surface.shotName !== "" ? "file://" + LockState.shotFor(surface.shotName) : ""
         }
         MultiEffect {
             anchors.fill: parent
-            source: wp
+            visible: shot.status === Image.Ready
+            source: shot
             blurEnabled: true
-            blur: 1.0
+            blur: surface.enter
             blurMax: 64
-            saturation: 0.1
-            brightness: -0.08
+            saturation: -0.9 * surface.enter
+            brightness: -0.08 * surface.enter
         }
-        Rectangle {
+        Item {
             anchors.fill: parent
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.alpha(Theme.frame, 0.25) }
-                GradientStop { position: 0.6; color: Qt.alpha(Theme.frame, 0.35) }
-                GradientStop { position: 1.0; color: Qt.alpha(Theme.frame, 0.8) }
+            // over the picture it fades in (and out when unlocking); without one it's just there
+            opacity: shot.status === Image.Ready ? surface.enter : 1
+            // ── the wallpaper, blurred and faded ──
+            Image {
+                id: wp
+                anchors.fill: parent
+                source: Wall.path !== "" && !Wall.isVideo(Wall.path) ? Wall.url(Wall.pathFor(surface.screen ? surface.screen.name : "")) : ""
+                fillMode: Image.PreserveAspectCrop
+                sourceSize: Qt.size(surface.width / 2, surface.height / 2)
+                visible: false
             }
+            MultiEffect {
+                anchors.fill: parent
+                source: wp
+                blurEnabled: true
+                blur: 1.0
+                blurMax: 64
+                saturation: 0.1
+                brightness: -0.08
+            }
+            Rectangle {
+                anchors.fill: parent
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: Qt.alpha(Theme.frame, 0.25) }
+                    GradientStop { position: 0.6; color: Qt.alpha(Theme.frame, 0.35) }
+                    GradientStop { position: 1.0; color: Qt.alpha(Theme.frame, 0.8) }
+                }
+            }
+
         }
 
         SystemClock { id: clock; precision: SystemClock.Seconds }
+        // 0 → 1 as it locks, back to 0 as it unlocks (then the session unlocks)
         property real enter: 0
         Component.onCompleted: enter = 1
-        Behavior on enter { NumberAnimation { duration: Theme.ms(800); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve } }
+        Connections { target: LockState; function onUnlockingChanged() { surface.enter = LockState.unlocking ? 0 : 1; } }
+        Behavior on enter {
+            NumberAnimation {
+                duration: LockState.unlocking ? Theme.ms(650) : Theme.ms(800)
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: LockState.unlocking ? Theme.exitCurve : Theme.enterCurve
+            }
+        }
 
         // ── the island: locked, the date, the weather ──
         IslandShape {
@@ -121,6 +157,7 @@ WlSessionLock {
                     anchors.verticalCenter: parent.verticalCenter
                     echoMode: TextInput.Password
                     passwordCharacter: "●"
+                    readOnly: LockState.unlocking
                     color: Theme.text
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.sizeTitle
