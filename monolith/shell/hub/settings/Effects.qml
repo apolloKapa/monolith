@@ -38,12 +38,12 @@ ColumnLayout {
     }
     SettingRow {
         key: "theme.animations";
-        icon: "animation"; title: "Animations"; desc: "Off: everything appears at once"
+        icon: "animation"; title: "Shell animations"; desc: "The bar, menus and pop-ups. Off: everything appears at once"
         Toggle { checked: Theme.animOn; onToggled: on => Store.set("theme.animations", on) }
     }
     SettingRow {
         key: "theme.animSpeed"; def: 1;
-        icon: "speed"; title: "Animation speed"; desc: "Faster or slower than normal"
+        icon: "speed"; title: "Shell animation speed"; desc: "Faster or slower than normal"
         NumberBox { from: 0.25; to: 3; step: 0.05; decimals: 2; unit: "×"; value: Number(Store.get("theme.animSpeed", 1)); onMoved: v => Store.set("theme.animSpeed", v) }
     }
 }

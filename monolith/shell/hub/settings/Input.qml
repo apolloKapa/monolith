@@ -31,7 +31,7 @@ ColumnLayout {
 
     Label { text: "Keyboard"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6 }
     SettingRow {
-        icon: "language"; title: "Layouts"; desc: "Comma-separated, like us,gr. Switch with " + (NiriConf.unquote(sec.val("input/keyboard/xkb|options", "")) || "your layout keybind")
+        icon: "language"; title: "Keyboard layouts"; desc: "Comma-separated, like us,gr. Switch with " + (NiriConf.unquote(sec.val("input/keyboard/xkb|options", "")) || "your layout keybind")
         Field { text: NiriConf.unquote(sec.val("input/keyboard/xkb|layout", "")); placeholder: "us"; onAccepted: t => { if (t.trim() !== "" && t.trim() !== NiriConf.unquote(sec.val("input/keyboard/xkb|layout", ""))) sec.put("input/keyboard/xkb", "layout", NiriConf.quote(t.trim())); } }
     }
     SettingRow {
@@ -49,7 +49,7 @@ ColumnLayout {
 
     Label { text: "Mouse"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 6 }
     SettingRow {
-        icon: "mouse"; title: "Speed"
+        icon: "mouse"; title: "Mouse speed"
         NumberBox { from: -1; to: 1; step: 0.05; decimals: 2; value: Number(sec.val("input/mouse|accel-speed", 0)); onMoved: x => sec.put("input/mouse", "accel-speed", x.toFixed(2)) }
     }
     SettingRow {
@@ -57,7 +57,7 @@ ColumnLayout {
         Toggle { checked: NiriConf.unquote(sec.val("input/mouse|accel-profile", "")) === "flat"; onToggled: on => sec.put("input/mouse", "accel-profile", on ? "\"flat\"" : "\"adaptive\"") }
     }
     SettingRow {
-        icon: "swap_vert"; title: "Natural scrolling"
+        icon: "swap_vert"; title: "Natural scrolling (mouse)"
         Toggle { checked: sec.has("input/mouse|natural-scroll"); onToggled: on => sec.flag("input/mouse", "natural-scroll", on) }
     }
 
@@ -67,7 +67,7 @@ ColumnLayout {
         Toggle { checked: sec.has("input/touchpad|tap"); onToggled: on => sec.flag("input/touchpad", "tap", on) }
     }
     SettingRow {
-        icon: "swap_vert"; title: "Natural scrolling"
+        icon: "swap_vert"; title: "Natural scrolling (touchpad)"
         Toggle { checked: sec.has("input/touchpad|natural-scroll"); onToggled: on => sec.flag("input/touchpad", "natural-scroll", on) }
     }
     SettingRow {

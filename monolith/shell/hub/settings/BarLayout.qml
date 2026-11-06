@@ -127,7 +127,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "bar.opacity";
-        icon: "opacity"; title: "Background"; desc: "0 %: the bar disappears and only its modules stay"
+        icon: "opacity"; title: "Bar opacity"; desc: "0 %: the bar disappears and only its modules stay"
         NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Theme.barOpacity; onMoved: v => Store.set("bar.opacity", v) }
     }
     SettingRow {
@@ -146,7 +146,7 @@ ColumnLayout {
         NumberBox { from: 0; to: 120; slideTo: 60; unit: "px"; value: Number(Store.get("bar.sectionGap", 14)); onMoved: v => Store.set("bar.sectionGap", v) }
     }
     SettingRow {
-        icon: "monitor"; title: "Screens with a bar"; desc: "Bar → Screens"
+        icon: "monitor"; title: "Screens with a bar"; desc: "Bar → Bar & dock per screen"
         Button { text: "Open"; onClicked: HubState.settingsSection = "barscreens" }
     }
 

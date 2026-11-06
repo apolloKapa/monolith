@@ -143,7 +143,7 @@ ColumnLayout {
         Button { text: "Show it"; onClicked: HubState.openWelcome() }
     }
     SettingRow {
-        icon: "keyboard_command_key"; title: "Keys"; desc: "Every keybind is on the Keys page"
+        icon: "keyboard_command_key"; title: "Keybinds"; desc: "Every keybind is on the Keys page"
         Button { text: "Open"; onClicked: HubState.page = "keys" }
     }
 }

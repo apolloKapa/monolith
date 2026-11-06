@@ -24,7 +24,7 @@ ColumnLayout {
     }
 
     SettingRow {
-        icon: "terminal"; title: "Fastfetch"; desc: "What a new terminal greets you with. Colours follow the wallpaper; {{primary}} and the like in a preset become them"
+        icon: "terminal"; title: "Terminal greeting (fastfetch)"; desc: "What a new terminal greets you with. Colours follow the wallpaper; {{primary}} and the like in a preset become them"
         Row {
             spacing: 6
             Button { text: "New"; icon: "add"; onClicked: sec.run(["new"]) }
