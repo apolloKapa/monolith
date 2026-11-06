@@ -53,8 +53,8 @@ FaceBase {
             Icon { anchors.centerIn: parent; visible: cov.status !== Image.Ready; name: "music_note"; size: parent.width * 0.3; color: Theme.subtext }
             // grooves and the label hole
             Repeater { model: [0.72, 0.86]; Rectangle { required property real modelData; anchors.centerIn: parent; width: parent.width * modelData; height: width; radius: width / 2; color: "transparent"; border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.08) } }
-            Rectangle { anchors.centerIn: parent; width: parent.width * 0.14; height: width; radius: width / 2; color: Theme.m("surface_container_lowest", "#101014"); border.width: 1.5; border.color: Qt.alpha(Theme.accent, 0.5 + f.kick * 0.4) }
+            Rectangle { visible: cov.status === Image.Ready; anchors.centerIn: parent; width: parent.width * 0.14; height: width; radius: width / 2; color: Theme.m("surface_container_lowest", "#101014"); border.width: 1.5; border.color: Qt.alpha(Theme.accent, 0.5 + f.kick * 0.4) }
         }
-        MouseArea { anchors.fill: parent; enabled: !!f.p; cursorShape: Qt.PointingHandCursor; onClicked: f.p.togglePlaying() }
+        MouseArea { anchors.fill: parent; enabled: f.live && !!f.p; cursorShape: Qt.PointingHandCursor; onClicked: f.p.togglePlaying() }
     }
 }

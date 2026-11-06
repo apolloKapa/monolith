@@ -17,6 +17,7 @@ FaceBase {
         Rectangle { anchors.fill: parent; radius: f.r; color: Qt.rgba(0, 0, 0, cov.status === Image.Ready ? 0.4 : 0) }
     }
     LyricLines {
+        live: f.live
         anchors.fill: parent
         anchors.margins: Math.max(10, Math.min(24, f.height * 0.08))
         lines: f.opt("lyricsLines", 3)

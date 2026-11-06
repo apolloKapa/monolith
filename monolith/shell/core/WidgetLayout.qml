@@ -164,11 +164,21 @@ Singleton {
         }));
     }
     function remove(mode, id) { save(mode, items(mode).filter(i => i.id !== id)); }
-    function add(mode, type, screen) {
+    // the add strip's categories: [id, name, icon, types]
+    readonly property var categories: [
+        ["all", "All", "apps", order],
+        ["time", "Time", "schedule", ["clock", "date", "calendar"]],
+        ["media", "Media", "music_note", ["media", "visualizer", "image"]],
+        ["system", "System", "monitoring", ["usage", "cpu", "ram", "temp", "disk", "battery"]],
+        ["info", "Info", "info", ["weather", "notifications", "github"]],
+        ["you", "Personal", "person", ["user", "greeting", "notes", "text"]]
+    ]
+    // x/y: where its top-left goes, as fractions of the screen (else near the middle)
+    function add(mode, type, screen, x, y) {
         const id = type[0] + Date.now().toString(36);
         const s = spec[type];
         const d = s ? (s.faces[0][4] || s.size) : [0, 0];
-        save(mode, items(mode).concat([{ id: id, type: type, face: "", x: 0.4, y: 0.4, w: d[0], h: d[1], screen: mode === "lock" ? "" : screen }]));
+        save(mode, items(mode).concat([{ id: id, type: type, face: "", x: x === undefined ? 0.4 : x, y: y === undefined ? 0.4 : y, w: d[0], h: d[1], screen: mode === "lock" ? "" : screen }]));
         return id;
     }
     // a new look: its own default size when it has one (a round look), else the size kept inside its shape

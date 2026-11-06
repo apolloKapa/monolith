@@ -582,6 +582,13 @@ Page {
                 color: Lyrics.plain !== "" ? Theme.text : Theme.subtext
                 font.family: Theme.fontFamily; font.pixelSize: Lyrics.plain !== "" ? 14 : 15
             }
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                visible: Lyrics.state !== "loading" && Lyrics.state !== "none"
+                text: Lyrics.fromFile ? "Use online lyrics" : "Pick a lyrics file"
+                icon: Lyrics.fromFile ? "cloud" : "folder_open"
+                onClicked: Lyrics.fromFile ? Lyrics.forgetFile() : Lyrics.pickFile()
+            }
         }
     }
 }

@@ -7,6 +7,7 @@ import "../../ui"
 FaceBase {
     id: f
     LyricLines {
+        live: f.live
         anchors.fill: parent
         lines: f.opt("lyricsLines", 3)
         align: f.opt("lyricsAlignment", "center")

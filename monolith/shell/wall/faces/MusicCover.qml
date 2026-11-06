@@ -25,5 +25,5 @@ FaceBase {
             Text { width: parent.width; elide: Text.ElideRight; text: f.p ? f.p.trackArtist : ""; color: Qt.rgba(1, 1, 1, 0.75); font.family: Theme.fontFamily; font.pixelSize: Math.max(9, f.height * 0.055) }
         }
     }
-    MouseArea { anchors.fill: parent; enabled: !!f.p; cursorShape: Qt.PointingHandCursor; onClicked: f.p.togglePlaying() }
+    MouseArea { anchors.fill: parent; enabled: f.live && !!f.p; cursorShape: Qt.PointingHandCursor; onClicked: f.p.togglePlaying() }
 }

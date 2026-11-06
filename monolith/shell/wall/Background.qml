@@ -11,9 +11,8 @@ PanelWindow {
     screen: modelData
     WlrLayershell.namespace: "monolith-wallpaper"
     WlrLayershell.layer: WlrLayer.Background
-    // the notes widget takes typing when clicked
-    // a notes widget takes typing when clicked
-    WlrLayershell.keyboardFocus: WidgetLayout.items("desktop").some(i => i.type === "notes") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    // a notes widget (and the GitHub widget's name field) takes typing when clicked
+    WlrLayershell.keyboardFocus: WidgetLayout.items("desktop").some(i => i.type === "notes" || i.type === "github") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: Theme.card

@@ -38,14 +38,30 @@ Item {
             }
         }
     }
-    Text {
+    property bool live: true
+    Column {
         anchors.centerIn: parent
-        visible: !ll.have && ll.sayMissing
         width: parent.width
+        spacing: 8
+        visible: !ll.have && ll.sayMissing
+        Text {
+            width: parent.width
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.Wrap
         text: !ll.hasPlayer ? "Nothing playing" : (Lyrics.state === "loading" ? "Looking for lyrics…" : "No synced lyrics for this song")
         color: Qt.alpha(ll.ink, 0.6)
         font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: Math.max(11, ll.size * 0.6)
+    }
+    // none found: pick a lyrics file for this song (remembered)
+    Rectangle {
+        visible: ll.hasPlayer && Lyrics.state !== "loading" && ll.height > 70
+        anchors.horizontalCenter: parent.horizontalCenter
+        height: 28; width: pr.implicitWidth + 20; radius: Theme.corner(28, 8)
+        color: Qt.alpha(pm.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
+        Row { id: pr; anchors.centerIn: parent; spacing: 6
+            Icon { name: "folder_open"; size: 15; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+            Text { text: "Pick a lyrics file"; color: ll.ink; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter } }
+        MouseArea { id: pm; anchors.fill: parent; hoverEnabled: true; enabled: ll.live; cursorShape: Qt.PointingHandCursor; onClicked: Lyrics.pickFile() }
+    }
     }
 }
