@@ -10,10 +10,10 @@ ColumnLayout {
         Toggle { checked: Store.get("dock.enabled", true); onToggled: on => Store.set("dock.enabled", on) }
     }
     SettingRow {
-        icon: "space_dashboard"; title: "When it shows"; desc: "It always shows when the pointer touches the bottom edge"
+        icon: "space_dashboard"; title: "When it shows"; desc: "Dodge windows: up, out of the way only while a window is where it sits. It always comes when the pointer touches the edge"
         Segmented {
-            width: 320
-            opts: [["always", "Always"], ["empty", "Empty workspaces"], ["edge", "Only at the edge"]]
+            width: 470
+            opts: [["always", "Always"], ["dodge", "Dodge windows"], ["empty", "Empty workspaces"], ["edge", "Only at the edge"]]
             value: Store.get("dock.show", Store.get("dock.onEmpty", true) ? "empty" : "edge")
             onPicked: v => Store.set("dock.show", v)
         }

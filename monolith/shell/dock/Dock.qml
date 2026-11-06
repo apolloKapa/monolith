@@ -62,7 +62,31 @@ PanelWindow {
     Connections { target: HubState; function onDockEditChanged() { if (HubState.dockEdit === dock.modelData.name) { dock.editing = true; HubState.dockEdit = ""; } } }
     onEditingChanged: { pickQuery = ""; picker.visible = false; if (editing) editKeys.forceActiveFocus(); }
 
-    readonly property bool shown: enabled && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || hovering || leaveDelay.running || menu.visible)
+    // dodge windows: up, unless a window is over (or touching) the dock's spot on this screen's
+    // current workspace. Floating windows count by where they are; tiled ones fill the screen's
+    // height, so any tiled window counts (niri doesn't say where on screen a tile sits).
+    readonly property bool covered: {
+        if (showWhen !== "dodge" || !activeWs) return false;
+        const ws = activeWs.id;
+        const touch = 4;
+        for (const k in Niri.windows) {
+            const w = Niri.windows[k];
+            if (!w || w.workspace_id !== ws) continue;
+            const L = w.layout;
+            const pos = L ? L.tile_pos_in_workspace_view : null;
+            if (!pos) { if (!w.is_floating) return true; continue; }
+            const sz = L.tile_size || [0, 0];
+            // the dock's spot in screen coordinates (its window sits against its edge)
+            const ox = dock.side === "right" ? dock.screen.width - dock.width : 0;
+            const oy = dock.side === "bottom" ? dock.screen.height - dock.height : 0;
+            const rx = ox + reach.x, ry = oy + reach.y;
+            if (pos[0] < rx + reach.width + touch && pos[0] + sz[0] > rx - touch
+                    && pos[1] < ry + reach.height + touch && pos[1] + sz[1] > ry - touch)
+                return true;
+        }
+        return false;
+    }
+    readonly property bool shown: enabled && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || (showWhen === "dodge" && !covered) || hovering || leaveDelay.running || menu.visible)
 
     // the shown dock's place, from its edge to its far side
     Item {
