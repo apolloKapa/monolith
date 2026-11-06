@@ -20,6 +20,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; Island {} }
     Variants { model: Quickshell.screens; Dock {} }
     Variants { model: Quickshell.screens; Popups {} }
+    Variants { model: Quickshell.screens; MediaPeek {} }
     Variants { model: Quickshell.screens; Osd {} }
     Variants { model: Quickshell.screens; CaptureOverlay {} }
     Variants { model: Quickshell.screens; PerfOverlay {} }

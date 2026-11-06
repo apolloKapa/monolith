@@ -8,6 +8,17 @@ import Quickshell.Io
 Singleton {
     id: hub
     property bool open: false
+    onOpenChanged: { Sounds.play(open ? "open" : "close"); if (open) peekScreen = ""; }
+    // the now-playing peek: a small player under the bar's media module while it's hovered
+    // (status/MediaPeek.qml); where it hangs, in that screen's coordinates
+    property string peekScreen: ""
+    property real peekX: 0
+    property real peekY: 0
+    property bool peekModuleHover: false
+    property bool peekCardHover: false
+    readonly property bool peekWanted: peekModuleHover || peekCardHover
+    onPeekWantedChanged: if (peekWanted) peekHide.stop(); else peekHide.restart()
+    property Timer peekHide: Timer { interval: 280; onTriggered: hub.peekScreen = "" }
     property string page: "search"
     property string screenName: ""
     readonly property var pages: ["search", "quick", "notifications", "media", "calendar", "sound", "network", "clipboard", "windows", "capture", "gaming", "tools", "wellbeing", "keys", "settings"]

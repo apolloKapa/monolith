@@ -18,7 +18,7 @@ Page {
     // the height it has with nothing typed; while you search it stays that tall (the results
     // scroll inside it) so the menu doesn't jump about as you type
     readonly property bool typing: query.trim() !== ""
-    readonly property real naturalH: favArea.height + (showGrid ? Math.min(maxRows * rowH, appGrid.contentHeight) : Math.max(1, Math.min(results.length, maxRows)) * rowH)
+    readonly property real naturalH: favArea.height + catBar.height + (showGrid ? Math.min(maxRows * rowH, appGrid.contentHeight) : Math.max(1, Math.min(results.length, maxRows)) * rowH)
     property real restH: 0
     // checked a moment later: on the first key the results change before `typing` turns true
     onNaturalHChanged: Qt.callLater(keepRest)
@@ -64,6 +64,17 @@ Page {
     function uses(id) { return Store.get("search.ranking", true) === false ? 0 : Number(Store.get("launches." + id.replace(/\./g, "_"), 0)); }
     readonly property var apps: { let _ = Store.revision; return DesktopEntries.applications.values.filter(a => !a.noDisplay)
         .slice().sort((a, b) => (uses(b.id) - uses(a.id)) || a.name.localeCompare(b.name)); }
+
+    // category tabs over the apps while nothing is typed (Settings → Launcher): the freedesktop
+    // main categories that have at least one app
+    readonly property bool showCats: Store.get("search.categories", false) === true && !typing
+    readonly property var catDefs: [["all", "All"], ["Network", "Web"], ["Game", "Games"], ["AudioVideo", "Media"], ["Office", "Office"],
+        ["Development", "Code"], ["Graphics", "Design"], ["System", "System"], ["Utility", "Tools"]]
+    function inCat(a, c) { return c === "all" || (a.categories || []).indexOf(c) !== -1; }
+    readonly property var cats: catDefs.filter(c => c[0] === "all" || apps.some(a => inCat(a, c[0])))
+    property string cat: "all"
+    readonly property var shownApps: showCats && cat !== "all" ? apps.filter(a => inCat(a, cat)) : apps
+    function stepCat(d) { const i = cats.findIndex(c => c[0] === cat); cat = cats[(Math.max(0, i) + d + cats.length) % cats.length][0]; }
 
     // files: the folder typed so far, or a name search under home
     property var files: []
@@ -123,7 +134,7 @@ Page {
         const out = [];
         const r = calc(q);
         if (r !== null) out.push({ kind: "calc", name: r, sub: "Copy the result", icon: "calculate", value: r });
-        if (q === "") return out.concat(apps.map(a => ({ kind: "app", entry: a })));
+        if (q === "") return out.concat(shownApps.map(a => ({ kind: "app", entry: a })));
         const scored = apps.map(a => ({ a: a, s: score(a, q) })).filter(x => x.s > 0).sort((x, y) => y.s - x.s);
         return out.concat(scored.map(x => ({ kind: "app", entry: x.a })));
     }
@@ -143,10 +154,26 @@ Page {
     Keys.onUpPressed: list.currentIndex = Math.max(0, list.currentIndex - 1)
     Keys.onDownPressed: list.currentIndex = Math.min(results.length - 1, list.currentIndex + 1)
     Keys.onReturnPressed: activate(list.currentIndex)
+    // Alt+←/→: the previous / next category
+    Keys.onLeftPressed: event => { if (page.showCats && (event.modifiers & Qt.AltModifier)) page.stepCat(-1); else event.accepted = false; }
+    Keys.onRightPressed: event => { if (page.showCats && (event.modifiers & Qt.AltModifier)) page.stepCat(1); else event.accepted = false; }
     Keys.onEnterPressed: activate(list.currentIndex)
 
     Item {
+        id: catBar
+        width: parent.width
+        height: page.showCats ? 44 : 0
+        visible: page.showCats
+        Segmented {
+            width: parent.width; height: 34
+            opts: page.cats
+            value: page.cat
+            onPicked: v => page.cat = v
+        }
+    }
+    Item {
         id: favArea
+        y: catBar.height
         width: parent.width
         height: page.showFavs ? favGrid.height + 12 : 0
         visible: page.showFavs
@@ -237,12 +264,12 @@ Page {
         id: appGrid
         visible: page.showGrid
         anchors.fill: parent
-        anchors.topMargin: favArea.height
+        anchors.topMargin: favArea.height + catBar.height
         clip: true
         cellWidth: width / page.gridColumns
         cellHeight: 92
         boundsBehavior: Flickable.StopAtBounds
-        model: page.showGrid ? page.apps : []
+        model: page.showGrid ? page.shownApps : []
         delegate: Pressable {
             required property var modelData
             width: appGrid.cellWidth - 4
@@ -265,7 +292,7 @@ Page {
         id: list
         visible: !page.showGrid
         anchors.fill: parent
-        anchors.topMargin: favArea.height
+        anchors.topMargin: favArea.height + catBar.height
         clip: true
         model: page.results
         boundsBehavior: Flickable.StopAtBounds

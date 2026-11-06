@@ -198,8 +198,25 @@ Item {
     Component {
         id: mediaC
         Mod {
+            id: mediaMod
             property bool want: bar.player !== null
-            onClicked: bar.open("media")
+            onClicked: { HubState.peekScreen = ""; bar.open("media"); }
+            // hovering it a moment shows a small player under it (Settings → Bar → Now playing peek)
+            HoverHandler {
+                id: mediaHover
+                enabled: !bar.only && Store.get("bar.mediaPeek", true) !== false
+                onHoveredChanged: { HubState.peekModuleHover = hovered; if (hovered) peekWait.restart(); else peekWait.stop(); }
+            }
+            Timer {
+                id: peekWait
+                interval: 350
+                onTriggered: {
+                    if (!mediaHover.hovered || HubState.open) return;
+                    const p = mediaMod.mapToItem(null, mediaMod.width / 2, mediaMod.height);
+                    HubState.peekX = p.x; HubState.peekY = p.y;
+                    HubState.peekScreen = bar.screenName;
+                }
+            }
             Rectangle {
                 width: 22; height: 22; radius: 11
                 color: Theme.control

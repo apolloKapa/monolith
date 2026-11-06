@@ -26,6 +26,17 @@ ColumnLayout {
         }
     }
     SettingRow {
+        key: "sounds.enabled"; def: false;
+        icon: "graphic_eq"; title: "Interface sounds"; desc: "Soft clicks for buttons and switches, and for menus opening and closing"
+        Toggle { checked: Sounds.on; onToggled: on => { Store.set("sounds.enabled", on); if (on) Qt.callLater(() => Sounds.play("toggle-on")); } }
+    }
+    SettingRow {
+        key: "sounds.volume"; def: 0.5;
+        visible: Sounds.on
+        icon: "volume_down"; title: "Interface sound volume"
+        NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Sounds.volume; onMoved: v => { Store.set("sounds.volume", v); Sounds.play("click"); } }
+    }
+    SettingRow {
         key: "notifications.timeout"; def: 6;
         icon: "timer"; title: "How long they stay"; desc: "Unless the app says otherwise; urgent ones stay until closed"
         NumberBox { from: 1; to: 300; slideTo: 30; unit: "s"; value: Number(Store.get("notifications.timeout", 6)); onMoved: v => Store.set("notifications.timeout", v) }

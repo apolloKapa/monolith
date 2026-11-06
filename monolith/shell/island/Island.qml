@@ -153,6 +153,8 @@ PanelWindow {
             clip: true
 
             HoverHandler { id: barHover }
+            // Theme → Effects (grain, edge light) while it's a menu
+            PanelFx { anchors.fill: parent; radius: island.rr; visible: win.grown && (Theme.fxGrain || Theme.fxEdge) }
 
             // the bar row, centred at the top
             IslandBar {
@@ -204,6 +206,25 @@ PanelWindow {
                 opacity: win.shown ? 1 : 0
                 visible: opacity > 0.01
                 Behavior on opacity { NumberAnimation { duration: win.shown ? 260 : 90 } }
+                // Unfold (Theme → Effects): the menu opens out of a thin bright line through its
+                // middle and folds back into it
+                property real unfold: win.shown ? 1 : 0
+                Behavior on unfold { enabled: Theme.fxUnfold; NumberAnimation { duration: win.shown ? Theme.springMs : 160; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
+                transform: Scale {
+                    origin.x: openArea.width / 2; origin.y: openArea.height / 2
+                    yScale: Theme.fxUnfold ? Math.max(0.012, openArea.unfold) : 1
+                    xScale: Theme.fxUnfold ? 0.985 + 0.015 * openArea.unfold : 1
+                }
+                Rectangle {
+                    z: 100
+                    visible: Theme.fxUnfold && openArea.unfold < 0.98 && openArea.unfold > 0.001
+                    anchors.centerIn: parent
+                    width: parent.width * (0.4 + 0.6 * Math.min(1, openArea.unfold * 3))
+                    height: Math.max(2, 3 / Math.max(0.05, openArea.unfold))
+                    radius: height / 2
+                    color: Theme.accent
+                    opacity: 1 - openArea.unfold
+                }
 
                 Rectangle {
                     id: field
@@ -407,6 +428,7 @@ PanelWindow {
         Behavior on scale { NumberAnimation { duration: win.shown ? Theme.springMs : 160; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.springCurve : Theme.exitCurve } }
         CardShadow {}
         MouseArea { anchors.fill: parent }
+        PanelFx { anchors.fill: parent; radius: floatCard.radius }
         // pages let go once it has faded out
         onOpacityChanged: if (!win.shown && opacity < 0.01) win.wasOpen = false
     }
