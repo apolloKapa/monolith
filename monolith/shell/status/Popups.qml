@@ -49,13 +49,10 @@ PanelWindow {
 
                 property real enter: 0
                 Component.onCompleted: enter = 1
-                Behavior on enter { NumberAnimation { duration: Theme.enterMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve } }
+                Behavior on enter { NumberAnimation { duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve } }
+                // fades in with a little zoom, like everything else
                 opacity: enter
-                // in from their side
-                transform: Translate {
-                    x: (win.corner.endsWith("left") ? -40 : (win.corner.endsWith("right") ? 40 : 0)) * (1 - pc.enter)
-                    y: (win.corner === "top" ? -30 : (win.corner === "bottom" ? 30 : 0)) * (1 - pc.enter)
-                }
+                scale: Theme.popScale + (1 - Theme.popScale) * enter
 
             }
         }

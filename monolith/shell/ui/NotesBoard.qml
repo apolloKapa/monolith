@@ -40,8 +40,10 @@ Item {
         anchors.fill: parent
         // the list and a note cross-fade
         opacity: nb.openId === "" ? 1 : 0
+        scale: nb.openId === "" ? 1 : Theme.popScale
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: nb.openId === "" ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: nb.openId === "" ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: nb.openId === "" ? Theme.enterCurve : Theme.exitCurve } }
         Row {
             id: head
             width: parent.width; height: 28
@@ -101,8 +103,10 @@ Item {
     Item {
         anchors.fill: parent
         opacity: nb.openId !== "" ? 1 : 0
+        scale: nb.openId !== "" ? 1 : Theme.popScale
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: nb.openId !== "" ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: nb.openId !== "" ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: nb.openId !== "" ? Theme.enterCurve : Theme.exitCurve } }
         Row {
             id: bar
             width: parent.width; height: 28

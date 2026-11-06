@@ -31,13 +31,16 @@ PanelWindow {
         id: card
         width: 360; height: 128
         x: Math.max(12, Math.min(pk.width - width - 12, HubState.peekX - width / 2))
-        y: Theme.barBottom ? HubState.peekY - height - 10 + (pk.shown ? 0 : 8) : HubState.peekY + 10 + (pk.shown ? 0 : -8)
+        y: Theme.barBottom ? HubState.peekY - height - 10 : HubState.peekY + 10
         radius: Theme.corner(80, 14)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
+        // fades in with a little zoom from the bar, and out the same way
         opacity: pk.shown ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: pk.shown ? Theme.fastMs : Theme.ms(120); easing.type: Easing.OutCubic } }
-        Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
+        scale: pk.shown ? 1 : Theme.popScale
+        transformOrigin: Theme.barBottom ? Item.Bottom : Item.Top
+        Behavior on opacity { NumberAnimation { duration: pk.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: pk.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: pk.shown ? Theme.enterCurve : Theme.exitCurve } }
         CardShadow {}
         HoverHandler { onHoveredChanged: HubState.peekCardHover = hovered }
 

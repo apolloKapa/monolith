@@ -51,6 +51,12 @@ PanelWindow {
         anchors.verticalCenter: parent.verticalCenter
         x: qa.out ? (qa.onLeft ? 12 : qa.width - width - 12) : (qa.onLeft ? -width - 30 : qa.width + 30)
         Behavior on x { NumberAnimation { duration: qa.speed; easing.type: Easing.BezierSpline; easing.bezierCurve: qa.out ? Theme.springCurve : Theme.exitCurve } }
+        // and fades in with a little zoom as it slides, out the same way
+        opacity: qa.out ? 1 : 0
+        scale: qa.out ? 1 : Theme.popScale
+        transformOrigin: qa.onLeft ? Item.Left : Item.Right
+        Behavior on opacity { NumberAnimation { duration: qa.out ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: qa.out ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: qa.out ? Theme.enterCurve : Theme.exitCurve } }
         radius: Theme.islandRadius
         color: Theme.frame
         border.width: Theme.outlineW

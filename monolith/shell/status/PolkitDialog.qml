@@ -25,8 +25,8 @@ Scope {
         onVisibleChanged: if (visible) appear.restart()
         ParallelAnimation {
             id: appear
-            NumberAnimation { target: card; property: "opacity"; from: 0; to: 1; duration: Theme.shortMs; easing.type: Easing.OutCubic }
-            NumberAnimation { target: card; property: "scale"; from: 0.92; to: 1; duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve }
+            NumberAnimation { target: card; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+            NumberAnimation { target: card; property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
         }
         Rectangle {
             id: card

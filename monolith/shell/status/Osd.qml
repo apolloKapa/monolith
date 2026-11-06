@@ -109,9 +109,9 @@ PanelWindow {
         border.width: 1
         border.color: Theme.hairline
         opacity: hold.running ? 1 : 0
-        scale: hold.running ? 1 : 0.94
-        Behavior on opacity { NumberAnimation { duration: hold.running ? Theme.ms(180) : Theme.shortMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: hold.running ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: hold.running ? Theme.enterCurve : Theme.exitCurve } }
+        scale: hold.running ? 1 : Theme.popScale
+        Behavior on opacity { NumberAnimation { duration: hold.running ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: hold.running ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: hold.running ? Theme.enterCurve : Theme.exitCurve } }
 
         Bubble {
             id: ob
