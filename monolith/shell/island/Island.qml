@@ -98,11 +98,14 @@ PanelWindow {
         id: island
         bodyW: win.grown ? win.openW : (win.toastOn ? Math.max(win.restW, 520) : win.restW)
         height: win.grown ? win.openH : (win.toastOn ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
-        r: win.grown || win.toastOn ? Theme.islandRadius : (Theme.fullBar ? (Theme.barLength < 0.999 ? Theme.islandRadius / 2 : 0) : height / 2)
+        r: win.grown || win.toastOn ? Theme.islandRadius : (Theme.fullBar ? (Theme.barLength < 0.999 ? Theme.islandRadius / 2 : 0) : (Theme.square ? 0 : height / 2))
         // a floating bar draws its own rounded background (Solid) or none at all (Modular: its
         // sections have pills), so the hanging shape stays empty
-        fill: Theme.barFloats ? "transparent" : (win.barSolid ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
-        shadow: !Theme.barFloats && (win.barSolid || Theme.barOpacity > 0.3)
+        // the Frame paints the bar's background itself (as part of one shape), so here it's empty
+        readonly property bool empty: Theme.barFloats || (Theme.frameBand && !win.grown)
+        fill: empty ? "transparent" : (win.barSolid ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
+        shadow: !empty && (win.barSolid || Theme.barOpacity > 0.3)
+        outline: !empty
         opacity: win.barHere || win.shown || win.toastOn ? 1 : 0
         ear: Theme.fullBar && !win.grown ? 0 : Theme.islandEar
         onHeightChanged: if (!win.shown && height <= Theme.islandH + 1) win.wasOpen = false
@@ -117,9 +120,26 @@ PanelWindow {
         Rectangle {
             anchors.fill: parent
             visible: Theme.barFloats && (Theme.barStyle === "solid" || win.toastOn)
-            radius: win.toastOn ? Theme.islandRadius : Math.min(height / 2, Theme.islandRadius + 6)
+            radius: win.toastOn ? Theme.islandRadius : Theme.barRound(height)
             color: win.barSolid || win.toastOn ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+            border.width: Theme.outlineW
+            border.color: Theme.outlineColor
             CardShadow { visible: win.barSolid || win.toastOn || Theme.barOpacity > 0.3 }
+        }
+        // Frame: a notification dropping out gets a background below the bar only (the frame
+        // already paints the bar's strip; painting it again would show darker in see-through styles)
+        Item {
+            visible: Theme.frameBand && win.toastOn
+            x: island.e; y: Theme.islandH
+            width: island.bodyW; height: Math.max(0, island.height - Theme.islandH)
+            clip: true
+            Rectangle {
+                y: -radius
+                width: parent.width; height: parent.height + radius
+                radius: Theme.islandRadius
+                color: Theme.frame
+                border.width: Theme.outlineW; border.color: Theme.outlineColor
+            }
         }
         // clicks on the island stay on the island
         MouseArea { anchors.fill: parent }
@@ -345,7 +365,7 @@ PanelWindow {
         height: win.dropped ? win.openH - Theme.islandH : 0
         r: Theme.islandRadius
         x: Math.round((win.width - width) / 2)
-        y: Theme.islandH - 1
+        y: Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
         Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : 220; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springCurve : Theme.exitCurve } }
         onHeightChanged: if (!win.shown && height <= 1) win.wasOpen = false

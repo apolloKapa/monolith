@@ -81,8 +81,10 @@ Item {
         x: zone.x - 8
         width: zone.width + 16
         height: bar.height
-        radius: Math.min(height / 2, Theme.islandRadius + 6)
+        radius: Theme.barRound(height)
         color: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+        border.width: Theme.outlineW
+        border.color: Theme.outlineColor
         CardShadow { visible: Theme.barOpacity > 0.3 }
     }
     ZonePill { zone: leftZone }

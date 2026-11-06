@@ -20,7 +20,7 @@ Column {
         property real screenW: pv.sw
         bodyW: Theme.fullBar ? Math.round((screenW - 2 * Theme.barMargin) * Theme.barLength) : Math.max(Theme.islandMinW, real.implicitWidth)
         height: Theme.islandH
-        r: Theme.fullBar ? (Theme.barLength < 0.999 ? Theme.islandRadius / 2 : 0) : height / 2
+        r: Theme.fullBar ? (Theme.barLength < 0.999 ? Theme.islandRadius / 2 : 0) : (Theme.square ? 0 : height / 2)
         ear: Theme.fullBar ? 0 : Theme.islandEar
         fill: Theme.barFloats ? "transparent" : (Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
         shadow: !Theme.barFloats && Theme.barOpacity > 0.3
@@ -28,8 +28,10 @@ Column {
         Rectangle {
             anchors.fill: parent
             visible: Theme.barStyle === "solid"
-            radius: Math.min(height / 2, Theme.islandRadius + 6)
+            radius: Theme.barRound(height)
             color: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+            border.width: Theme.outlineW
+            border.color: Theme.outlineColor
             CardShadow { visible: Theme.barOpacity > 0.3 }
         }
         Item {
