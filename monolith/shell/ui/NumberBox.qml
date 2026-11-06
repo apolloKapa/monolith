@@ -68,6 +68,8 @@ Item {
             anchors.topMargin: -13
             anchors.bottomMargin: -13
             hoverEnabled: true
+            // a slider inside something that scrolls keeps its drag
+            preventStealing: true
             cursorShape: Qt.PointingHandCursor
             function at(x) { return nb.clamp(nb.snap(nb.from + Math.max(0, Math.min(1, x / track.width)) * (nb.slideTo - nb.from))); }
             onPressed: mouse => { nb.dragging = true; nb.dragValue = at(mouse.x); nb.set(nb.dragValue); }
