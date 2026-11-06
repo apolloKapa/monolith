@@ -6,23 +6,26 @@ import Quickshell.Io
 import "../../core"
 import "../../ui"
 
-// You: glass; your picture, your name, the computer and how long it's been up, Settings and
-// Lock beside them, and sleep, restart and power off (hold one for a moment to do it).
+// You: glass; your picture, your name, the computer and how long it's been up; along the
+// bottom Settings and Lock, then sleep, restart and power off (hold one for a moment to do it).
 FaceBase {
     id: f
     readonly property string avatar: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face"))
     property string uptime: ""
     FileView { id: host; path: "/etc/hostname" }
-    FileView { id: up; path: "/proc/uptime" }
-    Timer {
-        interval: 60000; repeat: true; triggeredOnStart: true; running: f.live
-        onTriggered: {
-            up.reload();
-            const s = Math.floor(parseFloat((up.text() || "0").split(" ")[0]));
-            const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
-            f.uptime = (d > 0 ? d + "d " : "") + (h > 0 ? h + "h " : "") + m + "m";
+    // how long it's been up (/proc/uptime, read fresh each minute)
+    Process {
+        id: up
+        command: ["cat", "/proc/uptime"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const s = Math.floor(parseFloat((text || "0").split(" ")[0]));
+                const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
+                f.uptime = (d > 0 ? d + "d " : "") + (h > 0 ? h + "h " : "") + m + "m";
+            }
         }
     }
+    Timer { interval: 60000; repeat: true; triggeredOnStart: true; running: f.live; onTriggered: up.running = true }
     Glass { anchors.fill: parent; ctx: f.ctx; radius: Theme.corner(80, 16) }
     Fit {
         dw: 280; dh: 150
@@ -38,9 +41,13 @@ FaceBase {
             }
             ColumnLayout {
                 Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: 0
                 spacing: 4
                 Text { Layout.fillWidth: true; elide: Text.ElideRight; text: Quickshell.env("USER") || ""; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 20 }
                 Row {
+                    Layout.fillWidth: true
+                    clip: true
                     spacing: 4
                     Repeater {
                         model: [["computer", (host.text() || "").trim() || "localhost"], ["schedule", f.uptime]]
@@ -55,47 +62,44 @@ FaceBase {
                     }
                 }
             }
-            // Settings and Lock
-            Row {
-                Layout.alignment: Qt.AlignTop
-                spacing: 6
-                Repeater {
-                    model: [["settings", "Settings"], ["lock", "Lock"]]
-                    Rectangle {
-                        id: qb
-                        required property var modelData
-                        width: 32; height: 32; radius: Theme.corner(32, 9)
-                        color: Qt.alpha(qma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
-                        Icon { anchors.centerIn: parent; name: qb.modelData[0]; size: 17; color: qma.containsMouse ? Theme.accent : Theme.subtext }
-                        MouseArea {
-                            id: qma
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            enabled: f.live
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: qb.modelData[0] === "lock" ? LockState.lock() : HubState.openSettings("appearance", "")
-                        }
-                    }
-                }
-            }
         }
         Row {
             x: 14; anchors.bottom: parent.bottom; anchors.bottomMargin: 14
             width: parent.width - 28
             spacing: 6
+            // Settings and Lock (a click), then sleep, restart, power off (hold)
             Repeater {
-                // [command, icon, share of the row, colour]
-                model: [["suspend", "bedtime", 1, "#89b4fa"], ["reboot", "restart_alt", 2, "#fab387"], ["poweroff", "power_settings_new", 3, "#f38ba8"]]
+                model: [["settings", "Settings"], ["lock", "Lock"]]
+                Rectangle {
+                    id: qb
+                    required property var modelData
+                    width: (parent.width - 24) / 5; height: 38
+                    radius: Theme.corner(38, 8)
+                    color: Qt.alpha(qma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
+                    Icon { anchors.centerIn: parent; name: qb.modelData[0]; size: 18; color: qma.containsMouse ? Theme.accent : Theme.subtext }
+                    MouseArea {
+                        id: qma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        enabled: f.live
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: qb.modelData[0] === "lock" ? LockState.lock() : HubState.openSettings("appearance", "")
+                    }
+                }
+            }
+            Repeater {
+                // [command, icon, colour]
+                model: [["suspend", "bedtime", "#89b4fa"], ["reboot", "restart_alt", "#fab387"], ["poweroff", "power_settings_new", "#f38ba8"]]
                 Rectangle {
                     id: act
                     required property var modelData
-                    width: (parent.width - 12) * modelData[2] / 6; height: 38
+                    width: (parent.width - 24) / 5; height: 38
                     radius: Theme.corner(38, 8)
                     color: Qt.alpha(ma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
                     clip: true
                     property real hold: 0
-                    Rectangle { width: parent.width * act.hold; height: parent.height; color: act.modelData[3]; opacity: 0.85 }
-                    Icon { anchors.centerIn: parent; name: act.modelData[1]; size: 18; color: act.hold > 0.5 ? "#15161a" : (ma.containsMouse ? act.modelData[3] : Theme.subtext) }
+                    Rectangle { width: parent.width * act.hold; height: parent.height; color: act.modelData[2]; opacity: 0.85 }
+                    Icon { anchors.centerIn: parent; name: act.modelData[1]; size: 18; color: act.hold > 0.5 ? "#15161a" : (ma.containsMouse ? act.modelData[2] : Theme.subtext) }
                     NumberAnimation on hold { id: holding; running: false; to: 1; duration: 700; onFinished: if (act.hold >= 1) { Power.run(act.modelData[0]); act.hold = 0; } }
                     MouseArea {
                         id: ma

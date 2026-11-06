@@ -121,113 +121,123 @@ Page {
         Icon { id: tr; anchors.right: parent.right; anchors.rightMargin: 14; anchors.verticalCenter: parent.verticalCenter; name: r.trailing; size: 18; color: Theme.subtext; visible: r.trailing !== "" }
     }
 
-    ColumnLayout {
-        id: col
-        width: parent.width
-        spacing: 8
+    // scrolls when there's more than fits
+    Flickable {
+        id: scroller
+        SmoothWheel {}
+        anchors.fill: parent
+        contentHeight: col.implicitHeight
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+        interactive: contentHeight > height
+        ColumnLayout {
+            id: col
+            width: parent.width
+            spacing: 8
 
-        Seg {
-            opts: [["wifi", "Wi-Fi", "wifi"], ["wired", "Ethernet", "lan"], ["bt", "Bluetooth", "bluetooth"]]
-            value: page.tab
-            onPicked: v => page.tab = v
-        }
+            Seg {
+                opts: [["wifi", "Wi-Fi", "wifi"], ["wired", "Ethernet", "lan"], ["bt", "Bluetooth", "bluetooth"]]
+                value: page.tab
+                onPicked: v => page.tab = v
+            }
 
-        // ── Wi-Fi ──
-        Row2 {
-            visible: page.tab === "wifi"
-            icon: page.wifiOn ? "wifi" : "wifi_off"
-            title: "Wi-Fi"
-            sub: page.wifiOn ? (page.networks.length + " networks") : "Off"
-            on: page.wifiOn
-            trailing: page.wifiOn ? "toggle_on" : "toggle_off"
-            onClicked: { page.wifiOn = !page.wifiOn; Quickshell.execDetached(["nmcli", "radio", "wifi", page.wifiOn ? "on" : "off"]); }
-        }
-        Repeater {
-            model: page.tab === "wifi" && page.wifiOn ? page.networks : []
-            ColumnLayout {
-                required property var modelData
-                Layout.fillWidth: true
-                spacing: 6
-                Row2 {
-                    icon: modelData.signal > 70 ? "signal_wifi_4_bar" : (modelData.signal > 40 ? "network_wifi_3_bar" : "network_wifi_1_bar")
-                    title: modelData.ssid
-                    sub: page.busy === modelData.ssid ? "Connecting…" : (modelData.active ? "Connected" : (modelData.secure ? "Secured" : "Open"))
-                    on: modelData.active
-                    trailing: modelData.secure ? "lock" : ""
-                    onClicked: {
-                        if (modelData.active) Quickshell.execDetached(["nmcli", "connection", "down", "id", modelData.ssid]);
-                        else page.connect(modelData, "");
-                    }
-                    onRightClicked: Quickshell.execDetached(["nmcli", "connection", "delete", "id", modelData.ssid])
-                }
-                // the password, asked for in place when the network needs one
-                Rectangle {
-                    visible: page.askFor === modelData.ssid
+            // ── Wi-Fi ──
+            Row2 {
+                visible: page.tab === "wifi"
+                icon: page.wifiOn ? "wifi" : "wifi_off"
+                title: "Wi-Fi"
+                sub: page.wifiOn ? (page.networks.length + " networks") : "Off"
+                on: page.wifiOn
+                trailing: page.wifiOn ? "toggle_on" : "toggle_off"
+                onClicked: { page.wifiOn = !page.wifiOn; Quickshell.execDetached(["nmcli", "radio", "wifi", page.wifiOn ? "on" : "off"]); }
+            }
+            Repeater {
+                model: page.tab === "wifi" && page.wifiOn ? page.networks : []
+                ColumnLayout {
+                    required property var modelData
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 48
-                    radius: Theme.corner(height)
-                    color: Theme.container
-                    TextInput {
-                        id: pw
-                        anchors.fill: parent
-                        anchors.leftMargin: 16
-                        anchors.rightMargin: 16
-                        verticalAlignment: TextInput.AlignVCenter
-                        echoMode: TextInput.Password
-                        color: Theme.text
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.sizeBody
-                        onVisibleChanged: if (visible) forceActiveFocus()
-                        onAccepted: { page.connect(modelData, text); text = ""; }
-                        Label { anchors.fill: parent; verticalAlignment: Text.AlignVCenter; visible: pw.text === ""; text: "Password for " + modelData.ssid; muted: true }
+                    spacing: 6
+                    Row2 {
+                        icon: modelData.signal > 70 ? "signal_wifi_4_bar" : (modelData.signal > 40 ? "network_wifi_3_bar" : "network_wifi_1_bar")
+                        title: modelData.ssid
+                        sub: page.busy === modelData.ssid ? "Connecting…" : (modelData.active ? "Connected" : (modelData.secure ? "Secured" : "Open"))
+                        on: modelData.active
+                        trailing: modelData.secure ? "lock" : ""
+                        onClicked: {
+                            if (modelData.active) Quickshell.execDetached(["nmcli", "connection", "down", "id", modelData.ssid]);
+                            else page.connect(modelData, "");
+                        }
+                        onRightClicked: Quickshell.execDetached(["nmcli", "connection", "delete", "id", modelData.ssid])
+                    }
+                    // the password, asked for in place when the network needs one
+                    Rectangle {
+                        visible: page.askFor === modelData.ssid
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 48
+                        radius: Theme.corner(height)
+                        color: Theme.container
+                        TextInput {
+                            id: pw
+                            anchors.fill: parent
+                            anchors.leftMargin: 16
+                            anchors.rightMargin: 16
+                            verticalAlignment: TextInput.AlignVCenter
+                            echoMode: TextInput.Password
+                            color: Theme.text
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.sizeBody
+                            onVisibleChanged: if (visible) forceActiveFocus()
+                            onAccepted: { page.connect(modelData, text); text = ""; }
+                            Label { anchors.fill: parent; verticalAlignment: Text.AlignVCenter; visible: pw.text === ""; text: "Password for " + modelData.ssid; muted: true }
+                        }
                     }
                 }
             }
-        }
 
-        // ── Ethernet ──
-        Repeater {
-            model: page.tab === "wired" ? page.ethernet : []
-            Row2 {
-                required property var modelData
-                icon: "lan"
-                title: modelData.conn !== "" ? modelData.conn : modelData.name
-                sub: modelData.name + " · " + modelData.state
-                on: modelData.state === "connected"
-                onClicked: Quickshell.execDetached(["nmcli", "dev", modelData.state === "connected" ? "disconnect" : "connect", modelData.name])
-            }
-        }
-        Label {
-            visible: page.tab === "wired" && page.ethernet.length === 0
-            Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
-            text: "No wired adapters"; muted: true
-        }
-
-        // ── Bluetooth ──
-        Row2 {
-            visible: page.tab === "bt"
-            icon: page.adapter && page.adapter.enabled ? "bluetooth" : "bluetooth_disabled"
-            title: "Bluetooth"
-            sub: !page.adapter ? "No adapter" : (page.adapter.enabled ? (page.adapter.discovering ? "Looking for devices…" : "On") : "Off")
-            on: !!(page.adapter && page.adapter.enabled)
-            trailing: page.adapter && page.adapter.enabled ? "toggle_on" : "toggle_off"
-            onClicked: if (page.adapter) page.adapter.enabled = !page.adapter.enabled
-            onRightClicked: if (page.adapter && page.adapter.enabled) page.adapter.discovering = !page.adapter.discovering
-        }
-        Repeater {
-            model: page.tab === "bt" && page.adapter && page.adapter.enabled ? page.btDevices : []
-            Row2 {
-                required property var modelData
-                icon: modelData.icon && modelData.icon.indexOf("audio") !== -1 ? "headphones" : (modelData.icon && modelData.icon.indexOf("input") !== -1 ? "mouse" : "devices")
-                title: modelData.name || modelData.address
-                sub: modelData.connected ? ("Connected" + (modelData.batteryAvailable ? " · " + Math.round(modelData.battery * 100) + "%" : "")) : (modelData.paired ? "Paired" : "Click to pair")
-                on: modelData.connected
-                onClicked: {
-                    if (modelData.connected) modelData.disconnect();
-                    else if (modelData.paired) modelData.connect();
-                    else modelData.pair();
+            // ── Ethernet ──
+            Repeater {
+                model: page.tab === "wired" ? page.ethernet : []
+                Row2 {
+                    required property var modelData
+                    icon: "lan"
+                    title: modelData.conn !== "" ? modelData.conn : modelData.name
+                    sub: modelData.name + " · " + modelData.state
+                    on: modelData.state === "connected"
+                    onClicked: Quickshell.execDetached(["nmcli", "dev", modelData.state === "connected" ? "disconnect" : "connect", modelData.name])
                 }
-                onRightClicked: if (modelData.paired) modelData.forget()
+            }
+            Label {
+                visible: page.tab === "wired" && page.ethernet.length === 0
+                Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
+                text: "No wired adapters"; muted: true
+            }
+
+            // ── Bluetooth ──
+            Row2 {
+                visible: page.tab === "bt"
+                icon: page.adapter && page.adapter.enabled ? "bluetooth" : "bluetooth_disabled"
+                title: "Bluetooth"
+                sub: !page.adapter ? "No adapter" : (page.adapter.enabled ? (page.adapter.discovering ? "Looking for devices…" : "On") : "Off")
+                on: !!(page.adapter && page.adapter.enabled)
+                trailing: page.adapter && page.adapter.enabled ? "toggle_on" : "toggle_off"
+                onClicked: if (page.adapter) page.adapter.enabled = !page.adapter.enabled
+                onRightClicked: if (page.adapter && page.adapter.enabled) page.adapter.discovering = !page.adapter.discovering
+            }
+            Repeater {
+                model: page.tab === "bt" && page.adapter && page.adapter.enabled ? page.btDevices : []
+                Row2 {
+                    required property var modelData
+                    icon: modelData.icon && modelData.icon.indexOf("audio") !== -1 ? "headphones" : (modelData.icon && modelData.icon.indexOf("input") !== -1 ? "mouse" : "devices")
+                    title: modelData.name || modelData.address
+                    sub: modelData.connected ? ("Connected" + (modelData.batteryAvailable ? " · " + Math.round(modelData.battery * 100) + "%" : "")) : (modelData.paired ? "Paired" : "Click to pair")
+                    on: modelData.connected
+                    onClicked: {
+                        if (modelData.connected) modelData.disconnect();
+                        else if (modelData.paired) modelData.connect();
+                        else modelData.pair();
+                    }
+                    onRightClicked: if (modelData.paired) modelData.forget()
+                }
             }
         }
     }
