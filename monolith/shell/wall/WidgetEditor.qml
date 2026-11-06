@@ -261,8 +261,7 @@ PanelWindow {
         radius: 26
         color: Theme.frame
         border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
-        layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY; shadowHorizontalOffset: Theme.shadowX }
+        CardShadow {}
         Row {
             id: tb
             anchors.centerIn: parent

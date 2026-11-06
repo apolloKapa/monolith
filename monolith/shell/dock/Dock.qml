@@ -161,7 +161,13 @@ PanelWindow {
                             if (!moved && Math.abs(mouse.x - start.x) + Math.abs(mouse.y - start.y) > 6) { moved = true; dock.dragIndex = app.index; }
                             if (moved) dock.dragPos = mapToItem(appsRow, mouse.x, mouse.y);
                         }
-                        onReleased: { if (moved) dock.movePinned(app.index, dock.indexAt(dock.dragPos)); dock.dragIndex = -1; }
+                        // end the drag first, then reorder: saving rebuilds the dock (this tile too)
+                        onReleased: {
+                            const from = app.index, to = dock.indexAt(dock.dragPos), wasMoved = moved;
+                            dock.dragIndex = -1;
+                            moved = false;
+                            if (wasMoved) Qt.callLater(() => dock.movePinned(from, to));
+                        }
                         onCanceled: dock.dragIndex = -1
                     }
                     // editing: unpin

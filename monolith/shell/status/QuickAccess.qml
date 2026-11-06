@@ -55,8 +55,7 @@ PanelWindow {
         color: Theme.frame
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
-        layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY; shadowHorizontalOffset: Theme.shadowX }
+        CardShadow {}
         HoverHandler { id: panelHover; onHoveredChanged: if (!hovered) leave.restart(); else leave.stop() }
 
         // the tools as tabs down the side

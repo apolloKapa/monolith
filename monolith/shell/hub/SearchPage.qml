@@ -176,10 +176,13 @@ Page {
                             if (!moved && Math.abs(mouse.x - start.x) + Math.abs(mouse.y - start.y) > 8) { moved = true; page.favDrag = favTile.index; }
                             if (moved) page.favPos = mapToItem(favGrid, mouse.x, mouse.y);
                         }
+                        // end the drag first, then reorder: saving rebuilds the grid (this tile too)
                         onReleased: {
-                            if (moved) page.moveFav(favTile.index, page.favIndexAt(page.favPos));
-                            else page.launch(favTile.modelData);
+                            const from = favTile.index, to = page.favIndexAt(page.favPos), wasMoved = moved, entry = favTile.modelData;
                             page.favDrag = -1;
+                            moved = false;
+                            if (wasMoved) Qt.callLater(() => page.moveFav(from, to));
+                            else page.launch(entry);
                         }
                         onCanceled: page.favDrag = -1
                     }
