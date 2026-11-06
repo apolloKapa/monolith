@@ -5,8 +5,10 @@ import Quickshell.Services.Pipewire
 import Quickshell.Services.SystemTray
 import Quickshell.Services.Mpris
 import Quickshell.Services.UPower
+import Quickshell.Bluetooth
 import "../core"
 import "../ui"
+import "../wall/faces" as Faces
 
 // The island's bar: three zones (left, centre, right), each a list of modules you arrange in
 // Settings → Bar. Every module opens its page in the island.
@@ -98,7 +100,8 @@ Item {
     readonly property var mods: ({
         cc: ccC, search: searchC, clock: clockC, weather: weatherC, workspaces: wsC, media: mediaC, title: titleC,
         live: liveC, tray: trayC, stats: statsC, notifications: notifC, network: netC, sound: soundC,
-        battery: batC, keyboard: kbC, gaming: gameC, power: powerC, updates: updC
+        battery: batC, keyboard: kbC, gaming: gameC, power: powerC, updates: updC,
+        bluetooth: btC, visualizer: visC, nightlight: nightC, awake: awakeC, shuffle: shuffleC
     })
 
     // the control center: a filled accent bubble
@@ -347,6 +350,42 @@ Item {
             Label { text: Niri.layoutName.substring(0, 2).toUpperCase(); font.pixelSize: Theme.sizeSmall; strong: true; anchors.verticalCenter: parent.verticalCenter }
         }
     }
+    // Bluetooth: the adapter's state; how many devices are connected beside it
+    Component {
+        id: btC
+        Mod {
+            readonly property var adapter: Bluetooth.defaultAdapter
+            readonly property int connected: Bluetooth.devices.values.filter(d => d.connected).length
+            property bool want: !!adapter
+            pad: 7
+            onClicked: bar.open("network")
+            Icon {
+                name: !parent.parent.adapter || !parent.parent.adapter.enabled ? "bluetooth_disabled" : (parent.parent.connected > 0 ? "bluetooth_connected" : "bluetooth")
+                size: 18; filled: true
+                color: parent.parent.adapter && parent.parent.adapter.enabled ? Theme.text : Theme.subtext
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Label { visible: parent.parent.connected > 0; text: parent.parent.connected; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+        }
+    }
+    // audio bars while something plays (cava runs only while they show)
+    Component {
+        id: visC
+        Mod {
+            property bool want: bar.player !== null
+            onClicked: bar.open("media")
+            Faces.CavaBars {
+                width: 46; height: 16
+                count: 9; spacing: 2; minLen: 2
+                live: bar.player !== null
+                color: Theme.accent
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+    Component { id: nightC; Glyph { icon: "nightlight"; on: NightLight.enabled; tint: NightLight.enabled ? Theme.accent : Theme.text; onClicked: NightLight.toggle() } }
+    Component { id: awakeC; Glyph { icon: "coffee"; on: Tasks.awake; tint: Tasks.awake ? Theme.accent : Theme.text; onClicked: Tasks.awake = !Tasks.awake } }
+    Component { id: shuffleC; Glyph { icon: "shuffle"; enabled: Wall.images.length > 1; onClicked: Wall.shuffle() } }
     Component { id: powerC; Glyph { icon: "power_settings_new"; tint: Theme.danger; onClicked: { HubState.ccTab = "controls"; bar.open("quick"); } } }
 
     // the connection, for the network glyph (wired wins over Wi-Fi)
