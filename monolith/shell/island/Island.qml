@@ -22,12 +22,23 @@ PanelWindow {
     WlrLayershell.namespace: "monolith-island"
     // above fullscreen windows while open (a keybind over a game or video still shows it)
     WlrLayershell.layer: shown || wasOpen || toastOn ? WlrLayer.Overlay : WlrLayer.Top
-    WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // Settings is a window you work in: clicks elsewhere go to your other windows and don't
+    // close it, and it takes the keyboard only when you click into it (Escape or its bar
+    // button closes it)
+    readonly property bool pinned: shown && HubState.page === "settings"
+    WlrLayershell.keyboardFocus: shown ? (pinned ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
     // collapsed only the island takes the mouse; open, a click anywhere else closes it
-    mask: Region { item: win.shown ? fullArea : (win.tucked ? sensor : island) }
+    mask: win.pinned ? pinnedMask : plainMask
+    Region { id: plainMask; item: win.shown ? fullArea : (win.tucked ? sensor : island) }
+    Region {
+        id: pinnedMask
+        item: island
+        Region { item: floatCard.visible ? floatCard : null }
+        Region { item: win.dropped || drop.height > 1 ? dropBody : null }
+    }
     Item { id: fullArea; anchors.fill: parent }
 
     // auto-hide (Settings → Status line): the collapsed island slides up, and comes back when
@@ -37,7 +48,7 @@ PanelWindow {
     Item { id: sensor; x: island.x; y: Theme.barBottom ? win.height - 3 : 0; width: island.width; height: 3; HoverHandler { id: sensorHover } }
     readonly property bool bottom: Theme.barBottom
 
-    MouseArea { anchors.fill: parent; enabled: win.shown; onClicked: HubState.close() }
+    MouseArea { anchors.fill: parent; enabled: win.shown && !win.pinned; onClicked: HubState.close() }
 
     readonly property var pageInfo: ({
         "search":        { icon: "search",         title: "Search",        w: Number(Store.get("search.width", 640)) },
@@ -253,14 +264,6 @@ PanelWindow {
                         text: (win.pageInfo[HubState.page] || win.pageInfo.search).title
                         strong: true
                         font.pixelSize: Theme.sizeTitle + 2
-                    }
-                    Pressable {
-                        visible: !win.usesQuery && !win.tabbed
-                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                        width: 36; height: 36
-                        color: hovered ? Theme.containerHigh : "transparent"
-                        onClicked: HubState.close()
-                        Icon { anchors.centerIn: parent; name: "close"; size: 20; color: Theme.subtext }
                     }
                     Icon {
                         id: fieldIcon

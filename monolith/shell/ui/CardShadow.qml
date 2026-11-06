@@ -8,8 +8,10 @@ import "../core"
 Rectangle {
     anchors.fill: parent
     z: -1
+    // how far the shadow falls down (the bar's pills keep it centred: they float on the screen)
+    property real offsetY: Theme.shadowY
     radius: parent && parent.radius !== undefined ? parent.radius : 0
     color: parent && parent.color !== undefined ? parent.color : Theme.frame
     layer.enabled: true
-    layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: Theme.shadowY; shadowHorizontalOffset: Theme.shadowX }
+    layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: offsetY; shadowHorizontalOffset: Theme.shadowX }
 }

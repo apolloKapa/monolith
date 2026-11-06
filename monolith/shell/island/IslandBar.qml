@@ -87,7 +87,8 @@ Item {
         color: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
-        CardShadow { visible: Theme.barOpacity > 0.3 }
+        // centred, so it doesn't read as a second pill below (hard-shadow styles keep theirs)
+        CardShadow { visible: Theme.barOpacity > 0.3; offsetY: Theme.hardShadow > 0 ? Theme.shadowY : 0 }
     }
     ZonePill { zone: leftZone }
     ZonePill { zone: midZone }
