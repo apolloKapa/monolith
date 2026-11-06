@@ -28,6 +28,43 @@ Pressable {
         card.closed();
     }
 
+    // swipe it sideways to dismiss: past a third of its width (or flicked) it flies off that
+    // way and closes, otherwise it springs back
+    property bool swipeable: true
+    property real swipeX: 0
+    property bool flying: false
+    transform: Translate { x: card.swipeX }
+    opacity: Math.max(0, 1 - Math.abs(swipeX) / (width * 0.9))
+    Behavior on swipeX { enabled: !swipe.active && !card.resetting; NumberAnimation { duration: card.flying ? 180 : 260; easing.type: card.flying ? Easing.InCubic : Easing.OutBack } }
+    DragHandler {
+        id: swipe
+        enabled: card.swipeable && !card.flying
+        target: null
+        yAxis.enabled: false
+        dragThreshold: 8
+        property real lastX: 0
+        property real lastT: 0
+        property real speed: 0
+        onTranslationChanged: {
+            const now = Date.now();
+            if (now > lastT) speed = (translation.x - lastX) / (now - lastT);
+            lastX = translation.x; lastT = now;
+            card.swipeX = translation.x;
+        }
+        onActiveChanged: {
+            if (active) { lastX = 0; lastT = Date.now(); speed = 0; return; }
+            if (Math.abs(card.swipeX) > card.width / 3 || Math.abs(speed) > 1.2) {
+                card.flying = true;
+                card.swipeX = (card.swipeX !== 0 ? Math.sign(card.swipeX) : Math.sign(speed)) * (card.width + 40);
+                gone.restart();
+            } else card.swipeX = 0;
+        }
+    }
+    Timer { id: gone; interval: 190; onTriggered: card.closed() }
+    // reused for the next notification (the island's): back in place at once
+    property bool resetting: false
+    onNotifChanged: { resetting = true; flying = false; swipeX = 0; resetting = false; }
+
     RowLayout {
         id: body
         x: 12; y: 12

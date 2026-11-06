@@ -106,6 +106,16 @@ Singleton {
         function menu(): void { const sc = Quickshell.screens.find(x => x.name === hub.target("")) || Quickshell.screens[0]; hub.openDeskMenu(sc.name, sc.width / 2 - 125, sc.height / 2 - 150, ""); }
         function widget(id: string): void { const sc = Quickshell.screens.find(x => x.name === hub.target("")) || Quickshell.screens[0]; hub.openDeskMenu(sc.name, sc.width / 2 - 125, sc.height / 2 - 150, id); }
     }
+    // quick access from a keybind (`quickshell ipc call quick bar right`): on the screen you're on
+    property var quickReq: ({ screen: "", edge: "", full: false, n: 0 })
+    function quick(edge, full) { quickReq = { screen: target(""), edge: edge || "", full: full, n: quickReq.n + 1 }; }
+    IpcHandler {
+        target: "quick"
+        // the mini bar / the open tool, at the middle of an edge ("" = the first edge in Settings)
+        function bar(edge: string): void { hub.quick(edge, false); }
+        function open(edge: string): void { hub.quick(edge, true); }
+        function hide(): void { hub.quickReq = { screen: "", edge: "hide", full: false, n: hub.quickReq.n + 1 }; }
+    }
     IpcHandler {
         target: "widgets"
         // the widget editor: desktop | lock
