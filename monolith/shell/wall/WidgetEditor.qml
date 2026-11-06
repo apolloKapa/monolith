@@ -31,7 +31,7 @@ PanelWindow {
     // the whole editor fades in with a little zoom, and out when it closes (the window is clear
     // underneath, so what's behind shows through the fade)
     color: "transparent"
-    Component.onCompleted: { if (shown) edIn.restart(); else contentItem.opacity = 0; }
+    Component.onCompleted: { syncSlots(); if (shown) edIn.restart(); else contentItem.opacity = 0; }
     ParallelAnimation {
         id: edIn
         NumberAnimation { target: ed.contentItem; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
@@ -249,12 +249,32 @@ PanelWindow {
         return m[v] !== undefined ? m[v] : (String(v).startsWith("#") ? v : Theme.containerHigh);
     }
     function optionValue(item, o) { return o[0].startsWith("store:") ? Store.get(o[0].slice(6), o[3]) : WidgetLayout.opt(item, o[0], o[3]); }
+    // the widgets, kept in a model that's updated in place: a changed setting (a slider being
+    // dragged, a look picked) changes that widget instead of rebuilding them all, which cut a
+    // slider's drag off after its first step and closed the settings panel
+    ListModel { id: slots }
+    function syncSlots() {
+        const l = ed.list;
+        let same = slots.count === l.length;
+        for (let i = 0; same && i < l.length; i++) if (slots.get(i).iid !== l[i].id) same = false;
+        if (!same) {
+            slots.clear();
+            for (const it of l) slots.append({ iid: it.id, json: JSON.stringify(it) });
+            return;
+        }
+        for (let i = 0; i < l.length; i++) {
+            const j = JSON.stringify(l[i]);
+            if (slots.get(i).json !== j) slots.setProperty(i, "json", j);
+        }
+    }
+    onListChanged: syncSlots()
     Repeater {
         id: widgetsRep
-        model: ed.list
+        model: slots
         Item {
             id: wrap
-            required property var modelData
+            required property string json
+            readonly property var modelData: JSON.parse(json)
             readonly property bool sel: ed.selected === modelData.id
             readonly property var sz: WidgetLayout.size(modelData)
             property real ww: sz[0]
