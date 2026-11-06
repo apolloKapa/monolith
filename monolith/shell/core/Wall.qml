@@ -42,6 +42,11 @@ Singleton {
         Store.set("wallpaper.screens", {});
         makePalette(p);
     }
+    // a random other picture from the folder (the bar's shuffle button)
+    function shuffle() {
+        const pool = images.filter(i => i !== path && !isVideo(i));
+        if (pool.length > 0) set(pool[Math.floor(Math.random() * pool.length)]);
+    }
     function makePalette(p) {
         // videos: the colours of their first frame
         paletteProc.command = ["sh", "-c",
