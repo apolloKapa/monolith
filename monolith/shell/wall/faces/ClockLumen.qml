@@ -9,10 +9,10 @@ FaceBase {
     readonly property real d: Math.min(width, height)
     readonly property bool secs: opt("showSeconds", true)
     readonly property color dial: Theme.m("primary_container", Theme.accentContainer)
-    readonly property color hourC: Theme.m("secondary", Theme.subtext)
-    readonly property color minC: Theme.m("primary", Theme.accent)
-    readonly property color secC: Theme.m("tertiary", Theme.accent)
-    readonly property color numC: Theme.m("on_primary_container", Theme.text)
+    readonly property color hourC: f.hasMain ? f.mainC : Theme.m("secondary", Theme.subtext)
+    readonly property color minC: f.hasAccent ? f.accentC : Theme.m("primary", Theme.accent)
+    readonly property color secC: f.hasAccent ? f.accentC : Theme.m("tertiary", Theme.accent)
+    readonly property color numC: f.hasMain ? f.mainC : Theme.m("on_primary_container", Theme.text)
     property real hourA: 0
     property real minA: 0
     property real secA: 0

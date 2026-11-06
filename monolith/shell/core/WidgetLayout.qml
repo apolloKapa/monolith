@@ -23,7 +23,8 @@ Singleton {
             faces: [["compact", "Compact", "WeatherCompact", [0.8, 3.5]], ["full", "Full", "WeatherFull", [1.6, 3.5], [400, 170]], ["round", "Round", "WeatherRound", [1, 1], [200, 200]]] },
         media: { name: "Music", icon: "music_note", size: [360, 130], lim: [120, 60, 1200, 700], aspect: [0.8, 6],
             faces: [["full", "Full", "MusicFull", [2.4, 4.4], [400, 140]], ["round", "Round", "MusicRound", [0.8, 1.25], [300, 300]], ["lyrics", "Lyrics", "MusicLyrics", [0.8, 4], [460, 240]],
-                    ["simpleLyrics", "Simple lyrics", "MusicLyricsSimple", [1, 8], [600, 130]], ["cover", "Cover", "MusicCover", [0.8, 1.25], [220, 220]], ["controls", "Controls", "MusicControls", [2, 4], [380, 160]]] },
+                    ["simpleLyrics", "Simple lyrics", "MusicLyricsSimple", [1, 8], [600, 130]], ["cover", "Cover", "MusicCover", [0.8, 1.25], [220, 220]], ["controls", "Controls", "MusicSlim", [1.6, 8], [420, 110]],
+                    ["card", "Player card", "MusicControls", [2, 4], [380, 160]]] },
         visualizer: { name: "Visualiser", icon: "graphic_eq", size: [900, 180], lim: [160, 40, 3840, 600], aspect: [1, 20],
             faces: [["bars", "Bars", "VisualizerBars"], ["continuous", "Continuous", "VisualizerContinuous"]] },
         calendar: { name: "Calendar", icon: "calendar_month", size: [270, 250], lim: [200, 190, 600, 560], aspect: [0.8, 1.6],
@@ -107,7 +108,7 @@ Singleton {
         "clock/lockscreen": [160, 80, 1600, 800, 0.8, 2.8], "clock/stretched": [100, 120, 900, 1200, 0.3, 2.5],
         "weather/compact": [90, 90, 600, 600, 0.7, 2.2], "weather/full": [340, 160, 820, 500, 1.5, 2.2], "weather/round": [90, 90, 600, 600, 1, 1],
         "media/full": [150, 64, 800, 300, 2.4, 4.4], "media/round": [150, 150, 1000, 1000, 1, 1],
-        "media/lyrics": [180, 60, 1200, 600, 1.2, 5], "media/simpleLyrics": [180, 60, 2400, 1200, 0.5, 8],
+        "media/lyrics": [180, 60, 1200, 600, 1.2, 5], "media/controls": [200, 70, 1400, 260, 1.6, 8], "media/simpleLyrics": [180, 60, 2400, 1200, 0.5, 8],
         "visualizer/bars": [50, 50, 3840, 1200, 0.1, 80], "visualizer/continuous": [50, 50, 3840, 1200, 0.1, 80],
         "cpu/default": [100, 70, 600, 400, 0.6, 3], "ram/default": [100, 70, 600, 400, 0.6, 3],
         "temp/default": [100, 70, 600, 400, 0.6, 3], "disk/default": [100, 70, 600, 400, 0.6, 3],
@@ -141,9 +142,19 @@ Singleton {
 
     // each widget's own settings, shown in the editor for the selected one:
     // [key, label, kind ("toggle" | "slider" | "choice" | "text" | "file"), default, extra]
+    // the looks that sit on a card: they get the Background setting (blurry, solid or none)
+    readonly property var carded: ["battery/default", "media/full", "media/lyrics", "media/controls", "media/card", "notes/default", "github/default",
+        "weather/compact", "weather/full", "weather/round", "notifications/list", "cpu/default", "ram/default", "temp/default", "disk/default",
+        "calendar/month", "usage/rings", "usage/bars", "clock/analog", "user/default"]
+    readonly property var colourChoices: [["", "Theme"], ["text", "Text"], ["accent", "Accent"], ["primary", "Primary"], ["secondary", "Secondary"],
+        ["tertiary", "Tertiary"], ["white", "White"], ["black", "Black"]]
     function optionsFor(t, f) {
         const id = faceId(t, f);
         const o = [["opacity", "Opacity", "slider", 1, [0.15, 1, 0.05]]];
+        if (carded.indexOf(t + "/" + id) !== -1)
+            o.push(["background", "Background", "choice", "blur", [["blur", "Blurry"], ["normal", "Normal"], ["clear", "Clear"]]]);
+        if (t === "clock" || (t === "media" && id === "controls"))
+            o.push(["mainColor", "Main colour", "colour", ""], ["accentColor", "Accent colour", "colour", ""]);
         if (["cpu", "ram", "temp", "disk", "battery"].indexOf(t) !== -1 && id === "circle")
             o.push(["sineWave", "Wavy ring", "toggle", true], ["lineThickness", "Line thickness", "slider", 8, [3, 16, 1]]);
         if (t === "media" && (id === "lyrics" || id === "simpleLyrics"))

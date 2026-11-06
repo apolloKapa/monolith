@@ -13,6 +13,8 @@ Item {
     property string face: item ? (item.face || "") : ""
     property var item: null
     property bool live: true
+    // shown in the widget editor (a silent visualiser draws its bars at rest there)
+    property bool editing: false
     // what's behind it (the wallpaper item) and where this widget sits on it, for the glass
     property Item backdrop: null
     property point origin: Qt.point(x, y)

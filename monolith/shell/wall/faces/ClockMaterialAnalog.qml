@@ -11,9 +11,9 @@ FaceBase {
     readonly property real d: Math.min(width, height)
     readonly property bool secs: opt("showSeconds", true)
     readonly property color dial: Theme.m("primary_container", Theme.accentContainer)
-    readonly property color hourC: Theme.m("secondary", Theme.subtext)
-    readonly property color minC: Theme.m("primary", Theme.accent)
-    readonly property color secC: Theme.m("tertiary", Theme.accent)
+    readonly property color hourC: f.hasMain ? f.mainC : Theme.m("secondary", Theme.subtext)
+    readonly property color minC: f.hasAccent ? f.accentC : Theme.m("primary", Theme.accent)
+    readonly property color secC: f.hasAccent ? f.accentC : Theme.m("tertiary", Theme.accent)
     Canvas {
         anchors.centerIn: parent
         width: f.d; height: f.d

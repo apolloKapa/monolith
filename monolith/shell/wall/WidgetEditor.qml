@@ -242,6 +242,12 @@ PanelWindow {
         if (k.startsWith("store:")) Store.set(k.slice(6), v);
         else WidgetLayout.setOpt(mode, id, k, v);
     }
+    // what a colour choice looks like (the empty one, "the theme's", as the card colour)
+    function swatch(v) {
+        const m = { "": Theme.containerHigh, text: Theme.text, accent: Theme.accent, white: "#ffffff", black: "#000000",
+            primary: Theme.m("primary", Theme.accent), secondary: Theme.m("secondary", Theme.subtext), tertiary: Theme.m("tertiary", Theme.accent) };
+        return m[v] !== undefined ? m[v] : (String(v).startsWith("#") ? v : Theme.containerHigh);
+    }
     function optionValue(item, o) { return o[0].startsWith("store:") ? Store.get(o[0].slice(6), o[3]) : WidgetLayout.opt(item, o[0], o[3]); }
     Repeater {
         id: widgetsRep
@@ -263,6 +269,7 @@ PanelWindow {
                 id: face
                 anchors.fill: parent
                 item: wrap.modelData
+                editing: true
                 backdrop: ed.lockMode ? null : wp
                 origin: Qt.point(wrap.x, wrap.y)
             }
@@ -418,6 +425,31 @@ PanelWindow {
                                 opts: oc.modelData[2] === "choice" ? oc.modelData[4] : []
                                 value: String(oc.val)
                                 onPicked: v => ed.setOption(wrap.modelData.id, oc.modelData[0], v)
+                            }
+                            // a colour: the theme's own, a theme colour, or any #rrggbb typed in
+                            Flow {
+                                visible: oc.modelData[2] === "colour"
+                                width: parent.width
+                                spacing: 6
+                                Repeater {
+                                    model: oc.modelData[2] === "colour" ? WidgetLayout.colourChoices : []
+                                    Rectangle {
+                                        required property var modelData
+                                        readonly property bool on: String(oc.val || "") === modelData[0]
+                                        width: 30; height: 30; radius: 15
+                                        color: ed.swatch(modelData[0])
+                                        border.width: on ? 3 : 1
+                                        border.color: on ? Theme.accent : Theme.hairline
+                                        Icon { anchors.centerIn: parent; visible: parent.modelData[0] === ""; name: "format_color_reset"; size: 16; color: Theme.subtext }
+                                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: ed.setOption(wrap.modelData.id, oc.modelData[0], parent.modelData[0]) }
+                                    }
+                                }
+                                Field {
+                                    width: 110
+                                    text: String(oc.val || "").startsWith("#") ? String(oc.val) : ""
+                                    placeholder: "#rrggbb"
+                                    onAccepted: v => { v = v.trim(); if (!v.startsWith("#")) v = "#" + v; if (/^#[0-9a-fA-F]{6}$/.test(v)) ed.setOption(wrap.modelData.id, oc.modelData[0], v); }
+                                }
                             }
                             Field {
                                 visible: oc.modelData[2] === "text" || oc.modelData[2] === "file"
