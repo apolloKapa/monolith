@@ -25,6 +25,15 @@ Singleton {
     // the colours the shell is really using, as Material roles in matugen's format, for the apps
     // and fastfetch: the wallpaper's own roles, or, with a colour theme or a style's colours
     // picked (Theme → Style & colours), roles made from those. Written to shell-palette.json.
+    // the third colour (the second one in fastfetch's logo, …): the theme's teal, unless it's
+    // Catppuccin's stock teal that many themes never changed (then it stayed mint whatever theme
+    // you picked): a light shade of the theme's accent instead, so it follows the theme
+    readonly property color tertiary: {
+        const t = Theme.c("teal", "");
+        const stock = !t || hex(Qt.color(t)) === "#94e2d5";
+        const catppuccin = String(Store.get("theme.palette", "")).toLowerCase().indexOf("catppuccin") !== -1;
+        return stock && !catppuccin ? Qt.tint(Theme.accent, Qt.rgba(1, 1, 1, Theme.dark ? 0.45 : 0.25)) : Qt.color(t);
+    }
     function hex(c) { const h = v => ("0" + Math.round(v * 255).toString(16)).slice(-2); return "#" + h(c.r) + h(c.g) + h(c.b); }
     readonly property var shellRoles: {
         const out = {};
@@ -36,7 +45,7 @@ Singleton {
         const map = {
             primary: Theme.accent, on_primary: Theme.onAccent, primary_container: Theme.accentContainer, on_primary_container: Theme.onAccentContainer,
             secondary: c("blue", Theme.accent), on_secondary: c("crust", "#000000"), secondary_container: Theme.selected, on_secondary_container: Theme.text,
-            tertiary: c("teal", c("peach", Theme.accent)), on_tertiary: c("crust", "#000000"), tertiary_container: Theme.control, on_tertiary_container: Theme.text,
+            tertiary: ac.tertiary, on_tertiary: c("crust", "#000000"), tertiary_container: Theme.control, on_tertiary_container: Theme.text,
             error: Theme.danger, on_error: c("crust", "#000000"),
             background: c("base", Theme.card), on_background: Theme.text, surface: c("base", Theme.card), on_surface: Theme.text,
             surface_variant: c("surface1", Theme.control), on_surface_variant: Theme.subtext,
