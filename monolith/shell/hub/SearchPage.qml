@@ -15,7 +15,16 @@ Page {
 
     readonly property real rowH: 52
     readonly property int maxRows: Number(Store.get("search.rows", 7))
-    implicitHeight: favArea.height + (showGrid ? Math.min(maxRows * rowH, appGrid.contentHeight) : Math.max(1, Math.min(results.length, maxRows)) * rowH)
+    // the height it has with nothing typed; while you search it stays that tall (the results
+    // scroll inside it) so the menu doesn't jump about as you type
+    readonly property bool typing: query.trim() !== ""
+    readonly property real naturalH: favArea.height + (showGrid ? Math.min(maxRows * rowH, appGrid.contentHeight) : Math.max(1, Math.min(results.length, maxRows)) * rowH)
+    property real restH: 0
+    // checked a moment later: on the first key the results change before `typing` turns true
+    onNaturalHChanged: Qt.callLater(keepRest)
+    function keepRest() { if (!typing) restH = naturalH; }
+    Component.onCompleted: restH = naturalH
+    implicitHeight: typing && restH > 0 ? restH : naturalH
     // all apps as a grid of icons while nothing is typed (Settings → Launcher)
     readonly property bool showGrid: Store.get("search.grid", false) === true && query.trim() === ""
     readonly property int gridColumns: Number(Store.get("search.gridColumns", 6))
