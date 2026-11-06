@@ -21,9 +21,13 @@ Item {
 
     // the modules in each zone, and every module there is
     readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
-    readonly property var zones: Store.get("bar.modules", null) || defaults
-    readonly property string clockStyle: Store.get("bar.clockStyle", "stacked")      // stacked | simple | full | seconds
-    readonly property string wsStyle: Store.get("bar.workspaces", "pills")           // pills | dots | numbers
+    // previews (Settings → Bar) can show just some modules, in a style of their own
+    property var only: null
+    property string clockStyleAs: ""
+    property string wsStyleAs: ""
+    readonly property var zones: only ? { left: only, center: [], right: [] } : (Store.get("bar.modules", null) || defaults)
+    readonly property string clockStyle: clockStyleAs || Store.get("bar.clockStyle", "stacked")      // stacked | simple | full | seconds
+    readonly property string wsStyle: wsStyleAs || Store.get("bar.workspaces", "pills")              // pills | dots | numbers
 
     PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
     readonly property var sink: Pipewire.defaultAudioSink

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import "../../core"
 import "../../ui"
+import "../../island"
 
 // Bar → Layout & modules: the bar's shape and height, which modules sit in each zone (left,
 // centre, right) and in what order, and the modules' own looks.
@@ -25,6 +26,45 @@ ColumnLayout {
 
     function save(z) { Store.set("bar.modules", z); }
     function copy() { return { left: (zones.left || []).slice(), center: (zones.center || []).slice(), right: (zones.right || []).slice() }; }
+
+    // the bar as it is now, live
+    BarPreview { Layout.fillWidth: true; Layout.bottomMargin: 6 }
+
+    // a style choice shown as the module itself, drawn in each style
+    component StylePick: Flow {
+        id: sp
+        property string module: "clock"
+        property var opts: []
+        property string value: ""
+        signal picked(string v)
+        Layout.fillWidth: true
+        spacing: 8
+        Repeater {
+            model: sp.opts
+            Pressable {
+                id: card
+                required property var modelData
+                readonly property bool on: sp.value === modelData[0]
+                width: Math.max(120, mod.implicitWidth + 28); height: Theme.islandH + 46
+                color: on ? Theme.accentContainer : (hovered ? Theme.containerHigh : Theme.container)
+                border.width: on ? 2 : 0; border.color: Theme.accent
+                onClicked: sp.picked(modelData[0])
+                Rectangle {
+                    x: 8; y: 8; width: parent.width - 16; height: Theme.islandH
+                    radius: height / 2; color: Theme.frame; clip: true
+                    IslandBar {
+                        id: mod
+                        anchors.centerIn: parent
+                        enabled: false
+                        only: [sp.module]
+                        clockStyleAs: sp.module === "clock" ? card.modelData[0] : ""
+                        wsStyleAs: sp.module === "workspaces" ? card.modelData[0] : ""
+                    }
+                }
+                Label { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 8; text: card.modelData[1]; strong: card.on; font.pixelSize: Theme.sizeSmall; color: card.on ? Theme.onAccentContainer : Theme.text }
+            }
+        }
+    }
 
     SettingRow {
         icon: "toolbar"; title: "Shape"; desc: "The island in the middle, or a bar across the whole top"
@@ -256,15 +296,21 @@ ColumnLayout {
     }
     Button { text: "Back to the default modules"; icon: "restart_alt"; onClicked: Store.set("bar.modules", null) }
 
-    // the modules' looks
+    // the modules' looks: each shown as the module itself
     Label { text: "Modules"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
-    SettingRow {
-        icon: "schedule"; title: "Clock"
-        Segmented { width: 340; opts: [["stacked", "Stacked"], ["simple", "Time"], ["full", "Time + date"], ["seconds", "Seconds"]]; value: Store.get("bar.clockStyle", "stacked"); onPicked: v => Store.set("bar.clockStyle", v) }
+    Label { text: "Clock"; strong: true; Layout.leftMargin: 6 }
+    StylePick {
+        module: "clock"
+        opts: [["stacked", "Stacked"], ["simple", "Time"], ["full", "Time + date"], ["seconds", "Seconds"]]
+        value: Store.get("bar.clockStyle", "stacked")
+        onPicked: v => Store.set("bar.clockStyle", v)
     }
-    SettingRow {
-        icon: "view_week"; title: "Workspaces"
-        Segmented { width: 280; opts: [["pills", "Pills"], ["dots", "Dots"], ["numbers", "Numbers"]]; value: Store.get("bar.workspaces", "pills"); onPicked: v => Store.set("bar.workspaces", v) }
+    Label { text: "Workspaces"; strong: true; Layout.leftMargin: 6; Layout.topMargin: 4 }
+    StylePick {
+        module: "workspaces"
+        opts: [["pills", "Pills"], ["dots", "Dots"], ["numbers", "Numbers"]]
+        value: Store.get("bar.workspaces", "pills")
+        onPicked: v => Store.set("bar.workspaces", v)
     }
     SettingRow {
         icon: "memory"; title: "System stats"; desc: "Which ones show"
