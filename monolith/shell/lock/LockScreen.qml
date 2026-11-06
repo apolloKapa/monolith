@@ -156,13 +156,23 @@ WlSessionLock {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 10
                 Repeater {
-                    model: [["bedtime", ["loginctl", "suspend"]], ["restart_alt", ["loginctl", "reboot"]], ["power_settings_new", ["loginctl", "poweroff"]]]
+                    // [icon, action, its name]: restart and power off need a second click
+                    model: [["bedtime", "suspend", "Sleep"], ["restart_alt", "reboot", "Restart"], ["power_settings_new", "poweroff", "Power off"]]
                     Pressable {
+                        id: lb
                         required property var modelData
-                        width: 44; height: 44
-                        color: Qt.alpha(Theme.frame, 0.75)
-                        onClicked: Quickshell.execDetached(modelData[1])
-                        Icon { anchors.centerIn: parent; name: parent.modelData[0]; size: 20 }
+                        property bool armed: false
+                        width: armed ? lbt.implicitWidth + 28 : 44; height: 44
+                        Behavior on width { NumberAnimation { duration: 160 } }
+                        color: armed ? Theme.danger : Qt.alpha(Theme.frame, 0.75)
+                        onClicked: {
+                            if (modelData[1] !== "suspend" && !armed) { armed = true; lbDisarm.restart(); return; }
+                            armed = false;
+                            Power.run(modelData[1]);
+                        }
+                        Timer { id: lbDisarm; interval: 3000; onTriggered: lb.armed = false }
+                        Icon { visible: !lb.armed; anchors.centerIn: parent; name: lb.modelData[0]; size: 20 }
+                        Text { id: lbt; visible: lb.armed; anchors.centerIn: parent; text: lb.modelData[2] + "?"; color: Theme.m("on_error", "#ffffff"); font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.Bold }
                     }
                 }
             }

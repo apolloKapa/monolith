@@ -247,21 +247,30 @@ RowLayout {
             Layout.fillWidth: true
             spacing: 8
             Repeater {
+                // [icon, name, what it does, asks first]: log out, restart and power off need a second click
                 model: [
-                    ["lock", "Lock", () => { HubState.close(); LockState.lock(); }],
-                    ["bedtime", "Suspend", () => { HubState.close(); Quickshell.execDetached(["loginctl", "suspend"]); }],
-                    ["logout", "Log out", () => Niri.action(["quit"])],
-                    ["restart_alt", "Restart", () => Quickshell.execDetached(["loginctl", "reboot"])],
-                    ["power_settings_new", "Power off", () => Quickshell.execDetached(["loginctl", "poweroff"])]
+                    ["lock", "Lock", () => { HubState.close(); LockState.lock(); }, false],
+                    ["bedtime", "Suspend", () => { HubState.close(); Power.suspend(); }, false],
+                    ["logout", "Log out", () => Power.logout(), true],
+                    ["restart_alt", "Restart", () => Power.reboot(), true],
+                    ["power_settings_new", "Power off", () => Power.poweroff(), true]
                 ]
                 Pressable {
+                    id: pb
                     required property var modelData
                     required property int index
+                    property bool armed: false
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
-                    color: index === 4 ? Qt.alpha(Theme.danger, hovered ? 0.32 : 0.2) : Theme.containerHigh
-                    onClicked: modelData[2]()
-                    Icon { anchors.centerIn: parent; name: parent.modelData[0]; size: 21; color: parent.index === 4 ? Theme.danger : Theme.text }
+                    color: armed ? Theme.danger : (index === 4 ? Qt.alpha(Theme.danger, hovered ? 0.32 : 0.2) : Theme.containerHigh)
+                    onClicked: {
+                        if (modelData[3] && !armed) { armed = true; disarm.restart(); return; }
+                        armed = false;
+                        modelData[2]();
+                    }
+                    Timer { id: disarm; interval: 3000; onTriggered: pb.armed = false }
+                    Icon { visible: !pb.armed; anchors.centerIn: parent; name: pb.modelData[0]; size: 21; color: pb.index === 4 ? Theme.danger : Theme.text }
+                    Text { visible: pb.armed; anchors.centerIn: parent; text: pb.modelData[1] + "?"; color: Theme.m("on_error", "#ffffff"); font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.Bold }
                 }
             }
         }

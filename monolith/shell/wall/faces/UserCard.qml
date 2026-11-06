@@ -62,7 +62,7 @@ FaceBase {
             spacing: 6
             Repeater {
                 // [command, icon, share of the row, colour]
-                model: [[["loginctl", "suspend"], "bedtime", 1, "#89b4fa"], [["loginctl", "reboot"], "restart_alt", 2, "#fab387"], [["loginctl", "poweroff"], "power_settings_new", 3, "#f38ba8"]]
+                model: [["suspend", "bedtime", 1, "#89b4fa"], ["reboot", "restart_alt", 2, "#fab387"], ["poweroff", "power_settings_new", 3, "#f38ba8"]]
                 Rectangle {
                     id: act
                     required property var modelData
@@ -73,7 +73,7 @@ FaceBase {
                     property real hold: 0
                     Rectangle { width: parent.width * act.hold; height: parent.height; color: act.modelData[3]; opacity: 0.85 }
                     Icon { anchors.centerIn: parent; name: act.modelData[1]; size: 18; color: act.hold > 0.5 ? "#15161a" : (ma.containsMouse ? act.modelData[3] : Theme.subtext) }
-                    NumberAnimation on hold { id: holding; running: false; to: 1; duration: 700; onFinished: if (act.hold >= 1) { Quickshell.execDetached(act.modelData[0]); act.hold = 0; } }
+                    NumberAnimation on hold { id: holding; running: false; to: 1; duration: 700; onFinished: if (act.hold >= 1) { Power.run(act.modelData[0]); act.hold = 0; } }
                     MouseArea {
                         id: ma
                         anchors.fill: parent
