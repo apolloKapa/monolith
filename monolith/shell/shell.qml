@@ -14,23 +14,38 @@ import "apps"
 
 // Monolith: the island on every screen (bar + every page), the dock, notification popups, the OSD.
 ShellRoot {
+    // windows that are rarely up (the capture overlay, the wallpaper picker, the widget editor,
+    // the welcome…) exist only while they're used, plus a moment to animate away: hidden windows
+    // still cost memory on every screen
+    component Lazy: Item {
+        property bool when: false
+        property int linger: 800
+        readonly property bool on: when || after.running
+        Timer { id: after; interval: parent.linger }
+        onWhenChanged: if (!when) after.restart()
+    }
     Variants { model: Quickshell.screens; Background {} }
     Variants { model: Quickshell.screens; Reserve {} }
     Variants { model: Quickshell.screens; Frame {} }
     Variants { model: Quickshell.screens; Island {} }
     Variants { model: Quickshell.screens; Dock {} }
     Variants { model: Quickshell.screens; Popups {} }
-    Variants { model: Quickshell.screens; MediaPeek {} }
+    Lazy { id: peekL; when: HubState.peekScreen !== "" }
+    Variants { model: peekL.on ? Quickshell.screens : []; MediaPeek {} }
     Variants { model: Quickshell.screens; Osd {} }
-    Variants { model: Quickshell.screens; CaptureOverlay {} }
-    Variants { model: Quickshell.screens; PerfOverlay {} }
-    Variants { model: Quickshell.screens; Dim {} }
-    Variants { model: Quickshell.screens; WallpaperPicker {} }
-    Variants { model: Quickshell.screens; DesktopMenu {} }
-    AppImagesWindow {}
-    Variants { model: Quickshell.screens; Welcome {} }
+    Lazy { id: capL; when: Capture.active || Capture.freezing; linger: 300 }
+    Variants { model: capL.on ? Quickshell.screens : []; CaptureOverlay {} }
+    Variants { model: GameMode.overlay ? Quickshell.screens : []; PerfOverlay {} }
+    Lazy { id: dimL; when: Idle.dimming }
+    Variants { model: dimL.on ? Quickshell.screens : []; Dim {} }
+    Lazy { id: wallL; when: HubState.wallOpen; linger: 1200 }
+    Variants { model: wallL.on ? Quickshell.screens : []; WallpaperPicker {} }
+    Variants { model: HubState.deskMenu.screen !== "" ? Quickshell.screens : []; DesktopMenu {} }
+    LazyLoader { active: AppImages.opened; AppImagesWindow {} }
+    Lazy { id: welcomeL; when: HubState.welcomeOpen; linger: 1500 }
+    Variants { model: welcomeL.on ? Quickshell.screens : []; Welcome {} }
     Variants { model: Quickshell.screens; QuickAccess {} }
-    Variants { model: Quickshell.screens; WidgetEditor {} }
+    Variants { model: HubState.editWidgets !== "" ? Quickshell.screens : []; WidgetEditor {} }
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own

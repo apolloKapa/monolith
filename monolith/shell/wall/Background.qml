@@ -34,6 +34,8 @@ PanelWindow {
         cache: false
         sourceSize: Qt.size(bg.width, bg.height)
         Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutCubic } }
+        // the picture that just faded out lets go of its memory (a whole screen's worth)
+        onOpacityChanged: if (opacity === 0 && source !== "") source = ""
     }
     // everything that makes up the wallpaper, in one item the widgets' glass can blur
     Item {

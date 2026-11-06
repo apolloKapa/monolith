@@ -16,7 +16,8 @@ FaceBase {
     readonly property real ar: half * (cont ? 0.72 : 0.78)              // the record's radius
     readonly property real barMax: (half - ar) * (cont ? 0.96 : 0.92)
     property bool held: false
-    readonly property bool want: f.live && f.visible
+    // cava runs only while something plays
+    readonly property bool want: f.live && f.visible && f.playing
     onWantChanged: { if (want && !held) { Cava.hold(); held = true; } else if (!want && held) { Cava.release(); held = false; } }
     Component.onCompleted: if (want) { Cava.hold(); held = true; }
     Component.onDestruction: if (held) Cava.release()

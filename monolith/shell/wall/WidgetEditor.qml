@@ -115,22 +115,65 @@ PanelWindow {
         if (!linked) { from = 0; to = h ? height : width; }
         return h ? { x: line - 0.5, y: from, w: 1, h: to - from } : { x: from, y: line - 0.5, w: to - from, h: 1 };
     }
+    // equal spacing along one axis (h: x): the widget sits as far from a neighbour as two other
+    // widgets are from each other, as far from a screen edge as another widget is from its edge,
+    // or halfway between its two neighbours. Returns { pos, diff, refs } (refs: the gaps to label).
+    function spaceAxis(h, raw, size, crossLo, crossHi, others, best) {
+        const ext = h ? width : height;
+        const lo = o => h ? o.l : o.t, hi = o => h ? o.r : o.b;
+        const clo = o => h ? o.t : o.l, chi = o => h ? o.b : o.r;
+        const crosses = (a, b0, b1) => clo(a) < b1 && chi(a) > b0;
+        // the gap between two boxes (a before b) as a segment to label, along the shared stretch
+        const seg = (from, to, c0, c1) => ({ h: h, from: from, to: to, cross: (Math.max(c0, 0) + Math.min(c1, h ? height : width)) / 2 });
+        const row = others.filter(o => crosses(o, crossLo, crossHi));
+        // the gaps already there between widgets that share a row (or column)
+        const gaps = [];
+        for (const a of others) for (const b of others) {
+            if (a === b || !crosses(b, clo(a), chi(a)) || lo(b) < hi(a)) continue;
+            const between = others.some(c => c !== a && c !== b && lo(c) >= hi(a) && hi(c) <= lo(b) && crosses(c, clo(a), chi(a)));
+            if (!between && lo(b) - hi(a) >= 4) gaps.push({ v: lo(b) - hi(a), s: seg(hi(a), lo(b), Math.max(clo(a), clo(b)), Math.min(chi(a), chi(b))) });
+        }
+        const offer = (pos, refs) => { const d = Math.abs(pos - raw); if (d < best.diff) best = { pos: pos, diff: d, refs: refs, line: -1 }; };
+        for (const o of row) for (const gp of gaps) {
+            offer(hi(o) + gp.v, [gp.s, seg(hi(o), hi(o) + gp.v, Math.max(clo(o), crossLo), Math.min(chi(o), crossHi))]);
+            offer(lo(o) - gp.v - size, [gp.s, seg(lo(o) - gp.v, lo(o), Math.max(clo(o), crossLo), Math.min(chi(o), crossHi))]);
+        }
+        // the same margin from a screen edge as another widget
+        for (const o of others) {
+            const m0 = lo(o), m1 = ext - hi(o);
+            if (m0 >= 4) offer(m0, [seg(0, m0, clo(o), chi(o)), seg(0, m0, crossLo, crossHi)]);
+            if (m1 >= 4) offer(ext - m1 - size, [seg(hi(o), ext, clo(o), chi(o)), seg(ext - m1, ext, crossLo, crossHi)]);
+        }
+        // halfway between the nearest neighbours on each side
+        const before = row.filter(o => hi(o) <= raw + size / 2).sort((a, b) => hi(b) - hi(a))[0];
+        const after = row.filter(o => lo(o) >= raw + size / 2).sort((a, b) => lo(a) - lo(b))[0];
+        if (before && after && lo(after) - hi(before) > size) {
+            const pos = (hi(before) + lo(after) - size) / 2;
+            offer(pos, [seg(hi(before), pos, crossLo, crossHi), seg(pos + size, lo(after), crossLo, crossHi)]);
+        }
+        return best;
+    }
+    property var measures: []                     // [{ h, from, to, cross }] equal gaps, labelled
     // where a moved widget lands (and the guides for it)
     function place(self, rx, ry, free) {
         const w = self.width, h = self.height;
         let x = rx, y = ry;
-        const g = [];
+        const g = [], ms = [];
         if (!free) {
             const others = otherBoxes(self);
-            const sx = catchAxis(rx, w, linesFor(true, others));
-            const sy = catchAxis(ry, h, linesFor(false, others));
-            x = sx.line >= 0 ? sx.pos : snapTo(rx);
-            y = sy.line >= 0 ? sy.pos : snapTo(ry);
+            let sx = catchAxis(rx, w, linesFor(true, others));
+            sx = spaceAxis(true, rx, w, ry, ry + h, others, { pos: sx.pos, diff: sx.diff, line: sx.line, refs: [] });
+            x = sx.diff < catchPx ? sx.pos : snapTo(rx);
+            let sy = catchAxis(ry, h, linesFor(false, others));
+            sy = spaceAxis(false, ry, h, x, x + w, others, { pos: sy.pos, diff: sy.diff, line: sy.line, refs: [] });
+            y = sy.diff < catchPx ? sy.pos : snapTo(ry);
             const box = { l: x, t: y, r: x + w, b: y + h };
             if (sx.line >= 0) g.push(guideFor(true, sx.line, box, others));
             if (sy.line >= 0) g.push(guideFor(false, sy.line, box, others));
+            for (const r of (sx.refs || []).concat(sy.refs || [])) ms.push(r);
         }
         guides = g;
+        measures = ms;
         return Qt.point(Math.max(0, Math.min(width - w, x)), Math.max(0, Math.min(height - h, y)));
     }
     // a resized widget's right and bottom edges catch the same lines
@@ -146,6 +189,35 @@ PanelWindow {
         Repeater {
             model: ed.guides
             Rectangle { required property var modelData; x: modelData.x; y: modelData.y; width: Math.max(1, modelData.w); height: Math.max(1, modelData.h); color: Theme.accent }
+        }
+        // equal gaps: a line with end caps and the distance
+        Repeater {
+            model: ed.measures
+            Item {
+                id: ms
+                required property var modelData
+                readonly property real len: modelData.to - modelData.from
+                x: modelData.h ? modelData.from : modelData.cross
+                y: modelData.h ? modelData.cross : modelData.from
+                Rectangle { x: ms.modelData.h ? 0 : -0.5; y: ms.modelData.h ? -0.5 : 0; width: ms.modelData.h ? ms.len : 1; height: ms.modelData.h ? 1 : ms.len; color: Theme.accent }
+                Repeater {
+                    model: 2
+                    Rectangle {
+                        required property int index
+                        width: ms.modelData.h ? 1 : 7; height: ms.modelData.h ? 7 : 1
+                        x: ms.modelData.h ? index * ms.len - 0.5 : -3.5
+                        y: ms.modelData.h ? -3.5 : index * ms.len - 0.5
+                        color: Theme.accent
+                    }
+                }
+                Rectangle {
+                    width: ml.implicitWidth + 12; height: 20; radius: 10
+                    color: Theme.accent
+                    x: ms.modelData.h ? (ms.len - width) / 2 : 6
+                    y: ms.modelData.h ? -height - 6 : (ms.len - height) / 2
+                    Text { id: ml; anchors.centerIn: parent; text: Math.round(ms.len); color: Theme.onAccent; font.family: Theme.fontFamily; font.pixelSize: 11; font.bold: true }
+                }
+            }
         }
     }
 
@@ -195,14 +267,14 @@ PanelWindow {
                 property point start
                 property point from
                 onPressed: mouse => { ed.selected = wrap.modelData.id; ed.adding = false; start = mapToItem(ed.contentItem, mouse.x, mouse.y); from = Qt.point(wrap.x, wrap.y); ed.moving = wrap; }
-                onCanceled: { ed.moving = null; ed.guides = []; }
+                onCanceled: { ed.moving = null; ed.guides = []; ed.measures = []; }
                 onPositionChanged: mouse => {
                     if (!pressed) return;
                     const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
                     const at = ed.place(wrap, from.x + p.x - start.x, from.y + p.y - start.y, (mouse.modifiers & Qt.ControlModifier) !== 0);
                     wrap.x = at.x; wrap.y = at.y;
                 }
-                onReleased: { ed.moving = null; ed.guides = []; WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height }); }
+                onReleased: { ed.moving = null; ed.guides = []; ed.measures = []; WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height }); }
             }
             // resize: the corner handle, freely (inside the widget's limits and its look's shape)
             Rectangle {
@@ -240,7 +312,7 @@ PanelWindow {
                         wrap.hh = Math.min(c[1], ed.height - wrap.y);
                     }
                     onCanceled: ed.guides = []
-                    onReleased: { ed.guides = []; WidgetLayout.update(ed.mode, wrap.modelData.id, { w: Math.round(wrap.ww), h: Math.round(wrap.hh) }); }
+                    onReleased: { ed.guides = []; ed.measures = []; WidgetLayout.update(ed.mode, wrap.modelData.id, { w: Math.round(wrap.ww), h: Math.round(wrap.hh) }); }
                 }
             }
             // its own little bar: the name, the look, its settings, remove
@@ -484,9 +556,9 @@ PanelWindow {
                                         ed.adding = false;
                                     }
                                 } else card.clicked();
-                                dragging = false; ed.dragType = ""; ed.guides = [];
+                                dragging = false; ed.dragType = ""; ed.guides = []; ed.measures = [];
                             }
-                            onCanceled: { dragging = false; ed.dragType = ""; ed.guides = []; }
+                            onCanceled: { dragging = false; ed.dragType = ""; ed.guides = []; ed.measures = []; }
                         }
                     }
                 }

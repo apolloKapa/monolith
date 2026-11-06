@@ -328,7 +328,8 @@ PanelWindow {
             clip: true
             cellWidth: width / 5
             cellHeight: 88
-            model: picker.apps
+            // only while it's open (a hidden grid still builds every icon in view, on every screen)
+            model: picker.visible ? picker.apps : []
             SmoothWheel {}
             delegate: Pressable {
                 required property var modelData
