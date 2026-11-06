@@ -41,8 +41,15 @@ Rectangle {
         height: 380
         padding: 8
         closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutside
-        enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.fastMs; easing.type: Easing.OutCubic } }
-        exit: Transition { NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.exitMs; easing.type: Easing.OutCubic } }
+        transformOrigin: QQC.Popup.Top
+        enter: Transition {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+        }
+        exit: Transition {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; from: 1; to: Theme.popScale; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
+        }
         onOpened: { fp.filter = ""; search.text = ""; search.forceActiveFocus(); list.positionViewAtIndex(Math.max(0, fp.shown.indexOf(fp.value)), ListView.Center); }
         background: Rectangle {
             radius: Theme.corner(48, 6)

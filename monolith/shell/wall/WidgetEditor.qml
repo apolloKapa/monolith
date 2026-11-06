@@ -22,18 +22,32 @@ PanelWindow {
     readonly property bool snap: Store.get("widgets.snap", true) !== false
     readonly property real grid: 20
 
-    visible: shown
+    visible: shown || contentItem.opacity > 0.01
     WlrLayershell.namespace: "monolith-widget-editor"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
-    color: "black"
+    // the whole editor fades in with a little zoom, and out when it closes (the window is clear
+    // underneath, so what's behind shows through the fade)
+    color: "transparent"
+    Component.onCompleted: { if (shown) edIn.restart(); else contentItem.opacity = 0; }
+    ParallelAnimation {
+        id: edIn
+        NumberAnimation { target: ed.contentItem; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: ed.contentItem; property: "scale"; from: 1 + (1 - Theme.popScale) / 2; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+    }
+    ParallelAnimation {
+        id: edOut
+        NumberAnimation { target: ed.contentItem; property: "opacity"; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: ed.contentItem; property: "scale"; to: 1 + (1 - Theme.popScale) / 2; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
+    }
     // opened from a widget's right-click menu: that one starts selected
     onShownChanged: {
         selected = shown ? HubState.editSelect : ""; adding = false; presetsOpen = false;
         HubState.editSelect = "";
         if (shown) keys.forceActiveFocus();
+        if (shown) edIn.restart(); else edOut.restart();
     }
 
     function done() { HubState.editWidgets = ""; }
@@ -353,7 +367,12 @@ PanelWindow {
             }
             // its settings: under (or over) its little bar
             Rectangle {
-                visible: wrap.sel && ed.optsOpen
+                opacity: (wrap.sel && ed.optsOpen) ? 1 : 0
+                scale: (wrap.sel && ed.optsOpen) ? 1 : Theme.popScale
+                visible: opacity > 0.01
+                transformOrigin: wrap.y > 70 ? Item.Bottom : Item.Top
+                Behavior on opacity { NumberAnimation { duration: (wrap.sel && ed.optsOpen) ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: (wrap.sel && ed.optsOpen) ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: (wrap.sel && ed.optsOpen) ? Theme.enterCurve : Theme.exitCurve } }
                 z: 20
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: wrap.y > 70 ? -12 - 40 - 8 - height : wrap.height + 12 + 40 + 8
@@ -471,7 +490,12 @@ PanelWindow {
     readonly property var dragSize: dragType !== "" ? WidgetLayout.size({ type: dragType, face: "" }) : [0, 0]
     Rectangle {
         id: palette
-        visible: ed.adding
+        opacity: ed.adding ? 1 : 0
+        scale: ed.adding ? 1 : Theme.popScale
+        visible: opacity > 0.01
+        transformOrigin: Item.Bottom
+        Behavior on opacity { NumberAnimation { duration: ed.adding ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: ed.adding ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: ed.adding ? Theme.enterCurve : Theme.exitCurve } }
         z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom; anchors.bottomMargin: 28
@@ -613,7 +637,12 @@ PanelWindow {
     // ── presets: ready-made arrangements, replacing this screen's widgets ──
     property bool presetsOpen: false
     Rectangle {
-        visible: ed.presetsOpen
+        opacity: ed.presetsOpen ? 1 : 0
+        scale: ed.presetsOpen ? 1 : Theme.popScale
+        visible: opacity > 0.01
+        transformOrigin: Item.Bottom
+        Behavior on opacity { NumberAnimation { duration: ed.presetsOpen ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: ed.presetsOpen ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: ed.presetsOpen ? Theme.enterCurve : Theme.exitCurve } }
         z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom; anchors.bottomMargin: 28

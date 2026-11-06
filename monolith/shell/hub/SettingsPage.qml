@@ -150,12 +150,12 @@ Page {
                 active: page.current && HubState.open
                 source: "settings/" + page.file + ".qml"
                 onSourceChanged: { flick.contentY = 0; pageIn.restart(); }
-                // a page comes in like the menus do: fading up from a little lower
-                transform: Translate { id: lift }
+                // a page comes in like everything else: fading in with a little zoom
+                transformOrigin: Item.Top
                 ParallelAnimation {
                     id: pageIn
-                    NumberAnimation { target: loader; property: "opacity"; from: 0; to: 1; duration: Theme.shortMs; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: lift; property: "y"; from: 10; to: 0; duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+                    NumberAnimation { target: loader; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: loader; property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
                 }
             }
         }

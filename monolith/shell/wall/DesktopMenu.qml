@@ -68,11 +68,11 @@ PanelWindow {
         border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
         CardShadow {}
         MouseArea { anchors.fill: parent }   // clicks on the card don't close it
-        scale: dm.shown ? 1 : 0.9
+        scale: dm.shown ? 1 : Theme.popScale
         opacity: dm.shown ? 1 : 0
         transformOrigin: Item.TopLeft
-        Behavior on opacity { NumberAnimation { duration: dm.shown ? Theme.fastMs : Theme.exitMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+        Behavior on opacity { NumberAnimation { duration: dm.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: dm.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dm.shown ? Theme.enterCurve : Theme.exitCurve } }
 
         Column {
             id: col

@@ -162,6 +162,12 @@ PanelWindow {
         y: dock.side === "bottom" ? (dock.shown ? parent.height - height - dock.margin : parent.height + 8) : (dock.vertical ? Math.round((parent.height - height) / 2) : (dock.shown ? dock.margin : -height - 8))
         Behavior on x { enabled: dock.vertical; NumberAnimation { duration: dock.shown ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         Behavior on y { enabled: !dock.vertical; NumberAnimation { duration: dock.shown ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
+        // and fades in with a little zoom as it slides in, out the same way
+        opacity: dock.shown ? 1 : 0
+        scale: dock.shown ? 1 : Theme.popScale
+        transformOrigin: dock.side === "top" ? Item.Top : (dock.side === "left" ? Item.Left : (dock.side === "right" ? Item.Right : Item.Bottom))
+        Behavior on opacity { NumberAnimation { duration: dock.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: dock.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         // its own roundness (−1: the theme's)
         radius: Number(Store.get("dock.radius", -1)) >= 0 ? Math.min(Number(Store.get("dock.radius", -1)), Math.min(width, height) / 2) : Theme.corner(Math.min(width, height), 8)
         color: Qt.alpha(Theme.card, opacityBg)
@@ -356,10 +362,10 @@ PanelWindow {
         property bool open: false
         visible: open || opacity > 0.01
         opacity: open ? 1 : 0
-        scale: open ? 1 : 0.92
+        scale: open ? 1 : Theme.popScale
         transformOrigin: dock.side === "top" ? Item.Top : (dock.side === "left" ? Item.Left : (dock.side === "right" ? Item.Right : Item.Bottom))
-        Behavior on opacity { NumberAnimation { duration: menu.open ? Theme.fastMs : Theme.exitMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: menu.open ? Theme.moveMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: menu.open ? Theme.springCurve : Theme.exitCurve } }
+        Behavior on opacity { NumberAnimation { duration: menu.open ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: menu.open ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: menu.open ? Theme.enterCurve : Theme.exitCurve } }
         property var item: null
         property var wins: []
         function openFor(it, ws, cx, cy) {

@@ -14,6 +14,9 @@ FocusScope {
     height: implicitHeight
     visible: opacity > 0.01
     opacity: current ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: current ? Theme.shortMs : Theme.ms(120); easing.type: Easing.OutCubic } }
-    transform: Translate { y: current ? 0 : 8; Behavior on y { NumberAnimation { duration: Theme.ms(300); easing.type: Easing.OutCubic } } }
+    // fades in with a little zoom, and out the same way (like everything that appears)
+    scale: current ? 1 : Theme.popScale
+    transformOrigin: Item.Top
+    Behavior on opacity { NumberAnimation { duration: current ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+    Behavior on scale { NumberAnimation { duration: current ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: current ? Theme.enterCurve : Theme.exitCurve } }
 }

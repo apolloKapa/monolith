@@ -173,6 +173,16 @@ PanelWindow {
     Rectangle {
         id: bar
         visible: win.main
+        // the menu fades in with a little zoom as the overlay comes up
+        opacity: 0
+        scale: Theme.popScale
+        transformOrigin: Item.Bottom
+        Component.onCompleted: barIn.start()
+        ParallelAnimation {
+            id: barIn
+            NumberAnimation { target: bar; property: "opacity"; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+            NumberAnimation { target: bar; property: "scale"; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+        }
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 36

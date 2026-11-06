@@ -61,8 +61,13 @@ Page {
         spacing: 8
         boundsBehavior: Flickable.StopAtBounds
         model: Notifs.list
-        add: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.ms(260); easing.type: Easing.OutCubic } }
-        remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: Theme.ms(160); easing.type: Easing.OutCubic } }
+        // new ones fade in with a little zoom, closed ones fade out the same way
+        add: Transition { ParallelAnimation {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve } } }
+        remove: Transition { ParallelAnimation {
+            NumberAnimation { property: "opacity"; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; to: Theme.popScale; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve } } }
         displaced: Transition { NumberAnimation { property: "y"; duration: Theme.moveMs; easing.type: Easing.OutCubic } }
         delegate: NotificationCard {
             required property var modelData

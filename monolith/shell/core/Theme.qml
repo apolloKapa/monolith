@@ -134,6 +134,11 @@ Singleton {
     readonly property int shortMs: Math.round(260 * animScale)     // fades, small moves, switches
     // any other transition's length, scaled like the rest (0 when animations are off)
     function ms(n) { return Math.round(n * animScale); }
+    // how everything appears and goes: a fade with a little zoom (from popScale up to full size in,
+    // back down out), popInMs / popOutMs long, on the enter / exit curves
+    readonly property real popScale: animOn ? 0.94 : 1
+    readonly property int popInMs: Math.round(320 * animScale)
+    readonly property int popOutMs: Math.round(180 * animScale)
 
     // ── the island (status line + hub in one shape hanging from the top edge) ──
     readonly property color frame: Qt.alpha(oled ? "#000000" : m("surface", mix(_base, _s0, 0.35)), see)   // the island's fill

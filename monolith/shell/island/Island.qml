@@ -178,7 +178,10 @@ PanelWindow {
                 spacing: 6
                 opacity: win.toastOn ? 1 : 0
                 visible: opacity > 0.01
-                Behavior on opacity { NumberAnimation { duration: win.toastOn ? Theme.shortMs : Theme.ms(120); easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: win.toastOn ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+                scale: win.toastOn ? 1 : Theme.popScale
+                transformOrigin: win.bottom ? Item.Bottom : Item.Top
+                Behavior on scale { NumberAnimation { duration: win.toastOn ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.toastOn ? Theme.enterCurve : Theme.exitCurve } }
                 HoverHandler { onHoveredChanged: Notifs.hold = hovered }
                 Loader {
                     width: parent.width
@@ -209,7 +212,11 @@ PanelWindow {
                 height: parent.height - y - (win.docked && !Theme.fullBar && win.bottom ? Theme.islandH + 2 : win.pad)
                 opacity: win.shown ? 1 : 0
                 visible: opacity > 0.01
-                Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.shortMs : Theme.ms(90); easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+                // and a little zoom, from the bar's side
+                scale: win.shown ? 1 : Theme.popScale
+                transformOrigin: win.bottom && win.docked ? Item.Bottom : Item.Top
+                Behavior on scale { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
                 // Unfold (Theme → Effects): the menu opens out of a thin bright line through its
                 // middle and folds back into it
                 property real unfold: win.shown ? 1 : 0
@@ -425,18 +432,12 @@ PanelWindow {
         color: Theme.frame
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
+        // fades in with a little zoom from where it sits, and out the same way
         opacity: win.shown ? 1 : 0
-        scale: win.shown ? 1 : 0.94
+        scale: win.shown ? 1 : Theme.popScale
         transformOrigin: onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
-        // it slides in from its side
-        transform: Translate {
-            x: (win.shown ? 0 : 1) * (floatCard.onLeft ? -40 : (floatCard.onRight ? 40 : 0))
-            y: (win.shown ? 0 : 1) * (floatCard.onTop ? -30 : (floatCard.onBottom ? 40 : 0))
-            Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-            Behavior on y { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-        }
-        Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.ms(220) : Theme.ms(160); easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: win.shown ? Theme.springMs : 160; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.springCurve : Theme.exitCurve } }
+        Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
         CardShadow {}
         MouseArea { anchors.fill: parent }
         PanelFx { anchors.fill: parent; radius: floatCard.radius }
