@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""App colours (Settings -> App colours): apps take the shell's colours (the wallpaper palette).
+"""App colours (Settings -> App colours): apps take the shell's colours (as the shell shows them).
 
     app_colours.py apply TARGET...   write the colours for these targets: kitty gtk qt
     app_colours.py off TARGET        take them away again (your own settings stay)
@@ -8,7 +8,8 @@ kitty: ~/.config/kitty/colors.conf (kitty.conf includes it), reloaded in open wi
 gtk:   a marked block in ~/.config/gtk-3.0/gtk.css and gtk-4.0/gtk.css (GTK 3 and libadwaita
        colour names), the rest of those files is yours.
 qt:    a qt6ct/qt5ct colour scheme, picked in their config (apps need QT_QPA_PLATFORMTHEME=qt6ct).
-The palette is ~/.local/state/monolith/next-palette.json (matugen), the mode the shell's.
+The palette is the shell's own (~/.local/state/monolith/shell-palette.json: the wallpaper's or a
+colour theme's), else the wallpaper's (next-palette.json); the mode the shell's.
 """
 import configparser
 import json
@@ -28,7 +29,8 @@ def palette():
         mode = json.load(open(CONF + "/monolith/next.json")).get("theme", {}).get("mode", "dark")
     except (OSError, ValueError):
         mode = "dark"
-    roles = json.load(open(STATE + "/next-palette.json")).get("colors", {})
+    src = STATE + "/shell-palette.json"
+    roles = json.load(open(src if os.path.exists(src) else STATE + "/next-palette.json")).get("colors", {})
     out = {}
     for k, v in roles.items():
         pick = v.get(mode) or v.get("default") or {}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fastfetch presets (Settings -> Fastfetch). Presets are fastfetch configs in
 ~/.config/monolith/fastfetch/NAME.jsonc; {{colors.ROLE.VARIANT.hex}} (.red, .green, .blue too) or {{ROLE}} in them becomes the
-shell's colour (the wallpaper palette). The one in use is written to fastfetch's own config.
+shell's colour (as the shell shows it: the wallpaper's or a colour theme's). The one in use is written to fastfetch's own config.
 
     fastfetch.py list              JSON: each preset, whether it's in use, and a preview (HTML)
     fastfetch.py apply NAME        use NAME
@@ -23,7 +23,10 @@ HOME = os.path.expanduser("~")
 CONF = os.environ.get("XDG_CONFIG_HOME") or HOME + "/.config"
 DIR = CONF + "/monolith/fastfetch"
 TARGET = CONF + "/fastfetch/config.jsonc"
-PALETTE = (os.environ.get("XDG_STATE_HOME") or HOME + "/.local/state") + "/monolith/next-palette.json"
+STATE_DIR = (os.environ.get("XDG_STATE_HOME") or HOME + "/.local/state") + "/monolith"
+# the shell's colours as it shows them (the wallpaper's, or a colour theme's); the wallpaper
+# palette only until the shell has written that
+PALETTE = STATE_DIR + "/shell-palette.json" if os.path.exists(STATE_DIR + "/shell-palette.json") else STATE_DIR + "/next-palette.json"
 HEADER = '// Monolith: the "%s" preset with the shell\'s colours, rewritten when they change.\n// Change it in Settings -> Fastfetch (%s), not here.\n'
 
 
