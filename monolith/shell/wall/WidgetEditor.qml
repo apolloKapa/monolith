@@ -75,6 +75,80 @@ PanelWindow {
     // a click on nothing: no selection
     MouseArea { anchors.fill: parent; onClicked: { ed.selected = ""; ed.adding = false; } }
 
+    // ── magnetic alignment (as the old editor had it): while a widget moves, its left edge, middle
+    // or right edge (and top, middle, bottom) catches on a line within a few pixels and stays
+    // there: the screen's edges, thirds and middle, and every other widget's edges and middle.
+    // A thin line shows what it's lined up with. Hold Ctrl to move freely. With Grid on, a widget
+    // that isn't lined up with anything snaps to the grid. ──
+    readonly property real catchPx: 12
+    property var guides: []                       // [{ x, y, w, h }] lines to draw
+    function otherBoxes(self) {
+        const out = [];
+        for (let i = 0; i < widgetsRep.count; i++) {
+            const it = widgetsRep.itemAt(i);
+            if (!it || it === self) continue;
+            out.push({ l: it.x, t: it.y, r: it.x + it.width, b: it.y + it.height });
+        }
+        return out;
+    }
+    // the lines along one axis (h: the x axis)
+    function linesFor(h, others) {
+        const ext = h ? width : height;
+        const l = [0, ext / 3, ext / 2, ext * 2 / 3, ext];
+        for (const o of others) { const lo = h ? o.l : o.t, hi = h ? o.r : o.b; l.push(lo, (lo + hi) / 2, hi); }
+        return l;
+    }
+    // the best place for a span starting at `raw` and `size` long: { pos, line } (line -1: none)
+    function catchAxis(raw, size, lines) {
+        let best = { pos: raw, line: -1, diff: catchPx };
+        for (const ln of lines) for (const k of [0, size / 2, size]) {
+            const d = Math.abs(ln - k - raw);
+            if (d < best.diff) best = { pos: ln - k, line: ln, diff: d };
+        }
+        return best;
+    }
+    // the guide for a line: along the widgets lined up on it, else across the screen
+    function guideFor(h, line, box, others) {
+        const on = b => { const lo = h ? b.l : b.t, hi = h ? b.r : b.b; return Math.abs(lo - line) < 0.5 || Math.abs((lo + hi) / 2 - line) < 0.5 || Math.abs(hi - line) < 0.5; };
+        let from = h ? box.t : box.l, to = h ? box.b : box.r, linked = false;
+        for (const o of others) if (on(o)) { from = Math.min(from, h ? o.t : o.l); to = Math.max(to, h ? o.b : o.r); linked = true; }
+        if (!linked) { from = 0; to = h ? height : width; }
+        return h ? { x: line - 0.5, y: from, w: 1, h: to - from } : { x: from, y: line - 0.5, w: to - from, h: 1 };
+    }
+    // where a moved widget lands (and the guides for it)
+    function place(self, rx, ry, free) {
+        const w = self.width, h = self.height;
+        let x = rx, y = ry;
+        const g = [];
+        if (!free) {
+            const others = otherBoxes(self);
+            const sx = catchAxis(rx, w, linesFor(true, others));
+            const sy = catchAxis(ry, h, linesFor(false, others));
+            x = sx.line >= 0 ? sx.pos : snapTo(rx);
+            y = sy.line >= 0 ? sy.pos : snapTo(ry);
+            const box = { l: x, t: y, r: x + w, b: y + h };
+            if (sx.line >= 0) g.push(guideFor(true, sx.line, box, others));
+            if (sy.line >= 0) g.push(guideFor(false, sy.line, box, others));
+        }
+        guides = g;
+        return Qt.point(Math.max(0, Math.min(width - w, x)), Math.max(0, Math.min(height - h, y)));
+    }
+    // a resized widget's right and bottom edges catch the same lines
+    function edgeCatch(h, edge, self) {
+        const others = otherBoxes(self);
+        let best = { line: -1, diff: catchPx };
+        for (const ln of linesFor(h, others)) { const d = Math.abs(ln - edge); if (d < best.diff) best = { line: ln, diff: d }; }
+        return best.line;
+    }
+    Item {
+        z: 85
+        anchors.fill: parent
+        Repeater {
+            model: ed.guides
+            Rectangle { required property var modelData; x: modelData.x; y: modelData.y; width: Math.max(1, modelData.w); height: Math.max(1, modelData.h); color: Theme.accent }
+        }
+    }
+
     // ── the widgets ──
     property bool optsOpen: false
     onSelectedChanged: optsOpen = false
@@ -84,6 +158,7 @@ PanelWindow {
     }
     function optionValue(item, o) { return o[0].startsWith("store:") ? Store.get(o[0].slice(6), o[3]) : WidgetLayout.opt(item, o[0], o[3]); }
     Repeater {
+        id: widgetsRep
         model: ed.list
         Item {
             id: wrap
@@ -120,14 +195,14 @@ PanelWindow {
                 property point start
                 property point from
                 onPressed: mouse => { ed.selected = wrap.modelData.id; ed.adding = false; start = mapToItem(ed.contentItem, mouse.x, mouse.y); from = Qt.point(wrap.x, wrap.y); ed.moving = wrap; }
-                onCanceled: ed.moving = null
+                onCanceled: { ed.moving = null; ed.guides = []; }
                 onPositionChanged: mouse => {
                     if (!pressed) return;
                     const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
-                    wrap.x = Math.max(0, Math.min(ed.width - wrap.width, ed.snapTo(from.x + p.x - start.x)));
-                    wrap.y = Math.max(0, Math.min(ed.height - wrap.height, ed.snapTo(from.y + p.y - start.y)));
+                    const at = ed.place(wrap, from.x + p.x - start.x, from.y + p.y - start.y, (mouse.modifiers & Qt.ControlModifier) !== 0);
+                    wrap.x = at.x; wrap.y = at.y;
                 }
-                onReleased: { ed.moving = null; WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height }); }
+                onReleased: { ed.moving = null; ed.guides = []; WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height }); }
             }
             // resize: the corner handle, freely (inside the widget's limits and its look's shape)
             Rectangle {
@@ -146,11 +221,26 @@ PanelWindow {
                     onPositionChanged: mouse => {
                         if (!pressed) return;
                         const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
-                        const c = WidgetLayout.clamp(wrap.modelData.type, wrap.modelData.face, ed.snapTo(w0 + p.x - start.x), ed.snapTo(h0 + p.y - start.y));
+                        let w = w0 + p.x - start.x, h = h0 + p.y - start.y;
+                        const g = [];
+                        if (!(mouse.modifiers & Qt.ControlModifier)) {
+                            // the right and bottom edges catch on lines, else the grid
+                            const lx = ed.edgeCatch(true, wrap.x + w, wrap), ly = ed.edgeCatch(false, wrap.y + h, wrap);
+                            w = lx >= 0 ? lx - wrap.x : ed.snapTo(w);
+                            h = ly >= 0 ? ly - wrap.y : ed.snapTo(h);
+                            const c0 = WidgetLayout.clamp(wrap.modelData.type, wrap.modelData.face, w, h);
+                            const others = ed.otherBoxes(wrap);
+                            const box = { l: wrap.x, t: wrap.y, r: wrap.x + c0[0], b: wrap.y + c0[1] };
+                            if (lx >= 0 && Math.abs(c0[0] - w) < 0.5) g.push(ed.guideFor(true, lx, box, others));
+                            if (ly >= 0 && Math.abs(c0[1] - h) < 0.5) g.push(ed.guideFor(false, ly, box, others));
+                        }
+                        ed.guides = g;
+                        const c = WidgetLayout.clamp(wrap.modelData.type, wrap.modelData.face, w, h);
                         wrap.ww = Math.min(c[0], ed.width - wrap.x);
                         wrap.hh = Math.min(c[1], ed.height - wrap.y);
                     }
-                    onReleased: WidgetLayout.update(ed.mode, wrap.modelData.id, { w: Math.round(wrap.ww), h: Math.round(wrap.hh) })
+                    onCanceled: ed.guides = []
+                    onReleased: { ed.guides = []; WidgetLayout.update(ed.mode, wrap.modelData.id, { w: Math.round(wrap.ww), h: Math.round(wrap.hh) }); }
                 }
             }
             // its own little bar: the name, the look, its settings, remove
@@ -296,7 +386,7 @@ PanelWindow {
         z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: bar.bottom; anchors.topMargin: 8
-        text: ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move  ·  corner to resize  ·  its look and settings above it  ·  Esc when done"
+        text: ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move (it lines up with the middle and the other widgets; Ctrl: freely)  ·  corner to resize  ·  Esc when done"
         color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.4)
         font.pixelSize: Theme.sizeSmall
     }
@@ -381,8 +471,8 @@ PanelWindow {
                                 if (!dragging && Math.hypot(mouse.x - start.x, mouse.y - start.y) > 8) { dragging = true; ed.dragType = card.modelData; }
                                 if (!dragging) return;
                                 const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
-                                ed.dragPos = Qt.point(ed.snapTo(Math.max(0, Math.min(ed.width - ed.dragSize[0], p.x - ed.dragSize[0] / 2))),
-                                                      ed.snapTo(Math.max(0, Math.min(ed.height - ed.dragSize[1], p.y - ed.dragSize[1] / 2))));
+                                // the new widget lines up with the others like a moved one
+                                ed.dragPos = ed.place({ width: ed.dragSize[0], height: ed.dragSize[1] }, p.x - ed.dragSize[0] / 2, p.y - ed.dragSize[1] / 2, (mouse.modifiers & Qt.ControlModifier) !== 0);
                             }
                             onReleased: mouse => {
                                 if (dragging) {
@@ -394,9 +484,9 @@ PanelWindow {
                                         ed.adding = false;
                                     }
                                 } else card.clicked();
-                                dragging = false; ed.dragType = "";
+                                dragging = false; ed.dragType = ""; ed.guides = [];
                             }
-                            onCanceled: { dragging = false; ed.dragType = ""; }
+                            onCanceled: { dragging = false; ed.dragType = ""; ed.guides = []; }
                         }
                     }
                 }
