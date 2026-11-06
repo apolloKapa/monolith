@@ -74,14 +74,15 @@ case "$1" in
         case "$name" in
             emoji) ipc hub search ":" ;;
             autohide) ipc status toggle ;;
-            appimages|autostart) ipc settings open software ;;
+            autostart) ipc settings open software ;;
+            appimages) ipc appimages open ;;
             *) ipc hub "${2:-toggle}" "$(page_for "$name")" ;;
         esac
         ;;
     hub) ipc hub toggle "$(page_for "${2:-search}")" ;;
     search) ipc hub search "$2" ;;
     settings) ipc settings open "${2:-appearance}" ;;
-    appimages) ipc settings open software ;;
+    appimages) ipc appimages open ;;
     lock) ipc lock lock ;;
     screenshot)
         full=0; edit=0

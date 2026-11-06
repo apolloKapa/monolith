@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-"""Startup apps and AppImages for Settings -> Software.
+"""Startup apps for Settings -> Software (AppImages are scripts/appimages.py).
 
     startup.py apps              JSON list: every app (name, id, icon) and whether it starts at login
     startup.py set ID on|off     start that app at login, or not (~/.config/autostart/ID)
     startup.py run               start the ones that are on (once, at login; not under systemd,
                                  which starts ~/.config/autostart itself)
-    startup.py appimages DIR     JSON list of the AppImages in DIR, and which have an app entry
-    startup.py appimage add|remove FILE    give an AppImage an app entry (so Search and the dock
-                                 know it), or take it away
 """
 import configparser
 import glob
@@ -110,70 +107,6 @@ def cmd_run():
             pass
 
 
-def appimage_entry(f):
-    """The app entry for this AppImage: one that runs it (whoever made it), else the name
-    one made here gets."""
-    own = DATA + "/applications/appimage-" + os.path.splitext(os.path.basename(f))[0].replace(" ", "_") + ".desktop"
-    if os.path.exists(own):
-        return own
-    for d in glob.glob(DATA + "/applications/*.desktop"):
-        try:
-            text = open(d, encoding="utf-8", errors="replace").read()
-        except OSError:
-            continue
-        if f in text and re.search(r"^(Exec|X-Monolith-AppImage)=.*" + re.escape(f), text, re.M):
-            return d
-    return own
-
-
-def appimage_icon(f, name):
-    """The AppImage's own icon (its .DirIcon, unpacked by its runtime: the app doesn't run),
-    put in the user's icon theme folder. Returns the icon name, or None."""
-    import shutil, tempfile
-    dest_dir = DATA + "/icons/hicolor/256x256/apps"
-    tmp = tempfile.mkdtemp()
-    try:
-        run = lambda what: subprocess.run([f, "--appimage-extract", what], cwd=tmp, timeout=60,
-                                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        run(".DirIcon")
-        link = os.path.join(tmp, "squashfs-root", ".DirIcon")
-        if os.path.islink(link):
-            run(os.readlink(link))
-        src = os.path.realpath(link)
-        if not os.path.isfile(src):
-            return None
-        # SVG icons go to scalable/, the rest to 256x256/
-        svg = open(src, "rb").read(256).lstrip().startswith(b"<")
-        folder = DATA + "/icons/hicolor/scalable/apps" if svg else dest_dir
-        os.makedirs(folder, exist_ok=True)
-        shutil.copyfile(src, os.path.join(folder, name + (".svg" if svg else ".png")))
-        return name
-    except Exception:
-        return None
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
-
-
-def cmd_appimages(d):
-    files = sorted(glob.glob(os.path.join(os.path.expanduser(d), "*.AppImage")) + glob.glob(os.path.join(os.path.expanduser(d), "*.appimage")))
-    print(json.dumps([{"file": f, "name": os.path.splitext(os.path.basename(f))[0], "added": os.path.exists(appimage_entry(f)),
-                       "size": os.path.getsize(f)} for f in files]))
-
-
-def cmd_appimage(action, f):
-    dst = appimage_entry(f)
-    if action == "add":
-        os.chmod(f, os.stat(f).st_mode | 0o111)
-        name = os.path.splitext(os.path.basename(f))[0].replace("-", " ").replace("_", " ")
-        icon = appimage_icon(f, os.path.splitext(os.path.basename(dst))[0]) or "application-x-executable"
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        open(dst, "w", encoding="utf-8").write(
-            "[Desktop Entry]\nType=Application\nName=%s\nExec=%s %%U\nIcon=%s\nCategories=Utility;\n%s=appimage\n"
-            % (name, shlex.quote(f), icon, TAG))
-    elif os.path.exists(dst):
-        os.remove(dst)
-
-
 def main():
     a = sys.argv[1:]
     if not a:
@@ -184,10 +117,6 @@ def main():
         cmd_set(a[1], a[2] == "on")
     elif a[0] == "run":
         cmd_run()
-    elif a[0] == "appimages":
-        cmd_appimages(a[1])
-    elif a[0] == "appimage":
-        cmd_appimage(a[1], a[2])
 
 
 if __name__ == "__main__":

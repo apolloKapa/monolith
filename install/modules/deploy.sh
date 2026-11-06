@@ -184,11 +184,15 @@ SELECTED_COMPOSITORS="niri"
 EOF
 }
 
-# "Monolith Settings" in the app launcher: opens Settings in the hub
+# "Monolith Settings" and "AppImages" in the app launcher
 install_desktop_entry() {
     local apps_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
     mkdir -p "$apps_dir"
-    rm -f "$apps_dir/monolith-appimages.desktop"
+    # "AppImages" in the launcher: the window you drop AppImages on
+    printf '%s\n' "[Desktop Entry]" "Type=Application" "Name=AppImages" "GenericName=AppImage installer" \
+        "Comment=Drop an AppImage and it's set up like an installed app, with its own icon" \
+        "Exec=\"$BIN_DIR/monolith\" appimages" "Icon=application-x-executable" "Categories=System;Utility;" \
+        "Keywords=appimage;install;apps;" > "$apps_dir/monolith-appimages.desktop"
     printf '%s\n' "[Desktop Entry]" "Type=Application" "Name=Monolith Settings" \
         "Comment=Appearance, displays, keyboard and mouse, startup apps and more" \
         "Exec=\"$BIN_DIR/monolith\" settings" "Icon=preferences-system" "Categories=Settings;" \
