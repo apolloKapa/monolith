@@ -53,6 +53,7 @@ PanelWindow {
 
     function show(e, p, full) {
         if (blocked && !pinned) return;
+        putAway.stop();
         edge = e; pos = p;
         if (!rememberTool || tools.indexOf(tool) === -1) tool = tools[0];
         shown = true;
@@ -70,7 +71,13 @@ PanelWindow {
             qa.show(e, (e === "left" || e === "right") ? qa.height / 2 : qa.width / 2, r.full);
         }
     }
-    function hide() { expanded = false; shown = false; pinned = false; }
+    // put away: an open one folds into the mini bar first, then slides into the edge
+    function hide() {
+        pinned = false;
+        if (expanded) { expanded = false; putAway.restart(); }
+        else shown = false;
+    }
+    Timer { id: putAway; interval: Math.round(qa.speed * 0.85); onTriggered: if (!qa.expanded) qa.shown = false }
     function fold() { if (expanded) expanded = false; else hide(); }
     function step(d) { const i = tools.indexOf(tool); tool = tools[Math.max(0, Math.min(tools.length - 1, (i < 0 ? 0 : i) + d))]; }
 
@@ -151,6 +158,7 @@ PanelWindow {
     readonly property real span: expanded ? Math.max(railL, along + 24) : railL
     // how far out it is (0: tucked into the edge), and the drag pulling it (a little rubber band)
     property real pull: 0
+    Behavior on pull { enabled: !drag.active; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
     property real slide: shown || expanded ? 0 : railT + ear + 30
     Behavior on slide { NumberAnimation { duration: qa.speed; easing.type: Easing.BezierSpline; easing.bezierCurve: qa.out ? Theme.springCurve : Theme.exitCurve } }
 
@@ -206,8 +214,6 @@ PanelWindow {
                 qa.pull = 0;
             }
         }
-        Behavior on x { enabled: !drag.active; NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-        Behavior on y { enabled: !drag.active; NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
 
         // the rail: the tools (and the pin) along the edge
         Item {
@@ -264,20 +270,29 @@ PanelWindow {
 
         // the open tool, beside the rail
         Item {
+            id: clipBox
+            anchors.fill: parent
+            clip: true
+        Item {
             id: content
             readonly property real gap: 8
             x: qa.edge === "left" ? qa.railT + gap : (qa.edge === "right" ? body.width - qa.railT - gap - width : (body.width - width) / 2)
             y: qa.edge === "top" ? qa.railT + gap : (qa.edge === "bottom" ? body.height - qa.railT - gap - height : (body.height - height) / 2)
             width: qa.contentW
             height: qa.contentH
-            opacity: qa.expanded && qa.bodyThick > qa.railT + qa.across * 0.8 ? 1 : 0
+            // in once the panel is most of the way open; out at once when it starts to fold
+            readonly property bool on: qa.expanded && qa.bodyThick > qa.railT + qa.across * 0.7
+            opacity: on ? 1 : 0
+            scale: on ? 1 : 0.96
             visible: opacity > 0.01
-            Behavior on opacity { NumberAnimation { duration: qa.expanded ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: content.on ? Math.max(120, qa.speed * 0.6) : 90; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: content.on ? Math.max(120, qa.speed * 0.6) : 90; easing.type: Easing.OutCubic } }
             Loader {
                 anchors.fill: parent
                 active: qa.expanded || content.visible
                 source: "quick/" + ({ calc: "Calc", convert: "Convert", notes: "Notes", timer: "Timer", draw: "Draw", usage: "Usage" })[qa.tool] + ".qml"
             }
+        }
         }
     }
 
