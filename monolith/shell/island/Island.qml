@@ -99,9 +99,10 @@ PanelWindow {
     readonly property bool dropped: shown && docked && Theme.fullBar
 
     // a new notification drops out of the island (on the screen you're using) while it's closed
-    readonly property bool toastScreen: Niri.focusedOutput !== "" ? Niri.focusedOutput === modelData.name : (Quickshell.screens.length > 0 && modelData === Quickshell.screens[0])
-    readonly property bool toastOn: !shown && toastScreen && Notifs.popups.length > 0 && Store.get("notifications.style", "island") !== "corner"
-    readonly property var toast: Notifs.popups.length > 0 ? Notifs.popups[0] : null
+    // (on the screen it came up on: it stays there when you switch windows to another screen)
+    readonly property var myToasts: Notifs.popupsOn(modelData.name, Quickshell.screens.length ? Quickshell.screens[0].name : "").filter(p => !Notifs.leaving[p.id])
+    readonly property bool toastOn: !shown && myToasts.length > 0 && Store.get("notifications.style", "island") !== "corner"
+    readonly property var toast: myToasts.length > 0 ? myToasts[0] : null
     // pages stay loaded while the island shrinks back after being open (not for a toast)
     property bool wasOpen: false
 
@@ -189,28 +190,29 @@ PanelWindow {
                 y: win.bottom ? body.height - Theme.islandH - height : Theme.islandH
                 width: body.width - 2 * win.pad
                 spacing: 6
-                opacity: win.toastOn ? 1 : 0
+                // it drops down out of the island (rises out of it when the bar is at the bottom)
+                // as the island opens up, with a little bounce, and goes back up into it
+                property real drop: win.toastOn ? 1 : 0
+                Behavior on drop { NumberAnimation { duration: win.toastOn ? 460 : Theme.popOutMs; easing.type: win.toastOn ? Easing.OutBack : Easing.InCubic; easing.overshoot: 1.1 } }
+                opacity: Math.min(1, drop * 1.8)
                 visible: opacity > 0.01
-                Behavior on opacity { NumberAnimation { duration: win.toastOn ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-                scale: win.toastOn ? 1 : Theme.popScale
-                transformOrigin: win.bottom ? Item.Bottom : Item.Top
-                Behavior on scale { NumberAnimation { duration: win.toastOn ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.toastOn ? Theme.enterCurve : Theme.exitCurve } }
+                transform: Translate { y: (1 - toastArea.drop) * (win.bottom ? 1 : -1) * (toastArea.height * 0.7 + 20) }
                 HoverHandler { onHoveredChanged: Notifs.hold = hovered }
                 Loader {
                     width: parent.width
                     active: win.toast !== null
                     sourceComponent: NotificationCard {
                         notif: win.toast
-                        onClosed: Notifs.dismissPopup(win.toast)
+                        onClosed: Notifs.dismissPopup(win.toast, flying)
                     }
                 }
                 Pressable {
-                    visible: Notifs.popups.length > 1
+                    visible: win.myToasts.length > 1
                     width: moreLabel.implicitWidth + 24
                     height: 26
                     color: Theme.containerHigh
                     onClicked: HubState.toggle("notifications", win.modelData.name)
-                    Label { id: moreLabel; anchors.centerIn: parent; text: "+" + (Notifs.popups.length - 1) + " more"; font.pixelSize: Theme.sizeSmall; strong: true }
+                    Label { id: moreLabel; anchors.centerIn: parent; text: "+" + (win.myToasts.length - 1) + " more"; font.pixelSize: Theme.sizeSmall; strong: true }
                 }
             }
 
