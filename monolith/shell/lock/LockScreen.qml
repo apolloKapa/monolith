@@ -109,14 +109,10 @@ WlSessionLock {
                 NumberAnimation { id: shakeAnim; target: field; property: "shake"; from: 0; to: 1; duration: 480 }
                 Connections { target: LockState; function onFailed() { shakeAnim.restart(); pw.text = ""; } }
 
-                Rectangle {
+                Avatar {
                     id: face
-                    x: 8; width: 48; height: 48; radius: 24
+                    x: 8; size: 48
                     anchors.verticalCenter: parent.verticalCenter
-                    color: Theme.accentContainer
-                    clip: true
-                    Image { id: av; anchors.fill: parent; source: Wall.url(who.avatar); fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(96, 96) }
-                    Icon { anchors.centerIn: parent; visible: av.status !== Image.Ready; name: "person"; size: 26; filled: true; color: Theme.onAccentContainer }
                 }
                 TextInput {
                     id: pw

@@ -5,7 +5,7 @@ import Quickshell
 import "../../core"
 import "../../ui"
 
-// You: glass; your picture with two buttons beside it (your name: Settings; Lock), and sleep,
+// You: glass; your round picture with two buttons beside it (your name: Settings; Lock), and sleep,
 // restart and power off underneath (one, two and three parts wide). Hold one: it fills from the
 // bottom with a wave in its colour and does it when full; let go early and it drains back.
 FaceBase {
@@ -23,15 +23,7 @@ FaceBase {
             RowLayout {
                 Layout.fillWidth: true; Layout.fillHeight: true
                 spacing: 10
-                Rectangle {
-                    Layout.preferredWidth: 70; Layout.preferredHeight: 70
-                    radius: Math.min(Theme.corner(70, 12), 12)
-                    color: Theme.control
-                    Image { id: av; anchors.fill: parent; source: Wall.url(f.avatar); fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(140, 140); visible: false; asynchronous: true }
-                    MultiEffect { anchors.fill: parent; source: av; visible: av.status === Image.Ready; maskEnabled: true; maskSource: avm }
-                    Rectangle { id: avm; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
-                    Icon { anchors.centerIn: parent; visible: av.status !== Image.Ready; name: "person"; filled: true; size: 30; color: Theme.text }
-                }
+                Avatar { Layout.preferredWidth: 70; Layout.preferredHeight: 70; size: 70; fallback: Theme.control; iconColor: Theme.text }
                 ColumnLayout {
                     Layout.fillWidth: true; Layout.fillHeight: true
                     spacing: 6
