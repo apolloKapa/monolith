@@ -152,7 +152,8 @@ Singleton {
         const id = faceId(t, f);
         const o = [["opacity", "Opacity", "slider", 1, [0.15, 1, 0.05]]];
         if (carded.indexOf(t + "/" + id) !== -1)
-            o.push(["background", "Background", "choice", "blur", [["blur", "Blurry"], ["normal", "Normal"], ["clear", "Clear"]]]);
+            o.push(["background", "Background", "choice", "blur", [["blur", "Blurry"], ["normal", "Normal"], ["clear", "Clear"]]],
+                   ["blurStrength", "Blur strength", "slider", 0.8, [0.1, 1, 0.05]], ["radius", "Rounding", "slider", -1, [0, 100, 1]]);
         if (t === "clock" || (t === "media" && id === "controls"))
             o.push(["mainColor", "Main colour", "colour", ""], ["accentColor", "Accent colour", "colour", ""]);
         if (["cpu", "ram", "temp", "disk", "battery"].indexOf(t) !== -1 && id === "circle")
