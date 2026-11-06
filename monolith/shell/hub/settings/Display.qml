@@ -151,10 +151,25 @@ ColumnLayout {
         Label { visible: arr.mons.length === 0; anchors.centerIn: parent; text: "No screens found"; muted: true }
     }
 
+    // which display's settings show below
+    property string picked: ""
+    readonly property string shownName: sec.outputs.some(o => o.name === picked) ? picked : (sec.outputs.length ? (sec.outputs.find(o => o.name === Niri.focusedOutput) || sec.outputs[0]).name : "")
+    SettingRow {
+        visible: sec.outputs.length > 0
+        icon: "desktop_windows"; title: "Display"; desc: "The screen to set up"
+        Dropdown {
+            width: 300; height: 36
+            opts: sec.outputs.map(o => [o.name, o.name + "  ·  " + (o.make + " " + o.model).trim()])
+            value: sec.shownName
+            onPicked: v => sec.picked = v
+        }
+    }
+
     Repeater {
         model: sec.outputs
         Rectangle {
             id: card
+            visible: modelData.name === sec.shownName
             required property var modelData
             readonly property var o: modelData
             readonly property bool on: o.current_mode !== null
@@ -199,25 +214,31 @@ ColumnLayout {
                     }
                 }
                 // every size and rate the screen offers
-                SettingRow { visible: card.on; icon: "aspect_ratio"; title: "Resolution" }
-                ChipFlow {
-                        visible: card.on
+                SettingRow {
+                    visible: card.on
+                    icon: "aspect_ratio"; title: "Resolution"
+                    Dropdown {
+                        width: 200; height: 36
                         opts: card.sizes.map(s => [s, s.replace("x", " × ")])
                         value: card.cur ? card.cur.width + "x" + card.cur.height : ""
                         onPicked: v => {
                             const best = card.o.modes.filter(m => m.width + "x" + m.height === v).sort((a, b) => b.refresh_rate - a.refresh_rate)[0];
                             if (best) NiriConf.set(sec.block(card.o), "mode", NiriConf.quote(sec.modeStr(best)));
                         }
+                    }
                 }
-                SettingRow { visible: card.on && card.rates.length > 1; icon: "speed"; title: "Refresh rate" }
-                ChipFlow {
-                        visible: card.on && card.rates.length > 1
+                SettingRow {
+                    visible: card.on && card.rates.length > 1
+                    icon: "speed"; title: "Refresh rate"
+                    Dropdown {
+                        width: 200; height: 36
                         opts: card.rates.map(m => [String(m.refresh_rate), Math.round(m.refresh_rate / 1000) + " Hz"])
                         value: card.cur ? String(card.cur.refresh_rate) : ""
                         onPicked: v => {
                             const m = card.rates.find(r => String(r.refresh_rate) === v);
                             if (m) NiriConf.set(sec.block(card.o), "mode", NiriConf.quote(sec.modeStr(m)));
                         }
+                    }
                 }
                 SettingRow {
                     visible: card.on
