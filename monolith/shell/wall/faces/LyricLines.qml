@@ -94,12 +94,13 @@ Item {
         anchors.centerIn: parent
         width: parent.width
         spacing: 8
-        visible: !ll.have && (ll.sayMissing || !ll.hasPlayer || Lyrics.state === "loading")
+        // nothing playing: nothing at all (cleaner on the desktop)
+        visible: ll.hasPlayer && !ll.have && (ll.sayMissing || Lyrics.state === "loading")
         Text {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
-            text: !ll.hasPlayer ? "Nothing playing" : (Lyrics.state === "loading" ? "Looking for lyrics…" : "No lyrics for this song")
+            text: Lyrics.state === "loading" ? "Looking for lyrics…" : "No lyrics for this song"
             color: Theme.subtext
             font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: Math.max(11, Math.min(14, ll.size * 0.8))
         }
