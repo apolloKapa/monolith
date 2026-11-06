@@ -6,6 +6,7 @@ import "../../ui"
 ColumnLayout {
     spacing: 8
     SettingRow {
+        key: "wellbeing.track"; def: true;
         icon: "self_improvement"; title: "Track screen time"; desc: "How long each app is focused (not while you're away). Kept two weeks, only on this PC"
         Toggle { checked: Store.get("wellbeing.track", true) !== false; onToggled: on => Store.set("wellbeing.track", on) }
     }

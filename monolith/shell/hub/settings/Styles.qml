@@ -83,7 +83,7 @@ ColumnLayout {
     }
 
     Label { text: "Style"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.leftMargin: 4 }
-    SettingRow { icon: "style"; title: "The shell's look"; desc: "Shapes, outlines, shadows and type, with colours to match. Now " + Look.style.name + ". You can still pick other colours below" }
+    SettingRow { keys: ["theme.style", "theme.palette"]; icon: "style"; title: "The shell's look"; desc: "Shapes, outlines, shadows and type, with colours to match. Now " + Look.style.name + ". You can still pick other colours below" }
     GridLayout {
         Layout.fillWidth: true
         columns: 3
@@ -101,6 +101,7 @@ ColumnLayout {
 
     Label { text: "Colours"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.leftMargin: 4; Layout.topMargin: 10 }
     SettingRow {
+        key: "theme.palette"
         icon: "palette"; title: "Where the colours come from"
         desc: "Now: " + (Look.paletteName === "wallpaper" ? "your wallpaper" : (Look.paletteName === "style" ? "the " + Look.style.name + " style" : "the " + Look.paletteName + " theme")) + ". A colour theme below works with any style"
         Row {

@@ -28,6 +28,7 @@ ColumnLayout {
         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: HubState.show("wallpaper") }
     }
     SettingRow {
+        key: "wallpaper.dir";
         icon: "folder"; title: "Folder"; desc: "Where the wallpaper picker looks"
         Field { text: Wall.dir; onAccepted: v => { if (v.trim() !== "" && v.trim() !== Wall.dir) Store.set("wallpaper.dir", v.trim()); } }
     }

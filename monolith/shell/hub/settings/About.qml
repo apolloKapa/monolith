@@ -51,6 +51,7 @@ ColumnLayout {
         }
     }
     SettingRow {
+        key: "updates.check"; def: true;
         icon: "autorenew"; title: "Check automatically"; desc: "Every few hours, in the background"
         Toggle { checked: Store.get("updates.check", true) !== false; onToggled: on => Store.set("updates.check", on) }
     }

@@ -7,14 +7,17 @@ import "../../ui"
 ColumnLayout {
     spacing: 8
     SettingRow {
+        key: "nightlight.enabled";
         icon: "nightlight"; title: "Night light"; desc: "Warmer, less blue light. Also a tile in the control center"
         Toggle { checked: NightLight.enabled; onToggled: on => Store.set("nightlight.enabled", on) }
     }
     SettingRow {
+        key: "nightlight.temp";
         icon: "thermostat"; title: "Warmth"; desc: "Lower is warmer"
         NumberBox { from: 1000; to: 6500; step: 100; unit: "K"; value: NightLight.temp; onMoved: v => Store.set("nightlight.temp", v) }
     }
     SettingRow {
+        key: "nightlight.schedule";
         icon: "schedule"; title: "When"
         desc: NightLight.schedule === "sun" && !Weather.loc ? "Sunset to sunrise needs your location (General)" : ""
         Segmented {
@@ -25,6 +28,7 @@ ColumnLayout {
         }
     }
     SettingRow {
+        keys: ["nightlight.from", "nightlight.to"];
         visible: NightLight.schedule === "custom"
         icon: "more_time"; title: "From and to"; desc: "24-hour times, like 21:00 and 07:00"
         Row {

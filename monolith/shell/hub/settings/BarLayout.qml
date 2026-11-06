@@ -67,50 +67,74 @@ ColumnLayout {
     }
 
     // the bar's style: five cards, each a little picture of it
-    Label { text: "Style"; strong: true; Layout.leftMargin: 6 }
+    Row {
+        Layout.leftMargin: 6
+        spacing: 10
+        Label { text: "Style"; strong: true; anchors.verticalCenter: parent.verticalCenter }
+        // changed from the default (Island): put it back
+        Pressable {
+            visible: Store.has("bar.style") && Store.get("bar.style", "island") !== "island"
+            height: 26; width: rl.implicitWidth + 34
+            color: hovered ? Theme.control : "transparent"
+            onClicked: { Store.unset("bar.style"); Store.unset("bar.shape"); }
+            Row { id: rl; anchors.centerIn: parent; spacing: 4
+                Icon { name: "settings_backup_restore"; size: 15; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: "Back to default"; font.pixelSize: Theme.sizeSmall; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter } }
+        }
+    }
     BarStyles { Layout.fillWidth: true }
     SettingRow {
+        key: "bar.margin";
         visible: Theme.barFloats
         icon: "vertical_align_top"; title: "Space from the edge"; desc: "How far the floating bar sits from the top of the screen"
         NumberBox { from: 0; to: 40; unit: "px"; value: Theme.barMargin; onMoved: v => Store.set("bar.margin", v) }
     }
     SettingRow {
+        key: "bar.frameWidth"; def: 8;
         visible: Theme.barStyle === "frame"
         icon: "border_outer"; title: "Border width"; desc: "The frame round the screen"
         NumberBox { from: 2; to: 40; unit: "px"; value: Number(Store.get("bar.frameWidth", 8)); onMoved: v => Store.set("bar.frameWidth", v) }
     }
     SettingRow {
+        key: "bar.frameRadius";
         visible: Theme.barStyle === "frame"
         icon: "rounded_corner"; title: "Border's inside corners"
         NumberBox { from: 0; to: 60; unit: "px"; value: Number(Store.get("bar.frameRadius", Theme.islandRadius)); onMoved: v => Store.set("bar.frameRadius", v) }
     }
     SettingRow {
+        key: "bar.height";
         icon: "height"; title: "Height"
         NumberBox { from: 28; to: 72; slideTo: 60; unit: "px"; value: Theme.islandH; onMoved: v => Store.set("bar.height", v) }
     }
     SettingRow {
+        key: "bar.length";
         visible: Theme.fullBar
         icon: "width"; title: "Length"; desc: "How much of the screen's width the bar takes (centred)"
         NumberBox { from: 0.3; to: 1; step: 0.01; decimals: 2; factor: 100; unit: "%"; value: Theme.barLength; onMoved: v => Store.set("bar.length", v) }
     }
     SettingRow {
+        key: "bar.minWidth";
         visible: !Theme.fullBar
         icon: "width"; title: "Island width"; desc: "At least this wide (it grows with its modules)"
         NumberBox { from: 200; to: 2000; slideTo: 1400; step: 10; unit: "px"; value: Theme.islandMinW; onMoved: v => Store.set("bar.minWidth", v) }
     }
     SettingRow {
+        key: "bar.opacity";
         icon: "opacity"; title: "Background"; desc: "0 %: the bar disappears and only its modules stay"
         NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Theme.barOpacity; onMoved: v => Store.set("bar.opacity", v) }
     }
     SettingRow {
+        key: "bar.pills";
         icon: "pill"; title: "Modules on their own pills"; desc: "Each module gets a small background (good with a see-through bar)"
         Toggle { checked: Theme.barPills; onToggled: on => Store.set("bar.pills", on) }
     }
     SettingRow {
+        key: "bar.gap"; def: 2;
         icon: "space_bar"; title: "Space between modules"
         NumberBox { from: 0; to: 30; unit: "px"; value: Number(Store.get("bar.gap", 2)); onMoved: v => Store.set("bar.gap", v) }
     }
     SettingRow {
+        key: "bar.sectionGap"; def: 14;
         icon: "horizontal_distribute"; title: "Space between left, middle and right"
         NumberBox { from: 0; to: 120; slideTo: 60; unit: "px"; value: Number(Store.get("bar.sectionGap", 14)); onMoved: v => Store.set("bar.sectionGap", v) }
     }
@@ -327,6 +351,7 @@ ColumnLayout {
         onPicked: v => Store.set("bar.workspaces", v)
     }
     SettingRow {
+        key: "bar.stats";
         icon: "memory"; title: "System stats"; desc: "Which ones show"
         Row {
             spacing: 4
@@ -345,6 +370,7 @@ ColumnLayout {
         }
     }
     SettingRow {
+        key: "bar.soundPercent"; def: true;
         icon: "volume_up"; title: "Volume number"; desc: "Beside the sound icon"
         Toggle { checked: Store.get("bar.soundPercent", true) !== false; onToggled: on => Store.set("bar.soundPercent", on) }
     }

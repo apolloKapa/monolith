@@ -12,18 +12,22 @@ ColumnLayout {
     readonly property var tools: Store.get("quick.tools", ["calc", "convert", "notes", "timer", "draw", "usage"])
 
     SettingRow {
+        key: "quick.enabled"; def: true;
         icon: "side_navigation"; title: "Quick access"; desc: "Rest the pointer on the screen's edge and a panel of small tools slides in"
         Toggle { checked: Store.get("quick.enabled", true) !== false; onToggled: on => Store.set("quick.enabled", on) }
     }
     SettingRow {
+        key: "quick.edge"; def: "right";
         icon: "border_right"; title: "Which edge"
         Segmented { opts: [["left", "Left"], ["right", "Right"]]; value: Store.get("quick.edge", "right"); onPicked: v => Store.set("quick.edge", v) }
     }
     SettingRow {
+        key: "quick.delay"; def: 250;
         icon: "hourglass_top"; title: "Wait before it opens"; desc: "How long the pointer rests on the edge first"
         NumberBox { from: 0; to: 3000; slideTo: 1500; step: 50; unit: "ms"; value: Number(Store.get("quick.delay", 250)); onMoved: v => Store.set("quick.delay", v) }
     }
     SettingRow {
+        key: "quick.speed"; def: 260;
         icon: "speed"; title: "Slide speed"; desc: "How long sliding in takes"
         NumberBox { from: 0; to: 2000; slideTo: 800; step: 10; unit: "ms"; value: Number(Store.get("quick.speed", 260)); onMoved: v => Store.set("quick.speed", v) }
     }
@@ -31,6 +35,7 @@ ColumnLayout {
     Repeater {
         model: sec.all
         SettingRow {
+            key: "quick.tools";
             required property var modelData
             readonly property int at: sec.tools.indexOf(modelData[0])
             icon: modelData[2]; title: modelData[1]
