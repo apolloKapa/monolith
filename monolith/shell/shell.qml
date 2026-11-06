@@ -9,6 +9,7 @@ import "dock"
 import "wall"
 import "lock"
 import "capture"
+import "apps"
 
 // Monolith: the island on every screen (bar + every page), the dock, notification popups, the OSD.
 ShellRoot {
@@ -23,6 +24,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; Dim {} }
     Variants { model: Quickshell.screens; WallpaperPicker {} }
     Variants { model: Quickshell.screens; DesktopMenu {} }
+    AppImagesWindow {}
     Variants { model: Quickshell.screens; QuickAccess {} }
     Variants { model: Quickshell.screens; WidgetEditor {} }
     LockScreen {}

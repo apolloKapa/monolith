@@ -12,16 +12,14 @@ ColumnLayout {
     id: sec
     spacing: 8
     readonly property string script: Qt.resolvedUrl("../../scripts/startup.py").toString().replace("file://", "")
-    readonly property string appDir: Store.get("software.appimages", Quickshell.env("HOME") + "/Applications")
     property var apps: []
-    property var images: []
     property string filter: ""
     property bool showAll: false
 
-    function load() { appsProc.running = true; imgProc.running = true; }
-    Component.onCompleted: load()
+    function load() { appsProc.running = true; }
+    Component.onCompleted: { load(); AppImages.hold(); }
+    Component.onDestruction: AppImages.release()
     Process { id: appsProc; command: ["python3", sec.script, "apps"]; stdout: StdioCollector { onStreamFinished: { try { sec.apps = JSON.parse(text); } catch (e) {} } } }
-    Process { id: imgProc; command: ["python3", sec.script, "appimages", sec.appDir]; stdout: StdioCollector { onStreamFinished: { try { sec.images = JSON.parse(text); } catch (e) {} } } }
     Process { id: act; onExited: sec.load() }
     function run(args) { act.command = ["python3", sec.script].concat(args); act.running = true; }
 
@@ -57,20 +55,27 @@ ColumnLayout {
 
     Label { text: "AppImages"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
     SettingRow {
-        icon: "folder"; title: "Folder"; desc: "AppImages in here can be added to your apps"
-        Field { text: sec.appDir; onAccepted: v => { if (v.trim() !== "" && v.trim() !== sec.appDir) { Store.set("software.appimages", v.trim()); sec.load(); } } }
+        icon: "upload_file"; title: "The AppImages window"; desc: "Drop an AppImage on it and it's set up like an installed app (Mod+I, or AppImages in the launcher)"
+        Button { text: "Open"; primary: true; icon: "open_in_new"; onClicked: { HubState.close(); AppImages.opened = true; } }
     }
-    Label { visible: sec.images.length === 0; text: "No AppImages in that folder yet."; muted: true; Layout.leftMargin: 6 }
+    SettingRow {
+        icon: "folder"; title: "Folder"; desc: "Where dropped AppImages go"
+        Field { text: AppImages.folder.replace(Quickshell.env("HOME"), "~"); onAccepted: v => { const p = v.trim().replace(/^~/, Quickshell.env("HOME")); if (p !== "" && p !== AppImages.folder) Store.set("software.appimages", p); } }
+    }
+    SettingRow {
+        icon: "auto_mode"; title: "Set up AppImages put in the folder"; desc: "Copy one into the folder yourself and it's added to your apps; delete it and its entry goes too"
+        Toggle { checked: AppImages.auto; onToggled: on => Store.set("software.appimagesAuto", on) }
+    }
     Repeater {
-        model: sec.images
+        model: AppImages.items
         SettingRow {
             required property var modelData
             icon: "deployed_code"; title: modelData.name
-            desc: (modelData.size / 1048576).toFixed(0) + " MB" + (modelData.added ? "  ·  in your apps" : "")
+            desc: (modelData.size / 1048576).toFixed(0) + " MB" + (modelData.added ? "  ·  in your apps" : "  ·  not in your apps")
             Row {
                 spacing: 6
-                Button { text: "Run"; onClicked: Quickshell.execDetached(["sh", "-c", "chmod +x \"$1\" && exec \"$1\"", "_", modelData.file]) }
-                Button { text: modelData.added ? "Remove" : "Add to apps"; primary: !modelData.added; onClicked: sec.run(["appimage", modelData.added ? "remove" : "add", modelData.file]) }
+                Button { text: "Run"; onClicked: Quickshell.execDetached([modelData.file]) }
+                Button { text: modelData.added ? "Remove" : "Add to apps"; primary: !modelData.added; onClicked: modelData.added ? AppImages.remove(modelData.file, false) : AppImages.add([modelData.file], true) }
             }
         }
     }
