@@ -36,35 +36,40 @@ PanelWindow {
         sourceSize: Qt.size(bg.width, bg.height)
         Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutCubic } }
     }
-    Layer {
-        id: a
-        opacity: bg.showA ? 1 : 0
-        onStatusChanged: if (status === Image.Ready && !bg.showA && source !== "") bg.showA = true
-    }
-    Layer {
-        id: b
-        opacity: bg.showA ? 0 : 1
-        onStatusChanged: if (status === Image.Ready && bg.showA && source !== "" && a.source !== source) bg.showA = false
-    }
+    // everything that makes up the wallpaper, in one item the widgets' glass can blur
+    Item {
+        id: wallLayer
+        anchors.fill: parent
+        Layer {
+            id: a
+            opacity: bg.showA ? 1 : 0
+            onStatusChanged: if (status === Image.Ready && !bg.showA && source !== "") bg.showA = true
+        }
+        Layer {
+            id: b
+            opacity: bg.showA ? 0 : 1
+            onStatusChanged: if (status === Image.Ready && bg.showA && source !== "" && a.source !== source) bg.showA = false
+        }
 
-    // a video wallpaper: muted, looping, over the pictures (which stay as the backdrop)
-    Video {
-        anchors.fill: parent
-        visible: bg.video
-        source: bg.video ? Wall.url(bg.target) : ""
-        fillMode: VideoOutput.PreserveAspectCrop
-        loops: MediaPlayer.Infinite
-        muted: true
-        autoPlay: true
-    }
-    AnimatedImage {
-        anchors.fill: parent
-        visible: Wall.isAnimated(bg.target)
-        source: visible ? Wall.url(bg.target) : ""
-        fillMode: Image.PreserveAspectCrop
-        playing: visible
+        // a video wallpaper: muted, looping, over the pictures (which stay as the backdrop)
+        Video {
+            anchors.fill: parent
+            visible: bg.video
+            source: bg.video ? Wall.url(bg.target) : ""
+            fillMode: VideoOutput.PreserveAspectCrop
+            loops: MediaPlayer.Infinite
+            muted: true
+            autoPlay: true
+        }
+        AnimatedImage {
+            anchors.fill: parent
+            visible: Wall.isAnimated(bg.target)
+            source: visible ? Wall.url(bg.target) : ""
+            fillMode: Image.PreserveAspectCrop
+            playing: visible
+        }
     }
 
     // the desktop widgets, only on the first screen for now
-    Widgets { screenName: bg.modelData.name }
+    Widgets { screenName: bg.modelData.name; backdrop: wallLayer }
 }

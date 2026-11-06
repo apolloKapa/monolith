@@ -90,8 +90,8 @@ PanelWindow {
                     width: card.width - 32
                     visible: dm.item && (WidgetLayout.faces[dm.item.type] || []).length > 1
                     opts: dm.item ? (WidgetLayout.faces[dm.item.type] || []) : []
-                    value: dm.item ? (dm.item.face || ((WidgetLayout.faces[dm.item.type] || [[""]])[0][0])) : ""
-                    onPicked: v => WidgetLayout.update("desktop", dm.item.id, { face: v })
+                    value: dm.item ? WidgetLayout.faceId(dm.item.type, dm.item.face) : ""
+                    onPicked: v => WidgetLayout.setFace("desktop", dm.item, v)
                 }
                 Item { width: 1; height: 2 }
                 Entry { icon: "open_with"; text: "Move & resize"; onClicked: { const id = dm.item.id; dm.run(() => { HubState.editSelect = id; HubState.editWidgetsOn("desktop", dm.modelData.name); }); } }
