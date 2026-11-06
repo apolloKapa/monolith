@@ -3,8 +3,8 @@
 
     startup.py apps              JSON list: every app (name, id, icon) and whether it starts at login
     startup.py set ID on|off     start that app at login, or not (~/.config/autostart/ID)
-    startup.py run               start the ones that are on (once, at login; not under systemd,
-                                 which starts ~/.config/autostart itself)
+    startup.py run               start the ones that are on (once, at login; not when systemd's
+                                 xdg-desktop-autostart target runs, which starts them itself)
 """
 import configparser
 import glob
@@ -91,8 +91,21 @@ def cmd_set(i, on):
             open(dst, "w", encoding="utf-8").write("\n".join(text) + "\n")
 
 
+def systemd_autostarts():
+    """systemd starts ~/.config/autostart itself, but only when the session runs its
+    xdg-desktop-autostart target (niri started with niri-session); otherwise nobody would"""
+    if not os.path.isdir("/run/systemd/system"):
+        return False
+    try:
+        r = subprocess.run(["systemctl", "--user", "is-active", "xdg-desktop-autostart.target"],
+                           capture_output=True, text=True, timeout=5)
+        return r.stdout.strip() in ("active", "activating")
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
 def cmd_run():
-    if os.path.isdir("/run/systemd/system"):
+    if systemd_autostarts():
         return
     for f in sorted(glob.glob(AUTO + "/*.desktop")):
         e = entry(f)

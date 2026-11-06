@@ -43,7 +43,7 @@ Singleton {
         enabled: idle.on && idle.suspendAfter > 0
         timeout: idle.suspendAfter
         respectInhibitors: true
-        onIsIdleChanged: if (isIdle) { LockState.lock(); Quickshell.execDetached(["loginctl", "suspend"]); }
+        onIsIdleChanged: if (isIdle) { LockState.lock(); Power.suspend(); }
     }
 
     // your own idle actions (Settings → Lock & idle): [{ name, after (s), command, resume }]
