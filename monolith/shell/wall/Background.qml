@@ -33,7 +33,7 @@ PanelWindow {
         asynchronous: true
         cache: false
         sourceSize: Qt.size(bg.width, bg.height)
-        Behavior on opacity { NumberAnimation { duration: 700; easing.type: Easing.InOutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Theme.ms(700); easing.type: Easing.InOutCubic } }
         // the picture that just faded out lets go of its memory (a whole screen's worth)
         onOpacityChanged: if (opacity === 0 && source !== "") source = ""
     }

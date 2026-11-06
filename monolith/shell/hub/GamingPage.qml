@@ -96,7 +96,7 @@ Page {
                             }
                             Rectangle {
                                 width: parent.width; height: 10; radius: 5; color: Theme.ringTrack
-                                Rectangle { height: parent.height; radius: 5; width: Math.max(10, parent.width * modelData[1]); color: Theme.accent; Behavior on width { NumberAnimation { duration: 400 } } }
+                                Rectangle { height: parent.height; radius: 5; width: Math.max(10, parent.width * modelData[1]); color: Theme.accent; Behavior on width { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutCubic } } }
                             }
                         }
                     }

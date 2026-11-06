@@ -32,7 +32,10 @@ FaceBase {
         glow = g;
     }
     property var glow: new Array(12).fill(0)
-    Timer { interval: f.secs ? 40 : 1000; running: f.live && f.visible; repeat: true; triggeredOnStart: true; onTriggered: f.tick() }
+    // the sweeping second hand moves every frame (a 40 ms timer stepped visibly on fast screens);
+    // without it, once a second is plenty
+    FrameAnimation { running: f.secs && f.live && f.visible; onTriggered: f.tick() }
+    Timer { interval: 1000; running: !f.secs && f.live && f.visible; repeat: true; triggeredOnStart: true; onTriggered: f.tick() }
     Component.onCompleted: tick()
 
     // the dial: a circle with a soft lobe towards each hour, bigger where it's lit

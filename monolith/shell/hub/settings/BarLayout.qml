@@ -252,7 +252,7 @@ ColumnLayout {
         color: bz.ed.overZone === zone ? Qt.alpha(Theme.accent, 0.14) : Theme.container
         border.width: bz.ed.overZone === zone ? 2 : 1
         border.color: bz.ed.overZone === zone ? Theme.accent : Theme.ringTrack
-        Behavior on color { ColorAnimation { duration: 120 } }
+        Behavior on color { ColorAnimation { duration: Theme.ms(120); easing.type: Easing.OutCubic } }
         Label { x: 12; y: 6; text: bz.label; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
         Flow {
             id: zflow

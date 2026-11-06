@@ -17,7 +17,7 @@ Canvas {
     readonly property real level: Math.max(0, Math.min(1, value))
     readonly property real amp: level > 0.01 && level < 0.99 ? maxAmp * Math.sin(level * Math.PI) : 0
 
-    Behavior on value { enabled: wf.live; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on value { enabled: wf.live; NumberAnimation { duration: Theme.ms(800); easing.type: Easing.OutQuint } }
     NumberAnimation on phase { id: move; from: 0; to: Math.PI * 2; duration: 1800; loops: Animation.Infinite; running: false }
     Timer { id: settle; interval: 1800; onTriggered: if (!wf.keepMoving) move.stop() }
     onValueChanged: { if (live && level > 0.01 && level < 0.99) { move.start(); settle.restart(); } requestPaint(); }

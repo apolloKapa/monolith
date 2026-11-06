@@ -16,7 +16,7 @@ Canvas {
     readonly property real size: Math.min(width, height)
     readonly property real stroke: size * Math.max(3, Math.min(16, thickness)) / 130
 
-    Behavior on value { enabled: wr.live; NumberAnimation { duration: 800; easing.type: Easing.OutQuint } }
+    Behavior on value { enabled: wr.live; NumberAnimation { duration: Theme.ms(800); easing.type: Easing.OutQuint } }
     onValueChanged: requestPaint()
     onPhaseChanged: requestPaint()
     onWavyChanged: requestPaint()

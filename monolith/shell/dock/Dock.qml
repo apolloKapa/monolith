@@ -32,9 +32,9 @@ PanelWindow {
     // would be outside that for a moment, the dock would think it had been left and hide again)
     // stretched to the edge, so moving from the edge to the dock never leaves it; hidden: the strip
     mask: Region {
-        item: menu.visible || dock.editing ? fullArea : (dock.shown ? reach : hotZone)
+        item: menu.open || dock.editing ? fullArea : (dock.shown ? reach : hotZone)
         // the edge strip stays in while shown (resting on the edge away from the dock keeps it)
-        Region { item: dock.shown && !menu.visible && !dock.editing ? hotZone : null }
+        Region { item: dock.shown && !menu.open && !dock.editing ? hotZone : null }
     }
     Item { id: fullArea; anchors.fill: parent }
 
@@ -88,7 +88,7 @@ PanelWindow {
         }
         return false;
     }
-    readonly property bool shown: enabled && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || (showWhen === "dodge" && !covered) || hovering || leaveDelay.running || menu.visible)
+    readonly property bool shown: enabled && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || (showWhen === "dodge" && !covered) || hovering || leaveDelay.running || menu.open)
 
     // the shown dock's place, from its edge to its far side
     Item {
@@ -253,7 +253,7 @@ PanelWindow {
                         source: dock.iconFor(app.modelData.icon)
                         smooth: true; mipmap: true
                         scale: app.pressed ? 0.9 : (app.hovered ? (Store.get("dock.magnify", false) === true ? 1.3 : 1.08) : 1)
-                        Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
                     }
                     // one dot per open window (up to three)
                     Row {
@@ -349,10 +349,17 @@ PanelWindow {
     }
 
     // the right-click menu, above the app
-    MouseArea { anchors.fill: parent; visible: menu.visible; onClicked: menu.visible = false }
+    MouseArea { anchors.fill: parent; visible: menu.open; onClicked: menu.open = false }
     Rectangle {
         id: menu
-        visible: false
+        // open: fades and grows in from the dock, and out again (visible stays while it fades)
+        property bool open: false
+        visible: open || opacity > 0.01
+        opacity: open ? 1 : 0
+        scale: open ? 1 : 0.92
+        transformOrigin: dock.side === "top" ? Item.Top : (dock.side === "left" ? Item.Left : (dock.side === "right" ? Item.Right : Item.Bottom))
+        Behavior on opacity { NumberAnimation { duration: menu.open ? Theme.fastMs : Theme.exitMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: menu.open ? Theme.moveMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: menu.open ? Theme.springCurve : Theme.exitCurve } }
         property var item: null
         property var wins: []
         function openFor(it, ws, cx, cy) {
@@ -364,7 +371,7 @@ PanelWindow {
                 x = Math.max(8, Math.min(dock.width - width - 8, cx - width / 2));
                 y = dock.side === "top" ? capsule.y + capsule.height + 10 : capsule.y - height - 10;
             }
-            visible = true;
+            open = true;
         }
         width: 230
         height: menuCol.implicitHeight + 12
@@ -393,7 +400,7 @@ PanelWindow {
                         if (modelData[2] === "new") { const e = DesktopEntries.byId(it.id); if (e) e.execute(); }
                         else if (modelData[2] === "pin") { if (it.pinned) dock.unpin(it); else dock.pin(it); }
                         else if (modelData[2] === "close") for (const w of menu.wins) Niri.action(["close-window", "--id", String(w.id)]);
-                        menu.visible = false;
+                        menu.open = false;
                     }
                     Row {
                         x: 10

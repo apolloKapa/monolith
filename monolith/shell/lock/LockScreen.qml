@@ -49,7 +49,7 @@ WlSessionLock {
         SystemClock { id: clock; precision: SystemClock.Seconds }
         property real enter: 0
         Component.onCompleted: enter = 1
-        Behavior on enter { NumberAnimation { duration: 800; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve } }
+        Behavior on enter { NumberAnimation { duration: Theme.ms(800); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve } }
 
         // ── the island: locked, the date, the weather ──
         IslandShape {
@@ -106,7 +106,7 @@ WlSessionLock {
                 border.color: LockState.message !== "" ? Theme.danger : Theme.accent
                 property real shake: 0
                 transform: Translate { x: Math.sin(field.shake * Math.PI * 6) * 14 * (1 - field.shake) }
-                NumberAnimation { id: shakeAnim; target: field; property: "shake"; from: 0; to: 1; duration: 480 }
+                NumberAnimation { id: shakeAnim; target: field; property: "shake"; from: 0; to: 1; duration: Theme.ms(480); easing.type: Easing.OutCubic }
                 Connections { target: LockState; function onFailed() { shakeAnim.restart(); pw.text = ""; } }
 
                 Avatar {
@@ -159,7 +159,7 @@ WlSessionLock {
                         required property var modelData
                         property bool armed: false
                         width: armed ? lbt.implicitWidth + 28 : 44; height: 44
-                        Behavior on width { NumberAnimation { duration: 160 } }
+                        Behavior on width { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
                         color: armed ? Theme.danger : Qt.alpha(Theme.frame, 0.75)
                         onClicked: {
                             if (modelData[1] !== "suspend" && !armed) { armed = true; lbDisarm.restart(); return; }

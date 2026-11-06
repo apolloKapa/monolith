@@ -24,8 +24,8 @@ PanelWindow {
     color: "transparent"
     mask: Region { item: pk.shown ? card : null }
 
-    // the position only updates when asked
-    Timer { interval: 500; repeat: true; running: pk.shown && !!pk.player && pk.player.isPlaying; onTriggered: pk.player.positionChanged() }
+    // the position, moving every frame
+    PlayPosition { id: pp; player: pk.player; active: pk.shown }
 
     Rectangle {
         id: card
@@ -36,7 +36,7 @@ PanelWindow {
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
         opacity: pk.shown ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: pk.shown ? 200 : 120 } }
+        Behavior on opacity { NumberAnimation { duration: pk.shown ? Theme.fastMs : Theme.ms(120); easing.type: Easing.OutCubic } }
         Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
         CardShadow {}
         HoverHandler { onHoveredChanged: HubState.peekCardHover = hovered }
@@ -66,7 +66,7 @@ PanelWindow {
             width: card.width - x - 14; height: 4; radius: 2
             color: Theme.ringTrack
             visible: !!pk.player && pk.player.length > 0
-            Rectangle { height: parent.height; radius: 2; color: Theme.accent; width: pk.player && pk.player.length > 0 ? parent.width * Math.min(1, pk.player.position / pk.player.length) : 0 }
+            Rectangle { height: parent.height; radius: 2; color: Theme.accent; width: pk.player && pk.player.length > 0 ? parent.width * Math.min(1, pp.shown / pk.player.length) : 0 }
         }
         Row {
             x: art.x + art.width + 10; anchors.bottom: parent.bottom; anchors.bottomMargin: 12

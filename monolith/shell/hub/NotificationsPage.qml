@@ -61,8 +61,8 @@ Page {
         spacing: 8
         boundsBehavior: Flickable.StopAtBounds
         model: Notifs.list
-        add: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 260 } }
-        remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: 160 } }
+        add: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+        remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: Theme.ms(160); easing.type: Easing.OutCubic } }
         displaced: Transition { NumberAnimation { property: "y"; duration: Theme.moveMs; easing.type: Easing.OutCubic } }
         delegate: NotificationCard {
             required property var modelData

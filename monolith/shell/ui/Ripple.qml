@@ -17,7 +17,7 @@ Item {
         radius: ripple.radius
         color: ripple.ink
         opacity: ripple.pressed ? 0.12 : (ripple.hovered ? 0.08 : 0)
-        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Theme.ms(150); easing.type: Easing.OutCubic } }
     }
 
     property real cx: width / 2
@@ -35,13 +35,13 @@ Item {
     function release() { fade.restart(); }
 
     NumberAnimation {
-        id: grow; target: ripple; property: "spread"; from: 0; to: ripple.reach; duration: 420
+        id: grow; target: ripple; property: "spread"; from: 0; to: ripple.reach; duration: Theme.ms(420)
         easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve
     }
     SequentialAnimation {
         id: fade
-        PauseAnimation { duration: grow.running ? 120 : 0 }
-        NumberAnimation { target: ripple; property: "alpha"; to: 0; duration: 300; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: grow.running ? Theme.ms(120) : 0 }
+        NumberAnimation { target: ripple; property: "alpha"; to: 0; duration: Theme.ms(300); easing.type: Easing.OutCubic }
     }
 
     ShaderEffect {

@@ -47,7 +47,7 @@ Item {
             height: parent.height
             radius: parent.radius
             color: Theme.accent
-            Behavior on width { enabled: !nb.dragging; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+            Behavior on width { enabled: !nb.dragging; NumberAnimation { duration: Theme.ms(180); easing.type: Easing.OutCubic } }
         }
         // the handle: a pill that stands up from the track
         Rectangle {
@@ -59,8 +59,8 @@ Item {
             color: Theme.accent
             border.width: 2
             border.color: Theme.card
-            Behavior on height { NumberAnimation { duration: 140 } }
-            Behavior on x { enabled: !nb.dragging; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+            Behavior on height { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
+            Behavior on x { enabled: !nb.dragging; NumberAnimation { duration: Theme.ms(180); easing.type: Easing.OutCubic } }
         }
         MouseArea {
             id: area

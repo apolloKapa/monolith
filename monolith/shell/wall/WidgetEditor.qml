@@ -508,6 +508,7 @@ PanelWindow {
                         readonly property var sz: WidgetLayout.size({ type: modelData, face: "" })
                         width: 150; height: 146
                         color: cardMa.containsMouse ? Theme.control : Theme.containerHigh
+                        Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
                         onClicked: { ed.selected = WidgetLayout.add(ed.mode, modelData, ed.modelData.name); ed.adding = false; }
                         // a still preview of the widget, scaled into the card
                         Item {

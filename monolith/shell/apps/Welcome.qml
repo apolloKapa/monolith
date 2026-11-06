@@ -138,8 +138,8 @@ PanelWindow {
                     opacity: off === 0 ? 1 : 0
                     visible: opacity > 0.01
                     enabled: off === 0
-                    Behavior on x { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
-                    Behavior on opacity { NumberAnimation { duration: 300 } }
+                    Behavior on x { NumberAnimation { duration: Theme.ms(420); easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.ms(300); easing.type: Easing.OutCubic } }
                     Loader {
                         anchors.fill: parent
                         active: Math.abs(pg.off) <= 1
@@ -169,7 +169,7 @@ PanelWindow {
                         required property int index
                         width: index === wel.step ? 28 : 9; height: 9; radius: 4.5
                         color: index <= wel.step ? Theme.accent : Qt.alpha(Theme.text, 0.2)
-                        Behavior on width { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on width { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
                         MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor; onClicked: wel.step = parent.index }
                     }
                 }
@@ -458,7 +458,7 @@ PanelWindow {
                     width: 96; height: 96; radius: 48
                     color: Theme.accent
                     scale: 1
-                    SequentialAnimation on scale { running: true; NumberAnimation { from: 0.6; to: 1.08; duration: 420; easing.type: Easing.OutBack } NumberAnimation { to: 1; duration: 200 } }
+                    SequentialAnimation on scale { running: true; NumberAnimation { from: 0.6; to: 1.08; duration: Theme.ms(420); easing.type: Easing.OutBack } NumberAnimation { to: 1; duration: Theme.ms(200) } }
                     Icon { anchors.centerIn: parent; name: "check"; size: 54; color: Theme.onAccent }
                 }
                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: "You're all set"; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 38; font.weight: Font.Black }

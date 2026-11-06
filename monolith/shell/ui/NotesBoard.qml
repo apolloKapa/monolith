@@ -30,6 +30,7 @@ Item {
         signal hit()
         width: 28; height: 28; radius: Theme.corner(28, 8)
         color: bm.containsMouse ? Qt.alpha(Theme.containerHigh, 0.9) : (on ? Theme.accentContainer : "transparent")
+        Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
         Icon { anchors.centerIn: parent; name: b.icon; size: 17; filled: b.on; color: b.on ? Theme.onAccentContainer : (bm.containsMouse ? Theme.text : b.tint) }
         MouseArea { id: bm; anchors.fill: parent; hoverEnabled: true; enabled: nb.live; cursorShape: Qt.PointingHandCursor; onClicked: b.hit() }
     }
@@ -37,7 +38,10 @@ Item {
     // ── the list ──
     Item {
         anchors.fill: parent
-        visible: nb.openId === ""
+        // the list and a note cross-fade
+        opacity: nb.openId === "" ? 1 : 0
+        visible: opacity > 0.01
+        Behavior on opacity { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
         Row {
             id: head
             width: parent.width; height: 28
@@ -67,6 +71,7 @@ Item {
                 width: lv.width; height: 48
                 radius: Theme.corner(48, 10)
                 color: rm.containsMouse ? Qt.alpha(Theme.containerHigh, 0.85) : Qt.alpha(Theme.control, 0.55)
+                Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
                 Column {
                     x: 12; anchors.verticalCenter: parent.verticalCenter
                     width: parent.width - 24 - (rm.containsMouse ? 62 : 0)
@@ -95,7 +100,9 @@ Item {
     // ── one note ──
     Item {
         anchors.fill: parent
-        visible: nb.openId !== ""
+        opacity: nb.openId !== "" ? 1 : 0
+        visible: opacity > 0.01
+        Behavior on opacity { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
         Row {
             id: bar
             width: parent.width; height: 28

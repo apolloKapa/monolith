@@ -14,6 +14,7 @@ Rectangle {
     height: 40
     radius: Theme.corner(height)
     color: area.containsMouse || menu.visible ? Theme.containerHigh : Theme.container
+    Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
     border.width: menu.visible ? 2 : Math.max(Theme.outlineW, 1)
     border.color: menu.visible ? Theme.accent : (Theme.outlineW > 0 ? Theme.outlineColor : Theme.ringTrack)
 
@@ -31,7 +32,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         name: "expand_more"; size: 20
         rotation: menu.visible ? 180 : 0
-        Behavior on rotation { NumberAnimation { duration: 160 } }
+        Behavior on rotation { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
     }
     MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: menu.visible ? menu.close() : menu.open() }
 
@@ -42,6 +43,14 @@ Rectangle {
         padding: 6
         modal: false
         closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutside
+        // opens by fading in and dropping a little from the field; fades out quicker
+        enter: Transition {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.fastMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "y"; from: dd.height - 4; to: dd.height + 4; duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+        }
+        exit: Transition {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.exitMs; easing.type: Easing.OutCubic }
+        }
         background: Rectangle {
             radius: Theme.corner(48, 6)
             color: Theme.frame

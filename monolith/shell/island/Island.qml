@@ -178,7 +178,7 @@ PanelWindow {
                 spacing: 6
                 opacity: win.toastOn ? 1 : 0
                 visible: opacity > 0.01
-                Behavior on opacity { NumberAnimation { duration: win.toastOn ? 260 : 120 } }
+                Behavior on opacity { NumberAnimation { duration: win.toastOn ? Theme.shortMs : Theme.ms(120); easing.type: Easing.OutCubic } }
                 HoverHandler { onHoveredChanged: Notifs.hold = hovered }
                 Loader {
                     width: parent.width
@@ -209,7 +209,7 @@ PanelWindow {
                 height: parent.height - y - (win.docked && !Theme.fullBar && win.bottom ? Theme.islandH + 2 : win.pad)
                 opacity: win.shown ? 1 : 0
                 visible: opacity > 0.01
-                Behavior on opacity { NumberAnimation { duration: win.shown ? 260 : 90 } }
+                Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.shortMs : Theme.ms(90); easing.type: Easing.OutCubic } }
                 // Unfold (Theme → Effects): the menu opens out of a thin bright line through its
                 // middle and folds back into it
                 property real unfold: win.shown ? 1 : 0
@@ -435,7 +435,7 @@ PanelWindow {
             Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
             Behavior on y { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         }
-        Behavior on opacity { NumberAnimation { duration: win.shown ? 220 : 160 } }
+        Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.ms(220) : Theme.ms(160); easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: win.shown ? Theme.springMs : 160; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.springCurve : Theme.exitCurve } }
         CardShadow {}
         MouseArea { anchors.fill: parent }

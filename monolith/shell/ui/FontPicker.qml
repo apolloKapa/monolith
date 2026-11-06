@@ -17,6 +17,7 @@ Rectangle {
     height: 40
     radius: Theme.corner(height)
     color: area.containsMouse || pop.visible ? Theme.containerHigh : Theme.container
+    Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
     border.width: pop.visible ? 2 : Math.max(Theme.outlineW, 1)
     border.color: pop.visible ? Theme.accent : (Theme.outlineW > 0 ? Theme.outlineColor : Theme.ringTrack)
 
@@ -30,7 +31,7 @@ Rectangle {
         color: Theme.text
         elide: Text.ElideRight
     }
-    Icon { id: arrow; anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; name: "expand_more"; size: 20; rotation: pop.visible ? 180 : 0; Behavior on rotation { NumberAnimation { duration: 160 } } }
+    Icon { id: arrow; anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; name: "expand_more"; size: 20; rotation: pop.visible ? 180 : 0; Behavior on rotation { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } } }
     MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pop.visible ? pop.close() : pop.open() }
 
     QQC.Popup {
@@ -40,6 +41,8 @@ Rectangle {
         height: 380
         padding: 8
         closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutside
+        enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.fastMs; easing.type: Easing.OutCubic } }
+        exit: Transition { NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.exitMs; easing.type: Easing.OutCubic } }
         onOpened: { fp.filter = ""; search.text = ""; search.forceActiveFocus(); list.positionViewAtIndex(Math.max(0, fp.shown.indexOf(fp.value)), ListView.Center); }
         background: Rectangle {
             radius: Theme.corner(48, 6)
@@ -83,6 +86,7 @@ Rectangle {
                     width: list.width; height: 40
                     radius: Theme.corner(40, 2)
                     color: on ? Theme.accentContainer : (rowArea.containsMouse || list.currentIndex === index ? Theme.containerHigh : "transparent")
+                    Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
                     Text {
                         x: 12; anchors.verticalCenter: parent.verticalCenter
                         width: parent.width - 48

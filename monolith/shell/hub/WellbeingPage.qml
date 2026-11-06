@@ -120,7 +120,7 @@ Page {
                             height: Math.max(6, (parent.height - 30) * modelData.s / page.weekMax)
                             radius: Theme.corner(width)
                             color: modelData.today ? Theme.accent : Theme.control
-                            Behavior on height { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                            Behavior on height { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutCubic } }
                         }
                         Label { id: dayL; anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; muted: !modelData.today; font.pixelSize: Theme.sizeSmall }
                     }

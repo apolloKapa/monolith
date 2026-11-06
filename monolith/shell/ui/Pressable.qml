@@ -14,7 +14,7 @@ Rectangle {
 
     radius: Theme.corner(height)
     color: Theme.containerHigh
-    Behavior on color { ColorAnimation { duration: 220 } }
+    Behavior on color { ColorAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
     // the style's outline, on buttons that have a fill
     border.width: color.a > 0.05 ? Math.max(0, Theme.outlineW - 1) : 0
     border.color: Theme.outlineColor
