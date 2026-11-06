@@ -119,14 +119,15 @@ PanelWindow {
                 cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
                 property point start
                 property point from
-                onPressed: mouse => { ed.selected = wrap.modelData.id; ed.adding = false; start = mapToItem(ed.contentItem, mouse.x, mouse.y); from = Qt.point(wrap.x, wrap.y); }
+                onPressed: mouse => { ed.selected = wrap.modelData.id; ed.adding = false; start = mapToItem(ed.contentItem, mouse.x, mouse.y); from = Qt.point(wrap.x, wrap.y); ed.moving = wrap; }
+                onCanceled: ed.moving = null
                 onPositionChanged: mouse => {
                     if (!pressed) return;
                     const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
                     wrap.x = Math.max(0, Math.min(ed.width - wrap.width, ed.snapTo(from.x + p.x - start.x)));
                     wrap.y = Math.max(0, Math.min(ed.height - wrap.height, ed.snapTo(from.y + p.y - start.y)));
                 }
-                onReleased: WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height })
+                onReleased: { ed.moving = null; WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height }); }
             }
             // resize: the corner handle, freely (inside the widget's limits and its look's shape)
             Rectangle {
@@ -254,6 +255,7 @@ PanelWindow {
     // ── the toolbar ──
     Rectangle {
         id: bar
+        z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         y: 18
         height: 52
@@ -278,6 +280,7 @@ PanelWindow {
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Add widget"; icon: "add"; primary: ed.adding; onClicked: { ed.adding = !ed.adding; ed.presetsOpen = false; } }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Presets"; icon: "auto_awesome_mosaic"; primary: ed.presetsOpen; onClicked: { ed.presetsOpen = !ed.presetsOpen; ed.adding = false; } }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Grid"; icon: ed.snap ? "grid_on" : "grid_off"; onClicked: Store.set("widgets.snap", !ed.snap) }
+            Button { anchors.verticalCenter: parent.verticalCenter; text: "Distances"; icon: "straighten"; primary: ed.distances; onClicked: Store.set("widgets.distances", !ed.distances) }
             Button {
                 id: resetB
                 property bool armed: false
@@ -290,6 +293,7 @@ PanelWindow {
         }
     }
     Label {
+        z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: bar.bottom; anchors.topMargin: 8
         text: ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move  ·  corner to resize  ·  its look and settings above it  ·  Esc when done"
@@ -297,47 +301,156 @@ PanelWindow {
         font.pixelSize: Theme.sizeSmall
     }
 
-    // ── adding: every widget, as cards along the bottom ──
+    // ── adding: every widget as a live preview card along the bottom, by category. Click adds it
+    // near the middle; drag it out onto the screen to drop it where you let go. ──
+    property string addCat: "all"
+    property string dragType: ""                 // a card being dragged out
+    property point dragPos: Qt.point(0, 0)        // the ghost's top-left, in the window
+    readonly property var dragSize: dragType !== "" ? WidgetLayout.size({ type: dragType, face: "" }) : [0, 0]
     Rectangle {
+        id: palette
         visible: ed.adding
+        z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom; anchors.bottomMargin: 28
-        width: Math.min(parent.width - 60, pal.implicitWidth + 24)
-        height: 120
-        radius: Theme.corner(120, 10)
+        width: Math.min(parent.width - 60, Math.max(cats.implicitWidth, pal.implicitWidth) + 24)
+        height: 214
+        radius: Theme.corner(214, 10)
         color: Theme.frame
         border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
+        CardShadow {}
+        MouseArea { anchors.fill: parent }       // clicks on the strip don't deselect
+        Segmented {
+            id: cats
+            x: 12; y: 12
+            width: Math.min(parent.width - 24, 620); height: 34
+            opts: WidgetLayout.categories.map(c => [c[0], c[1]])
+            value: ed.addCat
+            onPicked: v => ed.addCat = v
+        }
         Flickable {
             SmoothWheel { horizontal: true }
-            anchors.fill: parent; anchors.margins: 12
+            x: 12; y: 56
+            width: parent.width - 24; height: parent.height - 68
             contentWidth: pal.implicitWidth
             clip: true
+            interactive: ed.dragType === ""
             Row {
                 id: pal
                 spacing: 8
                 Repeater {
-                    model: WidgetLayout.types
+                    model: (WidgetLayout.categories.find(c => c[0] === ed.addCat) || WidgetLayout.categories[0])[3]
                     Pressable {
-                        required property var modelData
-                        width: 110; height: 96
-                        color: Theme.containerHigh
-                        onClicked: { ed.selected = WidgetLayout.add(ed.mode, modelData[0], ed.modelData.name); ed.adding = false; }
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 8
-                            Bubble { anchors.horizontalCenter: parent.horizontalCenter; size: 44; icon: parent.parent.modelData[2] }
-                            Label { anchors.horizontalCenter: parent.horizontalCenter; text: parent.parent.modelData[1]; font.pixelSize: Theme.sizeSmall; strong: true }
+                        id: card
+                        required property string modelData
+                        readonly property var sz: WidgetLayout.size({ type: modelData, face: "" })
+                        width: 150; height: 146
+                        color: cardMa.containsMouse ? Theme.control : Theme.containerHigh
+                        onClicked: { ed.selected = WidgetLayout.add(ed.mode, modelData, ed.modelData.name); ed.adding = false; }
+                        // a still preview of the widget, scaled into the card
+                        Item {
+                            id: prev
+                            x: 8; y: 8; width: parent.width - 16; height: 100
+                            clip: true
+                            WidgetFace {
+                                live: false
+                                item: ({ id: "preview-" + card.modelData, type: card.modelData, face: "", opts: {} })
+                                width: card.sz[0]; height: card.sz[1]
+                                scale: Math.min(prev.width / card.sz[0], prev.height / card.sz[1], 1)
+                                anchors.centerIn: parent
+                            }
+                        }
+                        Row {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom; anchors.bottomMargin: 10
+                            spacing: 6
+                            Icon { name: WidgetLayout.typeIcon(card.modelData); size: 16; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+                            Label { text: WidgetLayout.typeName(card.modelData); font.pixelSize: Theme.sizeSmall; strong: true; anchors.verticalCenter: parent.verticalCenter }
+                        }
+                        // drag it out: past a few pixels it becomes a ghost that follows the pointer
+                        MouseArea {
+                            id: cardMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            property point start
+                            property bool dragging: false
+                            cursorShape: dragging ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+                            onPressed: mouse => { start = Qt.point(mouse.x, mouse.y); dragging = false; }
+                            onPositionChanged: mouse => {
+                                if (!pressed) return;
+                                if (!dragging && Math.hypot(mouse.x - start.x, mouse.y - start.y) > 8) { dragging = true; ed.dragType = card.modelData; }
+                                if (!dragging) return;
+                                const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
+                                ed.dragPos = Qt.point(ed.snapTo(Math.max(0, Math.min(ed.width - ed.dragSize[0], p.x - ed.dragSize[0] / 2))),
+                                                      ed.snapTo(Math.max(0, Math.min(ed.height - ed.dragSize[1], p.y - ed.dragSize[1] / 2))));
+                            }
+                            onReleased: mouse => {
+                                if (dragging) {
+                                    const p = mapToItem(palette, mouse.x, mouse.y);
+                                    // dropped back on the strip: nothing
+                                    if (!palette.contains(p)) {
+                                        ed.selected = WidgetLayout.add(ed.mode, card.modelData, ed.modelData.name, ed.dragPos.x / ed.width, ed.dragPos.y / ed.height);
+                                        ed.adding = false;
+                                    }
+                                } else card.clicked();
+                                dragging = false; ed.dragType = "";
+                            }
+                            onCanceled: { dragging = false; ed.dragType = ""; }
                         }
                     }
                 }
             }
         }
     }
+    // the dragged card: the widget itself, see-through, where it will land
+    WidgetFace {
+        visible: ed.dragType !== ""
+        z: 90
+        live: false
+        opacity: 0.75
+        item: ({ id: "ghost", type: ed.dragType || "clock", face: "", opts: {} })
+        x: ed.dragPos.x; y: ed.dragPos.y
+        width: ed.dragSize[0]; height: ed.dragSize[1]
+        Rectangle { anchors.fill: parent; anchors.margins: -6; radius: 10; color: "transparent"; border.width: 2; border.color: Theme.accent }
+    }
+
+    // ── distances: while a widget moves, how far it is from each screen edge ──
+    readonly property bool distances: Store.get("widgets.distances", false) === true
+    property var moving: null                     // the widget being moved (its wrapper)
+    Item {
+        id: dist
+        z: 80
+        anchors.fill: parent
+        readonly property var r: ed.moving ? Qt.rect(ed.moving.x, ed.moving.y, ed.moving.width, ed.moving.height)
+            : (ed.dragType !== "" ? Qt.rect(ed.dragPos.x, ed.dragPos.y, ed.dragSize[0], ed.dragSize[1]) : null)
+        visible: ed.distances && r !== null
+        component Gap: Item {
+            property bool horizontal: true
+            property real len: 0
+            Rectangle {
+                color: Theme.accent
+                width: parent.horizontal ? parent.width : 2; height: parent.horizontal ? 2 : parent.height
+                anchors.centerIn: parent
+            }
+            Rectangle {
+                visible: parent.len > 30
+                anchors.centerIn: parent
+                width: gl.implicitWidth + 12; height: 22; radius: 11
+                color: Theme.accent
+                Text { id: gl; anchors.centerIn: parent; text: Math.round(parent.parent.len) + " px"; color: Theme.onAccent; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.Bold }
+            }
+        }
+        Gap { visible: !!dist.r; horizontal: true; len: dist.r ? dist.r.x : 0; x: 0; width: len; y: dist.r ? dist.r.y + dist.r.height / 2 - 11 : 0; height: 22 }
+        Gap { visible: !!dist.r; horizontal: true; len: dist.r ? ed.width - dist.r.x - dist.r.width : 0; x: dist.r ? dist.r.x + dist.r.width : 0; width: len; y: dist.r ? dist.r.y + dist.r.height / 2 - 11 : 0; height: 22 }
+        Gap { visible: !!dist.r; horizontal: false; len: dist.r ? dist.r.y : 0; y: 0; height: len; x: dist.r ? dist.r.x + dist.r.width / 2 - 11 : 0; width: 22 }
+        Gap { visible: !!dist.r; horizontal: false; len: dist.r ? ed.height - dist.r.y - dist.r.height : 0; y: dist.r ? dist.r.y + dist.r.height : 0; height: len; x: dist.r ? dist.r.x + dist.r.width / 2 - 11 : 0; width: 22 }
+    }
 
     // ── presets: ready-made arrangements, replacing this screen's widgets ──
     property bool presetsOpen: false
     Rectangle {
         visible: ed.presetsOpen
+        z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom; anchors.bottomMargin: 28
         width: prow.implicitWidth + 24

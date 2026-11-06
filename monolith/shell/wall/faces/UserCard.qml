@@ -6,8 +6,8 @@ import Quickshell.Io
 import "../../core"
 import "../../ui"
 
-// You: glass; your picture, your name, the computer and how long it's been up, and sleep,
-// restart and power off (hold one for a moment to do it).
+// You: glass; your picture, your name, the computer and how long it's been up, Settings and
+// Lock beside them, and sleep, restart and power off (hold one for a moment to do it).
 FaceBase {
     id: f
     readonly property string avatar: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face"))
@@ -51,6 +51,29 @@ FaceBase {
                             Row { id: cr; anchors.centerIn: parent; spacing: 4
                                 Icon { name: parent.parent.modelData[0]; size: 13; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
                                 Text { text: parent.parent.modelData[1]; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter } }
+                        }
+                    }
+                }
+            }
+            // Settings and Lock
+            Row {
+                Layout.alignment: Qt.AlignTop
+                spacing: 6
+                Repeater {
+                    model: [["settings", "Settings"], ["lock", "Lock"]]
+                    Rectangle {
+                        id: qb
+                        required property var modelData
+                        width: 32; height: 32; radius: Theme.corner(32, 9)
+                        color: Qt.alpha(qma.containsMouse ? Theme.containerHigh : Theme.control, 0.85)
+                        Icon { anchors.centerIn: parent; name: qb.modelData[0]; size: 17; color: qma.containsMouse ? Theme.accent : Theme.subtext }
+                        MouseArea {
+                            id: qma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            enabled: f.live
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: qb.modelData[0] === "lock" ? LockState.lock() : HubState.openSettings("appearance", "")
                         }
                     }
                 }

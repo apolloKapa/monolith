@@ -99,27 +99,7 @@ Page {
 
         Card {
             Label { x: 16; y: 14; text: "Notes"; strong: true }
-            Flickable {
-                SmoothWheel {}
-                x: 12; y: 40
-                width: parent.width - 24
-                height: parent.height - 52
-                contentHeight: notes.implicitHeight
-                clip: true
-                TextEdit {
-                    id: notes
-                    width: parent.width
-                    wrapMode: TextEdit.Wrap
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.sizeBody
-                    selectionColor: Theme.selected
-                    text: Store.get("notes.text", "")
-                    onTextChanged: saveNotes.restart()
-                    Timer { id: saveNotes; interval: 600; onTriggered: if (Store.get("notes.text", "") !== notes.text) Store.set("notes.text", notes.text) }
-                    Label { visible: notes.text === ""; text: "Write something…"; muted: true }
-                }
-            }
+            NotesBoard { x: 12; y: 40; width: parent.width - 24; height: parent.height - 52 }
         }
 
         Card {
