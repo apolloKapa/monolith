@@ -5,7 +5,8 @@ import "../core"
 
 // The island's outline: a body `bodyW` × `height` hanging from the top edge, joined to the edge
 // by a concave curve (`ear`) on each side, with round lower corners (`r`). The item is
-// bodyW + 2·ear wide; the body sits between the ears. Filled, with a soft shadow under it.
+// bodyW + 2·ear wide; the body sits between the ears. Filled, with a soft shadow under it
+// (under the shape only; its children aren't layered).
 Item {
     id: s
     property real bodyW: 400
@@ -18,18 +19,19 @@ Item {
     readonly property real e: Math.max(0, Math.min(ear, height / 2))
     readonly property real rr: Math.max(0, Math.min(r, height - e, bodyW / 2))
 
-    layer.enabled: shadow
-    layer.effect: MultiEffect {
-        shadowEnabled: true
-        shadowBlur: Theme.shadowBlur
-        shadowColor: Theme.shadowColor
-        shadowVerticalOffset: Theme.shadowY
-        shadowHorizontalOffset: Theme.shadowX
-    }
-
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer
+        // only the shape goes through the shadow effect: what sits in the island (the bar, a
+        // menu, a notification) is drawn directly, so it stays sharp
+        layer.enabled: s.shadow
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowBlur: Theme.shadowBlur
+            shadowColor: Theme.shadowColor
+            shadowVerticalOffset: Theme.shadowY
+            shadowHorizontalOffset: Theme.shadowX
+        }
         ShapePath {
             fillColor: s.fill
             // the style's outline (none by default)
