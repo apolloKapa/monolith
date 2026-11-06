@@ -150,7 +150,8 @@ Singleton {
         ["tertiary", "Tertiary"], ["white", "White"], ["black", "Black"]]
     function optionsFor(t, f) {
         const id = faceId(t, f);
-        const o = [["opacity", "Opacity", "slider", 1, [0.15, 1, 0.05]]];
+        const o = [["opacity", "Opacity", "slider", 1, [0.15, 1, 0.05]],
+                   ["rotation", "Orientation", "dropdown", "0", [["0", "Upright"], ["90", "Turned right"], ["180", "Upside down"], ["270", "Turned left"]]]];
         if (carded.indexOf(t + "/" + id) !== -1)
             o.push(["background", "Background", "choice", "blur", [["blur", "Blurry"], ["normal", "Normal"], ["clear", "Clear"]]],
                    ["blurStrength", "Blur strength", "slider", 0.8, [0.1, 1, 0.05]], ["radius", "Rounding", "slider", -1, [0, 100, 1]]);
@@ -216,6 +217,10 @@ Singleton {
                     [["0", "Off"], ["0.25", "25 %"], ["0.5", "50 %"], ["0.75", "75 %"], ["1", "100 %"], ["1.5", "150 %"], ["2", "200 %"], ["3", "300 %"]]]);
         return o;
     }
+    // turned a quarter at a time (its Orientation): 0, 90, 180 or 270 degrees, clockwise
+    function rot(it) { const r = Math.round((Number(opt(it, "rotation", 0)) || 0) / 90) * 90; return ((r % 360) + 360) % 360; }
+    // the box it takes on screen: its size, sideways when turned a quarter
+    function footprint(it) { const s = size(it); return rot(it) % 180 ? [s[1], s[0]] : s; }
     function opt(it, key, fallback) { return it && it.opts && it.opts[key] !== undefined ? it.opts[key] : fallback; }
 
     // what's there to start with: the desktop keeps the earlier widgets you had on; the lock

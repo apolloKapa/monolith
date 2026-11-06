@@ -24,8 +24,8 @@ Item {
         WidgetFace {
             required property var modelData
             item: modelData
-            width: size[0]
-            height: size[1]
+            width: implicitWidth
+            height: implicitHeight
             backdrop: desk.backdrop
             x: Math.max(0, Math.min(modelData.x * desk.width, desk.width - width))
             y: Math.max(0, Math.min(modelData.y * desk.height, desk.height - height))

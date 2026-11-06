@@ -20,7 +20,8 @@ PanelWindow {
     property string selected: ""
     property bool adding: false
     readonly property bool snap: Store.get("widgets.snap", true) !== false
-    readonly property real grid: 20
+    // the grid (Grid in the toolbar): its lines are exactly where widgets snap
+    readonly property real grid: Number(Store.get("widgets.gridSize", 40)) || 40
 
     visible: shown || contentItem.opacity > 0.01
     WlrLayershell.namespace: "monolith-widget-editor"
@@ -66,13 +67,18 @@ PanelWindow {
     Rectangle { anchors.fill: parent; visible: ed.lockMode; color: Qt.alpha(Theme.frame, 0.35) }
     // the grid
     Canvas {
+        id: gridLines
         anchors.fill: parent
         visible: ed.snap
         opacity: 0.18
+        // drawn again whenever the screen or the grid's size changes (it was drawn once, at whatever size it had then)
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        Connections { target: ed; function onGridChanged() { gridLines.requestPaint(); } }
         onPaint: {
             const g = getContext("2d"); g.reset(); g.strokeStyle = "#ffffff"; g.lineWidth = 1;
-            for (let x = 0; x < width; x += ed.grid * 2) { g.beginPath(); g.moveTo(x + 0.5, 0); g.lineTo(x + 0.5, height); g.stroke(); }
-            for (let y = 0; y < height; y += ed.grid * 2) { g.beginPath(); g.moveTo(0, y + 0.5); g.lineTo(width, y + 0.5); g.stroke(); }
+            for (let x = 0; x <= width; x += ed.grid) { g.beginPath(); g.moveTo(Math.round(x) + 0.5, 0); g.lineTo(Math.round(x) + 0.5, height); g.stroke(); }
+            for (let y = 0; y <= height; y += ed.grid) { g.beginPath(); g.moveTo(0, Math.round(y) + 0.5); g.lineTo(width, Math.round(y) + 0.5); g.stroke(); }
         }
     }
     // the lock screen's fixed parts, as guides: the password pill and the top island
@@ -190,7 +196,44 @@ PanelWindow {
         measures = ms;
         return Qt.point(Math.max(0, Math.min(width - w, x)), Math.max(0, Math.min(height - h, y)));
     }
-    // a resized widget's right and bottom edges catch the same lines
+    // a widget's new box while one of its edges / corners is dragged: the moved edges catch on
+    // lines (else the grid), the size stays inside the look's limits and shape, the far side stays
+    function resizeBox(wrap, b0, edges, dx, dy, free) {
+        let l = b0.l, t = b0.t, r = b0.r, b = b0.b;
+        const g = [];
+        const pick = (h, v) => { if (free) return v; const ln = edgeCatch(h, v, wrap); if (ln >= 0) { g.push(h ? ln : -1 - ln); return ln; } return snapTo(v); };
+        if (edges[0]) l = pick(true, Math.max(0, b0.l + dx));
+        if (edges[2]) r = pick(true, Math.min(width, b0.r + dx));
+        if (edges[1]) t = pick(false, Math.max(0, b0.t + dy));
+        if (edges[3]) b = pick(false, Math.min(height, b0.b + dy));
+        // the look's limits and shape work on its own (unturned) size
+        const it = wrap.modelData;
+        const sw = wrap.sideways;
+        let w = Math.max(1, r - l), h = Math.max(1, b - t);
+        const c = WidgetLayout.clamp(it.type, it.face, sw ? h : w, sw ? w : h);
+        w = sw ? c[1] : c[0]; h = sw ? c[0] : c[1];
+        // only one direction dragged: the other grows around the middle (a shape that keeps its aspect)
+        if (edges[0] && !edges[2]) l = r - w; else if (edges[2] && !edges[0]) r = l + w; else { const m = (l + r) / 2; l = m - w / 2; r = l + w; }
+        if (edges[1] && !edges[3]) t = b - h; else if (edges[3] && !edges[1]) b = t + h; else { const m = (t + b) / 2; t = m - h / 2; b = t + h; }
+        // inside the screen
+        if (l < 0) { r -= l; l = 0; } if (r > width) { l -= r - width; r = width; }
+        if (t < 0) { b -= t; t = 0; } if (b > height) { t -= b - height; b = height; }
+        const others = otherBoxes(wrap);
+        const box = { l: l, t: t, r: r, b: b };
+        guides = g.map(v => v >= 0 ? guideFor(true, v, box, others) : guideFor(false, -1 - v, box, others));
+        return { l: l, t: t, r: r, b: b };
+    }
+    // turn a widget a quarter clockwise, keeping its middle where it is
+    function turn(wrap) {
+        const it = wrap.modelData;
+        const rot = (WidgetLayout.rot(it) + 90) % 360;
+        const cx = wrap.x + wrap.width / 2, cy = wrap.y + wrap.height / 2;
+        const nw = wrap.height, nh = wrap.width;
+        const x = Math.max(0, Math.min(width - nw, cx - nw / 2)), y = Math.max(0, Math.min(height - nh, cy - nh / 2));
+        WidgetLayout.update(mode, it.id, { x: x / width, y: y / height, opts: Object.assign({}, it.opts || {}, { rotation: String(rot) }) });
+        wrap.x = x; wrap.y = y;
+    }
+    // a resized widget's edges catch the same lines
     function edgeCatch(h, edge, self) {
         const others = otherBoxes(self);
         let best = { line: -1, diff: catchPx };
@@ -276,7 +319,8 @@ PanelWindow {
             required property string json
             readonly property var modelData: JSON.parse(json)
             readonly property bool sel: ed.selected === modelData.id
-            readonly property var sz: WidgetLayout.size(modelData)
+            readonly property var sz: WidgetLayout.footprint(modelData)
+            readonly property bool sideways: WidgetLayout.rot(modelData) % 180 !== 0
             property real ww: sz[0]
             property real hh: sz[1]
             onSzChanged: { ww = sz[0]; hh = sz[1]; }
@@ -317,43 +361,44 @@ PanelWindow {
                 }
                 onReleased: { ed.moving = null; ed.guides = []; ed.measures = []; WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height }); }
             }
-            // resize: the corner handle, freely (inside the widget's limits and its look's shape)
-            Rectangle {
-                visible: wrap.sel
-                x: parent.width - 8; y: parent.height - 8
-                width: 22; height: 22; radius: 11
-                color: Theme.accent
-                border.width: 3; border.color: Theme.onAccent
-                MouseArea {
-                    anchors.fill: parent; anchors.margins: -6
-                    cursorShape: Qt.SizeFDiagCursor
-                    property point start
-                    property real w0
-                    property real h0
-                    onPressed: mouse => { start = mapToItem(ed.contentItem, mouse.x, mouse.y); w0 = wrap.ww; h0 = wrap.hh; }
-                    onPositionChanged: mouse => {
-                        if (!pressed) return;
-                        const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
-                        let w = w0 + p.x - start.x, h = h0 + p.y - start.y;
-                        const g = [];
-                        if (!(mouse.modifiers & Qt.ControlModifier)) {
-                            // the right and bottom edges catch on lines, else the grid
-                            const lx = ed.edgeCatch(true, wrap.x + w, wrap), ly = ed.edgeCatch(false, wrap.y + h, wrap);
-                            w = lx >= 0 ? lx - wrap.x : ed.snapTo(w);
-                            h = ly >= 0 ? ly - wrap.y : ed.snapTo(h);
-                            const c0 = WidgetLayout.clamp(wrap.modelData.type, wrap.modelData.face, w, h);
-                            const others = ed.otherBoxes(wrap);
-                            const box = { l: wrap.x, t: wrap.y, r: wrap.x + c0[0], b: wrap.y + c0[1] };
-                            if (lx >= 0 && Math.abs(c0[0] - w) < 0.5) g.push(ed.guideFor(true, lx, box, others));
-                            if (ly >= 0 && Math.abs(c0[1] - h) < 0.5) g.push(ed.guideFor(false, ly, box, others));
+            // resize: from any edge or corner (inside the widget's limits and its look's shape; the
+            // opposite side stays put). Edges catch on lines and the grid like a move; Ctrl: freely
+            Repeater {
+                // [left?, top?, right?, bottom?] edges each handle moves
+                model: [[1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 0, 1], [1, 0, 0, 1], [1, 0, 0, 0]]
+                Rectangle {
+                    id: hd
+                    required property var modelData
+                    readonly property bool corner: (modelData[0] || modelData[2]) && (modelData[1] || modelData[3])
+                    readonly property bool horiz: !corner && (modelData[1] || modelData[3])     // a top or bottom edge
+                    visible: wrap.sel
+                    z: 12
+                    width: corner ? 18 : (horiz ? 34 : 10)
+                    height: corner ? 18 : (horiz ? 10 : 34)
+                    radius: Math.min(width, height) / 2
+                    x: (modelData[0] ? -6 : (modelData[2] ? wrap.width + 6 : wrap.width / 2)) - width / 2
+                    y: (modelData[1] ? -6 : (modelData[3] ? wrap.height + 6 : wrap.height / 2)) - height / 2
+                    color: Theme.accent
+                    border.width: 2; border.color: Theme.onAccent
+                    MouseArea {
+                        anchors.fill: parent; anchors.margins: -7
+                        cursorShape: hd.corner ? ((hd.modelData[0] === hd.modelData[1]) ? Qt.SizeFDiagCursor : Qt.SizeBDiagCursor) : (hd.horiz ? Qt.SizeVerCursor : Qt.SizeHorCursor)
+                        property point start
+                        property var box0
+                        onPressed: mouse => { start = mapToItem(ed.contentItem, mouse.x, mouse.y); box0 = { l: wrap.x, t: wrap.y, r: wrap.x + wrap.ww, b: wrap.y + wrap.hh }; ed.moving = wrap; }
+                        onPositionChanged: mouse => {
+                            if (!pressed) return;
+                            const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
+                            const r = ed.resizeBox(wrap, box0, hd.modelData, p.x - start.x, p.y - start.y, (mouse.modifiers & Qt.ControlModifier) !== 0);
+                            wrap.x = r.l; wrap.y = r.t; wrap.ww = r.r - r.l; wrap.hh = r.b - r.t;
                         }
-                        ed.guides = g;
-                        const c = WidgetLayout.clamp(wrap.modelData.type, wrap.modelData.face, w, h);
-                        wrap.ww = Math.min(c[0], ed.width - wrap.x);
-                        wrap.hh = Math.min(c[1], ed.height - wrap.y);
+                        onCanceled: { ed.moving = null; ed.guides = []; ed.measures = []; }
+                        onReleased: {
+                            ed.moving = null; ed.guides = []; ed.measures = [];
+                            const fw = wrap.sideways ? wrap.hh : wrap.ww, fh = wrap.sideways ? wrap.ww : wrap.hh;
+                            WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height, w: Math.round(fw), h: Math.round(fh) });
+                        }
                     }
-                    onCanceled: ed.guides = []
-                    onReleased: { ed.guides = []; ed.measures = []; WidgetLayout.update(ed.mode, wrap.modelData.id, { w: Math.round(wrap.ww), h: Math.round(wrap.hh) }); }
                 }
             }
             // its own little bar: the name, the look, its settings, remove
@@ -381,6 +426,13 @@ PanelWindow {
                         opts: WidgetLayout.faces[wrap.modelData.type] || []
                         value: WidgetLayout.faceId(wrap.modelData.type, wrap.modelData.face)
                         onPicked: v => WidgetLayout.setFace(ed.mode, wrap.modelData, v)
+                    }
+                    // turn it a quarter clockwise, around its middle
+                    Pressable {
+                        width: 32; height: 32
+                        color: hovered ? Theme.containerHigh : "transparent"
+                        onClicked: ed.turn(wrap)
+                        Icon { anchors.centerIn: parent; name: "rotate_right"; size: 19; color: Theme.text }
                     }
                     Pressable {
                         width: 32; height: 32
@@ -537,7 +589,15 @@ PanelWindow {
             }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Add widget"; icon: "add"; primary: ed.adding; onClicked: { ed.adding = !ed.adding; ed.presetsOpen = false; } }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Presets"; icon: "auto_awesome_mosaic"; primary: ed.presetsOpen; onClicked: { ed.presetsOpen = !ed.presetsOpen; ed.adding = false; } }
-            Button { anchors.verticalCenter: parent.verticalCenter; text: "Grid"; icon: ed.snap ? "grid_on" : "grid_off"; onClicked: Store.set("widgets.snap", !ed.snap) }
+            Button { anchors.verticalCenter: parent.verticalCenter; text: "Grid"; icon: ed.snap ? "grid_on" : "grid_off"; primary: ed.snap; onClicked: Store.set("widgets.snap", !ed.snap) }
+            Dropdown {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: ed.snap
+                width: 104; height: 38
+                opts: [["20", "20 px"], ["30", "30 px"], ["40", "40 px"], ["60", "60 px"], ["80", "80 px"]]
+                value: String(ed.grid)
+                onPicked: v => Store.set("widgets.gridSize", Number(v))
+            }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Distances"; icon: "straighten"; primary: ed.distances; onClicked: Store.set("widgets.distances", !ed.distances) }
             Button {
                 id: resetB
@@ -554,7 +614,7 @@ PanelWindow {
         z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: bar.bottom; anchors.topMargin: 8
-        text: ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move (it lines up with the middle and the other widgets; Ctrl: freely)  ·  corner to resize  ·  Esc when done"
+        text: ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move (it lines up with the middle and the other widgets; Ctrl: freely)  ·  an edge or corner to resize  ·  ↻ turns it  ·  Esc when done"
         color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.4)
         font.pixelSize: Theme.sizeSmall
     }

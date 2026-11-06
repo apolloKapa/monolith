@@ -20,8 +20,11 @@ Item {
     property point origin: Qt.point(x, y)
 
     readonly property var size: WidgetLayout.size(item || { type: type, face: face })
-    implicitWidth: size[0]
-    implicitHeight: size[1]
+    // turned (its Orientation): the look keeps its own size and is drawn turned in the middle
+    readonly property int rot: item ? WidgetLayout.rot(item) : 0
+    readonly property bool sideways: rot % 180 !== 0
+    implicitWidth: sideways ? size[1] : size[0]
+    implicitHeight: sideways ? size[0] : size[1]
     opacity: opt("opacity", 1)
 
     function opt(k, d) { return WidgetLayout.opt(item, k, d); }
@@ -35,7 +38,10 @@ Item {
 
     Loader {
         id: body
-        anchors.fill: parent
+        anchors.centerIn: parent
+        width: w.sideways ? w.height : w.width
+        height: w.sideways ? w.width : w.height
+        rotation: w.rot
         readonly property var ctx: w
         source: WidgetLayout.file(w.type, w.face) !== "" ? "faces/" + WidgetLayout.file(w.type, w.face) + ".qml" : ""
     }
