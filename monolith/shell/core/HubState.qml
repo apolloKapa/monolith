@@ -40,6 +40,11 @@ Singleton {
     // the widget editor: "" (closed), "desktop" or "lock", on this screen
     property string editWidgets: ""
     property string editScreen: ""
+    // the desktop's right-click menu: where, and on which widget (if any)
+    property var deskMenu: ({ screen: "", x: 0, y: 0, widget: "" })
+    function openDeskMenu(screen, x, y, widget) { open = false; deskMenu = { screen: screen, x: x, y: y, widget: widget || "" }; }
+    function closeDeskMenu() { deskMenu = { screen: "", x: 0, y: 0, widget: "" }; }
+    property string editSelect: ""      // the widget the editor opens with selected
     function editWidgetsOn(mode, screen) { open = false; wallOpen = false; editScreen = target(screen); editWidgets = mode || "desktop"; }
 
     // the dock editor, on a screen (Settings → Dock, `monolith dock`)
@@ -74,6 +79,12 @@ Singleton {
     IpcHandler {
         target: "dock"
         function edit(): void { hub.editDock(); }
+    }
+    IpcHandler {
+        target: "desktop"
+        // the desktop's menu at the middle of the screen you're on (`monolith desktop-menu`)
+        function menu(): void { const sc = Quickshell.screens.find(x => x.name === hub.target("")) || Quickshell.screens[0]; hub.openDeskMenu(sc.name, sc.width / 2 - 125, sc.height / 2 - 150, ""); }
+        function widget(id: string): void { const sc = Quickshell.screens.find(x => x.name === hub.target("")) || Quickshell.screens[0]; hub.openDeskMenu(sc.name, sc.width / 2 - 125, sc.height / 2 - 150, id); }
     }
     IpcHandler {
         target: "widgets"

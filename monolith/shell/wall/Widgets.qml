@@ -12,6 +12,12 @@ Item {
     // hidden while the editor shows its own copy
     visible: HubState.editWidgets === ""
 
+    // right-click on the empty desktop: the desktop menu
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        onClicked: mouse => HubState.openDeskMenu(desk.screenName, mouse.x, mouse.y, "")
+    }
     Repeater {
         model: desk.list
         WidgetFace {
@@ -22,6 +28,15 @@ Item {
             transformOrigin: Item.TopLeft
             x: Math.max(0, Math.min(modelData.x * desk.width, desk.width - width * scale))
             y: Math.max(0, Math.min(modelData.y * desk.height, desk.height - height * scale))
+            // right-click: this widget's menu (its style, the editor, remove)
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.RightButton
+                onClicked: mouse => {
+                    const p = mapToItem(desk, mouse.x, mouse.y);
+                    HubState.openDeskMenu(desk.screenName, p.x, p.y, parent.modelData.id);
+                }
+            }
         }
     }
 }

@@ -19,6 +19,10 @@ ColumnLayout {
         Button { text: "Edit the lock screen"; primary: true; icon: "edit"; onClicked: HubState.editWidgetsOn("lock") }
     }
     SettingRow {
+        icon: "commit"; title: "GitHub widget"; desc: "Whose contributions it shows (a GitHub username)"
+        Field { width: 220; text: Store.get("widgets.github.user", ""); placeholder: "username"; onAccepted: v => Store.set("widgets.github.user", v.trim()) }
+    }
+    SettingRow {
         icon: "image"; title: "The picture widget's picture"; desc: "An image file"
         Field { text: Store.get("widgets.imagePath", ""); placeholder: "/path/to/picture.png"; onAccepted: v => { const p = v.trim().replace(/^~/, Wall.home); if (p !== Store.get("widgets.imagePath", "")) Store.set("widgets.imagePath", p); } }
     }

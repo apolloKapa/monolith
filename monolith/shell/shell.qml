@@ -22,6 +22,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; PerfOverlay {} }
     Variants { model: Quickshell.screens; Dim {} }
     Variants { model: Quickshell.screens; WallpaperPicker {} }
+    Variants { model: Quickshell.screens; DesktopMenu {} }
     Variants { model: Quickshell.screens; QuickAccess {} }
     Variants { model: Quickshell.screens; WidgetEditor {} }
     LockScreen {}
