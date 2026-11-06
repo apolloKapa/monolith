@@ -29,7 +29,12 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: "black"
-    onShownChanged: { selected = ""; adding = false; if (shown) keys.forceActiveFocus(); }
+    // opened from a widget's right-click menu: that one starts selected
+    onShownChanged: {
+        selected = shown ? HubState.editSelect : ""; adding = false; presetsOpen = false;
+        HubState.editSelect = "";
+        if (shown) keys.forceActiveFocus();
+    }
 
     function done() { HubState.editWidgets = ""; }
     function snapTo(v) { return snap ? Math.round(v / grid) * grid : v; }
@@ -147,9 +152,16 @@ PanelWindow {
                     id: wb
                     anchors.centerIn: parent
                     spacing: 2
-                    Pressable { width: 32; height: 32; color: hovered ? Theme.containerHigh : "transparent"; onClicked: WidgetLayout.nextFace(ed.mode, wrap.modelData, -1); Icon { anchors.centerIn: parent; name: "chevron_left"; size: 20 } }
-                    Label { anchors.verticalCenter: parent.verticalCenter; text: WidgetLayout.typeName(wrap.modelData.type) + " · " + WidgetLayout.faceName(wrap.modelData.type, wrap.modelData.face); strong: true; font.pixelSize: Theme.sizeSmall + 1; leftPadding: 4; rightPadding: 4 }
-                    Pressable { width: 32; height: 32; color: hovered ? Theme.containerHigh : "transparent"; onClicked: WidgetLayout.nextFace(ed.mode, wrap.modelData, 1); Icon { anchors.centerIn: parent; name: "chevron_right"; size: 20 } }
+                    Label { anchors.verticalCenter: parent.verticalCenter; text: WidgetLayout.typeName(wrap.modelData.type); strong: true; font.pixelSize: Theme.sizeSmall + 1; leftPadding: 10; rightPadding: 6 }
+                    // its look, as a drop-down (one entry when the widget has just one)
+                    Dropdown {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 190; height: 32
+                        visible: (WidgetLayout.faces[wrap.modelData.type] || []).length > 1
+                        opts: WidgetLayout.faces[wrap.modelData.type] || []
+                        value: wrap.modelData.face || ((WidgetLayout.faces[wrap.modelData.type] || [[""]])[0][0])
+                        onPicked: v => WidgetLayout.update(ed.mode, wrap.modelData.id, { face: v })
+                    }
                     Rectangle { width: 1; height: 22; color: Theme.ringTrack; anchors.verticalCenter: parent.verticalCenter }
                     Pressable { width: 32; height: 32; color: hovered ? Qt.alpha(Theme.danger, 0.2) : "transparent"; onClicked: { WidgetLayout.remove(ed.mode, wrap.modelData.id); ed.selected = ""; } Icon { anchors.centerIn: parent; name: "delete"; size: 19; color: Theme.danger } }
                 }
@@ -182,7 +194,8 @@ PanelWindow {
                 value: ed.mode
                 onPicked: v => { ed.selected = ""; HubState.editWidgets = v; }
             }
-            Button { anchors.verticalCenter: parent.verticalCenter; text: "Add widget"; icon: "add"; primary: ed.adding; onClicked: ed.adding = !ed.adding }
+            Button { anchors.verticalCenter: parent.verticalCenter; text: "Add widget"; icon: "add"; primary: ed.adding; onClicked: { ed.adding = !ed.adding; ed.presetsOpen = false; } }
+            Button { anchors.verticalCenter: parent.verticalCenter; text: "Presets"; icon: "auto_awesome_mosaic"; primary: ed.presetsOpen; onClicked: { ed.presetsOpen = !ed.presetsOpen; ed.adding = false; } }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Grid"; icon: ed.snap ? "grid_on" : "grid_off"; onClicked: Store.set("widgets.snap", !ed.snap) }
             Button {
                 id: resetB
@@ -240,11 +253,45 @@ PanelWindow {
         }
     }
 
+    // ── presets: ready-made arrangements, replacing this screen's widgets ──
+    property bool presetsOpen: false
+    Rectangle {
+        visible: ed.presetsOpen
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom; anchors.bottomMargin: 28
+        width: prow.implicitWidth + 24
+        height: 132
+        radius: Theme.corner(132, 10)
+        color: Theme.frame
+        border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
+        Row {
+            id: prow
+            anchors.centerIn: parent
+            spacing: 8
+            Repeater {
+                model: WidgetLayout.presets
+                Pressable {
+                    required property var modelData
+                    width: 150; height: 108
+                    color: Theme.containerHigh
+                    onClicked: { WidgetLayout.applyPreset(ed.mode, modelData[0], ed.modelData.name); ed.selected = ""; ed.presetsOpen = false; }
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Bubble { anchors.horizontalCenter: parent.horizontalCenter; size: 44; icon: parent.parent.modelData[2] }
+                        Label { anchors.horizontalCenter: parent.horizontalCenter; text: parent.parent.modelData[1]; strong: true; font.pixelSize: Theme.sizeSmall }
+                        Label { anchors.horizontalCenter: parent.horizontalCenter; text: parent.parent.modelData[3].length + " widgets"; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
+                    }
+                }
+            }
+        }
+    }
+
     // keys
     Item {
         id: keys
         focus: true
-        Keys.onEscapePressed: { if (ed.adding) ed.adding = false; else if (ed.selected !== "") ed.selected = ""; else ed.done(); }
+        Keys.onEscapePressed: { if (ed.presetsOpen) ed.presetsOpen = false; else if (ed.adding) ed.adding = false; else if (ed.selected !== "") ed.selected = ""; else ed.done(); }
         Keys.onDeletePressed: if (ed.selected !== "") { WidgetLayout.remove(ed.mode, ed.selected); ed.selected = ""; }
     }
 }

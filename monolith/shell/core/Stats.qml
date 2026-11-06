@@ -20,6 +20,13 @@ Singleton {
     property real gpuWatts: 0     // the GPU's power draw
     property real gpuClock: 0     // its core clock, MHz
     // the last two minutes, one sample every two seconds (0..1), for the gaming page's graphs
+    property real memUsed: 0      // bytes
+    property real memTotal: 0
+    property real disk: 0         // 0..1, the root filesystem
+    property real diskUsed: 0     // bytes
+    property real diskTotal: 0
+    property var memHist: []
+    property var tempHist: []
     property var cpuHist: []
     property var gpuHist: []
     readonly property string gpuHwmon: gpuTempPath.replace(/\/temp1_input$/, "")
@@ -72,7 +79,11 @@ Singleton {
             const p = l.split(/:\s+/);
             if (p.length === 2) m[p[0]] = parseInt(p[1]);
         }
-        if (m.MemTotal) mem = 1 - (m.MemAvailable || 0) / m.MemTotal;
+        if (m.MemTotal) {
+            mem = 1 - (m.MemAvailable || 0) / m.MemTotal;
+            memTotal = m.MemTotal * 1024;
+            memUsed = (m.MemTotal - (m.MemAvailable || 0)) * 1024;
+        }
         if (gpuDir !== "") {
             gpuBusy.reload(); vramUsedF.reload();
             const b = parseInt(gpuBusy.text()); if (!isNaN(b)) gpu = b / 100;
@@ -85,12 +96,33 @@ Singleton {
         }
         cpuHist = cpuHist.concat([cpu]).slice(-60);
         gpuHist = gpuHist.concat([gpu]).slice(-60);
+        memHist = memHist.concat([mem]).slice(-60);
         if (tempPath !== "") {
             tempFile.reload();
             const v = parseInt(tempFile.text());
             if (!isNaN(v)) temp = v / 1000;
         }
+        tempHist = tempHist.concat([Math.min(1, temp / 100)]).slice(-60);
     }
 
     Timer { interval: 2000; running: true; repeat: true; triggeredOnStart: true; onTriggered: stats.sample() }
+
+    // the root filesystem's use, every half minute
+    Process {
+        id: df
+        command: ["df", "-B1", "--output=used,size", "/"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const l = text.trim().split("\n").pop().trim().split(/\s+/).map(Number);
+                if (l.length === 2 && l[1] > 0) { stats.diskUsed = l[0]; stats.diskTotal = l[1]; stats.disk = l[0] / l[1]; }
+            }
+        }
+    }
+    Timer { interval: 30000; running: true; repeat: true; triggeredOnStart: true; onTriggered: df.running = true }
+    function bytes(b) {
+        const u = ["B", "KB", "MB", "GB", "TB"];
+        let i = 0;
+        while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+        return (b >= 100 || i === 0 ? Math.round(b) : b.toFixed(1)) + " " + u[i];
+    }
 }

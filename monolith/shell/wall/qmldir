@@ -3,3 +3,4 @@ Widgets 1.0 Widgets.qml
 WallpaperPicker 1.0 WallpaperPicker.qml
 WidgetFace 1.0 WidgetFace.qml
 WidgetEditor 1.0 WidgetEditor.qml
+DesktopMenu 1.0 DesktopMenu.qml

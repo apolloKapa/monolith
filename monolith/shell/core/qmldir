@@ -22,3 +22,5 @@ singleton AppColours 1.0 AppColours.qml
 singleton Look 1.0 Look.qml
 singleton WidgetLayout 1.0 WidgetLayout.qml
 singleton NiriShell 1.0 NiriShell.qml
+singleton Cava 1.0 Cava.qml
+singleton GitHub 1.0 GitHub.qml

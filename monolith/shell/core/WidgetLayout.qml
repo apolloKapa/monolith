@@ -10,22 +10,47 @@ Singleton {
     // every widget there is: [type, name, icon]; and each type's looks: [face, name]
     readonly property var types: [
         ["clock", "Clock", "schedule"], ["date", "Date", "today"], ["weather", "Weather", "partly_cloudy_day"],
-        ["media", "Now playing", "music_note"], ["calendar", "Calendar", "calendar_month"], ["usage", "System usage", "memory"],
-        ["notes", "Notes", "sticky_note_2"], ["image", "Picture", "image"], ["greeting", "Greeting", "waving_hand"],
-        ["notifications", "Notifications", "notifications"]
+        ["media", "Now playing", "music_note"], ["visualizer", "Visualiser", "graphic_eq"], ["calendar", "Calendar", "calendar_month"],
+        ["usage", "System usage", "memory"], ["cpu", "CPU", "developer_board"], ["ram", "Memory", "memory_alt"],
+        ["temp", "Temperature", "device_thermostat"], ["disk", "Disk", "hard_drive"], ["battery", "Battery", "battery_full"],
+        ["github", "GitHub", "commit"], ["notes", "Notes", "sticky_note_2"], ["image", "Picture", "image"],
+        ["user", "You", "account_circle"], ["greeting", "Greeting", "waving_hand"], ["notifications", "Notifications", "notifications"]
     ]
     readonly property var faces: ({
-        clock: [["digital", "Digital"], ["stacked", "Stacked"], ["analog", "Analog"], ["minimal", "Minimal"]],
+        clock: [["digital", "Digital"], ["stacked", "Stacked"], ["analog", "Analog"], ["minimal", "Minimal"], ["stretched", "Stretched"],
+                ["big", "Big (lock screen)"], ["material", "Material"], ["materialAnalog", "Material analog"], ["lumen", "Lumen"]],
         date: [["full", "Full"], ["compact", "Compact"]],
-        weather: [["pill", "Pill"], ["full", "With hours"]],
-        media: [["card", "Card"], ["cover", "Cover"]],
+        weather: [["pill", "Pill"], ["full", "With hours"], ["round", "Round"]],
+        media: [["card", "Card"], ["cover", "Cover"], ["controls", "Controls"], ["lyrics", "Lyrics"], ["lyricLine", "Lyrics, one line"], ["round", "Round"]],
+        visualizer: [["bars", "Bars"], ["wave", "Wave"]],
         calendar: [["month", "Month"]],
         usage: [["rings", "Rings"], ["bars", "Bars"]],
+        cpu: [["number", "Number"], ["circle", "Circle"], ["card", "Card"]],
+        ram: [["number", "Number"], ["circle", "Circle"], ["card", "Card"]],
+        temp: [["number", "Number"], ["circle", "Circle"], ["card", "Card"]],
+        disk: [["number", "Number"], ["circle", "Circle"], ["card", "Card"]],
+        battery: [["card", "Card"], ["circle", "Circle"]],
+        github: [["grid", "Contributions"]],
         notes: [["card", "Card"]],
-        image: [["rounded", "Rounded"], ["circle", "Circle"]],
+        image: [["rounded", "Rounded"], ["circle", "Circle"], ["rect", "Square corners"]],
+        user: [["card", "Card"]],
         greeting: [["text", "Text"]],
         notifications: [["list", "List"]]
     })
+    // ready-made arrangements (the old Monolith's presets): [id, name, icon, items as [type, face, x, y]]
+    readonly property var presets: [
+        ["dashboard", "Dashboard", "space_dashboard", [["clock", "digital", 0.04, 0.06], ["weather", "full", 0.04, 0.36], ["calendar", "month", 0.78, 0.06],
+            ["cpu", "circle", 0.04, 0.62], ["ram", "circle", 0.14, 0.62], ["disk", "circle", 0.24, 0.62], ["media", "controls", 0.74, 0.78], ["github", "grid", 0.36, 0.80]]],
+        ["media", "Media station", "queue_music", [["media", "round", 0.06, 0.30], ["media", "lyrics", 0.30, 0.34], ["visualizer", "bars", 0.30, 0.74], ["clock", "minimal", 0.06, 0.08]]],
+        ["minimal", "Minimal", "crop_free", [["clock", "big", 0.36, 0.30], ["date", "compact", 0.43, 0.56]]],
+        ["shadow", "Shadow", "dark_mode", [["clock", "stretched", 0.05, 0.08], ["media", "lyricLine", 0.05, 0.82], ["weather", "round", 0.86, 0.08], ["battery", "circle", 0.86, 0.36]]]
+    ]
+    function applyPreset(mode, id, screen) {
+        const p = presets.find(x => x[0] === id);
+        if (!p) return;
+        const keep = mode === "lock" ? [] : items(mode).filter(i => i.screen && i.screen !== screen);
+        save(mode, keep.concat(p[3].map((it, n) => ({ id: it[0][0] + Date.now().toString(36) + n, type: it[0], face: it[1], x: it[2], y: it[3], scale: 1, screen: mode === "lock" ? "" : screen }))));
+    }
     function typeName(t) { const x = types.find(y => y[0] === t); return x ? x[1] : t; }
     function typeIcon(t) { const x = types.find(y => y[0] === t); return x ? x[2] : "widgets"; }
     function faceName(t, f) { const x = (faces[t] || []).find(y => y[0] === f); return x ? x[1] : ((faces[t] || [["", "Default"]])[0][1]); }
