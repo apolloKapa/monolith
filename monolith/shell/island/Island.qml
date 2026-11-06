@@ -70,7 +70,7 @@ PanelWindow {
     // the body's size: the bar's when collapsed, the page's when open
     readonly property real openW: Math.max(bar.implicitWidth, (pageInfo[HubState.page] || pageInfo.search).w)
     readonly property real openH: Math.min(height - 40, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
-    readonly property real restW: Theme.fullBar ? Math.round(width * Theme.barLength) : Math.max(Theme.islandMinW, bar.implicitWidth)
+    readonly property real restW: Theme.fullBar ? Math.round((width - 2 * Theme.barMargin) * Theme.barLength) : Math.max(Theme.islandMinW, bar.implicitWidth)
     // the bar can be off on some screens (Settings → Bar); menus still open there
     readonly property bool barHere: (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) === -1
     // the bar's own background shows when it's open, or per its opacity setting
@@ -80,7 +80,8 @@ PanelWindow {
     // the middle of the screen or on the right; then the island stays a bar
     // (each menu can have its own place, Settings → Menus & launcher)
     readonly property string place: Store.get("menus.positions." + HubState.page, "") || Store.get("menus.position", "top")
-    readonly property bool docked: place === "top"
+    // a floating bar (Solid, Modular) has nothing to grow out of: its menus open just under it
+    readonly property bool docked: place === "top" && !Theme.barFloats
     // the island grows into the menu; a full-width bar stays put and the menu drops out of it
     readonly property bool grown: shown && docked && !Theme.fullBar
     readonly property bool dropped: shown && docked && Theme.fullBar
@@ -98,18 +99,28 @@ PanelWindow {
         bodyW: win.grown ? win.openW : (win.toastOn ? Math.max(win.restW, 520) : win.restW)
         height: win.grown ? win.openH : (win.toastOn ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
         r: win.grown || win.toastOn ? Theme.islandRadius : (Theme.fullBar ? (Theme.barLength < 0.999 ? Theme.islandRadius / 2 : 0) : height / 2)
-        fill: win.barSolid ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
-        shadow: win.barSolid || Theme.barOpacity > 0.3
+        // a floating bar draws its own rounded background (Solid) or none at all (Modular: its
+        // sections have pills), so the hanging shape stays empty
+        fill: Theme.barFloats ? "transparent" : (win.barSolid ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
+        shadow: !Theme.barFloats && (win.barSolid || Theme.barOpacity > 0.3)
         opacity: win.barHere || win.shown || win.toastOn ? 1 : 0
         ear: Theme.fullBar && !win.grown ? 0 : Theme.islandEar
         onHeightChanged: if (!win.shown && height <= Theme.islandH + 1) win.wasOpen = false
         x: Math.round((win.width - width) / 2)
-        y: win.tucked ? -Theme.islandH + 3 : 0
+        y: win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin
         Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
         Behavior on r { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
         Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
 
+        // Solid: one rounded floating bar; Modular gets one too while a notification drops out
+        Rectangle {
+            anchors.fill: parent
+            visible: Theme.barFloats && (Theme.barStyle === "solid" || win.toastOn)
+            radius: win.toastOn ? Theme.islandRadius : Math.min(height / 2, Theme.islandRadius + 6)
+            color: win.barSolid || win.toastOn ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+            CardShadow { visible: win.barSolid || win.toastOn || Theme.barOpacity > 0.3 }
+        }
         // clicks on the island stay on the island
         MouseArea { anchors.fill: parent }
 
@@ -357,7 +368,7 @@ PanelWindow {
         readonly property bool onTop: win.place.startsWith("top")
         readonly property bool onBottom: win.place.startsWith("bottom")
         x: onLeft ? 16 : (onRight ? win.width - width - 16 : Math.round((win.width - width) / 2))
-        y: onTop ? Theme.islandH + 14 : (onBottom ? win.height - height - 16 : Math.max(Theme.islandH + 14, Math.round((win.height - height) / 2)))
+        y: onTop ? Theme.islandH + Theme.barMargin + 14 : (onBottom ? win.height - height - 16 : Math.max(Theme.islandH + 14, Math.round((win.height - height) / 2)))
         radius: Theme.islandRadius
         color: Theme.frame
         border.width: Theme.outlineW

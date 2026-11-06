@@ -18,12 +18,20 @@ Column {
     component Bar: IslandShape {
         id: isl
         property real screenW: pv.sw
-        bodyW: Theme.fullBar ? Math.round(screenW * Theme.barLength) : Math.max(Theme.islandMinW, real.implicitWidth)
+        bodyW: Theme.fullBar ? Math.round((screenW - 2 * Theme.barMargin) * Theme.barLength) : Math.max(Theme.islandMinW, real.implicitWidth)
         height: Theme.islandH
         r: Theme.fullBar ? (Theme.barLength < 0.999 ? Theme.islandRadius / 2 : 0) : height / 2
         ear: Theme.fullBar ? 0 : Theme.islandEar
-        fill: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
-        shadow: Theme.barOpacity > 0.3
+        fill: Theme.barFloats ? "transparent" : (Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
+        shadow: !Theme.barFloats && Theme.barOpacity > 0.3
+        // Solid: its own rounded floating bar
+        Rectangle {
+            anchors.fill: parent
+            visible: Theme.barStyle === "solid"
+            radius: Math.min(height / 2, Theme.islandRadius + 6)
+            color: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+            CardShadow { visible: Theme.barOpacity > 0.3 }
+        }
         Item {
             x: isl.e
             width: isl.bodyW
@@ -74,12 +82,21 @@ Column {
                 }
             }
         }
+        // Frame: the border round the screen
+        Rectangle {
+            visible: Theme.barStyle === "frame"
+            anchors.fill: parent
+            color: "transparent"
+            radius: parent.radius
+            border.width: Math.max(1, Theme.frameW * screenBox.k)
+            border.color: Theme.frame
+        }
         // the bar, at the screen's scale
         Item {
             width: pv.sw
             height: Theme.islandH + 20
             transform: Scale { xScale: screenBox.k; yScale: screenBox.k }
-            Bar { x: Math.round((pv.sw - width) / 2); screenW: pv.sw }
+            Bar { x: Math.round((pv.sw - width) / 2); y: Theme.barMargin; screenW: pv.sw }
         }
         Rectangle {
             visible: Store.get("status.autohide", false) === true
@@ -114,6 +131,7 @@ Column {
             readonly property real fit: cb.width > parent.width - 16 && !Theme.fullBar ? (parent.width - 16) / cb.width : 1
             Bar {
                 id: cb
+                y: Math.min(Theme.barMargin, 12)
                 screenW: Theme.fullBar ? Math.max(pv.width - 16, (pv.width - 16) / Math.max(0.2, Theme.barLength)) : pv.sw
                 anchors.horizontalCenter: parent.horizontalCenter
                 scale: close.fit

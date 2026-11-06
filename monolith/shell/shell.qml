@@ -15,6 +15,7 @@ import "apps"
 ShellRoot {
     Variants { model: Quickshell.screens; Background {} }
     Variants { model: Quickshell.screens; Reserve {} }
+    Variants { model: Quickshell.screens; Frame {} }
     Variants { model: Quickshell.screens; Island {} }
     Variants { model: Quickshell.screens; Dock {} }
     Variants { model: Quickshell.screens; Popups {} }
