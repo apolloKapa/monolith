@@ -168,7 +168,52 @@ Singleton {
         if (t === "text") o.push(["textContent", "Text", "text", ""]);
         if (t === "image") o.push(["imagePath", "Picture", "file", ""]);
         if (t === "github") o.push(["store:widgets.github.user", "GitHub username", "text", ""]);
-        if (t === "visualizer") o.push(["mirror", "Mirrored (from the middle)", "toggle", false]);
+        if (t === "visualizer") o.push(...visualiserOptions(id));
+        return o;
+    }
+    // the visualiser: its own look, then cava's settings (shared by every visualiser: "store:cava.*")
+    function visualiserOptions(id) {
+        const nums = (list, unit) => list.map(v => [String(v), v + (unit || "")]);
+        const o = [["", "Look", "header"],
+            ["barCount", "Bars", "dropdown", id === "continuous" ? "64" : "0", [["0", "As many as fit"]].concat(nums([8, 12, 16, 24, 32, 48, 64, 96, 128, 160]))],
+            ["anchor", "Grows from", "dropdown", "bottom", [["bottom", "The bottom (up)"], ["top", "The top (down)"], ["middle", "The middle (mirrored)"]]]];
+        if (id !== "continuous")
+            o.push(["barWidth", "Bar width", "dropdown", "6", nums([2, 3, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40], " px")],
+                   ["barSpacing", "Gap between bars", "dropdown", "4", nums([0, 1, 2, 3, 4, 6, 8, 10, 12, 16, 20], " px")],
+                   ["roundness", "Bar ends", "dropdown", "1", [["0", "Square"], ["0.35", "Slightly round"], ["0.7", "Round"], ["1", "Fully round"]]],
+                   ["smoothing", "Movement", "dropdown", "70", [["0", "Instant"], ["40", "Snappy"], ["70", "Smooth"], ["120", "Smoother"], ["200", "Slow"]]],
+                   ["dynamicOpacity", "Quiet bars are dimmer", "toggle", true]);
+        else o.push(["fillOpacity", "Fill", "dropdown", "0.9", [["0.4", "Faint"], ["0.6", "Soft"], ["0.9", "Strong"], ["1", "Solid"]]]);
+        o.push(["restHeight", "Height when silent", "dropdown", "3", nums([0, 1, 2, 3, 4, 6, 8, 12], " px")],
+               ["heightScale", "Height", "dropdown", "1", [["0.4", "40 %"], ["0.6", "60 %"], ["0.8", "80 %"], ["1", "100 %"], ["1.25", "125 %"], ["1.5", "150 %"]]],
+               ["edgeFade", "Fade towards the edges", "toggle", true],
+               ["barColor", "Colour", "colour", ""], ["barColor2", "Blend into (across the widget)", "colour", ""],
+               ["", "Sound (cava, for every visualiser)", "header"],
+               ["store:cava.method", "Input", "dropdown", "pipewire", [["pipewire", "PipeWire"], ["pulse", "PulseAudio"], ["alsa", "ALSA"], ["jack", "JACK"]]],
+               ["store:cava.source", "Source (auto, or a device / monitor name)", "text", "auto"],
+               ["store:cava.channels", "Channels", "dropdown", "stereo", [["stereo", "Stereo"], ["mono", "Mono"]]],
+               ["store:cava.monoOption", "Mono from", "dropdown", "average", [["average", "Both, averaged"], ["left", "Left"], ["right", "Right"]]],
+               ["store:cava.reverse", "Reversed (high notes first)", "toggle", false],
+               ["store:cava.bars", "Detail (frequency bands)", "dropdown", "36", nums([12, 16, 24, 32, 36, 48, 64, 96, 128])],
+               ["store:cava.framerate", "Frame rate", "dropdown", "60", nums([30, 60, 75, 120, 144, 165, 240], " fps")],
+               ["store:cava.autosens", "Automatic sensitivity", "toggle", true],
+               ["store:cava.sensitivity", "Sensitivity", "dropdown", "100", nums([25, 50, 75, 100, 150, 200, 300, 500], " %")],
+               ["store:cava.overshoot", "Auto-sensitivity headroom", "dropdown", "20", nums([0, 5, 10, 20, 30, 50], " %")],
+               ["store:cava.lowerCutoff", "Lowest frequency", "dropdown", "50", nums([20, 30, 40, 50, 60, 80, 100, 150, 200], " Hz")],
+               ["store:cava.higherCutoff", "Highest frequency", "dropdown", "10000", nums([4000, 6000, 8000, 10000, 12000, 15000, 18000, 20000], " Hz")],
+               ["store:cava.noiseReduction", "Smoothing (noise reduction)", "dropdown", "77", [["0", "Off (fast, jittery)"], ["20", "20"], ["40", "40"], ["60", "60"], ["77", "77 (cava's default)"], ["90", "90"], ["100", "100 (slow, smooth)"]]],
+               ["store:cava.monstercat", "Monstercat smoothing", "dropdown", "0", [["0", "Off"], ["1", "On"], ["1.5", "Strong"], ["2", "Stronger"]]],
+               ["store:cava.waves", "Waves smoothing", "toggle", false],
+               ["store:cava.sleepTimer", "Stop after silence", "dropdown", "0", [["0", "Never"], ["1", "1 s"], ["3", "3 s"], ["5", "5 s"], ["10", "10 s"], ["30", "30 s"]]],
+               ["store:cava.sampleRate", "Sample rate", "dropdown", "44100", nums([44100, 48000, 88200, 96000], " Hz")],
+               ["store:cava.sampleBits", "Sample bits", "dropdown", "16", nums([16, 24, 32], " bit")],
+               ["store:cava.inputChannels", "Input channels", "dropdown", "2", [["1", "1"], ["2", "2"]]],
+               ["store:cava.autoconnect", "Connect to (JACK)", "dropdown", "2", [["0", "Nothing automatically"], ["1", "Ports at start"], ["2", "New ports too"]]],
+               ["store:cava.remix", "Remix channels to fit", "toggle", true],
+               ["", "Equaliser (bass → treble)", "header"]);
+        for (let i = 1; i <= 5; i++)
+            o.push(["store:cava.eq" + i, ["Bass", "Low mids", "Mids", "High mids", "Treble"][i - 1], "dropdown", "1",
+                    [["0", "Off"], ["0.25", "25 %"], ["0.5", "50 %"], ["0.75", "75 %"], ["1", "100 %"], ["1.5", "150 %"], ["2", "200 %"], ["3", "300 %"]]]);
         return o;
     }
     function opt(it, key, fallback) { return it && it.opts && it.opts[key] !== undefined ? it.opts[key] : fallback; }

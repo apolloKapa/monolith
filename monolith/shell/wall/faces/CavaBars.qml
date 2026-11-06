@@ -4,17 +4,28 @@ import "../../ui"
 
 // Audio bars from cava: rounded bars (or one smooth filled shape when `continuous`), brighter in
 // the middle and fading at the edges. cava only runs while one of these is live and shown.
+// How it looks is the widget's own (its settings); what cava hears and how is shared by every
+// visualiser (Cava's settings).
 Item {
     id: cb
     property bool live: true
     property bool preview: false        // a still curve instead of sound (the editor's palette)
     property bool continuous: false
     property bool mirror: false          // grow up and down from the middle
-    property int count: Math.max(4, Math.min(96, Math.floor((width + spacing) / (minBar + spacing))))
+    property bool flip: false            // grow down from the top
+    property int bars: 0                 // how many (0: as many as fit)
     property real spacing: 4
     property real minBar: 6
-    property real minLen: 3
+    property real minLen: 3              // the height of a silent bar
+    property real roundness: 1           // 0 square .. 1 fully round ends
+    property real scaleY: 1              // how tall the loudest bar gets (1: the widget's height)
+    property bool fade: true             // dimmer towards the edges
+    property bool dynamic: true          // quiet bars are dimmer too
+    property real fill: 0.9              // the continuous shape's strongest opacity
+    property int smoothMs: 70            // how fast a bar follows the sound
     property color color: Theme.accent
+    property color color2: color         // a second colour: the bars blend into it across the widget
+    property int count: bars > 0 ? bars : Math.max(4, Math.min(160, Math.floor((width + spacing) / (minBar + spacing))))
     readonly property bool active: live && visible
 
     property bool held: false
@@ -37,10 +48,12 @@ Item {
         }
         return out;
     }
+    function colourAt(i) { return Qt.tint(cb.color, Qt.alpha(cb.color2, cb.count > 1 ? i / (cb.count - 1) : 0)); }
 
     Row {
         visible: !cb.continuous
-        anchors.bottom: cb.mirror ? undefined : parent.bottom
+        anchors.bottom: cb.mirror || cb.flip ? undefined : parent.bottom
+        anchors.top: cb.flip && !cb.mirror ? parent.top : undefined
         anchors.verticalCenter: cb.mirror ? parent.verticalCenter : undefined
         spacing: cb.spacing
         Repeater {
@@ -49,14 +62,15 @@ Item {
                 required property int index
                 readonly property real v: cb.vals[index] || 0
                 readonly property real edge: Math.min(index, cb.count - 1 - index) / Math.max(1, cb.count / 2)
-                anchors.bottom: cb.mirror ? undefined : parent.bottom
+                anchors.bottom: cb.mirror || cb.flip ? undefined : parent.bottom
+                anchors.top: cb.flip && !cb.mirror ? parent.top : undefined
                 anchors.verticalCenter: cb.mirror ? parent.verticalCenter : undefined
-                width: (cb.width - cb.spacing * (cb.count - 1)) / cb.count
-                height: Math.max(cb.minLen, v * cb.height * 0.96)
-                radius: Math.min(width * 0.35, height / 2)
-                color: cb.color
-                opacity: (0.3 + 0.7 * v) * (0.35 + 0.65 * Math.min(1, edge * 1.6))
-                Behavior on height { NumberAnimation { duration: 70 } }
+                width: Math.max(1, (cb.width - cb.spacing * (cb.count - 1)) / cb.count)
+                height: Math.max(cb.minLen, Math.min(cb.height, v * cb.height * 0.96 * cb.scaleY))
+                radius: Math.min(width / 2, height / 2) * cb.roundness
+                color: cb.colourAt(index)
+                opacity: (cb.dynamic ? 0.3 + 0.7 * v : 1) * (cb.fade ? 0.35 + 0.65 * Math.min(1, edge * 1.6) : 1)
+                Behavior on height { enabled: cb.smoothMs > 0; NumberAnimation { duration: cb.smoothMs } }
             }
         }
     }
@@ -66,15 +80,18 @@ Item {
         visible: cb.continuous
         property var v: cb.vals
         onVChanged: requestPaint()
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
         onPaint: {
             const c = getContext("2d");
             c.reset();
             const n = v.length;
             if (n < 2) return;
             const step = width / (n - 1);
-            const mid = cb.mirror ? height / 2 : height;
-            const amp = cb.mirror ? height / 2 * 0.95 : height * 0.92;
-            const y = i => mid - Math.max(cb.minLen / amp, v[i]) * amp;
+            const mid = cb.mirror ? height / 2 : (cb.flip ? 0 : height);
+            const amp = (cb.mirror ? height / 2 * 0.95 : height * 0.92) * cb.scaleY;
+            const dir = cb.flip && !cb.mirror ? -1 : 1;
+            const y = i => mid - dir * Math.min(cb.mirror ? height / 2 : height, Math.max(cb.minLen, v[i] * amp));
             c.beginPath();
             c.moveTo(0, mid);
             c.lineTo(0, y(0));
@@ -86,9 +103,10 @@ Item {
             } else c.lineTo(width, mid);
             c.closePath();
             const g = c.createLinearGradient(0, 0, width, 0);
-            g.addColorStop(0, Qt.alpha(cb.color, 0.25));
-            g.addColorStop(0.5, Qt.alpha(cb.color, 0.9));
-            g.addColorStop(1, Qt.alpha(cb.color, 0.25));
+            const edgeA = cb.fade ? 0.25 : cb.fill;
+            g.addColorStop(0, Qt.alpha(cb.color, edgeA));
+            g.addColorStop(0.5, Qt.alpha(Qt.tint(cb.color, Qt.alpha(cb.color2, 0.5)), cb.fill));
+            g.addColorStop(1, Qt.alpha(cb.color2, edgeA));
             c.fillStyle = g;
             c.fill();
         }
