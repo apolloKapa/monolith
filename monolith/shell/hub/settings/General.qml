@@ -45,6 +45,7 @@ ColumnLayout {
     // ── you ──
     readonly property string avatar: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : Quickshell.env("HOME") + "/.face")
     SettingRow {
+        key: "general.avatar"; def: "";
         icon: "account_circle"; title: "Your picture"; desc: "On the lock screen. An image file"
         Row {
             spacing: 10
@@ -89,10 +90,12 @@ ColumnLayout {
 
     // ── the weather ──
     SettingRow {
+        key: "weather.unit";
         icon: "thermostat"; title: "Units"
         Segmented { opts: [["metric", "°C, km/h"], ["imperial", "°F, mph"]]; value: Weather.metric ? "metric" : "imperial"; onPicked: v => Store.set("weather.unit", v) }
     }
     SettingRow {
+        key: "weather.interval"; def: 20;
         icon: "update"; title: "Weather refresh"; desc: "How often it looks again"
         NumberBox { from: 5; to: 720; slideTo: 120; step: 5; unit: "min"; value: Number(Store.get("weather.interval", 20)); onMoved: v => Store.set("weather.interval", v) }
     }

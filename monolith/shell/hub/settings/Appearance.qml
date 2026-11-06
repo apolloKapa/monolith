@@ -85,6 +85,7 @@ ColumnLayout {
     }
 
     SettingRow {
+        key: "theme.mode";
         icon: "dark_mode"; title: "Dark or light"; desc: "The shell's colours in dark or light (the style and colour theme are in Style & colours)"
         Segmented {
             opts: [["dark", "Dark"], ["light", "Light"]]; value: Theme.modeName
@@ -95,31 +96,36 @@ ColumnLayout {
         }
     }
     SettingRow {
+        key: "theme.appsFollow"; def: true;
         icon: "apps"; title: "Apps switch too"; desc: "Apps (GTK, browsers, Qt with a portal) go dark or light with the shell"
         Toggle { checked: Store.get("theme.appsFollow", true) !== false; onToggled: on => Store.set("theme.appsFollow", on) }
     }
     SettingRow {
+        key: "theme.radius";
         icon: "rounded_corner"; title: "Roundness"; desc: "How round the corners of everything are (the style multiplies it)"
         NumberBox { from: 0; to: 60; slideTo: 40; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
     }
     // ── font: every family by name; the preview shows the one under the pointer (or the
     // one in use) ──
-    property string fontFilter: ""
-    property string fontHover: ""
     readonly property var families: {
-        const f = fontFilter.toLowerCase();
         // one entry per family (no "… Bold", "… NL" variants) and no symbol fonts
         const all = Qt.fontFamilies().filter(n => !/ (Thin|Light|ExtraLight|Medium|SemiBold|Bold|ExtraBold|Black|Heavy|Obl|Italic|NL)\b/.test(n)
             && !/Material Symbols|Noto Color|Emoji|Awesome|Symbol|Dingbat|D050000L|Math|Nerd Font Propo|Nerd Font Mono|^Iosevka N?F$/.test(n));
-        return all.filter(n => f === "" || n.toLowerCase().includes(f));
+        return all;
     }
-    readonly property string previewFont: fontHover !== "" ? fontHover : Theme.fontFamily
     SettingRow {
         icon: "font_download"; title: "Font"
-        desc: "Used everywhere in the shell. Now " + Theme.fontFamily + (Store.get("theme.font", "") === "" ? " (the style's or the default)" : "")
-        Field { width: 220; placeholder: "Search " + sec.families.length + " fonts"; onAccepted: v => sec.fontFilter = v.trim() }
+        key: "theme.font"
+        desc: "Used everywhere in the shell" + (Store.get("theme.font", "") === "" ? " (the style's own, " + Theme.fontFamily + ")" : "")
+        FontPicker {
+            width: 300
+            families: sec.families
+            value: Store.get("theme.font", "")
+            defaultName: "Default (" + (Theme.styleFont || Theme.defaultFont) + ")"
+            onPicked: f => f === "" ? Store.unset("theme.font") : Store.set("theme.font", f)
+        }
     }
-    // the preview
+    // what it looks like
     Rectangle {
         Layout.fillWidth: true
         implicitHeight: pcol.implicitHeight + 28
@@ -132,50 +138,9 @@ ColumnLayout {
             x: 18; y: 14
             width: parent.width - 36
             spacing: 4
-            Label { text: sec.fontHover !== "" ? "Preview: " + sec.fontHover : "In use: " + Theme.fontFamily; muted: true; font.pixelSize: Theme.sizeSmall }
-            Text { width: parent.width; text: "The quick brown fox jumps over the lazy dog"; elide: Text.ElideRight; color: Theme.text; font.family: sec.previewFont; font.pixelSize: 26 }
-            Text { width: parent.width; text: "Settings  ·  21:47  ·  Wi-Fi on  ·  0123456789  ·  Ελληνικά"; elide: Text.ElideRight; color: Theme.subtext; font.family: sec.previewFont; font.pixelSize: 15 }
-        }
-    }
-    Rectangle {
-        Layout.fillWidth: true
-        implicitHeight: Math.min(260, fontFlow.implicitHeight + 20)
-        radius: Theme.corner(56, 2)
-        color: Theme.containerHigh
-        clip: true
-        Flickable {
-            SmoothWheel {}
-            anchors.fill: parent
-            anchors.margins: 10
-            contentHeight: fontFlow.implicitHeight
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-            Flow {
-                id: fontFlow
-                width: parent.width
-                spacing: 6
-                Pressable {
-                    readonly property bool on: Store.get("theme.font", "") === ""
-                    height: 34; width: dl.implicitWidth + 28
-                    color: on ? Theme.accentContainer : Theme.control
-                    onClicked: Store.set("theme.font", "")
-                    onHoveredChanged: sec.fontHover = hovered ? (Theme.styleFont || Theme.defaultFont) : ""
-                    Label { id: dl; anchors.centerIn: parent; text: "Default"; strong: true; color: parent.on ? Theme.onAccentContainer : Theme.text; font.pixelSize: Theme.sizeSmall + 1 }
-                }
-                Repeater {
-                    model: sec.families
-                    Pressable {
-                        required property string modelData
-                        readonly property bool on: Store.get("theme.font", "") === modelData
-                        height: 34
-                        width: Math.min(fontFlow.width, fl.implicitWidth + 28)
-                        color: on ? Theme.accentContainer : Theme.control
-                        onClicked: Store.set("theme.font", modelData)
-                        onHoveredChanged: sec.fontHover = hovered ? modelData : (sec.fontHover === modelData ? "" : sec.fontHover)
-                        Label { id: fl; anchors.centerIn: parent; text: parent.modelData; strong: parent.on; color: parent.on ? Theme.onAccentContainer : Theme.text; font.pixelSize: Theme.sizeSmall + 1 }
-                    }
-                }
-            }
+            Label { text: "Preview: " + Theme.fontFamily; muted: true; font.pixelSize: Theme.sizeSmall }
+            Text { width: parent.width; text: "The quick brown fox jumps over the lazy dog"; elide: Text.ElideRight; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 26 }
+            Text { width: parent.width; text: "Settings  ·  21:47  ·  Wi-Fi on  ·  0123456789  ·  Ελληνικά"; elide: Text.ElideRight; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 15 }
         }
     }
 

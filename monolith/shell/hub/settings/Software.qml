@@ -59,10 +59,12 @@ ColumnLayout {
         Button { text: "Open"; primary: true; icon: "open_in_new"; onClicked: { HubState.close(); AppImages.opened = true; } }
     }
     SettingRow {
+        key: "software.appimages";
         icon: "folder"; title: "Folder"; desc: "Where dropped AppImages go"
         Field { text: AppImages.folder.replace(Quickshell.env("HOME"), "~"); onAccepted: v => { const p = v.trim().replace(/^~/, Quickshell.env("HOME")); if (p !== "" && p !== AppImages.folder) Store.set("software.appimages", p); } }
     }
     SettingRow {
+        key: "software.appimagesAuto";
         icon: "auto_mode"; title: "Set up AppImages put in the folder"; desc: "Copy one into the folder yourself and it's added to your apps; delete it and its entry goes too"
         Toggle { checked: AppImages.auto; onToggled: on => Store.set("software.appimagesAuto", on) }
     }

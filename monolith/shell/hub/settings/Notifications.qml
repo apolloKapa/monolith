@@ -12,10 +12,12 @@ ColumnLayout {
         Toggle { checked: Notifs.dnd; onToggled: on => Notifs.dnd = on }
     }
     SettingRow {
+        key: "notifications.sound"; def: true;
         icon: "volume_up"; title: "Sound"; desc: "A short sound when a notification arrives"
         Toggle { checked: Store.get("notifications.sound", true); onToggled: on => Store.set("notifications.sound", on) }
     }
     SettingRow {
+        key: "notifications.soundFile"; def: "";
         icon: "music_note"; title: "Your own sound"; desc: "A sound file (.oga, .wav, .mp3). Empty: the system's"
         Row {
             spacing: 6
@@ -24,6 +26,7 @@ ColumnLayout {
         }
     }
     SettingRow {
+        key: "notifications.timeout"; def: 6;
         icon: "timer"; title: "How long they stay"; desc: "Unless the app says otherwise; urgent ones stay until closed"
         NumberBox { from: 1; to: 300; slideTo: 30; unit: "s"; value: Number(Store.get("notifications.timeout", 6)); onMoved: v => Store.set("notifications.timeout", v) }
     }
@@ -34,6 +37,7 @@ ColumnLayout {
     // where new ones pop up: out of the island, or as cards on any edge or corner
     readonly property string where: Store.get("notifications.style", "island") === "corner" ? Store.get("notifications.position", "top-right") : "island"
     SettingRow {
+        keys: ["notifications.style", "notifications.position"];
         icon: "notifications_active"; title: "Where they pop up"; desc: "On the screen you're using"
         Dropdown {
             width: 260

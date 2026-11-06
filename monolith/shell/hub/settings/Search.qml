@@ -8,31 +8,38 @@ ColumnLayout {
     id: favSec
     spacing: 8
     SettingRow {
+        key: "search.terminal";
         icon: "terminal"; title: "Terminal"; desc: "What `> command` runs in, and terminal apps open with"
         Field { text: Prefs.terminal; placeholder: "kitty -e"; onAccepted: v => { if (v.trim() !== "" && v.trim() !== Prefs.terminal) Store.set("search.terminal", v.trim()); } }
     }
     SettingRow {
+        key: "search.ranking"; def: true;
         icon: "trending_up"; title: "Usage ranking"; desc: "Apps you open often come first"
         Toggle { checked: Store.get("search.ranking", true) !== false; onToggled: on => Store.set("search.ranking", on) }
     }
     SettingRow {
+        key: "launches";
         icon: "delete_sweep"; title: "Forget what it learned"; desc: "Start the ranking over"
         Button { text: "Reset"; onClicked: Store.set("launches", {}) }
     }
     SettingRow {
+        key: "search.width"; def: 640;
         icon: "width"; title: "Width"
         NumberBox { from: 400; to: 1400; slideTo: 1100; step: 10; unit: "px"; value: Number(Store.get("search.width", 640)); onMoved: v => Store.set("search.width", v) }
     }
     SettingRow {
+        key: "search.grid"; def: false;
         icon: "apps"; title: "All apps as a grid"; desc: "While nothing is typed: icons instead of a list"
         Toggle { checked: Store.get("search.grid", false) === true; onToggled: on => Store.set("search.grid", on) }
     }
     SettingRow {
+        key: "search.gridColumns"; def: 6;
         visible: Store.get("search.grid", false) === true
         icon: "grid_view"; title: "Grid columns"
         NumberBox { from: 3; to: 12; value: Number(Store.get("search.gridColumns", 6)); onMoved: v => Store.set("search.gridColumns", v) }
     }
     SettingRow {
+        key: "search.rows"; def: 7;
         icon: "format_list_numbered"; title: "Results shown"
         NumberBox { from: 1; to: 30; slideTo: 20; value: Number(Store.get("search.rows", 7)); onMoved: v => Store.set("search.rows", v) }
     }
@@ -52,10 +59,12 @@ ColumnLayout {
     }
     Label { text: "Favourites"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
     SettingRow {
+        key: "search.showFavorites"; def: true;
         icon: "star"; title: "Favourite apps"; desc: "A grid above the list while nothing is typed. Right-click any app in the launcher to pin or unpin it"
         Toggle { checked: Store.get("search.showFavorites", true) !== false; onToggled: on => Store.set("search.showFavorites", on) }
     }
     SettingRow {
+        key: "search.favColumns"; def: 6;
         icon: "grid_view"; title: "Per row"
         NumberBox { from: 2; to: 12; value: Number(Store.get("search.favColumns", 6)); onMoved: v => Store.set("search.favColumns", v) }
     }

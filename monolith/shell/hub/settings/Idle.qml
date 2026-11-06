@@ -7,30 +7,37 @@ ColumnLayout {
     id: idleSec
     spacing: 8
     SettingRow {
+        key: "idle.enabled";
         icon: "timer"; title: "Lock when idle"; desc: "Lock, then turn the screens off, when you're away (videos and Stay awake pause this)"
         Toggle { checked: Idle.enabled; onToggled: on => Store.set("idle.enabled", on) }
     }
     SettingRow {
+        key: "idle.lockAfter";
         icon: "lock"; title: "Lock after"
         NumberBox { from: 1; to: 1440; slideTo: 60; unit: "min"; value: Math.round(Idle.lockAfter / 60); onMoved: v => Store.set("idle.lockAfter", v * 60) }
     }
     SettingRow {
+        key: "idle.screenOffAfter";
         icon: "desktop_access_disabled"; title: "Screens off after"
         NumberBox { from: 0; to: 1440; slideTo: 120; unit: "min"; zeroText: "Never"; value: Math.round(Idle.screenOffAfter / 60); onMoved: v => Store.set("idle.screenOffAfter", v * 60) }
     }
     SettingRow {
+        key: "idle.dimBefore";
         icon: "brightness_low"; title: "Dim first"; desc: "The screens darken this long before locking (move to stop it)"
         NumberBox { from: 0; to: 600; slideTo: 120; step: 5; unit: "s"; zeroText: "Off"; value: Idle.dimBefore; onMoved: v => Store.set("idle.dimBefore", v) }
     }
     SettingRow {
+        key: "idle.suspendAfter";
         icon: "bedtime"; title: "Suspend after"; desc: "Put the PC to sleep when you've been away this long"
         NumberBox { from: 0; to: 1440; slideTo: 240; step: 5; unit: "min"; zeroText: "Never"; value: Idle.suspendAfter / 60; onMoved: v => Store.set("idle.suspendAfter", Math.round(v * 60)) }
     }
     SettingRow {
+        key: "idle.mediaPauses";
         icon: "play_circle"; title: "Not while playing"; desc: "Music or video playing counts as being here"
         Toggle { checked: Idle.mediaPauses; onToggled: on => Store.set("idle.mediaPauses", on) }
     }
     SettingRow {
+        key: "lock.media"; def: true;
         icon: "music_note"; title: "Media on the lock screen"; desc: "Show what's playing, with play/pause"
         Toggle { checked: Store.get("lock.media", true) !== false; onToggled: on => Store.set("lock.media", on) }
     }
@@ -44,6 +51,7 @@ ColumnLayout {
     function setAct(i, k, v) { const l = acts.map(x => Object.assign({}, x)); l[i][k] = v; Store.set("idle.actions", l); }
     Label { text: "Your own actions"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
     SettingRow {
+        key: "idle.actions";
         icon: "terminal"; title: "Run a command when you're away"; desc: "After the time you set; the second command runs when you're back (optional)"
         Button { text: "Add"; icon: "add"; onClicked: Store.set("idle.actions", idleSec.acts.concat([{ name: "Action " + (idleSec.acts.length + 1), after: 600, command: "", resume: "" }])) }
     }

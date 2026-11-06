@@ -21,6 +21,28 @@ Singleton {
         }
         return cur;
     }
+    // whether a setting has been changed from its default (it's in the file at all)
+    function has(path) {
+        let _ = revision;
+        let cur = data;
+        for (const k of path.split(".")) {
+            if (cur === null || typeof cur !== "object" || !(k in cur)) return false;
+            cur = cur[k];
+        }
+        return true;
+    }
+    // back to the default: the setting leaves the file
+    function unset(path) {
+        if (!has(path)) return;
+        const copy = JSON.parse(JSON.stringify(data));
+        const keys = path.split(".");
+        let cur = copy;
+        for (let i = 0; i < keys.length - 1; i++) cur = cur[keys[i]];
+        delete cur[keys[keys.length - 1]];
+        data = copy;
+        revision++;
+        saveLater.restart();
+    }
     function set(path, value) {
         const copy = JSON.parse(JSON.stringify(data));
         let cur = copy;
