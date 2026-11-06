@@ -383,15 +383,23 @@ PanelWindow {
                 z: 20
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: wrap.y > 70 ? -12 - 40 - 8 - height : wrap.height + 12 + 40 + 8
-                width: 340
-                height: optCol.implicitHeight + 24
+                width: 360
+                // long lists (the visualiser's) scroll
+                height: Math.min(optCol.implicitHeight + 24, Math.max(200, (wrap.y > 70 ? wrap.y - 150 : ed.height - wrap.y - wrap.height - 150)))
                 radius: Theme.corner(60, 10)
                 color: Theme.frame
                 border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
-                MouseArea { anchors.fill: parent }
+                MouseArea { anchors.fill: parent; onWheel: wheel => wheel.accepted = true }
+                Flickable {
+                    id: optFlick
+                    anchors.fill: parent; anchors.margins: 12
+                    contentHeight: optCol.implicitHeight
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    SmoothWheel {}
                 Column {
                     id: optCol
-                    x: 12; y: 12; width: parent.width - 24
+                    width: optFlick.width
                     spacing: 10
                     Repeater {
                         model: WidgetLayout.optionsFor(wrap.modelData.type, wrap.modelData.face)
@@ -407,12 +415,26 @@ PanelWindow {
                                 Label { width: parent.width - 52; anchors.verticalCenter: parent.verticalCenter; text: oc.modelData[1]; wrapMode: Text.Wrap }
                                 Toggle { checked: oc.val === true; onToggled: on => ed.setOption(wrap.modelData.id, oc.modelData[0], on) }
                             }
-                            Label { visible: oc.modelData[2] !== "toggle"; text: oc.modelData[1]; muted: true; font.pixelSize: Theme.sizeSmall }
+                            // a section's name
+                            Label {
+                                visible: oc.modelData[2] === "header"
+                                topPadding: 6
+                                text: oc.modelData[1]; strong: true; color: Theme.accent
+                            }
+                            Label { visible: oc.modelData[2] !== "toggle" && oc.modelData[2] !== "header"; text: oc.modelData[1]; muted: true; font.pixelSize: Theme.sizeSmall; width: parent.width; wrapMode: Text.Wrap }
+                            Dropdown {
+                                visible: oc.modelData[2] === "dropdown"
+                                width: parent.width; height: 34
+                                opts: oc.modelData[2] === "dropdown" ? oc.modelData[4] : []
+                                value: String(oc.val)
+                                onPicked: v => ed.setOption(wrap.modelData.id, oc.modelData[0], v)
+                            }
                             NumberBox {
                                 visible: oc.modelData[2] === "slider"
                                 width: parent.width
-                                from: oc.modelData[4] ? oc.modelData[4][0] : 0; to: oc.modelData[4] ? oc.modelData[4][1] : 1
-                                step: oc.modelData[4] ? oc.modelData[4][2] : 1
+                                readonly property bool on: oc.modelData[2] === "slider" && !!oc.modelData[4]
+                                from: on ? oc.modelData[4][0] : 0; to: on ? oc.modelData[4][1] : 1
+                                step: on ? oc.modelData[4][2] : 1
                                 readonly property bool pct: oc.modelData[0] === "opacity" || oc.modelData[0] === "blurStrength"
                                 decimals: pct ? 2 : 0
                                 factor: pct ? 100 : 1
@@ -462,6 +484,7 @@ PanelWindow {
                             }
                         }
                     }
+                }
                 }
             }
         }
@@ -523,7 +546,7 @@ PanelWindow {
     property point dragPos: Qt.point(0, 0)        // the ghost's top-left, in the window
     readonly property var dragSize: dragType !== "" ? WidgetLayout.size({ type: dragType, face: "" }) : [0, 0]
     Rectangle {
-        id: palette
+        id: addStrip
         opacity: ed.adding ? 1 : 0
         scale: ed.adding ? 1 : Theme.popScale
         visible: opacity > 0.01
@@ -607,9 +630,9 @@ PanelWindow {
                             }
                             onReleased: mouse => {
                                 if (dragging) {
-                                    const p = mapToItem(palette, mouse.x, mouse.y);
+                                    const p = mapToItem(addStrip, mouse.x, mouse.y);
                                     // dropped back on the strip: nothing
-                                    if (!palette.contains(p)) {
+                                    if (!addStrip.contains(p)) {
                                         ed.selected = WidgetLayout.add(ed.mode, card.modelData, ed.modelData.name, ed.dragPos.x / ed.width, ed.dragPos.y / ed.height);
                                         Sounds.play("drop");
                                         ed.adding = false;
