@@ -68,26 +68,30 @@ Pressable {
         }
     }
     Timer { id: gone; interval: 190; onTriggered: card.closed() }
-    // Fall (Settings → Notifications): a snapshot of the card, thrown from where it was let go
-    // with the swipe's speed (and a little toss up), falls down the screen (core/Throw)
+    // Thrown away: a snapshot of the card, taken where it was let go, carries on in the
+    // full-screen layer (status/Thrown: falling like a ball, or sliding off), so its own small
+    // window can't cut it off; this card stays until that copy is on screen, then hides
+    property int throwId: -1
     function throwAway(speed) {
-        const w = card.Window.window;
         const p = card.mapToItem(null, 0, 0);
         const scr = card.screenName || HubState.screenName || Niri.focusedOutput || "";
         const dir = card.swipeX !== 0 ? Math.sign(card.swipeX) : (Math.sign(speed) || 1);
-        const vx = dir * Math.max(380, Math.min(2600, Math.abs(speed) * 1000));
+        const fast = Math.abs(speed) * 1000;
+        const vx = dir * (Throw.mode === "fall" ? Math.max(380, Math.min(2600, fast)) : Math.max(1100, Math.min(3200, fast)));
         grabbing = true;
         const ok = card.grabToImage(r => {
-            Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height, vx, -520);
-            grabbing = false;
-            thrown = true;
-            card.closed();
+            card.throwId = Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height, vx, -520);
+            handoff.restart();
         });
         if (!ok) { grabbing = false; card.swipeX = dir * (card.width + 40); gone.restart(); }
     }
+    function handedOver() { if (!thrown) { grabbing = false; thrown = true; card.closed(); } }
+    Connections { target: Throw; function onReady(id) { if (id === card.throwId) card.handedOver(); } }
+    // never stuck if the copy doesn't show (a screen that went away)
+    Timer { id: handoff; interval: 400; onTriggered: card.handedOver() }
     // reused for the next notification (the island's): back in place at once
     property bool resetting: false
-    onNotifChanged: { resetting = true; flying = false; thrown = false; grabbing = false; swipeX = 0; resetting = false; }
+    onNotifChanged: { resetting = true; flying = false; thrown = false; grabbing = false; throwId = -1; handoff.stop(); swipeX = 0; resetting = false; }
 
     RowLayout {
         id: body
