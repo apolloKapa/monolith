@@ -517,7 +517,9 @@ PanelWindow {
     Region {
         id: blurShape
         // (a screen with the bar turned off has no bar to blur behind: only its open menu)
-        item: win.barHere || win.toastOn || (win.shown && win.docked) ? body : null
+        // (the Frame style's band is the frame's: it blurs behind itself. Blurred here too, niri's
+        // blur showed the wallpaper over the frame, so the band didn't match the frame's sides)
+        item: (win.barHere && !(Theme.frameBand && !win.grown)) || win.toastOn || (win.shown && win.docked) ? body : null
         radius: island.rr
         Region { item: win.dropped || drop.height > 1 ? dropBody : null; radius: drop.rr }
         Region { item: blurBox.on ? blurBox : null; radius: floatCard.radius * blurBox.k }

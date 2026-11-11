@@ -201,10 +201,28 @@ Column {
                 Bar {
                     id: cb
                     y: Math.min(Theme.barMargin, 12)
-                    screenW: Theme.barLengthMode === "percent" ? Math.max(closeUp.width - 16, (closeUp.width - 16) / Math.max(0.2, Theme.barLength)) : pv.sw
+                    // a bar against the screen's edge (Fill, Frame, a full-length Island) runs the
+                    // close-up's whole width, as it runs the screen's: with a margin each side it
+                    // looked like a box floating short of both ends. Floating bars keep a margin.
+                    screenW: Theme.barLengthMode === "percent"
+                        ? (Theme.barFloats ? Math.max(closeUp.width - 16, (closeUp.width - 16) / Math.max(0.2, Theme.barLength))
+                                           : closeUp.width / Math.max(0.2, Theme.barLength))
+                        : pv.sw
                     anchors.horizontalCenter: parent.horizontalCenter
                     scale: close.fit
                     transformOrigin: Item.Top
+                }
+            }
+            // Frame: its border down both sides, joined to the bar's band
+            Repeater {
+                model: Theme.barStyle === "frame" ? [0, 1] : []
+                Rectangle {
+                    required property int modelData
+                    x: modelData === 0 ? 0 : closeUp.width - width
+                    y: Theme.islandH
+                    width: Math.max(2, Theme.frameW)
+                    height: closeUp.height - y
+                    color: Theme.liquid ? Qt.alpha(Theme.frame, 0.6) : Theme.frame
                 }
             }
             // "close up", in a chip on the left

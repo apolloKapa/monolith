@@ -19,7 +19,9 @@ Scope {
     // with auto-hide the bar keeps its own background (it slides away), so the frame starts at 0
     readonly property real top: Theme.frameBand ? Theme.islandH : 0
     readonly property real r: Theme.square ? 0 : Math.max(0, Number(Store.get("bar.frameRadius", Theme.islandRadius)))
-    readonly property color col: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+    // (liquid glass panes are nearly clear, being glass: the frame isn't, so it gets a real fill)
+    readonly property color base: Theme.liquid ? Qt.alpha(Theme.frame, 0.6) : Theme.frame
+    readonly property color col: Theme.barOpacity >= 0.99 ? base : Qt.alpha(base, base.a * Theme.barOpacity)
 
     PanelWindow {
         id: win
