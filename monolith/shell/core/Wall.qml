@@ -14,6 +14,38 @@ Singleton {
     readonly property string dir: Store.get("wallpaper.dir", (Prefs.raw.wallpaperDir || (home + "/Pictures/Wallpapers")))
     readonly property string mode: Store.get("theme.mode", "dark")
     property var images: []
+    // live wallpapers (videos, GIFs): in the folder or its Live folder (where "Add video…" copies
+    // them); the picker shows them on their own tab, pictures on the other
+    readonly property string liveDir: dir + "/Live"
+    readonly property var live: images.filter(i => isVideo(i) || isAnimated(i))
+    readonly property var pictures: images.filter(i => !isVideo(i) && !isAnimated(i))
+    // a still of each video (its first second), for the picker's cards
+    readonly property string thumbDir: home + "/.cache/monolith/live-thumbs"
+    property int thumbsMade: 0          // goes up when new stills are written: cards reload
+    function thumb(p) { return thumbDir + "/" + Qt.md5(p) + ".jpg"; }
+    function makeThumbs() {
+        const vids = images.filter(isVideo);
+        if (!vids.length) return;
+        thumbProc.command = ["sh", "-c",
+            "mkdir -p \"$1\"; shift; for v; do t=\"$(printf %s \"$v\" | md5sum | cut -d' ' -f1)\"; " +
+            "[ -s \"$THUMBS/$t.jpg\" ] || ffmpeg -loglevel error -y -ss 1 -i \"$v\" -frames:v 1 -vf scale=640:-2 \"$THUMBS/$t.jpg\" </dev/null " +
+            "|| ffmpeg -loglevel error -y -i \"$v\" -frames:v 1 -vf scale=640:-2 \"$THUMBS/$t.jpg\" </dev/null; done",
+            "_", thumbDir].concat(vids);
+        thumbProc.environment = { "THUMBS": thumbDir };
+        thumbProc.running = true;
+    }
+    Process { id: thumbProc; onExited: wall.thumbsMade++ }
+    // pick a video or GIF with a file dialog and copy it into the Live folder
+    function addLive() { addProc.running = true; }
+    Process {
+        id: addProc
+        command: ["sh", "-c",
+            "f=\"$(zenity --file-selection --title='Add a live wallpaper' --file-filter='Videos and GIFs | *.mp4 *.webm *.mkv *.mov *.gif *.MP4 *.WEBM *.MKV *.MOV *.GIF' 2>/dev/null)\" || exit 1; " +
+            "mkdir -p \"$1\" && cp -n \"$f\" \"$1/\" && printf '%s/%s' \"$1\" \"$(basename \"$f\")\"", "_", wall.liveDir]
+        stdout: StdioCollector { onStreamFinished: { const p = text.trim(); if (p) { wall.pendingAdd = p; wall.rescan(); } } }
+    }
+    property string pendingAdd: ""      // just added: set it once the scan has found it
+    function openLiveDir() { Quickshell.execDetached(["sh", "-c", "mkdir -p \"$1\" && xdg-open \"$1\"", "_", liveDir]); }
     // a screen can have its own wallpaper (right-click in the picker); else the shared one
     function pathFor(screen) { return Store.get("wallpaper.screens." + screen.replace(/\./g, "_"), "") || path; }
     function setFor(screen, p) { Store.set("wallpaper.screens." + screen.replace(/\./g, "_"), p); }
@@ -25,10 +57,12 @@ Singleton {
     function rescan() { scan.running = true; }
     Process {
         id: scan
-        command: ["sh", "-c", "find \"$1\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' \\) | sort", "_", wall.dir]
+        command: ["sh", "-c", "find \"$1\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' -o -iname '*.mov' \\) | sort", "_", wall.dir]
         stdout: StdioCollector {
             onStreamFinished: {
                 wall.images = text.split("\n").filter(l => l);
+                wall.makeThumbs();
+                if (wall.pendingAdd && wall.images.indexOf(wall.pendingAdd) !== -1) { wall.set(wall.pendingAdd); wall.pendingAdd = ""; }
                 // first start: make a palette for whatever wallpaper there is
                 if (!wall.checked) { wall.checked = true; firstPalette.running = true; }
             }

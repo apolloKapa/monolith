@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Effects
+import QtMultimedia
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
@@ -36,7 +37,10 @@ PanelWindow {
     readonly property string screenName: modelData.name
     readonly property string currentPath: Wall.pathFor(screenName)
     readonly property bool coverflow: Store.get("wallpaper.view", "flow") === "flow"
-    onShownChanged: if (shown) { Wall.rescan(); flow.currentIndex = Math.max(0, Wall.images.indexOf(currentPath)); keys.forceActiveFocus(); }
+    // Pictures or Live (videos and GIFs); the tab you used last
+    readonly property bool liveTab: Store.get("wallpaper.tab", "pictures") === "live"
+    readonly property var list: liveTab ? Wall.live : Wall.pictures
+    onShownChanged: if (shown) { Wall.rescan(); flow.currentIndex = Math.max(0, list.indexOf(currentPath)); keys.forceActiveFocus(); }
 
     // the room behind it dims; a click there closes it
     Rectangle {
@@ -82,11 +86,14 @@ PanelWindow {
                 id: keys
                 focus: true
                 Keys.onEscapePressed: HubState.wallOpen = false
-                Keys.onLeftPressed: if (win.coverflow) flow.decrementCurrentIndex(); else grid.moveCurrentIndexLeft()
-                Keys.onRightPressed: if (win.coverflow) flow.incrementCurrentIndex(); else grid.moveCurrentIndexRight()
-                Keys.onUpPressed: if (!win.coverflow) grid.moveCurrentIndexUp()
-                Keys.onDownPressed: if (!win.coverflow) grid.moveCurrentIndexDown()
-                Keys.onReturnPressed: { const i = win.coverflow ? flow.currentIndex : grid.currentIndex; if (Wall.images.length) Wall.set(Wall.images[i]); }
+                readonly property var g: win.liveTab ? liveGrid : grid
+                readonly property bool f: win.coverflow && !win.liveTab
+                Keys.onLeftPressed: if (f) flow.decrementCurrentIndex(); else g.moveCurrentIndexLeft()
+                Keys.onRightPressed: if (f) flow.incrementCurrentIndex(); else g.moveCurrentIndexRight()
+                Keys.onUpPressed: if (!f) g.moveCurrentIndexUp()
+                Keys.onDownPressed: if (!f) g.moveCurrentIndexDown()
+                Keys.onTabPressed: Store.set("wallpaper.tab", win.liveTab ? "pictures" : "live")
+                Keys.onReturnPressed: { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) Wall.set(win.list[i]); }
             }
 
             RowLayout {
@@ -95,8 +102,13 @@ PanelWindow {
                 height: 40
                 Icon { name: "wallpaper"; size: 22; filled: true; color: Theme.accent }
                 Label { text: "Wallpaper"; strong: true; font.pixelSize: Theme.sizeTitle + 2 }
-                Label { Layout.leftMargin: 8; Layout.fillWidth: true; text: Wall.dir.replace(Wall.home, "~") + "   ·   " + Wall.images.length + " pictures   ·   right-click: only this screen"; muted: true; font.pixelSize: Theme.sizeSmall }
-                Segmented { Layout.preferredWidth: 180; height: 36; opts: [["flow", "Coverflow"], ["grid", "Grid"]]; value: win.coverflow ? "flow" : "grid"; onPicked: v => Store.set("wallpaper.view", v) }
+                Segmented { Layout.leftMargin: 10; Layout.preferredWidth: 200; height: 36; opts: [["pictures", "Pictures"], ["live", "Live"]]; value: win.liveTab ? "live" : "pictures"; onPicked: v => Store.set("wallpaper.tab", v) }
+                Label {
+                    Layout.leftMargin: 8; Layout.fillWidth: true; elide: Text.ElideRight; muted: true; font.pixelSize: Theme.sizeSmall
+                    text: win.liveTab ? Wall.live.length + (Wall.live.length === 1 ? " live wallpaper" : " live wallpapers") + "   ·   hover to preview"
+                                      : Wall.dir.replace(Wall.home, "~") + "   ·   " + Wall.pictures.length + " pictures   ·   right-click: only this screen"
+                }
+                Segmented { visible: !win.liveTab; Layout.preferredWidth: 180; height: 36; opts: [["flow", "Coverflow"], ["grid", "Grid"]]; value: win.coverflow ? "flow" : "grid"; onPicked: v => Store.set("wallpaper.view", v) }
                 Segmented { Layout.preferredWidth: 160; height: 36; opts: [["dark", "Dark"], ["light", "Light"]]; value: Theme.modeName; onPicked: v => Store.set("theme.mode", v) }
                 Pressable {
                     Layout.preferredWidth: 36; Layout.preferredHeight: 36
@@ -131,12 +143,12 @@ PanelWindow {
             // ── coverflow: the pictures turn away on both sides of the middle one ──
             PathView {
                 id: flow
-                visible: win.coverflow
+                visible: win.coverflow && !win.liveTab
                 y: head.height + 12
                 width: parent.width
                 height: parent.height - y - 34
-                model: Wall.images
-                pathItemCount: Math.min(9, Wall.images.length)
+                model: win.list
+                pathItemCount: Math.min(9, win.list.length)
                 preferredHighlightBegin: 0.5
                 preferredHighlightEnd: 0.5
                 highlightRangeMode: PathView.StrictlyEnforceRange
@@ -201,28 +213,178 @@ PanelWindow {
                 WheelHandler { onWheel: event => { if (event.angleDelta.y > 0 || event.angleDelta.x > 0) flow.decrementCurrentIndex(); else flow.incrementCurrentIndex(); } }
             }
             Label {
-                visible: win.coverflow && Wall.images.length > 0
+                visible: win.coverflow && !win.liveTab && win.list.length > 0
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
                 width: parent.width * 0.7
                 horizontalAlignment: Text.AlignHCenter
-                text: Wall.images.length ? Wall.images[flow.currentIndex].replace(/^.*\//, "") + "   ·   " + (flow.currentIndex + 1) + " / " + Wall.images.length : ""
+                text: win.list.length ? (win.list[flow.currentIndex] || "").replace(/^.*\//, "") + "   ·   " + (flow.currentIndex + 1) + " / " + win.list.length : ""
                 muted: true
                 font.pixelSize: Theme.sizeSmall
+            }
+
+            // ── live: videos and GIFs, a still on each card that comes alive under the pointer ──
+            component LiveCard: ClippingRectangle {
+                id: lc
+                property string path: ""
+                property bool current: false
+                property bool hot: false
+                readonly property bool gif: Wall.isAnimated(path)
+                radius: Theme.corner(height, 6)
+                color: Theme.container
+                border.width: current ? 3 : 0
+                border.color: Theme.accent
+                scale: hot ? 1.03 : 1
+                Behavior on scale { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+                Icon { anchors.centerIn: parent; name: "movie"; size: 40; color: Theme.faint; visible: still.status !== Image.Ready && !lc.gif }
+                // the still (a video's first second, made by Wall.makeThumbs)
+                Image {
+                    id: still
+                    anchors.fill: parent
+                    visible: !lc.gif
+                    source: lc.gif || lc.path === "" ? "" : "file://" + Wall.thumb(lc.path) + "?" + Wall.thumbsMade
+                    sourceSize: Qt.size(640, 400)
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: false
+                    opacity: status === Image.Ready ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: Theme.ms(240); easing.type: Easing.OutCubic } }
+                }
+                AnimatedImage {
+                    anchors.fill: parent
+                    visible: lc.gif
+                    source: lc.gif ? Wall.url(lc.path) : ""
+                    fillMode: Image.PreserveAspectCrop
+                    playing: lc.hot
+                    asynchronous: true
+                }
+                // the preview: plays (muted) while the pointer is on it, fading in over the still
+                Loader {
+                    anchors.fill: parent
+                    active: lc.hot && !lc.gif && win.shown
+                    sourceComponent: Video {
+                        source: Wall.url(lc.path)
+                        fillMode: VideoOutput.PreserveAspectCrop
+                        loops: MediaPlayer.Infinite
+                        muted: true
+                        autoPlay: true
+                        opacity: playbackState === MediaPlayer.PlayingState && position > 80 ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: Theme.ms(300); easing.type: Easing.OutCubic } }
+                    }
+                }
+                // shade, name and a LIVE badge
+                Rectangle {
+                    anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
+                    height: parent.height * 0.42
+                    gradient: Gradient { GradientStop { position: 0; color: "transparent" } GradientStop { position: 1; color: Qt.rgba(0, 0, 0, 0.6) } }
+                }
+                Label {
+                    anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
+                    anchors.margins: 12
+                    elide: Text.ElideRight
+                    text: lc.path.replace(/^.*\//, "").replace(/\.[^.]+$/, "")
+                    color: "#ffffff"; strong: true; font.pixelSize: Theme.sizeSmall
+                }
+                Rectangle {
+                    anchors.left: parent.left; anchors.top: parent.top; anchors.margins: 10
+                    width: badge.implicitWidth + 18; height: 22; radius: 11
+                    color: Qt.rgba(0, 0, 0, 0.55)
+                    Row {
+                        id: badge
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Rectangle {
+                            width: 7; height: 7; radius: 3.5; color: "#ff5a6e"; anchors.verticalCenter: parent.verticalCenter
+                            SequentialAnimation on opacity { running: lc.hot || lc.current; loops: Animation.Infinite; NumberAnimation { to: 0.25; duration: 600 } NumberAnimation { to: 1; duration: 600 } }
+                        }
+                        Label { text: lc.gif ? "GIF" : "LIVE"; color: "#ffffff"; strong: true; font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                }
+                Bubble { visible: lc.current; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 10; size: 26; icon: "check"; on: true }
+            }
+
+            Item {
+                id: liveView
+                visible: win.liveTab
+                y: head.height + 12
+                width: parent.width
+                height: parent.height - y
+
+                // add one, its folder, sound, pausing under fullscreen apps
+                RowLayout {
+                    id: liveBar
+                    width: parent.width
+                    height: 40
+                    spacing: 8
+                    Button { text: "Add video…"; icon: "add"; primary: true; onClicked: Wall.addLive() }
+                    Button { text: "Open folder"; icon: "folder_open"; onClicked: Wall.openLiveDir() }
+                    Item { Layout.fillWidth: true }
+                    Label { text: "Sound"; muted: true; font.pixelSize: Theme.sizeSmall }
+                    Toggle { checked: Store.get("wallpaper.liveSound", false) === true; onToggled: on => Store.set("wallpaper.liveSound", on) }
+                    Label { Layout.leftMargin: 10; text: "Pause under fullscreen apps"; muted: true; font.pixelSize: Theme.sizeSmall }
+                    Toggle { checked: Store.get("wallpaper.livePause", true) !== false; onToggled: on => Store.set("wallpaper.livePause", on) }
+                }
+
+                Empty {
+                    anchors.centerIn: liveGrid
+                    width: liveGrid.width
+                    visible: Wall.live.length === 0
+                    icon: "animated_images"
+                    title: "No live wallpapers yet"
+                    sub: "Add a video (mp4, webm, mkv, mov) or a GIF and it plays behind your windows. They're kept in " + Wall.liveDir.replace(Wall.home, "~") + "."
+                    button: "Add video…"
+                    buttonIcon: "add"
+                    onActed: Wall.addLive()
+                }
+
+                GridView {
+                    SmoothWheel {}
+                    id: liveGrid
+                    y: liveBar.height + 12
+                    width: parent.width
+                    height: parent.height - y
+                    clip: true
+                    cellWidth: width / 3
+                    cellHeight: cellWidth * 0.6
+                    model: Wall.live
+                    boundsBehavior: Flickable.StopAtBounds
+                    delegate: Item {
+                        id: lcell
+                        required property string modelData
+                        required property int index
+                        width: liveGrid.cellWidth
+                        height: liveGrid.cellHeight
+                        LiveCard {
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            path: lcell.modelData
+                            hot: lma.containsMouse || (liveGrid.currentIndex === lcell.index && liveGrid.activeFocus)
+                            current: lcell.modelData === win.currentPath
+                        }
+                        MouseArea {
+                            id: lma
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: mouse => { if (mouse.button === Qt.RightButton) Wall.setFor(win.screenName, lcell.modelData); else Wall.set(lcell.modelData); }
+                        }
+                    }
+                }
             }
 
             // ── grid ──
             GridView {
                 SmoothWheel {}
                 id: grid
-                visible: !win.coverflow
+                visible: !win.coverflow && !win.liveTab
                 y: head.height + 12
                 width: parent.width
                 height: parent.height - y
                 clip: true
                 cellWidth: width / 5
                 cellHeight: cellWidth * 0.64
-                model: Wall.images
+                model: win.list
                 boundsBehavior: Flickable.StopAtBounds
                 delegate: Item {
                     id: gcell

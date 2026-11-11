@@ -52,14 +52,17 @@ PanelWindow {
             onStatusChanged: if (status === Image.Ready && bg.showA && source !== "" && a.source !== source) bg.showA = false
         }
 
-        // a video wallpaper: muted, looping, over the pictures (which stay as the backdrop)
+        // a video wallpaper: looping, over the pictures (which stay as the backdrop); muted unless
+        // Sound is on, and paused while a fullscreen app covers this screen (Wallpaper → Live)
         Video {
+            id: vid
             anchors.fill: parent
             visible: bg.video
             source: bg.video ? Wall.url(bg.target) : ""
             fillMode: VideoOutput.PreserveAspectCrop
             loops: MediaPlayer.Infinite
-            muted: true
+            muted: Store.get("wallpaper.liveSound", false) !== true
+            volume: 0.6
             autoPlay: true
         }
         AnimatedImage {
@@ -67,9 +70,11 @@ PanelWindow {
             visible: Wall.isAnimated(bg.target)
             source: visible ? Wall.url(bg.target) : ""
             fillMode: Image.PreserveAspectCrop
-            playing: visible
+            playing: visible && !bg.covered
         }
     }
+    readonly property bool covered: Store.get("wallpaper.livePause", true) !== false && Niri.focusedFullscreen && Niri.focusedOutput === modelData.name
+    onCoveredChanged: if (video) { if (covered) vid.pause(); else vid.play(); }
 
     // the desktop widgets, only on the first screen for now
     Widgets { screenName: bg.modelData.name; backdrop: wallLayer }
