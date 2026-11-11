@@ -14,9 +14,15 @@ ColumnLayout {
     readonly property var hiddenIds: Store.get("search.hidden", []) || []
     property string appFilter: ""
     property bool onlyHidden: false
-    readonly property var allApps: { let _ = Store.revision; return DesktopEntries.applications.values.filter(a => !a.noDisplay).slice().sort((a, b) => a.name.localeCompare(b.name)); }
-    readonly property var listedApps: allApps.filter(a => (!onlyHidden || hiddenIds.indexOf(a.id) !== -1)
-        && (appFilter.trim() === "" || a.name.toLowerCase().indexOf(appFilter.trim().toLowerCase()) !== -1))
+    // (the list is only made again when the apps, the search or the filter change: it used to be
+    // made again on every change to any setting, hiding one too, and the page jumped to the top)
+    readonly property var allApps: DesktopEntries.applications.values.filter(a => !a.noDisplay).slice().sort((a, b) => a.name.localeCompare(b.name))
+    readonly property var listedApps: {
+        const q = appFilter.trim().toLowerCase();
+        const byName = allApps.filter(a => q === "" || a.name.toLowerCase().indexOf(q) !== -1);
+        // (only the Hidden filter needs to know which are hidden)
+        return onlyHidden ? byName.filter(a => hiddenIds.indexOf(a.id) !== -1) : byName;
+    }
     function setShown(id, on) { Store.set("search.hidden", on ? hiddenIds.filter(x => x !== id) : hiddenIds.concat([id])); }
     SettingRow {
         key: "search.hidden";

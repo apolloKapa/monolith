@@ -53,6 +53,12 @@ def kitty(c, mode):
     norm[0], norm[7] = c.get("surface_container_highest", bg), c.get("on_surface_variant", fg)
     bright = [mix(x, "#ffffff" if mode == "dark" else "#000000", 0.2) for x in norm]
     bright[0] = c.get("outline", bright[0])
+    # white and bright white: near the text colour, and the text colour itself (a muted role made
+    # them grey, so anything printed in white, like fastfetch in its own colours, came out grey).
+    # (a light theme keeps them grey: white text wouldn't show on its background)
+    if mode == "dark":
+        norm[7] = mix(c.get("on_surface_variant", fg), fg, 0.65)
+        bright[7] = fg
     lines = ["# Monolith: the shell's colours (Settings -> App colours). Rewritten on every change.",
              "background " + bg, "foreground " + fg, "cursor " + c["primary"], "cursor_text_color " + bg,
              "selection_background " + c["primary_container"], "selection_foreground " + c["on_primary_container"],

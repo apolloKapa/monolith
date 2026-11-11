@@ -81,7 +81,11 @@ PanelWindow {
     // menus you filter by typing keep the search field; the rest show their name there
     readonly property bool usesQuery: HubState.page === "search" || !!(currentPage && currentPage.usesQuery)
     // the body's size: the bar's when collapsed, the page's when open
-    readonly property real openW: Math.max(bar.needWidth, (pageInfo[HubState.page] || pageInfo.search).w)
+    // (a menu growing out of the island is never narrower than the bar in it; a card or a menu
+    // dropping out of a full bar keeps its own width: following the bar's, it changed by a few
+    // pixels whenever a module's text did, the CPU % or the clock, and the menu kept resizing)
+    readonly property real openW: grownLike ? Math.max(bar.needWidth, (pageInfo[HubState.page] || pageInfo.search).w) : (pageInfo[HubState.page] || pageInfo.search).w
+    readonly property bool grownLike: place === "top" && !Theme.barFloats && !side && !Theme.fullBar
     readonly property real openH: Math.min(height - 40, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
     readonly property real restW: Theme.barWidth(width, bar.needWidth)
     readonly property bool barShort: restW < width - 2 * Theme.barMargin - 1   // a full bar that doesn't reach the screen's sides
