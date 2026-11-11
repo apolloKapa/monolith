@@ -284,4 +284,6 @@ Monolith's earlier versions were a fork of [Serpantinum](https://github.com/ilya
 
 The YAMIS icon pack (`config/icons/YAMIS`, "yet another monochrome icon set") is by [Dirn](https://bitbucket.org/dirn-typo/yet-another-monochrome-icon-set), licensed under the GNU GPL-3.0, and ships unchanged.
 
+The emoji search's short names and tags (`:sob:`, `:thumbsup:`) come from GitHub's [gemoji](https://github.com/github/gemoji) (MIT licence); the emoji list itself is generated from Unicode's `emoji-test.txt` (`tools/make_emoji.py`).
+
 The login screen theme is based on [Qylock](https://github.com/Darkkal44/qylock) by Darkkal44, licensed under the GNU GPL-3.0.

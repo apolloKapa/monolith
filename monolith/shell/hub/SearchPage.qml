@@ -124,9 +124,24 @@ Page {
             return [{ kind: "cmd", name: cmd === "" ? "Type a command" : cmd, sub: "Run in a terminal", icon: "terminal", cmd: cmd }];
         }
         if (q.startsWith(":")) {
-            const e = q.substring(1).trim();
-            const hits = Emoji.list.filter(x => e === "" || x[1].indexOf(e) !== -1).slice(0, 60);
-            return hits.map(x => ({ kind: "emoji", name: x[1], sub: Emoji.groups[x[2]] + " · Enter copies", glyph: x[0] }));
+            // by its short name (:sob, :joy:, :thumbsup), its name ("loudly crying") or a tag ("sad");
+            // exact short names first, then ones that start with what you typed, then the rest
+            const e = q.substring(1).trim().replace(/:$/, "");
+            const words = e.replace(/_/g, " ");
+            const score = x => {
+                if (e === "") return 5;
+                const codes = (x[3] || "").split(" ");
+                if (codes.indexOf(e) !== -1) return 0;
+                if (codes.some(c => c.startsWith(e))) return 1;
+                if (x[1].startsWith(words)) return 2;
+                if (codes.some(c => c.indexOf(e) !== -1) || x[1].indexOf(words) !== -1) return 3;
+                if ((x[4] || "").split(" ").some(t => t.startsWith(words))) return 4;
+                return -1;
+            };
+            const hits = Emoji.list.map((x, i) => [x, score(x), i]).filter(h => h[1] >= 0)
+                .sort((a, b) => a[1] - b[1] || a[2] - b[2]).slice(0, 60).map(h => h[0]);
+            return hits.map(x => ({ kind: "emoji", name: x[1], glyph: x[0],
+                sub: (x[3] ? ":" + x[3].split(" ")[0] + ":  ·  " : "") + Emoji.groups[x[2]] + " · Enter copies" }));
         }
         if (q.startsWith("/") || q.startsWith("~")) {
             return files.map(f => ({ kind: "file", name: f.replace(/\/$/, "").split("/").pop(), sub: f.replace(Quickshell.env("HOME"), "~"), path: f, icon: f.endsWith("/") ? "folder" : "draft" }));
