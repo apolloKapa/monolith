@@ -20,8 +20,10 @@ ColumnLayout {
     Process { id: supportCheck; command: ["python3", sec.script, "support"]; stdout: StdioCollector { onStreamFinished: sec.pictures = text.trim() !== "no" } }
     readonly property string fixCommand: "echo 'app-misc/fastfetch imagemagick' | sudo tee -a /etc/portage/package.use/monolith && sudo emerge --oneshot app-misc/fastfetch"
     Component.onCompleted: load()
-    Process { id: lister; command: ["python3", sec.script, "list"]; stdout: StdioCollector { onStreamFinished: { try { sec.list = JSON.parse(text); } catch (e) {} sec.loaded = true; } } }
-    Process { id: act; onExited: sec.load() }
+    // the setting goes to the script directly (the settings file may not be written yet)
+    readonly property var ffEnv: ({ MONOLITH_FF_DEFAULTS: Store.get("fastfetch.defaultColors", false) === true ? "1" : "0" })
+    Process { id: lister; environment: sec.ffEnv; command: ["python3", sec.script, "list"]; stdout: StdioCollector { onStreamFinished: { try { sec.list = JSON.parse(text); } catch (e) {} sec.loaded = true; } } }
+    Process { id: act; environment: sec.ffEnv; onExited: sec.load() }
     function run(args) { act.command = ["python3", sec.script].concat(args); act.running = true; }
     // a picture for a preset: the file picker, then the script fits and sets it
     Process {
@@ -38,11 +40,23 @@ ColumnLayout {
     }
 
     SettingRow {
-        icon: "terminal"; title: "Terminal greeting (fastfetch)"; desc: "What a new terminal greets you with. Colours follow the wallpaper; {{primary}} and the like in a preset become them. Picture… puts any image in as the logo (it shows in kitty)"
+        icon: "terminal"; title: "Terminal greeting (fastfetch)"; desc: "What a new terminal greets you with. Colours follow the wallpaper (unless you keep fastfetch's own, below); {{primary}} and the like in a preset become them. Picture… puts any image in as the logo (it shows in kitty)"
         Row {
             spacing: 6
             Button { text: "New"; icon: "add"; onClicked: sec.run(["new"]) }
             Button { text: "Reload"; icon: "refresh"; onClicked: sec.load() }
+        }
+    }
+    SettingRow {
+        key: "fastfetch.defaultColors"; def: false;
+        icon: "format_color_reset"; title: "Fastfetch's own colours"
+        desc: Store.get("fastfetch.defaultColors", false) === true
+            ? "On: the greeting keeps fastfetch's normal colours (your distribution's logo colours), not the shell's"
+            : "Off: the greeting takes the shell's colours. On: it keeps fastfetch's normal ones"
+        Toggle {
+            checked: Store.get("fastfetch.defaultColors", false) === true
+            // written again in the new colours, and the previews made again
+            onToggled: on => { Store.set("fastfetch.defaultColors", on); sec.run(["render"]); }
         }
     }
     // pictures need a fastfetch built with them

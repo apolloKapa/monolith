@@ -47,7 +47,34 @@ def active():
         return ""
 
 
+def keep_defaults():
+    """Settings -> Fastfetch -> "fastfetch's own colours": the shell's colours stay out of it.
+    MONOLITH_FF_DEFAULTS (1/0) when Settings runs this right after changing it, else the setting"""
+    env = os.environ.get("MONOLITH_FF_DEFAULTS")
+    if env in ("0", "1"):
+        return env == "1"
+    try:
+        return json.load(open(CONF + "/monolith/next.json")).get("fastfetch", {}).get("defaultColors", False) is True
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
+def plain(text):
+    """a preset without the shell's colours: every colour that names one ("keys": "{{primary}}",
+    or a colour code built from {{colors.ROLE.VARIANT.red}} and the like inside a string) is left
+    out, so fastfetch uses its own (the distribution's logo colours and so on)"""
+    ph = r"\{\{[^}]*\}\}"
+    # colour codes inside strings that are made of placeholders: \u001b[38;2;{{r}};{{g}};{{b}}m
+    text = re.sub(r"(?:\\u001b|\\e|\x1b)\[[0-9;]*(?:" + ph + r"[0-9;]*)+m", "", text)
+    # "name": "{{role}}" pairs (with the comma after them)
+    text = re.sub(r'"[^"\\]*"\s*:\s*"' + ph + r'"\s*,?', "", text)
+    text = re.sub(r",(\s*[}\]])", r"\1", text)
+    return re.sub(ph, "", text)
+
+
 def coloured(text):
+    if keep_defaults():
+        return plain(text)
     try:
         roles = json.load(open(PALETTE)).get("colors", {})
     except (OSError, ValueError):
