@@ -18,6 +18,17 @@ Item {
         PauseAnimation { id: wait }
         NumberAnimation { target: rise; property: "t"; to: 1; duration: Theme.ms(360); easing.type: Easing.OutCubic }
     }
+    // shown again (a tab switched back, a section appearing): it comes up again
+    Connections {
+        target: rise.target
+        enabled: rise.on && !!rise.target
+        function onVisibleChanged() {
+            if (!rise.target.visible || go.running) return;
+            go.stop(); rise.t = 0;
+            wait.duration = Theme.ms(rise.delay >= 0 ? rise.delay : Math.min(240, Math.max(0, rise.target.y) * 0.3));
+            go.start();
+        }
+    }
     Timer {
         interval: 1; running: rise.on
         onTriggered: {

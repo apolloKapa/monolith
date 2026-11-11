@@ -315,22 +315,89 @@ RowLayout {
                     required property var modelData
                     required property int index
                     property bool armed: false
+                    readonly property bool risky: index === 4
                     Layout.fillWidth: true
                     Layout.preferredHeight: 64
                     Rise { delay: 200 + pb.index * 45 }
                     radius: Theme.corner(56, 4)
-                    color: armed ? Theme.danger : (index === 4 ? Qt.alpha(Theme.danger, hovered ? 0.32 : 0.2) : Theme.containerHigh)
+                    clip: true
+                    color: risky ? Qt.alpha(Theme.danger, hovered ? 0.3 : 0.18) : (hovered ? Theme.control : Theme.containerHigh)
                     onClicked: {
-                        if (modelData[3] && !armed) { armed = true; disarm.restart(); return; }
+                        if (modelData[3] && !armed) { armed = true; disarm.restart(); kick.restart(); return; }
                         armed = false;
+                        go.restart();
                         modelData[2]();
                     }
+                    onArmedChanged: if (!armed) disarm.stop()
                     Timer { id: disarm; interval: 3000; onTriggered: pb.armed = false }
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 3
-                        Icon { anchors.horizontalCenter: parent.horizontalCenter; name: pb.armed ? "help" : pb.modelData[0]; size: 21; color: pb.armed ? Theme.m("on_error", "#ffffff") : (pb.index === 4 ? Theme.danger : Theme.text) }
-                        Label { anchors.horizontalCenter: parent.horizontalCenter; text: pb.armed ? "Sure?" : pb.modelData[1]; font.pixelSize: Theme.sizeSmall; strong: pb.armed; color: pb.armed ? Theme.m("on_error", "#ffffff") : (pb.index === 4 ? Theme.danger : Theme.subtext) }
+
+                    // asking: red rises from the bottom, and a line along the bottom runs down the
+                    // three seconds it waits for the second click
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        width: parent.width
+                        height: pb.armed ? parent.height : 0
+                        color: Theme.danger
+                        Behavior on height { NumberAnimation { duration: Theme.ms(pb.armed ? 320 : 220); easing.type: Easing.BezierSpline; easing.bezierCurve: pb.armed ? Theme.enterCurve : Theme.exitCurve } }
+                    }
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        height: 3
+                        radius: 1.5
+                        color: Theme.m("on_error", "#ffffff")
+                        opacity: pb.armed ? 0.75 : 0
+                        width: parent.width
+                        Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
+                        NumberAnimation on width { running: pb.armed; from: pb.width; to: 0; duration: 3000 }
+                    }
+
+                    Item {
+                        id: face
+                        anchors.fill: parent
+                        // the icon: dips when pressed; when it asks, it lifts and a "Sure?" slides up
+                        Icon {
+                            id: pic
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            y: pb.armed ? 9 : 13
+                            Behavior on y { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
+                            name: pb.armed ? "priority_high" : pb.modelData[0]
+                            size: 22
+                            filled: pb.armed || pb.hovered
+                            color: pb.armed ? Theme.m("on_error", "#ffffff") : (pb.risky ? Theme.danger : Theme.text)
+                            scale: pb.pressed ? 0.78 : (pb.hovered ? 1.12 : 1)
+                            Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack; easing.overshoot: 2.2 } }
+                            // each turns its own way under the pointer: restart spins, power off
+                            // tips, the moon rocks, the lock and door nudge
+                            rotation: !pb.hovered || pb.armed ? 0 : [-12, -18, 0, -150, 0][pb.index]
+                            Behavior on rotation { NumberAnimation { duration: Theme.ms(pb.index === 3 ? 520 : 300); easing.type: Easing.OutBack } }
+                            transform: [
+                                Translate { x: pb.hovered && !pb.armed && pb.index === 2 ? 3 : 0; Behavior on x { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } } },
+                                Scale { id: popS; origin.x: pic.width / 2; origin.y: pic.height / 2 }
+                            ]
+                        }
+                        Label {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            y: 39
+                            text: pb.armed ? "Sure?" : pb.modelData[1]
+                            font.pixelSize: Theme.sizeSmall
+                            strong: pb.armed
+                            color: pb.armed ? Theme.m("on_error", "#ffffff") : (pb.risky ? Theme.danger : Theme.subtext)
+                            Behavior on color { ColorAnimation { duration: Theme.fastMs } }
+                        }
+                    }
+                    // asking: a little shake so it's clear it wants a second click
+                    SequentialAnimation {
+                        id: kick
+                        NumberAnimation { target: face; property: "x"; to: -5; duration: Theme.ms(60); easing.type: Easing.OutQuad }
+                        NumberAnimation { target: face; property: "x"; to: 5; duration: Theme.ms(90); easing.type: Easing.InOutQuad }
+                        NumberAnimation { target: face; property: "x"; to: -3; duration: Theme.ms(80); easing.type: Easing.InOutQuad }
+                        NumberAnimation { target: face; property: "x"; to: 0; duration: Theme.ms(70); easing.type: Easing.OutQuad }
+                    }
+                    // doing it: the icon pops
+                    SequentialAnimation {
+                        id: go
+                        NumberAnimation { target: popS; properties: "xScale,yScale"; to: 1.45; duration: Theme.ms(120); easing.type: Easing.OutCubic }
+                        NumberAnimation { target: popS; properties: "xScale,yScale"; to: 1; duration: Theme.ms(260); easing.type: Easing.OutBack }
                     }
                 }
             }

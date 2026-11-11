@@ -49,6 +49,9 @@ Singleton {
     // an administrator password is being asked for (status/PolkitDialog): menus that hold the
     // keyboard let go of it, or the dialog can't be typed in
     property bool authOpen: false
+    // what the Network menu last found (its page is rebuilt each time it opens): it opens with
+    // that, at the right size, instead of growing once nmcli answers
+    property var netCache: ({})
     // open Search with text already typed (":" = emojis, "~/" = files)
     property string preset: ""
     signal presetRequested()

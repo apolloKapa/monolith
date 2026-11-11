@@ -128,8 +128,8 @@ PanelWindow {
         flipped: win.bottom
         y: win.bottom ? win.height - height - (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
                       : (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
-        Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+        Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
+        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
         Behavior on r { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
         Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
 
@@ -223,10 +223,15 @@ PanelWindow {
                 id: openArea
                 // in the island, or in the floating card
                 parent: !win.docked ? floatCard : (Theme.fullBar ? dropBody : body)
-                x: win.pad
+                // laid out at the size the menu is going to (not the size it has while it grows or
+                // shrinks there), so the page doesn't reflow and seem to rescale on every change;
+                // kept in the middle while the card around it catches up
+                readonly property real goalW: !win.docked ? Math.round(win.openW + 2 * win.pad) : win.openW
+                readonly property real goalH: !win.docked ? Math.round(win.openH - Theme.islandH + win.pad) : (Theme.fullBar ? win.openH - Theme.islandH : win.openH)
+                x: Math.round((parent.width - width) / 2)
                 y: win.docked && !Theme.fullBar && !win.bottom ? Theme.islandH + 2 : win.pad
-                width: parent.width - 2 * win.pad
-                height: parent.height - y - (win.docked && !Theme.fullBar && win.bottom ? Theme.islandH + 2 : win.pad)
+                width: (win.shown ? goalW : parent.width) - 2 * win.pad
+                height: (win.shown ? goalH : parent.height) - y - (win.docked && !Theme.fullBar && win.bottom ? Theme.islandH + 2 : win.pad)
                 opacity: win.shown ? 1 : 0
                 visible: opacity > 0.01
                 Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
@@ -431,8 +436,8 @@ PanelWindow {
         flipped: win.bottom
         y: win.bottom ? win.height - Theme.islandH - height + (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
                       : Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
-        Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-        Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : 220; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springCurve : Theme.exitCurve } }
+        Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
+        Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : 220; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.sizeCurve : Theme.exitCurve } }
         onHeightChanged: if (!win.shown && height <= 1) win.wasOpen = false
         MouseArea { anchors.fill: parent }
         Item { id: dropBody; x: drop.e; width: drop.bodyW; height: drop.height; clip: true }
@@ -445,8 +450,8 @@ PanelWindow {
         // whole pixels: a fractional card size blurs what's in it
         width: Math.round(win.openW + 2 * win.pad)
         height: Math.round(win.openH - Theme.islandH + win.pad)
-        Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+        Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
+        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
         // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
         // "top" means by the bar: next to it at the bottom when the bar is there
         readonly property string spot: win.bottom && win.place.startsWith("top") ? "bottom" + win.place.slice(3) : win.place

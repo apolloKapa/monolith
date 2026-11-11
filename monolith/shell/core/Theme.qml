@@ -185,6 +185,9 @@ Singleton {
     // SpringAnimation: that steps every 16 ms, so it moves at 60 fps on any screen.)
     readonly property var springCurve: [0.22, 1.0, 0.36, 1.1, 1, 1]
     readonly property int springMs: Math.round(520 * animScale)
+    // menus growing and shrinking to fit: a quick start that settles, no overshoot (a spring's
+    // overshoot made a menu look as if it rescaled every time its content changed)
+    readonly property var sizeCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
     // the soft shadow under floating shapes (drawn by the shell, no compositor blur)
     // (styles with a hard shadow: a solid offset copy in the ink colour)
     readonly property real hardShadow: Look.style.hardShadow || 0

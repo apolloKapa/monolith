@@ -55,14 +55,18 @@ Rectangle {
             spacing: 6
             Label { text: row.title; strong: true; width: Math.min(implicitWidth, texts.width - (row.changed ? 14 : 0)); elide: Text.ElideRight }
             // changed from the default
-            Rectangle { visible: row.changed; width: 7; height: 7; radius: 3.5; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+            Rectangle { visible: scale > 0.01; scale: row.changed ? 1 : 0; Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack; easing.overshoot: 2.5 } } width: 7; height: 7; radius: 3.5; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
         }
         Label { width: parent.width; text: row.desc; muted: true; font.pixelSize: Theme.sizeSmall; wrapMode: Text.Wrap; visible: text !== "" }
     }
     // back to the default
     Pressable {
         id: revert
-        visible: row.changed
+        visible: opacity > 0.01
+        opacity: row.changed ? 1 : 0
+        scale: row.changed ? 1 : 0.5
+        Behavior on opacity { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
         anchors.right: slot.left; anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
         width: 32; height: 32

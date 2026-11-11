@@ -20,8 +20,11 @@ PanelWindow {
     exclusionMode: exclusive ? ExclusionMode.Normal : ExclusionMode.Ignore
     exclusiveZone: exclusive ? (vertical ? capsule.width : capsule.height) + dock.margin : 0
     anchors { bottom: side !== "top"; top: side !== "bottom"; left: side !== "right"; right: side !== "left" }
-    implicitHeight: vertical ? 0 : (editing ? 620 : 280)
-    implicitWidth: vertical ? (editing ? 620 : 300) : 0
+    // always this size: room for the editor's app picker. Growing the window when the editor
+    // opened (280 → 620) resized it while it was drawing, which a layer window doesn't survive;
+    // what takes clicks is the mask below
+    implicitHeight: vertical ? 0 : 620
+    implicitWidth: vertical ? 620 : 0
     WlrLayershell.keyboardFocus: editing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     // on the same edge as the bar it sits clear of it (an exclusive dock is already moved by it)
     readonly property bool barEdge: !exclusive && ((side === "bottom" && Theme.barBottom) || (side === "top" && !Theme.barBottom))
@@ -62,7 +65,7 @@ PanelWindow {
         return Math.max(0, Math.min(pinnedList.length - 1, Math.floor((vertical ? p.y : p.x) / step)));
     }
     Connections { target: HubState; function onDockEditChanged() { if (HubState.dockEdit === dock.modelData.name) { dock.editing = true; HubState.dockEdit = ""; } } }
-    onEditingChanged: { pickQuery = ""; picker.visible = false; if (editing) editKeys.forceActiveFocus(); }
+    onEditingChanged: { pickQuery = ""; picker.wanted = false; if (editing) editKeys.forceActiveFocus(); }
 
     // dodge windows: up, unless a window is over (or touching) the dock's spot on this screen's
     // current workspace. Floating windows count by where they are; tiled ones fill the screen's
@@ -177,7 +180,7 @@ PanelWindow {
 
         MouseArea {
             anchors.fill: parent
-            pressAndHoldInterval: 700
+            pressAndHoldInterval: 1000
             onPressAndHold: dock.editing = true
         }
         PanelFx { anchors.fill: parent; radius: capsule.radius; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge) }
@@ -193,8 +196,20 @@ PanelWindow {
                     required property var modelData
                     required property int index
                     opacity: dock.dragIndex === index ? 0.3 : 1
+                    Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
+                    // in the editor the icons wiggle (each a little out of step), so it's clear they can be moved
+                    rotation: 0
+                    SequentialAnimation on rotation {
+                        running: dock.editing && dock.dragIndex !== app.index && Theme.animOn
+                        loops: Animation.Infinite
+                        PauseAnimation { duration: (app.index * 53) % 140 }
+                        NumberAnimation { to: 2.4; duration: 130; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: -2.4; duration: 260; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 0; duration: 130; easing.type: Easing.InOutSine }
+                        onRunningChanged: if (!running) app.rotation = 0
+                    }
                     // hold for a moment: the dock editor
-                    Timer { id: hold; interval: 700; onTriggered: { app.held = true; dock.editing = true; } }
+                    Timer { id: hold; interval: 1000; onTriggered: { app.held = true; dock.editing = true; } }
                     property bool held: false
                     onPressedChanged: { if (pressed && !dock.editing) { held = false; hold.restart(); } else hold.stop(); }
                     // editing: drag to reorder
@@ -202,7 +217,8 @@ PanelWindow {
                         anchors.fill: parent
                         enabled: dock.editing
                         preventStealing: true
-                        cursorShape: dock.dragIndex === app.index ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                        // the grab hand only in the editor (a disabled area still sets its cursor)
+                        cursorShape: !dock.editing ? Qt.PointingHandCursor : (dock.dragIndex === app.index ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
                         property point start
                         property bool moved: false
                         onPressed: mouse => { start = Qt.point(mouse.x, mouse.y); moved = false; }
@@ -222,7 +238,9 @@ PanelWindow {
                     }
                     // editing: unpin
                     Rectangle {
-                        visible: dock.editing
+                        visible: scale > 0.01
+                        scale: dock.editing ? 1 : 0
+                        Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack; easing.overshoot: 2 } }
                         z: 5
                         x: parent.width - 18; y: -4
                         width: 22; height: 22; radius: 11
@@ -279,8 +297,8 @@ PanelWindow {
             Pressable {
                 visible: dock.editing
                 width: capsule.cell; height: capsule.cell
-                color: picker.visible ? Theme.accentContainer : Theme.containerHigh
-                onClicked: picker.visible = !picker.visible
+                color: picker.wanted ? Theme.accentContainer : Theme.containerHigh
+                onClicked: picker.wanted = !picker.wanted
                 Icon { anchors.centerIn: parent; name: "add"; size: 26; color: Theme.accent }
             }
             Pressable {
@@ -294,17 +312,27 @@ PanelWindow {
     }
 
     // holding the dock's background also opens the editor; while editing, a click outside ends it
-    MouseArea { anchors.fill: parent; visible: dock.editing && !picker.visible; onClicked: dock.editing = false }
+    // (under the dock: on top of it, it took the clicks meant for +, ✓ and the icons, and every
+    // click in the editor just closed it)
+    MouseArea { z: -1; anchors.fill: parent; visible: dock.editing && !picker.wanted; onClicked: dock.editing = false }
     Item {
         id: editKeys
         focus: dock.editing
-        Keys.onEscapePressed: { if (picker.visible) picker.visible = false; else dock.editing = false; }
+        Keys.onEscapePressed: { if (picker.wanted) picker.wanted = false; else dock.editing = false; }
     }
 
     // the app picker: every app that isn't pinned, with a search
     Rectangle {
         id: picker
-        visible: false
+        // open (wanted), fading and zooming in from the dock, and out again
+        property bool wanted: false
+        visible: wanted || t > 0.01
+        property real t: wanted ? 1 : 0
+        Behavior on t { NumberAnimation { duration: picker.wanted ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        opacity: t
+        scale: Theme.popScale + (1 - Theme.popScale) * t
+        transformOrigin: dock.side === "top" ? Item.Top : (dock.side === "left" ? Item.Left : (dock.side === "right" ? Item.Right : Item.Bottom))
+        onWantedChanged: if (wanted) pickField.forceInput()
         z: 20
         width: dock.vertical ? Math.min(dock.width - capsule.width - 40, 520) : Math.min(dock.width - 40, 640)
         height: dock.vertical ? Math.min(dock.height - 80, 520) : Math.min(dock.height - capsule.height - 40, 480)

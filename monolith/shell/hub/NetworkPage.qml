@@ -60,6 +60,18 @@ Page {
         return out;
     }
 
+    function remember() { if (restoring) return; HubState.netCache = { devices: devices, ips: ips, saved: saved, wifiOn: wifiOn, list: HubState.netCache.list }; }
+    onDevicesChanged: remember()
+    onWifiOnChanged: remember()
+    onIpsChanged: remember()
+    // what it found last time, until nmcli answers (read once: bound, it would loop through remember())
+    property bool restoring: true
+    Component.onCompleted: {
+        const c = HubState.netCache;
+        if (c.devices) { devices = c.devices; ips = c.ips || ({}); saved = c.saved || ({}); wifiOn = c.wifiOn === true; }
+        if (c.list) { sync(c.list); activeNet = c.list.find(n => n.active) || null; listed = true; }
+        restoring = false;
+    }
     function refresh() { devProc.running = true; radioProc.running = true; ipProc.running = true; savedProc.running = true; }
     onCurrentChanged: { if (current) refresh(); else closePrompt(); }
     onTabChanged: closePrompt()
@@ -115,6 +127,7 @@ Page {
                   .filter(n => n.ssid !== "" && !seen[n.ssid] && (seen[n.ssid] = true));
                 page.sync(list);
                 page.activeNet = list.find(n => n.active) || null;
+                HubState.netCache = Object.assign({}, HubState.netCache, { list: list });
                 page.listed = true;
             }
         }

@@ -7,12 +7,14 @@ Rectangle {
     property alias text: input.text
     property string placeholder: ""
     signal accepted(string v)
+    function forceInput() { input.forceActiveFocus(); }
     width: 240
     height: 40
     radius: Theme.corner(height)
     color: Theme.container
     border.width: input.activeFocus ? 2 : Theme.outlineW
     border.color: input.activeFocus ? Theme.accent : Theme.outlineColor
+    Behavior on border.color { ColorAnimation { duration: Theme.fastMs } }
     TextInput {
         id: input
         anchors.fill: parent
