@@ -50,10 +50,19 @@ Item {
     Component.onCompleted: place()
     onVisibleChanged: if (visible) place()
 
-    // the pointer: the glass swells under it
+    // the pointer: the glass swells and catches the light under it. Where it is stays put once it
+    // leaves (Qt resets a hover point to 0,0 then: the light jumped to the top-left corner while it
+    // faded out) and glides after the pointer instead of jumping with each mouse event
     property real swell: hover.hovered ? 1 : 0
     Behavior on swell { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
-    HoverHandler { id: hover }
+    property real pointerX: width / 2
+    property real pointerY: height / 2
+    Behavior on pointerX { enabled: lp.swell > 0.02; NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+    Behavior on pointerY { enabled: lp.swell > 0.02; NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+    HoverHandler {
+        id: hover
+        onPointChanged: if (hovered) { lp.pointerX = point.position.x; lp.pointerY = point.position.y; }
+    }
 
     Image {
         id: wallTex
@@ -94,7 +103,7 @@ Item {
         readonly property real vivid: lp.vivid
         readonly property color tint: lp.tint
         readonly property real tintMix: lp.tintMix
-        readonly property vector2d pointer: Qt.vector2d(hover.point.position.x, hover.point.position.y)
+        readonly property vector2d pointer: Qt.vector2d(lp.pointerX, lp.pointerY)
         readonly property real swell: lp.swell
         fragmentShader: Qt.resolvedUrl("../shaders/glass.frag.qsb")
     }

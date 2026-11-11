@@ -119,7 +119,11 @@ void main() {
     col = mix(vec3(luma), col, vivid);
 
     // lighting
-    vec2 toLight = normalize(mix(normalize(LIGHT), length(toPtr) > 1.0 ? normalize(toPtr) : normalize(LIGHT), 0.35 * swell));
+    // near the pointer the light comes from it: edges close to it turn towards it, the rest keep
+    // the light from the top left (it used to swing every edge, however far)
+    float near = swell * exp(-dot(toPtr, toPtr) / (2.0 * (reach * 1.6) * (reach * 1.6)));
+    vec2 ptrDir = length(toPtr) > 1.0 ? toPtr / length(toPtr) : normalize(LIGHT);
+    vec2 toLight = normalize(mix(normalize(LIGHT), ptrDir, 0.75 * near));
     float facing = dot(out2, toLight);              // 1: this edge faces the light
     float lit = pow(max(facing, 0.0), 1.4);
     float back = pow(max(-facing, 0.0), 2.0);
@@ -135,14 +139,14 @@ void main() {
     // softer glow inside it, and a broad sheen over the lit bezel
     float hair = exp(-inset / 1.0);
     float glow = exp(-inset / 4.5);
-    float rimLight = (hair * (0.22 + 0.8 * lit + 0.35 * back) + glow * 0.12 * (0.3 + lit)) * shine;
+    float rimLight = (hair * (0.22 + 0.8 * lit + 0.35 * back) + glow * 0.12 * (0.3 + lit)) * shine * (1.0 + 1.2 * near);
     float sheen = exp(-inset / (bz * 0.5)) * lit * lit * 0.18 * shine;
     // a thin rainbow in the curve
     float band = (inset - bz * 0.45) / (bz * 0.2 + 1.0);
     vec3 rainbow = (0.5 + 0.5 * cos(6.2831853 * (dot(out2, vec2(0.6, 0.4)) + inset / (bz * 1.7) + vec3(0.0, 0.33, 0.67))) - 0.5)
                    * exp(-band * band) * (0.035 + 0.07 * lit) * shine;
-    // the swell catches a soft highlight
-    float spot = bump * 0.06;
+    // the swell catches a soft highlight, brightest right under the pointer
+    float spot = bump * bump * 0.13 + near * 0.045;
 
     col = mix(col, tint.rgb, tintMix);
     col += vec3(rimLight + sheen + spot) + rainbow;
