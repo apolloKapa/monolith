@@ -84,8 +84,9 @@ FaceBase {
                             clip: true
                             Icon { x: (act.width - width) / 2; y: (act.height - height) / 2; name: act.modelData[1]; size: 16; color: "#15161a" }
                         }
-                        NumberAnimation { id: filling; target: act; property: "level"; to: 1; duration: 1000 * (1 - act.level) + 1
-                            onFinished: if (act.level >= 1) { act.done = true; flashAnim.start(); Power.run(act.modelData[0]); reset.start(); } }
+                        NumberAnimation { id: filling; target: act; property: "level"; to: 1 }
+                        // full: it happens right then, while you're still holding
+                        onLevelChanged: if (level >= 0.999 && !done && filling.running) { done = true; flashAnim.start(); Power.run(modelData[0]); reset.start(); }
                         NumberAnimation { id: draining; target: act; property: "level"; to: 0; duration: Theme.ms(500); easing.type: Easing.OutCubic }
                         NumberAnimation { id: flashAnim; target: flash; property: "opacity"; from: 0.6; to: 0; duration: Theme.ms(500); easing.type: Easing.OutExpo }
                         Timer { id: reset; interval: 1500; onTriggered: { act.done = false; draining.start(); } }
@@ -95,7 +96,7 @@ FaceBase {
                             hoverEnabled: true
                             enabled: f.live
                             cursorShape: act.done ? Qt.ArrowCursor : Qt.PointingHandCursor
-                            onPressed: if (!act.done) { draining.stop(); filling.start(); }
+                            onPressed: if (!act.done) { draining.stop(); filling.duration = 1000 * (1 - act.level) + 1; filling.restart(); }
                             onReleased: if (!act.done && act.level < 1) { filling.stop(); draining.start(); }
                             onCanceled: if (!act.done) { filling.stop(); draining.start(); }
                         }

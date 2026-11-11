@@ -207,19 +207,19 @@ WlSessionLock {
                         color: Qt.alpha(Theme.frame, 0.75)
                         onPressedChanged: {
                             if (!held || done) return;
-                            if (pressed) { lbDrain.stop(); lbFill.restart(); }
-                            else if (level < 1) { lbFill.stop(); lbDrain.restart(); }
+                            if (pressed) { lbDrain.stop(); lbFill.duration = Math.max(1, 1000 * (1 - level)); lbFill.restart(); }
+                            else if (level < 1) { lbFill.stop(); lbDrain.duration = Theme.ms(320 * level + 1); lbDrain.restart(); }
                         }
                         onClicked: if (!held) Power.run(modelData[1])
                         // a real second, whatever the animation speed
                         NumberAnimation {
                             id: lbFill
                             target: lb; property: "level"; to: 1
-                            duration: Math.max(1, 1000 * (1 - lb.level))
-                            onFinished: if (lb.level >= 1) { lb.done = true; Power.run(lb.modelData[1]); lbUndo.restart(); }
                         }
-                        NumberAnimation { id: lbDrain; target: lb; property: "level"; to: 0; duration: Theme.ms(320 * lb.level + 1); easing.type: Easing.OutCubic }
-                        Timer { id: lbUndo; interval: 2500; onTriggered: { lb.done = false; lbDrain.restart(); } }
+                        NumberAnimation { id: lbDrain; target: lb; property: "level"; to: 0; easing.type: Easing.OutCubic }
+                        // full: it happens right then
+                        onLevelChanged: if (held && level >= 0.999 && !done && lbFill.running) { done = true; Power.run(modelData[1]); lbUndo.restart(); }
+                        Timer { id: lbUndo; interval: 2500; onTriggered: { lb.done = false; lbDrain.duration = Theme.ms(320 * lb.level + 1); lbDrain.restart(); } }
                         Row {
                             id: lbFace
                             anchors.centerIn: parent

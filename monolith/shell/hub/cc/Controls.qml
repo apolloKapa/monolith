@@ -341,8 +341,10 @@ RowLayout {
                     color: risky ? Qt.alpha(Theme.danger, hovered ? 0.3 : 0.18) : (hovered ? Theme.control : Theme.containerHigh)
                     onPressedChanged: {
                         if (!held || done) return;
-                        if (pressed) { draining.stop(); filling.restart(); }
-                        else if (level < 1) { filling.stop(); draining.restart(); }
+                        // (each run's length is worked out when it starts: bound to the level it
+                        // changes, the animation never reported finishing)
+                        if (pressed) { draining.stop(); filling.duration = Math.max(1, 1000 * (1 - level)); filling.restart(); }
+                        else if (level < 1) { filling.stop(); draining.duration = Theme.ms(320 * level + 1); draining.restart(); }
                     }
                     onClicked: {
                         if (held) { if (!done) kick.restart(); return; }
@@ -353,12 +355,12 @@ RowLayout {
                     NumberAnimation {
                         id: filling
                         target: pb; property: "level"; to: 1
-                        duration: Math.max(1, 1000 * (1 - pb.level))
-                        onFinished: if (pb.level >= 1) { pb.done = true; go.restart(); pb.modelData[2](); undo.restart(); }
                     }
-                    NumberAnimation { id: draining; target: pb; property: "level"; to: 0; duration: Theme.ms(320 * pb.level + 1); easing.type: Easing.OutCubic }
+                    NumberAnimation { id: draining; target: pb; property: "level"; to: 0; easing.type: Easing.OutCubic }
+                    // full: it happens right then, while you're still holding
+                    onLevelChanged: if (held && level >= 0.999 && !done && filling.running) { done = true; go.restart(); modelData[2](); undo.restart(); }
                     // (log out / an action that didn't happen: the button comes back)
-                    Timer { id: undo; interval: 2500; onTriggered: { pb.done = false; draining.restart(); } }
+                    Timer { id: undo; interval: 2500; onTriggered: { pb.done = false; draining.duration = Theme.ms(320 * pb.level + 1); draining.restart(); } }
 
                     // the red, cut to the button's rounded shape (a plain clip cuts to its square box)
                     Item {
