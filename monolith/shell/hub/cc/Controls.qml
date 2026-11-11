@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Bluetooth
@@ -320,7 +321,6 @@ RowLayout {
                     Layout.preferredHeight: 64
                     Rise { delay: 200 + pb.index * 45 }
                     radius: Theme.corner(56, 4)
-                    clip: true
                     color: risky ? Qt.alpha(Theme.danger, hovered ? 0.3 : 0.18) : (hovered ? Theme.control : Theme.containerHigh)
                     onClicked: {
                         if (modelData[3] && !armed) { armed = true; disarm.restart(); kick.restart(); return; }
@@ -331,25 +331,49 @@ RowLayout {
                     onArmedChanged: if (!armed) disarm.stop()
                     Timer { id: disarm; interval: 3000; onTriggered: pb.armed = false }
 
-                    // asking: red rises from the bottom, and a line along the bottom runs down the
-                    // three seconds it waits for the second click
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        width: parent.width
-                        height: pb.armed ? parent.height : 0
-                        color: Theme.danger
-                        Behavior on height { NumberAnimation { duration: Theme.ms(pb.armed ? 320 : 220); easing.type: Easing.BezierSpline; easing.bezierCurve: pb.armed ? Theme.enterCurve : Theme.exitCurve } }
+                    // asking: red rises from the bottom like a liquid, and a line along the bottom
+                    // runs down the three seconds it waits for the second click. Both are cut to the
+                    // button's rounded shape (a plain clip cuts to its square box: square corners)
+                    Item {
+                        id: fillBox
+                        anchors.fill: parent
+                        visible: fill.height > 0.5
+                        layer.enabled: visible
+                        layer.effect: MultiEffect {
+                            maskEnabled: true
+                            maskSource: fillMask
+                            maskThresholdMin: 0.5
+                            maskSpreadAtMin: 1.0
+                        }
+                        Rectangle {
+                            id: fill
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: parent.width
+                            // a little taller than the button when full, so its rounded top is out of sight
+                            height: pb.armed ? parent.height + pb.radius : 0
+                            radius: pb.radius
+                            color: Theme.danger
+                            Behavior on height { NumberAnimation { duration: Theme.ms(pb.armed ? 340 : 240); easing.type: Easing.BezierSpline; easing.bezierCurve: pb.armed ? Theme.enterCurve : Theme.exitCurve } }
+                        }
+                        Rectangle {
+                            id: countdown
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 5
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            height: 3
+                            radius: 1.5
+                            color: Theme.m("on_error", "#ffffff")
+                            opacity: pb.armed ? 0.8 : 0
+                            Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
+                            // from the middle out to both sides, shrinking back to the middle
+                            property real share: 0
+                            width: (parent.width - 2 * pb.radius * 0.6) * share
+                            NumberAnimation on share { id: tick; running: false; from: 1; to: 0; duration: 3000 }
+                            Connections { target: pb; function onArmedChanged() { if (pb.armed) tick.restart(); else tick.stop(); } }
+                        }
                     }
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        height: 3
-                        radius: 1.5
-                        color: Theme.m("on_error", "#ffffff")
-                        opacity: pb.armed ? 0.75 : 0
-                        width: parent.width
-                        Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
-                        NumberAnimation on width { running: pb.armed; from: pb.width; to: 0; duration: 3000 }
-                    }
+                    Rectangle { id: fillMask; anchors.fill: parent; radius: pb.radius; visible: false; layer.enabled: true }
 
                     Item {
                         id: face
