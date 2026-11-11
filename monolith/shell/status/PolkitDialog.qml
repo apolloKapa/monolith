@@ -20,9 +20,10 @@ Scope {
         anchors { top: true; bottom: true; left: true; right: true }
         color: Qt.alpha("#000000", 0.35)
         readonly property var flow: agent.flow
+        Binding { target: HubState; property: "authOpen"; value: win.visible }
 
         // the card grows in as the window shows
-        onVisibleChanged: if (visible) appear.restart()
+        onVisibleChanged: if (visible) { appear.restart(); pw.text = ""; pw.forceActiveFocus(); }
         ParallelAnimation {
             id: appear
             NumberAnimation { target: card; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
@@ -75,7 +76,6 @@ Scope {
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.sizeTitle - 1
                         focus: win.visible
-                        onVisibleChanged: if (visible) { text = ""; forceActiveFocus(); }
                         onAccepted: if (win.flow && win.flow.isResponseRequired) win.flow.submit(text)
                         Keys.onEscapePressed: if (win.flow) win.flow.cancelAuthenticationRequest()
                         Label {

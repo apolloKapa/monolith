@@ -14,7 +14,7 @@ Page {
     property var entries: []
     readonly property var shown: query.trim() === "" ? entries : entries.filter(e => e.text.toLowerCase().indexOf(query.toLowerCase()) !== -1)
     readonly property real rowH: 52
-    implicitHeight: Math.max(120, Math.min(shown.length, 8) * (rowH + 6))
+    implicitHeight: Math.max(200, Math.min(shown.length, 8) * (rowH + 6))
 
     onCurrentChanged: if (current) listProc.running = true
     Process {
@@ -41,7 +41,14 @@ Page {
     Keys.onDownPressed: list.currentIndex = Math.min(shown.length - 1, list.currentIndex + 1)
     Keys.onReturnPressed: if (shown[list.currentIndex]) copy(shown[list.currentIndex])
 
-    Label { anchors.centerIn: parent; visible: page.shown.length === 0; text: page.entries.length === 0 ? "The clipboard history is empty" : "Nothing matches"; muted: true }
+    Empty {
+        anchors.centerIn: parent
+        width: parent.width
+        visible: page.shown.length === 0
+        icon: page.entries.length === 0 ? "content_paste" : "search_off"
+        title: page.entries.length === 0 ? "Nothing copied yet" : "Nothing matches"
+        sub: page.entries.length === 0 ? "What you copy is kept here, ready to paste again." : "Try fewer letters."
+    }
 
     ListView {
         SmoothWheel {}

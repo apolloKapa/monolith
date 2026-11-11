@@ -7,7 +7,7 @@ import "../ui"
 Page {
     id: page
     pageId: "notifications"
-    implicitHeight: Math.min(560, head.height + 8 + Math.max(120, list.contentHeight))
+    implicitHeight: Math.min(560, head.height + 8 + Math.max(200, list.contentHeight))
 
     RowLayout {
         id: head
@@ -43,12 +43,13 @@ Page {
         }
     }
 
-    Column {
+    Empty {
         anchors.centerIn: list
+        width: list.width
         visible: Notifs.list.length === 0
-        spacing: 6
-        Icon { anchors.horizontalCenter: parent.horizontalCenter; name: "notifications_paused"; size: 40; color: Theme.faint }
-        Label { text: "You're all caught up"; muted: true }
+        icon: Notifs.dnd ? "do_not_disturb_on" : "notifications_paused"
+        title: "You're all caught up"
+        sub: Notifs.dnd ? "Do not disturb is on: new ones arrive quietly." : "New notifications wait here until you clear them."
     }
 
     ListView {

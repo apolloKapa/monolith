@@ -60,6 +60,13 @@ Item {
         onPositionChanged: mouse => { if (pressed) { s.dragValue = at(mouse.x); s.moved(s.dragValue); } }
         onReleased: s.dragging = false
         onCanceled: s.dragging = false
-        onWheel: wheel => s.moved(Math.max(0, Math.min(1, s.value + (wheel.angleDelta.y > 0 ? 0.05 : -0.05))))
+        // inside a list that scrolls, the wheel scrolls the list (it used to change the value
+        // of whatever slider the pointer happened to pass over); anywhere else it nudges the value
+        onWheel: wheel => {
+            for (let p = s.parent; p; p = p.parent) {
+                if (p.contentY !== undefined && p.flickableDirection !== undefined && p.contentHeight > p.height + 1) { wheel.accepted = false; return; }
+            }
+            s.moved(Math.max(0, Math.min(1, s.value + (wheel.angleDelta.y > 0 ? 0.05 : -0.05))));
+        }
     }
 }

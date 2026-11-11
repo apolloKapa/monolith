@@ -46,6 +46,9 @@ Singleton {
     function close() { open = false; }
     // a page gives the keyboard back to the island's field (after its own text box is done)
     signal refocus()
+    // an administrator password is being asked for (status/PolkitDialog): menus that hold the
+    // keyboard let go of it, or the dialog can't be typed in
+    property bool authOpen: false
     // open Search with text already typed (":" = emojis, "~/" = files)
     property string preset: ""
     signal presetRequested()

@@ -24,3 +24,7 @@ NotesBoard 1.0 NotesBoard.qml
 PanelFx 1.0 PanelFx.qml
 Avatar 1.0 Avatar.qml
 PlayPosition 1.0 PlayPosition.qml
+Hero 1.0 Hero.qml
+SectionHead 1.0 SectionHead.qml
+Empty 1.0 Empty.qml
+IconTabs 1.0 IconTabs.qml

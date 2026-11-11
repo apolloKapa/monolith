@@ -221,149 +221,6 @@ Page {
         refresh();
     }
 
-    component Seg: Rectangle {
-        id: seg
-        property var opts: []
-        property string value: ""
-        signal picked(string v)
-        Layout.fillWidth: true
-        Layout.preferredHeight: 44
-        radius: Theme.corner(height)
-        color: Theme.container
-        Rectangle {
-            y: 4
-            x: 4 + seg.opts.findIndex(o => o[0] === seg.value) * ((seg.width - 8) / seg.opts.length)
-            width: (seg.width - 8) / seg.opts.length
-            height: seg.height - 8
-            radius: Theme.corner(height)
-            color: Theme.selected
-            Behavior on x { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
-        }
-        Row {
-            anchors.fill: parent
-            anchors.margins: 4
-            Repeater {
-                model: seg.opts
-                Pressable {
-                    required property var modelData
-                    width: parent.width / seg.opts.length
-                    height: parent.height
-                    color: "transparent"
-                    onClicked: seg.picked(modelData[0])
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 6
-                        Icon { name: modelData[2]; size: 18; filled: seg.value === modelData[0]; anchors.verticalCenter: parent.verticalCenter }
-                        Label { text: modelData[1]; strong: seg.value === modelData[0]; anchors.verticalCenter: parent.verticalCenter }
-                    }
-                }
-            }
-        }
-    }
-
-    // How things stand, on top of a tab: a big icon, a line or two, and the switch.
-    component Hero: Rectangle {
-        id: hero
-        property string icon: ""
-        property string title: ""
-        property string sub: ""
-        property bool on: false          // the switch
-        property bool lit: on            // tinted: something is connected
-        property bool switchable: true
-        signal toggled(bool on)
-        Layout.fillWidth: true
-        Layout.preferredHeight: 84
-        radius: Theme.corner(height, 6)
-        color: lit ? Theme.selected : Theme.container
-        border.width: Theme.outlineW
-        border.color: Theme.outlineColor
-        Behavior on color { ColorAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
-        Bubble { id: hb; x: 16; anchors.verticalCenter: parent.verticalCenter; size: 52; icon: hero.icon; on: hero.lit }
-        Column {
-            anchors.left: hb.right; anchors.leftMargin: 14
-            anchors.right: sw.visible ? sw.left : parent.right; anchors.rightMargin: 14
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 3
-            Label { width: parent.width; text: hero.title; strong: true; font.pixelSize: Theme.sizeTitle }
-            Label { width: parent.width; text: hero.sub; muted: true; visible: text !== "" }
-        }
-        Toggle {
-            id: sw
-            visible: hero.switchable
-            anchors.right: parent.right; anchors.rightMargin: 18
-            anchors.verticalCenter: parent.verticalCenter
-            checked: hero.on
-            onToggled: v => hero.toggled(v)
-        }
-    }
-
-    // A small title over a list, with one action at its end (scan again).
-    component Section: Item {
-        id: sec
-        property string text: ""
-        property string action: ""
-        property string hint: ""
-        property bool spinning: false
-        signal acted()
-        Layout.fillWidth: true
-        Layout.preferredHeight: 32
-        Layout.topMargin: 4
-        Label { x: 8; anchors.verticalCenter: parent.verticalCenter; text: sec.text; muted: true; strong: true; font.pixelSize: Theme.sizeSmall + 1 }
-        Pressable {
-            visible: sec.action !== ""
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            width: actRow.implicitWidth + 20
-            height: 30
-            color: "transparent"
-            onClicked: sec.acted()
-            Row {
-                id: actRow
-                anchors.centerIn: parent
-                spacing: 6
-                Label { text: sec.hint; muted: true; font.pixelSize: Theme.sizeSmall + 1; anchors.verticalCenter: parent.verticalCenter }
-                Icon {
-                    name: sec.action; size: 18; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter
-                    RotationAnimator on rotation { running: sec.spinning; from: 0; to: 360; duration: 1000; loops: Animation.Infinite; onRunningChanged: if (!running) target.rotation = 0 }
-                }
-            }
-        }
-    }
-
-    // Nothing to list: a picture, why, and (when there is one) the way out.
-    component Empty: Item {
-        id: em
-        property string icon: ""
-        property string title: ""
-        property string sub: ""
-        property string button: ""
-        property string buttonIcon: ""
-        property bool spinning: false
-        signal acted()
-        Layout.fillWidth: true
-        Layout.preferredHeight: emCol.implicitHeight + 44
-        Column {
-            id: emCol
-            anchors.centerIn: parent
-            width: Math.min(parent.width - 40, 380)
-            spacing: 8
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 68; height: 68; radius: 34
-                color: Theme.container
-                Icon {
-                    anchors.centerIn: parent; name: em.icon; size: 32; color: Theme.subtext
-                    RotationAnimator on rotation { running: em.spinning; from: 0; to: 360; duration: 1000; loops: Animation.Infinite }
-                }
-            }
-            Item { width: 1; height: 2 }
-            Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: em.title; strong: true; font.pixelSize: Theme.sizeTitle }
-            Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: em.sub; muted: true; wrapMode: Text.WordWrap; elide: Text.ElideNone; visible: text !== "" }
-            Item { width: 1; height: 4; visible: em.button !== "" }
-            Button { visible: em.button !== ""; anchors.horizontalCenter: parent.horizontalCenter; text: em.button; icon: em.buttonIcon; primary: true; onClicked: em.acted() }
-        }
-    }
-
     component Entry: Pressable {
         id: r
         property string icon: ""
@@ -400,7 +257,7 @@ Page {
             width: parent.width
             spacing: 8
 
-            Seg {
+            IconTabs {
                 opts: [["wifi", "Wi-Fi", "wifi"], ["wired", "Ethernet", "lan"], ["bt", "Bluetooth", "bluetooth"]]
                 value: page.tab
                 onPicked: v => page.tab = v
@@ -418,7 +275,7 @@ Page {
                 lit: page.wifiOn && page.activeNet !== null
                 onToggled: v => page.setWifi(v)
             }
-            Section {
+            SectionHead {
                 visible: page.tab === "wifi" && page.wifiOn && nets.count > 0
                 text: "Networks nearby"
                 action: "refresh"
@@ -680,7 +537,7 @@ Page {
                 lit: page.btOn && page.btConnected.length > 0
                 onToggled: v => { if (page.adapter) page.adapter.enabled = v; }
             }
-            Section {
+            SectionHead {
                 visible: page.tab === "bt" && page.btOn && page.btDevices.length > 0
                 text: "Devices"
                 action: page.adapter && page.adapter.discovering ? "progress_activity" : "bluetooth_searching"

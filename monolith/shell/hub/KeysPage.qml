@@ -55,7 +55,14 @@ Page {
         return a.charAt(0).toUpperCase() + a.substring(1);
     }
 
-    Label { anchors.centerIn: parent; visible: page.shown.length === 0; text: page.binds.length === 0 ? "No keybinds found" : "Nothing matches"; muted: true }
+    Empty {
+        anchors.centerIn: parent
+        width: parent.width
+        visible: page.shown.length === 0
+        icon: page.binds.length === 0 ? "keyboard" : "search_off"
+        title: page.binds.length === 0 ? "No keybinds found" : "Nothing matches"
+        sub: page.binds.length === 0 ? "niri's keybinds file couldn't be read." : "Try fewer letters."
+    }
 
     GridView {
         SmoothWheel {}

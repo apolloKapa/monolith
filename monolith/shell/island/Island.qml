@@ -26,7 +26,7 @@ PanelWindow {
     // close it, and it takes the keyboard only when you click into it (Escape or its bar
     // button closes it)
     readonly property bool pinned: shown && HubState.page === "settings"
-    WlrLayershell.keyboardFocus: shown ? (pinned ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: shown && !HubState.authOpen ? (pinned ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"

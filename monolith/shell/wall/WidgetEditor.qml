@@ -26,7 +26,7 @@ PanelWindow {
     visible: shown || contentItem.opacity > 0.01
     WlrLayershell.namespace: "monolith-widget-editor"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: shown && !HubState.authOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     // the whole editor fades in with a little zoom, and out when it closes (the window is clear
