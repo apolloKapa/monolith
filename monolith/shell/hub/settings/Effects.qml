@@ -17,8 +17,9 @@ ColumnLayout {
     SettingRow {
         keys: ["theme.blur", "theme.panelOpacity"];
         icon: "blur_on"; title: "Blur behind panels"
-        desc: Theme.panelOpacity > 0.95 ? "Blurs what's behind see-through panels. Turning it on also sets the opacity to 75 %, or there'd be nothing to see" : "Blurs what's behind the bar, menus, dock and pop-ups, so text on them stays readable"
-        Toggle { checked: Theme.blur; onToggled: on => { Store.set("theme.blur", on); if (on && Theme.panelOpacity > 0.95) Store.set("theme.panelOpacity", 0.75); } }
+        desc: Theme.liquid ? "Off with Liquid glass: it's glass already, and bends and frosts what's behind it by itself"
+            : (Theme.panelOpacity > 0.95 ? "Blurs what's behind see-through panels, with any style. Turning it on also sets the opacity to 75 %, or there'd be nothing to see" : "Blurs what's behind the bar, menus, dock and pop-ups, so text on them stays readable")
+        Toggle { enabled: !Theme.liquid; opacity: enabled ? 1 : 0.4; checked: Theme.blur; onToggled: on => { Store.set("theme.blur", on); if (on && Theme.panelOpacity > 0.95) Store.set("theme.panelOpacity", 0.75); } }
     }
     SettingRow {
         key: "theme.blurStrength"; def: 3;

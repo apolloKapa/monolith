@@ -5,7 +5,7 @@ import Quickshell.Io
 import "../../core"
 import "../../ui"
 
-// Theme → Style: the whole look (18 styles, each previewed), then its colours: the wallpaper's,
+// Theme → Style: the whole look (17 styles, each previewed; blur is a toggle under them), then its colours: the wallpaper's,
 // the style's own, or one of the colour themes.
 ColumnLayout {
     id: sec
@@ -91,6 +91,18 @@ ColumnLayout {
         Repeater {
             model: Look.styles
             StyleCard { required property var modelData; st: modelData }
+        }
+    }
+    SettingRow {
+        keys: ["theme.blur", "theme.panelOpacity"]
+        icon: "blur_on"; title: "Blur behind panels"
+        desc: Theme.liquid ? "Liquid glass is glass already: it bends and frosts what's behind it by itself, so blur is off with it"
+            : "With any style: the bar, menus, dock and pop-ups turn see-through and blur what's behind them"
+        Toggle {
+            enabled: !Theme.liquid
+            opacity: enabled ? 1 : 0.4
+            checked: Theme.blur
+            onToggled: on => { Store.set("theme.blur", on); if (on && Theme.panelOpacity > 0.95) Store.set("theme.panelOpacity", 0.75); }
         }
     }
 

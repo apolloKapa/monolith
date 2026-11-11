@@ -2,7 +2,7 @@
 // The styles (Settings → Theme → Style): each is a whole look. Keys:
 //   name, desc          what Settings shows
 //   matugen             colours from the wallpaper (else its own `colors`, or the colour theme you pick)
-//   opaque              false: panels see-through (blur, liquid glass, bubbly)
+//   opaque              false: panels see-through (liquid glass, bubbly); blur is a setting for any style
 //   radiusScale         corners × this (with your corner setting); square: no rounding
 //   outline [w, w2]     outline width on panels and controls; outlineRole: its colour
 //                       (accent, accentSoft, ink = the text colour, text, rule = a faint line)
@@ -30,13 +30,6 @@ var list = [
   "matugen": true,
   "desc": "Tonal layers, hairline edges, floating cards",
   "id": "orbit"
- },
- {
-  "name": "Blur",
-  "opaque": false,
-  "id": "blur",
-  "desc": "See-through panels over your wallpaper",
-  "matugen": true
  },
  {
   "name": "Liquid glass",
