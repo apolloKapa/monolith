@@ -74,7 +74,8 @@ Item {
         case "dots":        return { along: active ? 11 : 9, across: active ? 11 : 9, r: 1, fill: active ? A : (busy ? mid : faint), edge: 0, num: false };
         case "numbers":     return { along: 22, across: 22, r: 1, fill: active ? A : "transparent", edge: 0, num: true };
         case "numberPills": return { along: active ? 34 : 20, across: 20, r: 1, fill: active ? A : (busy ? Theme.containerHigh : "transparent"), edge: 0, num: true };
-        case "lines":       return { along: active ? 26 : 16, across: 4, r: 1, fill: active ? A : (busy ? mid : faint), edge: 0, num: false };
+        // (upright strokes, across the bar; the open one taller)
+        case "lines":       return { along: 4, across: active ? 22 : 14, r: 1, fill: active ? A : (busy ? mid : faint), edge: 0, num: false };
         case "squares":     return { along: 13, across: 13, r: 0.3, fill: active ? A : (busy ? mid : "transparent"), edge: active || busy ? 0 : 1.5, num: false };
         case "rings":       return { along: active ? 13 : 11, across: active ? 13 : 11, r: 1, fill: active ? A : "transparent", edge: active ? 0 : (busy ? 3 : 1.5), num: false };
         case "bubbles":     return { along: 22, across: 22, r: 1, fill: active ? A : (busy ? Theme.containerHigh : Qt.alpha(Theme.text, 0.04)), edge: 0, num: true };
