@@ -39,6 +39,50 @@ ColumnLayout {
         Toggle { checked: Theme.fxEdge; onToggled: on => Store.set("theme.effects.edge", on) }
     }
 
+    SectionHead { text: "Shadows" }
+    SettingRow {
+        key: "theme.shadow.on"; def: true;
+        icon: "shadow"; title: "Shadows"
+        desc: Theme.hardShadow > 0 ? "Your style draws its own hard shadow; these settings change the soft one other styles use" : "The soft shadow under the bar, menus, the dock, pop-ups and cards"
+        Toggle { checked: Theme.shadowOn; onToggled: on => Store.set("theme.shadow.on", on) }
+    }
+    SettingRow {
+        key: "theme.shadow.strength"; def: 1;
+        visible: Theme.shadowOn
+        icon: "contrast"; title: "Strength"; desc: "How dark the shadow is. 100 % is the normal shade"
+        NumberBox { from: 0.1; to: 2; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Theme.shadowStrength; onMoved: v => Store.set("theme.shadow.strength", v) }
+    }
+    SettingRow {
+        key: "theme.shadow.softness"; def: 0.9;
+        visible: Theme.shadowOn
+        icon: "blur_medium"; title: "Softness"; desc: "0 % is a crisp edge, 100 % fades out far"
+        NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Theme.shadowSoftness; onMoved: v => Store.set("theme.shadow.softness", v) }
+    }
+    SettingRow {
+        key: "theme.shadow.distance"; def: 6;
+        visible: Theme.shadowOn
+        icon: "vertical_align_bottom"; title: "Distance"; desc: "How far down it falls (0 is all around)"
+        NumberBox { from: -20; to: 30; unit: "px"; value: Theme.shadowDistance; onMoved: v => Store.set("theme.shadow.distance", v) }
+    }
+    SettingRow {
+        key: "theme.shadow.sideways"; def: 0;
+        visible: Theme.shadowOn
+        icon: "swap_horiz"; title: "Direction"; desc: "Left (below 0) or right (above 0) of the shape"
+        NumberBox { from: -20; to: 20; unit: "px"; value: Theme.shadowSideways; onMoved: v => Store.set("theme.shadow.sideways", v) }
+    }
+    SettingRow {
+        key: "theme.shadow.colour"; def: "black";
+        visible: Theme.shadowOn
+        icon: "format_color_fill"; title: "Colour"; desc: "Black, a glow in the accent colour, or the text colour"
+        Segmented { width: 260; opts: [["black", "Black"], ["accent", "Accent"], ["ink", "Text"]]; value: ["black", "accent", "ink"].indexOf(Theme.shadowTint) !== -1 ? Theme.shadowTint : "black"; onPicked: v => Store.set("theme.shadow.colour", v) }
+    }
+    SettingRow {
+        key: "widgets.shadow"; def: "off";
+        icon: "widgets"; title: "Shadows under widgets"
+        desc: "For every desktop and lock screen widget that doesn't pick its own (each widget's Shadow setting)"
+        Segmented { width: 260; opts: [["off", "Off"], ["soft", "Soft"], ["strong", "Strong"]]; value: Theme.widgetShadow; onPicked: v => Store.set("widgets.shadow", v) }
+    }
+
     SectionHead { text: "Motion" }
     SettingRow {
         key: "theme.animations";

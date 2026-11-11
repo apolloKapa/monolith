@@ -50,3 +50,10 @@ WeatherTone 1.0 WeatherTone.qml
 WavySeek 1.0 WavySeek.qml
 Marquee 1.0 Marquee.qml
 MusicSlim 1.0 MusicSlim.qml
+DotText 1.0 DotText.qml
+DotCard 1.0 DotCard.qml
+ClockDot 1.0 ClockDot.qml
+DateDot 1.0 DateDot.qml
+WeatherDot 1.0 WeatherDot.qml
+MetricDot 1.0 MetricDot.qml
+MusicDot 1.0 MusicDot.qml

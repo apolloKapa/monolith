@@ -190,11 +190,23 @@ Singleton {
     readonly property var sizeCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
     // the soft shadow under floating shapes (drawn by the shell, no compositor blur)
     // (styles with a hard shadow: a solid offset copy in the ink colour)
+    // (Theme → Effects → Shadows: on/off, strength, softness, distance, direction, colour)
     readonly property real hardShadow: Look.style.hardShadow || 0
-    readonly property real shadowBlur: hardShadow > 0 ? 0 : 0.9
-    readonly property color shadowColor: hardShadow > 0 ? text : Qt.rgba(0, 0, 0, dark ? 0.55 : 0.28)
-    readonly property real shadowY: hardShadow > 0 ? hardShadow : 6
-    readonly property real shadowX: hardShadow
+    readonly property bool shadowOn: Store.get("theme.shadow.on", true) !== false
+    readonly property real shadowStrength: Number(Store.get("theme.shadow.strength", 1))
+    readonly property real shadowSoftness: Number(Store.get("theme.shadow.softness", 0.9))
+    readonly property real shadowDistance: Number(Store.get("theme.shadow.distance", 6))
+    readonly property real shadowSideways: Number(Store.get("theme.shadow.sideways", 0))
+    readonly property string shadowTint: String(Store.get("theme.shadow.colour", "black"))
+    // the colour shadows are made of (a theme colour by name, or any #rrggbb)
+    readonly property color shadowBase: shadowTint === "accent" ? accent : (shadowTint === "ink" ? text : (/^#[0-9a-fA-F]{6}$/.test(shadowTint) ? shadowTint : "#000000"))
+    readonly property real shadowBlur: hardShadow > 0 ? 0 : shadowSoftness
+    readonly property color shadowColor: !shadowOn ? "transparent" : (hardShadow > 0 ? text : Qt.alpha(shadowBase, Math.min(1, (dark ? 0.55 : 0.28) * shadowStrength)))
+    readonly property real shadowY: hardShadow > 0 ? hardShadow : shadowDistance
+    readonly property real shadowX: hardShadow > 0 ? hardShadow : shadowSideways
+    // widgets' shadows (Theme → Effects → Shadows, and each widget's own Shadow setting):
+    // off | soft | strong; the same colour and direction as the rest
+    readonly property string widgetShadow: String(Store.get("widgets.shadow", "off"))
 
     // ── type ──
     readonly property int sizeTiny: 9

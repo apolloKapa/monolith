@@ -16,15 +16,15 @@ Singleton {
             faces: [["digital", "Digital", "ClockDigital", [1.2, 5]], ["minimal", "Minimal", "ClockMinimal", [1.2, 5]], ["analog", "Analog", "ClockAnalog", [1, 1], [220, 220]],
                     ["material", "Material", "ClockMaterial", [0.7, 1.3], [230, 230]], ["materialAnalog", "Material analog", "ClockMaterialAnalog", [1, 1], [230, 230]],
                     ["lumen", "Lumen", "ClockLumen", [1, 1], [240, 240]], ["lockscreen", "Lock screen", "ClockLockscreen", [0.6, 4], [520, 260]],
-                    ["stretched", "Stretched", "ClockStretched", [0.3, 2.5], [300, 280]], ["stacked", "Stacked", "ClockStacked", [0.5, 1.2], [180, 260]]] },
+                    ["stretched", "Stretched", "ClockStretched", [0.3, 2.5], [300, 280]], ["stacked", "Stacked", "ClockStacked", [0.5, 1.2], [180, 260]], ["dot", "Dot", "ClockDot", [1, 2.6], [320, 180]]] },
         date: { name: "Date", icon: "today", size: [300, 100], lim: [100, 40, 900, 400], aspect: [1, 6],
-            faces: [["full", "Full", "DateFull"], ["compact", "Compact", "DateCompact"]] },
+            faces: [["full", "Full", "DateFull"], ["compact", "Compact", "DateCompact"], ["dot", "Dot", "DateDot", [1.2, 3.5], [320, 140]]] },
         weather: { name: "Weather", icon: "partly_cloudy_day", size: [250, 120], lim: [90, 70, 800, 500], aspect: [0.8, 4],
-            faces: [["compact", "Compact", "WeatherCompact", [0.8, 3.5]], ["full", "Full", "WeatherFull", [1.6, 3.5], [400, 170]], ["round", "Round", "WeatherRound", [1, 1], [200, 200]]] },
+            faces: [["compact", "Compact", "WeatherCompact", [0.8, 3.5]], ["full", "Full", "WeatherFull", [1.6, 3.5], [400, 170]], ["round", "Round", "WeatherRound", [1, 1], [200, 200]], ["dot", "Dot", "WeatherDot", [0.9, 2.2], [260, 170]]] },
         media: { name: "Music", icon: "music_note", size: [360, 130], lim: [120, 60, 1200, 700], aspect: [0.8, 6],
             faces: [["full", "Full", "MusicFull", [2.4, 4.4], [400, 140]], ["round", "Round", "MusicRound", [0.8, 1.25], [300, 300]], ["lyrics", "Lyrics", "MusicLyrics", [0.8, 4], [460, 240]],
                     ["simpleLyrics", "Simple lyrics", "MusicLyricsSimple", [1, 8], [600, 130]], ["cover", "Cover", "MusicCover", [0.8, 1.25], [220, 220]], ["controls", "Controls", "MusicSlim", [1.6, 8], [420, 110]],
-                    ["card", "Player card", "MusicControls", [2, 4], [380, 160]]] },
+                    ["card", "Player card", "MusicControls", [2, 4], [380, 160]], ["dot", "Dot", "MusicDot", [1.8, 3.6], [400, 150]]] },
         visualizer: { name: "Visualiser", icon: "graphic_eq", size: [900, 180], lim: [160, 40, 3840, 600], aspect: [1, 20],
             faces: [["bars", "Bars", "VisualizerBars"], ["continuous", "Continuous", "VisualizerContinuous"]] },
         calendar: { name: "Calendar", icon: "calendar_month", size: [270, 250], lim: [200, 190, 600, 560], aspect: [0.8, 1.6],
@@ -32,15 +32,15 @@ Singleton {
         usage: { name: "System usage", icon: "monitoring", size: [330, 120], lim: [200, 90, 900, 400], aspect: [1.2, 4],
             faces: [["rings", "Rings", "UsageRings"], ["bars", "Bars", "UsageBars", [1, 3], [300, 170]]] },
         cpu: { name: "CPU", icon: "developer_board", size: [180, 130], lim: [90, 70, 600, 600], aspect: [0.6, 2.5],
-            faces: [["default", "Card", "MetricCard"], ["circle", "Circle", "MetricCircle", [1, 1], [150, 150]]] },
+            faces: [["default", "Card", "MetricCard"], ["circle", "Circle", "MetricCircle", [1, 1], [150, 150]], ["dot", "Dot", "MetricDot", [1, 1], [170, 170]]] },
         ram: { name: "Memory", icon: "memory_alt", size: [180, 130], lim: [90, 70, 600, 600], aspect: [0.6, 2.5],
-            faces: [["default", "Card", "MetricCard"], ["circle", "Circle", "MetricCircle", [1, 1], [150, 150]]] },
+            faces: [["default", "Card", "MetricCard"], ["circle", "Circle", "MetricCircle", [1, 1], [150, 150]], ["dot", "Dot", "MetricDot", [1, 1], [170, 170]]] },
         temp: { name: "Temperature", icon: "device_thermostat", size: [180, 130], lim: [90, 70, 600, 600], aspect: [0.6, 2.5],
-            faces: [["default", "Card", "MetricCard"], ["circle", "Circle", "MetricCircle", [1, 1], [150, 150]]] },
+            faces: [["default", "Card", "MetricCard"], ["circle", "Circle", "MetricCircle", [1, 1], [150, 150]], ["dot", "Dot", "MetricDot", [1, 1], [170, 170]]] },
         disk: { name: "Disk", icon: "hard_drive", size: [180, 130], lim: [90, 70, 600, 600], aspect: [0.6, 2.5],
-            faces: [["default", "Card", "MetricCard"], ["circle", "Circle", "MetricCircle", [1, 1], [150, 150]]] },
+            faces: [["default", "Card", "MetricCard"], ["circle", "Circle", "MetricCircle", [1, 1], [150, 150]], ["dot", "Dot", "MetricDot", [1, 1], [170, 170]]] },
         battery: { name: "Battery", icon: "battery_full", size: [260, 90], lim: [90, 60, 600, 600], aspect: [0.6, 4.5],
-            faces: [["default", "Bar", "BatteryBar", [1.5, 4.5]], ["circle", "Circle", "BatteryCircle", [1, 1], [150, 150]]] },
+            faces: [["default", "Bar", "BatteryBar", [1.5, 4.5]], ["circle", "Circle", "BatteryCircle", [1, 1], [150, 150]], ["dot", "Dot", "MetricDot", [1, 1], [170, 170]]] },
         github: { name: "GitHub", icon: "commit", size: [560, 190], lim: [320, 150, 1100, 320], aspect: [2, 5],
             faces: [["default", "Contributions", "GithubGrid"]] },
         notes: { name: "Notes", icon: "sticky_note_2", size: [300, 280], lim: [200, 160, 700, 700], aspect: [0.5, 2.5],
@@ -118,7 +118,10 @@ Singleton {
         "github/default": [520, 140, 1200, 380, 1.4, 8.5], "notes/default": [240, 180, 700, 700, 0.5, 2.5],
         "text/default": [60, 30, 2000, 800, 0.2, 20], "image/rect": [30, 30, 4000, 4000, 0.02, 50],
         "image/rounded": [30, 30, 4000, 4000, 0.02, 50], "image/round": [40, 40, 3000, 3000, 1, 1],
-        "user/default": [220, 130, 500, 300, 1.2, 2.8]
+        "user/default": [220, 130, 500, 300, 1.2, 2.8],
+        "clock/dot": [140, 70, 1400, 900, 1, 2.6], "date/dot": [160, 70, 1200, 500, 1.2, 3.5], "weather/dot": [140, 100, 800, 500, 0.9, 2.2],
+        "media/dot": [240, 100, 1000, 400, 1.8, 3.6], "cpu/dot": [100, 100, 600, 600, 1, 1], "ram/dot": [100, 100, 600, 600, 1, 1],
+        "temp/dot": [100, 100, 600, 600, 1, 1], "disk/dot": [100, 100, 600, 600, 1, 1], "battery/dot": [100, 100, 600, 600, 1, 1]
     })
     function lookOf(t, f) { return looks[t + "/" + faceId(t, f)] || null; }
     function aspectOf(t, f) {
@@ -151,10 +154,21 @@ Singleton {
     function optionsFor(t, f) {
         const id = faceId(t, f);
         const o = [["opacity", "Opacity", "slider", 1, [0.15, 1, 0.05]],
-                   ["rotation", "Orientation", "dropdown", "0", [["0", "Upright"], ["90", "Turned right"], ["180", "Upside down"], ["270", "Turned left"]]]];
+                   ["rotation", "Orientation", "dropdown", "0", [["0", "Upright"], ["90", "Turned right"], ["180", "Upside down"], ["270", "Turned left"]]],
+                   ["shadow", "Shadow", "dropdown", "", [["", "Like Settings"], ["off", "Off"], ["soft", "Soft"], ["strong", "Strong"], ["glow", "Accent glow"]]],
+                   ["shadowDistance", "Shadow distance", "slider", 6, [0, 30, 1]]];
         if (carded.indexOf(t + "/" + id) !== -1)
             o.push(["background", "Background", "choice", "blur", [["blur", "Blurry"], ["normal", "Normal"], ["clear", "Clear"]]],
                    ["blurStrength", "Blur strength", "slider", 0.8, [0.1, 1, 0.05]], ["radius", "Rounding", "slider", -1, [0, 100, 1]]);
+        // the Dot looks (dot-matrix cards): the card's tone and the accent (red unless you pick one)
+        if (id === "dot") {
+            o.push(["dotTone", "Card", "choice", "dark", [["dark", "Dark"], ["light", "Light"], ["glass", "Glass"], ["clear", "Clear"]]],
+                   ["accentColor", "Accent colour", "colour", ""]);
+            if (t === "clock")
+                o.push(["showDate", "Day and date", "toggle", true], ["showSeconds", "Seconds dot", "toggle", true],
+                       ["hour12", "12-hour", "toggle", false], ["offDots", "Show unlit dots", "toggle", true]);
+            return o;
+        }
         if (t === "clock" || (t === "media" && id === "controls"))
             o.push(["mainColor", "Main colour", "colour", ""], ["accentColor", "Accent colour", "colour", ""]);
         if (["cpu", "ram", "temp", "disk", "battery"].indexOf(t) !== -1 && id === "circle")
@@ -285,6 +299,8 @@ Singleton {
             ["cpu", "circle", 0.04, 0.55, 150, 150], ["ram", "circle", 0.13, 0.55, 150, 150], ["disk", "circle", 0.22, 0.55, 150, 150], ["media", "full", 0.70, 0.80, 420, 140], ["github", "default", 0.33, 0.78, 560, 190]]],
         ["media", "Media station", "queue_music", [["media", "round", 0.06, 0.28, 360, 360], ["media", "lyrics", 0.32, 0.30, 520, 300], ["visualizer", "bars", 0.06, 0.78, 1500, 160], ["clock", "minimal", 0.06, 0.06, 260, 100]]],
         ["minimal", "Minimal", "crop_free", [["clock", "lockscreen", 0.33, 0.28, 600, 320]]],
+        ["dot", "Dot", "grid_4x4", [["clock", "dot", 0.04, 0.06, 420, 220], ["date", "dot", 0.04, 0.30, 420, 150], ["weather", "dot", 0.04, 0.46, 200, 170],
+            ["battery", "dot", 0.155, 0.46, 170, 170], ["cpu", "dot", 0.80, 0.06, 170, 170], ["ram", "dot", 0.895, 0.06, 170, 170], ["media", "dot", 0.70, 0.82, 420, 150]]],
         ["shadow", "Shadow", "dark_mode", [["clock", "stretched", 0.05, 0.08, 620, 170], ["media", "simpleLyrics", 0.05, 0.80, 700, 120], ["weather", "round", 0.88, 0.08, 110, 220], ["battery", "circle", 0.86, 0.45, 150, 150]]]
     ]
     function applyPreset(mode, id, screen) {

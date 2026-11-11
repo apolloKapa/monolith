@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Services.Mpris
 import "../core"
@@ -43,6 +44,19 @@ Item {
         height: w.sideways ? w.width : w.height
         rotation: w.rot
         readonly property var ctx: w
+        // its shadow (its own Shadow setting, else Settings → Effects → Shadows under widgets):
+        // the shape of what it draws, so a clock's digits get one as well as a card
+        readonly property string shadow: { const v = String(w.opt("shadow", "") || ""); return v !== "" ? v : Theme.widgetShadow; }
+        readonly property bool shadowed: shadow !== "off" && Theme.shadowOn
+        layer.enabled: shadowed
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: body.shadow === "glow" ? Qt.alpha(Theme.accent, 0.85) : Qt.alpha(Theme.shadowBase, body.shadow === "strong" ? 0.8 : 0.5)
+            shadowBlur: body.shadow === "glow" ? 1 : (body.shadow === "strong" ? Math.max(0.5, Theme.shadowSoftness) : Theme.shadowSoftness)
+            shadowVerticalOffset: body.shadow === "glow" ? 0 : Number(w.opt("shadowDistance", 6))
+            shadowHorizontalOffset: body.shadow === "glow" ? 0 : Theme.shadowSideways
+            blurMax: 48
+        }
         source: WidgetLayout.file(w.type, w.face) !== "" ? "faces/" + WidgetLayout.file(w.type, w.face) + ".qml" : ""
     }
 }
