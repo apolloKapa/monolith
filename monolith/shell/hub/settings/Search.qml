@@ -96,47 +96,11 @@ ColumnLayout {
         }
     }
 
-    // ── hidden apps: still installed, just not in the launcher ──
-    readonly property var hiddenIds: Store.get("search.hidden", []) || []
-    property string appFilter: ""
-    property bool onlyHidden: false
-    readonly property var allApps: { let _ = Store.revision; return DesktopEntries.applications.values.filter(a => !a.noDisplay).slice().sort((a, b) => a.name.localeCompare(b.name)); }
-    readonly property var listedApps: allApps.filter(a => (!onlyHidden || hiddenIds.indexOf(a.id) !== -1)
-        && (appFilter.trim() === "" || a.name.toLowerCase().indexOf(appFilter.trim().toLowerCase()) !== -1))
-    function setShown(id, on) { Store.set("search.hidden", on ? hiddenIds.filter(x => x !== id) : hiddenIds.concat([id])); }
+    // (hiding apps has its own tab: Software → Apps)
     Label { text: "Hidden apps"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
     SettingRow {
-        key: "search.hidden";
-        icon: "visibility_off"; title: "Apps in the launcher"
-        desc: favSec.hiddenIds.length === 0 ? "All shown. Switch one off to hide it (it stays installed), or right-click it in the launcher → Hide"
-                                          : favSec.hiddenIds.length + (favSec.hiddenIds.length === 1 ? " app hidden" : " apps hidden") + ": still installed, just not in the launcher"
-        Button { visible: favSec.hiddenIds.length > 0; text: "Show all"; onClicked: Store.set("search.hidden", []) }
+        icon: "visibility_off"; title: "Hide apps from the launcher"
+        desc: ((Store.get("search.hidden", []) || []).length || "No") + " hidden now. Pick which apps show in Software → Apps (or right-click one in the launcher → Hide)"
+        Button { text: "Open"; onClicked: HubState.settingsSection = "apps" }
     }
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 8
-        Field { Layout.fillWidth: true; placeholder: "Find an app"; onTextChanged: favSec.appFilter = text }
-        Segmented { width: 220; opts: [["all", "All apps"], ["hidden", "Hidden"]]; value: favSec.onlyHidden ? "hidden" : "all"; onPicked: v => favSec.onlyHidden = v === "hidden" }
-    }
-    Repeater {
-        model: favSec.listedApps
-        Rectangle {
-            required property var modelData
-            readonly property bool shown: favSec.hiddenIds.indexOf(modelData.id) === -1
-            Layout.fillWidth: true
-            implicitHeight: 46
-            radius: Theme.corner(46, 2)
-            color: Theme.containerHigh
-            opacity: shown ? 1 : 0.6
-            Image { id: hi; x: 12; anchors.verticalCenter: parent.verticalCenter; width: 26; height: 26; sourceSize: Qt.size(52, 52); source: Quickshell.iconPath(parent.modelData.icon, "application-x-executable"); asynchronous: true; smooth: true; mipmap: true }
-            Column {
-                anchors.left: hi.right; anchors.leftMargin: 12; anchors.right: tg.left; anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                Label { width: parent.width; elide: Text.ElideRight; text: parent.parent.modelData.name }
-                Label { width: parent.width; elide: Text.ElideRight; visible: !parent.parent.shown; text: "Hidden"; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
-            }
-            Toggle { id: tg; anchors.right: parent.right; anchors.rightMargin: 10; anchors.verticalCenter: parent.verticalCenter; checked: parent.shown; onToggled: on => favSec.setShown(parent.modelData.id, on) }
-        }
-    }
-    Label { visible: favSec.listedApps.length === 0; text: favSec.onlyHidden ? "No hidden apps" : "No app matches"; muted: true; Layout.leftMargin: 6 }
 }
