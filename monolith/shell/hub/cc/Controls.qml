@@ -230,34 +230,46 @@ RowLayout {
                 radius: Theme.corner(56, 6)
                 color: Theme.control
                 Icon { visible: art.status !== Image.Ready; anchors.centerIn: parent; name: cc.player ? "music_note" : "music_off"; size: 48; color: Theme.faint }
-                Image {
-                    id: art
+                // the picture, the shade and the bars, cut to the cover's rounded shape (a clip
+                // only cuts to the square box, and a ring painted over the corners left rough edges)
+                Item {
                     anchors.fill: parent
-                    source: cc.player ? (cc.player.trackArtUrl || "") : ""
-                    fillMode: Image.PreserveAspectCrop
-                    clip: true
-                    sourceSize: Qt.size(600, 600)
-                    asynchronous: true
+                    layer.enabled: art.status === Image.Ready || cvb.live
+                    layer.smooth: true
+                    layer.effect: MultiEffect {
+                        maskEnabled: true
+                        maskSource: coverMask
+                        maskThresholdMin: 0.5
+                        maskSpreadAtMin: 1.0
+                    }
+                    Image {
+                        id: art
+                        anchors.fill: parent
+                        source: cc.player ? (cc.player.trackArtUrl || "") : ""
+                        fillMode: Image.PreserveAspectCrop
+                        clip: true
+                        sourceSize: Qt.size(600, 600)
+                        asynchronous: true
+                    }
+                    // the sound, dancing along the bottom of the cover while it plays
+                    Rectangle {
+                        visible: cvb.live
+                        anchors.bottom: parent.bottom
+                        width: parent.width; height: parent.height * 0.45
+                        gradient: Gradient { GradientStop { position: 0; color: "transparent" } GradientStop { position: 1; color: Qt.rgba(0, 0, 0, 0.55) } }
+                    }
+                    Faces.CavaBars {
+                        id: cvb
+                        anchors.bottom: parent.bottom; anchors.bottomMargin: 12
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width - 32; height: parent.height * 0.3
+                        count: 24; spacing: 3; minLen: 3
+                        live: !!cc.player && cc.player.isPlaying
+                        visible: live
+                        color: "#ffffff"
+                    }
                 }
-                // the sound, dancing along the bottom of the cover while it plays
-                Rectangle {
-                    visible: cvb.live
-                    anchors.bottom: parent.bottom
-                    width: parent.width; height: parent.height * 0.45
-                    gradient: Gradient { GradientStop { position: 0; color: "transparent" } GradientStop { position: 1; color: Qt.rgba(0, 0, 0, 0.55) } }
-                }
-                Faces.CavaBars {
-                    id: cvb
-                    anchors.bottom: parent.bottom; anchors.bottomMargin: 12
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: parent.width - 32; height: parent.height * 0.3
-                    count: 24; spacing: 3; minLen: 3
-                    live: !!cc.player && cc.player.isPlaying
-                    visible: live
-                    color: "#ffffff"
-                }
-                // rounded corners over the picture (clip only cuts to the box)
-                Rectangle { anchors.fill: parent; anchors.margins: -cover.radius; radius: cover.radius * 2; color: "transparent"; border.width: cover.radius; border.color: Theme.container; visible: art.status === Image.Ready }
+                Rectangle { id: coverMask; anchors.fill: parent; radius: cover.radius; visible: false; layer.enabled: true; layer.smooth: true }
             }
             Column {
                 x: 18
