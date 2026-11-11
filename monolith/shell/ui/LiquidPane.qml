@@ -50,19 +50,28 @@ Item {
     Component.onCompleted: place()
     onVisibleChanged: if (visible) place()
 
-    // the pointer: the glass swells and catches the light under it. Where it is stays put once it
-    // leaves (Qt resets a hover point to 0,0 then: the light jumped to the top-left corner while it
-    // faded out) and glides after the pointer instead of jumping with each mouse event
-    property real swell: hover.hovered ? 1 : 0
+    // the pointer: the glass swells and catches the light under it, only while the pointer is over
+    // the glass itself. Where it is stays put once it leaves (so the light fades out there) and
+    // glides after the pointer instead of jumping with each mouse event
+    property real swell: hover.hovered && pointerX >= 0 && pointerY >= 0 && pointerX <= width && pointerY <= height ? 1 : 0
     Behavior on swell { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
     property real pointerX: width / 2
     property real pointerY: height / 2
     Behavior on pointerX { enabled: lp.swell > 0.02; NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
     Behavior on pointerY { enabled: lp.swell > 0.02; NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
-    HoverHandler {
-        id: hover
-        onPointChanged: if (hovered) { lp.pointerX = point.position.x; lp.pointerY = point.position.y; }
+    // Where the pointer is: heard by the card the glass is in (its parent), not by the glass. The
+    // glass sits under the card's buttons, tiles and sliders, and each of those took the hover:
+    // the light faded out over every button and back in over the gaps, and stood still meanwhile.
+    // A parent stays hovered over its children, and they keep their own hover.
+    HoverHandler { id: hover; parent: lp.parent }
+    readonly property point hoverAt: hover.point.position
+    function follow() {
+        if (!hover.hovered || !lp.parent) return;
+        const p = lp.mapFromItem(lp.parent, hoverAt.x, hoverAt.y);    // in the glass's own coordinates
+        pointerX = p.x; pointerY = p.y;
     }
+    onHoverAtChanged: follow()
+    Connections { target: hover; function onHoveredChanged() { lp.follow(); } }
 
     Image {
         id: wallTex
