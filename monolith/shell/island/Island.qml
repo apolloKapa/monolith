@@ -512,7 +512,7 @@ PanelWindow {
         item: win.barHere || win.toastOn || (win.shown && win.docked) ? body : null
         radius: island.rr
         Region { item: win.dropped || drop.height > 1 ? dropBody : null; radius: drop.rr }
-        Region { item: blurBox.on ? blurBox : null; radius: floatCard.radius }
+        Region { item: blurBox.on ? blurBox : null; radius: floatCard.radius * blurBox.k }
     }
     // Where the floating card's blur is. The blur can't fade: it's there or it isn't. Kept on
     // until the card had faded out, it stayed behind as an empty blurred box after the menu
@@ -521,11 +521,18 @@ PanelWindow {
     // Unfolding, it's as tall as the card is at that moment.
     Item {
         id: blurBox
-        readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04 : (win.shown && floatCard.opacity > 0.55))
+        // (and only once the menu's own page is showing: the card comes in a moment before it,
+        // and an empty blurred card read as a ghost of the menu)
+        readonly property bool pageIn: !!win.currentPage && win.currentPage.opacity > 0.6
+        readonly property bool on: !win.docked && pageIn && (Theme.fxUnfold ? floatCard.unfold > 0.04 : (win.shown && floatCard.opacity > 0.4))
         readonly property real part: Theme.fxUnfold ? Math.max(0.01, floatCard.unfold) : 1
-        x: floatCard.x
-        width: floatCard.width
-        height: Math.round(floatCard.height * part)
-        y: Math.round(floatCard.y + (floatCard.height - height) / 2)
+        // the card zooms in and out from its own corner or side: the blur shrinks with it
+        readonly property real k: floatCard.scale
+        readonly property real fx: floatCard.onLeft ? 0 : (floatCard.onRight ? 1 : 0.5)
+        readonly property real fy: floatCard.onTop ? 0 : (floatCard.onBottom ? 1 : 0.5)
+        width: Math.round(floatCard.width * k)
+        height: Math.round(floatCard.height * k * part)
+        x: Math.round(floatCard.x + (floatCard.width - width) * fx)
+        y: Math.round(floatCard.y + (floatCard.height * k - height) / 2 + (floatCard.height - floatCard.height * k) * fy)
     }
 }
