@@ -42,15 +42,18 @@ Item {
         height: 10
         radius: 5
         color: Theme.control
+        // the fill: up to the handle's middle, so the handle always caps it (sized on its own, its
+        // rounded end used to poke out past the handle)
         Rectangle {
-            width: Math.max(height, parent.width * nb.frac)
+            width: Math.max(0, handle.x + handle.width / 2)
+            visible: width > 0.5
             height: parent.height
-            radius: parent.radius
+            radius: Math.min(parent.radius, width / 2)
             color: Theme.accent
-            Behavior on width { enabled: !nb.dragging; NumberAnimation { duration: Theme.ms(180); easing.type: Easing.OutCubic } }
         }
         // the handle: a pill that stands up from the track
         Rectangle {
+            id: handle
             x: Math.max(0, Math.min(parent.width - width, parent.width * nb.frac - width / 2))
             anchors.verticalCenter: parent.verticalCenter
             width: 6

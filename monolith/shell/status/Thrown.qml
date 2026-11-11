@@ -110,10 +110,14 @@ PanelWindow {
                     card.py += card.vy * dt;
                     card.travelled += Math.abs(card.vx * dt);
                     if (falls) {
-                        // the screen's sides bounce it back, a bit slower each time
-                        if (card.px < 0 && card.vx < 0) { card.px = 0; card.vx = -card.vx * 0.6; card.spin = -card.spin * 0.7; }
-                        const right = win.width - card.width;
-                        if (card.px > right && card.vx > 0) { card.px = right; card.vx = -card.vx * 0.6; card.spin = -card.spin * 0.7; }
+                        // the screen's sides bounce it back, a bit slower each time. Where its edges are
+                        // depends on how far it has turned: a wide card on its side is narrow, so it
+                        // goes by the turned card's width, not its box's (that bounced off thin air)
+                        const a = card.rotation * Math.PI / 180;
+                        const half = (Math.abs(card.width * Math.cos(a)) + Math.abs(card.height * Math.sin(a))) / 2;
+                        const mid = card.px + card.width / 2;
+                        if (mid - half < 0 && card.vx < 0) { card.px = half - card.width / 2; card.vx = -card.vx * 0.6; card.spin = -card.spin * 0.7; }
+                        if (mid + half > win.width && card.vx > 0) { card.px = win.width - half - card.width / 2; card.vx = -card.vx * 0.6; card.spin = -card.spin * 0.7; }
                     }
                     // gone: out at the bottom (falling), faded or off the side (sliding)
                     const out = falls ? card.py > win.height + Math.max(card.width, card.height)
