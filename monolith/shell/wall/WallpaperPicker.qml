@@ -251,7 +251,8 @@ PanelWindow {
     BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
     Region {
         id: blurShape
-        item: win.visible ? panel : null
+        // (gone the moment it starts closing: the blur cannot fade out with it)
+        item: win.shown ? panel : null
         radius: panel.radius
     }
 }

@@ -161,7 +161,8 @@ PanelWindow {
     BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
     Region {
         id: blurShape
-        item: osd.visible ? pill : null
+        // (only while it is fully there: the blur cannot fade out with it)
+        item: osd.visible && hold.running ? pill : null
         radius: pill.radius
     }
 }

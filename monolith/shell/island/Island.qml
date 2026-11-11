@@ -512,6 +512,20 @@ PanelWindow {
         item: win.barHere || win.toastOn || (win.shown && win.docked) ? body : null
         radius: island.rr
         Region { item: win.dropped || drop.height > 1 ? dropBody : null; radius: drop.rr }
-        Region { item: floatCard.visible ? floatCard : null; radius: floatCard.radius }
+        Region { item: blurBox.on ? blurBox : null; radius: floatCard.radius }
+    }
+    // Where the floating card's blur is. The blur can't fade: it's there or it isn't. Kept on
+    // until the card had faded out, it stayed behind as an empty blurred box after the menu
+    // was gone (and showed up before the menu did). So it's on only while the card is mostly
+    // there: it goes the moment the menu starts closing, and comes once the card has come in.
+    // Unfolding, it's as tall as the card is at that moment.
+    Item {
+        id: blurBox
+        readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04 : (win.shown && floatCard.opacity > 0.55))
+        readonly property real part: Theme.fxUnfold ? Math.max(0.01, floatCard.unfold) : 1
+        x: floatCard.x
+        width: floatCard.width
+        height: Math.round(floatCard.height * part)
+        y: Math.round(floatCard.y + (floatCard.height - height) / 2)
     }
 }
