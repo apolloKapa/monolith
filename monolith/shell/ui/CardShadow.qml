@@ -9,12 +9,13 @@ Rectangle {
     id: cs
     anchors.fill: parent
     z: -1
-    // Liquid glass: the card's light rim and shine, over the card (not under it like the shadow)
-    GlassRim { parent: cs.parent; anchors.fill: parent; radius: cs.radius; z: 900 }
+    // Liquid glass: the card is a pane of glass (under the card's own faint fill and content)
+    LiquidPane { parent: cs.parent; anchors.fill: parent; radius: cs.radius; z: -0.5; visible: Theme.liquid && cs.visible }
     // how far the shadow falls down (the bar's pills keep it centred: they float on the screen)
     property real offsetY: Theme.shadowY
     radius: parent && parent.radius !== undefined ? parent.radius : 0
-    color: parent && parent.color !== undefined ? parent.color : Theme.frame
+    // (liquid glass: the card's fill is nearly clear, so the shadow is cast by a solid copy)
+    color: Theme.liquid ? Qt.alpha(Theme.frame, 1) : (parent && parent.color !== undefined ? parent.color : Theme.frame)
     layer.enabled: true
     layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: offsetY; shadowHorizontalOffset: Theme.shadowX }
 }

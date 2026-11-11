@@ -174,6 +174,10 @@ PanelWindow {
         // its own roundness (−1: the theme's)
         radius: Number(Store.get("dock.radius", -1)) >= 0 ? Math.min(Number(Store.get("dock.radius", -1)), Math.min(width, height) / 2) : Theme.corner(Math.min(width, height), 8)
         color: Qt.alpha(Theme.card, opacityBg)
+        // liquid glass: the capsule is a pane of glass. Its window is a strip along the screen's
+        // edge, so the pane is told where that strip is on the screen
+        readonly property point glassOrigin: Qt.point(dock.side === "right" ? dock.screen.width - dock.width : 0, dock.side === "bottom" ? dock.screen.height - dock.height : 0)
+        LiquidPane { anchors.fill: parent; z: -1; radius: capsule.radius; visible: Theme.liquid && capsule.opacityBg > 0.02 }
         // the outline: optional, and never on an invisible dock
         border.width: Store.get("dock.border", true) !== false && opacityBg > 0.02 ? Math.max(1, Theme.outlineW) : 0
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
@@ -183,7 +187,7 @@ PanelWindow {
             pressAndHoldInterval: 1000
             onPressAndHold: dock.editing = true
         }
-        PanelFx { anchors.fill: parent; radius: capsule.radius; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge || Theme.liquid) }
+        PanelFx { anchors.fill: parent; radius: capsule.radius; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge) }
         Grid {
             id: appsRow
             anchors.centerIn: parent

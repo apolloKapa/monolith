@@ -55,32 +55,13 @@ Item {
         }
     }
 
-    // Liquid glass: the same outline again, without the shadow: a shine across the upper part
-    // and a light rim along the lower edge where the glass curves away
-    Shape {
-        anchors.fill: parent
-        visible: Theme.liquid && s.fill.a > 0.01
-        preferredRendererType: Shape.CurveRenderer
-        transform: Scale { origin.y: s.height / 2; yScale: s.flipped ? -1 : 1 }
-        ShapePath {
-            strokeColor: Qt.rgba(1, 1, 1, 0.34)
-            strokeWidth: 1.2
-            fillGradient: LinearGradient {
-                x1: 0; y1: 0; x2: 0; y2: s.height
-                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.14) }
-                GradientStop { position: Math.min(0.9, 22 / Math.max(1, s.height)); color: Qt.rgba(1, 1, 1, 0.03) }
-                GradientStop { position: 0.85; color: "transparent" }
-                GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.07) }
-            }
-            startX: 0; startY: 0
-            PathLine { x: s.width; y: 0 }
-            PathQuad { controlX: s.width - s.e; controlY: 0; x: s.width - s.e; y: s.e }
-            PathLine { x: s.width - s.e; y: s.height - s.rr }
-            PathArc { x: s.width - s.e - s.rr; y: s.height; radiusX: s.rr; radiusY: s.rr; direction: PathArc.Clockwise }
-            PathLine { x: s.e + s.rr; y: s.height }
-            PathArc { x: s.e; y: s.height - s.rr; radiusX: s.rr; radiusY: s.rr; direction: PathArc.Clockwise }
-            PathLine { x: s.e; y: s.e }
-            PathQuad { controlX: s.e; controlY: 0; x: 0; y: 0 }
-        }
+    // Liquid glass: the body is a pane of glass (square where it meets the screen edge); the ears
+    // keep the faint fill
+    LiquidPane {
+        x: s.e; y: 0
+        width: s.bodyW; height: s.height
+        visible: Theme.liquid && s.fill.a > 0.001 && s.height > 4
+        topLeft: s.flipped ? s.rr : 0; topRight: s.flipped ? s.rr : 0
+        bottomRight: s.flipped ? 0 : s.rr; bottomLeft: s.flipped ? 0 : s.rr
     }
 }

@@ -81,12 +81,12 @@ Singleton {
     readonly property bool oled: Look.style.oled === true
     // how solid panels are: see-through styles, and your setting (Theme → Effects)
     readonly property real panelOpacity: Number(Store.get("theme.panelOpacity", 1))
-    // Liquid glass: clearer panes (with the blur behind them on unless you turned it off), a
-    // light rim and shine on them (ui/GlassRim) and widgets that bend what's behind them
+    // Liquid glass: panes are glass (ui/LiquidPane, shaders/glass.frag) with only a whisper of
+    // fill over them; the compositor blur behind them is on unless you turned it off
     readonly property bool liquid: Look.style.liquid === true
-    readonly property real see: (liquid ? 0.42 : (Look.style.opaque === false ? 0.74 : 1)) * panelOpacity
+    readonly property real see: (liquid ? 0.08 : (Look.style.opaque === false ? 0.74 : 1)) * panelOpacity
     // blur behind the shell's panels (the compositor does it; strength in niri's config)
-    readonly property bool blur: Store.get("theme.blur", liquid) === true
+    readonly property bool blur: Store.get("theme.blur", false) === true
     // effects (Theme → Effects): film grain on panels, a light along their top edge, and menus
     // that unfold from a thin line (the old shell's theme.effects carry over)
     readonly property var oldFx: Prefs.raw.theme && Prefs.raw.theme.effects ? Prefs.raw.theme.effects : ({})
@@ -95,9 +95,10 @@ Singleton {
     readonly property bool fxUnfold: Store.get("theme.effects.unfold", oldFx.unfold === true) === true && animOn
     readonly property color card: Qt.alpha(oled ? "#000000" : m("surface_container_low", mix(_base, _s0, 0.55)), see)  // the hub, the dock
     // (with a palette: mantle, surface0, surface1; surface2 is ink in some styles)
-    readonly property color container: oled ? "#0d0d0d" : m("surface_container", Look.colors ? c("mantle", _s0) : _s0)            // groups inside a card
-    readonly property color containerHigh: oled ? "#171717" : m("surface_container_high", Look.colors ? _s0 : _s1)                 // rows, tiles
-    readonly property color control: oled ? "#242424" : m("surface_container_highest", Look.colors ? _s1 : _s2)                    // bubbles, tracks, chips
+    // (liquid glass: the groups, rows and chips inside a pane are see-through too)
+    readonly property color container: Qt.alpha(oled ? "#0d0d0d" : m("surface_container", Look.colors ? c("mantle", _s0) : _s0), liquid ? 0.34 : 1)            // groups inside a card
+    readonly property color containerHigh: Qt.alpha(oled ? "#171717" : m("surface_container_high", Look.colors ? _s0 : _s1), liquid ? 0.4 : 1)                 // rows, tiles
+    readonly property color control: Qt.alpha(oled ? "#242424" : m("surface_container_highest", Look.colors ? _s1 : _s2), liquid ? 0.5 : 1)                    // bubbles, tracks, chips
     readonly property bool dark: lum(card) < 0.5
     readonly property color hairline: Qt.alpha(m("outline_variant", dark ? "#ffffff" : "#000000"), roles.outline_variant ? 0.55 : 0.08)
 
