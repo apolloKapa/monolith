@@ -322,7 +322,13 @@ Item {
                     color: hovered ? Theme.containerHigh : "transparent"
                     Image { anchors.centerIn: parent; width: 16; height: 16; source: modelData.icon; sourceSize: Qt.size(32, 32); smooth: true; mipmap: true }
                     onClicked: modelData.activate()
-                    onRightClicked: { if (bar.trayWindow) { const p = bar.vertical ? bar.edgePoint(trayItem) : mapToItem(null, 0, height + 4); modelData.display(bar.trayWindow, p.x, p.y); } }
+                    // its menu, drawn by Monolith (status/TrayMenu.qml); an icon without one gets
+                    // its secondary action
+                    onRightClicked: {
+                        if (!modelData.hasMenu) { modelData.secondaryActivate(); return; }
+                        const p = bar.edgePoint(trayItem);
+                        HubState.toggleTray(modelData, bar.screenName, p.x, p.y);
+                    }
                 }
             }
         }

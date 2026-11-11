@@ -38,6 +38,8 @@ ShellRoot {
     Variants { model: notifL.on ? Quickshell.screens : []; NotifDrop {} }
     Lazy { id: soundL; when: HubState.dropScreen !== "" && HubState.dropKind === "sound"; linger: 400 }
     Variants { model: soundL.on ? Quickshell.screens : []; SoundDrop {} }
+    Lazy { id: trayL; when: HubState.dropScreen !== "" && HubState.dropKind === "tray"; linger: 400 }
+    Variants { model: trayL.on ? Quickshell.screens : []; TrayMenu {} }
     Variants { model: Quickshell.screens; Osd {} }
     Lazy { id: capL; when: Capture.active || Capture.freezing; linger: 300 }
     Variants { model: capL.on ? Quickshell.screens : []; CaptureOverlay {} }

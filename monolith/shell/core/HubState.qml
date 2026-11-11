@@ -22,6 +22,14 @@ Singleton {
         dropX = x; dropY = y; dropKind = kind; dropScreen = screen;
     }
     function closeDrop() { dropScreen = ""; }
+    // a tray icon's menu (status/TrayMenu.qml): which icon's; a right click on another icon
+    // switches to its menu, on the same one again puts it away
+    property var trayItem: null
+    function toggleTray(item, screen, x, y) {
+        if (dropKind === "tray" && dropScreen === screen && trayItem === item) { dropScreen = ""; return; }
+        open = false; peekScreen = "";
+        trayItem = item; dropX = x; dropY = y; dropKind = "tray"; dropScreen = screen;
+    }
     // the now-playing peek: a small player under the bar's media module while it's hovered
     // (status/MediaPeek.qml); where it hangs, in that screen's coordinates
     property string peekScreen: ""
