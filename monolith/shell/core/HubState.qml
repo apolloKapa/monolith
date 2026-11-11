@@ -44,6 +44,8 @@ Singleton {
         show(p, screen);
     }
     function close() { open = false; }
+    // a page gives the keyboard back to the island's field (after its own text box is done)
+    signal refocus()
     // open Search with text already typed (":" = emojis, "~/" = files)
     property string preset: ""
     signal presetRequested()

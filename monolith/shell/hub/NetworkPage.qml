@@ -6,8 +6,9 @@ import Quickshell.Bluetooth
 import "../core"
 import "../ui"
 
-// Network: the wired connection, Wi-Fi networks (connect, with a password when needed;
-// right-click forgets) and Bluetooth devices (connect, pair).
+// Network: Wi-Fi (what you're on, the networks nearby, a password asked for in place),
+// the wired connection and Bluetooth devices. Each tab opens with a card saying how things
+// stand, and says what to do when there's nothing to list.
 Page {
     id: page
     pageId: "network"
@@ -15,48 +16,209 @@ Page {
     property string tab: "wifi"
 
     property var devices: []          // nmcli devices
-    property var networks: []         // Wi-Fi networks in range
+    property var ips: ({})            // device -> its IPv4 address
+    property var saved: ({})          // names of the saved Wi-Fi connections
     property bool wifiOn: false
-    property string askFor: ""        // the network asking for a password
-    property string busy: ""
+    property var activeNet: null      // the Wi-Fi network we're on
+    property bool listed: false       // a first scan came back
+    property bool scanning: false
+
+    // the one network that's opened up: for its password ("pw") or its details ("info")
+    property string openSsid: ""
+    property string openMode: "pw"
+    property string busy: ""          // the network being connected to
+    property string error: ""         // what went wrong, in words
+    property string errorSsid: ""
+    signal failed(string ssid)
 
     readonly property var ethernet: devices.filter(d => d.type === "ethernet")
+    readonly property var wifiDev: devices.find(d => d.type === "wifi") || null
     readonly property var adapter: Bluetooth.defaultAdapter
+    readonly property bool btOn: !!(adapter && adapter.enabled)
     readonly property var btDevices: Bluetooth.devices.values.slice().sort((a, b) => (b.connected - a.connected) || (b.paired - a.paired))
+    readonly property var btConnected: btDevices.filter(d => d.connected)
 
-    function refresh() { devProc.running = true; radioProc.running = true; wifiProc.running = true; }
-    onCurrentChanged: if (current) refresh()
+    function strengthWord(s) { return s > 70 ? "Strong signal" : (s > 40 ? "Good signal" : "Weak signal"); }
+    function strengthIcon(s) { return s > 75 ? "signal_wifi_4_bar" : (s > 50 ? "network_wifi_3_bar" : (s > 25 ? "network_wifi_2_bar" : "network_wifi_1_bar")); }
+    function stateWord(s) {
+        if (s === "connected") return "Connected";
+        if (s === "unavailable") return "Cable unplugged";
+        if (s === "disconnected") return "Not connected";
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+    // one line of nmcli's terse output: fields split at ":", with "\:" and "\\" unescaped
+    function fields(line) {
+        const out = [];
+        let cur = "";
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === "\\" && i + 1 < line.length) cur += line[++i];
+            else if (ch === ":") { out.push(cur); cur = ""; }
+            else cur += ch;
+        }
+        out.push(cur);
+        return out;
+    }
+
+    function refresh() { devProc.running = true; radioProc.running = true; ipProc.running = true; savedProc.running = true; }
+    onCurrentChanged: { if (current) refresh(); else closePrompt(); }
+    onTabChanged: closePrompt()
     Timer { interval: 5000; repeat: true; running: page.current && HubState.open; onTriggered: page.refresh() }
+    Timer { id: soon; interval: 1500; onTriggered: page.refresh() }
 
     Process {
         id: devProc
         command: ["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "dev"]
-        stdout: StdioCollector { onStreamFinished: page.devices = text.trim().split("\n").filter(l => l).map(l => { const p = l.split(":"); return { name: p[0], type: p[1], state: p[2], conn: p.slice(3).join(":") }; }) }
+        stdout: StdioCollector { onStreamFinished: page.devices = text.trim().split("\n").filter(l => l).map(l => { const p = page.fields(l); return { name: p[0], type: p[1], state: p[2], conn: p[3] || "" }; }) }
     }
     Process { id: radioProc; command: ["nmcli", "-t", "radio", "wifi"]; stdout: StdioCollector { onStreamFinished: page.wifiOn = text.trim() === "enabled" } }
     Process {
-        id: wifiProc
-        command: ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "dev", "wifi", "list"]
+        id: ipProc
+        command: ["nmcli", "-t", "-f", "GENERAL.DEVICE,IP4.ADDRESS", "dev", "show"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const seen = {};
-                page.networks = text.trim().split("\n").filter(l => l).map(l => {
-                    const p = l.replace(/\\:/g, "\u0001").split(":").map(s => s.replace(/\u0001/g, ":"));
-                    return { active: p[0] === "*", ssid: p[1], signal: parseInt(p[2]) || 0, secure: (p[3] || "") !== "" && p[3] !== "--" };
-                }).filter(n => n.ssid !== "" && !seen[n.ssid] && (seen[n.ssid] = true)).sort((a, b) => (b.active - a.active) || (b.signal - a.signal));
+                const map = {};
+                let dev = "";
+                for (const l of text.split("\n")) {
+                    const p = page.fields(l);
+                    if (p[0] === "GENERAL.DEVICE") dev = p[1];
+                    else if (p[0].indexOf("IP4.ADDRESS") === 0 && dev !== "" && !map[dev]) map[dev] = (p[1] || "").split("/")[0];
+                }
+                page.ips = map;
+            }
+        }
+    }
+    // the saved connections first: the list marks them, and they connect without asking
+    Process {
+        id: savedProc
+        command: ["nmcli", "-t", "-f", "NAME,TYPE", "connection"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const map = {};
+                for (const l of text.split("\n")) { const p = page.fields(l); if (p[1] === "802-11-wireless") map[p[0]] = true; }
+                page.saved = map;
+                wifiProc.running = true;
             }
         }
     }
     Process {
+        id: wifiProc
+        command: ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "dev", "wifi", "list", "--rescan", "auto"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const seen = {};
+                const list = text.split("\n").filter(l => l).map(l => {
+                    const p = page.fields(l);
+                    const sec = (p[3] || "").trim();
+                    return { active: p[0] === "*", ssid: p[1] || "", strength: parseInt(p[2]) || 0, secure: sec !== "" && sec !== "--", security: sec === "--" ? "" : sec, saved: page.saved[p[1]] === true };
+                }).sort((a, b) => (b.active - a.active) || (b.saved - a.saved) || (b.strength - a.strength))
+                  .filter(n => n.ssid !== "" && !seen[n.ssid] && (seen[n.ssid] = true));
+                page.sync(list);
+                page.activeNet = list.find(n => n.active) || null;
+                page.listed = true;
+            }
+        }
+    }
+    Process { id: scanProc; command: ["nmcli", "dev", "wifi", "rescan"]; onExited: { page.scanning = false; page.refresh(); } }
+    function rescan() { if (scanning) return; scanning = true; scanProc.running = true; }
+
+    // The list is kept in place (rows are updated, not rebuilt), so a password being typed
+    // and the opened row survive the refresh every few seconds; rows keep their order too,
+    // only the connected one moves to the top.
+    ListModel { id: nets }
+    function find(ssid) { for (let i = 0; i < nets.count; i++) if (nets.get(i).ssid === ssid) return i; return -1; }
+    function sync(list) {
+        for (let i = nets.count - 1; i >= 0; i--) {
+            const s = nets.get(i).ssid;
+            if (s !== openSsid && s !== busy && !list.some(n => n.ssid === s)) nets.remove(i);
+        }
+        for (const n of list) {
+            const i = find(n.ssid);
+            if (i < 0) nets.append(n); else nets.set(i, n);
+        }
+        for (let i = 1; i < nets.count; i++) if (nets.get(i).active) nets.move(i, 0, 1);
+    }
+
+    function closePrompt() { openSsid = ""; error = ""; errorSsid = ""; }
+    function openRow(ssid, mode) { error = ""; errorSsid = ""; openMode = mode; openSsid = ssid; }
+    function setWifi(on) {
+        wifiOn = on;
+        if (!on) { nets.clear(); listed = false; activeNet = null; closePrompt(); }
+        Quickshell.execDetached(["nmcli", "radio", "wifi", on ? "on" : "off"]);
+        soon.restart();
+    }
+    // only ever removes a Wi-Fi connection of that name
+    function forget(ssid) {
+        Quickshell.execDetached(["sh", "-c", 'if [ "$(nmcli -g connection.type connection show id "$1" 2>/dev/null)" = 802-11-wireless ]; then nmcli connection delete id "$1"; fi', "sh", ssid]);
+        soon.restart();
+    }
+    function disconnectWifi() {
+        if (wifiDev) Quickshell.execDetached(["nmcli", "dev", "disconnect", wifiDev.name]);
+        closePrompt();
+        soon.restart();
+    }
+
+    Process {
         id: connectProc
         property string ssid: ""
-        onExited: code => { page.busy = ""; if (code !== 0) page.askFor = ssid; else page.askFor = ""; page.refresh(); }
+        property bool hadPw: false
+        property bool wasSaved: false
+        property int code: -1
+        property bool gotText: false
+        property string said: ""
+        stderr: StdioCollector { onStreamFinished: { connectProc.said = text; connectProc.gotText = true; page.connected(); } }
+        onExited: c => { code = c; page.connected(); }
     }
-    function connect(n, password) {
-        busy = n.ssid;
-        connectProc.ssid = n.ssid;
-        connectProc.command = password ? ["nmcli", "dev", "wifi", "connect", n.ssid, "password", password] : ["nmcli", "dev", "wifi", "connect", n.ssid];
+    // With a password: an older saved connection of that name goes first (a stale or half-made
+    // one makes nmcli fail whatever is typed), then a fresh one is made.
+    function connect(ssid, password) {
+        if (busy !== "") return;
+        error = ""; errorSsid = "";
+        busy = ssid;
+        connectProc.ssid = ssid;
+        connectProc.hadPw = password !== "";
+        connectProc.wasSaved = saved[ssid] === true;
+        connectProc.code = -1;
+        connectProc.gotText = false;
+        connectProc.command = password !== ""
+            ? ["sh", "-c", 'if [ "$(nmcli -g connection.type connection show id "$1" 2>/dev/null)" = 802-11-wireless ]; then nmcli connection delete id "$1" >/dev/null 2>&1; fi; exec nmcli -w 45 dev wifi connect "$1" password "$2"', "sh", ssid, password]
+            : ["nmcli", "-w", "45", "dev", "wifi", "connect", ssid];
         connectProc.running = true;
+    }
+    // the answer: in, or why not (a wrong password asks again, anything else says what it was)
+    function connected() {
+        const p = connectProc;
+        if (p.code < 0 || !p.gotText || busy === "") return;
+        const ssid = p.ssid;
+        busy = "";
+        if (p.code === 0) {
+            if (openSsid === ssid) closePrompt();
+            refresh();
+            return;
+        }
+        const i = find(ssid);
+        const secure = i >= 0 && nets.get(i).secure;
+        const said = p.said.trim();
+        const secrets = /secrets were required|no secrets|\bpsk\b|password|key-mgmt|wireless-security/i.test(said);
+        const timeout = /timeout/i.test(said);
+        // what a failed first try leaves behind would get in the way of the next one
+        if (!p.wasSaved || p.hadPw) forget(ssid);
+        errorSsid = ssid;
+        if (secure && (secrets || (timeout && p.hadPw))) {
+            error = p.hadPw ? "That password didn't work. Check it and try again."
+                            : (p.wasSaved ? "The saved password no longer works. Enter the new one." : "This network needs a password.");
+            openMode = "pw";
+            openSsid = ssid;
+        } else if (/no network with ssid|could not be found/i.test(said)) {
+            error = "This network is out of range now.";
+        } else if (timeout) {
+            error = "It took too long to connect. Try again closer to the router.";
+        } else {
+            const last = said.split("\n").filter(l => l).pop() || "";
+            error = last.replace(/^Error:\s*/, "").replace(/^Connection activation failed:\s*/, "").replace(/^\(\d+\)\s*/, "") || "Couldn't connect.";
+        }
+        failed(ssid);
+        refresh();
     }
 
     component Seg: Rectangle {
@@ -99,7 +261,110 @@ Page {
         }
     }
 
-    component Row2: Pressable {
+    // How things stand, on top of a tab: a big icon, a line or two, and the switch.
+    component Hero: Rectangle {
+        id: hero
+        property string icon: ""
+        property string title: ""
+        property string sub: ""
+        property bool on: false          // the switch
+        property bool lit: on            // tinted: something is connected
+        property bool switchable: true
+        signal toggled(bool on)
+        Layout.fillWidth: true
+        Layout.preferredHeight: 84
+        radius: Theme.corner(height, 6)
+        color: lit ? Theme.selected : Theme.container
+        border.width: Theme.outlineW
+        border.color: Theme.outlineColor
+        Behavior on color { ColorAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+        Bubble { id: hb; x: 16; anchors.verticalCenter: parent.verticalCenter; size: 52; icon: hero.icon; on: hero.lit }
+        Column {
+            anchors.left: hb.right; anchors.leftMargin: 14
+            anchors.right: sw.visible ? sw.left : parent.right; anchors.rightMargin: 14
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 3
+            Label { width: parent.width; text: hero.title; strong: true; font.pixelSize: Theme.sizeTitle }
+            Label { width: parent.width; text: hero.sub; muted: true; visible: text !== "" }
+        }
+        Toggle {
+            id: sw
+            visible: hero.switchable
+            anchors.right: parent.right; anchors.rightMargin: 18
+            anchors.verticalCenter: parent.verticalCenter
+            checked: hero.on
+            onToggled: v => hero.toggled(v)
+        }
+    }
+
+    // A small title over a list, with one action at its end (scan again).
+    component Section: Item {
+        id: sec
+        property string text: ""
+        property string action: ""
+        property string hint: ""
+        property bool spinning: false
+        signal acted()
+        Layout.fillWidth: true
+        Layout.preferredHeight: 32
+        Layout.topMargin: 4
+        Label { x: 8; anchors.verticalCenter: parent.verticalCenter; text: sec.text; muted: true; strong: true; font.pixelSize: Theme.sizeSmall + 1 }
+        Pressable {
+            visible: sec.action !== ""
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            width: actRow.implicitWidth + 20
+            height: 30
+            color: "transparent"
+            onClicked: sec.acted()
+            Row {
+                id: actRow
+                anchors.centerIn: parent
+                spacing: 6
+                Label { text: sec.hint; muted: true; font.pixelSize: Theme.sizeSmall + 1; anchors.verticalCenter: parent.verticalCenter }
+                Icon {
+                    name: sec.action; size: 18; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter
+                    RotationAnimator on rotation { running: sec.spinning; from: 0; to: 360; duration: 1000; loops: Animation.Infinite; onRunningChanged: if (!running) target.rotation = 0 }
+                }
+            }
+        }
+    }
+
+    // Nothing to list: a picture, why, and (when there is one) the way out.
+    component Empty: Item {
+        id: em
+        property string icon: ""
+        property string title: ""
+        property string sub: ""
+        property string button: ""
+        property string buttonIcon: ""
+        property bool spinning: false
+        signal acted()
+        Layout.fillWidth: true
+        Layout.preferredHeight: emCol.implicitHeight + 44
+        Column {
+            id: emCol
+            anchors.centerIn: parent
+            width: Math.min(parent.width - 40, 380)
+            spacing: 8
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 68; height: 68; radius: 34
+                color: Theme.container
+                Icon {
+                    anchors.centerIn: parent; name: em.icon; size: 32; color: Theme.subtext
+                    RotationAnimator on rotation { running: em.spinning; from: 0; to: 360; duration: 1000; loops: Animation.Infinite }
+                }
+            }
+            Item { width: 1; height: 2 }
+            Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: em.title; strong: true; font.pixelSize: Theme.sizeTitle }
+            Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: em.sub; muted: true; wrapMode: Text.WordWrap; elide: Text.ElideNone; visible: text !== "" }
+            Item { width: 1; height: 4; visible: em.button !== "" }
+            Button { visible: em.button !== ""; anchors.horizontalCenter: parent.horizontalCenter; text: em.button; icon: em.buttonIcon; primary: true; onClicked: em.acted() }
+        }
+    }
+
+    component Entry: Pressable {
         id: r
         property string icon: ""
         property string title: ""
@@ -118,7 +383,7 @@ Page {
             Label { width: parent.width; text: r.title; strong: true }
             Label { width: parent.width; text: r.sub; muted: true; font.pixelSize: Theme.sizeSmall; visible: text !== "" }
         }
-        Icon { id: tr; anchors.right: parent.right; anchors.rightMargin: 14; anchors.verticalCenter: parent.verticalCenter; name: r.trailing; size: 18; color: Theme.subtext; visible: r.trailing !== "" }
+        Icon { id: tr; anchors.right: parent.right; anchors.rightMargin: 16; anchors.verticalCenter: parent.verticalCenter; name: r.trailing; size: 18; color: Theme.subtext; visible: r.trailing !== "" }
     }
 
     // scrolls when there's more than fits
@@ -142,95 +407,296 @@ Page {
             }
 
             // ── Wi-Fi ──
-            Row2 {
-                visible: page.tab === "wifi"
-                icon: page.wifiOn ? "wifi" : "wifi_off"
-                title: "Wi-Fi"
-                sub: page.wifiOn ? (page.networks.length + " networks") : "Off"
+            Hero {
+                visible: page.tab === "wifi" && page.wifiDev !== null
+                icon: !page.wifiOn ? "wifi_off" : (page.activeNet ? page.strengthIcon(page.activeNet.strength) : "wifi_find")
+                title: !page.wifiOn ? "Wi-Fi is off" : (page.activeNet ? page.activeNet.ssid : "Not connected")
+                sub: !page.wifiOn ? "Turn it on to see the networks around you"
+                    : (page.activeNet ? ["Connected", page.strengthWord(page.activeNet.strength), page.ips[page.wifiDev ? page.wifiDev.name : ""] || ""].filter(s => s !== "").join("  ·  ")
+                                      : "Pick a network below to get online")
                 on: page.wifiOn
-                trailing: page.wifiOn ? "toggle_on" : "toggle_off"
-                onClicked: { page.wifiOn = !page.wifiOn; Quickshell.execDetached(["nmcli", "radio", "wifi", page.wifiOn ? "on" : "off"]); }
+                lit: page.wifiOn && page.activeNet !== null
+                onToggled: v => page.setWifi(v)
+            }
+            Section {
+                visible: page.tab === "wifi" && page.wifiOn && nets.count > 0
+                text: "Networks nearby"
+                action: "refresh"
+                hint: page.scanning ? "Looking…" : "Scan again"
+                spinning: page.scanning
+                onActed: page.rescan()
             }
             Repeater {
-                model: page.tab === "wifi" && page.wifiOn ? page.networks : []
-                ColumnLayout {
-                    required property var modelData
+                model: page.tab === "wifi" && page.wifiOn ? nets : null
+                Rectangle {
+                    id: net
+                    required property string ssid
+                    required property int strength
+                    required property bool secure
+                    required property string security
+                    required property bool active
+                    required property bool saved
+                    readonly property bool opened: page.openSsid === ssid
+                    readonly property bool busy: page.busy === ssid
+                    readonly property bool asking: page.openMode === "pw" && !active
+                    readonly property string trouble: page.errorSsid === ssid ? page.error : ""
+                    // WPA wants 8 characters at least; anything older, anything at all
+                    readonly property int minLen: /WPA|SAE|RSN/i.test(security) ? 8 : 1
+                    property bool reveal: false
+                    property real extra: opened ? panel.implicitHeight + 14 : 0
+                    Behavior on extra { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
                     Layout.fillWidth: true
-                    spacing: 6
-                    Row2 {
-                        icon: modelData.signal > 70 ? "signal_wifi_4_bar" : (modelData.signal > 40 ? "network_wifi_3_bar" : "network_wifi_1_bar")
-                        title: modelData.ssid
-                        sub: page.busy === modelData.ssid ? "Connecting…" : (modelData.active ? "Connected" : (modelData.secure ? "Secured" : "Open"))
-                        on: modelData.active
-                        trailing: modelData.secure ? "lock" : ""
-                        onClicked: {
-                            if (modelData.active) Quickshell.execDetached(["nmcli", "connection", "down", "id", modelData.ssid]);
-                            else page.connect(modelData, "");
-                        }
-                        onRightClicked: Quickshell.execDetached(["nmcli", "connection", "delete", "id", modelData.ssid])
+                    Layout.preferredHeight: 56 + extra
+                    radius: Theme.corner(56)
+                    color: active ? Theme.selected : (opened ? Theme.container : Theme.containerHigh)
+                    border.width: Theme.outlineW
+                    border.color: Theme.outlineColor
+                    clip: true
+                    Behavior on color { ColorAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
+
+                    function submit() { if (pw.text.length >= minLen && !busy) page.connect(ssid, pw.text); }
+                    function fold() { const had = pw.activeFocus; pw.text = ""; reveal = false; if (had) HubState.refocus(); }
+                    onOpenedChanged: { if (opened && asking) pw.forceActiveFocus(); else if (!opened) fold(); }
+                    Component.onDestruction: if (pw.activeFocus) HubState.refocus()
+                    Connections {
+                        target: page
+                        function onFailed(s) { if (s === net.ssid && net.opened && net.asking) { pw.forceActiveFocus(); pw.selectAll(); } }
                     }
-                    // the password, asked for in place when the network needs one
-                    Rectangle {
-                        visible: page.askFor === modelData.ssid
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 48
-                        radius: Theme.corner(height)
-                        color: Theme.container
-                        TextInput {
-                            id: pw
-                            anchors.fill: parent
-                            anchors.leftMargin: 16
-                            anchors.rightMargin: 16
-                            verticalAlignment: TextInput.AlignVCenter
-                            echoMode: TextInput.Password
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.sizeBody
-                            onVisibleChanged: if (visible) forceActiveFocus()
-                            onAccepted: { page.connect(modelData, text); text = ""; }
-                            Label { anchors.fill: parent; verticalAlignment: Text.AlignVCenter; visible: pw.text === ""; text: "Password for " + modelData.ssid; muted: true }
+
+                    Pressable {
+                        id: head
+                        width: parent.width
+                        height: 56
+                        color: "transparent"
+                        // a click: the connected one opens up, a known or open one connects,
+                        // a new one with a lock asks for its password
+                        onClicked: {
+                            if (net.busy) return;
+                            if (net.opened) page.closePrompt();
+                            else if (net.active) page.openRow(net.ssid, "info");
+                            else if (net.secure && !net.saved) page.openRow(net.ssid, "pw");
+                            else { page.closePrompt(); page.connect(net.ssid, ""); }
+                        }
+                        onRightClicked: if (!net.busy && (net.saved || net.active)) { if (net.opened) page.closePrompt(); else page.openRow(net.ssid, "info"); }
+                        Bubble { id: nb; x: 10; anchors.verticalCenter: parent.verticalCenter; size: 36; icon: page.strengthIcon(net.strength); on: net.active }
+                        Column {
+                            anchors.left: nb.right; anchors.leftMargin: 12
+                            anchors.right: tail.left; anchors.rightMargin: 8
+                            anchors.verticalCenter: parent.verticalCenter
+                            Label { width: parent.width; text: net.ssid; strong: true }
+                            Label {
+                                width: parent.width
+                                font.pixelSize: Theme.sizeSmall
+                                readonly property bool bad: net.trouble !== "" && !net.opened && !net.busy
+                                color: bad ? Theme.danger : Theme.subtext
+                                text: net.busy ? "Connecting…" : (bad ? net.trouble
+                                    : (net.active ? "Connected" : ((net.saved ? "Saved" : (net.secure ? "Needs a password" : "Open, no password")) + "  ·  " + page.strengthWord(net.strength))))
+                            }
+                        }
+                        Row {
+                            id: tail
+                            anchors.right: parent.right; anchors.rightMargin: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 4
+                            Icon {
+                                visible: net.busy
+                                anchors.verticalCenter: parent.verticalCenter
+                                name: "progress_activity"; size: 20; color: Theme.accent
+                                RotationAnimator on rotation { running: net.busy; from: 0; to: 360; duration: 900; loops: Animation.Infinite }
+                            }
+                            Icon { visible: !net.busy && net.secure && !net.saved && !net.active; anchors.verticalCenter: parent.verticalCenter; name: "lock"; size: 18; color: Theme.subtext }
+                            Icon { visible: !net.busy && net.active; anchors.verticalCenter: parent.verticalCenter; name: "check_circle"; filled: true; size: 20; color: Theme.accent }
+                            // a known network's details (forget it, disconnect)
+                            Pressable {
+                                visible: !net.busy && (net.saved || net.active)
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 32; height: 32
+                                color: "transparent"
+                                onClicked: { if (net.opened) page.closePrompt(); else page.openRow(net.ssid, "info"); }
+                                Icon {
+                                    anchors.centerIn: parent; name: "expand_more"; size: 20; color: Theme.subtext
+                                    rotation: net.opened ? 180 : 0
+                                    Behavior on rotation { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+                                }
+                            }
+                        }
+                    }
+
+                    Column {
+                        id: panel
+                        x: 14
+                        y: 58
+                        width: parent.width - 28
+                        spacing: 8
+                        opacity: net.opened ? 1 : 0
+                        visible: net.extra > 1
+                        Behavior on opacity { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+
+                        // the password, asked for in place
+                        Item {
+                            visible: net.asking
+                            width: parent.width
+                            height: 44
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: go.left; anchors.rightMargin: 8
+                                height: parent.height
+                                radius: Theme.corner(height)
+                                color: Theme.containerHigh
+                                border.width: pw.activeFocus ? 2 : Theme.outlineW
+                                border.color: net.trouble !== "" ? Theme.danger : (pw.activeFocus ? Theme.accent : Theme.outlineColor)
+                                Icon { id: key; x: 14; anchors.verticalCenter: parent.verticalCenter; name: "key"; size: 18; color: Theme.subtext }
+                                TextInput {
+                                    id: pw
+                                    anchors.left: key.right; anchors.leftMargin: 10
+                                    anchors.right: eye.left; anchors.rightMargin: 4
+                                    height: parent.height
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    echoMode: net.reveal ? TextInput.Normal : TextInput.Password
+                                    passwordCharacter: "•"
+                                    inputMethodHints: Qt.ImhSensitiveData | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase
+                                    readOnly: net.busy
+                                    clip: true
+                                    color: Theme.text
+                                    selectionColor: Theme.selected
+                                    selectedTextColor: Theme.text
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.sizeBody
+                                    maximumLength: 64
+                                    onTextEdited: if (net.trouble !== "") { page.error = ""; page.errorSsid = ""; }
+                                    onAccepted: net.submit()
+                                    Keys.onEscapePressed: page.closePrompt()
+                                    Label { anchors.fill: parent; verticalAlignment: Text.AlignVCenter; visible: pw.text === ""; text: "Password"; muted: true }
+                                }
+                                Pressable {
+                                    id: eye
+                                    anchors.right: parent.right; anchors.rightMargin: 6
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 32; height: 32
+                                    color: "transparent"
+                                    onClicked: { net.reveal = !net.reveal; pw.forceActiveFocus(); }
+                                    Icon { anchors.centerIn: parent; name: net.reveal ? "visibility_off" : "visibility"; size: 18; color: Theme.subtext }
+                                }
+                            }
+                            Button {
+                                id: go
+                                anchors.right: parent.right
+                                height: parent.height
+                                primary: true
+                                text: net.busy ? "Connecting…" : "Connect"
+                                enabledInput: !net.busy && pw.text.length >= net.minLen
+                                opacity: enabledInput || net.busy ? 1 : 0.45
+                                onClicked: net.submit()
+                            }
+                        }
+                        Label {
+                            visible: net.asking
+                            x: 4
+                            width: parent.width - 8
+                            font.pixelSize: Theme.sizeSmall
+                            color: net.trouble !== "" ? Theme.danger : Theme.subtext
+                            text: net.trouble !== "" ? net.trouble
+                                : (pw.text.length > 0 && pw.text.length < net.minLen ? "At least " + net.minLen + " characters" : "Enter connects  ·  Esc cancels")
+                        }
+
+                        // a known network: what it is, and the ways out
+                        Item {
+                            visible: !net.asking
+                            width: parent.width
+                            height: 40
+                            Label {
+                                x: 4
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.right: acts.left; anchors.rightMargin: 8
+                                muted: true
+                                text: [net.security !== "" ? net.security : "Open", net.strength + "% signal", net.active ? (page.ips[page.wifiDev ? page.wifiDev.name : ""] || "") : ""].filter(s => s !== "").join("  ·  ")
+                            }
+                            Row {
+                                id: acts
+                                anchors.right: parent.right
+                                spacing: 8
+                                Button { visible: net.saved; text: "Forget"; icon: "delete"; onClicked: { page.forget(net.ssid); page.closePrompt(); } }
+                                Button { visible: net.active; text: "Disconnect"; icon: "link_off"; onClicked: page.disconnectWifi() }
+                                Button { visible: !net.active; primary: true; text: "Connect"; onClicked: { const s = net.ssid; page.closePrompt(); page.connect(s, ""); } }
+                            }
                         }
                     }
                 }
+            }
+            Empty {
+                visible: page.tab === "wifi" && page.wifiDev === null
+                icon: "wifi_off"
+                title: "No Wi-Fi here"
+                sub: "This computer has no Wi-Fi adapter, or its driver isn't loaded."
+            }
+            Empty {
+                visible: page.tab === "wifi" && page.wifiDev !== null && !page.wifiOn
+                icon: "wifi_off"
+                title: "Wi-Fi is off"
+                sub: "Turn it on and the networks around you show up here."
+                button: "Turn on Wi-Fi"
+                buttonIcon: "wifi"
+                onActed: page.setWifi(true)
+            }
+            Empty {
+                visible: page.tab === "wifi" && page.wifiDev !== null && page.wifiOn && nets.count === 0
+                icon: page.listed && !page.scanning ? "wifi_find" : "progress_activity"
+                spinning: !page.listed || page.scanning
+                title: page.listed && !page.scanning ? "No networks in range" : "Looking for networks…"
+                sub: page.listed && !page.scanning ? "Move closer to a router, then look again." : ""
+                button: page.listed && !page.scanning ? "Scan again" : ""
+                buttonIcon: "refresh"
+                onActed: page.rescan()
             }
 
             // ── Ethernet ──
             Repeater {
                 model: page.tab === "wired" ? page.ethernet : []
-                Row2 {
+                Hero {
                     required property var modelData
                     icon: "lan"
-                    title: modelData.conn !== "" ? modelData.conn : modelData.name
-                    sub: modelData.name + " · " + modelData.state
+                    title: modelData.conn !== "" ? modelData.conn : "Ethernet"
+                    sub: [page.stateWord(modelData.state), modelData.name, modelData.state === "connected" ? (page.ips[modelData.name] || "") : ""].filter(s => s !== "").join("  ·  ")
                     on: modelData.state === "connected"
-                    onClicked: Quickshell.execDetached(["nmcli", "dev", modelData.state === "connected" ? "disconnect" : "connect", modelData.name])
+                    switchable: modelData.state !== "unavailable"
+                    onToggled: v => { Quickshell.execDetached(["nmcli", "dev", v ? "connect" : "disconnect", modelData.name]); soon.restart(); }
                 }
             }
-            Label {
+            Empty {
                 visible: page.tab === "wired" && page.ethernet.length === 0
-                Layout.fillWidth: true; horizontalAlignment: Text.AlignHCenter
-                text: "No wired adapters"; muted: true
+                icon: "lan"
+                title: "No wired adapter"
+                sub: "Plug in an Ethernet adapter and it shows up here."
             }
 
             // ── Bluetooth ──
-            Row2 {
-                visible: page.tab === "bt"
-                icon: page.adapter && page.adapter.enabled ? "bluetooth" : "bluetooth_disabled"
-                title: "Bluetooth"
-                sub: !page.adapter ? "No adapter" : (page.adapter.enabled ? (page.adapter.discovering ? "Looking for devices…" : "On") : "Off")
-                on: !!(page.adapter && page.adapter.enabled)
-                trailing: page.adapter && page.adapter.enabled ? "toggle_on" : "toggle_off"
-                onClicked: if (page.adapter) page.adapter.enabled = !page.adapter.enabled
-                onRightClicked: if (page.adapter && page.adapter.enabled) page.adapter.discovering = !page.adapter.discovering
+            Hero {
+                visible: page.tab === "bt" && page.adapter !== null
+                icon: page.btOn ? (page.btConnected.length > 0 ? "bluetooth_connected" : "bluetooth") : "bluetooth_disabled"
+                title: !page.btOn ? "Bluetooth is off" : (page.btConnected.length > 0 ? page.btConnected.map(d => d.name || d.address).join(", ") : "Bluetooth is on")
+                sub: !page.btOn ? "Turn it on to use your headphones, mouse or controller"
+                    : (page.btConnected.length > 0 ? "Connected" : "Pick a device below, or scan for a new one")
+                on: page.btOn
+                lit: page.btOn && page.btConnected.length > 0
+                onToggled: v => { if (page.adapter) page.adapter.enabled = v; }
+            }
+            Section {
+                visible: page.tab === "bt" && page.btOn && page.btDevices.length > 0
+                text: "Devices"
+                action: page.adapter && page.adapter.discovering ? "progress_activity" : "bluetooth_searching"
+                hint: page.adapter && page.adapter.discovering ? "Looking… click to stop" : "Find new devices"
+                spinning: !!(page.adapter && page.adapter.discovering)
+                onActed: if (page.adapter) page.adapter.discovering = !page.adapter.discovering
             }
             Repeater {
-                model: page.tab === "bt" && page.adapter && page.adapter.enabled ? page.btDevices : []
-                Row2 {
+                model: page.tab === "bt" && page.btOn ? page.btDevices : []
+                Entry {
                     required property var modelData
                     icon: modelData.icon && modelData.icon.indexOf("audio") !== -1 ? "headphones" : (modelData.icon && modelData.icon.indexOf("input") !== -1 ? "mouse" : "devices")
                     title: modelData.name || modelData.address
-                    sub: modelData.connected ? ("Connected" + (modelData.batteryAvailable ? " · " + Math.round(modelData.battery * 100) + "%" : "")) : (modelData.paired ? "Paired" : "Click to pair")
+                    sub: modelData.connected ? ("Connected" + (modelData.batteryAvailable ? "  ·  " + Math.round(modelData.battery * 100) + "% battery" : "")) : (modelData.paired ? "Paired  ·  click to connect" : "New  ·  click to pair")
                     on: modelData.connected
+                    trailing: modelData.connected ? "check_circle" : (modelData.paired ? "" : "add_link")
                     onClicked: {
                         if (modelData.connected) modelData.disconnect();
                         else if (modelData.paired) modelData.connect();
@@ -238,6 +704,40 @@ Page {
                     }
                     onRightClicked: if (modelData.paired) modelData.forget()
                 }
+            }
+            Label {
+                visible: page.tab === "bt" && page.btOn && page.btDevices.some(d => d.paired)
+                Layout.fillWidth: true
+                Layout.topMargin: 2
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: Theme.sizeSmall
+                muted: true
+                text: "Right-click a paired device to forget it"
+            }
+            Empty {
+                visible: page.tab === "bt" && page.adapter === null
+                icon: "bluetooth_disabled"
+                title: "No Bluetooth here"
+                sub: "This computer has no Bluetooth adapter, or its service isn't running."
+            }
+            Empty {
+                visible: page.tab === "bt" && page.adapter !== null && !page.btOn
+                icon: "bluetooth_disabled"
+                title: "Bluetooth is off"
+                sub: "Turn it on to connect headphones, a mouse or a controller."
+                button: "Turn on Bluetooth"
+                buttonIcon: "bluetooth"
+                onActed: if (page.adapter) page.adapter.enabled = true
+            }
+            Empty {
+                visible: page.tab === "bt" && page.btOn && page.btDevices.length === 0
+                icon: page.adapter && page.adapter.discovering ? "progress_activity" : "bluetooth_searching"
+                spinning: !!(page.adapter && page.adapter.discovering)
+                title: page.adapter && page.adapter.discovering ? "Looking for devices…" : "No devices yet"
+                sub: "Put your device in pairing mode so it can be found."
+                button: page.adapter && page.adapter.discovering ? "" : "Find devices"
+                buttonIcon: "bluetooth_searching"
+                onActed: if (page.adapter) page.adapter.discovering = true
             }
         }
     }

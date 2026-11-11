@@ -460,6 +460,7 @@ PanelWindow {
     Connections {
         target: HubState
         function onPresetRequested() { if (win.shown && HubState.preset !== "") { query.text = HubState.preset; HubState.preset = ""; } }
+        function onRefocus() { if (win.shown) query.forceActiveFocus(); }
     }
 
     // blur behind it (Theme → Effects), shaped like it
