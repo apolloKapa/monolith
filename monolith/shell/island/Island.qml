@@ -231,21 +231,24 @@ PanelWindow {
                 visible: opacity > 0.01
                 Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
                 // and a little zoom, from the bar's side
-                scale: win.shown ? 1 : Theme.popScale
+                scale: win.shown || Theme.fxUnfold ? 1 : Theme.popScale
                 transformOrigin: win.bottom && win.docked ? Item.Bottom : Item.Top
                 Behavior on scale { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
                 // Unfold (Theme → Effects): the menu opens out of a thin bright line through its
                 // middle and folds back into it
+                // (a floating menu unfolds whole, card and all: see floatCard; here it's the
+                // content of a menu growing out of the bar)
+                readonly property bool unfolds: Theme.fxUnfold && win.docked
                 property real unfold: win.shown ? 1 : 0
-                Behavior on unfold { enabled: Theme.fxUnfold; NumberAnimation { duration: win.shown ? Theme.springMs : 160; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
+                Behavior on unfold { enabled: Theme.fxUnfold; NumberAnimation { duration: win.shown ? Theme.ms(420) : Theme.ms(200); easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
                 transform: Scale {
                     origin.x: openArea.width / 2; origin.y: openArea.height / 2
-                    yScale: Theme.fxUnfold ? Math.max(0.012, openArea.unfold) : 1
-                    xScale: Theme.fxUnfold ? 0.985 + 0.015 * openArea.unfold : 1
+                    yScale: openArea.unfolds ? Math.max(0.012, openArea.unfold) : 1
+                    xScale: openArea.unfolds ? 0.985 + 0.015 * openArea.unfold : 1
                 }
                 Rectangle {
                     z: 100
-                    visible: Theme.fxUnfold && openArea.unfold < 0.98 && openArea.unfold > 0.001
+                    visible: openArea.unfolds && openArea.unfold < 0.98 && openArea.unfold > 0.001
                     anchors.centerIn: parent
                     width: parent.width * (0.4 + 0.6 * Math.min(1, openArea.unfold * 3))
                     height: Math.max(2, 3 / Math.max(0.05, openArea.unfold))
@@ -461,10 +464,28 @@ PanelWindow {
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
         // fades in with a little zoom from where it sits, and out the same way
-        opacity: win.shown ? 1 : 0
-        scale: win.shown ? 1 : Theme.popScale
+        // Unfold (Theme → Effects): instead, the whole card opens out of a thin bright line through
+        // its middle and folds back into it
+        readonly property real unfold: openArea.unfold
+        opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (win.shown ? 1 : 0)
+        scale: win.shown || Theme.fxUnfold ? 1 : Theme.popScale
+        transform: Scale {
+            origin.x: floatCard.width / 2; origin.y: floatCard.height / 2
+            yScale: Theme.fxUnfold ? Math.max(0.006, floatCard.unfold) : 1
+            xScale: Theme.fxUnfold ? 0.96 + 0.04 * floatCard.unfold : 1
+        }
+        Rectangle {
+            z: 100
+            visible: Theme.fxUnfold && floatCard.unfold < 0.98 && floatCard.unfold > 0.001
+            anchors.centerIn: parent
+            width: parent.width * (0.5 + 0.5 * Math.min(1, floatCard.unfold * 3))
+            height: Math.max(2, 3 / Math.max(0.02, floatCard.unfold))
+            radius: height / 2
+            color: Theme.accent
+            opacity: 1 - floatCard.unfold
+        }
         transformOrigin: onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
-        Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on opacity { enabled: !Theme.fxUnfold; NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
         CardShadow {}
         MouseArea { anchors.fill: parent }
@@ -487,7 +508,8 @@ PanelWindow {
     BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
     Region {
         id: blurShape
-        item: body
+        // (a screen with the bar turned off has no bar to blur behind: only its open menu)
+        item: win.barHere || win.toastOn || (win.shown && win.docked) ? body : null
         radius: island.rr
         Region { item: win.dropped || drop.height > 1 ? dropBody : null; radius: drop.rr }
         Region { item: floatCard.visible ? floatCard : null; radius: floatCard.radius }
