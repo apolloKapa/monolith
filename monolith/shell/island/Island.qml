@@ -121,7 +121,9 @@ PanelWindow {
         fill: empty ? "transparent" : (win.barSolid ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
         shadow: !empty && (win.barSolid || Theme.barOpacity > 0.3)
         outline: !empty
-        opacity: win.barHere || win.shown || win.toastOn ? 1 : 0
+        // a screen with the bar turned off keeps it off while a menu is open, unless the menu
+        // opens out of the bar itself (a floating menu has nothing to do with the bar)
+        opacity: win.barHere || win.toastOn || (win.shown && win.docked) ? 1 : 0
         ear: Theme.fullBar && !win.grown ? 0 : Theme.islandEar
         onHeightChanged: if (!win.shown && height <= Theme.islandH + 1) win.wasOpen = false
         x: Math.round((win.width - width) / 2)

@@ -9,6 +9,7 @@ Rectangle {
     property color ink: Theme.text
     property bool enabledInput: true
     property int buttons: Qt.LeftButton
+    property int cursor: Qt.PointingHandCursor
     signal clicked(var mouse)
     signal rightClicked()
 
@@ -34,7 +35,7 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         enabled: root.enabledInput
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: root.cursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onPressed: mouse => ink.press(mouse.x, mouse.y)
         onReleased: ink.release()

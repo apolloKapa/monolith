@@ -195,6 +195,7 @@ PanelWindow {
                     id: app
                     required property var modelData
                     required property int index
+                    cursor: dock.editing ? Qt.OpenHandCursor : Qt.ArrowCursor
                     opacity: dock.dragIndex === index ? 0.3 : 1
                     Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
                     // in the editor the icons wiggle (each a little out of step), so it's clear they can be moved
@@ -217,8 +218,9 @@ PanelWindow {
                         anchors.fill: parent
                         enabled: dock.editing
                         preventStealing: true
-                        // the grab hand only in the editor (a disabled area still sets its cursor)
-                        cursorShape: !dock.editing ? Qt.PointingHandCursor : (dock.dragIndex === app.index ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
+                        // the normal arrow over the dock; the grab hand only in the editor (a disabled
+                        // area still sets its cursor)
+                        cursorShape: !dock.editing ? Qt.ArrowCursor : (dock.dragIndex === app.index ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
                         property point start
                         property bool moved: false
                         onPressed: mouse => { start = Qt.point(mouse.x, mouse.y); moved = false; }
