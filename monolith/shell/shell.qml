@@ -33,6 +33,8 @@ ShellRoot {
     Variants { model: Quickshell.screens; Thrown {} }
     Lazy { id: peekL; when: HubState.peekScreen !== "" }
     Variants { model: peekL.on ? Quickshell.screens : []; MediaPeek {} }
+    Lazy { id: notifL; when: HubState.notifScreen !== ""; linger: 400 }
+    Variants { model: notifL.on ? Quickshell.screens : []; NotifDrop {} }
     Variants { model: Quickshell.screens; Osd {} }
     Lazy { id: capL; when: Capture.active || Capture.freezing; linger: 300 }
     Variants { model: capL.on ? Quickshell.screens : []; CaptureOverlay {} }

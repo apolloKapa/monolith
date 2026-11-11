@@ -321,8 +321,13 @@ Item {
     Component {
         id: notifC
         Mod {
+            id: notifMod
             pad: 7
-            onClicked: bar.open("notifications")
+            // the list drops down right under the bell (over it when the bar is at the bottom)
+            onClicked: {
+                const p = notifMod.mapToItem(null, notifMod.width / 2, Theme.barBottom ? 0 : notifMod.height);
+                HubState.toggleNotifs(bar.screenName, p.x, p.y);
+            }
             Icon {
                 name: Notifs.dnd ? "notifications_paused" : (Notifs.list.length > 0 ? "notifications_unread" : "notifications")
                 size: 18; filled: Notifs.list.length > 0

@@ -8,7 +8,18 @@ import Quickshell.Io
 Singleton {
     id: hub
     property bool open: false
-    onOpenChanged: { Sounds.play(open ? "open" : "close"); if (open) peekScreen = ""; }
+    onOpenChanged: { Sounds.play(open ? "open" : "close"); if (open) { peekScreen = ""; notifScreen = ""; } }
+    // the notifications dropdown: the bar's bell drops the list out right under it
+    // (status/NotifDrop.qml); where it hangs, in that screen's coordinates
+    property string notifScreen: ""
+    property real notifX: 0
+    property real notifY: 0
+    function toggleNotifs(screen, x, y) {
+        if (notifScreen === screen) { notifScreen = ""; return; }
+        open = false; peekScreen = "";
+        notifX = x; notifY = y; notifScreen = screen;
+    }
+    function closeNotifs() { notifScreen = ""; }
     // the now-playing peek: a small player under the bar's media module while it's hovered
     // (status/MediaPeek.qml); where it hangs, in that screen's coordinates
     property string peekScreen: ""
