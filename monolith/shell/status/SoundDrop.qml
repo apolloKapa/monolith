@@ -59,7 +59,7 @@ PanelWindow {
 
     Rectangle {
         id: card
-        width: 400
+        width: 460
         height: Math.min(dd.height - 80, col.implicitHeight + 24)
         Behavior on height { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.OutCubic } }
         x: Math.max(12, Math.min(dd.width - width - 12, HubState.dropX - width / 2))
@@ -97,13 +97,13 @@ PanelWindow {
                 Rectangle {
                     id: hero
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 132
+                    Layout.preferredHeight: 150
                     radius: Theme.corner(80, 10)
                     color: Theme.selected
                     border.width: Theme.outlineW
                     border.color: Theme.outlineColor
                     readonly property real vol: dd.sink && dd.sink.audio ? dd.sink.audio.volume : 0
-                    Bubble { id: hb; x: 14; y: 14; size: 44; icon: dd.iconOf(dd.sink); on: true }
+                    Bubble { id: hb; x: 16; y: 16; size: 50; icon: dd.iconOf(dd.sink); on: true }
                     Column {
                         anchors.left: hb.right; anchors.leftMargin: 12
                         anchors.right: bars.left; anchors.rightMargin: 10
@@ -120,8 +120,8 @@ PanelWindow {
                         id: bars
                         anchors.right: muteBtn.left; anchors.rightMargin: 12
                         anchors.verticalCenter: hb.verticalCenter
-                        width: 56; height: 24
-                        count: 9; spacing: 3; minLen: 3
+                        width: 72; height: 28
+                        count: 12; spacing: 3; minLen: 3
                         live: dd.shown && !dd.sinkMuted
                         opacity: dd.sinkMuted ? 0.25 : 1
                         color: Theme.accent
@@ -130,16 +130,16 @@ PanelWindow {
                         id: muteBtn
                         anchors.right: parent.right; anchors.rightMargin: 14
                         anchors.verticalCenter: hb.verticalCenter
-                        width: 40; height: 40
+                        width: 44; height: 44
                         color: dd.sinkMuted ? Theme.accent : Theme.control
                         ink: dd.sinkMuted ? Theme.onAccent : Theme.text
                         onClicked: if (dd.sink && dd.sink.audio) dd.sink.audio.muted = !dd.sink.audio.muted
                         Icon { anchors.centerIn: parent; size: 20; filled: true; name: dd.sinkMuted ? "volume_off" : "volume_up"; color: dd.sinkMuted ? Theme.onAccent : Theme.text }
                     }
                     Slider {
-                        x: 14; y: 72
-                        width: parent.width - 28
-                        height: 46
+                        x: 16; y: 84
+                        width: parent.width - 32
+                        height: 50
                         icon: dd.volIcon(dd.sinkMuted, hero.vol)
                         muted: dd.sinkMuted
                         value: hero.vol
@@ -154,8 +154,8 @@ PanelWindow {
                     visible: dd.outputs.length > 1
                     property bool expanded: false
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 48
-                    radius: Theme.corner(48, 8)
+                    Layout.preferredHeight: 52
+                    radius: Theme.corner(52, 8)
                     color: hovered || expanded ? Theme.containerHigh : Theme.container
                     onClicked: expanded = !expanded
                     Icon { id: oi; x: 14; anchors.verticalCenter: parent.verticalCenter; name: "swap_horiz"; size: 20; color: Theme.subtext }
@@ -175,14 +175,16 @@ PanelWindow {
                     }
                 }
                 Item {
-                    visible: outRow.visible && height > 0.5
+                    id: fold
+                    // how far it's open (0..1), animated; hidden only once fully shut (a hidden
+                    // item gets no height from the layout, so it must show before it grows)
+                    property real open: outRow.expanded ? 1 : 0
+                    Behavior on open { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.OutCubic } }
+                    visible: outRow.visible && open > 0.01
                     Layout.fillWidth: true
-                    Layout.preferredHeight: outRow.expanded ? devs.implicitHeight : 0
-                    Layout.topMargin: outRow.expanded ? 0 : -10
-                    Behavior on Layout.preferredHeight { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.OutCubic } }
+                    Layout.preferredHeight: devs.implicitHeight * open
                     clip: true
-                    opacity: outRow.expanded ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: Theme.moveMs } }
+                    opacity: open
                     Column {
                         id: devs
                         width: parent.width
@@ -194,8 +196,8 @@ PanelWindow {
                                 required property var modelData
                                 readonly property bool current: modelData === dd.sink
                                 width: devs.width
-                                height: 44
-                                radius: Theme.corner(44, 8)
+                                height: 48
+                                radius: Theme.corner(48, 8)
                                 color: current ? Theme.selected : (hovered ? Theme.container : "transparent")
                                 onClicked: Pipewire.preferredDefaultAudioSink = modelData
                                 Icon { id: di; x: 14; anchors.verticalCenter: parent.verticalCenter; name: dd.iconOf(dev.modelData); size: 19; filled: dev.current; color: dev.current ? Theme.accent : Theme.subtext }
@@ -218,7 +220,7 @@ PanelWindow {
                 Rectangle {
                     visible: !!dd.source
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 92
+                    Layout.preferredHeight: 100
                     radius: Theme.corner(80, 10)
                     color: Theme.containerHigh
                     Label {
@@ -229,9 +231,9 @@ PanelWindow {
                         font.pixelSize: Theme.sizeSmall; muted: true
                     }
                     Slider {
-                        x: 14; y: 36
+                        x: 14; y: 40
                         width: parent.width - 28
-                        height: 42
+                        height: 46
                         icon: dd.micMuted ? "mic_off" : "mic"
                         muted: dd.micMuted
                         value: dd.source && dd.source.audio ? dd.source.audio.volume : 0
@@ -249,7 +251,7 @@ PanelWindow {
                         required property var modelData
                         readonly property bool quiet: modelData.audio.muted
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 92
+                        Layout.preferredHeight: 100
                         radius: Theme.corner(80, 10)
                         color: Theme.containerHigh
                         Label {
@@ -260,9 +262,9 @@ PanelWindow {
                             font.pixelSize: Theme.sizeSmall; muted: true
                         }
                         Slider {
-                            x: 14; y: 36
+                            x: 14; y: 40
                             width: parent.width - 28
-                            height: 42
+                            height: 46
                             icon: dd.volIcon(app.quiet, app.modelData.audio.volume)
                             muted: app.quiet
                             value: app.modelData.audio.volume
