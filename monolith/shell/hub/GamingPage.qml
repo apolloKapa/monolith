@@ -33,6 +33,7 @@ Page {
 
         // ── game mode: a big switch with what it does ──
         Pressable {
+            Rise {}
             Layout.fillWidth: true
             Layout.preferredHeight: 92
             radius: Theme.corner(92, 10)
@@ -76,6 +77,7 @@ Page {
                 tint: Theme.m("tertiary", Theme.accent)
             }
             Card {
+                cascade: true
                 Layout.fillWidth: true
                 Layout.preferredHeight: 170
                 icon: "data_usage"; title: "Memory"

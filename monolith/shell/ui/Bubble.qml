@@ -12,6 +12,12 @@ Rectangle {
     radius: Theme.corner(size, 4)
     color: on ? Theme.accent : Theme.control
     Behavior on color { ColorAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+    onOnChanged: pop.restart()
+    SequentialAnimation {
+        id: pop
+        NumberAnimation { target: b; property: "scale"; to: 1.14; duration: Theme.ms(110); easing.type: Easing.OutCubic }
+        NumberAnimation { target: b; property: "scale"; to: 1; duration: Theme.ms(260); easing.type: Easing.OutBack }
+    }
     Icon {
         anchors.centerIn: parent
         name: b.icon

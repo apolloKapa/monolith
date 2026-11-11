@@ -17,6 +17,7 @@ GridLayout {
 
     // ── weather: now, big; then the next hours ──
     Card {
+        cascade: true
         Layout.fillWidth: true
         Layout.preferredHeight: 230
         icon: "partly_cloudy_day"; title: Weather.city !== "" ? Weather.city : "Weather"
@@ -53,6 +54,7 @@ GridLayout {
 
     // ── this month, today filled ──
     Card {
+        cascade: true
         id: cal
         Layout.fillWidth: true
         Layout.preferredHeight: 230
@@ -95,6 +97,7 @@ GridLayout {
 
     // ── the latest clipboard entries (click one to copy it again) ──
     Card {
+        cascade: true
         id: clip
         Layout.fillWidth: true
         Layout.preferredHeight: 230
@@ -131,6 +134,7 @@ GridLayout {
 
     // ── this PC ──
     Card {
+        cascade: true
         id: sys
         Layout.fillWidth: true
         Layout.preferredHeight: 230

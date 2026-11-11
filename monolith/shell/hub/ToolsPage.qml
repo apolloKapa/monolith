@@ -31,6 +31,7 @@ Page {
     }
 
     component Card: Rectangle {
+        Rise {}
         Layout.fillWidth: true
         Layout.fillHeight: true
         radius: Theme.corner(80, 10)

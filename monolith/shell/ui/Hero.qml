@@ -12,6 +12,7 @@ Rectangle {
     property bool lit: on            // tinted: something is connected
     property bool switchable: true
     signal toggled(bool on)
+    Rise {}
     Layout.fillWidth: true
     Layout.preferredHeight: 84
     radius: Theme.corner(height, 6)

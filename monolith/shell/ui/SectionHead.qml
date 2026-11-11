@@ -10,6 +10,7 @@ Item {
     property string hint: ""
     property bool spinning: false
     signal acted()
+    Rise {}
     Layout.fillWidth: true
     Layout.preferredHeight: 32
     Layout.topMargin: 4

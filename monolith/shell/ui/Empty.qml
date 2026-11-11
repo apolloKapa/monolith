@@ -12,6 +12,7 @@ Item {
     property string buttonIcon: ""
     property bool spinning: false
     signal acted()
+    Rise {}
     Layout.fillWidth: true
     Layout.preferredHeight: implicitHeight
     implicitHeight: emCol.implicitHeight + 44

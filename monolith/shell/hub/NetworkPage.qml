@@ -228,6 +228,7 @@ Page {
         property string sub: ""
         property bool on: false
         property string trailing: ""
+        Rise {}
         Layout.fillWidth: true
         Layout.preferredHeight: 56
         radius: Theme.corner(height)
@@ -300,6 +301,7 @@ Page {
                     // WPA wants 8 characters at least; anything older, anything at all
                     readonly property int minLen: /WPA|SAE|RSN/i.test(security) ? 8 : 1
                     property bool reveal: false
+                    Rise {}
                     property real extra: opened ? panel.implicitHeight + 14 : 0
                     Behavior on extra { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
                     Layout.fillWidth: true

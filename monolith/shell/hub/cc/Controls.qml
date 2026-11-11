@@ -7,6 +7,7 @@ import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import "../../core"
 import "../../ui"
+import "../../wall/faces" as Faces
 
 // Control center → Controls: big toggle tiles with the volume bars under them on the left;
 // what's playing and the power actions on the right.
@@ -45,6 +46,7 @@ RowLayout {
         property bool on: false
         Layout.fillWidth: true
         Layout.preferredHeight: 104
+        Rise {}
         radius: Theme.corner(56, 8)
         color: on ? Theme.accentContainer : Theme.containerHigh
         Rectangle {
@@ -166,6 +168,7 @@ RowLayout {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: levels.implicitHeight + 28
+            Rise {}
             radius: Theme.corner(56, 8)
             color: Theme.container
             border.width: Theme.outlineW
@@ -235,6 +238,23 @@ RowLayout {
                     sourceSize: Qt.size(600, 600)
                     asynchronous: true
                 }
+                // the sound, dancing along the bottom of the cover while it plays
+                Rectangle {
+                    visible: cvb.live
+                    anchors.bottom: parent.bottom
+                    width: parent.width; height: parent.height * 0.45
+                    gradient: Gradient { GradientStop { position: 0; color: "transparent" } GradientStop { position: 1; color: Qt.rgba(0, 0, 0, 0.55) } }
+                }
+                Faces.CavaBars {
+                    id: cvb
+                    anchors.bottom: parent.bottom; anchors.bottomMargin: 12
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width - 32; height: parent.height * 0.3
+                    count: 24; spacing: 3; minLen: 3
+                    live: !!cc.player && cc.player.isPlaying
+                    visible: live
+                    color: "#ffffff"
+                }
                 // rounded corners over the picture (clip only cuts to the box)
                 Rectangle { anchors.fill: parent; anchors.margins: -cover.radius; radius: cover.radius * 2; color: "transparent"; border.width: cover.radius; border.color: Theme.container; visible: art.status === Image.Ready }
             }
@@ -297,6 +317,7 @@ RowLayout {
                     property bool armed: false
                     Layout.fillWidth: true
                     Layout.preferredHeight: 64
+                    Rise { delay: 200 + pb.index * 45 }
                     radius: Theme.corner(56, 4)
                     color: armed ? Theme.danger : (index === 4 ? Qt.alpha(Theme.danger, hovered ? 0.32 : 0.2) : Theme.containerHigh)
                     onClicked: {

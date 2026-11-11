@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Services.Pipewire
 import "../core"
 import "../ui"
+import "../wall/faces" as Faces
 
 // Sound: the device in use on a card of its own with the one big volume bar, the other
 // devices as plain rows under it (a click switches to one), and the apps playing, each
@@ -57,6 +58,7 @@ Page {
             visible: page.tab !== "apps" && page.inUse !== null
             readonly property var node: page.inUse
             readonly property bool quiet: !!(node && node.audio && node.audio.muted)
+            Rise {}
             Layout.fillWidth: true
             Layout.preferredHeight: 148
             radius: Theme.corner(84, 6)
@@ -66,7 +68,7 @@ Page {
             Bubble { id: nb; x: 16; y: 16; size: 52; icon: page.iconOf(now.node); on: true }
             Column {
                 anchors.left: nb.right; anchors.leftMargin: 14
-                anchors.right: mute.left; anchors.rightMargin: 12
+                anchors.right: live.visible ? live.left : mute.left; anchors.rightMargin: 12
                 anchors.verticalCenter: nb.verticalCenter
                 spacing: 3
                 Label { width: parent.width; text: page.nameOf(now.node); strong: true; font.pixelSize: Theme.sizeTitle }
@@ -74,6 +76,17 @@ Page {
                     width: parent.width; muted: true
                     text: now.quiet ? "Muted" : ((page.out ? "Playing here" : "Listening here") + "  ·  " + Math.round((now.node && now.node.audio ? now.node.audio.volume : 0) * 100) + "%")
                 }
+            }
+            // what's coming out of it, live
+            Faces.CavaBars {
+                id: live
+                visible: page.out
+                live: page.out && page.current && HubState.open
+                anchors.right: mute.left; anchors.rightMargin: 14
+                anchors.verticalCenter: nb.verticalCenter
+                width: 84; height: 30
+                count: 14; spacing: 3; minLen: 3
+                color: Theme.accent
             }
             Pressable {
                 id: mute
@@ -139,6 +152,7 @@ Page {
                         radius: Theme.corner(height)
                         color: Theme.containerHigh
                         onClicked: page.use(modelData)
+                        Rise {}
                         Bubble { id: db; x: 10; anchors.verticalCenter: parent.verticalCenter; size: 36; icon: page.iconOf(dev.modelData) }
                         Column {
                             anchors.left: db.right; anchors.leftMargin: 12
@@ -161,6 +175,7 @@ Page {
                         id: app
                         required property var modelData
                         readonly property bool quiet: modelData.audio.muted
+                        Rise {}
                         Layout.fillWidth: true
                         Layout.preferredHeight: 100
                         radius: Theme.corner(56, 6)

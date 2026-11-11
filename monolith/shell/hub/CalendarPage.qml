@@ -36,6 +36,7 @@ Page {
 
         // the time card
         Rectangle {
+            Rise {}
             Layout.preferredWidth: 300
             Layout.fillHeight: true
             radius: Theme.corner(80, 10)
@@ -77,6 +78,7 @@ Page {
 
         // the month
         Rectangle {
+            Rise {}
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Theme.corner(80, 10)
@@ -127,6 +129,7 @@ Page {
 
     // the weather: now, then the next hours, then the next days
     Rectangle {
+        Rise {}
         visible: !!Weather.loc
         y: topRow.height + 10
         width: parent.width

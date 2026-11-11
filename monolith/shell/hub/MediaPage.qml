@@ -6,6 +6,7 @@ import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
 import "../core"
 import "../ui"
+import "../wall/faces" as Faces
 
 // Media, laid out like the old Monolith's player and coloured by what's playing: the cover
 // blurred behind everything and its own colour (picked from the art) on the play button, the
@@ -398,6 +399,17 @@ Page {
                         }
                     }
                 }
+            }
+            // the sound itself behind the bands: you see what each one is shaping
+            Faces.CavaBars {
+                y: eqHead.height + 16
+                width: parent.width
+                height: parent.height - y - 42
+                count: 40; spacing: 4; minLen: 0
+                live: page.view === "eq" && page.current && !!page.player && page.player.isPlaying
+                visible: live
+                opacity: 0.22
+                color: page.tone
             }
             Row {
                 y: eqHead.height + 16

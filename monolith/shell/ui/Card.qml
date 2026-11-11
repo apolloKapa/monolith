@@ -8,8 +8,12 @@ Rectangle {
     property string title: ""
     default property alias content: slot.data
     property real pad: 14
+    property bool cascade: false      // on a menu: comes up with the others when the page opens
+    Rise { on: card.cascade }
+    HoverHandler { id: hov }
     radius: Theme.corner(80, 10)
-    color: Theme.container
+    color: hov.hovered && card.cascade ? Theme.mix(Theme.container, Theme.containerHigh, 0.5) : Theme.container
+    Behavior on color { ColorAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
     border.width: Theme.outlineW
     border.color: Theme.outlineColor
     Row {

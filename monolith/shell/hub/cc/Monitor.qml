@@ -13,6 +13,7 @@ ColumnLayout {
     function gb(b) { return (b / 1073741824).toFixed(1) + " GB"; }
 
     Card {
+        cascade: true
         Layout.fillWidth: true
         Layout.preferredHeight: 200
         RowLayout {
@@ -50,6 +51,7 @@ ColumnLayout {
 
         // the disks: used / size as bars
         Card {
+            cascade: true
             id: disks
             Layout.fillWidth: true
             Layout.preferredWidth: 640
@@ -100,6 +102,7 @@ ColumnLayout {
 
         // the internet: ping to a public resolver
         Card {
+            cascade: true
             id: net
             Layout.fillWidth: true
             Layout.preferredWidth: 360

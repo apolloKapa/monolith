@@ -269,13 +269,32 @@ PanelWindow {
                         strong: true
                         font.pixelSize: Theme.sizeTitle + 2
                     }
+                    Rectangle {
+                        id: fieldTile
+                        readonly property bool on: !win.usesQuery && !win.tabbed
+                        x: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 32; height: 32
+                        radius: Theme.corner(height, -2)
+                        color: on ? Theme.accent : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.shortMs } }
+                        SequentialAnimation {
+                            id: tilePop
+                            NumberAnimation { target: fieldTile; property: "scale"; from: 0.6; to: 1; duration: Theme.ms(380); easing.type: Easing.OutBack }
+                        }
+                        NumberAnimation { id: tileTurn; target: fieldTile; property: "rotation"; from: -20; to: 0; duration: Theme.ms(380); easing.type: Easing.OutCubic }
+                        Connections { target: HubState; function onPageChanged() { tilePop.restart(); tileTurn.restart(); } }
+                    }
                     Icon {
                         id: fieldIcon
-                        x: 16
+                        x: 14
                         anchors.verticalCenter: parent.verticalCenter
                         name: (win.pageInfo[HubState.page] || win.pageInfo.search).icon
                         size: 20
-                        color: Theme.accent
+                        filled: fieldTile.on
+                        color: fieldTile.on ? Theme.onAccent : Theme.accent
+                        scale: fieldTile.scale
+                        rotation: fieldTile.rotation
                     }
                     TextInput {
                         id: query
@@ -457,7 +476,7 @@ PanelWindow {
     // open, or still shrinking back
     readonly property bool open: shown || wasOpen
 
-    onShownChanged: if (shown) { wasOpen = true; query.text = HubState.preset; HubState.preset = ""; query.forceActiveFocus(); }
+    onShownChanged: if (shown) { tilePop.restart(); tileTurn.restart(); wasOpen = true; query.text = HubState.preset; HubState.preset = ""; query.forceActiveFocus(); }
     Connections {
         target: HubState
         function onPresetRequested() { if (win.shown && HubState.preset !== "") { query.text = HubState.preset; HubState.preset = ""; } }

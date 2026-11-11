@@ -135,6 +135,32 @@ Page {
                                 clip: true
                                 Behavior on height { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
                                 Rectangle { x: 21; y: 2; width: 2; height: pages.implicitHeight - 4; radius: 1; color: Theme.hairline }
+                                // the open page's highlight and its mark on the line: one of each per
+                                // section, gliding to the page you pick (the mark stretches on its way:
+                                // its head gets there first, its tail catches up)
+                                Item {
+                                    id: glide
+                                    readonly property int at: Math.max(0, sec.modelData.tabs.findIndex(t => t[0] === page.tab[0]))
+                                    readonly property real slot: 2 + at * 36
+                                    property real head: slot
+                                    property real tail: slot
+                                    Behavior on head { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+                                    Behavior on tail { NumberAnimation { duration: Theme.ms(520); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+                                    visible: sec.cur
+                                    Rectangle {
+                                        x: 30; y: glide.tail
+                                        width: pages.width; height: 34
+                                        radius: Theme.corner(height)
+                                        color: Theme.selected
+                                    }
+                                    Rectangle {
+                                        x: 20
+                                        y: Math.min(glide.head, glide.tail) + 8
+                                        width: 4; radius: 2
+                                        height: 18 + Math.abs(glide.head - glide.tail)
+                                        color: Theme.accent
+                                    }
+                                }
                                 Column {
                                     id: pages
                                     x: 30; y: 2
@@ -148,15 +174,8 @@ Page {
                                             readonly property bool on: page.tab[0] === modelData[0] && sec.cur
                                             width: pages.width
                                             height: 34
-                                            color: on ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
+                                            color: hovered && !on ? Qt.alpha(Theme.containerHigh, 0.7) : "transparent"
                                             onClicked: HubState.settingsSection = modelData[0]
-                                            // the open page's mark, growing out of the line
-                                            Rectangle {
-                                                x: -10; anchors.verticalCenter: parent.verticalCenter
-                                                width: 4; height: sub.on ? 18 : 0; radius: 2
-                                                color: Theme.accent
-                                                Behavior on height { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
-                                            }
                                             Label {
                                                 x: sub.hovered && !sub.on ? 15 : 12
                                                 Behavior on x { NumberAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }

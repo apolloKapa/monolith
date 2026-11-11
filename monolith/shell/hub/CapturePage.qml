@@ -37,6 +37,7 @@ Page {
         property bool on: false
         Layout.fillWidth: true
         Layout.preferredHeight: 96
+        Rise {}
         radius: Theme.corner(96, 4)
         color: on ? Theme.selected : Theme.containerHigh
         Column {

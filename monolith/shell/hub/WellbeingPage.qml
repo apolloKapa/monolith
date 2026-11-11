@@ -33,6 +33,7 @@ Page {
 
         // today
         Rectangle {
+            Rise {}
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Theme.corner(80, 10)
@@ -97,6 +98,7 @@ Page {
 
         // the week
         Rectangle {
+            Rise {}
             Layout.preferredWidth: 300
             Layout.fillHeight: true
             radius: Theme.corner(80, 10)
