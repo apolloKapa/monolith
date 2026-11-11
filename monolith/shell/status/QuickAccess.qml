@@ -29,11 +29,10 @@ PanelWindow {
     readonly property string sizeName: Store.get("quick.size", "normal")
     // the open tool's size (Settings → Desktop → Quick access), or much bigger with the rail's
     // expand button (remembered): as big as the screen allows, leaving room round it
-    property bool big: Store.get("quick.big", false) === true
-    onBigChanged: Store.set("quick.big", big)
+    // (read from the setting; the buttons write the setting: a property that did both looped)
+    readonly property bool big: Store.get("quick.big", false) === true
     // or maximized: the whole screen but the bar and a small margin (the rail's maximize button)
-    property bool maxed: Store.get("quick.max", false) === true
-    onMaxedChanged: Store.set("quick.max", maxed)
+    readonly property bool maxed: Store.get("quick.max", false) === true
     // (along the edge it leaves room for the curves joining the edge: 2 × ear + margins)
     readonly property real roomW: maxed ? (vertical ? width - railT - 40 : width - 2 * ear - 48) : (vertical ? width - railT - 120 : width - 160)
     readonly property real roomH: maxed ? (vertical ? height - topRoom - bottomRoom - 2 * ear - 48 : height - topRoom - bottomRoom - railT - 40)
@@ -265,7 +264,7 @@ PanelWindow {
                     radius: Theme.corner(qa.tab, 0)
                     readonly property bool on: qa.big && !qa.maxed
                     color: on ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
-                    onClicked: { if (qa.maxed) { qa.maxed = false; qa.big = true; } else qa.big = !qa.big; qa.expanded = true; }
+                    onClicked: { if (qa.maxed) { Store.set("quick.max", false); Store.set("quick.big", true); } else Store.set("quick.big", !qa.big); qa.expanded = true; }
                     Icon { anchors.centerIn: parent; name: parent.on ? "close_fullscreen" : "open_in_full"; size: 19; color: parent.on ? Theme.onAccentContainer : Theme.subtext }
                 }
                 // maximized: the whole screen (again: back to the size it was)
@@ -273,7 +272,7 @@ PanelWindow {
                     width: qa.tab; height: qa.tab
                     radius: Theme.corner(qa.tab, 0)
                     color: qa.maxed ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
-                    onClicked: { qa.maxed = !qa.maxed; qa.expanded = true; }
+                    onClicked: { Store.set("quick.max", !qa.maxed); qa.expanded = true; }
                     Icon { anchors.centerIn: parent; name: qa.maxed ? "fullscreen_exit" : "fullscreen"; size: 21; color: qa.maxed ? Theme.onAccentContainer : Theme.subtext }
                 }
                 // keep it out
