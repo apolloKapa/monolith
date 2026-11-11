@@ -41,9 +41,14 @@ PanelWindow {
             y: phase === "held" || phase === "back" ? modelData.y : py
             // fades as it goes sideways (held and sliding); falling it stays solid
             opacity: phase === "fall" ? 1 : Math.max(0, 1 - Math.abs(phase === "slide" ? travelled : dx) / (width * 1.1))
-            // springing back home
-            Behavior on dx { enabled: card.phase === "back"; NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutBack } }
-            onDxChanged: if (phase === "back" && Math.abs(dx) < 0.5) { Throw.home(modelData.id); Throw.land(modelData.id); }
+            // springing back home: a little past it and back, then the real card takes over (it
+            // shows first and the copy goes a frame later, so they overlap instead of flickering)
+            NumberAnimation {
+                id: backAnim
+                target: card; property: "dx"; to: 0
+                duration: Theme.ms(320); easing.type: Easing.OutBack; easing.overshoot: 1.4
+                onFinished: { Throw.home(card.modelData.id); Qt.callLater(() => Throw.land(card.modelData.id)); }
+            }
             property int frames: 0
 
             Connections {
@@ -60,7 +65,7 @@ PanelWindow {
                 function onSpringBack(id) {
                     if (id !== card.modelData.id) return;
                     card.phase = "back";
-                    if (Math.abs(card.dx) < 0.5) { Throw.home(id); Throw.land(id); } else card.dx = 0;
+                    backAnim.restart();
                 }
             }
             FrameAnimation {

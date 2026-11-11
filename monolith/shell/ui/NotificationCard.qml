@@ -68,7 +68,7 @@ Pressable {
     Connections {
         target: Throw
         function onReady(id) { if (id === card.throwId) card.handOver(); }
-        function onHome(id) { if (id === card.throwId) { card.throwId = -1; card.handed = false; card.swipeX = 0; } }
+        function onHome(id) { if (id === card.throwId) { card.throwId = -1; card.resetting = true; card.swipeX = 0; card.resetting = false; card.handed = false; } }
     }
     // never stuck if the copy doesn't show (a screen that went away)
     Timer { id: handoff; interval: 400; onTriggered: card.handOver() }
@@ -110,7 +110,12 @@ Pressable {
                 const vx = dir * (Throw.mode === "fall" ? Math.max(380, Math.min(2600, fast)) : Math.max(1100, Math.min(3200, fast)));
                 Throw.letGo(id, vx, -520, Throw.mode);
                 card.closed();
-            } else Throw.springBack(id);
+            } else {
+                // the real card goes back in place now, while it's still hidden (it would
+                // otherwise show where it was let go and spring back a second time)
+                card.resetting = true; card.swipeX = 0; card.resetting = false;
+                Throw.springBack(id);
+            }
         };
         if (handed) act(); else pending = act;
     }
