@@ -103,6 +103,10 @@ else
 fi
 
 # --- install ------------------------------------------------------------------------------------
+# how many steps there are (for the progress bar in each step's header)
+STEP_TOTAL=5
+[ "$OPT_SDDM" = true ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
+[ "$WALLPAPERS" != none ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 step "Packages"
 install_dependencies "$PROJECT_ROOT" "$INSTALL_STATE"
 

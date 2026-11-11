@@ -9,6 +9,56 @@ C_GREEN=$'\e[32m'
 C_YELLOW=$'\e[33m'
 C_RED=$'\e[31m'
 
+# --- effects ---------------------------------------------------------------------------------
+# Animations only in a real terminal (not piped, not the --update notification run);
+# MONOLITH_NO_ANIM=1 turns them off. Gradients use 24-bit colour when the terminal has it.
+ANIM=false
+[ -t 1 ] && [ "${TERM:-dumb}" != dumb ] && [ -z "${MONOLITH_NO_ANIM:-}" ] && ANIM=true
+TRUECOLOR=false
+case "${COLORTERM:-}" in truecolor|24bit) TRUECOLOR=true ;; esac
+case "${TERM:-}" in *kitty*|*alacritty*|*foot*|*wezterm*|*ghostty*) TRUECOLOR=true ;; esac
+# the gradient: pink -> violet -> cyan
+GRAD=(255 140 220  190 140 255  110 200 255)
+BANNER_SHOWN=false
+
+nap() { [ "$ANIM" = true ] && sleep "$1"; return 0; }
+# the gradient's colour at position i of n, as an escape in $GA (cyan without 24-bit colour);
+# grad_at prints it. No subshells in the loops: the logo sweep draws thousands of these.
+grad_set() {
+    local i=$1 n=$2
+    [ "$TRUECOLOR" = true ] || { GA=$C_CYAN; return; }
+    [ "$n" -le 1 ] && n=2
+    local t=$(( i * 2000 / (n - 1) ))        # 0..2000 over the two halves
+    local k=0; [ "$t" -gt 1000 ] && { k=3; t=$(( t - 1000 )); }
+    GA=$'\e'"[38;2;$(( GRAD[k] + (GRAD[k+3] - GRAD[k]) * t / 1000 ));$(( GRAD[k+1] + (GRAD[k+4] - GRAD[k+1]) * t / 1000 ));$(( GRAD[k+2] + (GRAD[k+5] - GRAD[k+2]) * t / 1000 ))m"
+}
+grad_at() { grad_set "$1" "$2"; printf '%s' "$GA"; }
+# a line of text in the gradient, in $GL (only the first `upto` characters); grad_line prints it
+grad_build() {
+    local text=$1 upto=${2:-999999} i n=${#1}
+    GL=""
+    for (( i = 0; i < n && i < upto; i++ )); do
+        grad_set "$i" "$n"; GL+="$GA${text:i:1}"
+    done
+    GL+=$RESET
+}
+grad_line() { grad_build "$@"; printf '%s' "$GL"; }
+# a full-width rule in the gradient
+grad_rule() {
+    local w=${1:-80} ch=${2:-─} line="" i
+    for (( i = 0; i < w; i++ )); do line+="$ch"; done
+    grad_line "$line"
+}
+# the highlighted menu row: an accent bar and a soft background
+row_on() {
+    if [ "$TRUECOLOR" = true ]; then
+        printf '\r\e[K\e[48;2;58;40;78m%s\e[38;2;255;140;220m ▌%s\e[48;2;58;40;78m %s \e[K%s\n' "$BOLD" "$RESET" "$1" "$RESET"
+    else
+        printf '\r\e[K%s%s ▸ %s%s\n' "$BOLD" "$C_CYAN" "$RESET" "$1"
+    fi
+}
+row_off() { printf '\r\e[K   %s\n' "$1"; }
+
 IS_REINSTALL=false
 NIRI_MODE=replace
 WALLPAPERS=random
@@ -22,7 +72,7 @@ REPLACE_DM=false
 SDDM_WAYLAND="$PM_SDDM_WAYLAND_DEFAULT"
 
 USER_NAME="${USER:-$(whoami)}"
-OS_NAME=$(grep '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"')
+OS_NAME=$(grep '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d "\"'")
 [[ -z "$OS_NAME" ]] && OS_NAME="Linux"
 CPU_INFO=$(grep -m 1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2 | xargs || true)
 [[ -z "$CPU_INFO" ]] && CPU_INFO="unknown"
@@ -137,9 +187,9 @@ manage_sddm_menu() {
 
         for i in "${!items[@]}"; do
             if [ "$i" -eq "$cursor" ]; then
-                printf "\r\033[K%s%s ▸ %s%s\n" "$BOLD" "$C_CYAN" "$RESET" "${items[$i]}"
+                row_on "${items[$i]}"
             else
-                printf "\r\033[K    %s\n" "${items[$i]}"
+                row_off "${items[$i]}"
             fi
         done
         rendered_lines=${#items[@]}
@@ -191,24 +241,36 @@ manage_sddm_menu() {
 
 draw_banner() {
     clear
-    printf "%s" "$BOLD"
-    cat << "EOF"
- ███╗   ███╗ ██████╗ ███╗   ██╗ ██████╗ ██╗     ██╗████████╗██╗  ██╗
- ████╗ ████║██╔═══██╗████╗  ██║██╔═══██╗██║     ██║╚══██╔══╝██║  ██║
- ██╔████╔██║██║   ██║██╔██╗ ██║██║   ██║██║     ██║   ██║   ███████║
- ██║╚██╔╝██║██║   ██║██║╚██╗██║██║   ██║██║     ██║   ██║   ██╔══██║
- ██║ ╚═╝ ██║╚██████╔╝██║ ╚████║╚██████╔╝███████╗██║   ██║   ██║  ██║
- ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═╝
-EOF
-    printf "%s" "$RESET"
-    printf " %sreally good desktop :3%s\n" "$BOLD" "$RESET"
-    printf "%s%s%s\n" "$DIM" "--------------------------------------------------------------------------------" "$RESET"
-    printf " %sUser:%s %-25s | %sOS:%s  %s\n" "$BOLD" "$RESET" "$USER_NAME" "$BOLD" "$RESET" "$OS_NAME"
-    printf " %sCPU:%s  %-25.25s | %sGPU:%s %.40s\n" "$BOLD" "$RESET" "$CPU_INFO" "$BOLD" "$RESET" "$GPU_INFO"
-    printf " %sRepo:%s %-25s | %sMode:%s %s\n" "$BOLD" "$RESET" "$REPO_SLUG@$MONOLITH_BRANCH" "$BOLD" "$RESET" "$INSTALL_STATE"
-    printf " %sVersion:%s %s (%s)" "$BOLD" "$RESET" "$TARGET_VERSION" "$TARGET_COMMIT"
+    local logo=(
+" ███╗   ███╗ ██████╗ ███╗   ██╗ ██████╗ ██╗     ██╗████████╗██╗  ██╗"
+" ████╗ ████║██╔═══██╗████╗  ██║██╔═══██╗██║     ██║╚══██╔══╝██║  ██║"
+" ██╔████╔██║██║   ██║██╔██╗ ██║██║   ██║██║     ██║   ██║   ███████║"
+" ██║╚██╔╝██║██║   ██║██║╚██╗██║██║   ██║██║     ██║   ██║   ██╔══██║"
+" ██║ ╚═╝ ██║╚██████╔╝██║ ╚████║╚██████╔╝███████╗██║   ██║   ██║  ██║"
+" ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═╝"
+    )
+    local w=${#logo[0]} l c
+    printf '\e[?25l'
+    if [ "$ANIM" = true ] && [ "$BANNER_SHOWN" = false ]; then
+        # the first time: the logo sweeps in from the left, in the gradient
+        for (( c = 4; c <= w + 4; c += 4 )); do
+            printf '\e[H'
+            for l in "${logo[@]}"; do grad_build "$l" "$c"; printf '%s%s\e[K\n' "$BOLD" "$GL"; done
+            sleep 0.012
+        done
+    else
+        for l in "${logo[@]}"; do grad_build "$l"; printf '%s%s\n' "$BOLD" "$GL"; done
+    fi
+    BANNER_SHOWN=true
+    printf " %s%sreally good desktop :3%s\n" "$BOLD" "$(grad_at 0 2)" "$RESET"
+    printf "%s\n" "$(grad_rule 80)"
+    local k="$BOLD$(grad_at 1 2)"
+    printf " %sUser:%s %-25s %s│%s %sOS:%s  %s\n" "$k" "$RESET" "$USER_NAME" "$DIM" "$RESET" "$k" "$RESET" "$OS_NAME"
+    printf " %sCPU:%s  %-25.25s %s│%s %sGPU:%s %.40s\n" "$k" "$RESET" "$CPU_INFO" "$DIM" "$RESET" "$k" "$RESET" "$GPU_INFO"
+    printf " %sRepo:%s %-25s %s│%s %sMode:%s %s\n" "$k" "$RESET" "$REPO_SLUG@$MONOLITH_BRANCH" "$DIM" "$RESET" "$k" "$RESET" "$INSTALL_STATE"
+    printf " %sVersion:%s %s (%s)" "$k" "$RESET" "$TARGET_VERSION" "$TARGET_COMMIT"
     [ -n "$OLD_VERSION" ] && printf "  %sinstalled: %s%s" "$DIM" "$OLD_VERSION" "$RESET"
-    printf "\n%s%s%s\n\n" "$DIM" "================================================================================" "$RESET"
+    printf "\n%s\n\n" "$(grad_rule 80 ━)"
 }
 
 show_package_overview() {
@@ -277,9 +339,9 @@ run_installer_ui() {
             [ "$rendered" -gt 0 ] && printf "\033[%dA" "$rendered"
             for i in "${!labels[@]}"; do
                 if [ "$i" -eq "$cursor" ]; then
-                    printf "\r\033[K%s ▸ %s%d. %s\n" "$BOLD" "$RESET" $((i + 1)) "${labels[$i]}"
+                    row_on "$((i + 1)). ${labels[$i]}"
                 else
-                    printf "\r\033[K   %d. %s\n" $((i + 1)) "${labels[$i]}"
+                    row_off "$((i + 1)). ${labels[$i]}"
                 fi
             done
             rendered=${#labels[@]}
@@ -311,13 +373,48 @@ run_installer_ui() {
     done
 }
 
-step() { printf "\n%s%s==>%s %s%s%s\n" "$BOLD" "$C_CYAN" "$RESET" "$BOLD" "$1" "$RESET"; }
+# each install step: "step 3/7", a bar that fills up to it (animated from the last one), its name
+STEP_N=0
+STEP_TOTAL=${STEP_TOTAL:-0}
+step() {
+    STEP_N=$(( STEP_N + 1 ))
+    local total=$STEP_TOTAL; [ "$total" -lt "$STEP_N" ] && total=$STEP_N
+    local w=30 from=$(( (STEP_N - 1) * 30 / total )) to=$(( STEP_N * 30 / total )) f i bar
+    printf "\n"
+    for (( f = from; f <= to; f++ )); do
+        bar=""
+        for (( i = 0; i < w; i++ )); do
+            if [ "$i" -lt "$f" ]; then grad_set "$i" "$w"; bar+="$GA━"; else bar+="$DIM─$RESET"; fi
+        done
+        printf "\r\e[K %s%s%d/%d%s  %s%s  %s%s%s" "$BOLD" "$(grad_at "$STEP_N" "$((total + 1))")" "$STEP_N" "$total" "$RESET" "$bar" "$RESET" "$BOLD" "$1" "$RESET"
+        nap 0.02
+    done
+    printf "\n"
+}
 
 draw_completion_screen() {
     cleanup_terminal
-    printf "\n%s%s" "$BOLD" "$C_GREEN"
-    printf "  Monolith %s (%s) is installed.%s\n\n" "$TARGET_VERSION" "$TARGET_COMMIT" "$RESET"
-    printf "  %sreally good desktop :3%s\n\n" "$BOLD" "$RESET"
+    printf "\n"
+    # a little sparkle runs across, then settles into the gradient line
+    if [ "$ANIM" = true ]; then
+        local sparks=("✦" "✧" "·" "⋆") w=60 p i line
+        printf '\e[?25l'
+        for (( p = 0; p <= w + 6; p += 2 )); do
+            line=""
+            for (( i = 0; i < w; i++ )); do
+                if [ "$i" -le "$p" ] && [ "$i" -gt $(( p - 6 )) ]; then grad_set "$i" "$w"; line+="$GA${sparks[$(( (i + p) % 4 ))]}"
+                elif [ "$i" -le "$p" ]; then grad_set "$i" "$w"; line+="$GA─"
+                else line+=" "; fi
+            done
+            printf '\r  %s%s' "$line" "$RESET"
+            sleep 0.015
+        done
+        printf '\e[?25h\n\n'
+    else
+        printf "  %s\n\n" "$(grad_rule 60)"
+    fi
+    printf "  %s%s\n" "$BOLD" "$(grad_line "Monolith $TARGET_VERSION ($TARGET_COMMIT) is installed.")"
+    printf "  %s%sreally good desktop :3%s\n\n" "$BOLD" "$(grad_at 1 2)" "$RESET"
     if [ ${#FAILED_PKGS[@]} -gt 0 ]; then
         printf "%s%s  These packages failed to install:%s\n" "$BOLD" "$C_RED" "$RESET"
         for fp in "${FAILED_PKGS[@]}"; do printf "    - %s%s%s\n" "$C_YELLOW" "$fp" "$RESET"; done
