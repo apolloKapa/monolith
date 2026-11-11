@@ -16,13 +16,24 @@ Item {
     id: bar
     property string screenName: ""
     property var trayWindow: null                       // the window tray menus open from
+    // down a side of the screen (SideBar): the zones run top to bottom, modules stack their parts
+    property bool vertical: false
     readonly property real gap: Number(Store.get("bar.sectionGap", 14))
-    implicitWidth: leftZone.width + midZone.width + rightZone.width + (midZone.width > 0 ? 2 * gap : gap) + 2 * Theme.islandPad
+    // a zone's length along the bar
+    function len(z) { return vertical ? z.height : z.width; }
+    readonly property real fitLength: len(leftZone) + len(midZone) + len(rightZone) + (len(midZone) > 0 ? 2 * gap : gap) + 2 * Theme.islandPad
+    implicitWidth: vertical ? Theme.islandH : fitLength
     // spread out, the middle stays in the middle: the shortest it can be without the sides running into it
-    readonly property real spreadWidth: midZone.width > 0 ? midZone.width + 2 * Math.max(leftZone.width, rightZone.width) + 2 * gap + 2 * Theme.islandPad : implicitWidth
-    readonly property real needWidth: Theme.barSpread ? spreadWidth : implicitWidth
-    implicitHeight: Theme.islandH
+    readonly property real spreadWidth: len(midZone) > 0 ? len(midZone) + 2 * Math.max(len(leftZone), len(rightZone)) + 2 * gap + 2 * Theme.islandPad : fitLength
+    // the length the bar needs (its width, or its height when it's vertical)
+    readonly property real needWidth: Theme.barSpread ? spreadWidth : fitLength
+    implicitHeight: vertical ? fitLength : Theme.islandH
     function open(p) { HubState.toggle(p, bar.screenName); }
+    // the point on a module's edge that faces into the screen (where its drop-downs hang from)
+    function edgePoint(it) {
+        if (vertical) return it.mapToItem(null, Theme.barSide === "right" ? 0 : it.width, it.height / 2);
+        return it.mapToItem(null, it.width / 2, Theme.barBottom ? 0 : it.height);
+    }
 
     // the modules in each zone, and every module there is
     readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["updates", "live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
@@ -42,16 +53,30 @@ Item {
 
     SystemClock { id: clock; precision: bar.clockStyle === "seconds" ? SystemClock.Seconds : SystemClock.Minutes }
 
+    // a row of things, or a column of them on a vertical bar, centred across
+    component Line: Grid {
+        columns: bar.vertical ? 1 : 0
+        rows: bar.vertical ? 0 : 1
+        horizontalItemAlignment: Grid.AlignHCenter
+        verticalItemAlignment: Grid.AlignVCenter
+    }
     // a module: a hover pill with a ripple
     component Mod: Pressable {
         id: m
         default property alias content: inner.data
         property real pad: 9
-        height: Theme.islandH - 10
-        width: inner.implicitWidth + 2 * pad
+        // (stacked on a vertical bar: less room above and below)
+        readonly property real vpad: Math.round(pad * 0.7)
+        height: bar.vertical ? inner.implicitHeight + 2 * vpad : Theme.islandH - 10
+        width: bar.vertical ? Theme.islandH - 10 : inner.implicitWidth + 2 * pad
         // on a see-through bar, modules can sit on their own pills
         color: hovered ? Theme.containerHigh : (Theme.barPills ? Qt.alpha(Theme.frame, Math.max(0.85, Theme.frame.a)) : "transparent")
-        Row { id: inner; x: m.pad; anchors.verticalCenter: parent.verticalCenter; spacing: 6 }
+        Line {
+            id: inner
+            x: bar.vertical ? Math.round((m.width - width) / 2) : m.pad
+            y: bar.vertical ? m.vpad : Math.round((m.height - height) / 2)
+            spacing: bar.vertical ? 2 : 6
+        }
     }
     // a round icon module
     component Glyph: Mod {
@@ -60,19 +85,17 @@ Item {
         property bool on: false
         property color tint: Theme.text
         pad: 7
-        Icon { name: g.icon; size: 18; filled: g.on; color: g.tint; anchors.verticalCenter: parent.verticalCenter }
+        Icon { name: g.icon; size: 18; filled: g.on; color: g.tint }
     }
 
     // ── the zones ──
-    component Zone: Row {
+    component Zone: Line {
         property var keys: []
-        height: bar.height
         spacing: Number(Store.get("bar.gap", 2))
         Repeater {
             model: parent.keys
             Loader {
                 required property string modelData
-                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
                 sourceComponent: bar.mods[modelData] || null
                 // a module with nothing to show (`want: false`) takes no room
                 visible: !!item && item.want !== false
@@ -82,11 +105,12 @@ Item {
     // Modular: each section on a floating pill of its own
     component ZonePill: Rectangle {
         property Item zone
-        visible: Theme.barStyle === "modular" && !bar.only && zone.width > 0
-        x: zone.x - 8
-        width: zone.width + 16
-        height: bar.height
-        radius: Theme.barRound(height)
+        visible: Theme.barStyle === "modular" && !bar.only && bar.len(zone) > 0
+        x: bar.vertical ? 0 : zone.x - 8
+        y: bar.vertical ? zone.y - 8 : 0
+        width: bar.vertical ? bar.width : zone.width + 16
+        height: bar.vertical ? zone.height + 16 : bar.height
+        radius: Theme.barRound(Math.min(width, height))
         color: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
@@ -96,10 +120,16 @@ Item {
     ZonePill { zone: leftZone }
     ZonePill { zone: midZone }
     ZonePill { zone: rightZone }
-    Zone { id: leftZone; x: Theme.islandPad; keys: bar.zones.left || [] }
+    // (a vertical bar: left is the top, right the bottom)
+    readonly property real barLen: vertical ? height : width
+    // where a zone starts along the bar, and across it (centred)
+    readonly property real leftAt: Theme.islandPad
+    readonly property real midAt: Theme.barSpread ? Math.round((barLen - len(midZone)) / 2) : leftAt + len(leftZone) + gap
+    readonly property real rightAt: Theme.barSpread ? barLen - len(rightZone) - Theme.islandPad : midAt + len(midZone) + (len(midZone) > 0 ? gap : 0)
+    Zone { id: leftZone; x: bar.vertical ? Math.round((bar.width - width) / 2) : bar.leftAt; y: bar.vertical ? bar.leftAt : Math.round((bar.height - height) / 2); keys: bar.zones.left || [] }
     // a full-width bar spreads them: left edge, middle, right edge
-    Zone { id: midZone; x: Theme.barSpread ? Math.round((bar.width - width) / 2) : leftZone.x + leftZone.width + bar.gap; keys: bar.zones.center || [] }
-    Zone { id: rightZone; x: Theme.barSpread ? bar.width - width - Theme.islandPad : midZone.x + midZone.width + (midZone.width > 0 ? bar.gap : 0); keys: bar.zones.right || [] }
+    Zone { id: midZone; x: bar.vertical ? Math.round((bar.width - width) / 2) : bar.midAt; y: bar.vertical ? bar.midAt : Math.round((bar.height - height) / 2); keys: bar.zones.center || [] }
+    Zone { id: rightZone; x: bar.vertical ? Math.round((bar.width - width) / 2) : bar.rightAt; y: bar.vertical ? bar.rightAt : Math.round((bar.height - height) / 2); keys: bar.zones.right || [] }
 
     readonly property var mods: ({
         cc: ccC, search: searchC, clock: clockC, weather: weatherC, workspaces: wsC, media: mediaC, title: titleC,
@@ -129,24 +159,24 @@ Item {
         Mod {
             onClicked: bar.open("calendar")
             Text {
-                text: Qt.formatTime(clock.date, bar.clockStyle === "seconds" ? "HH:mm:ss" : "HH:mm")
+                // (stacked hours over minutes on a vertical bar)
+                text: Qt.formatTime(clock.date, bar.vertical ? (bar.clockStyle === "seconds" ? "HH\nmm\nss" : "HH\nmm") : (bar.clockStyle === "seconds" ? "HH:mm:ss" : "HH:mm"))
+                horizontalAlignment: Text.AlignHCenter
+                lineHeight: bar.vertical ? 0.9 : 1
                 color: Theme.text
                 font.family: Theme.fontFamily; font.pixelSize: bar.clockStyle === "stacked" ? 16 : 14; font.weight: Font.Bold
-                anchors.verticalCenter: parent.verticalCenter
             }
             Column {
-                visible: bar.clockStyle === "stacked"
-                anchors.verticalCenter: parent.verticalCenter
+                visible: bar.clockStyle === "stacked" && !bar.vertical
                 spacing: -2
                 Text { text: Qt.formatDate(clock.date, "dddd"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1; font.weight: Font.Medium }
                 Text { text: Qt.formatDate(clock.date, "d MMM"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1 }
             }
             Text {
-                visible: bar.clockStyle === "full"
+                visible: bar.clockStyle === "full" && !bar.vertical
                 text: Qt.formatDate(clock.date, "ddd d MMM")
                 color: Theme.subtext
                 font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall
-                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
@@ -155,8 +185,8 @@ Item {
         Mod {
             property bool want: Weather.ready
             onClicked: bar.open("calendar")
-            Icon { name: Weather.ready ? Weather.icon(Weather.current.code, Weather.current.day) : ""; size: 16; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
-            Label { text: Weather.ready ? Math.round(Weather.current.temp) + "°" : ""; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+            Icon { name: Weather.ready ? Weather.icon(Weather.current.code, Weather.current.day) : ""; size: 16; color: Theme.accent }
+            Label { text: Weather.ready ? Math.round(Weather.current.temp) + "°" : ""; font.pixelSize: Theme.sizeSmall }
         }
     }
 
@@ -164,9 +194,9 @@ Item {
     Component {
         id: wsC
         Item {
-            width: ws.width + 14
-            height: Theme.islandH - 10
-            Row {
+            width: bar.vertical ? Theme.islandH - 10 : ws.width + 14
+            height: bar.vertical ? ws.height + 14 : Theme.islandH - 10
+            Line {
                 id: ws
                 anchors.centerIn: parent
                 spacing: bar.wsStyle === "numbers" ? 3 : 5
@@ -176,13 +206,16 @@ Item {
                         required property var modelData
                         readonly property bool active: modelData.is_active
                         readonly property bool busy: Niri.workspaceHasWindows(modelData.id)
-                        width: bar.wsStyle === "numbers" ? 22 : (bar.wsStyle === "dots" ? 9 : (active ? 26 : 9))
-                        height: bar.wsStyle === "numbers" ? 22 : 9
+                        // (the active pill stretches along the bar: down it on a vertical one)
+                        readonly property real along: bar.wsStyle === "numbers" ? 22 : (bar.wsStyle === "dots" ? 9 : (active ? 26 : 9))
+                        readonly property real across: bar.wsStyle === "numbers" ? 22 : 9
+                        width: bar.vertical ? across : along
+                        height: bar.vertical ? along : across
                         radius: Theme.corner(height)
-                        anchors.verticalCenter: parent.verticalCenter
                         color: active ? Theme.accent : (bar.wsStyle === "numbers" ? "transparent" : (busy ? Theme.subtext : Theme.control))
                         border.width: bar.wsStyle === "dots" && !active && busy ? 0 : 0
                         Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+                        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                         Behavior on color { ColorAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
                         Text {
                             visible: bar.wsStyle === "numbers"
@@ -217,7 +250,7 @@ Item {
                 onTriggered: {
                     if (!mediaHover.hovered || HubState.open) return;
                     // under it, or over it when the bar is at the bottom
-                    const p = mediaMod.mapToItem(null, mediaMod.width / 2, Theme.barBottom ? 0 : mediaMod.height);
+                    const p = bar.edgePoint(mediaMod);
                     HubState.peekX = p.x; HubState.peekY = p.y;
                     HubState.peekScreen = bar.screenName;
                 }
@@ -226,7 +259,6 @@ Item {
                 width: 22; height: 22; radius: 11
                 color: Theme.control
                 clip: true
-                anchors.verticalCenter: parent.verticalCenter
                 Image {
                     anchors.fill: parent
                     source: bar.player ? (bar.player.trackArtUrl || "") : ""
@@ -235,7 +267,7 @@ Item {
                     RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: bar.player !== null }
                 }
             }
-            Label { text: bar.player ? bar.player.trackTitle : ""; font.pixelSize: Theme.sizeSmall; width: Math.min(implicitWidth, 200); anchors.verticalCenter: parent.verticalCenter }
+            Label { visible: !bar.vertical; text: bar.player ? bar.player.trackTitle : ""; font.pixelSize: Theme.sizeSmall; width: Math.min(implicitWidth, 200) }
         }
     }
     Component {
@@ -243,8 +275,8 @@ Item {
         Mod {
             property bool want: Niri.focusedTitle !== ""
             onClicked: bar.open("windows")
-            Icon { name: "select_window"; size: 16; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
-            Label { text: Niri.focusedTitle; muted: true; font.pixelSize: Theme.sizeSmall; width: Math.min(implicitWidth, 220); anchors.verticalCenter: parent.verticalCenter }
+            Icon { name: "select_window"; size: 16; color: Theme.subtext }
+            Label { visible: !bar.vertical; text: Niri.focusedTitle; muted: true; font.pixelSize: Theme.sizeSmall; width: Math.min(implicitWidth, 220) }
         }
     }
 
@@ -264,14 +296,12 @@ Item {
             Rectangle {
                 visible: live.mode === "rec"
                 width: 9; height: 9; radius: 4.5; color: Theme.danger
-                anchors.verticalCenter: parent.verticalCenter
                 SequentialAnimation on opacity { running: live.mode === "rec"; loops: Animation.Infinite; NumberAnimation { to: 0.3; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
             }
-            Icon { visible: live.mode !== "rec"; name: live.mode === "timer" ? "timer" : "upgrade"; size: 16; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+            Icon { visible: live.mode !== "rec"; name: live.mode === "timer" ? "timer" : "upgrade"; size: 16; color: Theme.accent }
             Label {
                 text: live.mode === "rec" ? Tasks.fmt(Tasks.recSeconds) : (live.mode === "timer" ? Tasks.fmt(Tasks.remaining) : String(Updates.available))
                 font.pixelSize: Theme.sizeSmall; strong: true
-                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
@@ -281,18 +311,18 @@ Item {
 
     Component {
         id: trayC
-        Row {
+        Line {
             spacing: 2
             Repeater {
                 model: SystemTray.items
                 Pressable {
+                    id: trayItem
                     required property var modelData
                     width: 28; height: 28
-                    anchors.verticalCenter: parent ? parent.verticalCenter : undefined
                     color: hovered ? Theme.containerHigh : "transparent"
                     Image { anchors.centerIn: parent; width: 16; height: 16; source: modelData.icon; sourceSize: Qt.size(32, 32); smooth: true; mipmap: true }
                     onClicked: modelData.activate()
-                    onRightClicked: { if (bar.trayWindow) { const p = mapToItem(null, 0, height); modelData.display(bar.trayWindow, p.x, p.y + 4); } }
+                    onRightClicked: { if (bar.trayWindow) { const p = bar.vertical ? bar.edgePoint(trayItem) : mapToItem(null, 0, height + 4); modelData.display(bar.trayWindow, p.x, p.y); } }
                 }
             }
         }
@@ -307,12 +337,11 @@ Item {
             Repeater {
                 model: [["cpu", "memory", Math.round(Stats.cpu * 100) + "%"], ["mem", "data_usage", Math.round(Stats.mem * 100) + "%"],
                         ["temp", "thermostat", Math.round(Stats.temp) + "°"], ["gpu", "videogame_asset", Math.round(Stats.gpu * 100) + "%"]].filter(x => parent.parent.which.indexOf(x[0]) !== -1)
-                Row {
+                Line {
                     required property var modelData
-                    spacing: 3
-                    anchors.verticalCenter: parent ? parent.verticalCenter : undefined
-                    Icon { name: modelData[1]; size: 15; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
-                    Label { text: modelData[2]; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+                    spacing: bar.vertical ? 0 : 3
+                    Icon { name: modelData[1]; size: 15; color: Theme.subtext }
+                    Label { text: modelData[2]; font.pixelSize: Theme.sizeSmall }
                 }
             }
         }
@@ -325,16 +354,15 @@ Item {
             pad: 7
             // the list drops down right under the bell (over it when the bar is at the bottom)
             onClicked: {
-                const p = notifMod.mapToItem(null, notifMod.width / 2, Theme.barBottom ? 0 : notifMod.height);
+                const p = bar.edgePoint(notifMod);
                 HubState.toggleDrop("notifications", bar.screenName, p.x, p.y);
             }
             Icon {
                 name: Notifs.dnd ? "notifications_paused" : (Notifs.list.length > 0 ? "notifications_unread" : "notifications")
                 size: 18; filled: Notifs.list.length > 0
                 color: Notifs.list.length > 0 && !Notifs.dnd ? Theme.accent : Theme.text
-                anchors.verticalCenter: parent.verticalCenter
             }
-            Label { visible: Notifs.list.length > 0; text: Notifs.list.length; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+            Label { visible: Notifs.list.length > 0; text: Notifs.list.length; font.pixelSize: Theme.sizeSmall }
         }
     }
     Component { id: netC; Glyph { icon: bar.netIcon; on: true; onClicked: bar.open("network") } }
@@ -345,15 +373,14 @@ Item {
             pad: 7
             // a small sound card drops down right under it (over it when the bar is at the bottom)
             onClicked: {
-                const p = soundMod.mapToItem(null, soundMod.width / 2, Theme.barBottom ? 0 : soundMod.height);
+                const p = bar.edgePoint(soundMod);
                 HubState.toggleDrop("sound", bar.screenName, p.x, p.y);
             }
             Icon {
                 name: bar.muted || bar.volume === 0 ? "volume_off" : (bar.volume < 0.4 ? "volume_down" : "volume_up")
                 size: 18; filled: true; color: bar.muted ? Theme.subtext : Theme.text
-                anchors.verticalCenter: parent.verticalCenter
             }
-            Label { visible: Store.get("bar.soundPercent", true) !== false; text: Math.round(bar.volume * 100); font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+            Label { visible: Store.get("bar.soundPercent", true) !== false; text: Math.round(bar.volume * 100); font.pixelSize: Theme.sizeSmall }
         }
     }
     // the battery (laptops; hidden when there's none)
@@ -368,9 +395,8 @@ Item {
                 name: !parent.parent.dev ? "battery_full" : (parent.parent.dev.state === UPowerDeviceState.Charging ? "battery_charging_full" : (parent.parent.dev.percentage < 0.2 ? "battery_alert" : "battery_full"))
                 size: 18; filled: true
                 color: parent.parent.dev && parent.parent.dev.percentage < 0.2 ? Theme.danger : Theme.text
-                anchors.verticalCenter: parent.verticalCenter
             }
-            Label { text: parent.parent.dev ? Math.round(parent.parent.dev.percentage * 100) + "%" : ""; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+            Label { text: parent.parent.dev ? Math.round(parent.parent.dev.percentage * 100) + "%" : ""; font.pixelSize: Theme.sizeSmall }
         }
     }
     Component {
@@ -378,8 +404,8 @@ Item {
         Mod {
             property bool want: Niri.layoutName !== ""
             onClicked: Niri.action(["switch-layout", "next"])
-            Icon { name: "keyboard"; size: 16; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
-            Label { text: Niri.layoutName.substring(0, 2).toUpperCase(); font.pixelSize: Theme.sizeSmall; strong: true; anchors.verticalCenter: parent.verticalCenter }
+            Icon { name: "keyboard"; size: 16; color: Theme.subtext }
+            Label { text: Niri.layoutName.substring(0, 2).toUpperCase(); font.pixelSize: Theme.sizeSmall; strong: true }
         }
     }
     // Bluetooth: the adapter's state; how many devices are connected beside it
@@ -395,9 +421,8 @@ Item {
                 name: !parent.parent.adapter || !parent.parent.adapter.enabled ? "bluetooth_disabled" : (parent.parent.connected > 0 ? "bluetooth_connected" : "bluetooth")
                 size: 18; filled: true
                 color: parent.parent.adapter && parent.parent.adapter.enabled ? Theme.text : Theme.subtext
-                anchors.verticalCenter: parent.verticalCenter
             }
-            Label { visible: parent.parent.connected > 0; text: parent.parent.connected; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+            Label { visible: parent.parent.connected > 0; text: parent.parent.connected; font.pixelSize: Theme.sizeSmall }
         }
     }
     // audio bars while something plays (cava runs only while they show)
@@ -407,11 +432,10 @@ Item {
             property bool want: bar.player !== null
             onClicked: bar.open("media")
             Faces.CavaBars {
-                width: 46; height: 16
-                count: 9; spacing: 2; minLen: 2
+                width: bar.vertical ? 24 : 46; height: 16
+                count: bar.vertical ? 5 : 9; spacing: 2; minLen: 2
                 live: bar.player !== null
                 color: Theme.accent
-                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }

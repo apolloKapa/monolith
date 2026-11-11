@@ -28,6 +28,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; Reserve {} }
     Variants { model: Quickshell.screens; Frame {} }
     Variants { model: Quickshell.screens; Island {} }
+    Variants { model: Quickshell.screens; SideBar {} }
     Variants { model: Quickshell.screens; Dock {} }
     Variants { model: Quickshell.screens; Popups {} }
     Variants { model: Quickshell.screens; Thrown {} }

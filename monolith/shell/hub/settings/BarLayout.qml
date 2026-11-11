@@ -87,8 +87,15 @@ ColumnLayout {
     BarStyles { Layout.fillWidth: true }
     SettingRow {
         key: "bar.position"; def: "top";
-        icon: "vertical_split"; title: "Position"; desc: "Along the top or the bottom of the screen (menus open out of it either way)"
-        Segmented { width: 200; opts: [["top", "Top"], ["bottom", "Bottom"]]; value: Theme.barBottom ? "bottom" : "top"; onPicked: v => Store.set("bar.position", v) }
+        icon: "vertical_split"; title: "Position"
+        desc: Theme.barSide !== "" ? "Down the " + Theme.barSide + " side of the screen (its menus open as cards beside it)" : "Along the " + Theme.barEdge + " of the screen (menus open out of it)"
+        Dropdown {
+            width: 220
+            opts: [["top", "Up (top)", "Along the top edge"], ["bottom", "Down (bottom)", "Along the bottom edge"],
+                   ["left", "Left", "Down the left side"], ["right", "Right", "Down the right side"]]
+            value: Theme.barEdge
+            onPicked: v => Store.set("bar.position", v)
+        }
     }
     SettingRow {
         key: "bar.margin";

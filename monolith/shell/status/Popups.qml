@@ -23,14 +23,18 @@ PanelWindow {
     readonly property string corner: Store.get("notifications.position", "top-right")
     readonly property bool fromBottom: corner.startsWith("bottom")
     anchors { top: corner.startsWith("top"); bottom: corner.startsWith("bottom"); right: corner.endsWith("right"); left: corner.endsWith("left") }
-    margins { top: Theme.barBottom ? 16 : Theme.islandH + 16; bottom: Theme.barBottom ? Theme.islandH + 16 : 16; right: 12; left: 12 }
+    margins {
+        top: Theme.barEdge === "top" ? Theme.islandH + 16 : 16; bottom: Theme.barEdge === "bottom" ? Theme.islandH + 16 : 16
+        right: 12 + (Theme.barSide === "right" ? Theme.sideRoom : 0); left: 12 + (Theme.barSide === "left" ? Theme.sideRoom : 0)
+    }
     // a fixed size (resizing a layer surface while it draws lost frames); only the cards take clicks
     implicitWidth: 390
     implicitHeight: 720
     mask: Region { item: stack }
     color: "transparent"
     // only when they're set to pop up in a corner; by default they drop out of the island
-    visible: mine.length > 0 && Store.get("notifications.style", "island") === "corner"
+    // (a bar down the side has no island to drop out of: they always come up here then)
+    visible: mine.length > 0 && (Store.get("notifications.style", "island") === "corner" || Theme.barSide !== "")
 
     HoverHandler { onHoveredChanged: Notifs.hold = hovered }
 

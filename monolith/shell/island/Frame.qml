@@ -36,7 +36,15 @@ Scope {
 
         // the inside (the screen your windows get)
         // (the bar's band is along the bottom when the bar is)
-        Item { id: hole; x: fr.w; y: Theme.barBottom ? fr.w : fr.top; width: win.width - 2 * fr.w; height: win.height - fr.top - fr.w }
+        // (or down the side, with a bar there)
+        readonly property string band: Theme.barEdge
+        Item {
+            id: hole
+            x: win.band === "left" ? fr.top : fr.w
+            y: win.band === "top" ? fr.top : fr.w
+            width: win.width - (win.band === "left" || win.band === "right" ? fr.top + fr.w : 2 * fr.w)
+            height: win.height - (win.band === "top" || win.band === "bottom" ? fr.top + fr.w : 2 * fr.w)
+        }
 
         // the frame: the screen minus the inside
         Shape {
@@ -104,7 +112,12 @@ Scope {
         color: "transparent"
         mask: Region {}
     }
-    Edge { anchors { left: true; top: true; bottom: true } }
-    Edge { anchors { right: true; top: true; bottom: true } }
-    Edge { anchors { bottom: !Theme.barBottom; top: Theme.barBottom; left: true; right: true } }
+    // (on the three edges the bar isn't on: Reserve keeps them off the bar's)
+    Variants {
+        model: ["left", "right", "top", "bottom"].filter(e => e !== Theme.barEdge)
+        Edge {
+            required property string modelData
+            anchors { left: modelData !== "right"; right: modelData !== "left"; top: modelData !== "bottom"; bottom: modelData !== "top" }
+        }
+    }
 }

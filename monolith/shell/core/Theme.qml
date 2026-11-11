@@ -156,6 +156,22 @@ Singleton {
     // the bar along the top (default) or the bottom of the screen (Settings → Bar); at the bottom
     // the island rises from the bottom edge and its menus grow upwards
     readonly property bool barBottom: Store.get("bar.position", "top") === "bottom"
+    // or down the left or right side ("" for top / bottom): a vertical bar with its own window
+    // (island/SideBar.qml); its menus open as floating cards beside it
+    readonly property string barSide: ["left", "right"].indexOf(Store.get("bar.position", "top")) !== -1 ? Store.get("bar.position", "top") : ""
+    // the room a side bar takes from the screen's edge
+    // the edge the bar is on: top, bottom, left or right
+    readonly property string barEdge: barSide !== "" ? barSide : (barBottom ? "bottom" : "top")
+    readonly property real sideRoom: barSide !== "" ? islandH + barMargin : 0
+    // where a card dropping out of the bar's module (sound, notifications, the media peek) goes:
+    // under it, over it (bar at the bottom), or beside it (side bars); (px, py) is the module's
+    // point on the bar's inner edge, the card w × h in an area aw × ah
+    function dropPos(px, py, w, h, aw, ah) {
+        if (barSide !== "")
+            return Qt.point(barSide === "left" ? px + 10 : px - w - 10, Math.max(12, Math.min(ah - h - 12, py - h / 2)));
+        return Qt.point(Math.max(12, Math.min(aw - w - 12, px - w / 2)), barBottom ? py - h - 10 : py + 10);
+    }
+    readonly property int dropOrigin: barSide === "left" ? Item.Left : (barSide === "right" ? Item.Right : (barBottom ? Item.Bottom : Item.Top))
     readonly property bool fullBar: barStyle !== "island"                         // spread across the screen
     readonly property bool barFloats: barStyle === "solid" || barStyle === "modular" // off the edge
     readonly property real barMargin: barFloats ? Number(Store.get("bar.margin", 8)) : 0

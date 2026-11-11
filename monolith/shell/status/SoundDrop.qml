@@ -62,8 +62,9 @@ PanelWindow {
         width: 460
         height: Math.min(dd.height - 80, col.implicitHeight + 24)
         Behavior on height { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.OutCubic } }
-        x: Math.max(12, Math.min(dd.width - width - 12, HubState.dropX - width / 2))
-        y: Theme.barBottom ? HubState.dropY - height - 10 : HubState.dropY + 10
+        readonly property point at: Theme.dropPos(HubState.dropX, HubState.dropY, width, height, dd.width, dd.height)
+        x: at.x
+        y: at.y
         radius: Theme.corner(80, 14)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
@@ -71,7 +72,7 @@ PanelWindow {
         // drops down from the bar with a little zoom, and goes back up the same way
         opacity: dd.shown ? 1 : 0
         scale: dd.shown ? 1 : Theme.popScale
-        transformOrigin: Theme.barBottom ? Item.Bottom : Item.Top
+        transformOrigin: Theme.dropOrigin
         Behavior on opacity { NumberAnimation { duration: dd.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: dd.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dd.shown ? Theme.enterCurve : Theme.exitCurve } }
         CardShadow {}

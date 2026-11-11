@@ -151,6 +151,10 @@ Singleton {
         "calendar/month", "usage/rings", "usage/bars", "clock/analog", "user/default"]
     readonly property var colourChoices: [["", "Theme"], ["text", "Text"], ["accent", "Accent"], ["primary", "Primary"], ["secondary", "Secondary"],
         ["tertiary", "Tertiary"], ["white", "White"], ["black", "Black"]]
+    // the card's Background, a drop-down: frosted wallpaper, a see-through (or solid) card at its
+    // Background opacity, or no card ("normal" is the old name of Opacity, at 100 % a solid card)
+    readonly property var backgroundOptions: [["background", "Background", "dropdown", "blur", [["blur", "Blur", "The wallpaper behind it, frosted"], ["normal", "Opacity", "A card as see-through as Background opacity"], ["clear", "Clear", "No card, only what's on it"]]],
+        ["bgOpacity", "Background opacity (with Opacity)", "slider", 1, [0, 1, 0.05]]]
     function optionsFor(t, f) {
         const id = faceId(t, f);
         const o = [["opacity", "Opacity", "slider", 1, [0.15, 1, 0.05]],
@@ -158,11 +162,12 @@ Singleton {
                    ["shadow", "Shadow", "dropdown", "", [["", "Like Settings"], ["off", "Off"], ["soft", "Soft"], ["strong", "Strong"], ["glow", "Accent glow"]]],
                    ["shadowDistance", "Shadow distance", "slider", 6, [0, 30, 1]]];
         if (carded.indexOf(t + "/" + id) !== -1)
-            o.push(["background", "Background", "choice", "blur", [["blur", "Blurry"], ["normal", "Normal"], ["clear", "Clear"]]],
-                   ["blurStrength", "Blur strength", "slider", 0.8, [0.1, 1, 0.05]], ["radius", "Rounding", "slider", -1, [0, 100, 1]]);
+            o.push(...backgroundOptions, ["blurStrength", "Blur strength", "slider", 0.8, [0.1, 1, 0.05]], ["radius", "Rounding", "slider", -1, [0, 100, 1]]);
         // the Dot looks (dot-matrix cards): the card's tone and the accent (red unless you pick one)
         if (id === "dot") {
-            o.push(["dotTone", "Card", "choice", "dark", [["dark", "Dark"], ["light", "Light"], ["glass", "Glass"], ["clear", "Clear"]]],
+            // (the card's colour, and its Background like the other cards')
+            o.push(["dotTone", "Card colour", "choice", "dark", [["dark", "Dark"], ["light", "Light"]]],
+                   ...backgroundOptions, ["blurStrength", "Blur strength", "slider", 0.8, [0.1, 1, 0.05]],
                    ["accentColor", "Accent colour", "colour", ""]);
             if (t === "clock")
                 o.push(["showDate", "Day and date", "toggle", true], ["showSeconds", "Seconds dot", "toggle", true],

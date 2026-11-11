@@ -4,7 +4,8 @@ import "../../core"
 import "../../ui"
 
 // A widget's card, as its Background setting says: "blur" the wallpaper behind it blurred under a
-// tint of the theme's surface, "normal" a solid card, "clear" no card at all.
+// tint of the theme's surface, "normal" (Opacity) a card as see-through as its Background opacity
+// (solid at 100 %), "clear" no card at all.
 // Without a backdrop (the editor's palette) a blurred card is just the tinted card.
 Item {
     id: g
@@ -18,7 +19,10 @@ Item {
     // where this card sits inside its widget (for the part of the wallpaper behind it)
     property real dx: 0
     property real dy: 0
-    readonly property string mode: ctx && ctx.opt ? String(ctx.opt("background", "blur")) : "blur"
+    // (a Dot card's old Glass / Clear tones are its Background now)
+    property string defaultMode: "blur"
+    readonly property string mode: ctx && ctx.opt ? String(ctx.opt("background", defaultMode)) : defaultMode
+    readonly property real cardOpacity: ctx && ctx.opt ? Math.max(0, Math.min(1, Number(ctx.opt("bgOpacity", 1)))) : 1
     readonly property Item backdrop: ctx && mode === "blur" ? ctx.backdrop : null
     // Blur strength (0.1..1): the wallpaper behind is shrunk before it's blurred, so the blur
     // reaches much further than the effect's own radius (and costs less)
@@ -67,7 +71,9 @@ Item {
         anchors.fill: parent
         visible: g.mode !== "clear"
         radius: g.r
-        color: g.mode === "normal" ? Qt.alpha(g.tintColor, 1) : Qt.alpha(g.tintColor, g.backdrop ? g.tint : Math.max(g.tint, 0.85))
+        color: g.mode === "normal" ? Qt.alpha(g.tintColor, g.cardOpacity) : Qt.alpha(g.tintColor, g.backdrop ? g.tint : Math.max(g.tint, 0.85))
+        // (an all see-through card keeps no edge either)
+        opacity: g.mode === "normal" ? Math.min(1, g.cardOpacity * 4) : 1
         border.width: Theme.outlineW
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Qt.alpha(Theme.text, 0.06)
     }

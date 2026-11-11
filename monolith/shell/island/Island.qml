@@ -86,7 +86,9 @@ PanelWindow {
     readonly property real restW: Theme.barWidth(width, bar.needWidth)
     readonly property bool barShort: restW < width - 2 * Theme.barMargin - 1   // a full bar that doesn't reach the screen's sides
     // the bar can be off on some screens (Settings → Bar); menus still open there
-    readonly property bool barHere: (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) === -1
+    // (a bar down the side is its own window, SideBar: the island then only holds the menus)
+    readonly property bool side: Theme.barSide !== ""
+    readonly property bool barHere: !side && (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) === -1
     // the bar's own background shows when it's open, or per its opacity setting
     readonly property bool barSolid: shown || toastOn || Theme.barOpacity >= 0.99
 
@@ -95,7 +97,8 @@ PanelWindow {
     // (each menu can have its own place, Settings → Menus & launcher)
     readonly property string place: Store.get("menus.positions." + HubState.page, "") || Store.get("menus.position", "top")
     // a floating bar (Solid, Modular) has nothing to grow out of: its menus open just under it
-    readonly property bool docked: place === "top" && !Theme.barFloats
+    // (nor does a bar down the side: its menus open beside it)
+    readonly property bool docked: place === "top" && !Theme.barFloats && !side
     // the island grows into the menu; a full-width bar stays put and the menu drops out of it
     readonly property bool grown: shown && docked && !Theme.fullBar
     readonly property bool dropped: shown && docked && Theme.fullBar
@@ -103,7 +106,7 @@ PanelWindow {
     // a new notification drops out of the island (on the screen you're using) while it's closed
     // (on the screen it came up on: it stays there when you switch windows to another screen)
     readonly property var myToasts: Notifs.popupsOn(modelData.name, Quickshell.screens.length ? Quickshell.screens[0].name : "").filter(p => !Notifs.leaving[p.id])
-    readonly property bool toastOn: !shown && myToasts.length > 0 && Store.get("notifications.style", "island") !== "corner"
+    readonly property bool toastOn: !side && !shown && myToasts.length > 0 && Store.get("notifications.style", "island") !== "corner"
     readonly property var toast: myToasts.length > 0 ? myToasts[0] : null
     // pages stay loaded while the island shrinks back after being open (not for a toast)
     property bool wasOpen: false
@@ -457,14 +460,17 @@ PanelWindow {
         Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
         // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
         // "top" means by the bar: next to it at the bottom when the bar is there
-        readonly property string spot: win.bottom && win.place.startsWith("top") ? "bottom" + win.place.slice(3) : win.place
+        // (by a bar down the side: beside it, in the middle of that edge)
+        readonly property string spot: win.side && win.place.startsWith("top") ? Theme.barSide : (win.bottom && win.place.startsWith("top") ? "bottom" + win.place.slice(3) : win.place)
         readonly property bool onLeft: spot.indexOf("left") !== -1
         readonly property bool onRight: spot.indexOf("right") !== -1
         readonly property bool onTop: spot.startsWith("top")
         readonly property bool onBottom: spot.startsWith("bottom")
-        x: onLeft ? 16 : (onRight ? win.width - width - 16 : Math.round((win.width - width) / 2))
         // clear of the bar, wherever it is
-        readonly property real topRoom: win.bottom ? 16 : Theme.islandH + Theme.barMargin + 14
+        readonly property real leftRoom: 16 + (Theme.barSide === "left" ? Theme.sideRoom : 0)
+        readonly property real rightRoom: 16 + (Theme.barSide === "right" ? Theme.sideRoom : 0)
+        x: onLeft ? leftRoom : (onRight ? win.width - width - rightRoom : Math.round((win.width - width) / 2))
+        readonly property real topRoom: win.bottom || win.side ? 16 : Theme.islandH + Theme.barMargin + 14
         readonly property real bottomRoom: win.bottom ? Theme.islandH + Theme.barMargin + 14 : 16
         y: onTop ? topRoom : (onBottom ? win.height - height - bottomRoom : Math.max(topRoom, Math.min(win.height - height - bottomRoom, Math.round((win.height - height) / 2))))
         radius: Theme.islandRadius

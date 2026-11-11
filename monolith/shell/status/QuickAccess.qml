@@ -99,10 +99,10 @@ PanelWindow {
 
     // ── the edges: resting on one for a moment brings the bar out there ──
     // (not along the bar's own edge, and the dock's edge only away from the dock's middle)
-    readonly property real topRoom: Theme.barBottom ? 0 : Theme.islandH + Theme.barMargin + 6
-    readonly property real bottomRoom: Theme.barBottom ? Theme.islandH + Theme.barMargin + 6 : 0
+    readonly property real topRoom: Theme.barEdge === "top" ? Theme.islandH + Theme.barMargin + 6 : 0
+    readonly property real bottomRoom: Theme.barEdge === "bottom" ? Theme.islandH + Theme.barMargin + 6 : 0
     readonly property string dockEdge: Store.get("dock.enabled", true) !== false ? Store.get("dock.position", "bottom") : ""
-    function stripOn(e) { return enabled && !out && edges.indexOf(e) !== -1 && !(e === "top" && !Theme.barBottom) && !(e === "bottom" && Theme.barBottom); }
+    function stripOn(e) { return enabled && !out && edges.indexOf(e) !== -1 && e !== Theme.barEdge; }
     function dockGap(e) { return dockEdge === e ? 0.25 : 0; }
     QtObject {
         id: strips
