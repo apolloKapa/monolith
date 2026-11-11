@@ -186,6 +186,20 @@ PanelWindow {
             anchors.fill: parent
             pressAndHoldInterval: 1000
             onPressAndHold: dock.editing = true
+            // editing (hold the dock): drag it by its background to move it closer to or further
+            // from its edge (Settings → Dock → How high it sits); the icons still drag to reorder
+            cursorShape: dock.editing ? (pressed ? Qt.ClosedHandCursor : Qt.SizeVerCursor) : Qt.ArrowCursor
+            property point startPos
+            property real startMargin: 0
+            onPressed: mouse => { startPos = mapToItem(null, mouse.x, mouse.y); startMargin = Number(Store.get("dock.margin", 12)); }
+            onPositionChanged: mouse => {
+                if (!pressed || !dock.editing) return;
+                const p = mapToItem(null, mouse.x, mouse.y);
+                const d = dock.side === "bottom" ? startPos.y - p.y : dock.side === "top" ? p.y - startPos.y
+                        : dock.side === "left" ? p.x - startPos.x : startPos.x - p.x;
+                const v = Math.round(Math.max(0, Math.min(400, startMargin + d)));
+                if (v !== Number(Store.get("dock.margin", 12))) Store.set("dock.margin", v);
+            }
         }
         PanelFx { anchors.fill: parent; radius: capsule.radius; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge) }
         Grid {

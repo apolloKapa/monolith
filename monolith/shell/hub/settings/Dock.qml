@@ -86,8 +86,11 @@ ColumnLayout {
     }
     SettingRow {
         key: "dock.margin"; def: 12;
-        icon: "vertical_align_bottom"; title: "Distance from the edge"
-        NumberBox { from: 0; to: 80; slideTo: 40; unit: "px"; value: Number(Store.get("dock.margin", 12)); onMoved: v => Store.set("dock.margin", v) }
+        readonly property string side: Store.get("dock.position", "bottom")
+        icon: side === "top" ? "vertical_align_top" : (side === "bottom" ? "vertical_align_bottom" : "width")
+        title: side === "bottom" ? "How high it sits" : (side === "top" ? "How low it sits" : "Distance from the edge")
+        desc: "How far it is from the edge of the screen. You can also hold the dock for a second and drag it by its background"
+        NumberBox { from: 0; to: 400; slideTo: 200; unit: "px"; value: Number(Store.get("dock.margin", 12)); onMoved: v => Store.set("dock.margin", v) }
     }
     SettingRow {
         key: "dock.spacing"; def: 4;
