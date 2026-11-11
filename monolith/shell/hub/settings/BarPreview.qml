@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Widgets
 import "../../core"
 import "../../ui"
 import "../../island"
@@ -75,14 +76,14 @@ Column {
             border.width: 1; border.color: Qt.alpha("#ffffff", 0.10)
             CardShadow {}
 
-            Rectangle {
+            // (clipped to its rounded shape: a plain clip cuts square corners)
+            ClippingRectangle {
                 id: screenBox
                 x: monitor.bezel; y: monitor.bezel
                 width: monitor.width - 2 * monitor.bezel
                 height: monitor.height - 2 * monitor.bezel
                 radius: Theme.corner(80, 8)
                 color: Theme.container
-                clip: true
                 readonly property real k: width / pv.sw
                 readonly property real barTop: Theme.barBottom ? 0 : (Theme.islandH + 2 * Theme.barMargin) * k
                 readonly property real barBottomRoom: Theme.barBottom ? (Theme.islandH + 2 * Theme.barMargin) * k : 0
@@ -175,14 +176,13 @@ Column {
         }
 
         // ── the bar, close up ──
-        Rectangle {
+        ClippingRectangle {
             id: closeUp
             x: 12; width: parent.width - 24
             anchors.top: stand.bottom; anchors.topMargin: 14
             height: Theme.islandH + 28
             radius: Theme.corner(80, 10)
             color: Theme.containerHigh
-            clip: true
             Image {
                 anchors.fill: parent
                 source: pv.scr ? Wall.url(Wall.pathFor(pv.scr.name)) : ""

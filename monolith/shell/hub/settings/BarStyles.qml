@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Widgets
 import "../../core"
 import "../../ui"
 
@@ -60,10 +61,10 @@ Flow {
             transform: Translate { y: sc.hovered && !sc.pressed ? -2 : 0; Behavior on y { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } } }
 
             // a little screen
-            Rectangle {
+            ClippingRectangle {
                 id: mini
                 x: 10; y: 10; width: parent.width - 20; height: 78
-                radius: Theme.corner(60, 8); clip: true
+                radius: Theme.corner(60, 8)
                 color: Theme.m("surface_container_lowest", "#101014")
                 readonly property color barC: Qt.alpha(Theme.frame, 1)
                 Image {
