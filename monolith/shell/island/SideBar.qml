@@ -64,7 +64,7 @@ PanelWindow {
             bodyW: box.height
             height: box.width
             ear: win.ear
-            r: Theme.square ? 0 : height / 2
+            r: Theme.barRound(height)
             rotation: win.onLeft ? -90 : 90
             fill: win.fill
             shadow: win.shadowed
@@ -112,6 +112,6 @@ PanelWindow {
     Region {
         id: blurShape
         item: box
-        radius: Theme.barStyle === "solid" ? Theme.barRound(box.width) : (Theme.barStyle === "island" ? (Theme.square ? 0 : box.width / 2) : 0)
+        radius: Theme.barStyle === "solid" ? Theme.barRound(box.width) : (Theme.barStyle === "island" ? Theme.barRound(box.width) : 0)
     }
 }

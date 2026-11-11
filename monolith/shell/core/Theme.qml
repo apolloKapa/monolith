@@ -199,8 +199,10 @@ Singleton {
     readonly property real islandPad: 12        // inside, around the content
     readonly property real islandGap: 8         // between the island and the screen edge when open
     readonly property real islandRadius: square ? 0 : Math.max(14, radius + 12)  // its lower corners when open
-    // a floating bar's (Solid, Modular) corners: a pill, square in square styles
-    function barRound(h) { return square ? 0 : Math.min(h / 2, islandRadius + 6); }
+    // the bar's corners (the island at rest, Solid, Modular's pills): they follow Appearance →
+    // Corner rounding like everything else (a pill at the default and above, squarer below it,
+    // square in square styles)
+    function barRound(h) { return square ? 0 : Math.min(h / 2, radius + 8); }
     // the Frame draws the bar's background itself (one shape, so see-through styles don't double up)
     readonly property bool frameBand: barStyle === "frame" && Store.get("status.autohide", false) !== true
     // the island's "spring": a curve that overshoots a little and settles. (Not Qt's

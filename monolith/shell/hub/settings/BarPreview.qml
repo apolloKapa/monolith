@@ -22,7 +22,7 @@ Column {
         property real screenW: pv.sw
         bodyW: Theme.barWidth(screenW, real.needWidth)
         height: Theme.islandH
-        r: Theme.fullBar ? (bodyW < screenW - 2 * Theme.barMargin - 1 ? Theme.islandRadius / 2 : 0) : (Theme.square ? 0 : height / 2)
+        r: Theme.fullBar ? (bodyW < screenW - 2 * Theme.barMargin - 1 ? Theme.islandRadius / 2 : 0) : Theme.barRound(height)
         ear: Theme.fullBar ? 0 : Theme.islandEar
         fill: Theme.barFloats ? "transparent" : (Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
         shadow: !Theme.barFloats && Theme.barOpacity > 0.3

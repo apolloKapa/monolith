@@ -63,6 +63,7 @@ ColumnLayout {
                         only: [sp.module]
                         clockStyleAs: sp.module === "clock" ? card.modelData[0] : ""
                         wsStyleAs: sp.module === "workspaces" ? card.modelData[0] : ""
+                        wsSample: sp.module === "workspaces"
                     }
                 }
                 Label { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 8; text: card.modelData[1]; strong: card.on; font.pixelSize: Theme.sizeSmall; color: card.on ? Theme.onAccentContainer : Theme.text }
@@ -370,17 +371,76 @@ ColumnLayout {
 
     // the modules' looks: each shown as the module itself
     Label { text: "Modules"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
+    // the clock: one big live preview, and a toggle for each of its parts
     Label { text: "Clock"; strong: true; Layout.leftMargin: 6 }
-    StylePick {
-        module: "clock"
-        opts: [["stacked", "Stacked"], ["simple", "Time"], ["full", "Time + date"], ["seconds", "Seconds"]]
-        value: Store.get("bar.clockStyle", "stacked")
-        onPicked: v => Store.set("bar.clockStyle", v)
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: Math.max(110, clockBox.height + 40)
+        radius: Theme.corner(80, 10)
+        color: Theme.container
+        border.width: Theme.outlineW; border.color: Theme.outlineColor
+        // the clock module on a piece of bar, twice its real size
+        readonly property real k: 2
+        Rectangle {
+            id: clockBox
+            anchors.centerIn: parent
+            width: (clockPrev.implicitWidth + 16) * parent.k
+            height: Theme.islandH * parent.k
+            radius: Theme.barRound(Theme.islandH) * parent.k
+            color: Theme.frame
+            Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+            IslandBar {
+                id: clockPrev
+                enabled: false
+                only: ["clock"]
+                scale: parent.parent.k
+                transformOrigin: Item.Center
+                anchors.centerIn: parent
+            }
+        }
+        Label {
+            anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 8
+            text: "Twice its real size"; muted: true; font.pixelSize: Theme.sizeSmall - 2
+        }
+    }
+    SettingRow {
+        key: "bar.clock.seconds";
+        icon: "timer"; title: "Seconds"; desc: "Hours, minutes and seconds"
+        Toggle { checked: clockPrev.clockSeconds; onToggled: on => Store.set("bar.clock.seconds", on) }
+    }
+    SettingRow {
+        key: "bar.clock.stackTime";
+        icon: "view_agenda"; title: "Hours over minutes"; desc: "The time stacked in lines instead of one row"
+        Toggle { checked: clockPrev.clockStackTime; onToggled: on => Store.set("bar.clock.stackTime", on) }
+    }
+    SettingRow {
+        key: "bar.clock.hour12";
+        icon: "schedule"; title: "12-hour time"; desc: "With AM / PM"
+        Toggle { checked: clockPrev.clock12; onToggled: on => Store.set("bar.clock.hour12", on) }
+    }
+    SettingRow {
+        key: "bar.clock.date";
+        icon: "calendar_today"; title: "Date"; desc: "The date beside the time"
+        Toggle { checked: clockPrev.clockDate; onToggled: on => Store.set("bar.clock.date", on) }
+    }
+    SettingRow {
+        key: "bar.clock.dateLayout";
+        visible: clockPrev.clockDate
+        icon: "splitscreen"; title: "Date layout"; desc: clockPrev.clockDateLayout === "stacked" ? "Two small lines beside the time" : "One line beside the time"
+        Segmented { width: 240; opts: [["stacked", "Stacked"], ["inline", "One line"]]; value: clockPrev.clockDateLayout; onPicked: v => Store.set("bar.clock.dateLayout", v) }
+    }
+    SettingRow {
+        key: "bar.clock.weekday";
+        visible: clockPrev.clockDate
+        icon: "event"; title: "Day of the week"; desc: "Its name with the date"
+        Toggle { checked: clockPrev.clockWeekday; onToggled: on => Store.set("bar.clock.weekday", on) }
     }
     Label { text: "Workspaces"; strong: true; Layout.leftMargin: 6; Layout.topMargin: 4 }
+    Label { text: "Shown with four sample workspaces: the second open, the first three with windows"; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6 }
     StylePick {
         module: "workspaces"
-        opts: [["pills", "Pills"], ["dots", "Dots"], ["numbers", "Numbers"]]
+        opts: [["pills", "Pills"], ["dots", "Dots"], ["lines", "Lines"], ["rings", "Rings"], ["squares", "Squares"],
+               ["numbers", "Numbers"], ["numberPills", "Numbered pill"], ["bubbles", "Bubbles"]]
         value: Store.get("bar.workspaces", "pills")
         onPicked: v => Store.set("bar.workspaces", v)
     }

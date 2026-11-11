@@ -41,9 +41,46 @@ Item {
     property var only: null
     property string clockStyleAs: ""
     property string wsStyleAs: ""
+    // previews show made-up workspaces (four, the second one open, the first and third with
+    // windows), so every style has something to show whatever your screen has
+    property bool wsSample: false
+    readonly property var sampleWorkspaces: [{ id: -1, idx: 1, is_active: false, busy: true }, { id: -2, idx: 2, is_active: true, busy: true },
+                                             { id: -3, idx: 3, is_active: false, busy: true }, { id: -4, idx: 4, is_active: false, busy: false }]
     readonly property var zones: only ? { left: only, center: [], right: [] } : (Store.get("bar.modules", null) || defaults)
-    readonly property string clockStyle: clockStyleAs || Store.get("bar.clockStyle", "stacked")      // stacked | simple | full | seconds
-    readonly property string wsStyle: wsStyleAs || Store.get("bar.workspaces", "pills")              // pills | dots | numbers
+    readonly property string clockStyle: clockStyleAs || Store.get("bar.clockStyle", "stacked")      // stacked | simple | full | seconds (the old presets)
+    // the clock's parts (Settings → Bar → Clock), each a toggle; unset, they follow the old preset
+    function clockOpt(k, d) { const v = Store.get("bar.clock." + k, null); return v === null || v === undefined ? d : v; }
+    readonly property bool clockSeconds: clockOpt("seconds", clockStyle === "seconds") === true
+    readonly property bool clockDate: clockOpt("date", clockStyle === "stacked" || clockStyle === "full") === true
+    readonly property string clockDateLayout: String(clockOpt("dateLayout", clockStyle === "full" ? "inline" : "stacked"))   // stacked | inline
+    readonly property bool clockWeekday: clockOpt("weekday", true) === true
+    readonly property bool clockStackTime: clockOpt("stackTime", false) === true      // hours over minutes
+    readonly property bool clock12: clockOpt("hour12", false) === true
+    // the time's lines: one ("14:05:09"), or stacked (always on a vertical bar)
+    readonly property bool timeStacked: vertical || clockStackTime
+    function timeText(d) {
+        // (Qt counts 12-hour only with AM/PM in the same format: "h" alone gave 0 for 12 AM)
+        const parts = [clock12 ? Qt.formatTime(d, "h AP").split(" ")[0] : Qt.formatTime(d, "HH"), Qt.formatTime(d, "mm")];
+        if (clockSeconds) parts.push(Qt.formatTime(d, "ss"));
+        const t = parts.join(timeStacked ? "\n" : ":");
+        return clock12 ? t + (timeStacked ? "\n" : " ") + Qt.formatTime(d, "AP") : t;
+    }
+    readonly property string wsStyle: wsStyleAs || Store.get("bar.workspaces", "pills")
+    // each workspace style: how long along the bar and how thick across, how round, and how it's
+    // filled, edged and numbered when it's open, has windows, or is empty
+    function wsLook(st, active, busy) {
+        const A = Theme.accent, faint = Theme.control, mid = Theme.subtext;
+        switch (st) {
+        case "dots":        return { along: active ? 11 : 9, across: active ? 11 : 9, r: 1, fill: active ? A : (busy ? mid : faint), edge: 0, num: false };
+        case "numbers":     return { along: 22, across: 22, r: 1, fill: active ? A : "transparent", edge: 0, num: true };
+        case "numberPills": return { along: active ? 34 : 20, across: 20, r: 1, fill: active ? A : (busy ? Theme.containerHigh : "transparent"), edge: 0, num: true };
+        case "lines":       return { along: active ? 26 : 16, across: 4, r: 1, fill: active ? A : (busy ? mid : faint), edge: 0, num: false };
+        case "squares":     return { along: 13, across: 13, r: 0.3, fill: active ? A : (busy ? mid : "transparent"), edge: active || busy ? 0 : 1.5, num: false };
+        case "rings":       return { along: active ? 13 : 11, across: active ? 13 : 11, r: 1, fill: active ? A : "transparent", edge: active ? 0 : (busy ? 3 : 1.5), num: false };
+        case "bubbles":     return { along: 22, across: 22, r: 1, fill: active ? A : (busy ? Theme.containerHigh : Qt.alpha(Theme.text, 0.04)), edge: 0, num: true };
+        default:            return { along: active ? 26 : 9, across: 9, r: 1, fill: active ? A : (busy ? mid : faint), edge: 0, num: false };   // pills
+        }
+    }
 
     PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
     readonly property var sink: Pipewire.defaultAudioSink
@@ -51,7 +88,7 @@ Item {
     readonly property bool muted: sink && sink.audio ? sink.audio.muted : false
     readonly property var player: Mpris.players.values.find(p => p.isPlaying) || null
 
-    SystemClock { id: clock; precision: bar.clockStyle === "seconds" ? SystemClock.Seconds : SystemClock.Minutes }
+    SystemClock { id: clock; precision: bar.clockSeconds ? SystemClock.Seconds : SystemClock.Minutes }
 
     // a row of things, or a column of them on a vertical bar, centred across
     component Line: Grid {
@@ -153,28 +190,32 @@ Item {
     }
     Component { id: searchC; Glyph { icon: "search"; onClicked: bar.open("search") } }
 
-    // the clock, in its style
+    // the clock, made of the parts you turned on: the time (with seconds, 12-hour, hours over
+    // minutes) and the date beside it (stacked in two small lines, or on one line, with or
+    // without the day's name)
     Component {
         id: clockC
         Mod {
             onClicked: bar.open("calendar")
+            readonly property bool stackedDate: bar.clockDate && bar.clockDateLayout === "stacked" && !bar.vertical
             Text {
-                // (stacked hours over minutes on a vertical bar)
-                text: Qt.formatTime(clock.date, bar.vertical ? (bar.clockStyle === "seconds" ? "HH\nmm\nss" : "HH\nmm") : (bar.clockStyle === "seconds" ? "HH:mm:ss" : "HH:mm"))
+                text: bar.timeText(clock.date)
                 horizontalAlignment: Text.AlignHCenter
-                lineHeight: bar.vertical ? 0.9 : 1
+                // (stacked, the lines sit close; next to a stacked date the time is a bit bigger)
+                lineHeight: bar.timeStacked ? 0.82 : 1
                 color: Theme.text
-                font.family: Theme.fontFamily; font.pixelSize: bar.clockStyle === "stacked" ? 16 : 14; font.weight: Font.Bold
+                font.family: Theme.fontFamily; font.weight: Font.Bold
+                font.pixelSize: bar.timeStacked && !bar.vertical ? (bar.clockSeconds || bar.clock12 ? 9 : 12) : (parent.parent.stackedDate ? 16 : 14)
             }
             Column {
-                visible: bar.clockStyle === "stacked" && !bar.vertical
+                visible: parent.parent.stackedDate
                 spacing: -2
-                Text { text: Qt.formatDate(clock.date, "dddd"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1; font.weight: Font.Medium }
+                Text { visible: bar.clockWeekday; text: Qt.formatDate(clock.date, "dddd"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1; font.weight: Font.Medium }
                 Text { text: Qt.formatDate(clock.date, "d MMM"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1 }
             }
             Text {
-                visible: bar.clockStyle === "full" && !bar.vertical
-                text: Qt.formatDate(clock.date, "ddd d MMM")
+                visible: bar.clockDate && bar.clockDateLayout === "inline" && !bar.vertical
+                text: Qt.formatDate(clock.date, bar.clockWeekday ? "ddd d MMM" : "d MMM")
                 color: Theme.subtext
                 font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall
             }
@@ -199,32 +240,35 @@ Item {
             Line {
                 id: ws
                 anchors.centerIn: parent
-                spacing: bar.wsStyle === "numbers" ? 3 : 5
+                spacing: ["numbers", "numberPills", "bubbles"].indexOf(bar.wsStyle) !== -1 ? 3 : 5
                 Repeater {
-                    model: Niri.workspacesOn(bar.screenName)
+                    model: bar.wsSample ? bar.sampleWorkspaces : Niri.workspacesOn(bar.screenName)
                     Rectangle {
                         required property var modelData
                         readonly property bool active: modelData.is_active
-                        readonly property bool busy: Niri.workspaceHasWindows(modelData.id)
-                        // (the active pill stretches along the bar: down it on a vertical one)
-                        readonly property real along: bar.wsStyle === "numbers" ? 22 : (bar.wsStyle === "dots" ? 9 : (active ? 26 : 9))
-                        readonly property real across: bar.wsStyle === "numbers" ? 22 : 9
+                        readonly property bool busy: modelData.busy !== undefined ? modelData.busy : Niri.workspaceHasWindows(modelData.id)
+                        readonly property var look: bar.wsLook(bar.wsStyle, active, busy)
+                        // (the open one stretches along the bar: down it on a vertical one)
+                        readonly property real along: look.along
+                        readonly property real across: look.across
                         width: bar.vertical ? across : along
                         height: bar.vertical ? along : across
-                        radius: Theme.corner(height)
-                        color: active ? Theme.accent : (bar.wsStyle === "numbers" ? "transparent" : (busy ? Theme.subtext : Theme.control))
-                        border.width: bar.wsStyle === "dots" && !active && busy ? 0 : 0
+                        // round as the theme's corners allow (squares: a little rounded)
+                        radius: look.r >= 1 ? Theme.corner(Math.min(width, height)) : Math.min(Math.min(width, height) / 2, Theme.radius * look.r)
+                        color: look.fill
+                        border.width: look.edge
+                        border.color: busy ? Theme.subtext : Theme.control
                         Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                         Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                         Behavior on color { ColorAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
                         Text {
-                            visible: bar.wsStyle === "numbers"
+                            visible: parent.look.num
                             anchors.centerIn: parent
                             text: parent.modelData.idx
                             color: parent.active ? Theme.onAccent : (parent.busy ? Theme.text : Theme.faint)
                             font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall; font.weight: Font.DemiBold
                         }
-                        MouseArea { anchors.fill: parent; anchors.margins: -4; cursorShape: Qt.PointingHandCursor; onClicked: Niri.focusWorkspace(parent.modelData.idx) }
+                        MouseArea { anchors.fill: parent; anchors.margins: -4; enabled: !bar.wsSample; cursorShape: Qt.PointingHandCursor; onClicked: Niri.focusWorkspace(parent.modelData.idx) }
                     }
                 }
             }
