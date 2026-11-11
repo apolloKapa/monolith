@@ -32,7 +32,16 @@ Page {
     // ── favourites: pinned apps, shown as a grid above everything (searching too) ──
     // (desktop ids; the earlier Monolith's list to start with). Right-click an app to pin or unpin.
     readonly property var favIds: Store.get("search.favorites", null) || Prefs.favorites
-    readonly property var favs: favIds.map(id => DesktopEntries.byId(id) || DesktopEntries.byId(id + ".desktop")).filter(e => e)
+    readonly property var favs: favIds.map(id => DesktopEntries.byId(id) || DesktopEntries.byId(id + ".desktop")).filter(e => e && !isHidden(e))
+    // apps you hid (right-click → Hide, or Settings → Menus & launcher → Hidden apps): still
+    // installed, just not in the launcher
+    readonly property var hiddenIds: Store.get("search.hidden", []) || []
+    function isHidden(entry) { return hiddenIds.indexOf(entry.id) !== -1; }
+    function hide(entry) { if (!isHidden(entry)) Store.set("search.hidden", hiddenIds.concat([entry.id])); }
+    // the right-click menu: which app, and where (in the page)
+    property var menuEntry: null
+    property point menuAt: Qt.point(0, 0)
+    function openMenu(entry, item) { menuEntry = entry; menuAt = item.mapToItem(page, item.width / 2, item.height / 2); }
     readonly property int favColumns: Number(Store.get("search.favColumns", 6))
     // favourites stay at the top while you search too (the results list under them)
     readonly property bool showFavs: favs.length > 0 && Store.get("search.showFavorites", true) !== false
@@ -62,7 +71,7 @@ Page {
     // how often each app was opened from here, for the order
     // how often each app was opened (ranks them first), unless that's switched off
     function uses(id) { return Store.get("search.ranking", true) === false ? 0 : Number(Store.get("launches." + id.replace(/\./g, "_"), 0)); }
-    readonly property var apps: { let _ = Store.revision; return DesktopEntries.applications.values.filter(a => !a.noDisplay)
+    readonly property var apps: { let _ = Store.revision; return DesktopEntries.applications.values.filter(a => !a.noDisplay && hiddenIds.indexOf(a.id) === -1)
         .slice().sort((a, b) => (uses(b.id) - uses(a.id)) || a.name.localeCompare(b.name)); }
 
     // category tabs over the apps while nothing is typed (Settings → Launcher): the freedesktop
@@ -213,7 +222,7 @@ Page {
                     border.color: Theme.accent
                     opacity: dragged ? 0.3 : 1
                     onClicked: page.launch(modelData)
-                    onRightClicked: page.toggleFav(modelData)
+                    onRightClicked: page.openMenu(modelData, favTile)
                     // drag it (move a little while holding) to put it somewhere else
                     MouseArea {
                         anchors.fill: parent
@@ -286,12 +295,13 @@ Page {
         boundsBehavior: Flickable.StopAtBounds
         model: page.showGrid ? page.shownApps : []
         delegate: Pressable {
+            id: gridTile
             required property var modelData
             width: appGrid.cellWidth - 4
             height: 88
             color: hovered ? Theme.containerHigh : "transparent"
             onClicked: page.launch(modelData)
-            onRightClicked: page.toggleFav(modelData)
+            onRightClicked: page.openMenu(modelData, gridTile)
             Column {
                 anchors.centerIn: parent
                 width: parent.width - 8
@@ -327,8 +337,8 @@ Page {
             height: page.rowH
             color: "transparent"
             onClicked: page.activate(index)
-            // right-click an app: pin it to the favourites, or unpin it
-            onRightClicked: if (isApp) page.toggleFav(modelData.entry)
+            // right-click an app: favourite or not, or hide it
+            onRightClicked: if (isApp) page.openMenu(modelData.entry, row)
 
             readonly property bool isApp: modelData.kind === "app"
             readonly property string title: isApp ? modelData.entry.name : modelData.name
@@ -380,4 +390,50 @@ Page {
             Icon { visible: row.isApp && page.isFav(row.modelData.entry); anchors.right: parent.right; anchors.rightMargin: 14; anchors.verticalCenter: parent.verticalCenter; name: "star"; filled: true; size: 16; color: Theme.accent }
         }
     }
+
+    // ── an app's right-click menu ──
+    MouseArea {
+        anchors.fill: parent
+        z: 90
+        visible: page.menuEntry !== null
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: page.menuEntry = null
+    }
+    Rectangle {
+        id: appMenu
+        z: 91
+        visible: page.menuEntry !== null
+        width: 230
+        height: menuCol.implicitHeight + 12
+        x: Math.max(4, Math.min(page.width - width - 4, page.menuAt.x - width / 2))
+        y: Math.max(4, Math.min(page.height - height - 4, page.menuAt.y))
+        radius: Theme.corner(80, 6)
+        color: Theme.containerHigh
+        border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
+        CardShadow {}
+        component MenuRow: Pressable {
+            property string icon: ""
+            property string text: ""
+            property bool danger: false
+            width: menuCol.width; height: 36
+            color: hovered ? Theme.control : "transparent"
+            Icon { x: 10; anchors.verticalCenter: parent.verticalCenter; name: parent.icon; size: 18; color: parent.danger ? Theme.danger : Theme.text }
+            Label { x: 38; anchors.verticalCenter: parent.verticalCenter; text: parent.text; color: parent.danger ? Theme.danger : Theme.text }
+        }
+        Column {
+            id: menuCol
+            x: 6; y: 6
+            width: parent.width - 12
+            Label { x: 10; width: parent.width - 20; height: 28; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight; text: page.menuEntry ? page.menuEntry.name : ""; strong: true; font.pixelSize: Theme.sizeSmall }
+            MenuRow { icon: "open_in_new"; text: "Open"; onClicked: { const e = page.menuEntry; page.menuEntry = null; page.launch(e); } }
+            MenuRow {
+                readonly property bool fav: !!page.menuEntry && page.isFav(page.menuEntry)
+                icon: fav ? "star_border" : "star"
+                text: fav ? "Remove from favourites" : "Add to favourites"
+                onClicked: { page.toggleFav(page.menuEntry); page.menuEntry = null; }
+            }
+            MenuRow { icon: "visibility_off"; text: "Hide from the launcher"; danger: true; onClicked: { page.hide(page.menuEntry); page.menuEntry = null; } }
+        }
+    }
+    Keys.onEscapePressed: event => { if (page.menuEntry) { page.menuEntry = null; event.accepted = true; } else event.accepted = false; }
 }
