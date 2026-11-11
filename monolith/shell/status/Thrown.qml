@@ -11,6 +11,21 @@ PanelWindow {
     required property var modelData
     screen: modelData
     readonly property var mine: Throw.on_(modelData.name)
+    // the copies, one row each. (The Repeater used to take `mine` itself: that's a new list every
+    // time one is launched or lands, so every copy was rebuilt, back where it was grabbed and
+    // "held", and the ones already thrown never got their let-go again: several thrown at once
+    // left frozen cards on the screen.) Only rows that came or went change now.
+    ListModel { id: rows }
+    onMineChanged: {
+        const ids = mine.map(f => f.id);
+        for (let i = rows.count - 1; i >= 0; i--)
+            if (ids.indexOf(rows.get(i).fid) === -1) rows.remove(i);
+        for (const f of mine) {
+            let have = false;
+            for (let i = 0; i < rows.count; i++) if (rows.get(i).fid === f.id) { have = true; break; }
+            if (!have) rows.append({ fid: f.id, url: f.url, fx: f.x, fy: f.y, fw: f.w, fh: f.h });
+        }
+    }
     WlrLayershell.namespace: "monolith-thrown"
     WlrLayershell.layer: WlrLayer.Overlay
     exclusionMode: ExclusionMode.Ignore
@@ -19,13 +34,20 @@ PanelWindow {
     mask: Region {}
 
     Repeater {
-        model: win.mine
+        model: rows
         Image {
             id: card
-            required property var modelData
-            source: modelData.url
-            width: modelData.w
-            height: modelData.h
+            required property int fid
+            required property string url
+            required property real fx
+            required property real fy
+            required property real fw
+            required property real fh
+            // (what the rest reads, as before)
+            readonly property var modelData: ({ id: fid, x: fx, y: fy, w: fw, h: fh })
+            source: url
+            width: fw
+            height: fh
             smooth: true
             // held: where the pointer has it; then the flight (px, px/s, gravity px/s²)
             property string phase: "held"        // held | fall | slide | back
@@ -50,10 +72,13 @@ PanelWindow {
                 onFinished: { Throw.home(card.modelData.id); Qt.callLater(() => Throw.land(card.modelData.id)); }
             }
             property int frames: 0
+            // never stuck: held with no word from its card for a while (the card went away
+            // mid-swipe), it springs back and goes
+            Timer { id: stale; interval: 8000; running: card.phase === "held"; onTriggered: if (card.phase === "held") { card.phase = "back"; backAnim.restart(); } }
 
             Connections {
                 target: Throw
-                function onDragTo(id, d) { if (id === card.modelData.id && card.phase === "held") card.dx = d; }
+                function onDragTo(id, d) { if (id === card.modelData.id && card.phase === "held") { card.dx = d; stale.restart(); } }
                 function onLetGo(id, vx, vy, mode) {
                     if (id !== card.modelData.id) return;
                     card.px = card.modelData.x + card.dx; card.py = card.modelData.y;
