@@ -192,23 +192,60 @@ WlSessionLock {
                 anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 10
                 Repeater {
-                    // [icon, action, its name]: restart and power off need a second click
+                    // [icon, action, its name]: restart and power off have to be held for a
+                    // second: the button opens up with its name and fills red from the left
                     model: [["bedtime", "suspend", "Sleep"], ["restart_alt", "reboot", "Restart"], ["power_settings_new", "poweroff", "Power off"]]
                     Pressable {
                         id: lb
                         required property var modelData
-                        property bool armed: false
-                        width: armed ? lbt.implicitWidth + 28 : 44; height: 44
+                        readonly property bool held: modelData[1] !== "suspend"
+                        property real level: 0
+                        property bool done: false
+                        readonly property bool open: held && (pressed || level > 0.001)
+                        width: open ? lbt.implicitWidth + 56 : 44; height: 44
                         Behavior on width { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
-                        color: armed ? Theme.danger : Qt.alpha(Theme.frame, 0.75)
-                        onClicked: {
-                            if (modelData[1] !== "suspend" && !armed) { armed = true; lbDisarm.restart(); return; }
-                            armed = false;
-                            Power.run(modelData[1]);
+                        color: Qt.alpha(Theme.frame, 0.75)
+                        onPressedChanged: {
+                            if (!held || done) return;
+                            if (pressed) { lbDrain.stop(); lbFill.restart(); }
+                            else if (level < 1) { lbFill.stop(); lbDrain.restart(); }
                         }
-                        Timer { id: lbDisarm; interval: 3000; onTriggered: lb.armed = false }
-                        Icon { visible: !lb.armed; anchors.centerIn: parent; name: lb.modelData[0]; size: 20 }
-                        Text { id: lbt; visible: lb.armed; anchors.centerIn: parent; text: lb.modelData[2] + "?"; color: Theme.m("on_error", "#ffffff"); font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.Bold }
+                        onClicked: if (!held) Power.run(modelData[1])
+                        // a real second, whatever the animation speed
+                        NumberAnimation {
+                            id: lbFill
+                            target: lb; property: "level"; to: 1
+                            duration: Math.max(1, 1000 * (1 - lb.level))
+                            onFinished: if (lb.level >= 1) { lb.done = true; Power.run(lb.modelData[1]); lbUndo.restart(); }
+                        }
+                        NumberAnimation { id: lbDrain; target: lb; property: "level"; to: 0; duration: Theme.ms(320 * lb.level + 1); easing.type: Easing.OutCubic }
+                        Timer { id: lbUndo; interval: 2500; onTriggered: { lb.done = false; lbDrain.restart(); } }
+                        Row {
+                            id: lbFace
+                            anchors.centerIn: parent
+                            spacing: 8
+                            Icon { name: lb.modelData[0]; size: 20; anchors.verticalCenter: parent.verticalCenter }
+                            Text { id: lbt; visible: lb.open; text: "Hold to " + lb.modelData[2].toLowerCase(); color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
+                        }
+                        // the red, cut to the round button; the icon and name light on it
+                        Item {
+                            anchors.fill: parent
+                            visible: lb.level > 0.001
+                            layer.enabled: visible
+                            layer.effect: MultiEffect { maskEnabled: true; maskSource: lbMask; maskThresholdMin: 0.5; maskSpreadAtMin: 1.0 }
+                            Rectangle { width: parent.width * lb.level; height: parent.height; color: Theme.danger }
+                            Item {
+                                width: parent.width * lb.level; height: parent.height
+                                clip: true
+                                Row {
+                                    x: lbFace.x; y: lbFace.y
+                                    spacing: 8
+                                    Icon { name: lb.modelData[0]; size: 20; filled: true; color: Theme.m("on_error", "#ffffff"); anchors.verticalCenter: parent.verticalCenter }
+                                    Text { visible: lb.open; text: lbt.text; color: Theme.m("on_error", "#ffffff"); font: lbt.font; anchors.verticalCenter: parent.verticalCenter }
+                                }
+                            }
+                        }
+                        Rectangle { id: lbMask; anchors.fill: parent; radius: lb.radius; visible: false; layer.enabled: true }
                     }
                 }
             }

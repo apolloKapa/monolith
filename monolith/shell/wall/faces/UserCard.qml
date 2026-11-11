@@ -74,17 +74,17 @@ FaceBase {
                         Behavior on scale { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutQuart } }
                         property real level: 0
                         property bool done: false
-                        WaveFill { anchors.fill: parent; radius: act.radius; value: act.level; color: act.modelData[3]; live: f.live; keepMoving: act.level > 0 && act.level < 1; maxAmp: 8 }
+                        // held, it fills up sideways from the left (a whole second: full = it happens)
+                        Rectangle { width: act.width * act.level; height: act.height; radius: act.radius; color: act.modelData[3]; visible: act.level > 0.001 }
                         Rectangle { id: flash; anchors.fill: parent; radius: act.radius; color: "#ffffff"; opacity: 0 }
                         Icon { anchors.centerIn: parent; name: act.modelData[1]; size: 16; color: ma.containsMouse ? Theme.text : Theme.subtext }
-                        // the icon turns dark under the liquid
+                        // the icon turns dark where it's filled
                         Item {
-                            anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
-                            height: act.height * act.level
+                            width: act.width * act.level; height: act.height
                             clip: true
-                            Icon { anchors.horizontalCenter: parent.horizontalCenter; y: act.height / 2 - height / 2 - (act.height - parent.height); name: act.modelData[1]; size: 16; color: "#15161a" }
+                            Icon { x: (act.width - width) / 2; y: (act.height - height) / 2; name: act.modelData[1]; size: 16; color: "#15161a" }
                         }
-                        NumberAnimation { id: filling; target: act; property: "level"; to: 1; duration: 900 * (1 - act.level) + 1; easing.type: Easing.InQuad
+                        NumberAnimation { id: filling; target: act; property: "level"; to: 1; duration: 1000 * (1 - act.level) + 1
                             onFinished: if (act.level >= 1) { act.done = true; flashAnim.start(); Power.run(act.modelData[0]); reset.start(); } }
                         NumberAnimation { id: draining; target: act; property: "level"; to: 0; duration: Theme.ms(500); easing.type: Easing.OutCubic }
                         NumberAnimation { id: flashAnim; target: flash; property: "opacity"; from: 0.6; to: 0; duration: Theme.ms(500); easing.type: Easing.OutExpo }

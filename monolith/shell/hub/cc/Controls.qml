@@ -299,7 +299,9 @@ RowLayout {
             }
         }
 
-        // power: each with its name under it; the last three ask again before they do it
+        // power: each with its name under it; log out, restart and off have to be held for a
+        // second: red fills the button from the left while you hold, and letting go early
+        // drains it back
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -315,29 +317,43 @@ RowLayout {
                     id: pb
                     required property var modelData
                     required property int index
-                    property bool armed: false
                     readonly property bool risky: index === 4
+                    readonly property bool held: modelData[3]
+                    // how full it is (0..1) while held; full = it happens
+                    property real level: 0
+                    property bool done: false
                     Layout.fillWidth: true
                     Layout.preferredHeight: 64
                     Rise { delay: 200 + pb.index * 45 }
                     radius: Theme.corner(56, 4)
                     color: risky ? Qt.alpha(Theme.danger, hovered ? 0.3 : 0.18) : (hovered ? Theme.control : Theme.containerHigh)
+                    onPressedChanged: {
+                        if (!held || done) return;
+                        if (pressed) { draining.stop(); filling.restart(); }
+                        else if (level < 1) { filling.stop(); draining.restart(); }
+                    }
                     onClicked: {
-                        if (modelData[3] && !armed) { armed = true; disarm.restart(); kick.restart(); return; }
-                        armed = false;
+                        if (held) { if (!done) kick.restart(); return; }
                         go.restart();
                         modelData[2]();
                     }
-                    onArmedChanged: if (!armed) disarm.stop()
-                    Timer { id: disarm; interval: 3000; onTriggered: pb.armed = false }
+                    // a real second, whatever the animation speed (Theme → Effects)
+                    NumberAnimation {
+                        id: filling
+                        target: pb; property: "level"; to: 1
+                        duration: Math.max(1, 1000 * (1 - pb.level))
+                        onFinished: if (pb.level >= 1) { pb.done = true; go.restart(); pb.modelData[2](); undo.restart(); }
+                    }
+                    NumberAnimation { id: draining; target: pb; property: "level"; to: 0; duration: Theme.ms(320 * pb.level + 1); easing.type: Easing.OutCubic }
+                    // (log out / an action that didn't happen: the button comes back)
+                    Timer { id: undo; interval: 2500; onTriggered: { pb.done = false; draining.restart(); } }
 
-                    // asking: red rises from the bottom like a liquid, and a line along the bottom
-                    // runs down the three seconds it waits for the second click. Both are cut to the
-                    // button's rounded shape (a plain clip cuts to its square box: square corners)
+                    // the red, cut to the button's rounded shape (a plain clip cuts to its square box)
                     Item {
                         id: fillBox
                         anchors.fill: parent
-                        visible: fill.height > 0.5
+                        z: 1
+                        visible: pb.level > 0.001
                         layer.enabled: visible
                         layer.effect: MultiEffect {
                             maskEnabled: true
@@ -346,31 +362,27 @@ RowLayout {
                             maskSpreadAtMin: 1.0
                         }
                         Rectangle {
-                            id: fill
-                            anchors.bottom: parent.bottom
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: parent.width
-                            // a little taller than the button when full, so its rounded top is out of sight
-                            height: pb.armed ? parent.height + pb.radius : 0
-                            radius: pb.radius
+                            width: parent.width * pb.level
+                            height: parent.height
                             color: Theme.danger
-                            Behavior on height { NumberAnimation { duration: Theme.ms(pb.armed ? 340 : 240); easing.type: Easing.BezierSpline; easing.bezierCurve: pb.armed ? Theme.enterCurve : Theme.exitCurve } }
                         }
-                        Rectangle {
-                            id: countdown
-                            anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 5
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            height: 3
-                            radius: 1.5
-                            color: Theme.m("on_error", "#ffffff")
-                            opacity: pb.armed ? 0.8 : 0
-                            Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
-                            // from the middle out to both sides, shrinking back to the middle
-                            property real share: 0
-                            width: (parent.width - 2 * pb.radius * 0.6) * share
-                            NumberAnimation on share { id: tick; running: false; from: 1; to: 0; duration: 3000 }
-                            Connections { target: pb; function onArmedChanged() { if (pb.armed) tick.restart(); else tick.stop(); } }
+                        // the icon and name in the light colour, on the part that's red
+                        Item {
+                            width: parent.width * pb.level
+                            height: parent.height
+                            clip: true
+                            Icon {
+                                x: (pb.width - width) / 2; y: 13
+                                name: pb.modelData[0]; size: 22; filled: true
+                                color: Theme.m("on_error", "#ffffff")
+                                scale: pic.scale; rotation: pic.rotation
+                            }
+                            Label {
+                                x: (pb.width - width) / 2; y: 39
+                                text: faceLabel.text
+                                font.pixelSize: Theme.sizeSmall; strong: true
+                                color: Theme.m("on_error", "#ffffff")
+                            }
                         }
                     }
                     Rectangle { id: fillMask; anchors.fill: parent; radius: pb.radius; visible: false; layer.enabled: true }
@@ -378,38 +390,36 @@ RowLayout {
                     Item {
                         id: face
                         anchors.fill: parent
-                        // the icon: dips when pressed; when it asks, it lifts and a "Sure?" slides up
+                        // the icon: dips when pressed
                         Icon {
                             id: pic
                             anchors.horizontalCenter: parent.horizontalCenter
-                            y: pb.armed ? 9 : 13
-                            Behavior on y { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
-                            name: pb.armed ? "priority_high" : pb.modelData[0]
+                            y: 13
+                            name: pb.modelData[0]
                             size: 22
-                            filled: pb.armed || pb.hovered
-                            color: pb.armed ? Theme.m("on_error", "#ffffff") : (pb.risky ? Theme.danger : Theme.text)
-                            scale: pb.pressed ? 0.78 : (pb.hovered ? 1.12 : 1)
+                            filled: pb.hovered
+                            color: pb.risky ? Theme.danger : Theme.text
+                            scale: pb.pressed && !pb.held ? 0.78 : (pb.hovered ? 1.12 : 1)
                             Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack; easing.overshoot: 2.2 } }
                             // each turns its own way under the pointer: restart spins, power off
                             // tips, the moon rocks, the lock and door nudge
-                            rotation: !pb.hovered || pb.armed ? 0 : [-12, -18, 0, -150, 0][pb.index]
+                            rotation: !pb.hovered ? 0 : [-12, -18, 0, -150, 0][pb.index]
                             Behavior on rotation { NumberAnimation { duration: Theme.ms(pb.index === 3 ? 520 : 300); easing.type: Easing.OutBack } }
                             transform: [
-                                Translate { x: pb.hovered && !pb.armed && pb.index === 2 ? 3 : 0; Behavior on x { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } } },
+                                Translate { x: pb.hovered && pb.index === 2 ? 3 : 0; Behavior on x { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } } },
                                 Scale { id: popS; origin.x: pic.width / 2; origin.y: pic.height / 2 }
                             ]
                         }
                         Label {
+                            id: faceLabel
                             anchors.horizontalCenter: parent.horizontalCenter
                             y: 39
-                            text: pb.armed ? "Sure?" : pb.modelData[1]
+                            text: pb.held && !pb.done && (pb.pressed || pb.level > 0.001) ? "Hold…" : pb.modelData[1]
                             font.pixelSize: Theme.sizeSmall
-                            strong: pb.armed
-                            color: pb.armed ? Theme.m("on_error", "#ffffff") : (pb.risky ? Theme.danger : Theme.subtext)
-                            Behavior on color { ColorAnimation { duration: Theme.fastMs } }
+                            color: pb.risky ? Theme.danger : Theme.subtext
                         }
                     }
-                    // asking: a little shake so it's clear it wants a second click
+                    // clicked instead of held: a little shake (and "Hold…" showed while pressed)
                     SequentialAnimation {
                         id: kick
                         NumberAnimation { target: face; property: "x"; to: -5; duration: Theme.ms(60); easing.type: Easing.OutQuad }
