@@ -67,6 +67,10 @@ PanelWindow {
                     y: (1 - slot.drop) * (win.fromBottom ? 1 : -1) * (height * 0.6 + 24)
                     x: slot.away * (win.corner.endsWith("left") ? -1 : 1) * (width * 0.5)
                     onClosed: Notifs.dismissPopup(slot.modelData, pc.flying)
+                    screenName: win.modelData.name
+                    windowOffset: Qt.point(
+                        win.anchors.right && !win.anchors.left ? win.screen.width - win.width - win.margins.right : (win.anchors.left && !win.anchors.right ? win.margins.left : (win.screen.width - win.width) / 2),
+                        win.anchors.top && !win.anchors.bottom ? win.margins.top : (win.anchors.bottom && !win.anchors.top ? win.screen.height - win.height - win.margins.bottom : (win.screen.height - win.height) / 2))
                 }
             }
         }

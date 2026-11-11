@@ -18,6 +18,15 @@ ColumnLayout {
         NumberBox { from: 1; to: 300; slideTo: 30; unit: "s"; value: Number(Store.get("notifications.timeout", 6)); onMoved: v => Store.set("notifications.timeout", v) }
     }
     SettingRow {
+        key: "notifications.throw"; def: "slide";
+        icon: Store.get("notifications.throw", "slide") === "fall" ? "sports_baseball" : "swipe_right"
+        title: "Thrown away"
+        desc: Store.get("notifications.throw", "slide") === "fall"
+            ? "Swipe one away and it falls down the screen like a thrown ball: as fast as you flicked it, spinning, bouncing off the sides"
+            : "Swipe one away and it slides off to the side"
+        Segmented { width: 220; opts: [["slide", "Slide off"], ["fall", "Fall"]]; value: Store.get("notifications.throw", "slide"); onPicked: v => Store.set("notifications.throw", v) }
+    }
+    SettingRow {
         icon: "science"; title: "Try it"; desc: "Send a test notification"
         Button { text: "Send"; icon: "send"; onClicked: Quickshell.execDetached(["notify-send", "-a", "Monolith", "This is how it looks", "Notifications pop up like this."]) }
     }

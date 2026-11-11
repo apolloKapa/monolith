@@ -30,6 +30,7 @@ ShellRoot {
     Variants { model: Quickshell.screens; Island {} }
     Variants { model: Quickshell.screens; Dock {} }
     Variants { model: Quickshell.screens; Popups {} }
+    Variants { model: Quickshell.screens; Thrown {} }
     Lazy { id: peekL; when: HubState.peekScreen !== "" }
     Variants { model: peekL.on ? Quickshell.screens : []; MediaPeek {} }
     Variants { model: Quickshell.screens; Osd {} }

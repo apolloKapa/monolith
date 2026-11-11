@@ -207,6 +207,7 @@ PanelWindow {
                     active: win.toast !== null
                     sourceComponent: NotificationCard {
                         notif: win.toast
+                        screenName: win.modelData.name
                         onClosed: Notifs.dismissPopup(win.toast, flying)
                     }
                 }

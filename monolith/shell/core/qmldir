@@ -28,3 +28,4 @@ singleton AppImages 1.0 AppImages.qml
 singleton Power 1.0 Power.qml
 singleton Notes 1.0 Notes.qml
 singleton Sounds 1.0 Sounds.qml
+singleton Throw 1.0 Throw.qml

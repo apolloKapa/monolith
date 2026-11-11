@@ -33,8 +33,14 @@ Pressable {
     property bool swipeable: true
     property real swipeX: 0
     property bool flying: false
+    // where this card's window sits on its screen (a corner popup's window isn't at 0,0), so a
+    // thrown card falls from where it really is
+    property point windowOffset: Qt.point(0, 0)
+    property string screenName: ""      // the screen it's on (in a menu: the menu's screen)
+    property bool grabbing: false      // being photographed to be thrown: fully there for that frame
+    property bool thrown: false        // thrown (Fall): its falling copy took over, this one hides
     transform: Translate { x: card.swipeX }
-    opacity: Math.max(0, 1 - Math.abs(swipeX) / (width * 0.9))
+    opacity: grabbing ? 1 : (thrown ? 0 : Math.max(0, 1 - Math.abs(swipeX) / (width * 0.9)))
     Behavior on swipeX { enabled: !swipe.active && !card.resetting; NumberAnimation { duration: card.flying ? 180 : 260; easing.type: card.flying ? Easing.InCubic : Easing.OutBack } }
     DragHandler {
         id: swipe
@@ -55,15 +61,33 @@ Pressable {
             if (active) { lastX = 0; lastT = Date.now(); speed = 0; return; }
             if (Math.abs(card.swipeX) > card.width / 3 || Math.abs(speed) > 1.2) {
                 card.flying = true;
+                if (Throw.on && card.Window.window) { card.throwAway(speed); return; }
                 card.swipeX = (card.swipeX !== 0 ? Math.sign(card.swipeX) : Math.sign(speed)) * (card.width + 40);
                 gone.restart();
             } else card.swipeX = 0;
         }
     }
     Timer { id: gone; interval: 190; onTriggered: card.closed() }
+    // Fall (Settings → Notifications): a snapshot of the card, thrown from where it was let go
+    // with the swipe's speed (and a little toss up), falls down the screen (core/Throw)
+    function throwAway(speed) {
+        const w = card.Window.window;
+        const p = card.mapToItem(null, 0, 0);
+        const scr = card.screenName || HubState.screenName || Niri.focusedOutput || "";
+        const dir = card.swipeX !== 0 ? Math.sign(card.swipeX) : (Math.sign(speed) || 1);
+        const vx = dir * Math.max(380, Math.min(2600, Math.abs(speed) * 1000));
+        grabbing = true;
+        const ok = card.grabToImage(r => {
+            Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height, vx, -520);
+            grabbing = false;
+            thrown = true;
+            card.closed();
+        });
+        if (!ok) { grabbing = false; card.swipeX = dir * (card.width + 40); gone.restart(); }
+    }
     // reused for the next notification (the island's): back in place at once
     property bool resetting: false
-    onNotifChanged: { resetting = true; flying = false; swipeX = 0; resetting = false; }
+    onNotifChanged: { resetting = true; flying = false; thrown = false; grabbing = false; swipeX = 0; resetting = false; }
 
     RowLayout {
         id: body
