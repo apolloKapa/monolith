@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Qt.labs.folderlistmodel
 import Quickshell
 import "../../core"
 import "../../ui"
@@ -8,7 +9,8 @@ import "../../ui"
 // like (2 % to 5000 %), drag with the right or middle button (or the hand, or two fingers on a
 // touchpad) to move around. Pen, highlighter, line, arrow, rectangle, ellipse and an eraser that
 // takes whole strokes; colours, a size, undo / redo. The drawing stays when the panel closes
-// (core/Sketch). Save puts all of it in a picture in ~/Pictures and copies it.
+// (core/Sketch). Save puts all of it in a picture in ~/Pictures and copies it; Copy only copies
+// it. The pictures you saved are under the history button (click one to copy it, or open it).
 ColumnLayout {
     id: d
     spacing: 8
@@ -20,8 +22,13 @@ ColumnLayout {
 
     // the stroke being drawn (not in the drawing until you let go)
     property var cur: null
-    // only the newest piece of the pen's line needs drawing while it's drawn
+    // only the newest part of the pen's line needs drawing while it's drawn: everything after
+    // the points already on screen (the mouse can move several times between two paints; drawing
+    // only the last piece left gaps, so lines came out dashed)
     property bool partial: false
+    property int drawnTo: 0
+    // the saved pictures, instead of the colours and size
+    property bool showSaved: false
 
     function toWorld(px, py) { return Qt.point(Sketch.ox + px / Sketch.z, Sketch.oy + py / Sketch.z); }
     function zoomAt(px, py, f) {
@@ -183,12 +190,17 @@ ColumnLayout {
                 // the pen: just its newest piece on top of what's there
                 if (d.partial && d.cur && d.cur.pts.length >= 4) {
                     const p = d.cur.pts, n = p.length;
+                    const from = Math.max(0, Math.min(d.drawnTo, n) - 2);
                     g.setTransform(Sketch.z, 0, 0, Sketch.z, -Sketch.ox * Sketch.z, -Sketch.oy * Sketch.z);
                     d.styleFor(g, d.cur);
-                    g.beginPath(); g.moveTo(p[n - 4], p[n - 3]); g.lineTo(p[n - 2], p[n - 1]); g.stroke();
+                    g.beginPath(); g.moveTo(p[from], p[from + 1]);
+                    for (let i = from + 2; i < n; i += 2) g.lineTo(p[i], p[i + 1]);
+                    g.stroke();
+                    d.drawnTo = n;
                     return;
                 }
                 d.paintAll(g, width, height, Sketch.ox, Sketch.oy, Sketch.z, true);
+                if (d.cur) d.drawnTo = d.cur.pts.length;
             }
         }
         // the eraser's ring under the pointer
@@ -225,6 +237,7 @@ ColumnLayout {
                 if (d.tool === "eraser") { before = Sketch.strokes; erase(w); return; }
                 d.cur = { t: d.tool, c: String(d.ink), s: d.size, pts: d.shape ? [w.x, w.y, w.x, w.y] : [w.x, w.y] };
                 d.partial = false;
+                d.drawnTo = 0;
                 cv.requestPaint();
             }
             onPositionChanged: mouse => {
@@ -290,6 +303,7 @@ ColumnLayout {
         Canvas {
             id: exporter
             property string file: ""
+            property bool keep: true          // Save: keep the file; Copy: only the clipboard
             property var box: null
             property real k: 1
             visible: file !== ""
@@ -307,7 +321,9 @@ ColumnLayout {
                 if (file === "") return;
                 const f = file;
                 file = "";
-                if (save(f)) Quickshell.execDetached(["sh", "-c", "wl-copy < \"$1\"; notify-send -a Monolith 'Drawing saved' \"$1\"", "_", f]);
+                if (!save(f)) return;
+                if (keep) Quickshell.execDetached(["sh", "-c", "wl-copy < \"$1\"; notify-send -a Monolith 'Drawing saved' \"$1\"", "_", f]);
+                else Quickshell.execDetached(["sh", "-c", "wl-copy -t image/png < \"$1\"; rm -f \"$1\"; notify-send -a Monolith 'Drawing copied'", "_", f]);
             }
         }
     }
@@ -316,14 +332,16 @@ ColumnLayout {
         g.setTransform(k, 0, 0, k, -b.x * k + 24, -b.y * k + 24);
         for (const s of Sketch.strokes) { styleFor(g, s); strokePath(g, s); }
     }
-    function savePicture() {
+    function savePicture(keep) {
         const b = bounds();
         if (!b) return;
+        exporter.keep = keep !== false;
         // twice the size it's drawn at, up to 4096 px on its long side
         const k = Math.min(2, 4000 / Math.max(b.w, b.h));
         exporter.box = b; exporter.k = k;
         exporter.width = Math.ceil(b.w * k) + 48; exporter.height = Math.ceil(b.h * k) + 48;
-        exporter.file = Quickshell.env("HOME") + "/Pictures/Drawing_" + Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss") + ".png";
+        exporter.file = exporter.keep ? Quickshell.env("HOME") + "/Pictures/Drawing_" + Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss") + ".png"
+                                      : (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/monolith-drawing-" + Date.now() + ".png";
         exporter.requestPaint();
     }
 
@@ -345,8 +363,49 @@ ColumnLayout {
         Tb { icon: "undo"; enabled: Sketch.canUndo; onClicked: Sketch.undo() }
         Tb { icon: "redo"; enabled: Sketch.canRedo; onClicked: Sketch.redo() }
     }
+    // ── the pictures you saved (newest first): click to copy, or open ──
+    FolderListModel {
+        id: saved
+        folder: "file://" + Quickshell.env("HOME") + "/Pictures"
+        nameFilters: ["Drawing_*.png"]
+        showDirs: false
+        sortField: FolderListModel.Time
+    }
+    ListView {
+        visible: d.showSaved
+        Layout.fillWidth: true
+        Layout.preferredHeight: 92
+        orientation: ListView.Horizontal
+        spacing: 6
+        clip: true
+        model: saved
+        delegate: Rectangle {
+            id: th
+            required property string filePath
+            required property url fileUrl
+            required property string fileName
+            width: 120; height: 92
+            radius: Theme.corner(80, 4)
+            color: Theme.container
+            border.width: tm.containsMouse ? 2 : 0; border.color: Theme.accent
+            Image { anchors.fill: parent; anchors.margins: 4; source: th.fileUrl; fillMode: Image.PreserveAspectFit; sourceSize.width: 240; asynchronous: true; cache: false }
+            MouseArea { id: tm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                onClicked: Quickshell.execDetached(["sh", "-c", "wl-copy -t image/png < \"$1\" && notify-send -a Monolith 'Drawing copied' \"$1\"", "_", th.filePath]) }
+            Pressable {
+                visible: tm.containsMouse || hovered
+                anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 4
+                width: 24; height: 24
+                color: Qt.alpha(Theme.frame, 0.85)
+                onClicked: Qt.openUrlExternally(th.fileUrl)
+                Icon { anchors.centerIn: parent; name: "open_in_new"; size: 14 }
+            }
+        }
+        Label { anchors.centerIn: parent; visible: saved.count === 0; text: "Pictures you save show up here"; muted: true; font.pixelSize: Theme.sizeSmall }
+    }
+
     // ── colours and size ──
     RowLayout {
+        visible: !d.showSaved
         Layout.fillWidth: true
         spacing: 5
         Repeater {
@@ -390,12 +449,27 @@ ColumnLayout {
                 Label { id: clr; visible: clearBtn.armed; text: "Clear?"; font.pixelSize: Theme.sizeSmall; color: Theme.onAccent; anchors.verticalCenter: parent.verticalCenter }
             }
         }
+        // copy it (no file kept)
+        Pressable {
+            width: 34; height: 34; color: Theme.control
+            enabled: Sketch.strokes.length > 0
+            opacity: enabled ? 1 : 0.4
+            onClicked: d.savePicture(false)
+            Icon { anchors.centerIn: parent; name: "content_copy"; size: 17 }
+        }
         Pressable {
             width: 34; height: 34; color: Theme.accent; ink: Theme.onAccent
             enabled: Sketch.strokes.length > 0
             opacity: enabled ? 1 : 0.4
-            onClicked: d.savePicture()
+            onClicked: d.savePicture(true)
             Icon { anchors.centerIn: parent; name: "save"; size: 18; color: Theme.onAccent }
+        }
+        // the saved pictures
+        Pressable {
+            width: 34; height: 34
+            color: d.showSaved ? Theme.accentContainer : Theme.control
+            onClicked: d.showSaved = !d.showSaved
+            Icon { anchors.centerIn: parent; name: "photo_library"; size: 18; color: d.showSaved ? Theme.onAccentContainer : Theme.text }
         }
     }
 }

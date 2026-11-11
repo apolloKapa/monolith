@@ -25,7 +25,12 @@ Singleton {
             }
         }
     }
-    function startTimer(min) { total = min * 60; remaining = total; timing = true; }
+    function startTimer(min) { total = min * 60; remaining = total; timing = true; remember({ k: "timer", s: total }); }
+    // what was timed (quick access → Timer): timers started, stopwatch runs with their laps;
+    // newest first, kept across restarts
+    readonly property var history: Store.get("quick.timerHistory", []) || []
+    function remember(e) { Store.set("quick.timerHistory", [Object.assign({ at: Date.now() }, e)].concat(history).slice(0, 50)); }
+    function clearHistory() { Store.set("quick.timerHistory", []); }
     function fmt(s) { return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
     // more time on a running (or paused) timer
     function addTime(min) { if (total <= 0) { startTimer(min); return; } total += min * 60; remaining += min * 60; if (remaining > 0) timing = true; }
@@ -45,7 +50,16 @@ Singleton {
         else { swStart = Date.now(); swNow = swStart; swRunning = true; }
     }
     function swLap() { if (swMs > 0) laps = [swMs].concat(laps).slice(0, 99); }
-    function swReset() { swRunning = false; swAccum = 0; swNow = 0; laps = []; }
+    function swReset() {
+        // (a run worth keeping goes in the history first)
+        if (swMs >= 1000) remember({ k: "sw", ms: swMs, laps: laps });
+        swRunning = false; swAccum = 0; swNow = 0; laps = [];
+    }
+    // a stopwatch run as text: the time, then each lap
+    function swText(ms, lapList) {
+        const l = lapList || [];
+        return fmtMs(ms) + (l.length ? "\n" + l.slice().reverse().map((t, i) => "Lap " + (i + 1) + ": " + fmtMs(t)).join("\n") : "");
+    }
     function fmtMs(ms) {
         const cs = Math.floor(ms / 10) % 100, s = Math.floor(ms / 1000);
         return fmtLong(s) + "." + String(cs).padStart(2, "0");

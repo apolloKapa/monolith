@@ -36,7 +36,7 @@ Item {
     }
     Column {
         anchors.centerIn: parent
-        Text { anchors.horizontalCenter: parent.horizontalCenter; text: ring.text; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: Math.round(ring.width * 0.2); font.weight: Font.Bold }
+        Text { anchors.horizontalCenter: parent.horizontalCenter; text: ring.text; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: Math.round(Math.min(ring.width, ring.height) * 0.2); font.weight: Font.Bold }
         Label { anchors.horizontalCenter: parent.horizontalCenter; text: ring.caption; muted: true; font.pixelSize: Theme.sizeSmall }
     }
 }

@@ -5,16 +5,20 @@ import "../../core"
 import "../../ui"
 
 // A calculator: keys or typing. The answer shows as you type; = (or Enter) keeps it in the
-// history (click a line to use it again, the answer to copy it). The scientific keys add
-// powers, roots, trig (in degrees or radians), logs, π, e and "ans" (the last answer).
-ColumnLayout {
+// history (kept across restarts: click a line to use it again, its copy button copies the
+// answer). The scientific keys add powers, roots, trig (in degrees or radians), logs, π, e and
+// "ans" (the last answer). Wide (the panel made bigger), the history gets a column of its own.
+GridLayout {
     id: c
-    spacing: 8
+    columns: wide ? 2 : 1
+    columnSpacing: 14
+    rowSpacing: 8
+    readonly property bool wide: width > 760
     property string expr: ""
     property string result: ""
     property bool sci: Store.get("quick.calcSci", false) === true
     property bool deg: true
-    property var history: []           // [{ e, r }], newest first
+    property var history: Store.get("quick.calcHistory", []) || []           // [{ e, r }], newest first
     property string ans: "0"
 
     // the expression as JavaScript, with the calculator's names as plain functions
@@ -40,7 +44,7 @@ ColumnLayout {
         const r = compute(expr);
         if (r === "" ) return;
         result = r;
-        if (r !== "Error") { history = [{ e: expr, r: r }].concat(history).slice(0, 30); ans = r; }
+        if (r !== "Error") { Store.set("quick.calcHistory", [{ e: expr, r: r }].concat(history.filter(h => h.e !== expr)).slice(0, 60)); ans = r; }
     }
     function press(k) {
         if (k === "C") { expr = ""; result = ""; }
@@ -56,6 +60,12 @@ ColumnLayout {
     }
     function copy(v) { if (v !== "" && v !== "Error") Quickshell.execDetached(["wl-copy", "--", v]); }
 
+    ColumnLayout {
+    Layout.fillWidth: true
+    Layout.fillHeight: true
+    Layout.preferredWidth: c.wide ? 3 : 1
+    Layout.maximumWidth: c.wide ? 760 : -1
+    spacing: 8
     RowLayout {
         Layout.fillWidth: true
         Label { text: "Calculator"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.fillWidth: true }
@@ -102,24 +112,27 @@ ColumnLayout {
             text: pending ? "= " + c.live : (c.result === "" ? "0" : c.result)
             color: pending ? Theme.subtext : Theme.text
             font.family: Theme.fontFamily; font.pixelSize: Theme.sizeHeadline + 6; font.weight: Font.Bold
-            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: c.copy(c.result) }
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: c.copy(pending ? c.live : c.result) }
+        }
+        // copy the answer (or what it comes to so far)
+        Pressable {
+            x: 8; anchors.bottom: parent.bottom; anchors.bottomMargin: 8
+            width: 30; height: 30
+            color: hovered ? Theme.containerHigh : "transparent"
+            visible: c.result !== "" || (c.live !== "" && c.live !== "Error")
+            onClicked: c.copy(c.live !== "" && c.live !== "Error" ? c.live : c.result)
+            Icon { anchors.centerIn: parent; name: "content_copy"; size: 16; color: Theme.subtext }
         }
     }
     // the history: click one to use it again
+    // (narrow: the last three, over the keys)
     ListView {
         Layout.fillWidth: true
-        Layout.preferredHeight: c.history.length === 0 ? 0 : Math.min(3, c.history.length) * 28
-        visible: c.history.length > 0
+        Layout.preferredHeight: c.history.length === 0 || c.wide ? 0 : Math.min(3, c.history.length) * 30
+        visible: c.history.length > 0 && !c.wide
         clip: true
         model: c.history
-        delegate: Pressable {
-            required property var modelData
-            width: ListView.view.width; height: 28
-            color: hovered ? Theme.containerHigh : "transparent"
-            onClicked: { c.expr = modelData.e; input.forceActiveFocus(); }
-            Label { x: 10; width: parent.width * 0.6; elide: Text.ElideRight; anchors.verticalCenter: parent.verticalCenter; text: parent.modelData.e; muted: true; font.pixelSize: Theme.sizeSmall }
-            Label { anchors.right: parent.right; anchors.rightMargin: 10; anchors.verticalCenter: parent.verticalCenter; text: "= " + parent.modelData.r; strong: true; font.pixelSize: Theme.sizeSmall }
-        }
+        delegate: HistoryRow {}
     }
     GridLayout {
         visible: c.sci
@@ -155,6 +168,59 @@ ColumnLayout {
                 onClicked: c.press(modelData)
                 Label { anchors.centerIn: parent; text: parent.modelData; strong: true; font.pixelSize: Theme.sizeTitle; color: parent.modelData === "=" ? Theme.onAccent : Theme.text }
             }
+        }
+    }
+    }
+
+    // ── the history (wide) ──
+    ColumnLayout {
+        visible: c.wide
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.preferredWidth: 2
+        spacing: 6
+        RowLayout {
+            Layout.fillWidth: true
+            Label { text: "History"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.fillWidth: true }
+            Pressable {
+                visible: c.history.length > 0
+                width: hcl.implicitWidth + 20; height: 30
+                color: hovered ? Theme.containerHigh : Theme.control
+                onClicked: Store.set("quick.calcHistory", [])
+                Label { id: hcl; anchors.centerIn: parent; text: "Clear"; font.pixelSize: Theme.sizeSmall }
+            }
+        }
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            radius: Theme.corner(80, 4)
+            color: Theme.container
+            ListView {
+                anchors.fill: parent; anchors.margins: 6
+                clip: true
+                spacing: 2
+                model: c.history
+                delegate: HistoryRow {}
+            }
+            Label { anchors.centerIn: parent; visible: c.history.length === 0; text: "Answers you get with = show up here"; muted: true; font.pixelSize: Theme.sizeSmall }
+        }
+    }
+
+    // a line of the history: the sum (click to use it again), the answer, and copy
+    component HistoryRow: Pressable {
+        required property var modelData
+        width: ListView.view ? ListView.view.width : 200; height: 30
+        color: hovered ? Theme.containerHigh : "transparent"
+        onClicked: { c.expr = modelData.e; input.forceActiveFocus(); }
+        Label { x: 10; width: parent.width * 0.55; elide: Text.ElideRight; anchors.verticalCenter: parent.verticalCenter; text: parent.modelData.e; muted: true; font.pixelSize: Theme.sizeSmall }
+        Label { anchors.right: hcp.left; anchors.rightMargin: 6; anchors.verticalCenter: parent.verticalCenter; width: parent.width * 0.4 - 40; horizontalAlignment: Text.AlignRight; elide: Text.ElideLeft; text: "= " + parent.modelData.r; strong: true; font.pixelSize: Theme.sizeSmall }
+        Pressable {
+            id: hcp
+            anchors.right: parent.right; anchors.rightMargin: 4; anchors.verticalCenter: parent.verticalCenter
+            width: 26; height: 26
+            color: hovered ? Theme.control : "transparent"
+            onClicked: c.copy(parent.modelData.r)
+            Icon { anchors.centerIn: parent; name: "content_copy"; size: 14; color: Theme.subtext }
         }
     }
 }
