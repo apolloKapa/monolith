@@ -28,20 +28,51 @@ Pressable {
         card.closed();
     }
 
-    // swipe it sideways to dismiss: past a third of its width (or flicked) it flies off that
-    // way and closes, otherwise it springs back
+    // swipe it sideways to dismiss: past a third of its width (or flicked) it goes (slides off,
+    // or falls down the screen: Settings → Notifications), otherwise it springs back. While it's
+    // swiped, a copy in a full-screen layer (core/Throw, status/Thrown) follows the pointer, so
+    // the edge of this card's own small window can't cut it off.
     property bool swipeable: true
     property real swipeX: 0
     property bool flying: false
-    // where this card's window sits on its screen (a corner popup's window isn't at 0,0), so a
-    // thrown card falls from where it really is
+    // where this card's window sits on its screen (a corner popup's window isn't at 0,0)
     property point windowOffset: Qt.point(0, 0)
     property string screenName: ""      // the screen it's on (in a menu: the menu's screen)
-    property bool grabbing: false      // being photographed to be thrown: fully there for that frame
-    property bool thrown: false        // thrown (Fall): its falling copy took over, this one hides
+    property int throwId: -1            // its copy, while swiped
+    property bool handed: false         // the copy is on screen: this one hides
+    property var pending: null          // let go before the copy was ready: what to do then
     transform: Translate { x: card.swipeX }
-    opacity: grabbing ? 1 : (thrown ? 0 : Math.max(0, 1 - Math.abs(swipeX) / (width * 0.9)))
+    opacity: handed ? 0 : Math.max(0, 1 - Math.abs(swipeX) / (width * 1.1))
     Behavior on swipeX { enabled: !swipe.active && !card.resetting; NumberAnimation { duration: card.flying ? 180 : 260; easing.type: card.flying ? Easing.InCubic : Easing.OutBack } }
+
+    // the swipe starts: photograph the card where it is, the copy takes over from there
+    function startCopy() {
+        if (!Throw.on || !card.Window.window || throwId >= 0) return;
+        const p = card.mapToItem(null, -swipeX, 0);
+        const scr = card.screenName || HubState.screenName || Niri.focusedOutput || "";
+        const sx = swipeX;
+        swipeX = 0;                       // photographed in place; the copy gets the offset
+        const ok = card.grabToImage(r => {
+            card.throwId = Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height);
+            Throw.dragTo(card.throwId, card.swipeX);
+            handoff.restart();
+        });
+        swipeX = sx;
+        if (!ok) throwId = -1;
+    }
+    function handOver() {
+        if (handed || throwId < 0) return;
+        handed = true;
+        if (pending) { const p = pending; pending = null; p(); }
+    }
+    Connections {
+        target: Throw
+        function onReady(id) { if (id === card.throwId) card.handOver(); }
+        function onHome(id) { if (id === card.throwId) { card.throwId = -1; card.handed = false; card.swipeX = 0; } }
+    }
+    // never stuck if the copy doesn't show (a screen that went away)
+    Timer { id: handoff; interval: 400; onTriggered: card.handOver() }
+
     DragHandler {
         id: swipe
         enabled: card.swipeable && !card.flying
@@ -56,42 +87,37 @@ Pressable {
             if (now > lastT) speed = (translation.x - lastX) / (now - lastT);
             lastX = translation.x; lastT = now;
             card.swipeX = translation.x;
+            if (card.throwId >= 0) Throw.dragTo(card.throwId, translation.x);
         }
         onActiveChanged: {
-            if (active) { lastX = 0; lastT = Date.now(); speed = 0; return; }
-            if (Math.abs(card.swipeX) > card.width / 3 || Math.abs(speed) > 1.2) {
-                card.flying = true;
-                if (Throw.on && card.Window.window) { card.throwAway(speed); return; }
-                card.swipeX = (card.swipeX !== 0 ? Math.sign(card.swipeX) : Math.sign(speed)) * (card.width + 40);
-                gone.restart();
-            } else card.swipeX = 0;
+            if (active) { lastX = 0; lastT = Date.now(); speed = 0; card.startCopy(); return; }
+            const go = Math.abs(card.swipeX) > card.width / 3 || Math.abs(speed) > 1.2;
+            const dir = card.swipeX !== 0 ? Math.sign(card.swipeX) : (Math.sign(speed) || 1);
+            card.release(go, dir, speed);
         }
     }
-    Timer { id: gone; interval: 190; onTriggered: card.closed() }
-    // Thrown away: a snapshot of the card, taken where it was let go, carries on in the
-    // full-screen layer (status/Thrown: falling like a ball, or sliding off), so its own small
-    // window can't cut it off; this card stays until that copy is on screen, then hides
-    property int throwId: -1
-    function throwAway(speed) {
-        const p = card.mapToItem(null, 0, 0);
-        const scr = card.screenName || HubState.screenName || Niri.focusedOutput || "";
-        const dir = card.swipeX !== 0 ? Math.sign(card.swipeX) : (Math.sign(speed) || 1);
-        const fast = Math.abs(speed) * 1000;
-        const vx = dir * (Throw.mode === "fall" ? Math.max(380, Math.min(2600, fast)) : Math.max(1100, Math.min(3200, fast)));
-        grabbing = true;
-        const ok = card.grabToImage(r => {
-            card.throwId = Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height, vx, -520);
-            handoff.restart();
-        });
-        if (!ok) { grabbing = false; card.swipeX = dir * (card.width + 40); gone.restart(); }
+    function release(go, dir, speed) {
+        if (go) flying = true;
+        if (throwId < 0) {
+            // no copy (animations off, or it couldn't be made): as before, in its own window
+            if (go) { swipeX = dir * (width + 40); gone.restart(); } else swipeX = 0;
+            return;
+        }
+        const id = throwId;
+        const act = () => {
+            if (go) {
+                const fast = Math.abs(speed) * 1000;
+                const vx = dir * (Throw.mode === "fall" ? Math.max(380, Math.min(2600, fast)) : Math.max(1100, Math.min(3200, fast)));
+                Throw.letGo(id, vx, -520, Throw.mode);
+                card.closed();
+            } else Throw.springBack(id);
+        };
+        if (handed) act(); else pending = act;
     }
-    function handedOver() { if (!thrown) { grabbing = false; thrown = true; card.closed(); } }
-    Connections { target: Throw; function onReady(id) { if (id === card.throwId) card.handedOver(); } }
-    // never stuck if the copy doesn't show (a screen that went away)
-    Timer { id: handoff; interval: 400; onTriggered: card.handedOver() }
+    Timer { id: gone; interval: 190; onTriggered: card.closed() }
     // reused for the next notification (the island's): back in place at once
     property bool resetting: false
-    onNotifChanged: { resetting = true; flying = false; thrown = false; grabbing = false; throwId = -1; handoff.stop(); swipeX = 0; resetting = false; }
+    onNotifChanged: { resetting = true; flying = false; handed = false; pending = null; throwId = -1; handoff.stop(); swipeX = 0; resetting = false; }
 
     RowLayout {
         id: body

@@ -3,9 +3,9 @@ import Quickshell
 import Quickshell.Wayland
 import "../core"
 
-// Swiped-away notifications on their way out (core/Throw). Always there (an empty,
-// click-through layer: making it only when a card is thrown took a frame or two, and the card
-// was gone before its copy showed), takes no clicks.
+// Swiped notifications (core/Throw): held under the pointer, then thrown, slid off or sprung
+// back. Always there (an empty, click-through layer: making it when a swipe starts took a frame
+// or two), takes no clicks.
 PanelWindow {
     id: win
     required property var modelData
@@ -23,47 +23,71 @@ PanelWindow {
         Image {
             id: card
             required property var modelData
-            readonly property bool falls: modelData.mode === "fall"
             source: modelData.url
             width: modelData.w
             height: modelData.h
             smooth: true
-            // the flight: position and speed in px and px/s, gravity in px/s²
+            // held: where the pointer has it; then the flight (px, px/s, gravity px/s²)
+            property string phase: "held"        // held | fall | slide | back
+            property real dx: 0
             property real px: modelData.x
             property real py: modelData.y
-            property real vx: modelData.vx
-            property real vy: modelData.vy
-            property real spin: modelData.spin
-            readonly property real g: 3200
+            property real vx: 0
+            property real vy: 0
+            property real spin: 0
             property real travelled: 0
-            x: px
-            y: py
-            // sliding, it fades over the first card-width or so
-            opacity: falls ? 1 : Math.max(0, 1 - travelled / (width * 1.1))
-            // on screen (two frames drawn, so the two overlap for a moment instead of leaving a
-            // gap): the real card can hide now
+            readonly property real g: 3200
+            x: phase === "held" || phase === "back" ? modelData.x + dx : px
+            y: phase === "held" || phase === "back" ? modelData.y : py
+            // fades as it goes sideways (held and sliding); falling it stays solid
+            opacity: phase === "fall" ? 1 : Math.max(0, 1 - Math.abs(phase === "slide" ? travelled : dx) / (width * 1.1))
+            // springing back home
+            Behavior on dx { enabled: card.phase === "back"; NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutBack } }
+            onDxChanged: if (phase === "back" && Math.abs(dx) < 0.5) { Throw.home(modelData.id); Throw.land(modelData.id); }
             property int frames: 0
+
+            Connections {
+                target: Throw
+                function onDragTo(id, d) { if (id === card.modelData.id && card.phase === "held") card.dx = d; }
+                function onLetGo(id, vx, vy, mode) {
+                    if (id !== card.modelData.id) return;
+                    card.px = card.modelData.x + card.dx; card.py = card.modelData.y;
+                    card.travelled = Math.abs(card.dx);
+                    card.vx = vx; card.vy = mode === "fall" ? vy : 0;
+                    card.spin = mode === "fall" ? Math.max(-720, Math.min(720, vx * 0.35 + (Math.random() - 0.5) * 120)) : 0;
+                    card.phase = mode;
+                }
+                function onSpringBack(id) {
+                    if (id !== card.modelData.id) return;
+                    card.phase = "back";
+                    if (Math.abs(card.dx) < 0.5) { Throw.home(id); Throw.land(id); } else card.dx = 0;
+                }
+            }
             FrameAnimation {
                 running: card.status === Image.Ready
                 onTriggered: {
+                    // on screen (two frames drawn, so the two overlap for a moment instead of
+                    // leaving a gap): the real card can hide now
                     if (++card.frames === 2) Throw.ready(card.modelData.id);
+                    if (card.phase !== "fall" && card.phase !== "slide") return;
                     const dt = Math.min(0.05, frameTime);
-                    if (card.falls) {
+                    const falls = card.phase === "fall";
+                    if (falls) {
                         card.vy += card.g * dt;
                         card.rotation += card.spin * dt;
                     }
                     card.px += card.vx * dt;
                     card.py += card.vy * dt;
                     card.travelled += Math.abs(card.vx * dt);
-                    if (card.falls) {
+                    if (falls) {
                         // the screen's sides bounce it back, a bit slower each time
                         if (card.px < 0 && card.vx < 0) { card.px = 0; card.vx = -card.vx * 0.6; card.spin = -card.spin * 0.7; }
                         const right = win.width - card.width;
                         if (card.px > right && card.vx > 0) { card.px = right; card.vx = -card.vx * 0.6; card.spin = -card.spin * 0.7; }
                     }
                     // gone: out at the bottom (falling), faded or off the side (sliding)
-                    const out = card.falls ? card.py > win.height + Math.max(card.width, card.height)
-                                           : (card.opacity <= 0.01 || card.px > win.width || card.px + card.width < 0);
+                    const out = falls ? card.py > win.height + Math.max(card.width, card.height)
+                                      : (card.opacity <= 0.01 || card.px > win.width || card.px + card.width < 0);
                     if (out) { running = false; Throw.land(card.modelData.id); }
                 }
             }
