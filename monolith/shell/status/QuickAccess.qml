@@ -31,10 +31,15 @@ PanelWindow {
     // expand button (remembered): as big as the screen allows, leaving room round it
     property bool big: Store.get("quick.big", false) === true
     onBigChanged: Store.set("quick.big", big)
-    readonly property real roomW: (vertical ? width - railT - 120 : width - 160)
-    readonly property real roomH: (vertical ? height - topRoom - bottomRoom - 60 : height - topRoom - bottomRoom - railT - 120)
-    readonly property real contentW: big ? Math.max(400, Math.min(1100, roomW)) : (({ small: 380, normal: 440, large: 540 })[sizeName] || 440)
-    readonly property real contentH: big ? Math.max(500, Math.min(860, roomH)) : (({ small: 520, normal: 620, large: 760 })[sizeName] || 620)
+    // or maximized: the whole screen but the bar and a small margin (the rail's maximize button)
+    property bool maxed: Store.get("quick.max", false) === true
+    onMaxedChanged: Store.set("quick.max", maxed)
+    // (along the edge it leaves room for the curves joining the edge: 2 × ear + margins)
+    readonly property real roomW: maxed ? (vertical ? width - railT - 40 : width - 2 * ear - 48) : (vertical ? width - railT - 120 : width - 160)
+    readonly property real roomH: maxed ? (vertical ? height - topRoom - bottomRoom - 2 * ear - 48 : height - topRoom - bottomRoom - railT - 40)
+                                        : (vertical ? height - topRoom - bottomRoom - 60 : height - topRoom - bottomRoom - railT - 120)
+    readonly property real contentW: maxed ? Math.max(300, roomW) : (big ? Math.max(400, Math.min(1100, roomW)) : (({ small: 380, normal: 440, large: 540 })[sizeName] || 440))
+    readonly property real contentH: maxed ? Math.max(300, roomH) : (big ? Math.max(500, Math.min(860, roomH)) : (({ small: 520, normal: 620, large: 760 })[sizeName] || 620))
 
     // when it may come out: not in Game mode, not over a fullscreen window, maybe only on an empty workspace
     readonly property var active: ToplevelManager.activeToplevel
@@ -154,7 +159,7 @@ PanelWindow {
     // ── sizes ──
     readonly property real tab: 44                                // a tool's button
     readonly property real railT: 60                              // the mini bar's thickness
-    readonly property real railL: tools.length * (tab + 6) + 2 * (tab + 6) + 24   // its length (the tools, then expand and the pin)
+    readonly property real railL: tools.length * (tab + 6) + 3 * (tab + 6) + 24   // its length (the tools, then expand, maximize and the pin)
     readonly property real ear: Theme.islandEar
     // open: the rail plus the tool beside it
     // (out of a side edge the tool is beside the rail; out of the top or bottom, under / over it)
@@ -234,8 +239,8 @@ PanelWindow {
 
             Grid {
                 anchors.centerIn: parent
-                columns: qa.vertical ? 1 : qa.tools.length + 2
-                rows: qa.vertical ? qa.tools.length + 2 : 1
+                columns: qa.vertical ? 1 : qa.tools.length + 3
+                rows: qa.vertical ? qa.tools.length + 3 : 1
                 spacing: 6
                 Repeater {
                     model: qa.tools
@@ -258,9 +263,18 @@ PanelWindow {
                 Pressable {
                     width: qa.tab; height: qa.tab
                     radius: Theme.corner(qa.tab, 0)
-                    color: qa.big ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
-                    onClicked: { qa.big = !qa.big; qa.expanded = true; }
-                    Icon { anchors.centerIn: parent; name: qa.big ? "close_fullscreen" : "open_in_full"; size: 19; color: qa.big ? Theme.onAccentContainer : Theme.subtext }
+                    readonly property bool on: qa.big && !qa.maxed
+                    color: on ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
+                    onClicked: { if (qa.maxed) { qa.maxed = false; qa.big = true; } else qa.big = !qa.big; qa.expanded = true; }
+                    Icon { anchors.centerIn: parent; name: parent.on ? "close_fullscreen" : "open_in_full"; size: 19; color: parent.on ? Theme.onAccentContainer : Theme.subtext }
+                }
+                // maximized: the whole screen (again: back to the size it was)
+                Pressable {
+                    width: qa.tab; height: qa.tab
+                    radius: Theme.corner(qa.tab, 0)
+                    color: qa.maxed ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
+                    onClicked: { qa.maxed = !qa.maxed; qa.expanded = true; }
+                    Icon { anchors.centerIn: parent; name: qa.maxed ? "fullscreen_exit" : "fullscreen"; size: 21; color: qa.maxed ? Theme.onAccentContainer : Theme.subtext }
                 }
                 // keep it out
                 Pressable {
