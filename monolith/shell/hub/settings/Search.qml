@@ -28,6 +28,12 @@ ColumnLayout {
         NumberBox { from: 400; to: 1400; slideTo: 1100; step: 10; unit: "px"; value: Number(Store.get("search.width", 640)); onMoved: v => Store.set("search.width", v) }
     }
     SettingRow {
+        key: "search.height"; def: 0;
+        icon: "height"; title: "Height"
+        desc: Number(Store.get("search.height", 0)) > 0 ? "The apps' part is always this tall (the whole launcher a little more)" : "Auto: as tall as the results shown (below), plus the favourites"
+        NumberBox { from: 0; to: 1400; slideTo: 1000; step: 10; unit: "px"; zeroText: "Auto"; value: Number(Store.get("search.height", 0)); onMoved: v => Store.set("search.height", v < 150 ? 0 : v) }
+    }
+    SettingRow {
         key: "search.grid"; def: false;
         icon: "apps"; title: "All apps as a grid"; desc: "While nothing is typed: icons instead of a list"
         Toggle { checked: Store.get("search.grid", false) === true; onToggled: on => Store.set("search.grid", on) }
@@ -69,9 +75,27 @@ ColumnLayout {
         Toggle { checked: Store.get("search.showFavorites", true) !== false; onToggled: on => Store.set("search.showFavorites", on) }
     }
     SettingRow {
+        key: "search.favPlace"; def: "top";
+        icon: "dashboard"; title: "Where the favourites are"
+        Dropdown {
+            width: 240
+            opts: [["top", "Above the apps"], ["bottom", "Below the apps"], ["left", "On the left"], ["right", "On the right"]]
+            value: Store.get("search.favPlace", "top")
+            onPicked: v => Store.set("search.favPlace", v)
+        }
+    }
+    SettingRow {
         key: "search.favColumns"; def: 6;
+        visible: ["left", "right"].indexOf(Store.get("search.favPlace", "top")) === -1
         icon: "grid_view"; title: "Favourites per row"
         NumberBox { from: 2; to: 12; value: Number(Store.get("search.favColumns", 6)); onMoved: v => Store.set("search.favColumns", v) }
+    }
+    SettingRow {
+        key: "search.favSideColumns"; def: 2;
+        visible: ["left", "right"].indexOf(Store.get("search.favPlace", "top")) !== -1
+        icon: "view_column"; title: "Favourites per row (beside the apps)"
+        desc: "How wide their column is"
+        NumberBox { from: 1; to: 4; value: Number(Store.get("search.favSideColumns", 2)); onMoved: v => Store.set("search.favSideColumns", v) }
     }
     Repeater {
         model: favSec.favIds

@@ -18,12 +18,21 @@ Page {
     // the height it has with nothing typed; while you search it stays that tall (the results
     // scroll inside it) so the menu doesn't jump about as you type
     readonly property bool typing: query.trim() !== ""
-    readonly property real naturalH: favArea.height + catBar.height + (showGrid ? Math.min(maxRows * rowH, appGrid.contentHeight) : Math.max(1, Math.min(results.length, maxRows)) * rowH)
+    // the apps' part: as many rows as Settings → Launcher → Results shown
+    readonly property real listH: showGrid ? Math.min(maxRows * rowH, appGrid.contentHeight) : Math.max(1, Math.min(results.length, maxRows)) * rowH
+    // favourites above or below add to that; beside it, the taller of the two
+    readonly property real naturalH: fixedH > 0 ? fixedH
+        : catBar.height + (favSide ? Math.max(listH, favBlockH) : favBlockH + listH)
+    // (the favourites' own height, from their grid: beside the apps the favourites' box is as tall as
+    // the launcher, so reading the box here looped while switching sides)
+    readonly property real favBlockH: showFavs ? favGrid.height + 12 : 0
+    // Settings → Launcher → Height: a fixed height instead (0: as tall as its rows)
+    readonly property real fixedH: Math.max(0, Number(Store.get("search.height", 0)))
     property real restH: 0
     // checked a moment later: on the first key the results change before `typing` turns true
     onNaturalHChanged: Qt.callLater(keepRest)
     function keepRest() { if (!typing) restH = naturalH; }
-    Component.onCompleted: restH = naturalH
+    Component.onCompleted: { rebuildApps(); rebuildFavs(); restH = naturalH; }
     implicitHeight: typing && restH > 0 ? restH : naturalH
     // all apps as a grid of icons while nothing is typed (Settings → Launcher)
     readonly property bool showGrid: Store.get("search.grid", false) === true && query.trim() === ""
@@ -32,7 +41,13 @@ Page {
     // ── favourites: pinned apps, shown as a grid above everything (searching too) ──
     // (desktop ids; the earlier Monolith's list to start with). Right-click an app to pin or unpin.
     readonly property var favIds: Store.get("search.favorites", null) || Prefs.favorites
-    readonly property var favs: favIds.map(id => DesktopEntries.byId(id) || DesktopEntries.byId(id + ".desktop")).filter(e => e && !isHidden(e))
+    // (made again only when the favourites or the hidden apps really change: every saved setting
+    // makes the store's values new, and lists made from them on each one were rebuilt each time,
+    // which threw the launcher back to its top whenever you favourited or hid something)
+    readonly property string favKey: JSON.stringify(favIds) + "|" + JSON.stringify(hiddenIds)
+    property var favs: []
+    function rebuildFavs() { favs = favIds.map(id => DesktopEntries.byId(id) || DesktopEntries.byId(id + ".desktop")).filter(e => e && !isHidden(e)); }
+    onFavKeyChanged: rebuildFavs()
     // apps you hid (right-click → Hide, or Settings → Menus & launcher → Hidden apps): still
     // installed, just not in the launcher
     readonly property var hiddenIds: Store.get("search.hidden", []) || []
@@ -42,7 +57,13 @@ Page {
     property var menuEntry: null
     property point menuAt: Qt.point(0, 0)
     function openMenu(entry, item) { menuEntry = entry; menuAt = item.mapToItem(page, item.width / 2, item.height / 2); }
-    readonly property int favColumns: Number(Store.get("search.favColumns", 6))
+    // where the favourites are (Settings → Launcher): above the apps, below them, or in a column
+    // on their left or right
+    readonly property string favPlace: Store.get("search.favPlace", "top")
+    readonly property bool favSide: favPlace === "left" || favPlace === "right"
+    // beside the apps they're a narrow column (their own number per row)
+    readonly property int favColumns: favSide ? Number(Store.get("search.favSideColumns", 2)) : Number(Store.get("search.favColumns", 6))
+    readonly property real favSideW: favColumns * 88
     // favourites stay at the top while you search too (the results list under them)
     readonly property bool showFavs: favs.length > 0 && Store.get("search.showFavorites", true) !== false
     function isFav(entry) { return favIds.some(id => id === entry.id || id + ".desktop" === entry.id || id === entry.id.replace(/\.desktop$/, "")); }
@@ -71,8 +92,23 @@ Page {
     // how often each app was opened from here, for the order
     // how often each app was opened (ranks them first), unless that's switched off
     function uses(id) { return Store.get("search.ranking", true) === false ? 0 : Number(Store.get("launches." + id.replace(/\./g, "_"), 0)); }
-    readonly property var apps: { let _ = Store.revision; return DesktopEntries.applications.values.filter(a => !a.noDisplay && hiddenIds.indexOf(a.id) === -1)
-        .slice().sort((a, b) => (uses(b.id) - uses(a.id)) || a.name.localeCompare(b.name)); }
+    // every app that shows (not hidden), the ones you open most first; made again only when the
+    // apps or the hidden ones change, keeping where the list was scrolled to
+    readonly property string appsKey: JSON.stringify(hiddenIds) + "|" + (Store.get("search.ranking", true) !== false)
+    property var apps: []
+    function rebuildApps() {
+        const ly = list.contentY, gy = appGrid.contentY, ci = list.currentIndex;
+        apps = DesktopEntries.applications.values.filter(a => !a.noDisplay && hiddenIds.indexOf(a.id) === -1)
+            .slice().sort((a, b) => (uses(b.id) - uses(a.id)) || a.name.localeCompare(b.name));
+        // (the list puts its selection back on the first one when its contents change: back where it was)
+        Qt.callLater(() => {
+            list.currentIndex = Math.max(0, Math.min(ci, results.length - 1));
+            list.contentY = Math.max(0, Math.min(ly, list.contentHeight - list.height));
+            appGrid.contentY = Math.max(0, Math.min(gy, appGrid.contentHeight - appGrid.height));
+        });
+    }
+    onAppsKeyChanged: rebuildApps()
+    Connections { target: DesktopEntries.applications; function onValuesChanged() { page.rebuildApps(); page.rebuildFavs(); } }
 
     // category tabs over the apps while nothing is typed (Settings → Launcher): the freedesktop
     // main categories that have at least one app
@@ -105,7 +141,8 @@ Page {
         id: fileProc
         stdout: StdioCollector { onStreamFinished: page.files = text.split("\n").filter(l => l) }
     }
-    onQueryChanged: { const q = query.trim(); if (q.startsWith("/") || q.startsWith("~")) fileQuery(q); }
+    // (typing starts the list at the top; the list changing under you, an app hidden, keeps your place)
+    onQueryChanged: { list.currentIndex = 0; const q = query.trim(); if (q.startsWith("/") || q.startsWith("~")) fileQuery(q); }
 
     function score(a, q) {
         const n = a.name.toLowerCase();
@@ -162,7 +199,7 @@ Page {
         const scored = apps.map(a => ({ a: a, s: score(a, q) })).filter(x => x.s > 0).sort((x, y) => y.s - x.s);
         return out.concat(scored.map(x => ({ kind: "app", entry: x.a })));
     }
-    onResultsChanged: list.currentIndex = 0
+    onResultsChanged: list.currentIndex = Math.max(0, Math.min(list.currentIndex, results.length - 1))
 
     function activate(i) {
         const it = results[i];
@@ -197,10 +234,14 @@ Page {
     }
     Item {
         id: favArea
-        y: catBar.height
-        width: parent.width
-        height: page.showFavs ? favGrid.height + 12 : 0
-        visible: page.showFavs
+        readonly property bool showing: page.showFavs
+        x: page.favPlace === "right" ? parent.width - width : 0
+        y: page.favPlace === "bottom" ? parent.height - height : catBar.height
+        width: page.favSide ? page.favSideW : parent.width
+        height: !showing ? 0 : (page.favSide ? parent.height - catBar.height : favGrid.height + 12)
+        visible: showing
+        // (beside the apps, they scroll if there are more than fit)
+        clip: page.favSide
         Grid {
             id: favGrid
             width: parent.width
@@ -263,7 +304,15 @@ Page {
                 }
             }
         }
-        Rectangle { anchors.bottom: parent.bottom; anchors.bottomMargin: 5; width: parent.width; height: 1; color: Theme.ringTrack }
+        // the line between them and the apps, on the apps' side
+        Rectangle {
+            readonly property string side: ({ top: "bottom", bottom: "top", left: "right", right: "left" })[page.favPlace] || "bottom"
+            x: side === "right" ? parent.width - 4 : (side === "left" ? 3 : 0)
+            y: side === "bottom" ? parent.height - 6 : (side === "top" ? 5 : 0)
+            width: side === "left" || side === "right" ? 1 : parent.width
+            height: side === "left" || side === "right" ? parent.height : 1
+            color: Theme.ringTrack
+        }
         // the favourite being carried
         Rectangle {
             visible: page.favDrag >= 0
@@ -288,7 +337,10 @@ Page {
         id: appGrid
         visible: page.showGrid
         anchors.fill: parent
-        anchors.topMargin: favArea.height + catBar.height
+        anchors.topMargin: (page.favPlace === "top" ? favArea.height : 0) + catBar.height
+        anchors.bottomMargin: page.favPlace === "bottom" ? favArea.height : 0
+        anchors.leftMargin: page.favPlace === "left" && favArea.showing ? page.favSideW + 8 : 0
+        anchors.rightMargin: page.favPlace === "right" && favArea.showing ? page.favSideW + 8 : 0
         clip: true
         cellWidth: width / page.gridColumns
         cellHeight: 92
@@ -317,7 +369,10 @@ Page {
         id: list
         visible: !page.showGrid
         anchors.fill: parent
-        anchors.topMargin: favArea.height + catBar.height
+        anchors.topMargin: (page.favPlace === "top" ? favArea.height : 0) + catBar.height
+        anchors.bottomMargin: page.favPlace === "bottom" ? favArea.height : 0
+        anchors.leftMargin: page.favPlace === "left" && favArea.showing ? page.favSideW + 8 : 0
+        anchors.rightMargin: page.favPlace === "right" && favArea.showing ? page.favSideW + 8 : 0
         clip: true
         model: page.results
         boundsBehavior: Flickable.StopAtBounds
