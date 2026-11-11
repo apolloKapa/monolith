@@ -18,6 +18,9 @@ Item {
     property var trayWindow: null                       // the window tray menus open from
     readonly property real gap: Number(Store.get("bar.sectionGap", 14))
     implicitWidth: leftZone.width + midZone.width + rightZone.width + (midZone.width > 0 ? 2 * gap : gap) + 2 * Theme.islandPad
+    // spread out, the middle stays in the middle: the shortest it can be without the sides running into it
+    readonly property real spreadWidth: midZone.width > 0 ? midZone.width + 2 * Math.max(leftZone.width, rightZone.width) + 2 * gap + 2 * Theme.islandPad : implicitWidth
+    readonly property real needWidth: Theme.barSpread ? spreadWidth : implicitWidth
     implicitHeight: Theme.islandH
     function open(p) { HubState.toggle(p, bar.screenName); }
 
@@ -95,8 +98,8 @@ Item {
     ZonePill { zone: rightZone }
     Zone { id: leftZone; x: Theme.islandPad; keys: bar.zones.left || [] }
     // a full-width bar spreads them: left edge, middle, right edge
-    Zone { id: midZone; x: Theme.fullBar ? Math.round((bar.width - width) / 2) : leftZone.x + leftZone.width + bar.gap; keys: bar.zones.center || [] }
-    Zone { id: rightZone; x: Theme.fullBar ? bar.width - width - Theme.islandPad : midZone.x + midZone.width + (midZone.width > 0 ? bar.gap : 0); keys: bar.zones.right || [] }
+    Zone { id: midZone; x: Theme.barSpread ? Math.round((bar.width - width) / 2) : leftZone.x + leftZone.width + bar.gap; keys: bar.zones.center || [] }
+    Zone { id: rightZone; x: Theme.barSpread ? bar.width - width - Theme.islandPad : midZone.x + midZone.width + (midZone.width > 0 ? bar.gap : 0); keys: bar.zones.right || [] }
 
     readonly property var mods: ({
         cc: ccC, search: searchC, clock: clockC, weather: weatherC, workspaces: wsC, media: mediaC, title: titleC,

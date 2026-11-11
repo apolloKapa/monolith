@@ -156,6 +156,20 @@ Singleton {
     readonly property real frameW: barStyle === "frame" ? Number(Store.get("bar.frameWidth", 8)) : 0
     readonly property real islandMinW: Number(Store.get("bar.minWidth", 460))   // collapsed island: never narrower
     readonly property real barLength: barStyle === "frame" ? 1 : Number(Store.get("bar.length", 1))   // the bar's length (share of the screen; the Frame's is the whole width)
+    // how the bar's length is set (Settings → Bar): "fit" its modules (never under islandMinW),
+    // a "percent" of the screen, or exact "px". Unset: the island fits, the other styles take
+    // their share of the screen. The Frame is always the whole width.
+    readonly property string barLengthMode: barStyle === "frame" ? "percent" : (Store.get("bar.lengthMode", "") || (fullBar ? "percent" : "fit"))
+    // a bar with a set length spreads its modules: left end, middle, right end
+    readonly property bool barSpread: barLengthMode !== "fit"
+    readonly property real barLengthPx: Number(Store.get("bar.lengthPx", 1200))
+    // the bar's length on a screen this wide, holding modules this wide: never shorter than
+    // its modules (they'd hang out of it), never longer than the screen
+    function barWidth(screenW, contentW) {
+        const room = Math.max(100, screenW - 2 * barMargin);
+        const want = barLengthMode === "px" ? barLengthPx : (barLengthMode === "percent" ? room * barLength : Math.max(islandMinW, contentW));
+        return Math.round(Math.min(room, Math.max(want, contentW)));
+    }
     readonly property real barOpacity: Number(Store.get("bar.opacity", 1))      // the bar's own background (0: only its modules)
     readonly property bool barPills: Store.get("bar.pills", false) === true     // each module on its own pill
     readonly property bool square: Look.style.square === true                   // square styles: no rounding anywhere

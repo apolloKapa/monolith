@@ -18,20 +18,27 @@ Page {
     Keys.onLeftPressed: HubState.ccTab = tabs[Math.max(0, tabs.findIndex(t => t[0] === tab) - 1)][0]
     Keys.onRightPressed: HubState.ccTab = tabs[Math.min(tabs.length - 1, tabs.findIndex(t => t[0] === tab) + 1)][0]
 
+    // you and the time of day on the left, the tabs on the right
+    readonly property string hello: { const h = new Date().getHours(); return h < 5 ? "Good night" : (h < 12 ? "Good morning" : (h < 18 ? "Good afternoon" : "Good evening")); }
     RowLayout {
         id: nav
         width: parent.width
-        height: 40
-        Segmented {
-            Layout.preferredWidth: 420
-            height: 40
-            opts: page.tabs.map(t => [t[0], t[1]])
+        height: 52
+        spacing: 12
+        Avatar { size: 44; Layout.leftMargin: 4 }
+        Column {
+            Layout.fillWidth: true
+            spacing: 1
+            Label { width: parent.width; text: page.hello + ", " + (Quickshell.env("USER") || "you"); strong: true; font.pixelSize: Theme.sizeTitle }
+            Label { width: parent.width; text: Qt.formatDateTime(new Date(), "dddd d MMMM") + "  ·  up " + page.uptime; muted: true; font.pixelSize: Theme.sizeSmall + 1 }
+        }
+        IconTabs {
+            Layout.fillWidth: false
+            Layout.preferredWidth: 440
+            opts: page.tabs
             value: page.tab
             onPicked: v => HubState.ccTab = v
         }
-        Item { Layout.fillWidth: true }
-        // who and where: user@host and how long it's been up
-        Label { text: Quickshell.env("USER") + "  ·  up " + page.uptime; muted: true; font.pixelSize: Theme.sizeSmall }
     }
     // how long it's been up, refreshed each minute while the page is open
     property string uptime: ""

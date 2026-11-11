@@ -18,9 +18,9 @@ Column {
     component Bar: IslandShape {
         id: isl
         property real screenW: pv.sw
-        bodyW: Theme.fullBar ? Math.round((screenW - 2 * Theme.barMargin) * Theme.barLength) : Math.max(Theme.islandMinW, real.implicitWidth)
+        bodyW: Theme.barWidth(screenW, real.needWidth)
         height: Theme.islandH
-        r: Theme.fullBar ? (Theme.barLength < 0.999 ? Theme.islandRadius / 2 : 0) : (Theme.square ? 0 : height / 2)
+        r: Theme.fullBar ? (bodyW < screenW - 2 * Theme.barMargin - 1 ? Theme.islandRadius / 2 : 0) : (Theme.square ? 0 : height / 2)
         ear: Theme.fullBar ? 0 : Theme.islandEar
         fill: Theme.barFloats ? "transparent" : (Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
         shadow: !Theme.barFloats && Theme.barOpacity > 0.3
@@ -43,7 +43,7 @@ Column {
                 id: real
                 screenName: pv.scr ? pv.scr.name : ""
                 x: Theme.fullBar ? 0 : Math.round((parent.width - width) / 2)
-                width: Theme.fullBar ? parent.width : implicitWidth
+                width: Theme.fullBar ? parent.width : (Theme.barSpread ? Math.max(needWidth, isl.bodyW) : implicitWidth)
             }
         }
     }
@@ -130,11 +130,11 @@ Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: Math.min(cb.width, parent.width)
             height: parent.height
-            readonly property real fit: cb.width > parent.width - 16 && !Theme.fullBar ? (parent.width - 16) / cb.width : 1
+            readonly property real fit: cb.width > parent.width - 16 && Theme.barLengthMode !== "percent" ? (parent.width - 16) / cb.width : 1
             Bar {
                 id: cb
                 y: Math.min(Theme.barMargin, 12)
-                screenW: Theme.fullBar ? Math.max(pv.width - 16, (pv.width - 16) / Math.max(0.2, Theme.barLength)) : pv.sw
+                screenW: Theme.barLengthMode === "percent" ? Math.max(pv.width - 16, (pv.width - 16) / Math.max(0.2, Theme.barLength)) : pv.sw
                 anchors.horizontalCenter: parent.horizontalCenter
                 scale: close.fit
                 transformOrigin: Item.Top

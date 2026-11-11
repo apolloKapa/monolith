@@ -81,9 +81,10 @@ PanelWindow {
     // menus you filter by typing keep the search field; the rest show their name there
     readonly property bool usesQuery: HubState.page === "search" || !!(currentPage && currentPage.usesQuery)
     // the body's size: the bar's when collapsed, the page's when open
-    readonly property real openW: Math.max(bar.implicitWidth, (pageInfo[HubState.page] || pageInfo.search).w)
+    readonly property real openW: Math.max(bar.needWidth, (pageInfo[HubState.page] || pageInfo.search).w)
     readonly property real openH: Math.min(height - 40, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
-    readonly property real restW: Theme.fullBar ? Math.round((width - 2 * Theme.barMargin) * Theme.barLength) : Math.max(Theme.islandMinW, bar.implicitWidth)
+    readonly property real restW: Theme.barWidth(width, bar.needWidth)
+    readonly property bool barShort: restW < width - 2 * Theme.barMargin - 1   // a full bar that doesn't reach the screen's sides
     // the bar can be off on some screens (Settings → Bar); menus still open there
     readonly property bool barHere: (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) === -1
     // the bar's own background shows when it's open, or per its opacity setting
@@ -112,7 +113,7 @@ PanelWindow {
         id: island
         bodyW: win.grown ? win.openW : (win.toastOn ? Math.max(win.restW, 520) : win.restW)
         height: win.grown ? win.openH : (win.toastOn ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
-        r: win.grown || win.toastOn ? Theme.islandRadius : (Theme.fullBar ? (Theme.barLength < 0.999 ? Theme.islandRadius / 2 : 0) : (Theme.square ? 0 : height / 2))
+        r: win.grown || win.toastOn ? Theme.islandRadius : (Theme.fullBar ? (win.barShort ? Theme.islandRadius / 2 : 0) : (Theme.square ? 0 : height / 2))
         // a floating bar draws its own rounded background (Solid) or none at all (Modular: its
         // sections have pills), so the hanging shape stays empty
         // the Frame paints the bar's background itself (as part of one shape), so here it's empty
@@ -181,7 +182,7 @@ PanelWindow {
                 trayWindow: win
                 y: win.bottom ? body.height - Theme.islandH : 0
                 x: Theme.fullBar ? 0 : Math.round((body.width - width) / 2)
-                width: Theme.fullBar ? body.width : implicitWidth
+                width: Theme.fullBar ? body.width : (Theme.barSpread ? Math.max(needWidth, win.restW) : implicitWidth)
             }
 
             // ── a new notification, while closed ──

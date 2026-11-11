@@ -113,16 +113,30 @@ ColumnLayout {
         icon: "height"; title: "Height"
         NumberBox { from: 28; to: 72; slideTo: 60; unit: "px"; value: Theme.islandH; onMoved: v => Store.set("bar.height", v) }
     }
+    // the bar's length: as long as its modules need, a share of the screen, or an exact size
+    SettingRow {
+        key: "bar.lengthMode";
+        visible: Theme.barStyle !== "frame"
+        icon: "width"; title: "Length"
+        desc: Theme.barLengthMode === "fit" ? "As long as its modules need" : (Theme.barLengthMode === "percent" ? "A share of the screen's width" : "An exact length, the same on every screen")
+        Segmented { width: 300; opts: [["fit", "Fit"], ["percent", "% of screen"], ["px", "Pixels"]]; value: Theme.barLengthMode; onPicked: v => Store.set("bar.lengthMode", v) }
+    }
     SettingRow {
         key: "bar.length";
-        visible: Theme.fullBar
-        icon: "width"; title: "Length"; desc: "How much of the screen's width the bar takes (centred)"
-        NumberBox { from: 0.3; to: 1; step: 0.01; decimals: 2; factor: 100; unit: "%"; value: Theme.barLength; onMoved: v => Store.set("bar.length", v) }
+        visible: Theme.barStyle !== "frame" && Theme.barLengthMode === "percent"
+        icon: "percent"; title: "Share of the screen"; desc: "Centred; it never gets shorter than its modules"
+        NumberBox { from: 0.2; to: 1; step: 0.01; decimals: 2; factor: 100; unit: "%"; value: Theme.barLength; onMoved: v => Store.set("bar.length", v) }
+    }
+    SettingRow {
+        key: "bar.lengthPx";
+        visible: Theme.barStyle !== "frame" && Theme.barLengthMode === "px"
+        icon: "straighten"; title: "Length in pixels"; desc: "Centred; never shorter than its modules or longer than the screen"
+        NumberBox { from: 200; to: 7680; slideTo: 2560; step: 10; unit: "px"; value: Theme.barLengthPx; onMoved: v => Store.set("bar.lengthPx", v) }
     }
     SettingRow {
         key: "bar.minWidth";
-        visible: !Theme.fullBar
-        icon: "width"; title: "Island width"; desc: "At least this wide (it grows with its modules)"
+        visible: Theme.barStyle !== "frame" && Theme.barLengthMode === "fit"
+        icon: "expand"; title: "At least this long"; desc: "It grows from here as modules need more room"
         NumberBox { from: 200; to: 2000; slideTo: 1400; step: 10; unit: "px"; value: Theme.islandMinW; onMoved: v => Store.set("bar.minWidth", v) }
     }
     SettingRow {
