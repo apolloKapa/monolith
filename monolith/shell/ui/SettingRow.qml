@@ -20,10 +20,31 @@ Rectangle {
     Layout.fillWidth: true
     implicitHeight: Math.max(64, texts.implicitHeight + 24)
     radius: Theme.corner(56, 2)
-    color: Theme.containerHigh
+    color: hov.hovered ? Theme.mix(Theme.containerHigh, Theme.control, 0.55) : Theme.containerHigh
+    Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
     border.width: Theme.outlineW
     border.color: Theme.outlineColor
-    Bubble { id: b; x: 12; anchors.verticalCenter: parent.verticalCenter; size: 38; icon: row.icon }
+    HoverHandler { id: hov }
+
+    // rows come up one after another when a page opens (the lower, the later)
+    property real enter: 0
+    opacity: enter
+    transform: Translate { y: (1 - row.enter) * 16 }
+    SequentialAnimation {
+        id: enterAnim
+        PauseAnimation { id: enterWait }
+        NumberAnimation { target: row; property: "enter"; to: 1; duration: Theme.ms(340); easing.type: Easing.OutCubic }
+    }
+    Timer { interval: 1; running: true; onTriggered: { enterWait.duration = Theme.ms(Math.min(320, Math.max(0, row.y) * 0.4)); enterAnim.start(); } }
+
+    // the icon leans in when the pointer is on its row
+    Bubble {
+        id: b; x: 12; anchors.verticalCenter: parent.verticalCenter; size: 38; icon: row.icon
+        scale: hov.hovered ? 1.1 : 1
+        rotation: hov.hovered ? -6 : 0
+        Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
+        Behavior on rotation { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
+    }
     Column {
         id: texts
         anchors.left: b.right; anchors.leftMargin: 12

@@ -10,27 +10,28 @@ import "../ui"
 Page {
     id: page
     pageId: "settings"
-    implicitHeight: 680
+    implicitHeight: 800
+    height: Math.min(implicitHeight, parent && parent.height > 0 ? parent.height : implicitHeight)
     readonly property string section: HubState.settingsSection
 
     // sections down the left; one with several pages unfolds them underneath it (a section with
     // a single page just opens). A page is [id, title, file in settings/]; HubState.settingsSection
     // is a page id. `gap` puts a separator above a section.
     readonly property var categories: [
-        { id: "general", title: "General", icon: "person", tabs: [["general", "You & weather", "General"], ["about", "Updates & about", "About"]] },
-        { id: "theme", title: "Appearance", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Dark mode, font & icons", "Appearance"], ["wallpaper", "Wallpaper", "Wallpaper"], ["effects", "Effects & animations", "Effects"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Terminal greeting", "Fastfetch"]] },
-        { id: "bar", title: "Bar", icon: "toolbar", tabs: [["bar", "Layout & modules", "BarLayout"], ["status", "Auto-hide", "Status"], ["barscreens", "Bar & dock per screen", "BarScreens"]] },
-        { id: "menus", title: "Menus & launcher", icon: "apps", tabs: [["search", "Launcher", "Search"], ["menus", "Where menus open", "Menus"]] },
-        { id: "dock", title: "Dock", icon: "dock_to_bottom", tabs: [["dock", "Dock", "Dock"]] },
-        { id: "desktop", title: "Desktop", icon: "widgets", tabs: [["desktop", "Widgets", "Desktop"], ["quickaccess", "Quick access (screen edges)", "QuickAccess"]] },
-        { id: "windows", title: "Windows", icon: "select_window", tabs: [["windows", "Windows", "Windows"]] },
-        { id: "display", title: "Displays", icon: "monitor", gap: true, tabs: [["display", "Monitors", "Display"], ["nightlight", "Night light", "Night"]] },
-        { id: "devices", title: "Devices", icon: "keyboard", tabs: [["input", "Keyboard & mouse", "Input"], ["devices", "Microphone & camera", "Devices"]] },
-        { id: "alerts", title: "Notifications", icon: "notifications", tabs: [["notifications", "Notifications", "Notifications"], ["sounds", "Sounds", "SoundSettings"], ["osd", "On-screen pop-up", "Osd"]] },
-        { id: "lock", title: "Lock & idle", icon: "lock_clock", gap: true, tabs: [["idle", "Lock & idle", "Idle"]] },
-        { id: "capture", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots", "Capture"]] },
-        { id: "software", title: "Software", icon: "deployed_code", tabs: [["software", "Software", "Software"]] },
-        { id: "wellbeing", title: "Wellbeing", icon: "self_improvement", tabs: [["wellbeing", "Wellbeing", "Wellbeing"]] }
+        { id: "general", desc: "Who you are, the weather, updates", title: "General", icon: "person", tabs: [["general", "You & weather", "General"], ["about", "Updates & about", "About"]] },
+        { id: "theme", desc: "How everything looks: style, colours, wallpaper, motion", title: "Appearance", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Dark mode, font & icons", "Appearance"], ["wallpaper", "Wallpaper", "Wallpaper"], ["effects", "Effects & animations", "Effects"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Terminal greeting", "Fastfetch"]] },
+        { id: "bar", desc: "What the bar shows and where it sits", title: "Bar", icon: "toolbar", tabs: [["bar", "Layout & modules", "BarLayout"], ["status", "Auto-hide", "Status"], ["barscreens", "Bar & dock per screen", "BarScreens"]] },
+        { id: "menus", desc: "The launcher and where menus open", title: "Menus & launcher", icon: "apps", tabs: [["search", "Launcher", "Search"], ["menus", "Where menus open", "Menus"]] },
+        { id: "dock", desc: "Your pinned and running apps", title: "Dock", icon: "dock_to_bottom", tabs: [["dock", "Dock", "Dock"]] },
+        { id: "desktop", desc: "Widgets and the screen edges", title: "Desktop", icon: "widgets", tabs: [["desktop", "Widgets", "Desktop"], ["quickaccess", "Quick access (screen edges)", "QuickAccess"]] },
+        { id: "windows", desc: "Gaps, borders and how windows move", title: "Windows", icon: "select_window", tabs: [["windows", "Windows", "Windows"]] },
+        { id: "display", desc: "Monitors, scaling and night light", title: "Displays", icon: "monitor", gap: true, tabs: [["display", "Monitors", "Display"], ["nightlight", "Night light", "Night"]] },
+        { id: "devices", desc: "Keyboard, mouse, microphone and camera", title: "Devices", icon: "keyboard", tabs: [["input", "Keyboard & mouse", "Input"], ["devices", "Microphone & camera", "Devices"]] },
+        { id: "alerts", desc: "Notifications, sounds and pop-ups", title: "Notifications", icon: "notifications", tabs: [["notifications", "Notifications", "Notifications"], ["sounds", "Sounds", "SoundSettings"], ["osd", "On-screen pop-up", "Osd"]] },
+        { id: "lock", desc: "Locking, sleeping and what happens when you're away", title: "Lock & idle", icon: "lock_clock", gap: true, tabs: [["idle", "Lock & idle", "Idle"]] },
+        { id: "capture", desc: "Screenshots and recordings", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots", "Capture"]] },
+        { id: "software", desc: "Apps and updates for this PC", title: "Software", icon: "deployed_code", tabs: [["software", "Software", "Software"]] },
+        { id: "wellbeing", desc: "Screen time and breaks", title: "Wellbeing", icon: "self_improvement", tabs: [["wellbeing", "Wellbeing", "Wellbeing"]] }
     ]
     // the open category and tab (an unknown id shows the first)
     readonly property var category: categories.find(c => c.tabs.some(t => t[0] === section)) || categories[0]
@@ -39,18 +40,43 @@ Page {
 
     RowLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 12
 
         // ── the sections ──
         Rectangle {
-            Layout.preferredWidth: 236
+            Layout.preferredWidth: 264
             Layout.fillHeight: true
             radius: Theme.corner(56, 6)
             color: Theme.container
+            border.width: Theme.outlineW
+            border.color: Theme.outlineColor
+
+            // you, on top: a click opens General
+            Pressable {
+                id: me
+                x: 8; y: 8
+                width: parent.width - 16
+                height: 64
+                radius: Theme.corner(height, 2)
+                color: hovered ? Theme.containerHigh : "transparent"
+                onClicked: HubState.settingsSection = "general"
+                Avatar { id: face; x: 10; anchors.verticalCenter: parent.verticalCenter; size: 42; scale: me.hovered ? 1.06 : 1; Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } } }
+                Column {
+                    anchors.left: face.right; anchors.leftMargin: 12
+                    anchors.right: parent.right; anchors.rightMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 1
+                    Label { width: parent.width; text: Quickshell.env("USER") || "You"; strong: true; font.pixelSize: Theme.sizeBody + 1 }
+                    Label { width: parent.width; text: "Monolith " + Updates.version; muted: true; font.pixelSize: Theme.sizeSmall }
+                }
+            }
+            Rectangle { x: 16; y: 78; width: parent.width - 32; height: 1; color: Theme.hairline }
+
             Flickable {
                 SmoothWheel {}
-                anchors.fill: parent
-                anchors.margins: 6
+                x: 8; y: 85
+                width: parent.width - 16
+                height: parent.height - y - 8
                 contentHeight: list.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
@@ -74,12 +100,24 @@ Page {
                                 Rectangle { anchors.verticalCenter: parent.verticalCenter; x: 10; width: parent.width - 20; height: 1; color: Theme.hairline }
                             }
                             Pressable {
+                                id: head
                                 width: parent.width
-                                height: 40
+                                height: 44
                                 color: sec.cur && !sec.many ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
                                 onClicked: HubState.settingsSection = sec.modelData.tabs[0][0]
-                                Icon { x: 12; anchors.verticalCenter: parent.verticalCenter; name: sec.modelData.icon; size: 20; filled: sec.cur; color: sec.cur ? Theme.accent : Theme.text }
-                                Label { x: 42; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 70; elide: Text.ElideRight; text: sec.modelData.title; strong: sec.cur }
+                                // its icon on a little tile that lights up when it's the open one
+                                Rectangle {
+                                    id: tile
+                                    x: 7; anchors.verticalCenter: parent.verticalCenter
+                                    width: 30; height: 30
+                                    radius: Theme.corner(height, -2)
+                                    color: sec.cur ? Theme.accent : (head.hovered ? Theme.control : "transparent")
+                                    scale: head.pressed ? 0.9 : (head.hovered && !sec.cur ? 1.08 : 1)
+                                    Behavior on color { ColorAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
+                                    Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
+                                    Icon { anchors.centerIn: parent; name: sec.modelData.icon; size: 19; filled: sec.cur; color: sec.cur ? Theme.onAccent : Theme.text; Behavior on color { ColorAnimation { duration: Theme.ms(220) } } }
+                                }
+                                Label { x: 48; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 76; elide: Text.ElideRight; text: sec.modelData.title; strong: sec.cur }
                                 // it has pages: an arrow that turns as it unfolds
                                 Icon {
                                     visible: sec.many
@@ -95,7 +133,7 @@ Page {
                                 width: parent.width
                                 height: sec.cur ? pages.implicitHeight + 4 : 0
                                 clip: true
-                                Behavior on height { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.OutCubic } }
+                                Behavior on height { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
                                 Rectangle { x: 21; y: 2; width: 2; height: pages.implicitHeight - 4; radius: 1; color: Theme.hairline }
                                 Column {
                                     id: pages
@@ -105,13 +143,26 @@ Page {
                                     Repeater {
                                         model: sec.many ? sec.modelData.tabs : []
                                         Pressable {
+                                            id: sub
                                             required property var modelData
                                             readonly property bool on: page.tab[0] === modelData[0] && sec.cur
                                             width: pages.width
-                                            height: 32
+                                            height: 34
                                             color: on ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
                                             onClicked: HubState.settingsSection = modelData[0]
-                                            Label { x: 12; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 20; elide: Text.ElideRight; text: parent.modelData[1]; strong: parent.on; color: parent.on ? Theme.text : Theme.subtext; font.pixelSize: Theme.sizeSmall + 1 }
+                                            // the open page's mark, growing out of the line
+                                            Rectangle {
+                                                x: -10; anchors.verticalCenter: parent.verticalCenter
+                                                width: 4; height: sub.on ? 18 : 0; radius: 2
+                                                color: Theme.accent
+                                                Behavior on height { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
+                                            }
+                                            Label {
+                                                x: sub.hovered && !sub.on ? 15 : 12
+                                                Behavior on x { NumberAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
+                                                anchors.verticalCenter: parent.verticalCenter; width: parent.width - 22; elide: Text.ElideRight
+                                                text: sub.modelData[1]; strong: sub.on; color: sub.on ? Theme.text : Theme.subtext; font.pixelSize: Theme.sizeSmall + 1
+                                            }
                                         }
                                     }
                                 }
@@ -122,25 +173,50 @@ Page {
             }
         }
 
-        // ── the open category: its tabs along the top, the open tab below ──
+        // ── the open page: what it is on top, its settings below ──
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 10
-        // the open page's name (and its section's, when it has several pages)
-        Column {
+            spacing: 12
+        Item {
+            id: banner
             Layout.fillWidth: true
+            Layout.preferredHeight: 64
             visible: page.section !== "welcome"
-            spacing: 0
-            Label { visible: page.category.tabs.length > 1; text: page.category.title; muted: true; font.pixelSize: Theme.sizeSmall }
-            Label { text: page.category.tabs.length > 1 ? page.tab[1] : page.category.title; strong: true; font.pixelSize: Theme.sizeTitle + 2 }
+            // the icon pops and the words slide in each time another page opens
+            property real pop: 1
+            NumberAnimation { id: popAnim; target: banner; property: "pop"; from: 0; to: 1; duration: Theme.ms(420); easing.type: Easing.OutCubic }
+            Rectangle {
+                id: mark
+                x: 4; anchors.verticalCenter: parent.verticalCenter
+                width: 52; height: 52
+                radius: Theme.corner(height, 4)
+                color: Theme.accent
+                scale: 0.7 + 0.3 * banner.pop
+                rotation: -18 * (1 - banner.pop)
+                Icon { anchors.centerIn: parent; name: page.category.icon; size: 28; filled: true; color: Theme.onAccent }
+            }
+            Column {
+                anchors.left: mark.right; anchors.leftMargin: 16 + 14 * (1 - banner.pop)
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                opacity: banner.pop
+                spacing: 2
+                Row {
+                    spacing: 8
+                    Label { visible: page.category.tabs.length > 1 && page.tab[1] !== page.category.title; text: page.category.title; muted: true; font.pixelSize: Theme.sizeHeadline - 4; anchors.baseline: big.baseline }
+                    Icon { visible: page.category.tabs.length > 1 && page.tab[1] !== page.category.title; name: "chevron_right"; size: 20; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
+                    Label { id: big; text: page.category.tabs.length > 1 ? page.tab[1] : page.category.title; strong: true; font.pixelSize: Theme.sizeHeadline - 4 }
+                }
+                Label { width: parent.width; text: page.category.desc || ""; muted: true }
+            }
         }
         Flickable {
             SmoothWheel {}
             id: flick
             Layout.fillWidth: true
             Layout.fillHeight: true
-            contentHeight: loader.item ? loader.item.implicitHeight : 0
+            contentHeight: loader.item ? loader.item.implicitHeight + 8 : 0
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             Loader {
@@ -149,13 +225,21 @@ Page {
                 // loaded while the page is open; the section reloads its data each time
                 active: page.current && HubState.open
                 source: "settings/" + page.file + ".qml"
-                onSourceChanged: { flick.contentY = 0; pageIn.restart(); }
-                // a page comes in like everything else: fading in with a little zoom
-                transformOrigin: Item.Top
-                ParallelAnimation {
-                    id: pageIn
-                    NumberAnimation { target: loader; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: loader; property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+                onSourceChanged: { flick.contentY = 0; pageIn.restart(); popAnim.restart(); }
+                // the page fades in while its rows come up one after another (ui/SettingRow)
+                NumberAnimation { id: pageIn; target: loader; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+            }
+            // more below: the page fades out at the bottom edge
+            Rectangle {
+                parent: flick
+                anchors.bottom: parent.bottom
+                width: parent.width; height: 28
+                visible: opacity > 0.01
+                opacity: Theme.see >= 1 && flick.contentHeight - flick.contentY - flick.height > 6 ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
+                gradient: Gradient {
+                    GradientStop { position: 0; color: Qt.alpha(Theme.frame, 0) }
+                    GradientStop { position: 1; color: Theme.frame }
                 }
             }
         }
