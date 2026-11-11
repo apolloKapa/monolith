@@ -29,3 +29,4 @@ singleton Power 1.0 Power.qml
 singleton Notes 1.0 Notes.qml
 singleton Sounds 1.0 Sounds.qml
 singleton Throw 1.0 Throw.qml
+singleton Sketch 1.0 Sketch.qml

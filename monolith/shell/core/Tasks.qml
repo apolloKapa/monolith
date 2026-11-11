@@ -27,6 +27,29 @@ Singleton {
     }
     function startTimer(min) { total = min * 60; remaining = total; timing = true; }
     function fmt(s) { return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+    // more time on a running (or paused) timer
+    function addTime(min) { if (total <= 0) { startTimer(min); return; } total += min * 60; remaining += min * 60; if (remaining > 0) timing = true; }
+    // hours too, once there are some
+    function fmtLong(s) { return s >= 3600 ? Math.floor(s / 3600) + ":" + String(Math.floor(s % 3600 / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0") : fmt(s); }
+
+    // ── stopwatch (quick access), with laps ──
+    property bool swRunning: false
+    property real swAccum: 0          // ms counted before the current run
+    property real swStart: 0
+    property real swNow: 0
+    property var laps: []             // the time at each lap, newest first
+    readonly property real swMs: swAccum + (swRunning ? Math.max(0, swNow - swStart) : 0)
+    Timer { interval: 31; repeat: true; running: tasks.swRunning; onTriggered: tasks.swNow = Date.now() }
+    function swToggle() {
+        if (swRunning) { swAccum += Date.now() - swStart; swRunning = false; }
+        else { swStart = Date.now(); swNow = swStart; swRunning = true; }
+    }
+    function swLap() { if (swMs > 0) laps = [swMs].concat(laps).slice(0, 99); }
+    function swReset() { swRunning = false; swAccum = 0; swNow = 0; laps = []; }
+    function fmtMs(ms) {
+        const cs = Math.floor(ms / 10) % 100, s = Math.floor(ms / 1000);
+        return fmtLong(s) + "." + String(cs).padStart(2, "0");
+    }
 
     // ── screen recording (wf-recorder, to ~/Videos/Recordings) ──
     readonly property string recDir: Quickshell.env("HOME") + "/Videos/Recordings"

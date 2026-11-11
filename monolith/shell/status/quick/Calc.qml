@@ -4,29 +4,79 @@ import Quickshell
 import "../../core"
 import "../../ui"
 
-// A calculator: keys or typing; = shows the result (click it to copy).
+// A calculator: keys or typing. The answer shows as you type; = (or Enter) keeps it in the
+// history (click a line to use it again, the answer to copy it). The scientific keys add
+// powers, roots, trig (in degrees or radians), logs, π, e and "ans" (the last answer).
 ColumnLayout {
     id: c
     spacing: 8
     property string expr: ""
     property string result: ""
-    function evalNow() {
+    property bool sci: Store.get("quick.calcSci", false) === true
+    property bool deg: true
+    property var history: []           // [{ e, r }], newest first
+    property string ans: "0"
+
+    // the expression as JavaScript, with the calculator's names as plain functions
+    function compute(x) {
+        if (x.trim() === "") return "";
         try {
-            const v = Function('"use strict"; return (' + expr.replace(/×/g, "*").replace(/÷/g, "/").replace(/\^/g, "**").replace(/,/g, ".") + ')')();
-            result = typeof v === "number" && isFinite(v) ? String(Math.round(v * 1e10) / 1e10) : "Error";
-        } catch (e) { result = "Error"; }
+            const src = x.replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/\^/g, "**").replace(/π/g, "pi").replace(/√/g, "sqrt")
+                         .replace(/(\d+(\.\d+)?)%/g, "($1/100)").replace(/,/g, ".");
+            if (/[^0-9a-z+\-*/().\s]/i.test(src)) return "Error";
+            const k = c.deg ? Math.PI / 180 : 1;
+            const v = Function("sin", "cos", "tan", "asin", "acos", "atan", "sqrt", "ln", "log", "abs", "pi", "e", "ans", "fact", '"use strict"; return (' + src + ")")(
+                a => Math.sin(a * k), a => Math.cos(a * k), a => Math.tan(a * k),
+                a => Math.asin(a) / k, a => Math.acos(a) / k, a => Math.atan(a) / k,
+                Math.sqrt, Math.log, Math.log10, Math.abs, Math.PI, Math.E, Number(c.ans),
+                n => { let r = 1; for (let i = 2; i <= Math.min(170, Math.floor(n)); i++) r *= i; return r; });
+            if (typeof v !== "number" || !isFinite(v)) return "Error";
+            return String(Math.abs(v) >= 1e15 || (Math.abs(v) < 1e-9 && v !== 0) ? v.toPrecision(10) : Math.round(v * 1e10) / 1e10);
+        } catch (e) { return "Error"; }
+    }
+    // shown while you type
+    readonly property string live: compute(expr)
+    function evalNow() {
+        const r = compute(expr);
+        if (r === "" ) return;
+        result = r;
+        if (r !== "Error") { history = [{ e: expr, r: r }].concat(history).slice(0, 30); ans = r; }
     }
     function press(k) {
         if (k === "C") { expr = ""; result = ""; }
         else if (k === "⌫") expr = expr.slice(0, -1);
         else if (k === "=") evalNow();
+        else if (["sin", "cos", "tan", "ln", "log", "√", "asin", "acos", "atan", "abs", "fact"].indexOf(k) !== -1) expr += k + "(";
+        else if (k === "x²") expr += "^2";
+        else if (k === "xʸ") expr += "^";
+        else if (k === "1/x") expr = "1/(" + expr + ")";
+        else if (k === "±") expr = expr.startsWith("-(") && expr.endsWith(")") ? expr.slice(2, -1) : "-(" + expr + ")";
         else expr += k;
+        input.forceActiveFocus();
     }
-    Label { text: "Calculator"; strong: true; font.pixelSize: Theme.sizeTitle }
+    function copy(v) { if (v !== "" && v !== "Error") Quickshell.execDetached(["wl-copy", "--", v]); }
+
+    RowLayout {
+        Layout.fillWidth: true
+        Label { text: "Calculator"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.fillWidth: true }
+        Pressable {
+            visible: c.sci
+            width: dl.implicitWidth + 18; height: 30
+            color: Theme.control
+            onClicked: c.deg = !c.deg
+            Label { id: dl; anchors.centerIn: parent; text: c.deg ? "DEG" : "RAD"; strong: true; font.pixelSize: Theme.sizeSmall }
+        }
+        Pressable {
+            width: sl.implicitWidth + 18; height: 30
+            color: c.sci ? Theme.accentContainer : Theme.control
+            onClicked: { c.sci = !c.sci; Store.set("quick.calcSci", c.sci); }
+            Label { id: sl; anchors.centerIn: parent; text: "Scientific"; font.pixelSize: Theme.sizeSmall; color: c.sci ? Theme.onAccentContainer : Theme.text }
+        }
+    }
     Rectangle {
         Layout.fillWidth: true
-        Layout.preferredHeight: 92
-        radius: Theme.corner(92, 4)
+        Layout.preferredHeight: 96
+        radius: Theme.corner(96, 4)
         color: Theme.container
         TextInput {
             id: input
@@ -34,6 +84,7 @@ ColumnLayout {
             text: c.expr
             onTextEdited: c.expr = text
             onAccepted: c.evalNow()
+            Keys.onEscapePressed: event => { if (text !== "") { c.expr = ""; c.result = ""; } else event.accepted = false; }
             color: Theme.subtext
             font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTitle
             horizontalAlignment: TextInput.AlignRight
@@ -43,10 +94,49 @@ ColumnLayout {
         Text {
             anchors.right: parent.right; anchors.rightMargin: 14
             anchors.bottom: parent.bottom; anchors.bottomMargin: 10
-            text: c.result === "" ? "0" : c.result
-            color: Theme.text
+            width: parent.width - 28
+            horizontalAlignment: Text.AlignRight
+            elide: Text.ElideLeft
+            // the kept answer, or what it comes to so far (fainter)
+            readonly property bool pending: c.live !== "" && c.live !== "Error" && c.live !== c.result
+            text: pending ? "= " + c.live : (c.result === "" ? "0" : c.result)
+            color: pending ? Theme.subtext : Theme.text
             font.family: Theme.fontFamily; font.pixelSize: Theme.sizeHeadline + 6; font.weight: Font.Bold
-            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: if (c.result !== "" && c.result !== "Error") Quickshell.execDetached(["wl-copy", "--", c.result]) }
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: c.copy(c.result) }
+        }
+    }
+    // the history: click one to use it again
+    ListView {
+        Layout.fillWidth: true
+        Layout.preferredHeight: c.history.length === 0 ? 0 : Math.min(3, c.history.length) * 28
+        visible: c.history.length > 0
+        clip: true
+        model: c.history
+        delegate: Pressable {
+            required property var modelData
+            width: ListView.view.width; height: 28
+            color: hovered ? Theme.containerHigh : "transparent"
+            onClicked: { c.expr = modelData.e; input.forceActiveFocus(); }
+            Label { x: 10; width: parent.width * 0.6; elide: Text.ElideRight; anchors.verticalCenter: parent.verticalCenter; text: parent.modelData.e; muted: true; font.pixelSize: Theme.sizeSmall }
+            Label { anchors.right: parent.right; anchors.rightMargin: 10; anchors.verticalCenter: parent.verticalCenter; text: "= " + parent.modelData.r; strong: true; font.pixelSize: Theme.sizeSmall }
+        }
+    }
+    GridLayout {
+        visible: c.sci
+        Layout.fillWidth: true
+        columns: 5
+        rowSpacing: 6; columnSpacing: 6
+        Repeater {
+            model: ["sin", "cos", "tan", "π", "e", "ln", "log", "√", "x²", "xʸ", "1/x", "±", "%", "fact", "ans"]
+            Pressable {
+                required property string modelData
+                // (fixed height: the number keys below take the rest)
+                Layout.fillWidth: true
+                Layout.preferredHeight: 34
+                color: Theme.container
+                onClicked: c.press(modelData)
+                Label { anchors.centerIn: parent; text: parent.modelData === "fact" ? "n!" : parent.modelData; font.pixelSize: Theme.sizeSmall + 1 }
+            }
         }
     }
     GridLayout {
