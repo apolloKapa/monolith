@@ -52,7 +52,12 @@ Page {
     // installed, just not in the launcher
     readonly property var hiddenIds: Store.get("search.hidden", []) || []
     function isHidden(entry) { return hiddenIds.indexOf(entry.id) !== -1; }
-    function hide(entry) { if (!isHidden(entry)) Store.set("search.hidden", hiddenIds.concat([entry.id])); }
+    function hide(entry) {
+        if (isHidden(entry)) return;
+        Store.set("search.hidden", hiddenIds.concat([entry.id]));
+        // the selected one hidden: the next one (or the one before) instead
+        Qt.callLater(() => { if (rowGone(list.currentIndex)) { stepRow(1); if (rowGone(list.currentIndex)) stepRow(-1); } });
+    }
     // the right-click menu: which app, and where (in the page)
     property var menuEntry: null
     property point menuAt: Qt.point(0, 0)
@@ -94,7 +99,9 @@ Page {
     function uses(id) { return Store.get("search.ranking", true) === false ? 0 : Number(Store.get("launches." + id.replace(/\./g, "_"), 0)); }
     // every app that shows (not hidden), the ones you open most first; made again only when the
     // apps or the hidden ones change, keeping where the list was scrolled to
-    readonly property string appsKey: JSON.stringify(hiddenIds) + "|" + (Store.get("search.ranking", true) !== false)
+    // (in the list, hiding one folds its row shut where it is: no rebuild while it's open, so no
+    // jump. The grid can't fold a tile, so it's made again there)
+    readonly property string appsKey: (showGrid ? JSON.stringify(hiddenIds) : "") + "|" + (Store.get("search.ranking", true) !== false)
     property var apps: []
     function rebuildApps() {
         const ly = list.contentY, gy = appGrid.contentY, ci = list.currentIndex;
@@ -203,7 +210,7 @@ Page {
 
     function activate(i) {
         const it = results[i];
-        if (!it) return;
+        if (!it || rowGone(i)) return;
         if (it.kind === "app") { it.entry.execute(); Store.set("launches." + it.entry.id.replace(/\./g, "_"), uses(it.entry.id) + 1); }
         else if (it.kind === "emoji") Quickshell.execDetached(["wl-copy", "--", it.glyph]);
         else if (it.kind === "file") Quickshell.execDetached(["xdg-open", it.path]);
@@ -212,8 +219,15 @@ Page {
         page.done();
     }
 
-    Keys.onUpPressed: list.currentIndex = Math.max(0, list.currentIndex - 1)
-    Keys.onDownPressed: list.currentIndex = Math.min(results.length - 1, list.currentIndex + 1)
+    // (past the rows of apps hidden while it's open)
+    function rowGone(i) { const r = results[i]; return !!r && r.kind === "app" && isHidden(r.entry); }
+    function stepRow(d) {
+        let i = list.currentIndex + d;
+        while (i >= 0 && i < results.length && rowGone(i)) i += d;
+        if (i >= 0 && i < results.length) list.currentIndex = i;
+    }
+    Keys.onUpPressed: stepRow(-1)
+    Keys.onDownPressed: stepRow(1)
     Keys.onReturnPressed: activate(list.currentIndex)
     // Alt+←/→: the previous / next category
     Keys.onLeftPressed: event => { if (page.showCats && (event.modifiers & Qt.AltModifier)) page.stepCat(-1); else event.accepted = false; }
@@ -239,6 +253,8 @@ Page {
         y: page.favPlace === "bottom" ? parent.height - height : catBar.height
         width: page.favSide ? page.favSideW : parent.width
         height: !showing ? 0 : (page.favSide ? parent.height - catBar.height : favGrid.height + 12)
+        // (a new row of favourites slides the apps down instead of jumping)
+        Behavior on height { enabled: !page.favSide; NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
         visible: showing
         // (beside the apps, they scroll if there are more than fit)
         clip: page.favSide
@@ -389,7 +405,14 @@ Page {
             required property var modelData
             required property int index
             width: list.width
-            height: page.rowH
+            // hidden while the launcher is open: it folds shut (and is left out next time)
+            readonly property bool gone: isApp && page.isHidden(modelData.entry)
+            height: gone ? 0 : page.rowH
+            opacity: gone ? 0 : 1
+            visible: height > 0.5
+            clip: true
+            Behavior on height { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
             color: "transparent"
             onClicked: page.activate(index)
             // right-click an app: favourite or not, or hide it
