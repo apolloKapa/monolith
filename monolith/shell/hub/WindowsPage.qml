@@ -70,7 +70,7 @@ Page {
                         anchors.centerIn: parent
                         spacing: 6
                         Icon { name: "grid_view"; size: 18; anchors.verticalCenter: parent.verticalCenter }
-                        Label { text: "niri overview"; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: Niri.hyprland ? "Overview (hyprexpo)" : "niri overview"; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
                     }
                 }
             }

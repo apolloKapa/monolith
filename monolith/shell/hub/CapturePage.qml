@@ -63,7 +63,16 @@ Page {
             columnSpacing: 8
             Action { icon: "screenshot_region"; title: "Region"; sub: "Pick an area"; onClicked: Capture.start({ mode: "region" }) }
             Action { icon: "screenshot_monitor"; title: "Screen"; sub: "The whole screen"; onClicked: Capture.start({ mode: "screen" }) }
-            Action { icon: "select_window"; title: "Window"; sub: "The focused window"; onClicked: page.later(["niri", "msg", "action", "screenshot-window"]) }
+            // niri's own window screenshot; on Hyprland, the focused window's area through grim,
+            // saved to Screenshots and copied (as niri's does)
+            Action {
+                icon: "select_window"; title: "Window"; sub: "The focused window"
+                onClicked: page.later(Niri.hyprland
+                    ? ["sh", "-c", "d=\"$HOME/Pictures/Screenshots\"; mkdir -p \"$d\"; f=\"$d/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png\"; "
+                       + "g=$(hyprctl activewindow -j | python3 -c 'import json,sys; w=json.load(sys.stdin); print(\"%d,%d %dx%d\" % (w[\"at\"][0], w[\"at\"][1], w[\"size\"][0], w[\"size\"][1]))') || exit; "
+                       + "grim -g \"$g\" \"$f\" && wl-copy < \"$f\" && notify-send -a Monolith -i \"$f\" 'Screenshot saved' \"$(basename \"$f\")\""]
+                    : ["niri", "msg", "action", "screenshot-window"])
+            }
             Action {
                 icon: "document_scanner"; title: "Text from region"; sub: "Recognise text, copy it"
                 onClicked: page.later(["sh", "-c", "g=$(slurp) || exit; grim -g \"$g\" - | tesseract - - 2>/dev/null | wl-copy && notify-send -a Monolith 'Text copied' \"$(wl-paste | head -c 120)\""])

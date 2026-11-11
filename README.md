@@ -134,6 +134,21 @@ Modular config in `~/.config/niri/` (source: `config/niri/`):
 
 The installer reads displays from the running niri. If you install from a TTY, nothing is pinned and niri picks each monitor's preferred mode; run `monolith installer` from inside niri later to pin the layout. Settings → Displays can also change resolution, refresh rate and scale, and saves them.
 
+## Running on Hyprland
+
+The shell also runs on [Hyprland](https://hyprland.org). It notices by itself (Hyprland sets `HYPRLAND_INSTANCE_SIGNATURE`) and reads workspaces, windows, the focused screen and the keyboard layout from Quickshell's Hyprland module instead of niri. Window switching and closing, workspaces, layout switching, turning screens off when idle and logging out use Hyprland's dispatchers. The installer sets Monolith up for niri and never edits your Hyprland config, so add these lines to `~/.config/hypr/hyprland.conf` yourself:
+
+```
+exec-once = ~/.local/bin/monolith start --login
+bind = SUPER, Space, exec, ~/.local/bin/monolith hub search
+bind = SUPER, A, exec, ~/.local/bin/monolith msg toggle system
+bind = SUPER, V, exec, ~/.local/bin/monolith msg toggle clipboard
+bind = SUPER SHIFT, S, exec, ~/.local/bin/monolith screenshot
+bind = SUPER, L, exec, ~/.local/bin/monolith lock
+```
+
+What stays niri-only: the Displays, Keyboard & mouse and Windows settings pages, the cursor theme and the screenshot folder setting change niri's config, so on Hyprland they show a note and you set those in `hyprland.conf`. The window switcher's overview button uses the [hyprexpo](https://github.com/hyprwm/hyprland-plugins) plugin when it's loaded.
+
 ## Keybinds
 
 `Mod` is the Super/Windows key. `Mod+Shift+/` shows niri's own list.

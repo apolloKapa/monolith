@@ -230,6 +230,24 @@ Page {
                 Label { width: parent.width; text: page.category.desc || ""; muted: true }
             }
         }
+        // on Hyprland: these pages change niri's settings (its config file), which apply when you
+        // log into niri; Hyprland takes its own from hyprland.conf
+        Rectangle {
+            readonly property var niriPages: ({ Display: "Monitors", Input: "Keyboard and mouse", Windows: "Gaps, borders and window rules", Appearance: "The cursor theme and size", Capture: "Where screenshots are saved" })
+            visible: Niri.hyprland && niriPages[page.file] !== undefined
+            Layout.fillWidth: true
+            Layout.preferredHeight: visible ? hyNote.implicitHeight + 20 : 0
+            radius: Theme.corner(56, 6)
+            color: Qt.alpha(Theme.accent, 0.12)
+            border.width: 1; border.color: Qt.alpha(Theme.accent, 0.35)
+            Icon { id: hyIcon; x: 12; y: 10; name: "info"; size: 20; color: Theme.accent }
+            Label {
+                id: hyNote
+                anchors.left: hyIcon.right; anchors.leftMargin: 10; anchors.right: parent.right; anchors.rightMargin: 12; y: 10
+                wrapMode: Text.WordWrap; font.pixelSize: Theme.sizeSmall
+                text: (parent.niriPages[page.file] || "") + ": these settings are niri's, so they apply when you log into niri. On Hyprland, set them in ~/.config/hypr/hyprland.conf."
+            }
+        }
         Flickable {
             SmoothWheel {}
             id: flick

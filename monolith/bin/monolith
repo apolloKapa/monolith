@@ -13,6 +13,7 @@
 #   monolith set <setting> <json> | get <setting>
 #   monolith installer [--update]                 update Monolith, or change the install's choices
 #   monolith migrate                              point an older niri config at this shell
+# Works on niri and on Hyprland (start it from hyprland.conf: exec-once = monolith start --login).
 here=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
 qml="$here/shell/shell.qml"
 niri_conf="${XDG_CONFIG_HOME:-$HOME/.config}/niri"
@@ -20,7 +21,13 @@ shots="$HOME/Pictures/Screenshots"
 
 ipc() { quickshell ipc -p "$qml" call "$@"; }
 running() { pgrep -f "quickshell -p $qml" >/dev/null; }
-start() { running || niri msg action spawn -- quickshell -p "$qml"; }
+# started by the compositor (so it gets the session's environment): niri, or Hyprland
+on_hyprland() { [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; }
+start() {
+    running && return
+    if on_hyprland; then hyprctl dispatch exec "quickshell -p '$qml'" >/dev/null
+    else niri msg action spawn -- quickshell -p "$qml"; fi
+}
 # any copy of the shell (an installed one, a checkout)
 stop() { pkill -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null; }
 
@@ -91,7 +98,15 @@ case "$1" in
         for a in "$@"; do case "$a" in --full) full=1 ;; --edit) edit=1 ;; esac; done
         # the whole screen straight away; otherwise the capture overlay (its menu: photo/video,
         # save, copy, edit, text, QR), on the whole screen with --full --edit
-        [ $full = 1 ] && [ $edit = 0 ] && exec niri msg action screenshot-screen
+        if [ $full = 1 ] && [ $edit = 0 ]; then
+            on_hyprland || exec niri msg action screenshot-screen
+            # Hyprland: the focused monitor through grim, saved and copied (as niri's does)
+            mkdir -p "$shots"
+            f="$shots/Screenshot from $(date '+%Y-%m-%d %H-%M-%S').png"
+            mon=$(hyprctl monitors -j | python3 -c 'import json,sys; print(next(m["name"] for m in json.load(sys.stdin) if m.get("focused")))')
+            grim -o "$mon" "$f" && wl-copy < "$f" && notify-send -a Monolith -i "$f" "Screenshot saved" "$(basename "$f")"
+            exit
+        fi
         edit_b=$([ $edit = 1 ] && echo true || echo false)
         ipc capture start photo "$([ $full = 1 ] && echo screen || echo region)" "$edit_b"
         ;;

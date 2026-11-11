@@ -58,7 +58,12 @@ Singleton {
     }
     Process {
         id: freeze
-        onExited: { cap.freezing = false; cap.stamp++; cap.active = true; focusProc.running = true; }
+        onExited: {
+            cap.freezing = false; cap.stamp++; cap.active = true;
+            // the focused screen: niri is asked; on Hyprland the shell already knows
+            if (Niri.hyprland) { cap.focused = Niri.focusedOutput; if (cap.mode === "screen" && cap.screenName === "") cap.screenName = cap.focused; }
+            else focusProc.running = true;
+        }
     }
     // in screen mode, the focused screen is picked to start with
     Process {

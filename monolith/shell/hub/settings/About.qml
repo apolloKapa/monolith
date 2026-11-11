@@ -12,11 +12,11 @@ ColumnLayout {
     property var info: ({})
     Process {
         running: true
-        command: ["sh", "-c", ". /etc/os-release; echo \"os=$PRETTY_NAME\"; echo \"kernel=$(uname -r)\"; echo \"cpu=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')\"; echo \"gpu=$(lspci 2>/dev/null | grep -i -m1 -E 'vga|3d|display' | sed 's/.*: //; s/ (rev.*//')\"; echo \"mem=$(awk '/MemTotal/{printf \"%.0f GB\", $2/1048576}' /proc/meminfo)\"; echo \"niri=$(niri --version 2>/dev/null)\"; echo \"qs=$(quickshell --version 2>/dev/null | head -1 | cut -d' ' -f2)\""]
+        command: ["sh", "-c", ". /etc/os-release; echo \"os=$PRETTY_NAME\"; echo \"kernel=$(uname -r)\"; echo \"cpu=$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | sed 's/^ *//')\"; echo \"gpu=$(lspci 2>/dev/null | grep -i -m1 -E 'vga|3d|display' | sed 's/.*: //; s/ (rev.*//')\"; echo \"mem=$(awk '/MemTotal/{printf \"%.0f GB\", $2/1048576}' /proc/meminfo)\"; echo \"niri=$(if [ -n \"$HYPRLAND_INSTANCE_SIGNATURE\" ]; then hyprctl version 2>/dev/null | head -1 | cut -c1-40; else niri --version 2>/dev/null; fi)\"; echo \"qs=$(quickshell --version 2>/dev/null | head -1 | cut -d' ' -f2)\""]
         stdout: StdioCollector { onStreamFinished: { const o = {}; for (const l of text.split("\n")) { const i = l.indexOf("="); if (i > 0) o[l.substring(0, i)] = l.substring(i + 1); } sec.info = o; } }
     }
     SettingRow {
-        icon: "deployed_code"; title: "Monolith " + Updates.version; desc: "A desktop shell for niri. GPL-3.0. Its settings are in ~/.config/monolith/next.json"
+        icon: "deployed_code"; title: "Monolith " + Updates.version; desc: "A desktop shell for niri and Hyprland. GPL-3.0. Its settings are in ~/.config/monolith/next.json"
         Button { text: "GitHub"; icon: "open_in_new"; onClicked: Quickshell.execDetached(["xdg-open", "https://github.com/apolloKapa/monolith"]) }
     }
     Card {
@@ -27,7 +27,7 @@ ColumnLayout {
             width: parent.width
             spacing: 6
             Repeater {
-                model: [["System", "os"], ["Kernel", "kernel"], ["CPU", "cpu"], ["GPU", "gpu"], ["Memory", "mem"], ["niri · Quickshell", "niri"]]
+                model: [["System", "os"], ["Kernel", "kernel"], ["CPU", "cpu"], ["GPU", "gpu"], ["Memory", "mem"], [Niri.compositor + " · Quickshell", "niri"]]
                 Row {
                     required property var modelData
                     width: parent.width

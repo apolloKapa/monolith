@@ -2,11 +2,19 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 
-// niri's state, kept up to date from `niri msg -j event-stream`: workspaces per output,
-// windows, the focused window and keyboard layouts. Actions go through `niri msg action`.
+// The compositor's state: workspaces per output, windows, the focused window and keyboard
+// layouts, and its actions. On niri from `niri msg -j event-stream` and `niri msg action`; on
+// Hyprland from Quickshell's Hyprland module (its events, hyprctl), in the same shape, so the rest
+// of the shell doesn't care which it is. Actions use niri's names; on Hyprland they're turned
+// into its dispatchers (action()).
 Singleton {
     id: niri
+
+    // running on Hyprland (it sets this for everything it starts)
+    readonly property bool hyprland: (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") || "") !== ""
+    readonly property string compositor: hyprland ? "Hyprland" : "niri"
 
     property var workspaces: []          // sorted by output, then idx
     property var windows: ({})           // id -> window
@@ -28,7 +36,25 @@ Singleton {
     }
 
     function focusWorkspace(idx) { action(["focus-workspace", String(idx)]); }
-    function action(args) { Quickshell.execDetached(["niri", "msg", "action"].concat(args)); }
+    function action(args) {
+        if (!hyprland) { Quickshell.execDetached(["niri", "msg", "action"].concat(args)); return; }
+        // niri's action names → Hyprland's dispatchers
+        const i = args.indexOf("--id");
+        const id = i !== -1 ? String(args[i + 1]) : "";
+        const addr = "address:0x" + id.replace(/^0x/, "");
+        switch (args[0]) {
+        case "quit": Hyprland.dispatch("exit"); break;
+        case "power-off-monitors": Hyprland.dispatch("dpms off"); break;
+        case "power-on-monitors": Hyprland.dispatch("dpms on"); break;
+        case "focus-window": Hyprland.dispatch("focuswindow " + addr); break;
+        case "close-window": Hyprland.dispatch(id !== "" ? "closewindow " + addr : "killactive"); break;
+        case "focus-workspace": Hyprland.dispatch("workspace " + args[1]); break;
+        case "switch-layout": Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", args[1] === "prev" ? "prev" : "next"]); break;
+        // Hyprland has no overview of its own: the hyprexpo plugin's, when it's loaded
+        case "toggle-overview": Hyprland.dispatch("hyprexpo:expo toggle"); break;
+        default: console.log("Monolith: no Hyprland version of niri's " + args.join(" "));
+        }
+    }
 
     function sortWorkspaces(list) {
         return list.slice().sort((a, b) => (a.output === b.output) ? a.idx - b.idx : String(a.output).localeCompare(String(b.output)));
@@ -86,9 +112,75 @@ Singleton {
         return false;
     }
 
+    // ── Hyprland: the same picture, from Quickshell's Hyprland module ──
+    // (windows' places and sizes, classes and fullscreen come from hyprctl clients, which the
+    // module only asks for when told to: done after each window event)
+    function hyprSync() {
+        if (!hyprland) return;
+        const ws = Hyprland.workspaces.values.filter(w => w.id > 0).map(w => ({
+            id: w.id, idx: w.id, name: w.name, output: w.monitor ? w.monitor.name : "",
+            is_active: !!(w.monitor && w.monitor.activeWorkspace === w),
+            is_focused: Hyprland.focusedWorkspace === w, active_window_id: null }));
+        workspaces = sortWorkspaces(ws);
+        const m = {};
+        let fid = null;
+        for (const t of Hyprland.toplevels.values) {
+            const o = t.lastIpcObject || {};
+            const mon = t.monitor;
+            const at = o.at, size = o.size;
+            const w = {
+                id: String(t.address), title: t.title || "",
+                app_id: o["class"] || (t.wayland ? t.wayland.appId : "") || "",
+                workspace_id: t.workspace ? t.workspace.id : null,
+                is_focused: t.activated === true, is_floating: o.floating === true,
+                is_fullscreen: (o.fullscreen || 0) > 0, pid: o.pid || 0,
+                // where it is on its screen (the dock's "dodge windows" reads this, as on niri)
+                layout: at && size ? { tile_pos_in_workspace_view: [at[0] - (mon ? mon.x : 0), at[1] - (mon ? mon.y : 0)], tile_size: size } : null
+            };
+            m[w.id] = w;
+            if (w.is_focused) fid = w.id;
+        }
+        windows = m;
+        focusedWindowId = fid;
+    }
+    // many events come together (a window opening is several): one sync for all of them
+    Timer { id: hyprLater; interval: 40; onTriggered: niri.hyprSync() }
+    Connections {
+        target: niri.hyprland ? Hyprland : null
+        function onRawEvent(ev) {
+            const name = ev.name;
+            if (name === "activelayout") {
+                // "keyboard name,layout name"
+                const l = String(ev.data).split(",").slice(1).join(",");
+                niri.layouts = [l]; niri.layoutIndex = 0;
+                return;
+            }
+            if (/window|move|fullscreen|float|close|open|urgent/.test(name)) Hyprland.refreshToplevels();
+            hyprLater.restart();
+        }
+        function onFocusedWorkspaceChanged() { hyprLater.restart(); }
+        function onActiveToplevelChanged() { hyprLater.restart(); }
+    }
+    // the keyboard layout to start with (later changes come as events)
+    Process {
+        id: hyprKeymap
+        running: niri.hyprland
+        command: ["hyprctl", "devices", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const kb = (JSON.parse(text).keyboards || []);
+                    const main = kb.find(k => k.main) || kb[0];
+                    if (main && main.active_keymap) { niri.layouts = [main.active_keymap]; niri.layoutIndex = 0; }
+                } catch (e) {}
+            }
+        }
+    }
+    Component.onCompleted: if (hyprland) { Hyprland.refreshToplevels(); hyprLater.restart(); }
+
     Process {
         id: stream
-        running: true
+        running: !niri.hyprland
         command: ["niri", "msg", "-j", "event-stream"]
         stdout: SplitParser {
             onRead: line => { try { niri.handle(JSON.parse(line)); } catch (e) {} }
@@ -96,5 +188,5 @@ Singleton {
         // niri restarted or the stream dropped: reconnect
         onExited: restart.start()
     }
-    Timer { id: restart; interval: 1000; onTriggered: stream.running = true }
+    Timer { id: restart; interval: 1000; onTriggered: if (!niri.hyprland) stream.running = true }
 }
