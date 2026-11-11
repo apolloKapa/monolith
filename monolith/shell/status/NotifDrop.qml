@@ -12,7 +12,7 @@ PanelWindow {
     id: dd
     required property var modelData
     screen: modelData
-    readonly property bool shown: HubState.notifScreen === modelData.name && !HubState.open
+    readonly property bool shown: HubState.dropScreen === modelData.name && HubState.dropKind === "notifications" && !HubState.open
 
     visible: shown || card.opacity > 0.01
     WlrLayershell.namespace: "monolith-notifications"
@@ -25,11 +25,11 @@ PanelWindow {
     mask: Region { item: dd.shown ? full : null }
     Item { id: full; anchors.fill: parent }
 
-    MouseArea { anchors.fill: parent; onClicked: HubState.closeNotifs() }
+    MouseArea { anchors.fill: parent; onClicked: HubState.closeDrop() }
     Item {
         id: keys
         focus: true
-        Keys.onEscapePressed: HubState.closeNotifs()
+        Keys.onEscapePressed: HubState.closeDrop()
     }
     onShownChanged: if (shown) keys.forceActiveFocus()
 
@@ -39,8 +39,8 @@ PanelWindow {
         readonly property real listH: Notifs.list.length === 0 ? 170 : Math.min(list.contentHeight, 520)
         height: head.height + 8 + listH + 24
         Behavior on height { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.OutCubic } }
-        x: Math.max(12, Math.min(dd.width - width - 12, HubState.notifX - width / 2))
-        y: Theme.barBottom ? HubState.notifY - height - 10 : HubState.notifY + 10
+        x: Math.max(12, Math.min(dd.width - width - 12, HubState.dropX - width / 2))
+        y: Theme.barBottom ? HubState.dropY - height - 10 : HubState.dropY + 10
         radius: Theme.corner(80, 14)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor

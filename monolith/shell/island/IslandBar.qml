@@ -326,7 +326,7 @@ Item {
             // the list drops down right under the bell (over it when the bar is at the bottom)
             onClicked: {
                 const p = notifMod.mapToItem(null, notifMod.width / 2, Theme.barBottom ? 0 : notifMod.height);
-                HubState.toggleNotifs(bar.screenName, p.x, p.y);
+                HubState.toggleDrop("notifications", bar.screenName, p.x, p.y);
             }
             Icon {
                 name: Notifs.dnd ? "notifications_paused" : (Notifs.list.length > 0 ? "notifications_unread" : "notifications")
@@ -341,8 +341,13 @@ Item {
     Component {
         id: soundC
         Mod {
+            id: soundMod
             pad: 7
-            onClicked: bar.open("sound")
+            // a small sound card drops down right under it (over it when the bar is at the bottom)
+            onClicked: {
+                const p = soundMod.mapToItem(null, soundMod.width / 2, Theme.barBottom ? 0 : soundMod.height);
+                HubState.toggleDrop("sound", bar.screenName, p.x, p.y);
+            }
             Icon {
                 name: bar.muted || bar.volume === 0 ? "volume_off" : (bar.volume < 0.4 ? "volume_down" : "volume_up")
                 size: 18; filled: true; color: bar.muted ? Theme.subtext : Theme.text

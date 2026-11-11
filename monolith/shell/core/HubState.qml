@@ -8,18 +8,20 @@ import Quickshell.Io
 Singleton {
     id: hub
     property bool open: false
-    onOpenChanged: { Sounds.play(open ? "open" : "close"); if (open) { peekScreen = ""; notifScreen = ""; } }
-    // the notifications dropdown: the bar's bell drops the list out right under it
-    // (status/NotifDrop.qml); where it hangs, in that screen's coordinates
-    property string notifScreen: ""
-    property real notifX: 0
-    property real notifY: 0
-    function toggleNotifs(screen, x, y) {
-        if (notifScreen === screen) { notifScreen = ""; return; }
+    onOpenChanged: { Sounds.play(open ? "open" : "close"); if (open) { peekScreen = ""; dropScreen = ""; } }
+    // the bar's dropdowns: the bell and the volume drop a small card right under them
+    // (status/NotifDrop.qml, status/SoundDrop.qml); which one, and where it hangs, in that
+    // screen's coordinates
+    property string dropKind: ""        // "notifications" | "sound"
+    property string dropScreen: ""
+    property real dropX: 0
+    property real dropY: 0
+    function toggleDrop(kind, screen, x, y) {
+        if (dropScreen === screen && dropKind === kind) { dropScreen = ""; return; }
         open = false; peekScreen = "";
-        notifX = x; notifY = y; notifScreen = screen;
+        dropX = x; dropY = y; dropKind = kind; dropScreen = screen;
     }
-    function closeNotifs() { notifScreen = ""; }
+    function closeDrop() { dropScreen = ""; }
     // the now-playing peek: a small player under the bar's media module while it's hovered
     // (status/MediaPeek.qml); where it hangs, in that screen's coordinates
     property string peekScreen: ""
