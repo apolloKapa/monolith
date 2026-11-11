@@ -13,7 +13,7 @@ Item {
     property real radius: Theme.corner(80, 12)
     readonly property real r: ctx && ctx.opt && Number(ctx.opt("radius", -1)) >= 0 ? Math.min(Number(ctx.opt("radius", -1)), Math.min(width, height) / 2) : radius
     // blurred, the tint is lighter so the frosted wallpaper shows through
-    property real tint: backdrop ? 0.38 : 0.55
+    property real tint: backdrop ? (Theme.liquid ? 0.2 : 0.38) : 0.55
     property color tintColor: Theme.m("surface_container", Theme.container)
     // where this card sits inside its widget (for the part of the wallpaper behind it)
     property real dx: 0
@@ -23,7 +23,8 @@ Item {
     // Blur strength (0.1..1): the wallpaper behind is shrunk before it's blurred, so the blur
     // reaches much further than the effect's own radius (and costs less)
     readonly property real strength: ctx && ctx.opt ? Math.max(0.1, Math.min(1, Number(ctx.opt("blurStrength", 0.8)))) : 0.8
-    readonly property real shrink: 1 + strength * 11
+    // (liquid glass is clearer: barely frosted, so the bending at its edges shows)
+    readonly property real shrink: Theme.liquid ? 1 + strength * 1.6 : 1 + strength * 11
 
     // the wallpaper behind the card, shrunk (smoothly) and drawn back at full size, then blurred
     // as a layer effect and cut to the card's shape. (A MultiEffect reading the cropped texture
@@ -33,12 +34,8 @@ Item {
         anchors.fill: parent
         visible: !!g.backdrop
         layer.enabled: visible
-        layer.effect: MultiEffect {
-            blurEnabled: true; blur: 1.0; blurMax: 64
-            saturation: 0.15
-            maskEnabled: true
-            maskSource: mask
-        }
+        layer.effect: Theme.liquid ? liquidFx : frostFx
+        layer.smooth: true
         // a turned widget: the wallpaper behind its box on screen, turned back the other way
         ShaderEffectSource {
             readonly property int rot: g.ctx && g.ctx.rot !== undefined ? g.ctx.rot : 0
@@ -56,6 +53,28 @@ Item {
             hideSource: false
         }
     }
+    Component {
+        id: frostFx
+        MultiEffect {
+            blurEnabled: true; blur: 1.0; blurMax: 64
+            saturation: 0.15
+            maskEnabled: true
+            maskSource: mask
+        }
+    }
+    // liquid glass: the wallpaper bent at the card's edges like the rim of a lens, with a faint
+    // rainbow fringe (shaders/liquid.frag), cut to the card's rounded shape
+    Component {
+        id: liquidFx
+        ShaderEffect {
+            readonly property size size: Qt.size(g.width, g.height)
+            readonly property real radius: g.r
+            readonly property real bezel: Math.min(Math.min(g.width, g.height) * 0.14, 20)
+            readonly property real strength: 0.3 + g.strength * 0.25
+            readonly property real aberration: 1.6
+            fragmentShader: Qt.resolvedUrl("../../shaders/liquid.frag.qsb")
+        }
+    }
     Rectangle { id: mask; anchors.fill: parent; radius: g.r; visible: false; layer.enabled: true }
     Rectangle {
         anchors.fill: parent
@@ -65,4 +84,6 @@ Item {
         border.width: Theme.outlineW
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Qt.alpha(Theme.text, 0.06)
     }
+    // liquid glass: the light rim and shine on top
+    GlassRim { anchors.fill: parent; radius: g.r; visible: Theme.liquid && g.mode !== "clear" }
 }

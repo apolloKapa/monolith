@@ -81,9 +81,12 @@ Singleton {
     readonly property bool oled: Look.style.oled === true
     // how solid panels are: see-through styles, and your setting (Theme → Effects)
     readonly property real panelOpacity: Number(Store.get("theme.panelOpacity", 1))
-    readonly property real see: (Look.style.opaque === false ? 0.74 : 1) * panelOpacity
+    // Liquid glass: clearer panes (with the blur behind them on unless you turned it off), a
+    // light rim and shine on them (ui/GlassRim) and widgets that bend what's behind them
+    readonly property bool liquid: Look.style.liquid === true
+    readonly property real see: (liquid ? 0.42 : (Look.style.opaque === false ? 0.74 : 1)) * panelOpacity
     // blur behind the shell's panels (the compositor does it; strength in niri's config)
-    readonly property bool blur: Store.get("theme.blur", false) === true
+    readonly property bool blur: Store.get("theme.blur", liquid) === true
     // effects (Theme → Effects): film grain on panels, a light along their top edge, and menus
     // that unfold from a thin line (the old shell's theme.effects carry over)
     readonly property var oldFx: Prefs.raw.theme && Prefs.raw.theme.effects ? Prefs.raw.theme.effects : ({})

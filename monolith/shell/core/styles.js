@@ -9,6 +9,7 @@
 //   hardShadow          a solid offset shadow of this many px instead of a soft one
 //   font                its typeface (used when installed; your own font setting wins)
 //   oled                true black backgrounds
+//   liquid              liquid glass: clearer panes, a light rim and shine, widgets bend what's behind them
 //   colors              its palette (base, mantle, crust, surface0–2, overlay0–2, text, subtext0–1, accents)
 // (The looks and palettes are the earlier Monolith's styles.)
 var list = [
@@ -41,7 +42,8 @@ var list = [
   "name": "Liquid glass",
   "opaque": false,
   "id": "liquid",
-  "desc": "Clear glass panels, your wallpaper's colours",
+  "liquid": true,
+  "desc": "Clear glass that bends the light at its edges, your wallpaper's colours",
   "matugen": true
  },
  {

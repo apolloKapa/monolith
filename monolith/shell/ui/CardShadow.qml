@@ -6,8 +6,11 @@ import "../core"
 // the shadow effect, so the card's own content is drawn directly and stays sharp (a layered
 // card gets resampled and goes soft when its size isn't whole pixels).
 Rectangle {
+    id: cs
     anchors.fill: parent
     z: -1
+    // Liquid glass: the card's light rim and shine, over the card (not under it like the shadow)
+    GlassRim { parent: cs.parent; anchors.fill: parent; radius: cs.radius; z: 900 }
     // how far the shadow falls down (the bar's pills keep it centred: they float on the screen)
     property real offsetY: Theme.shadowY
     radius: parent && parent.radius !== undefined ? parent.radius : 0

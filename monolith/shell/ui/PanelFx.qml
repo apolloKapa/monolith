@@ -7,7 +7,9 @@ import "../core"
 Item {
     id: fx
     property real radius: 0
-    visible: Theme.fxGrain || Theme.fxEdge
+    visible: Theme.fxGrain || Theme.fxEdge || Theme.liquid
+    // Liquid glass: the light rim and shine
+    GlassRim { anchors.fill: parent; radius: fx.radius }
     // grain: a still noise tile, faint, kept inside the rounded shape
     Item {
         id: grainSrc
