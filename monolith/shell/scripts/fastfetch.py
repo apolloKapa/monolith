@@ -9,6 +9,10 @@ shell's colour (as the shell shows it: the wallpaper's or a colour theme's). The
     fastfetch.py new               a new preset (from fastfetch's defaults); prints its name
     fastfetch.py duplicate NAME    a copy; prints its name
     fastfetch.py delete NAME
+    fastfetch.py picture NAME FILE [small|medium|large]   a picture as NAME's logo (kitty)
+    fastfetch.py picsize NAME small|medium|large          the picture's size
+    fastfetch.py text NAME         back to the text logo NAME had before its picture
+    fastfetch.py support           "yes" if this fastfetch can show pictures at all
 """
 import html
 import json
@@ -66,6 +70,143 @@ def coloured(text):
 
 def path(name):
     return os.path.join(DIR, name + ".jsonc")
+
+
+# ── pictures as logos ──
+# A preset's picture is copied (as a PNG, fitted) to DIR/images/NAME.png and shown with
+# kitty's graphics protocol ("kitty-direct": kitty reads the file itself; it takes PNG only).
+# The text logo it replaced is kept next to it (NAME.logo.json) for "Back to text".
+IMAGES = DIR + "/images"
+SIZES = {"small": 22, "medium": 32, "large": 44}     # width in terminal cells
+
+
+def strip_jsonc(text):
+    """JSON with comments (// and /* */) and trailing commas -> plain JSON; strings untouched."""
+    out, i, n, in_str = [], 0, len(text), False
+    while i < n:
+        ch = text[i]
+        if in_str:
+            out.append(ch)
+            if ch == "\\":
+                out.append(text[i + 1:i + 2])
+                i += 2
+                continue
+            if ch == '"':
+                in_str = False
+        elif ch == '"':
+            in_str = True
+            out.append(ch)
+        elif text.startswith("//", i):
+            j = text.find("\n", i)
+            i = n if j < 0 else j
+            continue
+        elif text.startswith("/*", i):
+            j = text.find("*/", i + 2)
+            i = n if j < 0 else j + 2
+            continue
+        else:
+            out.append(ch)
+        i += 1
+    return re.sub(r",(\s*[}\]])", r"\1", "".join(out))
+
+
+def read_preset(name):
+    raw = open(path(name), encoding="utf-8").read()
+    head = "".join(l for l in raw.splitlines(True)[:5] if l.lstrip().startswith("//") and not l.lstrip().startswith("// Picture:"))
+    return head, json.loads(strip_jsonc(raw))
+
+
+def write_preset(name, head, data, note=""):
+    with open(path(name), "w", encoding="utf-8") as f:
+        f.write(head + (note and "// Picture: " + note + "\n") + json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+
+
+def picture_of(data):
+    logo = data.get("logo")
+    if isinstance(logo, dict) and logo.get("type") in ("kitty", "kitty-direct", "sixel", "iterm", "chafa", "kitty-icat"):
+        return logo
+    return None
+
+
+def fit_picture(src, dest, cells):
+    """The picture as a PNG at most 2x what it shows at; returns its height in cells."""
+    from PIL import Image, ImageOps
+    im = ImageOps.exif_transpose(Image.open(src))
+    im.seek(0)
+    im = im.convert("RGBA")
+    w, h = im.size
+    px = cells * 20
+    if w > px:
+        im = im.resize((px, max(1, round(h * px / w))), Image.LANCZOS)
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    tmp = dest + ".tmp.png"
+    im.save(tmp, "PNG")
+    os.replace(tmp, dest)
+    # terminal cells are about twice as tall as wide
+    return max(1, round(cells * (h / w) / 2.1))
+
+
+def set_picture(name, src, size="medium"):
+    head, data = read_preset(name)
+    keep = IMAGES + "/" + name + ".logo.json"
+    if not picture_of(data) and not os.path.exists(keep):
+        os.makedirs(IMAGES, exist_ok=True)
+        json.dump(data.get("logo", {}), open(keep, "w"))
+    dest = IMAGES + "/" + name + ".png"
+    cells = SIZES.get(size, SIZES["medium"])
+    rows = fit_picture(src, dest, cells)
+    data["logo"] = {"type": "kitty-direct", "source": dest, "width": cells, "height": rows,
+                    "position": "left", "padding": {"top": 1, "left": 2, "right": 3}}
+    write_preset(name, head, data, os.path.basename(src))
+    if name == active():
+        write_target(name)
+
+
+def set_size(name, size):
+    head, data = read_preset(name)
+    logo = picture_of(data)
+    if not logo or not os.path.exists(logo.get("source", "")):
+        return
+    from PIL import Image
+    w, h = Image.open(logo["source"]).size
+    cells = SIZES.get(size, SIZES["medium"])
+    logo["width"], logo["height"] = cells, max(1, round(cells * (h / w) / 2.1))
+    write_preset(name, head, data)
+    if name == active():
+        write_target(name)
+
+
+def image_support():
+    """Distributions can build fastfetch without picture logos (Gentoo: USE=-imagemagick);
+    then any picture preset only prints an error."""
+    with tempfile.NamedTemporaryFile("w", suffix=".jsonc", delete=False) as f:
+        f.write('{"logo": {"type": "kitty-direct", "source": "/nonexistent.png"}, "modules": []}')
+        tmp = f.name
+    try:
+        r = subprocess.run(["fastfetch", "-c", tmp, "--pipe", "true"], capture_output=True, text=True, timeout=6,
+                           stdin=subprocess.DEVNULL)
+        return "without image logo support" not in (r.stdout + r.stderr)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    finally:
+        os.unlink(tmp)
+
+
+def back_to_text(name):
+    head, data = read_preset(name)
+    keep = IMAGES + "/" + name + ".logo.json"
+    try:
+        data["logo"] = json.load(open(keep))
+    except (OSError, ValueError):
+        data.pop("logo", None)
+    for f in (keep, IMAGES + "/" + name + ".png"):
+        if os.path.exists(f):
+            os.remove(f)
+    if not data.get("logo"):
+        data.pop("logo", None)
+    write_preset(name, head, data)
+    if name == active():
+        write_target(name)
 
 
 def write_target(name):
@@ -227,8 +368,18 @@ def terminal_name():
 
 
 def preview(name):
+    text = coloured(open(path(name)).read())
+    try:
+        data = json.loads(strip_jsonc(text))
+        if picture_of(data):
+            # outside a terminal fastfetch draws no picture (and then nothing else either):
+            # the preview runs without it, and Settings puts the picture next to the text
+            data["logo"] = {"type": "none"}
+            text = json.dumps(data)
+    except ValueError:
+        pass
     with tempfile.NamedTemporaryFile("w", suffix=".jsonc", delete=False) as f:
-        f.write(coloured(open(path(name)).read()))
+        f.write(text)
         tmp = f.name
     try:
         # not a terminal: no input, and no hint of a terminal it could query (kitty answers
@@ -270,7 +421,20 @@ def main():
         sys.exit(__doc__)
     if a[0] == "list":
         cur = active()
-        print(json.dumps([{"name": n, "active": n == cur, "html": preview(n)} for n in presets()]))
+        items = []
+        for n in presets():
+            pic = {}
+            try:
+                logo = picture_of(read_preset(n)[1])
+                if logo:
+                    size = next((k for k, v in SIZES.items() if v == logo.get("width")), "")
+                    pic = {"image": logo.get("source", ""), "cols": logo.get("width", 0), "rows": logo.get("height", 0),
+                           "size": size, "padTop": (logo.get("padding") or {}).get("top", 0),
+                           "padLeft": (logo.get("padding") or {}).get("left", 0)}
+            except (OSError, ValueError):
+                pass
+            items.append({"name": n, "active": n == cur, "html": preview(n), **pic})
+        print(json.dumps(items))
     elif a[0] == "apply":
         write_target(a[1])
     elif a[0] == "render":
@@ -290,6 +454,17 @@ def main():
     elif a[0] == "delete":
         if a[1] != active() and os.path.exists(path(a[1])):
             os.remove(path(a[1]))
+            for f in (IMAGES + "/" + a[1] + ".png", IMAGES + "/" + a[1] + ".logo.json"):
+                if os.path.exists(f):
+                    os.remove(f)
+    elif a[0] == "picture":
+        set_picture(a[1], a[2], a[3] if len(a) > 3 else "medium")
+    elif a[0] == "picsize":
+        set_size(a[1], a[2])
+    elif a[0] == "text":
+        back_to_text(a[1])
+    elif a[0] == "support":
+        print("yes" if image_support() else "no")
 
 
 if __name__ == "__main__":

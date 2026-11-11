@@ -129,6 +129,8 @@ portage_write_conf() {
             "media-gfx/imagemagick jpeg png webp svg" \
             "app-text/tessdata_fast l10n_en" \
             "media-sound/cava pipewire" \
+            "# pictures as fastfetch's logo (Settings → Terminal greeting)" \
+            "app-misc/fastfetch imagemagick" \
             "dev-qt/qtmultimedia ffmpeg" \
             "# quickshell's crash handler, Thunar's panel bits, LibreWolf's system libvpx" \
             "dev-cpp/cpptrace unwind" \
