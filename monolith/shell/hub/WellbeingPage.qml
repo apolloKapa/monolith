@@ -62,7 +62,7 @@ Page {
                     color: Theme.containerHigh
                     // right-click: set its daily limit right in the row
                     onRightClicked: page.editing = page.editing === modelData.id ? "" : modelData.id
-                    Image { id: ai; x: 10; anchors.verticalCenter: parent.verticalCenter; width: 30; height: 30; sourceSize: Qt.size(60, 60); source: page.iconOf(row.modelData.id) }
+                    Image { id: ai; x: 10; anchors.verticalCenter: parent.verticalCenter; width: 30; height: 30; sourceSize: Qt.size(60, 60); source: page.iconOf(row.modelData.id); smooth: true; mipmap: true }
                     Column {
                         anchors.left: ai.right; anchors.leftMargin: 12
                         anchors.right: parent.right; anchors.rightMargin: 14

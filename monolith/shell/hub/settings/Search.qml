@@ -83,7 +83,7 @@ ColumnLayout {
             implicitHeight: 48
             radius: Theme.corner(48, 2)
             color: Theme.containerHigh
-            Image { id: fi; x: 12; anchors.verticalCenter: parent.verticalCenter; width: 28; height: 28; sourceSize: Qt.size(56, 56); source: parent.entry ? Quickshell.iconPath(parent.entry.icon, "application-x-executable") : "" }
+            Image { id: fi; x: 12; anchors.verticalCenter: parent.verticalCenter; width: 28; height: 28; sourceSize: Qt.size(56, 56); source: parent.entry ? Quickshell.iconPath(parent.entry.icon, "application-x-executable") : ""; smooth: true; mipmap: true }
             Label { anchors.left: fi.right; anchors.leftMargin: 12; anchors.verticalCenter: parent.verticalCenter; text: parent.entry ? parent.entry.name : parent.modelData + " (not installed)" }
             Row {
                 anchors.right: parent.right; anchors.rightMargin: 8

@@ -375,7 +375,7 @@ PanelWindow {
                     anchors.centerIn: parent
                     width: parent.width - 8
                     spacing: 6
-                    Image { anchors.horizontalCenter: parent.horizontalCenter; width: 38; height: 38; sourceSize: Qt.size(76, 76); source: dock.iconFor(parent.parent.modelData.icon); asynchronous: true }
+                    Image { anchors.horizontalCenter: parent.horizontalCenter; width: 38; height: 38; sourceSize: Qt.size(76, 76); source: dock.iconFor(parent.parent.modelData.icon); asynchronous: true; smooth: true; mipmap: true }
                     Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: parent.parent.modelData.name; font.pixelSize: Theme.sizeSmall }
                 }
             }

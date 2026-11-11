@@ -25,5 +25,8 @@ Text {
     color: Theme.text
     horizontalAlignment: Text.AlignHCenter
     verticalAlignment: Text.AlignVCenter
-    renderType: Text.NativeRendering
+    // drawn as shapes, so an icon stays sharp at any size and under any scale (widgets are laid
+    // out at a design size and scaled, menus zoom in, icons grow on hover). Native rendering
+    // drew the glyph once at its own size and stretched that picture: blocky icons.
+    renderType: Text.CurveRendering
 }

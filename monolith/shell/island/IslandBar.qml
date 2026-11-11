@@ -290,7 +290,7 @@ Item {
                     width: 28; height: 28
                     anchors.verticalCenter: parent ? parent.verticalCenter : undefined
                     color: hovered ? Theme.containerHigh : "transparent"
-                    Image { anchors.centerIn: parent; width: 16; height: 16; source: modelData.icon; sourceSize: Qt.size(32, 32) }
+                    Image { anchors.centerIn: parent; width: 16; height: 16; source: modelData.icon; sourceSize: Qt.size(32, 32); smooth: true; mipmap: true }
                     onClicked: modelData.activate()
                     onRightClicked: { if (bar.trayWindow) { const p = mapToItem(null, 0, height); modelData.display(bar.trayWindow, p.x, p.y + 4); } }
                 }
