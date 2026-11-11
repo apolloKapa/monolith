@@ -29,6 +29,23 @@ ColumnLayout {
     property int drawnTo: 0
     // the saved pictures, instead of the colours and size
     property bool showSaved: false
+    // the grid (remembered): off | dots | lines (graph paper, a stronger line every fourth), and
+    // snapping lines and shapes to it
+    readonly property string grid: Store.get("quick.drawGrid", "dots")
+    readonly property bool snap: Store.get("quick.drawSnap", false) === true && grid !== "off"
+    // the grid's spacing in drawing units at this zoom: 32 at 100 %, halved or doubled as you zoom
+    // so the squares stay 16..64 px on screen
+    function gridStep(z) {
+        let step = 32;
+        while (step * z < 16) step *= 2;
+        while (step * z > 64) step /= 2;
+        return step;
+    }
+    function snapped(w) {
+        if (!snap) return w;
+        const st = gridStep(Sketch.z);
+        return Qt.point(Math.round(w.x / st) * st, Math.round(w.y / st) * st);
+    }
 
     function toWorld(px, py) { return Qt.point(Sketch.ox + px / Sketch.z, Sketch.oy + py / Sketch.z); }
     function zoomAt(px, py, f) {
@@ -94,16 +111,35 @@ ColumnLayout {
     function paintAll(g, w, h, ox, oy, z, grid) {
         g.reset();
         g.clearRect(0, 0, w, h);
-        // dots that move and scale with the drawing, so you can see where you are
-        if (grid) {
-            let step = 32;
-            while (step * z < 16) step *= 2;
-            while (step * z > 64) step /= 2;
-            g.fillStyle = Qt.alpha(Theme.text, 0.13);
-            const r = Math.max(0.8, Math.min(1.6, z));
-            for (let x = Math.floor(ox / step) * step; x < ox + w / z; x += step)
-                for (let y = Math.floor(oy / step) * step; y < oy + h / z; y += step)
-                    g.fillRect((x - ox) * z - r / 2, (y - oy) * z - r / 2, r, r);
+        // the grid: it moves and scales with the drawing, so you can see where you are
+        if (grid && d.grid !== "off") {
+            const step = d.gridStep(z);
+            if (d.grid === "dots") {
+                g.fillStyle = Qt.alpha(Theme.text, 0.45);
+                const r = Math.max(2, Math.min(3, z * 2));
+                for (let x = Math.floor(ox / step) * step; x < ox + w / z; x += step)
+                    for (let y = Math.floor(oy / step) * step; y < oy + h / z; y += step)
+                        g.fillRect((x - ox) * z - r / 2, (y - oy) * z - r / 2, r, r);
+            } else {
+                // thin lines, and a stronger one every fourth (on whole multiples, so they stay
+                // put as the spacing halves and doubles)
+                const major = step * 4;
+                const line = (x0, y0, x1, y1) => { g.moveTo(Math.round(x0) + 0.5, Math.round(y0) + 0.5); g.lineTo(Math.round(x1) + 0.5, Math.round(y1) + 0.5); };
+                for (const strong of [false, true]) {
+                    g.beginPath();
+                    g.lineWidth = 1;
+                    g.strokeStyle = Qt.alpha(Theme.text, strong ? 0.22 : 0.1);
+                    for (let x = Math.floor(ox / step) * step; x < ox + w / z; x += step) {
+                        const isMajor = Math.abs(Math.round(x / major) * major - x) < 1e-6;
+                        if (isMajor === strong) line((x - ox) * z, 0, (x - ox) * z, h);
+                    }
+                    for (let y = Math.floor(oy / step) * step; y < oy + h / z; y += step) {
+                        const isMajor = Math.abs(Math.round(y / major) * major - y) < 1e-6;
+                        if (isMajor === strong) line(0, (y - oy) * z, w, (y - oy) * z);
+                    }
+                    g.stroke();
+                }
+            }
         }
         g.setTransform(z, 0, 0, z, -ox * z, -oy * z);
         for (const s of Sketch.strokes) { styleFor(g, s); strokePath(g, s); }
@@ -156,6 +192,25 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 4
         Label { text: "Draw"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.fillWidth: true }
+        // the grid: off → dots → lines; snapping lines and shapes to it
+        Pressable {
+            width: gl.implicitWidth + 38; height: 32
+            color: d.grid !== "off" ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
+            onClicked: Store.set("quick.drawGrid", ({ off: "dots", dots: "lines", lines: "off" })[d.grid] || "dots")
+            Row { anchors.centerIn: parent; spacing: 4
+                Icon { name: d.grid === "off" ? "grid_off" : (d.grid === "dots" ? "blur_on" : "grid_on"); size: 17; color: d.grid !== "off" ? Theme.onAccentContainer : Theme.text; anchors.verticalCenter: parent.verticalCenter }
+                Label { id: gl; text: ({ off: "No grid", dots: "Dots", lines: "Grid" })[d.grid] || "Dots"; font.pixelSize: Theme.sizeSmall; color: d.grid !== "off" ? Theme.onAccentContainer : Theme.text; anchors.verticalCenter: parent.verticalCenter } }
+        }
+        Pressable {
+            visible: d.grid !== "off"
+            width: sl2.implicitWidth + 38; height: 32
+            color: d.snap ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
+            onClicked: Store.set("quick.drawSnap", !d.snap)
+            Row { anchors.centerIn: parent; spacing: 4
+                Icon { name: "grid_guides"; size: 17; color: d.snap ? Theme.onAccentContainer : Theme.text; anchors.verticalCenter: parent.verticalCenter }
+                Label { id: sl2; text: "Snap"; font.pixelSize: Theme.sizeSmall; color: d.snap ? Theme.onAccentContainer : Theme.text; anchors.verticalCenter: parent.verticalCenter } }
+        }
+        Item { width: 6; height: 1 }
         Tb { icon: "zoom_out"; onClicked: d.zoomAt(pad.width / 2, pad.height / 2, 1 / 1.25) }
         Pressable {
             width: zl.implicitWidth + 16; height: 32
@@ -184,6 +239,7 @@ ColumnLayout {
             onWidthChanged: requestPaint()
             onHeightChanged: requestPaint()
             Connections { target: Sketch; function onRevChanged() { d.partial = false; cv.requestPaint(); } }
+            Connections { target: d; function onGridChanged() { d.partial = false; cv.requestPaint(); } }
             Component.onCompleted: requestPaint()
             onPaint: {
                 const g = getContext("2d");
@@ -233,8 +289,10 @@ ColumnLayout {
                 lx = mouse.x; ly = mouse.y;
                 panning = mouse.button !== Qt.LeftButton || d.tool === "hand";
                 if (panning) return;
-                const w = d.toWorld(mouse.x, mouse.y);
-                if (d.tool === "eraser") { before = Sketch.strokes; erase(w); return; }
+                const w0 = d.toWorld(mouse.x, mouse.y);
+                if (d.tool === "eraser") { before = Sketch.strokes; erase(w0); return; }
+                // (lines and shapes start on the grid when snapping is on)
+                const w = d.shape ? d.snapped(w0) : w0;
                 d.cur = { t: d.tool, c: String(d.ink), s: d.size, pts: d.shape ? [w.x, w.y, w.x, w.y] : [w.x, w.y] };
                 d.partial = false;
                 d.drawnTo = 0;
@@ -243,9 +301,10 @@ ColumnLayout {
             onPositionChanged: mouse => {
                 if (!pressed) return;
                 if (panning) { d.panBy(mouse.x - lx, mouse.y - ly); lx = mouse.x; ly = mouse.y; return; }
-                const w = d.toWorld(mouse.x, mouse.y);
-                if (d.tool === "eraser") { erase(w); return; }
+                const w0 = d.toWorld(mouse.x, mouse.y);
+                if (d.tool === "eraser") { erase(w0); return; }
                 if (!d.cur) return;
+                const w = d.shape ? d.snapped(w0) : w0;
                 if (d.shape) {
                     // Shift: straight lines snap to 45°, boxes and ellipses are square / round
                     let x = w.x, y = w.y;
