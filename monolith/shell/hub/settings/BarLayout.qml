@@ -58,6 +58,8 @@ ColumnLayout {
                         id: mod
                         anchors.centerIn: parent
                         enabled: false
+                        // (this screen's workspaces: with no screen it had none, and the cards were blank)
+                        screenName: Niri.focusedOutput || (Quickshell.screens.length ? Quickshell.screens[0].name : "")
                         only: [sp.module]
                         clockStyleAs: sp.module === "clock" ? card.modelData[0] : ""
                         wsStyleAs: sp.module === "workspaces" ? card.modelData[0] : ""
@@ -268,7 +270,9 @@ ColumnLayout {
         property alias flow: zflow
         property alias rep: zrep
         readonly property var list: bz.ed.zones[zone] || []
-        height: Math.max(64, zflow.implicitHeight + 34)
+        // what its modules need; the row makes all three as tall as the tallest
+        readonly property real need: zflow.implicitHeight + 34
+        height: Math.max(64, need)
         radius: Theme.corner(64, 4)
         color: bz.ed.overZone === zone ? Qt.alpha(Theme.accent, 0.14) : Theme.container
         border.width: bz.ed.overZone === zone ? 2 : 1
@@ -312,9 +316,11 @@ ColumnLayout {
                     width: parent.width - 16
                     spacing: 8
                     readonly property real zw: (width - 16) / 3
-                    BarZone { id: zoneL; ed: sec; width: zrow.zw; zone: "left"; label: "Left" }
-                    BarZone { id: zoneC; ed: sec; width: zrow.zw; zone: "center"; label: "Middle" }
-                    BarZone { id: zoneR; ed: sec; width: zrow.zw; zone: "right"; label: "Right" }
+                    // (the same height, so the three line up as one bar)
+                    readonly property real zh: Math.max(64, zoneL.need, zoneC.need, zoneR.need)
+                    BarZone { id: zoneL; ed: sec; width: zrow.zw; height: zrow.zh; zone: "left"; label: "Left" }
+                    BarZone { id: zoneC; ed: sec; width: zrow.zw; height: zrow.zh; zone: "center"; label: "Middle" }
+                    BarZone { id: zoneR; ed: sec; width: zrow.zw; height: zrow.zh; zone: "right"; label: "Right" }
                 }
             }
             // what isn't on the bar

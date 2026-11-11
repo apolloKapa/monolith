@@ -53,7 +53,8 @@ Column {
     Rectangle {
         id: stage
         width: pv.width
-        height: monitor.height + stand.height + 14 + closeUp.height + 34
+        // (room for the caption under the close-up too: it used to sit on the card's edge)
+        height: monitor.y + monitor.height + stand.height + 14 + closeUp.height + 6 + caption.height + 12
         radius: Theme.corner(80, 14)
         // a soft spotlight in the accent colour behind the monitor
         gradient: Gradient {
@@ -134,7 +135,7 @@ Column {
                     visible: Theme.barStyle === "frame"
                     anchors.fill: parent
                     color: "transparent"
-                    radius: parent.radius
+                    radius: screenBox.radius
                     border.width: Math.max(1, Theme.frameW * screenBox.k)
                     border.color: Theme.frame
                 }
@@ -156,7 +157,7 @@ Column {
                 // a little glare over the glass
                 Rectangle {
                     anchors.fill: parent
-                    radius: parent.radius
+                    radius: screenBox.radius
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
                         GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.05) }
@@ -180,7 +181,8 @@ Column {
             id: closeUp
             x: 12; width: parent.width - 24
             anchors.top: stand.bottom; anchors.topMargin: 14
-            height: Theme.islandH + 28
+            // (room under the bar for the "Real size" chip, so it doesn't touch the bar)
+            height: Theme.islandH + 40
             radius: Theme.corner(80, 10)
             color: Theme.containerHigh
             Image {
@@ -234,6 +236,7 @@ Column {
             }
         }
         Row {
+            id: caption
             anchors.left: closeUp.left; anchors.top: closeUp.bottom; anchors.topMargin: 6
             spacing: 6
             Icon { name: "visibility"; size: 14; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }

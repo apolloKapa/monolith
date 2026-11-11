@@ -52,7 +52,7 @@ Flow {
             readonly property bool on: Theme.barStyle === modelData[0]
             readonly property string st: modelData[0]
             // all five on one row, as wide as the page lets them be
-            width: Math.max(130, Math.floor((fl.width - 4 * fl.spacing) / 5)); height: 146
+            width: Math.max(130, Math.floor((fl.width - 4 * fl.spacing) / 5)); height: 156
             radius: Theme.corner(80, 12)
             color: on ? Theme.accentContainer : (hovered ? Theme.containerHigh : Theme.container)
             border.width: on ? 2 : 1; border.color: on ? Theme.accent : Qt.alpha(Theme.text, 0.06)
@@ -89,13 +89,17 @@ Flow {
                         Repeater { model: 3; Rectangle { required property int index; width: (index % 2 ? 0.45 : 0.65) * 120; height: 2.5; radius: 1.25; color: Qt.alpha(Theme.text, 0.15) } } }
                 }
                 // frame: the border round the screen
-                Rectangle { visible: sc.st === "frame"; anchors.fill: parent; color: "transparent"; border.width: 4; border.color: mini.barC; radius: parent.radius }
+                Rectangle { visible: sc.st === "frame"; anchors.fill: parent; color: "transparent"; border.width: 4; border.color: mini.barC; radius: mini.radius }
                 // island: a pill hanging from the top edge, with curved ears
+                // (square where it meets the edge; it used to start above the screen and stick out
+                // over the card's border)
                 Rectangle {
                     visible: sc.st === "island"
-                    anchors.horizontalCenter: parent.horizontalCenter; y: -7
-                    width: 96; height: 20; radius: 10; color: mini.barC
-                    Bits { x: 0; y: 7; width: parent.width; height: 11 }
+                    anchors.horizontalCenter: parent.horizontalCenter; y: 0
+                    width: Math.min(96, parent.width - 24); height: 14
+                    topLeftRadius: 0; topRightRadius: 0; bottomLeftRadius: 7; bottomRightRadius: 7
+                    color: mini.barC
+                    Bits { anchors.fill: parent; anchors.topMargin: 2; anchors.bottomMargin: 1 }
                 }
                 // fill / frame: a bar along the top
                 Rectangle {
@@ -134,7 +138,8 @@ Flow {
                 x: 12; y: mini.y + mini.height + 8; width: parent.width - 24
                 spacing: 1
                 Label { text: sc.modelData[1]; strong: true; font.pixelSize: Theme.sizeSmall + 1; color: sc.on ? Theme.onAccentContainer : Theme.text }
-                Label { width: parent.width; text: sc.modelData[2]; muted: true; font.pixelSize: Theme.sizeSmall - 2; elide: Text.ElideRight }
+                // (two lines, so it isn't cut off on narrower cards)
+                Label { width: parent.width; text: sc.modelData[2]; muted: true; font.pixelSize: Theme.sizeSmall - 2; wrapMode: Text.WordWrap; maximumLineCount: 2; elide: Text.ElideRight }
             }
         }
     }
