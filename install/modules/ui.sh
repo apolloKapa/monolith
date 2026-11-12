@@ -313,8 +313,8 @@ run_installer_ui() {
             && niri_label="${C_GREEN}[replace, backup kept]${RESET}" \
             || niri_label="${DIM}[keep mine]${RESET}"
         case "$WALLPAPERS" in
-            full)   wp_label="${C_GREEN}[full pack]${RESET}" ;;
-            random) wp_label="${C_GREEN}[3 random]${RESET}" ;;
+            full)   wp_label="${C_GREEN}[full pack, ~1.1 GB with live]${RESET}" ;;
+            random) wp_label="${C_GREEN}[3 random + 1 live]${RESET}" ;;
             *)      wp_label="${DIM}[none]${RESET}" ;;
         esac
 

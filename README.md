@@ -38,7 +38,7 @@ It opens a menu (arrow keys or j/k, Enter, q to quit):
 | Apps for the keybinds | ON | what the keybinds/autostart call: librewolf, thunar, mission-center, steam, wooz, awww, swaylock, swappy, grim/slurp, cliphist, playerctl, brightnessctl, fonts, ... |
 | niri config | Monolith config | writes the niri config below (your old one is backed up to `~/.config/niri_backup/`); or "keep mine" |
 | Login screen | ON | SDDM theme, with options to replace your current display manager and use Wayland for SDDM |
-| Wallpapers | 3 random | 3 random / full pack / none, from my [wallpapers](https://github.com/apolloKapa/wallpapers) repo (skipped if it doesn't exist; `WALLPAPER_REPO=` to use another) |
+| Wallpapers | 3 random + 1 live | 3 random pictures and 1 live wallpaper / the full pack (184 pictures and 27 live wallpapers, about 1.1 GB) / none, from the [wallpapers](https://github.com/apolloKapa/wallpapers) repo (live ones go into `Wallpapers/Live`; `WALLPAPER_REPO=` to use another) |
 | Install / Update / Reinstall | | Update keeps your settings; Reinstall starts them fresh |
 
 Then it:
