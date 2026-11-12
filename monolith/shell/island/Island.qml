@@ -33,7 +33,13 @@ PanelWindow {
     // collapsed only the island takes the mouse; open, a click anywhere else closes it
     mask: win.pinned ? pinnedMask : plainMask
     // (no bar on this screen: nothing takes clicks there, unless a notification is showing)
-    Region { id: plainMask; item: win.shown ? fullArea : (!(win.barHere || win.toastOn) ? null : (win.tucked ? sensor : island)) }
+    Region {
+        id: plainMask
+        item: win.shown ? fullArea : (!(win.barHere || win.toastGrows) ? null : (win.tucked ? sensor : island))
+        // a notification out of a full-width bar, or under a floating one
+        Region { item: !win.shown && drop.height > 1 ? dropBody : null }
+        Region { item: !win.shown && toastCard.visible ? toastCard : null }
+    }
     Region {
         id: pinnedMask
         item: island
@@ -112,15 +118,26 @@ PanelWindow {
     readonly property var myToasts: Notifs.popupsOn(modelData.name, Quickshell.screens.length ? Quickshell.screens[0].name : "").filter(p => !Notifs.leaving[p.id])
     readonly property bool toastOn: !side && !shown && myToasts.length > 0 && Store.get("notifications.style", "island") !== "corner"
     readonly property var toast: myToasts.length > 0 ? myToasts[0] : null
+    // where it shows, like the menus of each bar: the island grows into it; a full-width bar
+    // stays put and it drops out of the bar as its own shape; a floating bar (Solid, Modular)
+    // gets a card just under it. (Growing a full or floating bar made the whole bar come down.)
+    // Kept while it goes away, so it leaves from where it came.
+    // (an island spread wide is a full bar too: growing it brought the whole top down)
+    readonly property string toastWhere: Theme.barFloats ? "card" : (Theme.fullBar || restW > 760 ? "drop" : "island")
+    property string toastHost: toastWhere
+    onToastOnChanged: if (toastOn) toastHost = toastWhere
+    onToastWhereChanged: if (toastOn) toastHost = toastWhere
+    readonly property bool toastGrows: toastOn && toastHost === "island"
+    readonly property real toastW: Math.min(560, width - 40)
     // pages stay loaded while the island shrinks back after being open (not for a toast)
     property bool wasOpen: false
 
     // ── the island ──
     IslandShape {
         id: island
-        bodyW: win.grown ? win.openW : (win.toastOn ? Math.max(win.restW, 520) : win.restW)
-        height: win.grown ? win.openH : (win.toastOn ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
-        r: win.grown || win.toastOn ? Theme.islandRadius : (Theme.fullBar ? (win.barShort ? Theme.islandRadius / 2 : 0) : Theme.barRound(height))
+        bodyW: win.grown ? win.openW : (win.toastGrows ? Math.max(win.restW, 520) : win.restW)
+        height: win.grown ? win.openH : (win.toastGrows ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
+        r: win.grown || win.toastGrows ? Theme.islandRadius : (Theme.fullBar ? (win.barShort ? Theme.islandRadius / 2 : 0) : Theme.barRound(height))
         // a floating bar draws its own rounded background (Solid) or none at all (Modular: its
         // sections have pills), so the hanging shape stays empty
         // the Frame paints the bar's background itself (as part of one shape), so here it's empty
@@ -145,8 +162,8 @@ PanelWindow {
         // Solid: one rounded floating bar; Modular gets one too while a notification drops out
         Rectangle {
             anchors.fill: parent
-            visible: Theme.barFloats && (Theme.barStyle === "solid" || win.toastOn)
-            radius: win.toastOn ? Theme.islandRadius : Theme.barRound(height)
+            visible: Theme.barFloats && (Theme.barStyle === "solid" || win.toastGrows)
+            radius: win.toastGrows ? Theme.islandRadius : Theme.barRound(height)
             color: win.barSolid || win.toastOn ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
             border.width: Theme.outlineW
             border.color: Theme.outlineColor
@@ -155,7 +172,7 @@ PanelWindow {
         // Frame: a notification dropping out gets a background below the bar only (the frame
         // already paints the bar's strip; painting it again would show darker in see-through styles)
         Item {
-            visible: Theme.frameBand && win.toastOn
+            visible: Theme.frameBand && win.toastGrows
             x: island.e; y: win.bottom ? 0 : Theme.islandH
             width: island.bodyW; height: Math.max(0, island.height - Theme.islandH)
             clip: true
@@ -178,7 +195,7 @@ PanelWindow {
             height: island.height
             // only while it's bigger than the bar (a menu or notification, or shrinking back):
             // at rest the clip would cut the bar's own shadows (Modular's pills) with a hard edge
-            clip: win.shown || win.toastOn || island.height > Theme.islandH + 0.5
+            clip: win.shown || win.toastGrows || island.height > Theme.islandH + 0.5
 
             HoverHandler { id: barHover }
             // Theme → Effects (grain, edge light) while it's a menu
@@ -197,17 +214,22 @@ PanelWindow {
             // ── a new notification, while closed ──
             Column {
                 id: toastArea
+                parent: win.toastHost === "card" ? toastCard : (win.toastHost === "drop" ? dropBody : body)
                 x: win.pad
-                y: win.bottom ? body.height - Theme.islandH - height : Theme.islandH
-                width: body.width - 2 * win.pad
+                y: win.toastHost === "island" ? (win.bottom ? body.height - Theme.islandH - height : Theme.islandH)
+                   : (win.toastHost === "drop" ? (win.bottom ? win.pad : win.pad * 0.5) : win.pad)
+                width: parent.width - 2 * win.pad
                 spacing: 6
                 // it drops down out of the island (rises out of it when the bar is at the bottom)
                 // as the island opens up, with a little bounce, and goes back up into it
-                property real drop: win.toastOn ? 1 : 0
-                Behavior on drop { NumberAnimation { duration: win.toastOn ? 460 : Theme.popOutMs; easing.type: win.toastOn ? Easing.OutBack : Easing.InCubic; easing.overshoot: 1.1 } }
-                opacity: Math.min(1, drop * 1.8)
+                // (named `fall`, and always read as toastArea.fall: this file has an item with the
+                // id `drop`, and ids win over properties, so `drop * 1.8` was that item times 1.8,
+                // NaN: the notification was invisible inside an island that had opened for it)
+                property real fall: win.toastOn ? 1 : 0
+                Behavior on fall { NumberAnimation { duration: win.toastOn ? Theme.ms(460) : Theme.popOutMs; easing.type: win.toastOn ? Easing.OutBack : Easing.InCubic; easing.overshoot: 1.1 } }
+                opacity: Math.max(0, Math.min(1, toastArea.fall * 1.8))
                 visible: opacity > 0.01
-                transform: Translate { y: (1 - toastArea.drop) * (win.bottom ? 1 : -1) * (toastArea.height * 0.7 + 20) }
+                transform: Translate { y: (1 - toastArea.fall) * (win.bottom ? 1 : -1) * (toastArea.height * 0.7 + 20) }
                 HoverHandler { onHoveredChanged: Notifs.hold = hovered }
                 Loader {
                     width: parent.width
@@ -438,19 +460,43 @@ PanelWindow {
     // ── the menu dropping out of a full-width bar: a shape hanging from the bar's bottom edge ──
     IslandShape {
         id: drop
-        visible: Theme.fullBar && height > 1
-        bodyW: win.dropped ? win.openW : 160
-        height: win.dropped ? win.openH - Theme.islandH : 0
+        visible: (Theme.fullBar || toasting) && height > 1
+        // (a notification drops out of it too, when the bar is full width)
+        readonly property bool toasting: !win.dropped && win.toastOn && win.toastHost === "drop"
+        bodyW: win.dropped ? win.openW : (toasting ? win.toastW : 160)
+        height: win.dropped ? win.openH - Theme.islandH : (toasting ? toastArea.implicitHeight + win.pad * 1.5 : 0)
         r: Theme.islandRadius
         x: Math.round((win.width - width) / 2)
         flipped: win.bottom
-        y: win.bottom ? win.height - Theme.islandH - height + (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
-                      : Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
+        // hanging from the bar's edge, wherever the bar sits (a margin round an island bar)
+        y: win.bottom ? island.y - height + (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
+                      : island.y + Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
         Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
         Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : 220; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.sizeCurve : Theme.exitCurve } }
         onHeightChanged: if (!win.shown && height <= 1) win.wasOpen = false
         MouseArea { anchors.fill: parent }
         Item { id: dropBody; x: drop.e; width: drop.bodyW; height: drop.height; clip: true }
+    }
+
+    // ── a notification under a floating bar (Solid, Modular): its own card ──
+    Rectangle {
+        id: toastCard
+        readonly property bool on: win.toastOn && win.toastHost === "card"
+        width: win.toastW
+        height: Math.round(toastArea.implicitHeight + 2 * win.pad)
+        x: Math.round((win.width - width) / 2)
+        y: win.bottom ? island.y - height - 8 : island.y + Theme.islandH + 8
+        radius: Theme.islandRadius
+        color: Theme.frame
+        border.width: Theme.outlineW
+        border.color: Theme.outlineColor
+        clip: true
+        opacity: on ? 1 : 0
+        visible: opacity > 0.01
+        Behavior on opacity { NumberAnimation { duration: toastCard.on ? Theme.fastMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
+        CardShadow {}
+        MouseArea { anchors.fill: parent }
     }
 
     // ── the floating card (menus in the middle or on the right) ──
@@ -529,10 +575,11 @@ PanelWindow {
         // (a screen with the bar turned off has no bar to blur behind: only its open menu)
         // (the Frame style's band is the frame's: it blurs behind itself. Blurred here too, niri's
         // blur showed the wallpaper over the frame, so the band didn't match the frame's sides)
-        item: (win.barHere && !(Theme.frameBand && !win.grown)) || win.toastOn || (win.shown && win.docked) ? body : null
+        item: (win.barHere && !(Theme.frameBand && !win.grown)) || win.toastGrows || (win.shown && win.docked) ? body : null
         radius: island.rr
         Region { item: win.dropped || drop.height > 1 ? dropBody : null; radius: drop.rr }
         Region { item: blurBox.on ? blurBox : null; radius: floatCard.radius * blurBox.k }
+        Region { item: toastCard.on && toastCard.opacity > 0.6 ? toastCard : null; radius: toastCard.radius }
     }
     // Where the floating card's blur is. The blur can't fade: it's there or it isn't. Kept on
     // until the card had faded out, it stayed behind as an empty blurred box after the menu
