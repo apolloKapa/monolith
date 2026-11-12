@@ -35,6 +35,56 @@ Singleton {
         thumbProc.running = true;
     }
     Process { id: thumbProc; onExited: wall.thumbsMade++ }
+
+    // small copies of the pictures for the picker's cards (decoding a 4K file for a 640 px card is
+    // what made it slow). Made once in the background, the ones around the current wallpaper first
+    // (what the picker shows when it opens), four at a time; each card switches to its copy the
+    // moment it exists. A picture that can't be shrunk shows itself, full size.
+    readonly property string picThumbDir: home + "/.cache/monolith/wall-thumbs"
+    function picThumb(p) { return picThumbDir + "/" + Qt.md5(p) + "-960.jpg"; }
+    // path -> "ok" | "fail", for the pictures done so far
+    property var picThumbs: ({})
+    property var pendingThumbs: ({})
+    function picThumbState(p) { return picThumbs[p] || ""; }
+    function makePicThumbs() {
+        const pics = pictures;
+        if (!pics.length || picProc.running) return;
+        // what the picker shows when it opens first: the start of the grid, and the coverflow
+        // around the current wallpaper (both ways); then outward from those
+        const at = Math.max(0, pics.indexOf(path));
+        const order = pics.map((p, i) => [p, Math.min(i, Math.abs(i - at))])
+                          .sort((x, y) => x[1] - y[1]).map(x => x[0]);
+        picProc.command = ["sh", "-c",
+            "mkdir -p \"$D\" && printf '%s\\0' \"$@\" | xargs -0 -n1 -P4 sh -c '" +
+            "v=$1; t=\"$D/$(printf %s \"$v\" | md5sum | cut -d\" \" -f1)-960.jpg\"; " +
+            "if [ -s \"$t\" ] && [ \"$t\" -nt \"$v\" ]; then printf \"ok\\t%s\\n\" \"$v\"; " +
+            "elif ffmpeg -loglevel error -y -i \"$v\" -frames:v 1 -vf \"scale=min(960\\,iw):-2\" -q:v 4 \"$t.part.jpg\" </dev/null && mv \"$t.part.jpg\" \"$t\"; " +
+            "then printf \"ok\\t%s\\n\" \"$v\"; else rm -f \"$t.part.jpg\"; printf \"fail\\t%s\\n\" \"$v\"; fi' _",
+            "_"].concat(order);
+        picProc.environment = { "D": picThumbDir };
+        picProc.running = true;
+    }
+    Process {
+        id: picProc
+        stdout: SplitParser {
+            onRead: line => {
+                const tab = line.indexOf("\t");
+                if (tab > 0) { wall.pendingThumbs[line.slice(tab + 1)] = line.slice(0, tab); flushThumbs.start(); }
+            }
+        }
+        onExited: flushThumbs.start()
+    }
+    // hand the finished ones to the cards in batches (a new object each time, so bindings see it)
+    Timer {
+        id: flushThumbs
+        interval: 60
+        onTriggered: {
+            const add = wall.pendingThumbs;
+            if (!Object.keys(add).length) return;
+            wall.pendingThumbs = ({});
+            wall.picThumbs = Object.assign({}, wall.picThumbs, add);
+        }
+    }
     // pick a video or GIF with a file dialog and copy it into the Live folder
     function addLive() { addProc.running = true; }
     Process {
@@ -62,6 +112,7 @@ Singleton {
             onStreamFinished: {
                 wall.images = text.split("\n").filter(l => l);
                 wall.makeThumbs();
+                wall.makePicThumbs();
                 if (wall.pendingAdd && wall.images.indexOf(wall.pendingAdd) !== -1) { wall.set(wall.pendingAdd); wall.pendingAdd = ""; }
                 // first start: make a palette for whatever wallpaper there is
                 if (!wall.checked) { wall.checked = true; firstPalette.running = true; }

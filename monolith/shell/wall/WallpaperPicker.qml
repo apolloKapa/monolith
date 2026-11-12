@@ -128,11 +128,28 @@ PanelWindow {
                 border.width: current ? 3 : 0
                 border.color: Theme.accent
                 Icon { anchors.centerIn: parent; visible: Wall.isVideo(card.path); name: "movie"; size: 44; color: Theme.subtext }
+                // its small copy once Wall has made it (the full picture only if that failed)
+                readonly property string thumbState: Wall.picThumbState(card.path)
+                // waiting: a soft shimmer instead of an empty card
+                Rectangle {
+                    anchors.fill: parent
+                    visible: !Wall.isVideo(card.path) && pic.status !== Image.Ready
+                    color: Theme.containerHigh
+                    SequentialAnimation on opacity {
+                        running: parent.visible && win.shown
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 0.35; to: 0.8; duration: 700; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.8; to: 0.35; duration: 700; easing.type: Easing.InOutSine }
+                    }
+                }
                 Image {
+                    id: pic
                     anchors.fill: parent
                     visible: !Wall.isVideo(card.path)
-                    source: Wall.isVideo(card.path) || card.path === "" ? "" : Wall.url(card.path)
-                    sourceSize: Qt.size(640, 400)
+                    source: Wall.isVideo(card.path) || card.path === "" ? ""
+                          : card.thumbState === "ok" ? "file://" + Wall.picThumb(card.path)
+                          : card.thumbState === "fail" ? Wall.url(card.path) : ""
+                    sourceSize: Qt.size(960, 600)
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     opacity: status === Image.Ready ? 1 : 0
