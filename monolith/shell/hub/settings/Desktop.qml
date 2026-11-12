@@ -15,7 +15,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "lock"; title: "Lock screen widgets"
-        desc: WidgetLayout.items("lock").length + " on the lock screen (the password box stays where it is)"
+        desc: WidgetLayout.items("lock").length + " on the lock screen (drag the password box there too)"
         Button { text: "Edit the lock screen"; primary: true; icon: "edit"; onClicked: HubState.editWidgetsOn("lock") }
     }
     SettingRow {

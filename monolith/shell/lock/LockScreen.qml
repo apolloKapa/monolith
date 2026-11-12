@@ -122,17 +122,20 @@ WlSessionLock {
             }
         }
 
-        // ── the password pill, your picture inside it, the power buttons under it ──
+        // ── the password pill, your picture inside it, the power buttons under it. Where the
+        // widget editor put it (Lock screen tab: drag it; lock.password = its middle, as parts of
+        // the screen), else at the bottom in the middle ──
         Column {
             id: who
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: parent.height * 0.08
+            readonly property var at: Store.get("lock.password", null)
+            readonly property bool placed: !!at && typeof at.x === "number" && typeof at.y === "number"
+            x: Math.max(0, Math.min(parent.width - width, placed ? at.x * parent.width - width / 2 : (parent.width - width) / 2))
+            y: Math.max(0, Math.min(parent.height - height, placed ? at.y * parent.height - height / 2 : parent.height * 0.92 - height))
             spacing: 14
             // fades in with a little zoom (and out when unlocking)
             opacity: surface.enter
             scale: Theme.popScale + (1 - Theme.popScale) * surface.enter
-            transformOrigin: Item.Bottom
+            transformOrigin: placed ? Item.Center : Item.Bottom
             readonly property string avatar: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face"))
 
             Rectangle {

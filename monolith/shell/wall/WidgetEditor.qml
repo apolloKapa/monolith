@@ -81,16 +81,74 @@ PanelWindow {
             for (let y = 0; y <= height; y += ed.grid) { g.beginPath(); g.moveTo(0, Math.round(y) + 0.5); g.lineTo(width, Math.round(y) + 0.5); g.stroke(); }
         }
     }
-    // the lock screen's fixed parts, as guides: the password pill and the top island
-    Rectangle {
+    // the lock screen's password pill with the power buttons under it (as big as on the lock
+    // screen: 420 × 122): drag it anywhere, it catches on the same lines as the widgets do (Ctrl:
+    // freely). Saved as its middle (lock.password); Reset puts it back at the bottom
+    Item {
+        id: pass
         visible: ed.lockMode
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: parent.height * 0.08 + 58
-        width: 420; height: 64; radius: 32
-        color: Qt.alpha(Theme.frame, 0.6)
-        border.width: 2; border.color: Qt.alpha(Theme.text, 0.25)
-        Label { anchors.centerIn: parent; text: "Password (stays here)"; muted: true }
+        width: 420; height: 122
+        z: 5
+        readonly property var at: Store.get("lock.password", null)
+        readonly property bool placed: !!at && typeof at.x === "number" && typeof at.y === "number"
+        // (read straight from Store: in onAtChanged the `placed` binding may not have caught up yet)
+        function home() {
+            const a = Store.get("lock.password", null);
+            const ok = !!a && typeof a.x === "number" && typeof a.y === "number";
+            x = Math.max(0, Math.min(ed.width - width, ok ? a.x * ed.width - width / 2 : (ed.width - width) / 2));
+            y = Math.max(0, Math.min(ed.height - height, ok ? a.y * ed.height - height / 2 : ed.height * 0.92 - height));
+        }
+        onAtChanged: home()
+        Component.onCompleted: home()
+        Connections { target: ed; function onWidthChanged() { pass.home(); } function onHeightChanged() { pass.home(); } }
+        Rectangle {
+            id: passPill
+            width: parent.width; height: 64; radius: 32
+            color: Qt.alpha(Theme.frame, 0.85)
+            border.width: 2; border.color: passMa.pressed || passMa.containsMouse ? Theme.accent : Qt.alpha(Theme.text, 0.35)
+            Row {
+                anchors.centerIn: parent; spacing: 10
+                Icon { name: "drag_pan"; size: 20; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: "Password: drag to move"; muted: true; anchors.verticalCenter: parent.verticalCenter }
+            }
+        }
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            spacing: 10
+            Repeater {
+                model: ["bedtime", "restart_alt", "power_settings_new"]
+                Rectangle {
+                    required property string modelData
+                    width: 44; height: 44; radius: 22
+                    color: Qt.alpha(Theme.frame, 0.75)
+                    border.width: 1; border.color: Qt.alpha(Theme.text, 0.2)
+                    Icon { anchors.centerIn: parent; name: parent.modelData; size: 20; color: Theme.subtext }
+                }
+            }
+        }
+        MouseArea {
+            id: passMa
+            anchors.fill: parent; anchors.margins: -6
+            hoverEnabled: true
+            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+            property point start
+            property point from
+            onPressed: mouse => { ed.selected = ""; ed.adding = false; start = mapToItem(ed.contentItem, mouse.x, mouse.y); from = Qt.point(pass.x, pass.y); ed.moving = pass; }
+            onCanceled: { ed.moving = null; ed.guides = []; ed.measures = []; }
+            onPositionChanged: mouse => {
+                if (!pressed) return;
+                const p = mapToItem(ed.contentItem, mouse.x, mouse.y);
+                const at = ed.place(pass, from.x + p.x - start.x, from.y + p.y - start.y, (mouse.modifiers & Qt.ControlModifier) !== 0);
+                pass.x = at.x; pass.y = at.y;
+            }
+            onReleased: {
+                ed.moving = null; ed.guides = []; ed.measures = [];
+                Store.set("lock.password", { x: (pass.x + pass.width / 2) / ed.width, y: (pass.y + pass.height / 2) / ed.height });
+            }
+            // double-click: back to the bottom middle
+            onDoubleClicked: Store.unset("lock.password")
+        }
     }
     // a click on nothing: no selection
     MouseArea { anchors.fill: parent; onClicked: { ed.selected = ""; ed.adding = false; } }
@@ -109,6 +167,7 @@ PanelWindow {
             if (!it || it === self) continue;
             out.push({ l: it.x, t: it.y, r: it.x + it.width, b: it.y + it.height });
         }
+        if (lockMode && self !== pass) out.push({ l: pass.x, t: pass.y, r: pass.x + pass.width, b: pass.y + pass.height });
         return out;
     }
     // the lines along one axis (h: the x axis)
@@ -604,7 +663,7 @@ PanelWindow {
                 property bool armed: false
                 anchors.verticalCenter: parent.verticalCenter
                 text: armed ? "Sure?" : "Reset"; icon: "restart_alt"
-                onClicked: { if (armed) { WidgetLayout.reset(ed.mode); armed = false; } else { armed = true; disarm.restart(); } }
+                onClicked: { if (armed) { WidgetLayout.reset(ed.mode); if (ed.lockMode) Store.unset("lock.password"); armed = false; } else { armed = true; disarm.restart(); } }
                 Timer { id: disarm; interval: 4000; onTriggered: resetB.armed = false }
             }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Done"; icon: "check"; primary: true; onClicked: ed.done() }
