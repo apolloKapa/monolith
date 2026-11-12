@@ -54,9 +54,9 @@ PanelWindow {
         swap.active = true;
         swap.ready();
     }
-    // while a fullscreen app is on (any screen) or Game mode: asleep, after a moment (a quick
+    // while a fullscreen app is on this screen (not another one) or Game mode: asleep, after a moment (a quick
     // fullscreen toggle doesn't unload it); awake again at once
-    readonly property bool shouldSleep: Store.get("wallpaper.livePause", true) !== false && (Niri.focusedFullscreen || GameMode.active)
+    readonly property bool shouldSleep: Store.get("wallpaper.livePause", true) !== false && (Niri.fullscreenOn(modelData.name) || GameMode.active)
     property bool asleep: false
     onShouldSleepChanged: if (shouldSleep) sleepSoon.restart(); else { sleepSoon.stop(); asleep = false; }
     Timer { id: sleepSoon; interval: 1500; onTriggered: bg.asleep = bg.shouldSleep }

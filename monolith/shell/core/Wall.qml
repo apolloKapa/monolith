@@ -166,7 +166,9 @@ Singleton {
     }
     property string pendingAdd: ""      // just added: set it once the scan has found it
     function openLiveDir() { Quickshell.execDetached(["sh", "-c", "mkdir -p \"$1\" && xdg-open \"$1\"", "_", liveDir]); }
-    // a screen can have its own wallpaper (right-click in the picker); else the shared one
+    // the screen the picker sets ("" = every screen), chosen at its top ("Set on")
+    property string aim: ""
+    // a screen can have its own wallpaper ("Set on" or right-click in the picker); else the shared one
     function pathFor(screen) { return Store.get("wallpaper.screens." + screen.replace(/\./g, "_"), "") || path; }
     function setFor(screen, p) { Store.set("wallpaper.screens." + screen.replace(/\./g, "_"), p); }
     function isVideo(p) { return /\.(mp4|webm|mkv|mov)$/i.test(p); }

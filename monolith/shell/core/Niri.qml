@@ -36,6 +36,15 @@ Singleton {
         const scr = ws ? Quickshell.screens.find(s => s.name === ws.output) : null;
         return !!scr && size[0] >= scr.width - 1 && size[1] >= scr.height - 1;
     }
+    // a fullscreen window is showing on this screen: its shown workspace's active window covers it
+    // (the live wallpaper of the other screens keeps playing)
+    function fullscreenOn(output) {
+        const ws = workspaces.find(x => x.output === output && x.is_active);
+        if (!ws) return false;
+        const ids = ws.active_window_id !== null && ws.active_window_id !== undefined ? [ws.active_window_id]
+            : Object.keys(windows).filter(k => windows[k].workspace_id === ws.id);   // (Hyprland: none is noted)
+        return ids.some(k => { const w = windows[k]; return !!w && (w.is_fullscreen === true || covers(w)); });
+    }
     // the screen with the focused workspace
     readonly property string focusedOutput: { const w = workspaces.find(w => w.is_focused); return w ? (w.output || "") : ""; }
     readonly property string layoutName: layouts.length > layoutIndex ? layouts[layoutIndex] : ""

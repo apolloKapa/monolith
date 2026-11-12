@@ -11,7 +11,8 @@ import "../ui"
 // The wallpaper picker: a panel in the middle of the screen. It opens as a bubble that drops
 // out of the island and grows into the panel (and shrinks back up into it on close). Inside,
 // a coverflow (or a grid) of your pictures: ←/→ or the wheel to browse, Enter or a click on
-// the middle one to set it, right-click for this screen only, Esc to close.
+// the middle one to set it, right-click for this screen only, Esc to close. With more than one
+// screen, "Set on" picks which one a click sets (All, or one screen; Wall.aim).
 PanelWindow {
     id: win
     required property var modelData
@@ -35,7 +36,10 @@ PanelWindow {
     color: "transparent"
 
     readonly property string screenName: modelData.name
-    readonly property string currentPath: Wall.pathFor(screenName)
+    // the screen a click sets ("" = all of them); a screen that's gone counts as all
+    readonly property string aimName: Wall.aim !== "" && Quickshell.screens.some(s => s.name === Wall.aim) ? Wall.aim : ""
+    readonly property string currentPath: Wall.pathFor(aimName || screenName)
+    function pick(p) { if (aimName === "") Wall.set(p); else Wall.setFor(aimName, p); }
     readonly property bool coverflow: Store.get("wallpaper.view", "flow") === "flow"
     // Pictures or Live (videos and GIFs); the tab you used last
     readonly property bool liveTab: Store.get("wallpaper.tab", "pictures") === "live"
@@ -126,7 +130,7 @@ PanelWindow {
                 Keys.onUpPressed: if (!f) g.moveCurrentIndexUp()
                 Keys.onDownPressed: if (!f) g.moveCurrentIndexDown()
                 Keys.onTabPressed: Store.set("wallpaper.tab", win.liveTab ? "pictures" : "live")
-                Keys.onReturnPressed: { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) Wall.set(win.list[i]); }
+                Keys.onReturnPressed: { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) win.pick(win.list[i]); }
             }
 
             RowLayout {
@@ -136,10 +140,19 @@ PanelWindow {
                 Icon { name: "wallpaper"; size: 22; filled: true; color: Theme.accent }
                 Label { text: "Wallpaper"; strong: true; font.pixelSize: Theme.sizeTitle + 2 }
                 Segmented { Layout.leftMargin: 10; Layout.preferredWidth: 200; height: 36; opts: [["pictures", "Pictures"], ["live", "Live"]]; value: win.liveTab ? "live" : "pictures"; onPicked: v => Store.set("wallpaper.tab", v) }
+                // which screen a click sets: all of them, or just one
+                Label { visible: Quickshell.screens.length > 1; Layout.leftMargin: 10; text: "Set on"; muted: true; font.pixelSize: Theme.sizeSmall }
+                Segmented {
+                    visible: Quickshell.screens.length > 1
+                    Layout.preferredWidth: 90 * opts.length; height: 36
+                    opts: [["", "All"]].concat(Quickshell.screens.map(s => [s.name, s.name]))
+                    value: win.aimName
+                    onPicked: v => Wall.aim = v
+                }
                 Label {
                     Layout.leftMargin: 8; Layout.fillWidth: true; elide: Text.ElideRight; muted: true; font.pixelSize: Theme.sizeSmall
                     text: win.liveTab ? Wall.live.length + (Wall.live.length === 1 ? " live wallpaper" : " live wallpapers") + "   ·   hover to preview"
-                                      : Wall.dir.replace(Wall.home, "~") + "   ·   " + Wall.pictures.length + " pictures   ·   right-click: only this screen"
+                                      : Wall.dir.replace(Wall.home, "~") + "   ·   " + Wall.pictures.length + " pictures"
                 }
                 Segmented { visible: !win.liveTab; Layout.preferredWidth: 180; height: 36; opts: [["flow", "Coverflow"], ["grid", "Grid"]]; value: win.coverflow ? "flow" : "grid"; onPicked: v => Store.set("wallpaper.view", v) }
                 Segmented { Layout.preferredWidth: 160; height: 36; opts: [["dark", "Dark"], ["light", "Light"]]; value: Theme.modeName; onPicked: v => Store.set("theme.mode", v) }
@@ -257,7 +270,7 @@ PanelWindow {
                         onClicked: mouse => {
                             if (!fc.middle) { flow.currentIndex = fc.index; return; }
                             if (mouse.button === Qt.RightButton) Wall.setFor(win.screenName, fc.modelData);
-                            else Wall.set(fc.modelData);
+                            else win.pick(fc.modelData);
                         }
                     }
                 }
@@ -418,7 +431,7 @@ PanelWindow {
                             hoverEnabled: true
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: mouse => { if (mouse.button === Qt.RightButton) Wall.setFor(win.screenName, lcell.modelData); else Wall.set(lcell.modelData); }
+                            onClicked: mouse => { if (mouse.button === Qt.RightButton) Wall.setFor(win.screenName, lcell.modelData); else win.pick(lcell.modelData); }
                         }
                     }
                 }
@@ -453,7 +466,7 @@ PanelWindow {
                         anchors.fill: parent
                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: mouse => { if (mouse.button === Qt.RightButton) Wall.setFor(win.screenName, gcell.modelData); else Wall.set(gcell.modelData); }
+                        onClicked: mouse => { if (mouse.button === Qt.RightButton) Wall.setFor(win.screenName, gcell.modelData); else win.pick(gcell.modelData); }
                     }
                 }
             }
