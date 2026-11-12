@@ -103,7 +103,7 @@ The bar has five styles (Island, Fill, Frame, Solid, Modular), can sit at the to
 | Capture | screenshots and recordings through the capture menu (below), with an optional delay; the focused window; recent screenshots |
 | Gaming | game mode (performance power profile, do not disturb, screen kept awake, optionally the island tucked away; it survives a shell restart), CPU and GPU load, temperatures, clock, power and memory with two-minute graphs, a performance overlay, ending a stuck program, LACT and Steam |
 | Tools | timer, notes, unit converter |
-| Wellbeing | screen time per app, the week, daily limits |
+| Wellbeing | screen time for a day (against the day before, the busiest hour, the daily average), that week's bars and the month as a heatmap; each app's own view (its hours, its week, a daily limit); a week as days × hours; its settings behind the gear (tracking, a daily goal, every limit) |
 | Keys | every niri keybind, searchable |
 | Wallpaper | a coverflow (or grid) of your pictures and live wallpapers; set one for every screen or just one ("Set on"), star favourites (S). The colours come from the wallpaper (matugen) |
 | Settings | everything below, with a search box that jumps straight to a setting |
@@ -128,7 +128,6 @@ Small dropdowns also come out of the bar: notifications, sound, the tray's menus
 | Screenshots | folder, file type, the editor, the preview card, which tools the capture menu has, the delay, the text-recognition languages |
 | System monitor | what clicking the bar's stats opens, warnings when video memory, memory or a temperature stays too high |
 | Software | startup apps, AppImages |
-| Wellbeing | screen time and limits |
 
 Every setting shows a dot when it's changed from the default, and ↺ puts it back.
 

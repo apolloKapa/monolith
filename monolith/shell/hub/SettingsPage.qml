@@ -32,8 +32,7 @@ Page {
         { id: "lock", desc: "Locking, sleeping and what happens when you're away", title: "Lock & idle", icon: "lock_clock", gap: true, tabs: [["idle", "Lock & idle", "Idle"]] },
         { id: "capture", desc: "Screenshots and recordings", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots", "Capture"]] },
         { id: "sysmon", desc: "Live graphs, the busiest apps, and warnings when it runs hot or full", title: "System monitor", icon: "monitoring", tabs: [["sysmon", "System monitor", "SysMon"]] },
-        { id: "software", desc: "Apps and updates for this PC", title: "Software", icon: "deployed_code", tabs: [["software", "Software", "Software"], ["apps", "Apps", "Apps"]] },
-        { id: "wellbeing", desc: "Screen time and breaks", title: "Wellbeing", icon: "self_improvement", tabs: [["wellbeing", "Wellbeing", "Wellbeing"]] }
+        { id: "software", desc: "Apps and updates for this PC", title: "Software", icon: "deployed_code", tabs: [["software", "Software", "Software"], ["apps", "Apps", "Apps"]] }
     ]
     // ── search: every row of every page (scripts/settings_index.py reads their titles and
     // descriptions), plus the pages themselves. A result opens its page, scrolls to the row and

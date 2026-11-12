@@ -72,7 +72,7 @@ PanelWindow {
         "capture":       { icon: "screenshot_region", title: "Capture",    w: 680 },
         "gaming":        { icon: "sports_esports", title: "Gaming",        w: 960 },
         "tools":         { icon: "construction",   title: "Tools",         w: 900 },
-        "wellbeing":     { icon: "self_improvement", title: "Wellbeing",   w: 860 },
+        "wellbeing":     { icon: "self_improvement", title: "Wellbeing",   w: 960 },
         "keys":          { icon: "keyboard_command_key", title: "Keys",    w: 860 },
         "settings":      { icon: "settings",       title: "Settings",      w: 1140 }
     })
