@@ -49,7 +49,7 @@ WlSessionLock {
             Image {
                 id: wp
                 anchors.fill: parent
-                source: Wall.path !== "" && !Wall.isVideo(Wall.path) ? Wall.url(Wall.pathFor(surface.screen ? surface.screen.name : "")) : ""
+                source: Wall.still(Wall.pathFor(surface.screen ? surface.screen.name : ""))
                 fillMode: Image.PreserveAspectCrop
                 sourceSize: Qt.size(surface.width / 2, surface.height / 2)
                 visible: false
@@ -108,7 +108,8 @@ WlSessionLock {
 
         // ── the widgets, where the widget editor put them (its Lock screen tab) ──
         Repeater {
-            model: WidgetLayout.on("lock", "")
+            // (the media widget only while Lock & idle → Media on the lock screen is on)
+            model: WidgetLayout.on("lock", "").filter(i => i.type !== "media" || Store.get("lock.media", true) !== false)
             WidgetFace {
                 required property var modelData
                 item: modelData

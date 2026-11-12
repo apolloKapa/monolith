@@ -19,10 +19,10 @@ ColumnLayout {
     SettingRow {
         key: "nightlight.schedule";
         icon: "schedule"; title: "Schedule"
-        desc: NightLight.schedule === "sun" && !Weather.loc ? "Sunset to sunrise needs your location (General)" : ""
+        desc: NightLight.schedule === "sun" ? (Weather.loc ? "From sunset to sunrise where you are" : "Sunset to sunrise needs your location (General → You & weather)") : NightLight.schedule === "custom" ? "Between the two times below" : "All day"
         Segmented {
-            width: 330
-            opts: [["always", "Always"], ["sun", "Sunset to sunrise"], ["custom", "Set times"]]
+            width: 360
+            opts: [["always", "Always"], ["sun", "Sunset–sunrise"], ["custom", "Set times"]]
             value: NightLight.schedule
             onPicked: v => Store.set("nightlight.schedule", v)
         }

@@ -74,7 +74,7 @@ PanelWindow {
         Image {
             id: wp
             anchors.fill: parent
-            source: Wall.url(Wall.pathFor(wel.modelData.name))
+            source: Wall.still(Wall.pathFor(wel.modelData.name))
             fillMode: Image.PreserveAspectCrop
             sourceSize: Qt.size(wel.width / 3, wel.height / 3)
             visible: false
@@ -281,7 +281,7 @@ PanelWindow {
                     Layout.preferredWidth: 220; Layout.preferredHeight: 40
                     opts: [["dark", "Dark"], ["light", "Light"]]
                     value: Theme.modeName
-                    onPicked: v => { Store.set("theme.mode", v); Quickshell.execDetached(["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", v === "dark" ? "prefer-dark" : "prefer-light"]); }
+                    onPicked: v => Store.set("theme.mode", v)
                 }
                 Item { Layout.fillWidth: true }
                 Button { text: "Choose a wallpaper"; icon: "wallpaper"; onClicked: HubState.showWall(wel.modelData.name) }

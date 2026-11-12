@@ -50,7 +50,7 @@ ColumnLayout {
         Button { text: "Edit"; primary: true; icon: "edit"; onClicked: { HubState.editDock(); } }
     }
     SettingRow {
-        icon: "push_pin"; title: "Pinned apps"; desc: "Right-click an app in the dock to pin or unpin it. Start over from the default list:"
+        icon: "push_pin"; title: "Pinned apps"; desc: "Right-click an app in the dock to pin or unpin it. Reset puts back the default list"
         Button { text: "Reset"; onClicked: Store.set("dock.pinned", null) }
     }
 

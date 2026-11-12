@@ -23,16 +23,21 @@ ColumnLayout {
     Process { id: act; onExited: sec.load() }
     function run(args) { act.command = ["python3", sec.script].concat(args); act.running = true; }
 
-    readonly property var shownApps: {
+    readonly property var matching: {
         const f = filter.toLowerCase();
-        const l = apps.filter(a => f === "" ? (showAll || a.on) : a.name.toLowerCase().includes(f));
-        return l.slice(0, 40);
+        return apps.filter(a => f === "" ? (showAll || a.on) : a.name.toLowerCase().includes(f));
     }
+    readonly property var shownApps: matching.slice(0, 40)
 
     Label { text: "Start at login"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6 }
     SettingRow {
-        icon: "rocket_launch"; title: "Startup apps"; desc: sec.apps.filter(a => a.on).length + " start when you log in. Find an app to add it:"
-        Field { placeholder: "Find an app"; onAccepted: v => sec.filter = v.trim() }
+        icon: "rocket_launch"; title: "Startup apps"
+        desc: { const n = sec.apps.filter(a => a.on).length; return (n === 0 ? "Nothing starts" : n === 1 ? "1 app starts" : n + " apps start") + " when you log in. Search for an app (or show them all) and switch it on"; }
+        RowLayout {
+            spacing: 6
+            Field { width: 200; placeholder: "Find an app"; onTextChanged: sec.filter = text.trim() }
+            Button { visible: sec.filter === ""; text: sec.showAll ? "Only these" : "All apps"; onClicked: sec.showAll = !sec.showAll }
+        }
     }
     Repeater {
         model: sec.shownApps
@@ -47,11 +52,7 @@ ColumnLayout {
             Toggle { anchors.right: parent.right; anchors.rightMargin: 14; anchors.verticalCenter: parent.verticalCenter; checked: modelData.on; onToggled: on => sec.run(["set", modelData.id, on ? "on" : "off"]) }
         }
     }
-    Button {
-        visible: sec.filter === ""
-        text: sec.showAll ? "Only the ones that start" : "Show every app"
-        onClicked: sec.showAll = !sec.showAll
-    }
+    Label { visible: sec.matching.length > sec.shownApps.length; Layout.leftMargin: 6; text: (sec.matching.length - sec.shownApps.length) + " more: type part of a name to find them"; muted: true; font.pixelSize: Theme.sizeSmall }
 
     Label { text: "AppImages"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
     SettingRow {

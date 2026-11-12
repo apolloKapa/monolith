@@ -215,7 +215,8 @@ Page {
         else if (it.kind === "emoji") Quickshell.execDetached(["wl-copy", "--", it.glyph]);
         else if (it.kind === "file") Quickshell.execDetached(["xdg-open", it.path]);
         else if (it.kind === "calc") Quickshell.execDetached(["wl-copy", "--", it.value]);
-        else if (it.kind === "cmd" && it.cmd !== "") Quickshell.execDetached(["sh", "-c", "kitty -e sh -c " + JSON.stringify(it.cmd + "; exec $SHELL")]);
+        // in your terminal (Settings → Launcher), the command handed over as it is (no second round of quoting)
+        else if (it.kind === "cmd" && it.cmd !== "") Quickshell.execDetached(["sh", "-c", Prefs.terminal + " sh -c 'eval \"$1\"; exec \"${SHELL:-sh}\"' _ \"$1\"", "_", it.cmd]);
         page.done();
     }
 

@@ -5,7 +5,8 @@ import Quickshell.Io
 import "../../core"
 import "../../ui"
 
-// Screenshots: where niri saves them (its screenshot-path), and the keys.
+// Screenshots: where they're saved (niri's screenshot-path, which Monolith's capture uses too),
+// what happens after a shot, the editor, the capture menu's tools, and the keys.
 ColumnLayout {
     id: sec
     spacing: 8
@@ -15,7 +16,7 @@ ColumnLayout {
     readonly property string pattern: path.replace(/^.*\//, "")
 
     SettingRow {
-        icon: "folder"; title: "Screenshot folder"; desc: "niri saves screenshots here (and copies them)"
+        icon: "folder"; title: "Screenshot folder"; desc: "Where screenshots are saved (Monolith's and niri's own)"
         Field {
             text: sec.folder
             placeholder: "~/Pictures/Screenshots"

@@ -15,7 +15,9 @@ ColumnLayout {
         clip: true
         Image {
             anchors.fill: parent
-            source: Wall.path !== "" && !Wall.isVideo(Wall.path) ? Wall.url(Wall.path) : ""
+            // a live one: its still (the picker's card)
+            source: Wall.still(Wall.path)
+            cache: false
             sourceSize.width: 1200
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
@@ -24,14 +26,14 @@ ColumnLayout {
             anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 12
             width: wn.implicitWidth + 20; height: 28; radius: 14
             color: Qt.alpha(Theme.frame, 0.85)
-            Label { id: wn; anchors.centerIn: parent; text: Wall.path.replace(/^.*\//, "") || "No wallpaper"; font.pixelSize: Theme.sizeSmall }
+            Label { id: wn; anchors.centerIn: parent; text: (Wall.isVideo(Wall.path) || Wall.isAnimated(Wall.path) ? "Live · " : "") + (Wall.path.replace(/^.*\//, "") || "No wallpaper"); font.pixelSize: Theme.sizeSmall }
         }
         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: HubState.show("wallpaper") }
     }
     SettingRow {
         key: "wallpaper.dir";
         icon: "folder"; title: "Wallpaper folder"; desc: "Where the wallpaper picker looks"
-        Field { text: Wall.dir; onAccepted: v => { if (v.trim() !== "" && v.trim() !== Wall.dir) Store.set("wallpaper.dir", v.trim()); } }
+        Field { text: Wall.dir.replace(Wall.home, "~"); onAccepted: v => { const d = v.trim().replace(/^~/, Wall.home).replace(/\/$/, ""); if (d !== "" && d !== Wall.dir) Store.set("wallpaper.dir", d); } }
     }
     SettingRow {
         icon: "wallpaper"; title: "Pick a wallpaper"; desc: Wall.images.length + " pictures and videos, for every screen"

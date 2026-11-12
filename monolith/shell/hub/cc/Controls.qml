@@ -43,7 +43,7 @@ RowLayout {
         id: tile
         property string icon: ""
         property string title: ""
-        property string state: ""
+        property string status: ""
         property bool on: false
         Layout.fillWidth: true
         Layout.preferredHeight: 104
@@ -76,7 +76,7 @@ RowLayout {
             anchors.bottom: parent.bottom; anchors.bottomMargin: 13
             spacing: 1
             Label { width: parent.width; text: tile.title; strong: true; color: tile.on ? Theme.onAccentContainer : Theme.text }
-            Label { width: parent.width; text: tile.state !== "" ? tile.state : (tile.on ? "On" : "Off"); color: tile.on ? Theme.onAccentContainer : Theme.subtext; opacity: tile.on ? 0.8 : 1; font.pixelSize: Theme.sizeSmall }
+            Label { width: parent.width; text: tile.status !== "" ? tile.status : (tile.on ? "On" : "Off"); color: tile.on ? Theme.onAccentContainer : Theme.subtext; opacity: tile.on ? 0.8 : 1; font.pixelSize: Theme.sizeSmall }
         }
     }
 
@@ -114,7 +114,7 @@ RowLayout {
             }
             Tile {
                 icon: "bluetooth"; title: "Bluetooth"; on: !!(cc.bt && cc.bt.enabled)
-                state: !cc.bt ? "No adapter" : ""
+                status: !cc.bt ? "No adapter" : ""
                 onClicked: if (cc.bt) cc.bt.enabled = !cc.bt.enabled
                 onRightClicked: HubState.page = "network"
             }
@@ -124,7 +124,7 @@ RowLayout {
             }
             Tile {
                 icon: "nightlight"; title: "Night light"; on: NightLight.enabled
-                state: NightLight.enabled ? NightLight.temp + " K" : "Off"
+                status: NightLight.enabled ? NightLight.temp + " K" : "Off"
                 onClicked: NightLight.toggle()
                 onRightClicked: HubState.openSettings("nightlight")
             }
@@ -146,7 +146,7 @@ RowLayout {
                 icon: cc.profile === "performance" ? "bolt" : (cc.profile === "power-saver" ? "energy_savings_leaf" : "balance")
                 title: "Power mode"
                 on: cc.profile === "performance"
-                state: cc.profile === "" ? "—" : cc.profile.charAt(0).toUpperCase() + cc.profile.slice(1).replace("-", " ")
+                status: cc.profile === "" ? "—" : cc.profile.charAt(0).toUpperCase() + cc.profile.slice(1).replace("-", " ")
                 onClicked: {
                     const order = ["power-saver", "balanced", "performance"];
                     cc.profile = order[(order.indexOf(cc.profile) + 1) % order.length];
@@ -155,13 +155,13 @@ RowLayout {
             }
             Tile {
                 icon: "keyboard"; title: "Keyboard"; on: false
-                state: Niri.layoutName !== "" ? Niri.layoutName : "—"
+                status: Niri.layoutName !== "" ? Niri.layoutName : "—"
                 onClicked: Niri.action(["switch-layout", "next"])
             }
             Tile {
                 icon: Tasks.recording ? "stop_circle" : "screen_record"; title: Tasks.recording ? "Recording" : "Record"
                 on: Tasks.recording
-                state: Tasks.recording ? Tasks.fmt(Tasks.recSeconds) + " · stop" : "A region"
+                status: Tasks.recording ? Tasks.fmt(Tasks.recSeconds) + " · stop" : "A region"
                 onClicked: { if (Tasks.recording) Tasks.stopRecording(); else { HubState.close(); Tasks.startRecording(true); } }
             }
         }

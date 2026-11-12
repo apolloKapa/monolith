@@ -11,7 +11,7 @@ Singleton {
     id: pr
     readonly property string dir: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/monolith/profiles"
     readonly property var keep: ["welcome", "launches", "updates", "notes", "software", "quick.calcHistory",
-        "wallpaper.pickerPos", "wallpaper.playlistLast", "wallpaper.playlistApplied", "profile"]
+        "wallpaper.pickerPos", "wallpaper.playlistLast", "wallpaper.playlistApplied", "profile", "gaming.session"]
     property var list: []              // [{ name, saved, wallpaper, file }]
     readonly property string current: Store.get("profile.current", "")
     property string message: ""

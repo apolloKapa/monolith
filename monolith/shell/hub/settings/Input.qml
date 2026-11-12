@@ -49,7 +49,7 @@ ColumnLayout {
 
     Label { text: "Mouse"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 6 }
     SettingRow {
-        icon: "mouse"; title: "Mouse speed"
+        icon: "mouse"; title: "Mouse speed"; desc: "0 is normal; down to −1 slower, up to 1 faster"
         NumberBox { from: -1; to: 1; step: 0.05; decimals: 2; value: Number(sec.val("input/mouse|accel-speed", 0)); onMoved: x => sec.put("input/mouse", "accel-speed", x.toFixed(2)) }
     }
     SettingRow {

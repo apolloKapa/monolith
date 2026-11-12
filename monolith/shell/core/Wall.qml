@@ -171,6 +171,8 @@ Singleton {
     // a screen can have its own wallpaper ("Set on" or right-click in the picker); else the shared one
     function pathFor(screen) { return Store.get("wallpaper.screens." + screen.replace(/\./g, "_"), "") || path; }
     function setFor(screen, p) { Store.set("wallpaper.screens." + screen.replace(/\./g, "_"), p); if (p !== "") Sounds.play("wallpaper"); }
+    // a picture of any wallpaper, for an Image: a video's still (made for the picker), else the file
+    function still(p) { return !p ? "" : isVideo(p) ? "file://" + thumb(p) : url(p); }
     function isVideo(p) { return /\.(mp4|webm|mkv|mov)$/i.test(p); }
     function isAnimated(p) { return /\.gif$/i.test(p); }
     // a file path as a URL ('#', '?' and spaces in names break a plain "file://" + path)
@@ -299,7 +301,13 @@ Singleton {
         paletteProc.running = true;
     }
     Process { id: paletteProc }
-    onModeChanged: if (Store.loaded) makePalette(path)
+    onModeChanged: if (Store.loaded) { makePalette(path); followApps(); }
+    // other apps go dark or light with the shell (Appearance → Apps follow dark or light), from
+    // wherever it's changed (Settings, the picker, the welcome tour)
+    function followApps() {
+        if (Store.get("theme.appsFollow", true) === false) return;
+        Quickshell.execDetached(["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", mode === "light" ? "prefer-light" : "prefer-dark"]);
+    }
 
     property bool checked: false
     Component.onCompleted: rescan()

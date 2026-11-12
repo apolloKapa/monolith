@@ -58,7 +58,7 @@ PanelWindow {
     Image {
         id: wp
         anchors.fill: parent
-        source: Wall.url(Wall.pathFor(ed.modelData.name))
+        source: Wall.still(Wall.pathFor(ed.modelData.name))
         fillMode: Image.PreserveAspectCrop
         sourceSize: Qt.size(ed.width / (ed.lockMode ? 2 : 1), ed.height / (ed.lockMode ? 2 : 1))
         visible: !ed.lockMode

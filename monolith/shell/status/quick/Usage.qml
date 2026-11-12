@@ -27,14 +27,14 @@ GridLayout {
     readonly property var snapshots: Store.get("quick.usageSnapshots", []) || []
     function copy(t) { Quickshell.execDetached(["wl-copy", "--", t]); }
 
-    readonly property var rows: [["memory_alt", "Memory", Stats.bytes(Stats.memUsed) + " / " + Stats.bytes(Stats.memTotal)],
+    readonly property var facts: [["memory_alt", "Memory", Stats.bytes(Stats.memUsed) + " / " + Stats.bytes(Stats.memTotal)],
         ["hard_drive", "Disk", Stats.bytes(Stats.diskUsed) + " / " + Stats.bytes(Stats.diskTotal)],
         ["videogame_asset", "Video memory", Stats.vramTotal > 0 ? Stats.bytes(Stats.vramUsed) + " / " + Stats.bytes(Stats.vramTotal) : "—"],
         ["device_thermostat", "GPU", (Stats.gpuTemp > 0 ? Math.round(Stats.gpuTemp) + "°" : "—") + (Stats.gpuWatts > 0 ? " · " + Math.round(Stats.gpuWatts) + " W" : "") + (Stats.gpuClock > 0 ? " · " + Math.round(Stats.gpuClock) + " MHz" : "")]]
     // all of it, as text
     function report() {
-        const l = ["CPU " + Math.round(Stats.cpu * 100) + "% · " + Math.round(Stats.temp) + "°", "Memory " + Math.round(Stats.mem * 100) + "% (" + rows[0][2] + ")",
-                   "GPU " + Math.round(Stats.gpu * 100) + "% · " + rows[3][2], "Video memory " + rows[2][2], "Disk " + rows[1][2]];
+        const l = ["CPU " + Math.round(Stats.cpu * 100) + "% · " + Math.round(Stats.temp) + "°", "Memory " + Math.round(Stats.mem * 100) + "% (" + facts[0][2] + ")",
+                   "GPU " + Math.round(Stats.gpu * 100) + "% · " + facts[3][2], "Video memory " + facts[2][2], "Disk " + facts[1][2]];
         if (busiest.length) l.push("Busiest: " + busiest.slice(0, 5).map(p => p.n + " " + (Math.round(p.cpu * 10) / 10) + "%").join(", "));
         return l.join("\n");
     }
@@ -107,7 +107,7 @@ GridLayout {
                 columns: u.width > 560 ? 2 : 1
                 rowSpacing: 2; columnSpacing: 10
                 Repeater {
-                    model: u.rows
+                    model: u.facts
                     Pressable {
                         id: nr
                         required property var modelData

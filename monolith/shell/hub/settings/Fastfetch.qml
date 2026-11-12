@@ -40,7 +40,7 @@ ColumnLayout {
     }
 
     SettingRow {
-        icon: "terminal"; title: "Terminal greeting (fastfetch)"; desc: "What a new terminal greets you with. Colours follow the wallpaper (unless you keep fastfetch's own, below); {{primary}} and the like in a preset become them. Picture… puts any image in as the logo (it shows in kitty)"
+        icon: "terminal"; title: "Terminal greeting (fastfetch)"; desc: "The system info a new terminal shows (fastfetch). Pick a preset below; New makes your own. It takes the wallpaper's colours unless you keep fastfetch's own"
         Row {
             spacing: 6
             Button { text: "New"; icon: "add"; onClicked: sec.run(["new"]) }
@@ -105,7 +105,7 @@ ColumnLayout {
             }
         }
     }
-    Label { visible: sec.list.length === 0; text: sec.loaded ? "No presets yet" : "Loading the previews…"; muted: true; Layout.leftMargin: 6 }
+    Label { visible: sec.list.length === 0; text: sec.loaded ? "No presets yet: New makes one" : "Loading the previews…"; muted: true; Layout.leftMargin: 6 }
     Repeater {
         model: sec.list
         Rectangle {

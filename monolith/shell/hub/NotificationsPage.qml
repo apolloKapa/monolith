@@ -13,7 +13,7 @@ Page {
         id: head
         width: parent.width
         height: 44
-        Label { Layout.leftMargin: 6; text: Notifs.list.length === 0 ? "No notifications" : Notifs.list.length + (Notifs.list.length === 1 ? " notification" : " notifications"); strong: true }
+        Label { Layout.leftMargin: 6; visible: Notifs.list.length > 0; text: Notifs.list.length + (Notifs.list.length === 1 ? " notification" : " notifications"); strong: true }
         Item { Layout.fillWidth: true }
         Pressable {
             Layout.preferredHeight: 36

@@ -91,7 +91,7 @@ Column {
                 readonly property bool dockOn: Store.get("dock.enabled", true) !== false && Store.get("dock.position", "bottom") === "bottom"
                 Image {
                     anchors.fill: parent
-                    source: pv.scr ? Wall.url(Wall.pathFor(pv.scr.name)) : ""
+                    source: pv.scr ? Wall.still(Wall.pathFor(pv.scr.name)) : ""
                     fillMode: Image.PreserveAspectCrop
                     sourceSize.width: 900
                     asynchronous: true
@@ -187,7 +187,7 @@ Column {
             color: Theme.containerHigh
             Image {
                 anchors.fill: parent
-                source: pv.scr ? Wall.url(Wall.pathFor(pv.scr.name)) : ""
+                source: pv.scr ? Wall.still(Wall.pathFor(pv.scr.name)) : ""
                 fillMode: Image.PreserveAspectCrop
                 verticalAlignment: Theme.barBottom ? Image.AlignBottom : Image.AlignTop
                 sourceSize.width: 1400

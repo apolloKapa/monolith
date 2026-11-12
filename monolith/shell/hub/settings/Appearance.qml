@@ -91,14 +91,13 @@ ColumnLayout {
             opts: [["dark", "Dark"], ["light", "Light"]]; value: Theme.modeName
             onPicked: v => {
                 Store.set("theme.mode", v);
-                if (Store.get("theme.appsFollow", true)) Quickshell.execDetached(["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", v === "dark" ? "prefer-dark" : "prefer-light"]);
             }
         }
     }
     SettingRow {
         key: "theme.appsFollow"; def: true;
-        icon: "apps"; title: "Apps switch too"; desc: "Apps (GTK, browsers, Qt with a portal) go dark or light with the shell"
-        Toggle { checked: Store.get("theme.appsFollow", true) !== false; onToggled: on => Store.set("theme.appsFollow", on) }
+        icon: "apps"; title: "Apps follow dark or light"; desc: "GTK apps, browsers and Qt apps (through the portal) switch with the shell"
+        Toggle { checked: Store.get("theme.appsFollow", true) !== false; onToggled: on => { Store.set("theme.appsFollow", on); if (on) Wall.followApps(); } }
     }
     SettingRow {
         key: "theme.radius";
