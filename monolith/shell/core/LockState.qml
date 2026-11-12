@@ -12,6 +12,7 @@ import Quickshell.Services.Pam
 Singleton {
     id: ls
     property bool locked: false
+    onLockedChanged: if (locked) Sounds.play("lock")
     property string message: ""
     property bool busy: false
     property int failures: 0
@@ -66,8 +67,8 @@ Singleton {
         onCompleted: result => {
             ls.busy = false;
             ls.pending = "";
-            if (result === PamResult.Success) { ls.failures = 0; ls.unlocking = true; release.restart(); }
-            else { ls.failures++; ls.message = "That's not the password"; ls.failed(); }
+            if (result === PamResult.Success) { ls.failures = 0; ls.unlocking = true; release.restart(); Sounds.play("unlock"); }
+            else { ls.failures++; ls.message = "That's not the password"; ls.failed(); Sounds.play("error"); }
         }
         onError: { ls.busy = false; ls.message = "Couldn't check the password"; }
     }

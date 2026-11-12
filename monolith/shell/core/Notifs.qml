@@ -121,11 +121,50 @@ Singleton {
     }
     Timer { interval: 400; repeat: true; running: notifs.popups.length > 0; onTriggered: notifs._expire() }
     // the sound: your own file (Settings → Notifications), or the system's
+    // system | pack | file (a file picked before there was a choice: file)
+    function soundStyle() { return Store.get("notifications.soundStyle", Store.get("notifications.soundFile", "") !== "" ? "file" : "system"); }
     function playSound(urgent) {
-        const own = Store.get("notifications.soundFile", "");
+        // the sound pack's own chime (Settings → Sounds), else your file or the system's
+        const style = soundStyle();
+        if (style === "pack") { Sounds.playAlways(urgent ? "error" : "notify"); return; }
+        const own = style === "file" ? Store.get("notifications.soundFile", "") : "";
         Quickshell.execDetached(["pw-play", own !== "" && !urgent ? own : (urgent
             ? "/usr/share/sounds/freedesktop/stereo/dialog-warning.oga"
             : "/usr/share/sounds/freedesktop/stereo/message.oga")]);
+    }
+    function showPopup(n, where) {
+        const u = Object.assign({}, _until);
+        u[n.id] = Date.now() + (n.expireTimeout > 0 ? n.expireTimeout * 1000 : Number(Store.get("notifications.timeout", 6)) * 1000);
+        _until = u;
+        const sc = Object.assign({}, _screen);
+        sc[n.id] = where;
+        _screen = sc;
+        // more than four: the oldest slides away
+        _leave(popups.filter(p => !leaving[p.id]).slice(3));
+        popups = [n].concat(popups);
+    }
+    // held back while a fullscreen app covered their screen: [{ n, app, out }]; once it isn't
+    // fullscreen any more, one comes up as it is, more as a summary
+    property var held: []
+    function holdBack(n, out) { held = held.concat([{ n: n, app: n.appName || "An app", out: out }]); }
+    Timer {
+        interval: 1000; repeat: true
+        running: notifs.held.length > 0
+        onTriggered: {
+            const outs = [...new Set(notifs.held.map(h => h.out))].filter(o => !Niri.fullscreenOn(o));
+            if (!outs.length) return;
+            const back = notifs.held.filter(h => outs.indexOf(h.out) !== -1);
+            notifs.held = notifs.held.filter(h => outs.indexOf(h.out) === -1);
+            const alive = back.filter(h => notifs.list.indexOf(h.n) !== -1);
+            if (alive.length === 1) { notifs.showPopup(alive[0].n, alive[0].out); return; }
+            if (!alive.length) return;
+            const per = {};
+            for (const h of alive) per[h.app] = (per[h.app] || 0) + 1;
+            const body = Object.keys(per).map(k => per[k] > 1 ? k + " (" + per[k] + ")" : k).join(", ");
+            Quickshell.execDetached(["notify-send", "-a", "Monolith",
+                "-h", "boolean:suppress-sound:true",
+                alive.length + " notifications while you were in fullscreen", body + ". They're in the notification list."]);
+        }
     }
     function clearAll() {
         for (const n of server.trackedNotifications.values.slice()) n.dismiss();
@@ -143,16 +182,19 @@ Singleton {
         onNotification: n => {
             n.tracked = true;
             if (!notifs.dnd || n.urgency === NotificationUrgency.Critical) {
-                const u = Object.assign({}, notifs._until);
-                u[n.id] = Date.now() + (n.expireTimeout > 0 ? n.expireTimeout * 1000 : Number(Store.get("notifications.timeout", 6)) * 1000);
-                notifs._until = u;
-                const sc = Object.assign({}, notifs._screen);
-                sc[n.id] = Niri.focusedOutput !== "" ? Niri.focusedOutput : (Quickshell.screens.length ? Quickshell.screens[0].name : "");
-                notifs._screen = sc;
-                // more than four: the oldest slides away
-                notifs._leave(notifs.popups.filter(p => !notifs.leaving[p.id]).slice(3));
-                notifs.popups = [n].concat(notifs.popups);
-                if (Store.get("notifications.sound", true) && !n.hints["suppress-sound"])
+                const out = Niri.focusedOutput !== "" ? Niri.focusedOutput : (Quickshell.screens.length ? Quickshell.screens[0].name : "");
+                // a fullscreen app (a game) on that screen: the popup goes to another screen, or
+                // waits until it's no longer fullscreen (Settings → Notifications → While fullscreen)
+                const mode = Store.get("notifications.fullscreen", "other");
+                const covered = n.urgency !== NotificationUrgency.Critical && mode !== "show" && Niri.fullscreenOn(out);
+                let where = out;
+                if (covered) {
+                    const free = Quickshell.screens.map(s => s.name).filter(x => x !== out && !Niri.fullscreenOn(x));
+                    if (mode === "other" && free.length) where = free[0];
+                    else { notifs.holdBack(n, out); where = ""; }
+                }
+                if (where !== "") notifs.showPopup(n, where);
+                if (Store.get("notifications.sound", true) && !n.hints["suppress-sound"] && (!covered || Store.get("notifications.fullscreenSound", false) === true))
                     notifs.playSound(n.urgency === NotificationUrgency.Critical);
             }
             n.closed.connect(() => notifs.dismissPopup(n, true));

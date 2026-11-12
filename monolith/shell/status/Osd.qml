@@ -39,7 +39,7 @@ PanelWindow {
     function flash(k) { if (!ready || Store.get("osd.enabled", true) === false || Store.get("osd.show." + k, true) === false) return; kind = k; hold.restart(); }
     Connections {
         target: osd.audio
-        function onVolumeChanged() { osd.flash("volume"); }
+        function onVolumeChanged() { osd.flash("volume"); if (osd.here) Sounds.play("tick"); }
         function onMutedChanged() { osd.flash("volume"); }
     }
     Connections {

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import "../core"
 import "../ui"
 
@@ -18,8 +19,8 @@ Page {
     // a single page just opens). A page is [id, title, file in settings/]; HubState.settingsSection
     // is a page id. `gap` puts a separator above a section.
     readonly property var categories: [
-        { id: "general", desc: "Who you are, the weather, updates", title: "General", icon: "person", tabs: [["general", "You & weather", "General"], ["about", "Updates & about", "About"]] },
-        { id: "theme", desc: "How everything looks: style, colours, wallpaper, motion", title: "Appearance", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Dark mode, font & icons", "Appearance"], ["wallpaper", "Wallpaper", "Wallpaper"], ["effects", "Effects & animations", "Effects"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Terminal greeting", "Fastfetch"]] },
+        { id: "general", desc: "Who you are, the weather, updates", title: "General", icon: "person", tabs: [["general", "You & weather", "General"], ["profiles", "Profiles & backup", "Profiles"], ["about", "Updates & about", "About"]] },
+        { id: "theme", desc: "How everything looks: style, colours, wallpaper, motion", title: "Appearance", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Dark mode, font & icons", "Appearance"], ["wallpaper", "Wallpaper", "Wallpaper"], ["playlist", "Wallpaper playlist", "WallPlaylist"], ["effects", "Effects & animations", "Effects"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Terminal greeting", "Fastfetch"]] },
         { id: "bar", desc: "What the bar shows and where it sits", title: "Bar", icon: "toolbar", tabs: [["bar", "Layout & modules", "BarLayout"], ["status", "Auto-hide", "Status"], ["barscreens", "Bar & dock per screen", "BarScreens"]] },
         { id: "menus", desc: "The launcher and where menus open", title: "Menus & launcher", icon: "apps", tabs: [["search", "Launcher", "Search"], ["menus", "Where menus open", "Menus"]] },
         { id: "dock", desc: "Your pinned and running apps", title: "Dock", icon: "dock_to_bottom", tabs: [["dock", "Dock", "Dock"]] },
@@ -30,9 +31,71 @@ Page {
         { id: "alerts", desc: "Notifications, sounds and pop-ups", title: "Notifications", icon: "notifications", tabs: [["notifications", "Notifications", "Notifications"], ["sounds", "Sounds", "SoundSettings"], ["osd", "On-screen pop-up", "Osd"]] },
         { id: "lock", desc: "Locking, sleeping and what happens when you're away", title: "Lock & idle", icon: "lock_clock", gap: true, tabs: [["idle", "Lock & idle", "Idle"]] },
         { id: "capture", desc: "Screenshots and recordings", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots", "Capture"]] },
+        { id: "sysmon", desc: "Live graphs, the busiest apps, and warnings when it runs hot or full", title: "System monitor", icon: "monitoring", tabs: [["sysmon", "System monitor", "SysMon"]] },
         { id: "software", desc: "Apps and updates for this PC", title: "Software", icon: "deployed_code", tabs: [["software", "Software", "Software"], ["apps", "Apps", "Apps"]] },
         { id: "wellbeing", desc: "Screen time and breaks", title: "Wellbeing", icon: "self_improvement", tabs: [["wellbeing", "Wellbeing", "Wellbeing"]] }
     ]
+    // ── search: every row of every page (scripts/settings_index.py reads their titles and
+    // descriptions), plus the pages themselves. A result opens its page, scrolls to the row and
+    // makes it glow for a moment.
+    property string query: ""
+    property var index: []
+    Process {
+        id: indexProc
+        command: ["python3", Qt.resolvedUrl("../scripts/settings_index.py").toString().replace("file://", "")]
+        stdout: StdioCollector { onStreamFinished: { try { page.index = JSON.parse(text); } catch (e) {} } }
+    }
+    onCurrentChanged: if (current && !index.length && !indexProc.running) indexProc.running = true
+    // a page's file -> [its tab id, category title, tab title]
+    function placeOf(file) {
+        for (const c of categories) for (const t of c.tabs) if (t[2] === file) return [t[0], c.title, t[1], c.icon];
+        return null;
+    }
+    readonly property var results: {
+        const q = query.trim().toLowerCase();
+        if (q === "") return [];
+        const words = q.split(/\s+/);
+        const hit = text => words.every(w => text.indexOf(w) !== -1);
+        const out = [];
+        // pages first
+        for (const c of categories) for (const t of c.tabs) {
+            const name = (c.title + " " + t[1]).toLowerCase();
+            if (hit(name + " " + (c.desc || "").toLowerCase())) out.push({ tab: t[0], title: t[1], where: c.title, desc: c.desc || "", icon: c.icon, row: "", score: t[1].toLowerCase().startsWith(q) ? 0 : 1 });
+        }
+        for (const e of index) {
+            const pl = placeOf(e.file);
+            if (!pl) continue;
+            const title = e.title.toLowerCase();
+            if (!hit(title + " " + e.desc.toLowerCase() + " " + pl[2].toLowerCase())) continue;
+            out.push({ tab: pl[0], title: e.title, where: pl[1] + " › " + pl[2], desc: e.desc, icon: e.icon || pl[3], row: e.title,
+                       score: title.startsWith(q) ? 0 : (hit(title) ? 1 : 2) });
+        }
+        out.sort((a, b) => a.score - b.score);
+        return out.slice(0, 60);
+    }
+    // the row to go to once its page has loaded
+    property string findRow: ""
+    function go(res) {
+        findRow = res.row;
+        if (HubState.settingsSection === res.tab) Qt.callLater(page.seek);
+        HubState.settingsSection = res.tab;
+    }
+    function rowsIn(item, out) {
+        if (!item) return out;
+        if (item.title !== undefined && item.allKeys !== undefined) out.push(item);
+        for (const c of item.children) rowsIn(c, out);
+        return out;
+    }
+    function seek() {
+        if (findRow === "" || !loader.item) return;
+        const row = rowsIn(loader.item, []).find(r => r.title === findRow && r.visible);
+        findRow = "";
+        if (!row) return;
+        const y = row.mapToItem(loader.item, 0, 0).y;
+        flick.contentY = Math.max(0, Math.min(flick.contentHeight - flick.height, y - 60));
+        row.glow();
+    }
+
     // the open category and tab (an unknown id shows the first)
     readonly property var category: categories.find(c => c.tabs.some(t => t[0] === section)) || categories[0]
     readonly property var tab: category.tabs.find(t => t[0] === section) || category.tabs[0]
@@ -70,11 +133,62 @@ Page {
                     Label { width: parent.width; text: "Monolith " + Updates.version; muted: true; font.pixelSize: Theme.sizeSmall }
                 }
             }
-            Rectangle { x: 16; y: 78; width: parent.width - 32; height: 1; color: Theme.hairline }
+            // search all settings
+            Field {
+                id: findField
+                x: 10; y: 78
+                width: parent.width - 20; height: 40
+                placeholder: "Search settings"
+                onTextChanged: page.query = text
+                onAccepted: v => { if (page.results.length) page.go(page.results[0]); }
+                Keys.onEscapePressed: { text = ""; }
+                Icon { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; name: page.query !== "" ? "close" : "search"; size: 18; color: Theme.subtext
+                    MouseArea { anchors.fill: parent; anchors.margins: -6; enabled: page.query !== ""; cursorShape: Qt.PointingHandCursor; onClicked: findField.text = "" } }
+            }
+            Rectangle { x: 16; y: 126; width: parent.width - 32; height: 1; color: Theme.hairline }
+
+            // the results, in place of the sections while there's a search
+            Flickable {
+                SmoothWheel {}
+                visible: page.query.trim() !== ""
+                x: 8; y: 133
+                width: parent.width - 16
+                height: parent.height - y - 8
+                contentHeight: resCol.implicitHeight
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                Column {
+                    id: resCol
+                    width: parent.width
+                    spacing: 2
+                    Label { visible: page.results.length === 0; width: parent.width; topPadding: 16; horizontalAlignment: Text.AlignHCenter; text: page.index.length ? "Nothing found" : "Looking…"; muted: true }
+                    Repeater {
+                        model: page.results
+                        Pressable {
+                            id: res
+                            required property var modelData
+                            width: resCol.width
+                            height: rc.implicitHeight + 16
+                            color: hovered ? Theme.containerHigh : "transparent"
+                            onClicked: page.go(modelData)
+                            Icon { id: ri; x: 10; y: 10; name: res.modelData.icon || "tune"; size: 19; color: Theme.subtext }
+                            Column {
+                                id: rc
+                                anchors.left: ri.right; anchors.leftMargin: 10; anchors.right: parent.right; anchors.rightMargin: 8
+                                y: 8
+                                spacing: 1
+                                Label { width: parent.width; text: res.modelData.title; strong: true; elide: Text.ElideRight; font.pixelSize: Theme.sizeSmall + 1 }
+                                Label { width: parent.width; text: res.modelData.where; muted: true; elide: Text.ElideRight; font.pixelSize: Theme.sizeTiny + 1 }
+                            }
+                        }
+                    }
+                }
+            }
 
             Flickable {
                 SmoothWheel {}
-                x: 8; y: 85
+                visible: page.query.trim() === ""
+                x: 8; y: 133
                 width: parent.width - 16
                 height: parent.height - y - 8
                 contentHeight: list.implicitHeight
@@ -263,6 +377,9 @@ Page {
                 active: page.current && HubState.open
                 source: "settings/" + page.file + ".qml"
                 onSourceChanged: { flick.contentY = 0; pageIn.restart(); popAnim.restart(); }
+                // a search result: its row, once the page is laid out
+                onLoaded: if (page.findRow !== "") seekLater.restart()
+                Timer { id: seekLater; interval: 80; onTriggered: page.seek() }
                 // the page fades in while its rows come up one after another (ui/SettingRow)
                 NumberAnimation { id: pageIn; target: loader; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
             }

@@ -85,6 +85,7 @@ Singleton {
             const id = ev.WorkspaceActivated.id, focused = ev.WorkspaceActivated.focused;
             const target = workspaces.find(w => w.id === id);
             if (!target) return;
+            if (focused && !target.is_focused) Sounds.play("workspace");
             workspaces = workspaces.map(w => {
                 const n = Object.assign({}, w);
                 if (n.output === target.output) n.is_active = (n.id === id);

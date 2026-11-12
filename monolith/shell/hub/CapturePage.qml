@@ -13,6 +13,7 @@ Page {
     implicitHeight: col.implicitHeight
     readonly property string shotsDir: Quickshell.env("HOME") + "/Pictures/Screenshots"
     property var recent: []
+    readonly property int delay: Number(Store.get("capture.delay", 0)) || 0
 
     onCurrentChanged: if (current) listShots.running = true
     Process {
@@ -56,13 +57,19 @@ Page {
         width: parent.width
         spacing: 8
 
+        RowLayout {
+            Layout.fillWidth: true
+            Label { Layout.leftMargin: 6; text: "Delay"; muted: true; font.pixelSize: Theme.sizeSmall }
+            Segmented { Layout.preferredWidth: 240; height: 32; opts: [["0", "None"], ["3", "3 s"], ["5", "5 s"], ["10", "10 s"]]; value: String(page.delay); onPicked: v => Store.set("capture.delay", Number(v)) }
+            Item { Layout.fillWidth: true }
+        }
         GridLayout {
             Layout.fillWidth: true
             columns: 3
             rowSpacing: 8
             columnSpacing: 8
-            Action { icon: "screenshot_region"; title: "Region"; sub: "Pick an area"; onClicked: Capture.start({ mode: "region" }) }
-            Action { icon: "screenshot_monitor"; title: "Screen"; sub: "The whole screen"; onClicked: Capture.start({ mode: "screen" }) }
+            Action { icon: "screenshot_region"; title: "Region"; sub: page.delay > 0 ? "Pick an area, in " + page.delay + " s" : "Pick an area"; onClicked: Capture.startIn(page.delay, { mode: "region" }) }
+            Action { icon: "screenshot_monitor"; title: "Screen"; sub: page.delay > 0 ? "The whole screen, in " + page.delay + " s" : "The whole screen"; onClicked: Capture.startIn(page.delay, { mode: "screen" }) }
             // niri's own window screenshot; on Hyprland, the focused window's area through grim,
             // saved to Screenshots and copied (as niri's does)
             Action {
@@ -104,7 +111,7 @@ Page {
                     radius: Theme.corner(height, 2)
                     color: Theme.container
                     clip: true
-                    onClicked: { HubState.close(); Quickshell.execDetached(["satty", "--filename", modelData]); }
+                    onClicked: { HubState.close(); Capture.edit(modelData, modelData); }
                     onRightClicked: Quickshell.execDetached(["sh", "-c", "wl-copy < \"$1\"", "_", modelData])
                     Image { anchors.fill: parent; source: Wall.url(parent.modelData); sourceSize: Qt.size(320, 200); fillMode: Image.PreserveAspectCrop; asynchronous: true }
                 }

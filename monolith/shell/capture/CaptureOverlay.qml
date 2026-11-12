@@ -8,7 +8,7 @@ import "../ui"
 // The capture overlay on one screen: the frozen picture, dimmed except the selection, and (on
 // the screen you're working on) the toolbar. Drag to pick a region, drag inside it to move it,
 // the corners to resize it. Keys: Enter does the main action, Ctrl+C copies, E edits, T reads
-// the text, Q scans a QR code, Tab switches photo/video, F the whole screen, Esc cancels.
+// the text, Q scans a QR code, P pins it on screen, Tab switches photo/video, F the whole screen, Esc cancels.
 PanelWindow {
     id: win
     required property var modelData
@@ -137,10 +137,11 @@ PanelWindow {
             else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) Capture.finish(Capture.kind === "video" ? "record" : Capture.preferred);
             else if (event.key === Qt.Key_Tab) Capture.kind = Capture.kind === "photo" ? "video" : "photo";
             else if (event.key === Qt.Key_F) { Capture.mode = win.screenMode ? "region" : "screen"; if (Capture.mode === "screen" && Capture.screenName === "") Capture.screenName = win.name; }
-            else if (Capture.kind === "photo" && ctrl && event.key === Qt.Key_C) Capture.finish("copy");
-            else if (Capture.kind === "photo" && event.key === Qt.Key_E) Capture.finish("edit");
-            else if (Capture.kind === "photo" && event.key === Qt.Key_T) Capture.finish("text");
-            else if (Capture.kind === "photo" && event.key === Qt.Key_Q) Capture.finish("qr");
+            else if (Capture.kind === "photo" && ctrl && event.key === Qt.Key_C && Capture.toolOn("copy")) Capture.finish("copy");
+            else if (Capture.kind === "photo" && event.key === Qt.Key_E && Capture.toolOn("edit")) Capture.finish("edit");
+            else if (Capture.kind === "photo" && event.key === Qt.Key_P && Capture.toolOn("pin")) Capture.finish("pin");
+            else if (Capture.kind === "photo" && event.key === Qt.Key_T && Capture.toolOn("text")) Capture.finish("text");
+            else if (Capture.kind === "photo" && event.key === Qt.Key_Q && Capture.toolOn("qr")) Capture.finish("qr");
             else return;
             event.accepted = true;
         }
@@ -215,10 +216,11 @@ PanelWindow {
             }
             Rectangle { width: 1; height: 50; color: Theme.ringTrack; anchors.verticalCenter: parent.verticalCenter }
             Tool { visible: Capture.kind === "photo"; icon: "save"; text: "Save"; key: Capture.preferred === "save" ? "Enter" : ""; primary: Capture.preferred === "save"; onClicked: Capture.finish("save") }
-            Tool { visible: Capture.kind === "photo"; icon: "content_copy"; text: "Copy"; key: "Ctrl+C"; onClicked: Capture.finish("copy") }
-            Tool { visible: Capture.kind === "photo"; icon: "edit"; text: "Edit"; key: Capture.preferred === "edit" ? "Enter" : "E"; primary: Capture.preferred === "edit"; onClicked: Capture.finish("edit") }
-            Tool { visible: Capture.kind === "photo"; icon: "document_scanner"; text: "Text"; key: "T"; onClicked: Capture.finish("text") }
-            Tool { visible: Capture.kind === "photo"; icon: "qr_code_scanner"; text: "QR code"; key: "Q"; onClicked: Capture.finish("qr") }
+            Tool { visible: Capture.kind === "photo" && Capture.toolOn("copy"); icon: "content_copy"; text: "Copy"; key: "Ctrl+C"; onClicked: Capture.finish("copy") }
+            Tool { visible: Capture.kind === "photo" && (Capture.toolOn("edit") || Capture.preferred === "edit"); icon: "edit"; text: "Edit"; key: Capture.preferred === "edit" ? "Enter" : "E"; primary: Capture.preferred === "edit"; onClicked: Capture.finish("edit") }
+            Tool { visible: Capture.kind === "photo" && Capture.toolOn("pin"); icon: "push_pin"; text: "Pin"; key: "P"; onClicked: Capture.finish("pin") }
+            Tool { visible: Capture.kind === "photo" && Capture.toolOn("text"); icon: "document_scanner"; text: "Text"; key: "T"; onClicked: Capture.finish("text") }
+            Tool { visible: Capture.kind === "photo" && Capture.toolOn("qr"); icon: "qr_code_scanner"; text: "QR code"; key: "Q"; onClicked: Capture.finish("qr") }
             Tool { visible: Capture.kind === "video"; icon: "radio_button_checked"; text: "Record"; key: "Enter"; primary: true; onClicked: Capture.finish("record") }
             Rectangle { width: 1; height: 50; color: Theme.ringTrack; anchors.verticalCenter: parent.verticalCenter }
             Pressable {

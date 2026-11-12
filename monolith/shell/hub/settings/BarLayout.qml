@@ -450,7 +450,7 @@ ColumnLayout {
         Row {
             spacing: 4
             Repeater {
-                model: [["cpu", "CPU"], ["mem", "Memory"], ["temp", "Temperature"], ["gpu", "GPU"]]
+                model: [["cpu", "CPU"], ["mem", "Memory"], ["temp", "CPU °"], ["gpu", "GPU"], ["vram", "VRAM"], ["gtemp", "GPU °"]]
                 Pressable {
                     required property var modelData
                     readonly property var which: Store.get("bar.stats", ["cpu", "temp"])

@@ -40,9 +40,16 @@ ShellRoot {
     Variants { model: soundL.on ? Quickshell.screens : []; SoundDrop {} }
     Lazy { id: trayL; when: HubState.dropScreen !== "" && HubState.dropKind === "tray"; linger: 400 }
     Variants { model: trayL.on ? Quickshell.screens : []; TrayMenu {} }
+    Lazy { id: sysL; when: HubState.dropScreen !== "" && HubState.dropKind === "system"; linger: 400 }
+    Variants { model: sysL.on ? Quickshell.screens : []; SysDrop {} }
     Variants { model: Quickshell.screens; Osd {} }
     Lazy { id: capL; when: Capture.active || Capture.freezing; linger: 300 }
     Variants { model: capL.on ? Quickshell.screens : []; CaptureOverlay {} }
+    Lazy { id: prevL; when: Capture.previewFile !== ""; linger: 600 }
+    Variants { model: prevL.on ? Quickshell.screens : []; ShotPreview {} }
+    Variants { model: Capture.pins.map(p => p.id); Pin {} }
+    Variants { model: Capture.countdown > 0 ? Quickshell.screens : []; Countdown {} }
+    LazyLoader { active: Capture.editFile !== ""; ShotEditor {} }
     Variants { model: GameMode.overlay ? Quickshell.screens : []; PerfOverlay {} }
     Lazy { id: dimL; when: Idle.dimming }
     Variants { model: dimL.on ? Quickshell.screens : []; Dim {} }
@@ -59,7 +66,7 @@ ShellRoot {
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own
-    Component.onCompleted: { Notifs.dnd; Idle.enabled; Wall.path; Wellbeing.loaded; Updates.available; NightLight.enabled; AppColours.targets; NiriShell.passes; if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
+    Component.onCompleted: { Notifs.dnd; Idle.enabled; Wall.path; Wellbeing.loaded; Updates.available; NightLight.enabled; AppColours.targets; NiriShell.passes; Profiles.current; if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
     // the icon font (Material Symbols Rounded): every icon is drawn with it. Not there (a fresh
     // install, a distro without it): fetch it, then restart so the shell can use it
     Process {

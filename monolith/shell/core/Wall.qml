@@ -170,13 +170,86 @@ Singleton {
     property string aim: ""
     // a screen can have its own wallpaper ("Set on" or right-click in the picker); else the shared one
     function pathFor(screen) { return Store.get("wallpaper.screens." + screen.replace(/\./g, "_"), "") || path; }
-    function setFor(screen, p) { Store.set("wallpaper.screens." + screen.replace(/\./g, "_"), p); }
+    function setFor(screen, p) { Store.set("wallpaper.screens." + screen.replace(/\./g, "_"), p); if (p !== "") Sounds.play("wallpaper"); }
     function isVideo(p) { return /\.(mp4|webm|mkv|mov)$/i.test(p); }
     function isAnimated(p) { return /\.gif$/i.test(p); }
     // a file path as a URL ('#', '?' and spaces in names break a plain "file://" + path)
     function url(p) { return p.startsWith("/") ? "file://" + p.split("/").map(encodeURIComponent).join("/") : p; }
 
     function rescan() { scan.running = true; }
+
+    // ── favourites (the star on a picker card) ──
+    readonly property var favourites: Store.get("wallpaper.favourites", []) || []
+    function isFav(p) { return favourites.indexOf(p) !== -1; }
+    function toggleFav(p) { Store.set("wallpaper.favourites", isFav(p) ? favourites.filter(x => x !== p) : favourites.concat([p])); }
+
+    // ── playlist (Settings → Wallpaper → Playlist): a new wallpaper every few minutes, or at set
+    // times of day. wallpaper.playlist = { on, mode: every | times, minutes, from: pictures |
+    // live | all | favourites, order: random | order, perScreen, times: [{ at: "HH:MM", path }] }
+    readonly property var playlist: Store.get("wallpaper.playlist", ({})) || ({})
+    readonly property bool playlistOn: playlist.on === true
+    function playlistPool() {
+        const from = playlist.from || "pictures";
+        const l = from === "live" ? live : from === "all" ? images : from === "favourites" ? favourites.filter(f => images.indexOf(f) !== -1) : pictures;
+        return l;
+    }
+    // the next one after p in the pool (or a random other one)
+    function nextFrom(pool, p, avoid) {
+        if (!pool.length) return "";
+        if ((playlist.order || "random") === "order") {
+            const i = pool.indexOf(p);
+            return pool[(i + 1) % pool.length];
+        }
+        const others = pool.filter(x => x !== p && (avoid || []).indexOf(x) === -1);
+        const from = others.length ? others : pool.filter(x => x !== p);
+        return from.length ? from[Math.floor(Math.random() * from.length)] : pool[0];
+    }
+    // move on now (also the "Next" button); each screen its own one when perScreen is on
+    function playlistNext() {
+        const pool = playlistPool();
+        if (!pool.length) return;
+        lastTurn = Date.now();
+        Store.set("wallpaper.playlistLast", lastTurn);
+        const scr = Quickshell.screens.map(s => s.name);
+        if (playlist.perScreen === true && scr.length > 1) {
+            const picked = [];
+            for (const n of scr) picked.push(nextFrom(pool, pathFor(n), picked));
+            set(picked[0]);
+            for (let i = 1; i < scr.length; i++) setFor(scr[i], picked[i]);
+        } else set(nextFrom(pool, path));
+    }
+    property real lastTurn: Number(Store.get("wallpaper.playlistLast", 0)) || 0
+    // the times-of-day entry that's on now: the latest one at or before now (else last night's)
+    function timedNow() {
+        const t = (playlist.times || []).filter(e => e && e.path && /^\d{1,2}:\d{2}$/.test(e.at || ""));
+        if (!t.length) return null;
+        const d = new Date(), now = d.getHours() * 60 + d.getMinutes();
+        const mins = e => { const p = e.at.split(":"); return Number(p[0]) * 60 + Number(p[1]); };
+        const sorted = t.slice().sort((x, y) => mins(x) - mins(y));
+        let cur = sorted[sorted.length - 1];
+        for (const e of sorted) if (mins(e) <= now) cur = e;
+        return cur;
+    }
+    Timer {
+        interval: 20000; repeat: true
+        running: wall.playlistOn && Store.loaded
+        triggeredOnStart: true
+        onTriggered: {
+            // not during a game (it'd wake the wallpaper up)
+            if (GameMode.active) return;
+            if ((wall.playlist.mode || "every") === "times") {
+                const e = wall.timedNow();
+                if (e && wall.path !== e.path && Store.get("wallpaper.playlistApplied", "") !== e.at + e.path) {
+                    Store.set("wallpaper.playlistApplied", e.at + e.path);
+                    wall.set(e.path);
+                }
+                return;
+            }
+            const every = Math.max(1, Number(wall.playlist.minutes) || 30) * 60000;
+            if (wall.lastTurn === 0) { wall.lastTurn = Date.now(); Store.set("wallpaper.playlistLast", wall.lastTurn); return; }
+            if (Date.now() - wall.lastTurn >= every) wall.playlistNext();
+        }
+    }
 
     // where the picker was in each view (coverflow card, grid and Live scroll), so it opens there
     // again; kept in Store too, so a restart remembers it
@@ -205,6 +278,7 @@ Singleton {
     onDirChanged: rescan()
 
     function set(p) {
+        if (p !== path) Sounds.play("wallpaper");
         Store.set("wallpaper.path", p);
         // a picture for every screen again
         Store.set("wallpaper.screens", {});
@@ -233,5 +307,12 @@ Singleton {
         id: firstPalette
         command: ["test", "-s", wall.paletteFile]
         onExited: code => { if (code !== 0 && wall.path !== "") wall.makePalette(wall.path); }
+    }
+
+    // `monolith wallpaper next` (the playlist's next one; without a playlist, a random picture)
+    IpcHandler {
+        target: "wallpaper"
+        function next(): void { if (wall.playlistOn) wall.playlistNext(); else wall.shuffle(); }
+        function set(path: string): void { wall.set(path); }
     }
 }

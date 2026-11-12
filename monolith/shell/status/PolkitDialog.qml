@@ -43,7 +43,7 @@ Scope {
             NumberAnimation { id: shakeAnim; target: card; property: "shake"; from: 0; to: 1; duration: Theme.ms(480); easing.type: Easing.OutCubic }
             Connections {
                 target: win.flow
-                function onAuthenticationFailed() { shakeAnim.restart(); pw.text = ""; }
+                function onAuthenticationFailed() { shakeAnim.restart(); pw.text = ""; Sounds.play("error"); }
             }
 
             Column {

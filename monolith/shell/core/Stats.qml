@@ -29,6 +29,9 @@ Singleton {
     property var tempHist: []
     property var cpuHist: []
     property var gpuHist: []
+    property var vramHist: []
+    property var gpuTempHist: []
+    readonly property real vram: vramTotal > 0 ? vramUsed / vramTotal : 0
     readonly property string gpuHwmon: gpuTempPath.replace(/\/temp1_input$/, "")
     property var _prev: null
     property string tempPath: ""
@@ -103,6 +106,37 @@ Singleton {
             if (!isNaN(v)) temp = v / 1000;
         }
         tempHist = tempHist.concat([Math.min(1, temp / 100)]).slice(-60);
+        vramHist = vramHist.concat([vram]).slice(-60);
+        gpuTempHist = gpuTempHist.concat([Math.min(1, gpuTemp / 100)]).slice(-60);
+        checkWarnings();
+    }
+
+    // ── warnings (Settings → System monitor): a notification when the video memory, the CPU or
+    // the GPU runs too hot or too full for a while; again only after it's been fine for a minute
+    readonly property var warn: Store.get("sysmon.warn", ({})) || ({})
+    readonly property bool warnOn: warn.on !== false
+    property var _over: ({})          // what -> how many samples in a row it's been over
+    property var _told: ({})          // what -> told (until it's been fine for a while)
+    function checkWarnings() {
+        if (!warnOn) return;
+        const lim = {
+            vram: [vramTotal > 0 ? vram * 100 : 0, Number(warn.vram || 95), "Video memory almost full", v => Math.round(v) + "% of " + bytes(vramTotal) + " is in use. Close a game or a heavy app, or the GPU may stall."],
+            cpuTemp: [temp, Number(warn.cpuTemp || 90), "The CPU is very hot", v => Math.round(v) + " °C"],
+            gpuTemp: [gpuTemp, Number(warn.gpuTemp || 95), "The GPU is very hot", v => Math.round(v) + " °C (its hottest sensor can be higher)"],
+            mem: [mem * 100, Number(warn.mem || 95), "Memory almost full", v => Math.round(v) + "% of " + bytes(memTotal) + " is in use"]
+        };
+        const over = Object.assign({}, _over), told = Object.assign({}, _told);
+        for (const k in lim) {
+            const [v, max, title, body] = lim[k];
+            if (v > 0 && v >= max) over[k] = (over[k] || 0) + 1;
+            else { over[k] = Math.min(0, (over[k] || 0)) - 1; if (over[k] <= -30) told[k] = false; }
+            // ten seconds over it (five samples), once
+            if (over[k] >= 5 && !told[k]) {
+                told[k] = true;
+                Quickshell.execDetached(["notify-send", "-a", "Monolith", "-u", "critical", "-i", "dialog-warning", title, body(v)]);
+            }
+        }
+        _over = over; _told = told;
     }
 
     Timer { interval: 2000; running: true; repeat: true; triggeredOnStart: true; onTriggered: stats.sample() }

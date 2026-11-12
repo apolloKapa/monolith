@@ -25,6 +25,24 @@ Rectangle {
     border.width: Theme.outlineW
     border.color: Theme.outlineColor
     HoverHandler { id: hov }
+    // found by the settings search: a soft accent glow that fades
+    function glow() { glowAnim.restart(); }
+    Rectangle {
+        id: glowRect
+        anchors.fill: parent
+        radius: parent.radius
+        color: "transparent"
+        border.width: 2
+        border.color: Theme.accent
+        opacity: 0
+        z: 5
+        SequentialAnimation {
+            id: glowAnim
+            NumberAnimation { target: glowRect; property: "opacity"; to: 1; duration: 180 }
+            PauseAnimation { duration: 900 }
+            NumberAnimation { target: glowRect; property: "opacity"; to: 0; duration: 700; easing.type: Easing.InOutCubic }
+        }
+    }
 
     // rows come up one after another when a page opens (the lower, the later)
     property real enter: 0

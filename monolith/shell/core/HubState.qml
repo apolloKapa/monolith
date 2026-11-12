@@ -12,7 +12,7 @@ Singleton {
     // the bar's dropdowns: the bell and the volume drop a small card right under them
     // (status/NotifDrop.qml, status/SoundDrop.qml); which one, and where it hangs, in that
     // screen's coordinates
-    property string dropKind: ""        // "notifications" | "sound"
+    property string dropKind: ""        // "notifications" | "sound" | "tray" | "system"
     property string dropScreen: ""
     property real dropX: 0
     property real dropY: 0

@@ -30,3 +30,6 @@ Windows 1.0 Windows.qml
 BarStyles 1.0 BarStyles.qml
 SoundSettings 1.0 SoundSettings.qml
 Apps 1.0 Apps.qml
+WallPlaylist 1.0 WallPlaylist.qml
+Profiles 1.0 Profiles.qml
+SysMon 1.0 SysMon.qml

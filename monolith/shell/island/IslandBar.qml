@@ -383,11 +383,18 @@ Item {
     Component {
         id: statsC
         Mod {
+            id: statsMod
             readonly property var which: Store.get("bar.stats", ["cpu", "temp"])
-            onClicked: { HubState.ccTab = "monitor"; bar.open("quick"); }
+            // the system monitor drops down under it (Settings → System monitor), or the control center's Monitor
+            onClicked: {
+                if (Store.get("sysmon.dropdown", true) === false) { HubState.ccTab = "monitor"; bar.open("quick"); return; }
+                const p = bar.edgePoint(statsMod);
+                HubState.toggleDrop("system", bar.screenName, p.x, p.y);
+            }
             Repeater {
                 model: [["cpu", "memory", Math.round(Stats.cpu * 100) + "%"], ["mem", "data_usage", Math.round(Stats.mem * 100) + "%"],
-                        ["temp", "thermostat", Math.round(Stats.temp) + "°"], ["gpu", "videogame_asset", Math.round(Stats.gpu * 100) + "%"]].filter(x => parent.parent.which.indexOf(x[0]) !== -1)
+                        ["temp", "thermostat", Math.round(Stats.temp) + "°"], ["gpu", "videogame_asset", Math.round(Stats.gpu * 100) + "%"],
+                        ["vram", "developer_board", Math.round(Stats.vram * 100) + "%"], ["gtemp", "device_thermostat", Math.round(Stats.gpuTemp) + "°"]].filter(x => parent.parent.which.indexOf(x[0]) !== -1)
                 Line {
                     required property var modelData
                     spacing: bar.vertical ? 0 : 3

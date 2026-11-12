@@ -57,6 +57,23 @@ Singleton {
         saveLater.restart();
     }
 
+    // everything at once (a profile, an import): `keep` paths stay as they are now
+    function replace(next, keep) {
+        const copy = JSON.parse(JSON.stringify(next || {}));
+        for (const path of keep || []) {
+            const v = get(path, undefined);
+            const keys = path.split(".");
+            let cur = copy;
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (typeof cur[keys[i]] !== "object" || cur[keys[i]] === null) cur[keys[i]] = {};
+                cur = cur[keys[i]];
+            }
+            if (v === undefined) delete cur[keys[keys.length - 1]]; else cur[keys[keys.length - 1]] = v;
+        }
+        data = copy;
+        revision++;
+        saveLater.restart();
+    }
     Timer { id: saveLater; interval: 500; onTriggered: fv.setText(JSON.stringify(store.data, null, 2) + "\n") }
 
     FileView {

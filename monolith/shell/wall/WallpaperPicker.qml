@@ -131,6 +131,8 @@ PanelWindow {
                 Keys.onDownPressed: if (!f) g.moveCurrentIndexDown()
                 Keys.onTabPressed: Store.set("wallpaper.tab", win.liveTab ? "pictures" : "live")
                 Keys.onReturnPressed: { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) win.pick(win.list[i]); }
+                // S: star the one under the cursor (a favourite, for the playlist)
+                Keys.onPressed: event => { if (event.key === Qt.Key_S) { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) Wall.toggleFav(win.list[i]); event.accepted = true; } }
             }
 
             RowLayout {
@@ -164,6 +166,19 @@ PanelWindow {
                 }
             }
 
+            // the star in a card's corner: a favourite (for the playlist); shows on hover, or always once starred
+            component Star: Pressable {
+                property string path: ""
+                property bool hot: false
+                readonly property bool fav: Wall.isFav(path)
+                anchors.left: parent.left; anchors.top: parent.top; anchors.margins: 12
+                width: 30; height: 30
+                radius: 15
+                visible: fav || hot
+                color: hovered ? Theme.containerHigh : Qt.alpha(Theme.frame, 0.8)
+                onClicked: Wall.toggleFav(path)
+                Icon { anchors.centerIn: parent; name: "star"; size: 18; filled: parent.fav; color: parent.fav ? Theme.accent : Theme.text }
+            }
             // a picture, clipped to its rounded card (the accent border when it's the one in use)
             component Card: ClippingRectangle {
                 id: card
@@ -273,6 +288,7 @@ PanelWindow {
                             else win.pick(fc.modelData);
                         }
                     }
+                    Star { path: fc.modelData; hot: fc.middle }
                 }
                 WheelHandler { onWheel: event => { if (event.angleDelta.y > 0 || event.angleDelta.x > 0) flow.decrementCurrentIndex(); else flow.incrementCurrentIndex(); } }
             }
@@ -433,6 +449,7 @@ PanelWindow {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: mouse => { if (mouse.button === Qt.RightButton) Wall.setFor(win.screenName, lcell.modelData); else win.pick(lcell.modelData); }
                         }
+                        Star { path: lcell.modelData; hot: lma.containsMouse || hovered }
                     }
                 }
             }
@@ -468,6 +485,8 @@ PanelWindow {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: mouse => { if (mouse.button === Qt.RightButton) Wall.setFor(win.screenName, gcell.modelData); else win.pick(gcell.modelData); }
                     }
+                    HoverHandler { id: ghov }
+                    Star { path: gcell.modelData; hot: ghov.hovered; anchors.margins: 10 }
                 }
             }
         }

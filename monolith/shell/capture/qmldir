@@ -1,1 +1,5 @@
 CaptureOverlay 1.0 CaptureOverlay.qml
+ShotPreview 1.0 ShotPreview.qml
+ShotEditor 1.0 ShotEditor.qml
+Pin 1.0 Pin.qml
+Countdown 1.0 Countdown.qml

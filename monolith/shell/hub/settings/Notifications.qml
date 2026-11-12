@@ -18,6 +18,28 @@ ColumnLayout {
         icon: "timer"; title: "How long they stay"; desc: "Unless the app says otherwise; urgent ones stay until closed"
         NumberBox { from: 1; to: 300; slideTo: 30; unit: "s"; value: Number(Store.get("notifications.timeout", 6)); onMoved: v => Store.set("notifications.timeout", v) }
     }
+    // a game (any fullscreen app) on the screen they'd pop up on
+    SettingRow {
+        key: "notifications.fullscreen"; def: "other";
+        icon: "fullscreen"; title: "While an app is fullscreen"
+        desc: {
+            const m = Store.get("notifications.fullscreen", "other");
+            return m === "show" ? "They pop up over it as usual"
+                 : m === "other" ? "They pop up on another screen (with one screen, or all fullscreen: they wait). Urgent ones always show"
+                 : "They wait, then one summary comes up when you leave fullscreen. Urgent ones always show";
+        }
+        Dropdown {
+            opts: [["other", "Show on another screen"], ["hold", "Hold, summary after"], ["show", "Show over it"]]
+            value: Store.get("notifications.fullscreen", "other")
+            onPicked: v => Store.set("notifications.fullscreen", v)
+        }
+    }
+    SettingRow {
+        key: "notifications.fullscreenSound"; def: false;
+        visible: Store.get("notifications.fullscreen", "other") !== "show"
+        icon: "volume_off"; title: "Sound while fullscreen"; desc: "Off: notifications are silent while a fullscreen app covers the screen"
+        Toggle { checked: Store.get("notifications.fullscreenSound", false) === true; onToggled: on => Store.set("notifications.fullscreenSound", on) }
+    }
     SettingRow {
         key: "notifications.throw"; def: "slide";
         icon: Store.get("notifications.throw", "slide") === "fall" ? "sports_baseball" : "swipe_right"

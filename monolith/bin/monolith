@@ -5,6 +5,11 @@
 #   monolith hub <page> | search <text> | settings <section> | appimages | lock
 #   monolith screenshot [--full] [--edit]     the capture overlay (--full alone: whole screen now)
 #   monolith record-menu                      the capture overlay, set to video
+#   monolith wallpaper [next]                 the next wallpaper (the playlist's, else a random one)
+#   monolith profile [name]                   switch to a saved profile (no name: list them)
+#   monolith capture-in <seconds> [screen]    the capture overlay after a countdown
+#   monolith edit-image <file>                a picture in the screenshot editor
+#   monolith pin-image <file>                 a picture pinned over the windows
 #   monolith zoom in | out
 #   monolith welcome                             the welcome tour
 #   monolith dock                                the dock editor (or hold an app in the dock)
@@ -122,6 +127,11 @@ case "$1" in
     widgets) ipc widgets edit "${2:-desktop}" ;;
     timer) ipc tasks timer "${2:-0}" ;;
     record-menu) ipc capture start video region false ;;
+    wallpaper) ipc wallpaper "${2:-next}" ${3:+"$3"} ;;
+    profile) if [ -n "$2" ]; then ipc profile apply "$2"; else ipc profile list; fi ;;
+    capture-in) ipc capture delayed "${2:-3}" photo "$([ "$3" = screen ] && echo screen || echo region)" ;;
+    edit-image) ipc capture editFile "$(realpath "$2")" ;;
+    pin-image) ipc capture pinFile "$(realpath "$2")" ;;
     record) ipc tasks record "$([ "$2" = region ] && echo true || echo false)" ;;
     set) ipc store set "$2" "$3" ;;
     get) ipc store get "$2" ;;
