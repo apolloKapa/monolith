@@ -191,7 +191,7 @@ Pressable {
                         width: actLabel.implicitWidth + 24
                         color: Theme.selected
                         onClicked: { resetPress(); modelData.invoke(); card.closed(); }
-                        Label { id: actLabel; anchors.centerIn: parent; text: modelData.text; font.pixelSize: Theme.sizeSmall }
+                        Label { id: actLabel; anchors.centerIn: parent; width: Math.min(implicitWidth, 200); text: modelData.text; font.pixelSize: Theme.sizeSmall }
                     }
                 }
             }

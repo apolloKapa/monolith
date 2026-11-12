@@ -59,6 +59,7 @@ PanelWindow {
         // Island: the top bar's hanging shape, turned to hang from the side edge
         // (turned clockwise its top edge is on the right; anticlockwise, on the left)
         IslandShape {
+            id: sideShape
             visible: Theme.barStyle === "island"
             anchors.centerIn: parent
             bodyW: box.height
@@ -72,6 +73,7 @@ PanelWindow {
         // Fill (and Frame with auto-hide): a strip along the edge, its inner corners rounded
         // when it's shorter than the screen
         Rectangle {
+            id: stripBg
             readonly property real rr: win.short ? Theme.islandRadius / 2 : 0
             visible: Theme.barStyle === "fill" || (Theme.barStyle === "frame" && !Theme.frameBand)
             anchors.fill: parent
@@ -109,9 +111,23 @@ PanelWindow {
 
     // blur behind it (Theme → Effects), shaped like it (the Frame's band blurs behind itself)
     BackgroundEffect.blurRegion: Theme.blur && !win.tucked && Theme.barStyle !== "modular" && !(Theme.barStyle === "frame" && Theme.frameBand) ? blurShape : null
+    // (cut exactly like what's drawn: a square blur showed as a lighter patch in rounded corners)
     Region {
         id: blurShape
-        item: box
-        radius: Theme.barStyle === "solid" ? Theme.barRound(box.width) : (Theme.barStyle === "island" ? Theme.barRound(box.width) : 0)
+        // Solid: its rounded bar
+        Region { item: Theme.barStyle === "solid" ? box : null; radius: Theme.barRound(box.width) }
+        // Fill / Frame: the strip, its inner corners rounded when it's shorter than the screen
+        Region {
+            item: stripBg.visible ? box : null
+            topLeftRadius: stripBg.topLeftRadius; topRightRadius: stripBg.topRightRadius
+            bottomLeftRadius: stripBg.bottomLeftRadius; bottomRightRadius: stripBg.bottomRightRadius
+        }
+        // Island: the hanging shape, square against the edge, with its ears
+        EdgeBlur {
+            on: Theme.barStyle === "island"
+            edge: win.onLeft ? "left" : "right"
+            bx: box.x; by: box.y; bw: box.width; bh: box.height
+            r: sideShape.rr; e: sideShape.e
+        }
     }
 }

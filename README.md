@@ -231,7 +231,8 @@ What stays niri-only: the Displays, Keyboard & mouse and Windows settings pages,
 | `Mod+W` / `Mod+Alt+W` | Wallpaper |
 | `Mod+L` / `Mod+Alt+L` | lock |
 | `Mod+Ctrl+Alt+L` | swaylock |
-| `Mod+G` | restart the shell |
+| `Mod+H` | restart the shell |
+| `Mod+G` | Wellbeing (screen time) |
 
 **Windows**
 
@@ -239,7 +240,7 @@ What stays niri-only: the Displays, Keyboard & mouse and Windows settings pages,
 |---|---|
 | `Mod+Q` | close |
 | `Mod+Arrows` | focus column left/right, window up/down |
-| `Mod+H` / `J` / `K` | focus column left / window down / up |
+| `Mod+J` / `K` | focus window down / up (`Mod+Left` focuses the column to the left) |
 | `Mod+Shift+Arrows` | focus monitor |
 | `Mod+Ctrl+Arrows` | move column left/right, window up/down |
 | `Mod+Ctrl+H/J/K/L` | move column / window |

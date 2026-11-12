@@ -57,3 +57,10 @@ DateDot 1.0 DateDot.qml
 WeatherDot 1.0 WeatherDot.qml
 MetricDot 1.0 MetricDot.qml
 MusicDot 1.0 MusicDot.qml
+WellData 1.0 WellData.qml
+WellOpen 1.0 WellOpen.qml
+WellbeingCard 1.0 WellbeingCard.qml
+WellbeingRing 1.0 WellbeingRing.qml
+WellbeingWeek 1.0 WellbeingWeek.qml
+WellbeingApps 1.0 WellbeingApps.qml
+WellbeingDot 1.0 WellbeingDot.qml

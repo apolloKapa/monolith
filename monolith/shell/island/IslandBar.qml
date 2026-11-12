@@ -155,9 +155,13 @@ Item {
         // centred, so it doesn't read as a second pill below (hard-shadow styles keep theirs)
         CardShadow { visible: Theme.barOpacity > 0.3; offsetY: Theme.hardShadow > 0 ? Theme.shadowY : 0 }
     }
-    ZonePill { zone: leftZone }
-    ZonePill { zone: midZone }
-    ZonePill { zone: rightZone }
+    ZonePill { id: leftPillR; zone: leftZone }
+    ZonePill { id: midPillR; zone: midZone }
+    ZonePill { id: rightPillR; zone: rightZone }
+    // (the island's blur is cut to these in Modular)
+    readonly property Item leftPill: leftPillR
+    readonly property Item midPill: midPillR
+    readonly property Item rightPill: rightPillR
     // (a vertical bar: left is the top, right the bottom)
     readonly property real barLen: vertical ? height : width
     // where a zone starts along the bar, and across it (centred)

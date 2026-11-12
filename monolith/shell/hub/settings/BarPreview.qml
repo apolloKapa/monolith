@@ -240,7 +240,7 @@ Column {
             anchors.left: closeUp.left; anchors.top: closeUp.bottom; anchors.topMargin: 6
             spacing: 6
             Icon { name: "visibility"; size: 14; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }
-            Label { text: "A live preview: it changes as you change the settings below"; muted: true; font.pixelSize: Theme.sizeSmall - 1; anchors.verticalCenter: parent.verticalCenter }
+            Label { text: "A live preview: it changes as you change the settings below"; width: Math.min(implicitWidth, closeUp.width - 24); muted: true; font.pixelSize: Theme.sizeSmall - 1; anchors.verticalCenter: parent.verticalCenter }
         }
     }
 }

@@ -96,6 +96,7 @@ Item {
         border.color: Theme.accent
         TextInput {
             id: input
+            clip: true
             anchors.fill: parent
             anchors.leftMargin: 10; anchors.rightMargin: 10
             horizontalAlignment: TextInput.AlignHCenter

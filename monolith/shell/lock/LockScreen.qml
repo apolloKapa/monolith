@@ -112,7 +112,7 @@ WlSessionLock {
             model: WidgetLayout.on("lock", surface.shotName).filter(i => i.type !== "media" || Store.get("lock.media", true) !== false)
             WidgetFace {
                 required property var modelData
-                item: modelData
+                item: WidgetLayout.fitted(modelData, surface.height)
                 width: implicitWidth
                 height: implicitHeight
                 x: Math.max(0, Math.min(modelData.x * surface.width, surface.width - width))
@@ -141,7 +141,7 @@ WlSessionLock {
             visible: !who.visible
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom; anchors.bottomMargin: parent.height * 0.06
-            width: noteRow.implicitWidth + 32; height: 44; radius: 22
+            width: noteRow.implicitWidth + 32; height: 44; radius: Theme.corner(48, 8) * 44 / 64
             color: Qt.alpha(Theme.frame, 0.85)
             opacity: surface.enter
             Row {
@@ -150,6 +150,7 @@ WlSessionLock {
                 Icon { name: "lock"; size: 18; filled: true; color: LockState.message !== "" ? Theme.danger : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
                 Label {
                     anchors.verticalCenter: parent.verticalCenter
+                    width: Math.min(implicitWidth, surface.width - 120)
                     text: LockState.message !== "" ? LockState.message
                         : LockState.typed !== "" ? "●".repeat(Math.min(24, LockState.typed.length)) + "   Enter to unlock"
                         : "Type your password (the box is on " + WidgetLayout.passScreen + ")"
@@ -180,7 +181,9 @@ WlSessionLock {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: 420
                 height: 64
-                radius: height / 2
+                // the → button's corners plus the 8 px gap around it (a round pill with round
+                // buttons, a squarer one with squarer buttons: the button never pokes out)
+                radius: Theme.corner(48, 8)
                 color: Qt.alpha(Theme.frame, 0.9)
                 border.width: pw.activeFocus ? 2 : 0
                 border.color: LockState.message !== "" ? Theme.danger : Theme.accent
@@ -201,6 +204,7 @@ WlSessionLock {
                     anchors.verticalCenter: parent.verticalCenter
                     echoMode: TextInput.Password
                     passwordCharacter: "●"
+                    clip: true
                     readOnly: LockState.unlocking
                     color: Theme.text
                     font.family: Theme.fontFamily
@@ -215,6 +219,7 @@ WlSessionLock {
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
                         visible: pw.text === ""
+                        elide: Text.ElideRight
                         text: LockState.message !== "" ? LockState.message : (Quickshell.env("USER") || "") + "  ·  password"
                         color: LockState.message !== "" ? Theme.danger : Theme.subtext
                         font.pixelSize: Theme.sizeTitle - 1

@@ -23,7 +23,7 @@ Item {
         model: desk.list
         WidgetFace {
             required property var modelData
-            item: modelData
+            item: WidgetLayout.fitted(modelData, desk.height)
             width: implicitWidth
             height: implicitHeight
             backdrop: desk.backdrop

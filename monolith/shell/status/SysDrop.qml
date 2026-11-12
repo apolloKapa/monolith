@@ -40,17 +40,6 @@ PanelWindow {
     }
     Timer { interval: 2000; repeat: true; running: dd.shown; onTriggered: if (!top.running) top.running = true }
     onSortByChanged: { Store.set("sysmon.sort", sortBy); if (!top.running) top.running = true; }
-    // end it: TERM, and KILL when asked again within 4 s
-    property var asked: ({})          // pid -> when TERM was sent
-    function end(pid) {
-        const a = Object.assign({}, asked);
-        const force = a[pid] && Date.now() - a[pid] < 4000;
-        Quickshell.execDetached(["kill", force ? "-KILL" : "-TERM", String(pid)]);
-        a[pid] = force ? 0 : Date.now();
-        asked = a;
-        refreshSoon.restart();
-    }
-    Timer { id: refreshSoon; interval: 700; onTriggered: if (!top.running) top.running = true }
 
     function gb(b) { return (b / 1073741824).toFixed(1) + " GB"; }
     function mb(b) { return b >= 1073741824 ? gb(b) : Math.round(b / 1048576) + " MB"; }
@@ -152,7 +141,6 @@ PanelWindow {
                     Rectangle {
                         id: pr
                         required property var modelData
-                        readonly property bool asking: !!dd.asked[modelData.pid] && Date.now() - dd.asked[modelData.pid] < 4000
                         Layout.fillWidth: true
                         Layout.preferredHeight: 44
                         radius: Theme.corner(44, 2)
@@ -167,27 +155,15 @@ PanelWindow {
                             Label { width: 72; horizontalAlignment: Text.AlignRight; text: dd.mb(pr.modelData.mem); font.pixelSize: Theme.sizeSmall; strong: dd.sortBy === "mem"; muted: dd.sortBy !== "mem" }
                             Label { width: 72; horizontalAlignment: Text.AlignRight; text: pr.modelData.vram > 0 ? dd.mb(pr.modelData.vram) : "—"; font.pixelSize: Theme.sizeSmall; strong: dd.sortBy === "vram"; muted: dd.sortBy !== "vram" }
                         }
-                        Pressable {
-                            visible: pr.modelData.mine
-                            anchors.right: parent.right; anchors.rightMargin: 6
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: pr.asking ? 76 : 34; height: 34
-                            color: pr.asking ? Theme.danger : (hovered ? Qt.alpha(Theme.danger, 0.2) : "transparent")
-                            onClicked: dd.end(pr.modelData.pid)
-                            Icon { visible: !pr.asking; anchors.centerIn: parent; name: "close"; size: 18 }
-                            Label { visible: pr.asking; anchors.centerIn: parent; text: "Force"; strong: true; color: Theme.onAccent; font.pixelSize: Theme.sizeSmall }
-                        }
                     }
                 }
                 Label { visible: dd.procs.length === 0; Layout.alignment: Qt.AlignHCenter; text: "Looking…"; muted: true; font.pixelSize: Theme.sizeSmall }
                 RowLayout {
                     Layout.fillWidth: true
-                    Label { Layout.fillWidth: true; Layout.leftMargin: 4; text: "✕ asks it to close; again within a few seconds forces it"; muted: true; font.pixelSize: Theme.sizeTiny; elide: Text.ElideRight }
+                    Item { Layout.fillWidth: true }
                     Button { text: "More"; icon: "monitoring"; onClicked: { HubState.closeDrop(); HubState.ccTab = "monitor"; HubState.show("quick"); } }
                 }
             }
         }
     }
-    // the "Force" buttons go back after a while
-    Timer { interval: 1000; repeat: true; running: dd.shown && Object.keys(dd.asked).length > 0; onTriggered: dd.asked = Object.assign({}, dd.asked) }
 }

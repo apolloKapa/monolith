@@ -17,7 +17,8 @@ PanelWindow {
     screen: modelData
 
     readonly property bool here: HubState.screenName === "" ? (Quickshell.screens.length > 0 && modelData === Quickshell.screens[0]) : HubState.screenName === modelData.name
-    readonly property bool shown: HubState.open && here
+    // (folded away while a picture is being chosen: the file dialog opens under this layer)
+    readonly property bool shown: HubState.open && here && !Pictures.picking
 
     WlrLayershell.namespace: "monolith-island"
     // above fullscreen windows while open (a keybind over a game or video still shows it)
@@ -92,9 +93,15 @@ PanelWindow {
     // (a menu growing out of the island is never narrower than the bar in it; a card or a menu
     // dropping out of a full bar keeps its own width: following the bar's, it changed by a few
     // pixels whenever a module's text did, the CPU % or the clock, and the menu kept resizing)
-    readonly property real openW: grownLike ? Math.max(bar.needWidth, (pageInfo[HubState.page] || pageInfo.search).w) : (pageInfo[HubState.page] || pageInfo.search).w
+    // never wider than the screen (Settings is 1140 wide: on a 1024 px screen it was cut off on
+    // both sides); a floating card keeps clear of a side bar and the screen's edges
+    readonly property real maxOpenW: docked ? width - 2 * Theme.islandEar - 16 : width - floatCard.leftRoom - floatCard.rightRoom - 2 * pad
+    readonly property real openW: Math.min(maxOpenW, grownLike ? Math.max(bar.needWidth, (pageInfo[HubState.page] || pageInfo.search).w) : (pageInfo[HubState.page] || pageInfo.search).w)
     readonly property bool grownLike: place === "top" && !Theme.barFloats && !side && !Theme.fullBar
-    readonly property real openH: Math.min(height - 40, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
+    // as tall as the page wants, but never past the screen: a floating card keeps clear of the bar
+    // and the screen's edges (on a short screen, 720 px, it ran off the bottom)
+    readonly property real maxOpenH: docked ? height - 40 : height - floatCard.topRoom - floatCard.bottomRoom + Theme.islandH - pad
+    readonly property real openH: Math.min(maxOpenH, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
     readonly property real restW: Theme.barWidth(width, bar.needWidth)
     readonly property bool barShort: restW < width - 2 * Theme.barMargin - 1   // a full bar that doesn't reach the screen's sides
     // the bar can be off on some screens (Settings → Bar); menus still open there
@@ -167,6 +174,7 @@ PanelWindow {
 
         // Solid: one rounded floating bar; Modular gets one too while a notification drops out
         Rectangle {
+            id: solidBg
             anchors.fill: parent
             visible: Theme.barFloats && (Theme.barStyle === "solid" || win.toastGrows)
             radius: win.toastGrows ? Theme.islandRadius : Theme.barRound(height)
@@ -440,6 +448,8 @@ PanelWindow {
                     y: win.compact ? field.height + 8 : tabs.y + tabs.height + 10
                     width: parent.width
                     height: parent.height - y
+                    // (a page cut short by a small screen stays inside the card)
+                    clip: !!win.currentPage && win.currentPage.implicitHeight > height + 1
                     Repeater {
                         model: HubState.pages
                         Loader {
@@ -448,6 +458,9 @@ PanelWindow {
                             readonly property string pageId: modelData
                             property bool seen: false
                             width: pages.width
+                            // the room there is (a page's own height was used as is, so on a
+                            // short screen it was laid out taller than the card and spilled out)
+                            height: pages.height
                             active: win.here && win.open && (seen || HubState.page === modelData)
                             source: "../hub/" + modelData.charAt(0).toUpperCase() + modelData.slice(1) + "Page.qml"
                             onLoaded: {
@@ -581,9 +594,29 @@ PanelWindow {
         // (a screen with the bar turned off has no bar to blur behind: only its open menu)
         // (the Frame style's band is the frame's: it blurs behind itself. Blurred here too, niri's
         // blur showed the wallpaper over the frame, so the band didn't match the frame's sides)
-        item: (win.barHere && !(Theme.frameBand && !win.grown)) || win.toastGrows || (win.shown && win.docked) ? body : null
-        radius: island.rr
-        Region { item: win.dropped || drop.height > 1 ? dropBody : null; radius: drop.rr }
+        // each part is cut exactly like what's drawn there: a square blur showed as a lighter
+        // patch round the corners of a rounded bar
+        readonly property bool barOn: (win.barHere && !(Theme.frameBand && !win.grown)) || win.toastGrows || (win.shown && win.docked)
+        // Solid (and Modular with a notification out of it): its rounded rectangle
+        Region { item: blurShape.barOn && solidBg.visible ? solidBg : null; radius: solidBg.radius }
+        // Modular: only its pills (not the gaps between them)
+        Region { item: blurShape.barOn && !solidBg.visible && Theme.barStyle === "modular" && bar.leftPill.visible ? bar.leftPill : null; radius: bar.leftPill.radius }
+        Region { item: blurShape.barOn && !solidBg.visible && Theme.barStyle === "modular" && bar.midPill.visible ? bar.midPill : null; radius: bar.midPill.radius }
+        Region { item: blurShape.barOn && !solidBg.visible && Theme.barStyle === "modular" && bar.rightPill.visible ? bar.rightPill : null; radius: bar.rightPill.radius }
+        // the hanging shapes (Island, Fill, Frame): square against the edge, its ears too
+        EdgeBlur {
+            on: blurShape.barOn && !island.empty
+            edge: win.bottom ? "bottom" : "top"
+            bx: island.x + island.e; by: island.y; bw: island.bodyW; bh: island.height
+            r: island.rr; e: island.e
+        }
+        // the menu (or notification) dropping out of a full-width bar
+        EdgeBlur {
+            on: (win.dropped || drop.height > 1) && drop.visible
+            edge: win.bottom ? "bottom" : "top"
+            bx: drop.x + drop.e; by: drop.y; bw: drop.bodyW; bh: drop.height
+            r: drop.rr; e: drop.e
+        }
         Region { item: blurBox.on ? blurBox : null; radius: floatCard.radius * blurBox.k }
         Region { item: toastCard.on && toastCard.opacity > 0.6 ? toastCard : null; radius: toastCard.radius }
     }

@@ -21,11 +21,13 @@ Item {
     property point origin: Qt.point(x, y)
 
     readonly property var size: WidgetLayout.size(item || { type: type, face: face })
-    // turned (its Orientation): the look keeps its own size and is drawn turned in the middle
-    readonly property int rot: item ? WidgetLayout.rot(item) : 0
-    readonly property bool sideways: rot % 180 !== 0
-    implicitWidth: sideways ? size[1] : size[0]
-    implicitHeight: sideways ? size[0] : size[1]
+    // turned (its Angle, any amount): the look keeps its own size and is drawn turned in the
+    // middle of the box that takes (the editor turns its own frame instead: `turn: false`)
+    property bool turn: true
+    readonly property real rot: item && turn ? WidgetLayout.rot(item) : 0
+    readonly property var turnedBox: WidgetLayout.box(size[0], size[1], rot)
+    implicitWidth: turnedBox[0]
+    implicitHeight: turnedBox[1]
     opacity: opt("opacity", 1)
 
     function opt(k, d) { return WidgetLayout.opt(item, k, d); }
@@ -40,8 +42,8 @@ Item {
     Loader {
         id: body
         anchors.centerIn: parent
-        width: w.sideways ? w.height : w.width
-        height: w.sideways ? w.width : w.height
+        width: w.turn ? w.size[0] : w.width
+        height: w.turn ? w.size[1] : w.height
         rotation: w.rot
         readonly property var ctx: w
         // its shadow (its own Shadow setting, else Settings → Effects → Shadows under widgets):

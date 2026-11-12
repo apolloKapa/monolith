@@ -358,5 +358,16 @@ PanelWindow {
     // blur behind it (Theme → Effects)
     // (kept while it slides away: it used to vanish the moment hiding started)
     BackgroundEffect.blurRegion: Theme.blur && body.visible ? blurShape : null
-    Region { id: blurShape; item: body; radius: Theme.islandRadius }
+    // cut like its shape: square against the edge, rounded inside, with the ears
+    Region {
+        id: blurShape
+        EdgeBlur {
+            readonly property real thick: qa.vertical ? body.width : body.height
+            readonly property real long: qa.vertical ? body.height : body.width
+            edge: qa.edge
+            bx: body.x; by: body.y; bw: body.width; bh: body.height
+            e: Math.max(0, Math.min(qa.ear, thick / 2))
+            r: Math.max(0, Math.min(Theme.islandRadius, thick - e, long / 2))
+        }
+    }
 }

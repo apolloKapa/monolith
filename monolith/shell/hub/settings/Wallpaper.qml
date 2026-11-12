@@ -26,7 +26,7 @@ ColumnLayout {
             anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 12
             width: wn.implicitWidth + 20; height: 28; radius: 14
             color: Qt.alpha(Theme.frame, 0.85)
-            Label { id: wn; anchors.centerIn: parent; text: (Wall.isVideo(Wall.path) || Wall.isAnimated(Wall.path) ? "Live · " : "") + (Wall.path.replace(/^.*\//, "") || "No wallpaper"); font.pixelSize: Theme.sizeSmall }
+            Label { id: wn; anchors.centerIn: parent; width: Math.min(implicitWidth, parent.parent.width - 44); text: (Wall.isVideo(Wall.path) || Wall.isAnimated(Wall.path) ? "Live · " : "") + (Wall.path.replace(/^.*\//, "") || "No wallpaper"); font.pixelSize: Theme.sizeSmall }
         }
         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: HubState.show("wallpaper") }
     }

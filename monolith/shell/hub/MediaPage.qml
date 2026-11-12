@@ -115,7 +115,7 @@ Page {
             Icon { anchors.centerIn: parent; name: "music_off"; size: 46; color: Theme.subtext }
         }
         Label { anchors.horizontalCenter: parent.horizontalCenter; text: "Nothing is playing"; strong: true; font.pixelSize: Theme.sizeTitle + 4 }
-        Label { anchors.horizontalCenter: parent.horizontalCenter; text: "Play something in any app (a music player, a browser, a video) and it shows up here"; muted: true }
+        Label { anchors.horizontalCenter: parent.horizontalCenter; width: Math.min(implicitWidth, page.width - 64); wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter; text: "Play something in any app (a music player, a browser, a video) and it shows up here"; muted: true }
     }
 
     // ── top: the cover and the track ──

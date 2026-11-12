@@ -436,7 +436,7 @@ ColumnLayout {
         Toggle { checked: clockPrev.clockWeekday; onToggled: on => Store.set("bar.clock.weekday", on) }
     }
     Label { text: "Workspaces"; strong: true; Layout.leftMargin: 6; Layout.topMargin: 4 }
-    Label { text: "Shown with four sample workspaces: the second open, the first three with windows"; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6 }
+    Label { text: "Shown with four sample workspaces: the second open, the first three with windows"; Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6 }
     StylePick {
         module: "workspaces"
         opts: [["pills", "Pills"], ["dots", "Dots"], ["lines", "Lines"], ["rings", "Rings"], ["squares", "Squares"],

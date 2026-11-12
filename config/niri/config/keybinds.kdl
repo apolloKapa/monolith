@@ -32,7 +32,7 @@ binds {
     Mod+Ctrl+Up    { move-window-up; }
     Mod+Right { focus-column-right; }
     Mod+Ctrl+Right { move-column-right; }
-    Mod+H     { focus-column-left; }
+    Mod+H hotkey-overlay-title="Restart the shell" { spawn "monolith" "restart"; }
     Mod+J     { focus-window-down; }
     Mod+K     { focus-window-up; }
     Mod+L { spawn "monolith" "lock"; }
@@ -79,7 +79,7 @@ binds {
     Mod+A { spawn "monolith" "msg" "toggle" "autohide"; }
     Mod+Alt+C { spawn "monolith" "msg" "toggle" "clipboard"; }
     Mod+P { spawn "monolith" "msg" "toggle" "cheatsheet"; }
-    Mod+G { spawn "monolith" "restart"; }
+    Mod+G hotkey-overlay-title="Wellbeing (screen time)" { spawn "monolith" "hub" "wellbeing"; }
     Mod+Alt+M { spawn "monolith" "msg" "toggle" "music"; }
     Mod+X { spawn "monolith" "msg" "toggle" "music"; }
     Mod+Alt+W { spawn "monolith" "msg" "toggle" "wallpaper"; }

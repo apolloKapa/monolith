@@ -68,6 +68,7 @@ Scope {
                     color: Theme.containerHigh
                     TextInput {
                         id: pw
+                        clip: true
                         anchors.fill: parent
                         anchors.leftMargin: 18; anchors.rightMargin: 18
                         verticalAlignment: TextInput.AlignVCenter

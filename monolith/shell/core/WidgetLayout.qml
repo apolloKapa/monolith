@@ -54,11 +54,15 @@ Singleton {
         greeting: { name: "Greeting", icon: "waving_hand", size: [460, 100], lim: [160, 50, 1400, 400], aspect: [1.5, 8],
             faces: [["text", "Text", "GreetingText"]] },
         notifications: { name: "Notifications", icon: "notifications", size: [360, 190], lim: [240, 80, 700, 600], aspect: [0.8, 5],
-            faces: [["list", "List", "NotificationsList"]] }
+            faces: [["list", "List", "NotificationsList"]] },
+        wellbeing: { name: "Wellbeing", icon: "self_improvement", size: [340, 220], lim: [180, 100, 1000, 800], aspect: [0.8, 3.2],
+            faces: [["card", "Card", "WellbeingCard", [1.1, 2.6], [340, 240]], ["ring", "Ring", "WellbeingRing", [1, 1], [200, 200]],
+                    ["week", "Week", "WellbeingWeek", [1.2, 3.2], [360, 200]], ["apps", "Top apps", "WellbeingApps", [0.8, 2.2], [320, 240]],
+                    ["dot", "Dot", "WellbeingDot", [1.4, 2.6], [320, 170]]] }
     })
     // the order they're offered in
     readonly property var order: ["clock", "date", "weather", "media", "visualizer", "calendar", "usage", "cpu", "ram", "temp", "disk",
-        "battery", "github", "notes", "text", "image", "user", "greeting", "notifications"]
+        "battery", "github", "notes", "text", "image", "user", "greeting", "notifications", "wellbeing"]
     // [type, name, icon] for the add palette, and each type's [face, name] for the style drop-downs
     readonly property var types: order.map(t => [t, spec[t].name, spec[t].icon])
     readonly property var faces: {
@@ -121,7 +125,9 @@ Singleton {
         "user/default": [220, 130, 500, 300, 1.2, 2.8],
         "clock/dot": [140, 70, 1400, 900, 1, 2.6], "date/dot": [160, 70, 1200, 500, 1.2, 3.5], "weather/dot": [140, 100, 800, 500, 0.9, 2.2],
         "media/dot": [240, 100, 1000, 400, 1.8, 3.6], "cpu/dot": [100, 100, 600, 600, 1, 1], "ram/dot": [100, 100, 600, 600, 1, 1],
-        "temp/dot": [100, 100, 600, 600, 1, 1], "disk/dot": [100, 100, 600, 600, 1, 1], "battery/dot": [100, 100, 600, 600, 1, 1]
+        "temp/dot": [100, 100, 600, 600, 1, 1], "disk/dot": [100, 100, 600, 600, 1, 1], "battery/dot": [100, 100, 600, 600, 1, 1],
+        "wellbeing/card": [240, 160, 900, 600, 1.1, 2.6], "wellbeing/ring": [100, 100, 700, 700, 1, 1], "wellbeing/week": [240, 130, 1000, 560, 1.2, 3.2],
+        "wellbeing/apps": [220, 150, 800, 800, 0.8, 2.2], "wellbeing/dot": [180, 100, 1000, 500, 1.4, 2.6]
     })
     function lookOf(t, f) { return looks[t + "/" + faceId(t, f)] || null; }
     function aspectOf(t, f) {
@@ -148,7 +154,7 @@ Singleton {
     // the looks that sit on a card: they get the Background setting (blurry, solid or none)
     readonly property var carded: ["battery/default", "media/full", "media/lyrics", "media/controls", "media/card", "notes/default", "github/default",
         "weather/compact", "weather/full", "weather/round", "notifications/list", "cpu/default", "ram/default", "temp/default", "disk/default",
-        "calendar/month", "usage/rings", "usage/bars", "clock/analog", "user/default"]
+        "calendar/month", "usage/rings", "usage/bars", "clock/analog", "user/default", "wellbeing/card", "wellbeing/week", "wellbeing/apps"]
     readonly property var colourChoices: [["", "Theme"], ["text", "Text"], ["accent", "Accent"], ["primary", "Primary"], ["secondary", "Secondary"],
         ["tertiary", "Tertiary"], ["white", "White"], ["black", "Black"]]
     // the card's Background, a drop-down: frosted wallpaper, a see-through (or solid) card at its
@@ -158,7 +164,7 @@ Singleton {
     function optionsFor(t, f) {
         const id = faceId(t, f);
         const o = [["opacity", "Opacity", "slider", 1, [0.15, 1, 0.05]],
-                   ["rotation", "Orientation", "dropdown", "0", [["0", "Upright"], ["90", "Turned right"], ["180", "Upside down"], ["270", "Turned left"]]],
+                   ["rotation", "Angle (or twist it by its corner)", "slider", 0, [0, 359, 1]],
                    ["shadow", "Shadow", "dropdown", "", [["", "Like Settings"], ["off", "Off"], ["soft", "Soft"], ["strong", "Strong"], ["glow", "Accent glow"]]],
                    ["shadowDistance", "Shadow distance", "slider", 6, [0, 30, 1]]];
         if (carded.indexOf(t + "/" + id) !== -1)
@@ -172,6 +178,7 @@ Singleton {
             if (t === "clock")
                 o.push(["showDate", "Day and date", "toggle", true], ["showSeconds", "Seconds dot", "toggle", true],
                        ["hour12", "12-hour", "toggle", false], ["offDots", "Show unlit dots", "toggle", true]);
+            if (t === "wellbeing") o.push(...wellbeingOptions(id));
             return o;
         }
         if (t === "clock" || (t === "media" && id === "controls"))
@@ -189,6 +196,32 @@ Singleton {
         if (t === "image") o.unshift(["imagePath", "Picture", "file", ""]);   // first: what a picture widget is about
         if (t === "github") o.push(["store:widgets.github.user", "GitHub username", "text", ""]);
         if (t === "visualizer") o.push(...visualiserOptions(id));
+        if (t === "wellbeing") {
+            if (id !== "ring") o.push(["mainColor", "Main colour", "colour", ""]);
+            o.push(["accentColor", "Accent colour", "colour", ""], ...wellbeingOptions(id));
+        }
+        return o;
+    }
+    // the Wellbeing widget: what each look shows, the daily goal (shared with the Wellbeing page)
+    // and whether a click opens the page
+    function wellbeingOptions(id) {
+        const hours = [["goal", "Your daily goal (else 8 h)"], ["2", "2 hours"], ["4", "4 hours"], ["6", "6 hours"], ["8", "8 hours"], ["10", "10 hours"], ["12", "12 hours"]];
+        const o = [["", "What it shows", "header"]];
+        if (id === "card")
+            o.push(["apps", "Busiest apps", "dropdown", "3", [["0", "None"], ["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"], ["5", "5"]]],
+                   ["showDiff", "Against yesterday", "toggle", true], ["showGoal", "The goal as a bar", "toggle", true], ["showWeek", "This week as little bars", "toggle", true]);
+        if (id === "ring")
+            o.push(["fullAt", "The ring is full at", "dropdown", "goal", hours], ["showTopApp", "The busiest app's icon", "toggle", true],
+                   ["sineWave", "Wavy ring", "toggle", true], ["lineThickness", "Line thickness", "slider", 8, [3, 16, 1]], ["ringCard", "On a card", "toggle", false]);
+        if (id === "week")
+            o.push(["showAverage", "Daily average", "toggle", true], ["goalLine", "The goal as a line", "toggle", true], ["showTimes", "Times over the bars", "toggle", false]);
+        if (id === "apps")
+            o.push(["apps", "How many apps", "dropdown", "5", [["3", "3"], ["4", "4"], ["5", "5"], ["6", "6"], ["8", "8"]]], ["showIcons", "Icons", "toggle", true]);
+        if (id === "dot")
+            o.push(["fullAt", "The dots are full at", "dropdown", "goal", hours]);
+        o.push(["store:wellbeing.goal", "Daily goal (every Wellbeing widget and the page)", "dropdown", "0",
+                    [["0", "None"], ["60", "1 hour"], ["120", "2 hours"], ["180", "3 hours"], ["240", "4 hours"], ["300", "5 hours"], ["360", "6 hours"], ["480", "8 hours"], ["600", "10 hours"]]],
+               ["clickOpens", "A click opens Wellbeing", "toggle", true]);
         return o;
     }
     // the visualiser: its own look, then cava's settings (shared by every visualiser: "store:cava.*")
@@ -237,9 +270,16 @@ Singleton {
         return o;
     }
     // turned a quarter at a time (its Orientation): 0, 90, 180 or 270 degrees, clockwise
-    function rot(it) { const r = Math.round((Number(opt(it, "rotation", 0)) || 0) / 90) * 90; return ((r % 360) + 360) % 360; }
-    // the box it takes on screen: its size, sideways when turned a quarter
-    function footprint(it) { const s = size(it); return rot(it) % 180 ? [s[1], s[0]] : s; }
+    // its angle, any amount (clockwise, 0–360; twisted by its corner handle in the editor)
+    function rot(it) { return normAngle(Number(opt(it, "rotation", 0)) || 0); }
+    function normAngle(a) { a = Math.round(a * 10) / 10; return ((a % 360) + 360) % 360; }
+    // the box a w × h widget takes on screen turned by `a` degrees (its upright box when it isn't)
+    function box(w, h, a) {
+        const r = a * Math.PI / 180, c = Math.abs(Math.cos(r)), s = Math.abs(Math.sin(r));
+        return [w * c + h * s, w * s + h * c];
+    }
+    // the box it takes on screen (x/y are this box's top-left): its size, turned
+    function footprint(it) { const s = size(it); return box(s[0], s[1], rot(it)); }
     function opt(it, key, fallback) { return it && it.opts && it.opts[key] !== undefined ? it.opts[key] : fallback; }
 
     // what's there to start with: the desktop keeps the earlier widgets you had on; the lock
@@ -306,7 +346,32 @@ Singleton {
         Store.set("lock.perScreen", on);
     }
     function save(mode, list) { Store.set(key(mode), list); }
-    function update(mode, id, changes) { save(mode, items(mode).map(i => i.id === id ? Object.assign({}, i, changes) : i)); }
+    // Sizes are in pixels, so each widget keeps `dh`: the height of the screen it was placed or
+    // sized on. A shorter screen shows it smaller in proportion (a layout made on a 1440 px
+    // screen covered half of a 720 px one, its widgets on top of each other and the password
+    // box); the same size or a taller one shows it as it is. Older layouts count as made on
+    // the first screen (where the editor opens).
+    function refH(it) { return Number(it && it.dh) || (Quickshell.screens.length ? Quickshell.screens[0].height : 0); }
+    function fitScale(it, screenH) { const r = refH(it); return r > 0 && screenH > 0 ? Math.min(1, screenH / r) : 1; }
+    function fitted(it, screenH) {
+        const k = fitScale(it, screenH);
+        if (k > 0.999) return it;
+        const s = size(it);
+        return Object.assign({}, it, { w: Math.round(s[0] * k), h: Math.round(s[1] * k) });
+    }
+    // `editH`: the height of the screen it's being edited on (it's then sized for that screen)
+    function update(mode, id, changes, editH) {
+        save(mode, items(mode).map(i => {
+            if (i.id !== id) return i;
+            const c = Object.assign({}, changes);
+            if (editH > 0 && (c.x !== undefined || c.y !== undefined || c.w !== undefined)) {
+                // moved there without a new size: keep the size it's shown at on this screen
+                if (c.w === undefined) { const f = fitted(i, editH); if (f !== i) { c.w = f.w; c.h = f.h; } }
+                c.dh = editH;
+            }
+            return Object.assign({}, i, c);
+        }));
+    }
     function setOpt(mode, id, k, v) {
         save(mode, items(mode).map(i => {
             if (i.id !== id) return i;
@@ -323,14 +388,14 @@ Singleton {
         ["media", "Media", "music_note", ["media", "visualizer", "image"]],
         ["system", "System", "monitoring", ["usage", "cpu", "ram", "temp", "disk", "battery"]],
         ["info", "Info", "info", ["weather", "notifications", "github"]],
-        ["you", "Personal", "person", ["user", "greeting", "notes", "text"]]
+        ["you", "Personal", "person", ["user", "greeting", "notes", "text", "wellbeing"]]
     ]
     // x/y: where its top-left goes, as fractions of the screen (else near the middle)
-    function add(mode, type, screen, x, y) {
+    function add(mode, type, screen, x, y, editH) {
         const id = type[0] + Date.now().toString(36);
         const s = spec[type];
         const d = s ? (s.faces[0][4] || s.size) : [0, 0];
-        save(mode, items(mode).concat([{ id: id, type: type, face: "", x: x === undefined ? 0.4 : x, y: y === undefined ? 0.4 : y, w: d[0], h: d[1], screen: mode === "lock" && !lockPerScreen ? "" : screen }]));
+        save(mode, items(mode).concat([{ id: id, type: type, face: "", x: x === undefined ? 0.4 : x, y: y === undefined ? 0.4 : y, w: d[0], h: d[1], dh: editH > 0 ? editH : undefined, screen: mode === "lock" && !lockPerScreen ? "" : screen }]));
         return id;
     }
     // a new look: its own default size when it has one (a round look), else the size kept inside its shape

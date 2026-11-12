@@ -17,13 +17,31 @@ Singleton {
         command: ["sh", "-c", "find \"$1\" -maxdepth 3 -type f \\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.gif' \\) -printf '%T@\\t%p\\n' 2>/dev/null | sort -rn | head -n 24 | cut -f2-", "_", pics.dir]
         stdout: StdioCollector { onStreamFinished: pics.recent = text.split("\n").filter(l => l) }
     }
-    // a file dialog; `done(path)` gets the picked file (nothing when cancelled)
+    // a file dialog; `done(path)` gets the picked file (nothing when cancelled). While it's
+    // open `picking` is true: the shell's full-screen layers (the widget editor, Settings) step
+    // out of the way, since a normal window like this one always opens underneath them
+    property bool picking: false
     function choose(title, done) {
+        if (picking) return;
+        picking = true;
         const p = chooserC.createObject(pics, { command: ["sh", "-c",
             "zenity --file-selection --title=\"$1\" --filename=\"$2/\" --file-filter='Pictures | *.png *.jpg *.jpeg *.webp *.gif *.PNG *.JPG *.JPEG *.WEBP *.GIF' 2>/dev/null", "_", title || "Choose a picture", pics.dir] });
         const out = outC.createObject(p);
         p.stdout = out;
-        out.streamFinished.connect(() => { const f = out.text.trim(); if (f !== "" && done) done(f); p.destroy(); });
+        let file = "";
+        out.streamFinished.connect(() => { file = out.text.trim(); });
+        let ended = false;
+        // (on running going false: also when zenity can't start, so nothing stays hidden)
+        p.runningChanged.connect(() => {
+            if (p.running || ended) return;
+            ended = true;
+            Qt.callLater(() => {
+                pics.picking = false;
+                const f = file || out.text.trim();
+                p.destroy();
+                if (f !== "" && done) { try { done(f); } catch (e) { console.warn("Pictures: " + e); } }
+            });
+        });
         p.running = true;
     }
     Component { id: chooserC; Process {} }
