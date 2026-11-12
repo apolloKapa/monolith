@@ -137,6 +137,9 @@ Singleton {
     }
     // quick access from a keybind (`quickshell ipc call quick bar right`): on the screen you're on
     property var quickReq: ({ screen: "", edge: "", full: false, n: 0 })
+    // something is being dragged onto the quick access tool (a picture onto the drawing pad):
+    // it stays out (the pointer isn't "on" it while a drag goes on, so it would put itself away)
+    property bool quickHold: false
     function quick(edge, full) { quickReq = { screen: target(""), edge: edge || "", full: full, n: quickReq.n + 1 }; }
     IpcHandler {
         target: "quick"

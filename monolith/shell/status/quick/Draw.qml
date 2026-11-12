@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Qt.labs.folderlistmodel
 import Quickshell
+import Quickshell.Io
 import "../../core"
 import "../../ui"
 
@@ -11,11 +12,14 @@ import "../../ui"
 // takes whole strokes; colours, a size, undo / redo. The drawing stays when the panel closes
 // (core/Sketch). Save puts all of it in a picture in ~/Pictures and copies it; Copy only copies
 // it. The pictures you saved are under the history button (click one to copy it, or open it).
+// Pictures go in too: paste one (Ctrl+V), drop image files on the pad, or drag a saved drawing
+// in from the history strip; the move tool drags them, resizes them from the corner, Delete
+// removes the one picked.
 ColumnLayout {
     id: d
     spacing: 8
 
-    property string tool: "pen"         // pen | hl | line | arrow | rect | ellipse | eraser | hand
+    property string tool: "pen"         // pen | hl | line | arrow | rect | ellipse | eraser | hand | move
     property color ink: Theme.accent
     property real size: 4
     readonly property bool shape: ["line", "arrow", "rect", "ellipse"].indexOf(tool) !== -1
@@ -56,10 +60,112 @@ ColumnLayout {
     }
     function panBy(dx, dy) { Sketch.ox -= dx / Sketch.z; Sketch.oy -= dy / Sketch.z; Sketch.moved(); }
 
+    // ── pictures ──
+    // the one picked with the move tool (its index in the strokes), -1: none
+    property int picked: -1
+    readonly property var pickedPic: picked >= 0 && picked < Sketch.strokes.length && Sketch.strokes[picked].t === "img" ? Sketch.strokes[picked] : null
+    Connections { target: Sketch; function onStrokesChanged() { if (!d.pickedPic) d.picked = -1; } }
+    // the topmost picture under a point of the drawing
+    function picAt(w) {
+        for (let i = Sketch.strokes.length - 1; i >= 0; i--) {
+            const s = Sketch.strokes[i];
+            if (s.t === "img" && w.x >= s.x && w.x <= s.x + s.w && w.y >= s.y && w.y <= s.y + s.h) return i;
+        }
+        return -1;
+    }
+    // a picture file goes in: copied into the drawing's own folder, then placed (centred on
+    // px, py on the pad; at most 60 % of what you see, so a huge photo doesn't swamp the view)
+    function addPictureFile(path, px, py) {
+        const q = picQueue.slice();
+        q.push({ path: path, px: px, py: py });
+        picQueue = q;
+        if (!copyPic.running) nextPicture();
+    }
+    property var picQueue: []
+    function nextPicture() {
+        if (!picQueue.length) return;
+        const job = picQueue[0];
+        picQueue = picQueue.slice(1);
+        copyPic.job = job;
+        copyPic.command = ["sh", "-c", "mkdir -p \"$2\" && ext=\"${1##*.}\"; case \"$ext\" in */*|\"$1\") ext=png;; esac; " +
+            "dest=\"$2/$(date +%s%N).$ext\"; cp -- \"$1\" \"$dest\" && printf %s \"$dest\"", "_", job.path, Sketch.picDir];
+        copyPic.running = true;
+    }
+    Process {
+        id: copyPic
+        property var job: null
+        stdout: StdioCollector { onStreamFinished: { const f = text.trim(); if (f && copyPic.job) d.placePicture(f, copyPic.job.px, copyPic.job.py); } }
+        onExited: d.nextPicture()
+    }
+    // its natural size first (an Image tells), then into the drawing as one undoable change
+    function placePicture(file, px, py) { probe.createObject(d, { file: file, px: px, py: py }); }
+    Component {
+        id: probe
+        Image {
+            property string file: ""
+            property real px: 0
+            property real py: 0
+            visible: false
+            asynchronous: true
+            source: file ? Wall.url(file) : ""
+            onStatusChanged: {
+                if (status === Image.Ready) {
+                    const iw = Math.max(1, implicitWidth), ih = Math.max(1, implicitHeight);
+                    const k = Math.min(1, pad.width * 0.6 / Sketch.z / iw, pad.height * 0.6 / Sketch.z / ih);
+                    const c = d.toWorld(px, py);
+                    const pic = { t: "img", f: file, x: c.x - iw * k / 2, y: c.y - ih * k / 2, w: iw * k, h: ih * k };
+                    Sketch.commit(Sketch.strokes.concat([pic]));
+                    d.picked = Sketch.strokes.length - 1;
+                    d.tool = "move";
+                    destroy();
+                } else if (status === Image.Error) {
+                    Quickshell.execDetached(["notify-send", "-a", "Monolith", "Couldn't add that picture", file.replace(/^.*\//, "")]);
+                    destroy();
+                }
+            }
+        }
+    }
+    // Ctrl+V: a copied picture (a browser's, a screenshot), or image files copied in a file manager
+    function pastePicture() {
+        pasteProc.running = true;
+    }
+    Process {
+        id: pasteProc
+        command: ["sh", "-c",
+            "types=\"$(wl-paste --list-types 2>/dev/null)\" || exit 1; mkdir -p \"$1\"; " +
+            "for t in image/png image/jpeg image/webp image/gif image/bmp; do " +
+            "  if printf '%s\\n' \"$types\" | grep -qx \"$t\"; then f=\"$1/$(date +%s%N).${t#image/}\"; wl-paste -n -t \"$t\" > \"$f\" && printf 'file\\t%s\\n' \"$f\"; exit 0; fi; done; " +
+            "if printf '%s\\n' \"$types\" | grep -qx 'text/uri-list'; then wl-paste -n -t text/uri-list | tr -d '\\r' | sed -n 's|^file://||p' | while IFS= read -r p; do printf 'path\\t%s\\n' \"$(printf '%b' \"$(printf %s \"$p\" | sed 's/%/\\\\x/g')\")\"; done; fi",
+            "_", Sketch.picDir]
+        stdout: SplitParser {
+            onRead: line => {
+                const tab = line.indexOf("\t");
+                if (tab < 0) return;
+                const kind = line.slice(0, tab), path = line.slice(tab + 1);
+                if (kind === "file") d.placePicture(path, pad.width / 2, pad.height / 2);
+                else if (/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(path)) d.addPictureFile(path, pad.width / 2, pad.height / 2);
+            }
+        }
+    }
+    Shortcut { sequences: [StandardKey.Paste]; onActivated: d.pastePicture() }
+    Shortcut { sequences: [StandardKey.Delete, "Backspace"]; enabled: !!d.pickedPic; onActivated: { const i = d.picked; d.picked = -1; Sketch.commit(Sketch.strokes.filter((x, j) => j !== i)); } }
+    // the picture button: pick files
+    function choosePicture() { chooseProc.running = true; }
+    Process {
+        id: chooseProc
+        command: ["sh", "-c", "zenity --file-selection --multiple --separator='\\n' --title='Add a picture' --file-filter='Pictures | *.png *.jpg *.jpeg *.webp *.gif *.bmp *.svg *.PNG *.JPG *.JPEG *.WEBP' 2>/dev/null"]
+        stdout: SplitParser { onRead: line => { if (line.trim()) d.addPictureFile(line.trim(), pad.width / 2, pad.height / 2); } }
+    }
+
     // the box round all of it, in drawing coordinates
     function bounds() {
         let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
         for (const s of Sketch.strokes) {
+            if (s.t === "img") {
+                x0 = Math.min(x0, s.x); y0 = Math.min(y0, s.y);
+                x1 = Math.max(x1, s.x + s.w); y1 = Math.max(y1, s.y + s.h);
+                continue;
+            }
             const m = s.s / 2 + 2;
             for (let i = 0; i < s.pts.length; i += 2) {
                 x0 = Math.min(x0, s.pts[i] - m); y0 = Math.min(y0, s.pts[i + 1] - m);
@@ -108,7 +214,25 @@ ColumnLayout {
         g.lineCap = s.t === "hl" ? "butt" : "round";
         g.lineJoin = "round";
     }
-    function paintAll(g, w, h, ox, oy, z, grid) {
+    // a picture: drawn once its canvas has loaded it (a Canvas keeps its own image cache);
+    // a soft box until then
+    function picUrl(s) { return Wall.url(s.f); }
+    function drawPic(g, s, cvs) {
+        const u = picUrl(s);
+        g.globalAlpha = 1;
+        if (cvs.isImageLoaded(u)) g.drawImage(u, s.x, s.y, s.w, s.h);
+        else {
+            if (!cvs.isImageLoading(u)) cvs.loadImage(u);
+            if (cvs === cv) picWait.restart();
+            g.fillStyle = Qt.alpha(Theme.text, 0.08);
+            g.fillRect(s.x, s.y, s.w, s.h);
+        }
+    }
+    function drawOne(g, s, cvs) {
+        if (s.t === "img") { drawPic(g, s, cvs); return; }
+        styleFor(g, s); strokePath(g, s);
+    }
+    function paintAll(g, w, h, ox, oy, z, grid, cvs) {
         g.reset();
         g.clearRect(0, 0, w, h);
         // the grid: it moves and scales with the drawing, so you can see where you are
@@ -142,12 +266,13 @@ ColumnLayout {
             }
         }
         g.setTransform(z, 0, 0, z, -ox * z, -oy * z);
-        for (const s of Sketch.strokes) { styleFor(g, s); strokePath(g, s); }
+        for (const s of Sketch.strokes) drawOne(g, s, cvs);
         if (d.cur) { styleFor(g, d.cur); strokePath(g, d.cur); }
     }
 
     // erasing: the strokes that pass within r of (x, y)
     function near(s, x, y, r) {
+        if (s.t === "img") return x >= s.x - r && x <= s.x + s.w + r && y >= s.y - r && y <= s.y + s.h + r;
         const p = s.pts, rr = r + s.s / 2;
         const seg = (ax, ay, bx, by) => {
             const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy;
@@ -181,6 +306,7 @@ ColumnLayout {
         property bool on: false
         property string tip: ""
         width: 32; height: 32
+        Layout.preferredWidth: 32; Layout.preferredHeight: 32
         radius: Theme.corner(32, -2)
         color: on ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
         opacity: enabled ? 1 : 0.35
@@ -194,7 +320,7 @@ ColumnLayout {
         Label { text: "Draw"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.fillWidth: true }
         // the grid: off → dots → lines; snapping lines and shapes to it
         Pressable {
-            width: gl.implicitWidth + 38; height: 32
+            Layout.preferredWidth: gl.implicitWidth + 38; Layout.preferredHeight: 32
             color: d.grid !== "off" ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
             onClicked: Store.set("quick.drawGrid", ({ off: "dots", dots: "lines", lines: "off" })[d.grid] || "dots")
             Row { anchors.centerIn: parent; spacing: 4
@@ -203,17 +329,17 @@ ColumnLayout {
         }
         Pressable {
             visible: d.grid !== "off"
-            width: sl2.implicitWidth + 38; height: 32
+            Layout.preferredWidth: sl2.implicitWidth + 38; Layout.preferredHeight: 32
             color: d.snap ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
             onClicked: Store.set("quick.drawSnap", !d.snap)
             Row { anchors.centerIn: parent; spacing: 4
                 Icon { name: "grid_guides"; size: 17; color: d.snap ? Theme.onAccentContainer : Theme.text; anchors.verticalCenter: parent.verticalCenter }
                 Label { id: sl2; text: "Snap"; font.pixelSize: Theme.sizeSmall; color: d.snap ? Theme.onAccentContainer : Theme.text; anchors.verticalCenter: parent.verticalCenter } }
         }
-        Item { width: 6; height: 1 }
+        Item { Layout.preferredWidth: 6; Layout.preferredHeight: 1 }
         Tb { icon: "zoom_out"; onClicked: d.zoomAt(pad.width / 2, pad.height / 2, 1 / 1.25) }
         Pressable {
-            width: zl.implicitWidth + 16; height: 32
+            Layout.preferredWidth: zl.implicitWidth + 16; Layout.preferredHeight: 32
             color: hovered ? Theme.containerHigh : "transparent"
             // back to 100 %, keeping the middle where it is
             onClicked: d.zoomAt(pad.width / 2, pad.height / 2, 1 / Sketch.z)
@@ -241,6 +367,21 @@ ColumnLayout {
             Connections { target: Sketch; function onRevChanged() { d.partial = false; cv.requestPaint(); } }
             Connections { target: d; function onGridChanged() { d.partial = false; cv.requestPaint(); } }
             Component.onCompleted: requestPaint()
+            onImageLoaded: { d.partial = false; requestPaint(); }
+            // (Canvas doesn't always say when a later picture has loaded: look again for a moment)
+            Timer {
+                id: picWait
+                interval: 80
+                repeat: true
+                property int tries: 0
+                onRunningChanged: if (running) tries = 0
+                onTriggered: {
+                    tries++;
+                    if (d.picsLoaded(cv) || tries > 60) stop();
+                    d.partial = false;
+                    cv.requestPaint();
+                }
+            }
             onPaint: {
                 const g = getContext("2d");
                 // the pen: just its newest piece on top of what's there
@@ -255,7 +396,7 @@ ColumnLayout {
                     d.drawnTo = n;
                     return;
                 }
-                d.paintAll(g, width, height, Sketch.ox, Sketch.oy, Sketch.z, true);
+                d.paintAll(g, width, height, Sketch.ox, Sketch.oy, Sketch.z, true, cv);
                 if (d.cur) d.drawnTo = d.cur.pts.length;
             }
         }
@@ -266,11 +407,51 @@ ColumnLayout {
             x: ma.mouseX - width / 2; y: ma.mouseY - height / 2
             color: "transparent"; border.width: 1.5; border.color: Theme.text
         }
+        // the picked picture: its outline and the corner that sizes it
+        Item {
+            id: pickBox
+            readonly property var pic: d.tool === "move" ? d.pickedPic : null
+            property int rev: Sketch.rev    // (moves with the view and the picture)
+            visible: !!pic
+            x: pic ? (pic.x - Sketch.ox) * Sketch.z + rev * 0 : 0
+            y: pic ? (pic.y - Sketch.oy) * Sketch.z + rev * 0 : 0
+            width: pic ? pic.w * Sketch.z + rev * 0 : 0
+            height: pic ? pic.h * Sketch.z + rev * 0 : 0
+            Rectangle { anchors.fill: parent; anchors.margins: -1; color: "transparent"; border.width: 2; border.color: Theme.accent; radius: 2 }
+            Rectangle {
+                x: parent.width - width / 2; y: parent.height - height / 2
+                width: 14; height: 14; radius: 7
+                color: Theme.accent; border.width: 2; border.color: Theme.frame
+            }
+        }
+        // image files dropped on the pad (from a file manager, or a saved drawing from the strip below)
+        DropArea {
+            id: drop
+            anchors.fill: parent
+            keys: ["text/uri-list"]
+            onEntered: drag => { drag.accept(Qt.CopyAction); HubState.quickHold = true; }
+            onExited: HubState.quickHold = false
+            onDropped: drop => {
+                HubState.quickHold = false;
+                const files = (drop.urls || []).map(u => String(u)).filter(u => u.startsWith("file://"))
+                    .map(u => decodeURIComponent(u.slice(7))).filter(f => /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(f));
+                files.forEach((f, i) => d.addPictureFile(f, drop.x + i * 24, drop.y + i * 24));
+                drop.accept(Qt.CopyAction);
+            }
+        }
+        Rectangle {
+            anchors.fill: parent
+            visible: drop.containsDrag
+            color: Qt.alpha(Theme.accent, 0.12)
+            border.width: 2; border.color: Theme.accent
+            radius: pad.radius
+            Label { anchors.centerIn: parent; text: "Drop to add the picture"; strong: true; color: Theme.accent }
+        }
         Label {
             visible: Sketch.strokes.length === 0 && !d.cur
             anchors.centerIn: parent
             horizontalAlignment: Text.AlignHCenter
-            text: "Draw anywhere\nScroll or pinch to zoom · right-drag or two fingers to move"
+            text: "Draw anywhere\nScroll or pinch to zoom · right-drag or two fingers to move\nPaste (Ctrl+V) or drop pictures in"
             muted: true; font.pixelSize: Theme.sizeSmall
         }
 
@@ -280,16 +461,34 @@ ColumnLayout {
             acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
             hoverEnabled: true
             preventStealing: true
-            cursorShape: panning || d.tool === "hand" ? (pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor) : (d.tool === "eraser" ? Qt.BlankCursor : Qt.CrossCursor)
+            cursorShape: panning || d.tool === "hand" ? (pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
+                       : d.tool === "eraser" ? Qt.BlankCursor
+                       : d.tool === "move" ? (grab && grab.size ? Qt.SizeFDiagCursor : (pressed && grab ? Qt.ClosedHandCursor : Qt.ArrowCursor))
+                       : Qt.CrossCursor
             property bool panning: false
             property real lx: 0
             property real ly: 0
-            property var before: null       // the strokes before an erase, for undo
+            property var before: null       // the strokes before an erase (or a picture's move), for undo
+            property var grab: null         // the picture being moved or sized
             onPressed: mouse => {
                 lx = mouse.x; ly = mouse.y;
                 panning = mouse.button !== Qt.LeftButton || d.tool === "hand";
                 if (panning) return;
                 const w0 = d.toWorld(mouse.x, mouse.y);
+                // the move tool: pick the picture under the pointer and drag it (or its corner: size)
+                if (d.tool === "move") {
+                    const onCorner = d.pickedPic && Math.abs(mouse.x - (d.pickedPic.x + d.pickedPic.w - Sketch.ox) * Sketch.z) < 14
+                                                 && Math.abs(mouse.y - (d.pickedPic.y + d.pickedPic.h - Sketch.oy) * Sketch.z) < 14;
+                    const i = onCorner ? d.picked : d.picAt(w0);
+                    d.picked = i;
+                    if (i < 0) return;
+                    before = Sketch.strokes;
+                    const work = Sketch.strokes.slice();
+                    work[i] = Object.assign({}, work[i]);
+                    Sketch.strokes = work;
+                    grab = { i: i, size: onCorner, wx: w0.x, wy: w0.y, x: work[i].x, y: work[i].y, w: work[i].w, h: work[i].h };
+                    return;
+                }
                 if (d.tool === "eraser") { before = Sketch.strokes; erase(w0); return; }
                 // (lines and shapes start on the grid when snapping is on)
                 const w = d.shape ? d.snapped(w0) : w0;
@@ -302,6 +501,17 @@ ColumnLayout {
                 if (!pressed) return;
                 if (panning) { d.panBy(mouse.x - lx, mouse.y - ly); lx = mouse.x; ly = mouse.y; return; }
                 const w0 = d.toWorld(mouse.x, mouse.y);
+                if (d.tool === "move") {
+                    if (!grab) return;
+                    const s = Sketch.strokes[grab.i], dx = w0.x - grab.wx, dy = w0.y - grab.wy;
+                    if (grab.size) {
+                        // from the corner, keeping its shape
+                        const k = Math.max(8 / Math.max(grab.w, grab.h), Math.max((grab.w + dx) / grab.w, (grab.h + dy) / grab.h));
+                        s.w = grab.w * k; s.h = grab.h * k;
+                    } else { s.x = grab.x + dx; s.y = grab.y + dy; }
+                    Sketch.rev++;
+                    return;
+                }
                 if (d.tool === "eraser") { erase(w0); return; }
                 if (!d.cur) return;
                 const w = d.shape ? d.snapped(w0) : w0;
@@ -332,6 +542,11 @@ ColumnLayout {
             }
             onReleased: {
                 if (panning) { panning = false; return; }
+                if (d.tool === "move") {
+                    if (grab && before) { const now = Sketch.strokes; Sketch.strokes = before; Sketch.commit(now); }
+                    grab = null; before = null;
+                    return;
+                }
                 if (d.tool === "eraser") {
                     if (before && before !== Sketch.strokes) { const now = Sketch.strokes; Sketch.strokes = before; Sketch.commit(now); }
                     before = null;
@@ -368,29 +583,48 @@ ColumnLayout {
             visible: file !== ""
             opacity: 0.01
             z: -1
+            // (its pictures have to be loaded into this canvas first: it waits for them)
+            property bool waiting: false
+            onImageLoaded: if (waiting && d.picsLoaded(exporter)) { waiting = false; requestPaint(); }
+            Timer { interval: 80; repeat: true; running: exporter.waiting
+                onTriggered: if (d.picsLoaded(exporter)) { exporter.waiting = false; exporter.requestPaint(); } }
             onPaint: {
                 if (!box) return;
+                if (!d.picsLoaded(exporter)) {
+                    waiting = true;
+                    for (const s of Sketch.strokes) if (s.t === "img" && !isImageLoaded(d.picUrl(s))) loadImage(d.picUrl(s));
+                    return;
+                }
                 const g = getContext("2d");
                 g.reset();
                 g.fillStyle = Theme.container;
                 g.fillRect(0, 0, width, height);
-                d.paintAll2(g, box, k);
+                d.paintAll2(g, box, k, exporter);
             }
             onPainted: {
-                if (file === "") return;
+                if (file === "" || waiting) return;
                 const f = file;
                 file = "";
-                if (!save(f)) return;
-                if (keep) Quickshell.execDetached(["sh", "-c", "wl-copy < \"$1\"; notify-send -a Monolith 'Drawing saved' \"$1\"", "_", f]);
-                else Quickshell.execDetached(["sh", "-c", "wl-copy -t image/png < \"$1\"; rm -f \"$1\"; notify-send -a Monolith 'Drawing copied'", "_", f]);
+                // (Canvas.save() never wrote a file here: the picture goes out as PNG data instead,
+                // into a text file that base64 turns into the PNG)
+                const url = toDataURL("image/png");
+                const comma = url.indexOf(",");
+                if (comma < 0) return;
+                pngData.path = f + ".b64";
+                pngData.setText(url.slice(comma + 1));
+                const after = keep ? "wl-copy -t image/png < \"$1\"; notify-send -a Monolith 'Drawing saved' \"$1\""
+                                   : "wl-copy -t image/png < \"$1\"; rm -f \"$1\"; notify-send -a Monolith 'Drawing copied'";
+                Quickshell.execDetached(["sh", "-c", "base64 -d < \"$1.b64\" > \"$1\" && rm -f \"$1.b64\" && { " + after + "; }", "_", f]);
             }
+            FileView { id: pngData; blockWrites: true; printErrors: false }
         }
     }
     // (the background is already filled; the strokes only)
-    function paintAll2(g, b, k) {
+    function paintAll2(g, b, k, cvs) {
         g.setTransform(k, 0, 0, k, -b.x * k + 24, -b.y * k + 24);
-        for (const s of Sketch.strokes) { styleFor(g, s); strokePath(g, s); }
+        for (const s of Sketch.strokes) drawOne(g, s, cvs);
     }
+    function picsLoaded(cvs) { return Sketch.strokes.every(s => s.t !== "img" || cvs.isImageLoaded(picUrl(s))); }
     function savePicture(keep) {
         const b = bounds();
         if (!b) return;
@@ -401,6 +635,7 @@ ColumnLayout {
         exporter.width = Math.ceil(b.w * k) + 48; exporter.height = Math.ceil(b.h * k) + 48;
         exporter.file = exporter.keep ? Quickshell.env("HOME") + "/Pictures/Drawing_" + Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss") + ".png"
                                       : (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/monolith-drawing-" + Date.now() + ".png";
+        exporter.waiting = false;
         exporter.requestPaint();
     }
 
@@ -410,12 +645,12 @@ ColumnLayout {
         spacing: 2
         Repeater {
             model: [["pen", "stylus", "Pen"], ["hl", "ink_highlighter", "Highlighter"], ["line", "horizontal_rule", "Line"], ["arrow", "arrow_right_alt", "Arrow"],
-                    ["rect", "crop_square", "Rectangle"], ["ellipse", "circle", "Ellipse"], ["eraser", "ink_eraser", "Eraser"], ["hand", "pan_tool", "Move around"]]
+                    ["rect", "crop_square", "Rectangle"], ["ellipse", "circle", "Ellipse"], ["eraser", "ink_eraser", "Eraser"], ["hand", "pan_tool", "Move around"], ["move", "open_with", "Move pictures"], ["pic", "add_photo_alternate", "Add a picture (or paste one, or drop it here)"]]
             Tb {
                 required property var modelData
                 icon: modelData[1]
                 on: d.tool === modelData[0]
-                onClicked: d.tool = modelData[0]
+                onClicked: { if (modelData[0] === "pic") d.choosePicture(); else d.tool = modelData[0]; }
             }
         }
         Item { Layout.fillWidth: true }
@@ -448,8 +683,16 @@ ColumnLayout {
             color: Theme.container
             border.width: tm.containsMouse ? 2 : 0; border.color: Theme.accent
             Image { anchors.fill: parent; anchors.margins: 4; source: th.fileUrl; fillMode: Image.PreserveAspectFit; sourceSize.width: 240; asynchronous: true; cache: false }
+            // click: copy it; drag it up onto the pad: put it in the drawing
+            Drag.dragType: Drag.Automatic
+            Drag.supportedActions: Qt.CopyAction
+            Drag.mimeData: ({ "text/uri-list": String(th.fileUrl) })
+            Drag.imageSource: th.fileUrl
+            Drag.active: tm.drag.active
             MouseArea { id: tm; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                drag.target: dragDummy
                 onClicked: Quickshell.execDetached(["sh", "-c", "wl-copy -t image/png < \"$1\" && notify-send -a Monolith 'Drawing copied' \"$1\"", "_", th.filePath]) }
+            Item { id: dragDummy }
             Pressable {
                 visible: tm.containsMouse || hovered
                 anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 4
@@ -473,6 +716,7 @@ ColumnLayout {
                 required property var modelData
                 readonly property bool on: Qt.colorEqual(d.ink, modelData)
                 width: 22; height: 22; radius: 11
+                Layout.preferredWidth: 22; Layout.preferredHeight: 22
                 color: modelData
                 border.width: on ? 3 : 1
                 border.color: on ? Theme.accent : Theme.ringTrack
@@ -496,7 +740,11 @@ ColumnLayout {
         Pressable {
             id: clearBtn
             property bool armed: false
-            width: armed ? clr.implicitWidth + 50 : 34; height: 34
+            // (a layout places by Layout.* sizes: a plain width let "Clear?" slide under the next buttons)
+            Layout.preferredWidth: armed ? clr.implicitWidth + 50 : 34
+            Layout.preferredHeight: 34
+            Behavior on Layout.preferredWidth { NumberAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
+            clip: true
             color: armed ? Theme.danger : Theme.control
             enabled: Sketch.strokes.length > 0
             opacity: enabled ? 1 : 0.4
@@ -510,14 +758,14 @@ ColumnLayout {
         }
         // copy it (no file kept)
         Pressable {
-            width: 34; height: 34; color: Theme.control
+            Layout.preferredWidth: 34; Layout.preferredHeight: 34; color: Theme.control
             enabled: Sketch.strokes.length > 0
             opacity: enabled ? 1 : 0.4
             onClicked: d.savePicture(false)
             Icon { anchors.centerIn: parent; name: "content_copy"; size: 17 }
         }
         Pressable {
-            width: 34; height: 34; color: Theme.accent; ink: Theme.onAccent
+            Layout.preferredWidth: 34; Layout.preferredHeight: 34; color: Theme.accent; ink: Theme.onAccent
             enabled: Sketch.strokes.length > 0
             opacity: enabled ? 1 : 0.4
             onClicked: d.savePicture(true)
@@ -525,7 +773,7 @@ ColumnLayout {
         }
         // the saved pictures
         Pressable {
-            width: 34; height: 34
+            Layout.preferredWidth: 34; Layout.preferredHeight: 34
             color: d.showSaved ? Theme.accentContainer : Theme.control
             onClicked: d.showSaved = !d.showSaved
             Icon { anchors.centerIn: parent; name: "photo_library"; size: 18; color: d.showSaved ? Theme.onAccentContainer : Theme.text }

@@ -9,6 +9,7 @@ import Quickshell.Io
 // it survives a restart.
 // A stroke: { t: pen | hl | line | arrow | rect | ellipse, c: colour, s: width, pts: [x, y, …] }
 // in the drawing's own (endless) coordinates; the view shows from (ox, oy) at zoom z.
+// A picture (pasted or dropped in): { t: "img", f: its copy in picDir, x, y, w, h }.
 Singleton {
     id: sk
     property var strokes: []
@@ -22,6 +23,8 @@ Singleton {
     property var future: []
     readonly property bool canUndo: past.length > 0
     readonly property bool canRedo: future.length > 0
+    // pictures in the drawing are copied here (so moving or deleting the original doesn't matter)
+    readonly property string picDir: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/monolith/quick-draw"
     readonly property real minZ: 0.02
     readonly property real maxZ: 50
 
@@ -51,7 +54,12 @@ Singleton {
                 sk.z = Math.max(sk.minZ, Math.min(sk.maxZ, Number(d.z) || 1));
                 sk.rev++;
             } catch (e) {}
+            // pictures nothing uses any more (deleted, cleared; undo doesn't outlive a restart)
+            const used = sk.strokes.filter(x => x.t === "img").map(x => x.f.replace(/^.*\//, ""));
+            tidy.command = ["sh", "-c", "cd \"$1\" 2>/dev/null || exit 0; shift; for f in *; do [ -f \"$f\" ] || continue; keep=0; for u; do [ \"$f\" = \"$u\" ] && keep=1; done; [ $keep = 1 ] || rm -f -- \"$f\"; done", "_", sk.picDir].concat(used);
+            tidy.running = true;
         }
     }
+    Process { id: tidy }
     Timer { id: saveSoon; interval: 800; onTriggered: fv.setText(JSON.stringify({ strokes: sk.strokes, ox: sk.ox, oy: sk.oy, z: sk.z })) }
 }

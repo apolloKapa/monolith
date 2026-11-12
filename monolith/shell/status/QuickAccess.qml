@@ -337,7 +337,7 @@ PanelWindow {
     Timer {
         id: hideTimer
         interval: qa.hideDelay
-        onTriggered: if (!qa.pinned && !bodyHover.hovered && !drag.active && !qa.typing) qa.hide()
+        onTriggered: if (!qa.pinned && !bodyHover.hovered && !drag.active && !qa.typing && !HubState.quickHold) qa.hide()
     }
 
     // the keyboard, while it's out
