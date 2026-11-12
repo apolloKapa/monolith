@@ -39,8 +39,41 @@ PanelWindow {
     readonly property bool coverflow: Store.get("wallpaper.view", "flow") === "flow"
     // Pictures or Live (videos and GIFs); the tab you used last
     readonly property bool liveTab: Store.get("wallpaper.tab", "pictures") === "live"
-    readonly property var list: liveTab ? Wall.live : Wall.pictures
-    onShownChanged: if (shown) { Wall.rescan(); flow.currentIndex = Math.max(0, list.indexOf(currentPath)); keys.forceActiveFocus(); }
+    // the cards' list: replaced only when the pictures themselves change (every saved setting
+    // re-runs Store.get bindings, and a new list would send the views back to the top)
+    property var picList: []
+    property var liveList: []
+    readonly property var list: liveTab ? liveList : picList
+    function syncList() {
+        if (Wall.pictures.join("\n") !== picList.join("\n")) picList = Wall.pictures;
+        if (Wall.live.join("\n") !== liveList.join("\n")) liveList = Wall.live;
+    }
+    // the scroll of both grids, noted when it closes or changes tab (the wheel animates contentY,
+    // so there's no "movement ended" to listen to)
+    function notePos() {
+        if (!placed) return;
+        if (grid.contentHeight > 0) Wall.rememberPos("gridY", grid.contentY);
+        if (liveGrid.contentHeight > 0) Wall.rememberPos("liveY", liveGrid.contentY);
+    }
+    Connections { target: Wall; function onImagesChanged() { win.syncList(); } }
+
+    // back where you were last time; the first time, at the wallpaper you have
+    // (until it has put the views back, their moves aren't "where you were")
+    property bool placed: false
+    function restorePos() {
+        const pos = Wall.pickerPos;
+        const pic = Math.max(0, picList.indexOf(currentPath)), vid = Math.max(0, liveList.indexOf(currentPath));
+        flow.currentIndex = pos.flow !== undefined ? Math.min(pos.flow, Math.max(0, picList.length - 1)) : pic;
+        if (pos.gridY !== undefined) grid.contentY = Math.min(pos.gridY, Math.max(0, grid.contentHeight - grid.height));
+        else grid.positionViewAtIndex(pic, GridView.Center);
+        if (pos.liveY !== undefined) liveGrid.contentY = Math.min(pos.liveY, Math.max(0, liveGrid.contentHeight - liveGrid.height));
+        else liveGrid.positionViewAtIndex(vid, GridView.Center);
+        placed = true;
+    }
+    function opened() { syncList(); Wall.rescan(); Qt.callLater(restorePos); keys.forceActiveFocus(); }
+    // it's made already open (shell.qml loads it when the picker opens), so start here too
+    Component.onCompleted: if (shown) opened()
+    onShownChanged: if (shown) opened(); else { notePos(); Wall.savePos(); }
 
     // the room behind it dims; a click there closes it
     Rectangle {
@@ -160,12 +193,13 @@ PanelWindow {
             // ── coverflow: the pictures turn away on both sides of the middle one ──
             PathView {
                 id: flow
+                onCurrentIndexChanged: if (win.placed && win.shown && win.picList.length) Wall.rememberPos("flow", currentIndex)
                 visible: win.coverflow && !win.liveTab
                 y: head.height + 12
                 width: parent.width
                 height: parent.height - y - 34
-                model: win.list
-                pathItemCount: Math.min(9, win.list.length)
+                model: win.picList
+                pathItemCount: Math.min(9, win.picList.length)
                 preferredHighlightBegin: 0.5
                 preferredHighlightEnd: 0.5
                 highlightRangeMode: PathView.StrictlyEnforceRange
@@ -230,12 +264,12 @@ PanelWindow {
                 WheelHandler { onWheel: event => { if (event.angleDelta.y > 0 || event.angleDelta.x > 0) flow.decrementCurrentIndex(); else flow.incrementCurrentIndex(); } }
             }
             Label {
-                visible: win.coverflow && !win.liveTab && win.list.length > 0
+                visible: win.coverflow && !win.liveTab && win.picList.length > 0
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
                 width: parent.width * 0.7
                 horizontalAlignment: Text.AlignHCenter
-                text: win.list.length ? (win.list[flow.currentIndex] || "").replace(/^.*\//, "") + "   ·   " + (flow.currentIndex + 1) + " / " + win.list.length : ""
+                text: win.picList.length ? (win.picList[flow.currentIndex] || "").replace(/^.*\//, "") + "   ·   " + (flow.currentIndex + 1) + " / " + win.picList.length : ""
                 muted: true
                 font.pixelSize: Theme.sizeSmall
             }
@@ -363,7 +397,7 @@ PanelWindow {
                     clip: true
                     cellWidth: width / 3
                     cellHeight: cellWidth * 0.6
-                    model: Wall.live
+                    model: win.liveList
                     boundsBehavior: Flickable.StopAtBounds
                     delegate: Item {
                         id: lcell
@@ -401,7 +435,7 @@ PanelWindow {
                 clip: true
                 cellWidth: width / 5
                 cellHeight: cellWidth * 0.64
-                model: win.list
+                model: win.picList
                 boundsBehavior: Flickable.StopAtBounds
                 delegate: Item {
                     id: gcell

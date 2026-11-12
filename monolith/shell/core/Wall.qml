@@ -105,12 +105,23 @@ Singleton {
     function url(p) { return p.startsWith("/") ? "file://" + p.split("/").map(encodeURIComponent).join("/") : p; }
 
     function rescan() { scan.running = true; }
+
+    // where the picker was in each view (coverflow card, grid and Live scroll), so it opens there
+    // again; kept in Store too, so a restart remembers it
+    property var pickerPos: Store.get("wallpaper.pickerPos", {}) || {}
+    function rememberPos(key, value) {
+        if (pickerPos[key] === value) return;
+        pickerPos = Object.assign({}, pickerPos, { [key]: value });
+    }
+    function savePos() { Store.set("wallpaper.pickerPos", pickerPos); }
     Process {
         id: scan
         command: ["sh", "-c", "find \"$1\" -maxdepth 2 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' -o -iname '*.mov' \\) | sort", "_", wall.dir]
         stdout: StdioCollector {
             onStreamFinished: {
-                wall.images = text.split("\n").filter(l => l);
+                // the same files: keep the list as it is (a new one would send the picker back to the top)
+                const found = text.split("\n").filter(l => l);
+                if (found.join("\n") !== wall.images.join("\n")) wall.images = found;
                 wall.makeThumbs();
                 wall.makePicThumbs();
                 if (wall.pendingAdd && wall.images.indexOf(wall.pendingAdd) !== -1) { wall.set(wall.pendingAdd); wall.pendingAdd = ""; }
