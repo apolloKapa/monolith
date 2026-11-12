@@ -31,3 +31,4 @@ singleton Sounds 1.0 Sounds.qml
 singleton Throw 1.0 Throw.qml
 singleton Sketch 1.0 Sketch.qml
 singleton Profiles 1.0 Profiles.qml
+singleton Pictures 1.0 Pictures.qml

@@ -98,6 +98,7 @@ PanelWindow {
                     onPicked: v => WidgetLayout.setFace("desktop", dm.item, v)
                 }
                 Item { width: 1; height: 2 }
+                Entry { visible: !!dm.item && dm.item.type === "image"; icon: "add_photo_alternate"; text: "Choose a picture…"; onClicked: { const id = dm.item.id; dm.run(() => Pictures.choose("Choose a picture for the widget", f => WidgetLayout.setOpt("desktop", id, "imagePath", f))); } }
                 Entry { icon: "open_with"; text: "Move & resize"; onClicked: { const id = dm.item.id; dm.run(() => { HubState.editSelect = id; HubState.editWidgetsOn("desktop", dm.modelData.name); }); } }
                 Entry { icon: "add"; text: "Add a widget"; onClicked: dm.run(() => HubState.editWidgetsOn("desktop", dm.modelData.name)) }
                 Entry { icon: "delete"; text: "Remove this widget"; danger: true; onClicked: { const id = dm.item.id; dm.run(() => WidgetLayout.remove("desktop", id)); } }

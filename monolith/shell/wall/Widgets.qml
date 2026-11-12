@@ -29,6 +29,15 @@ Item {
             backdrop: desk.backdrop
             x: Math.max(0, Math.min(modelData.x * desk.width, desk.width - width))
             y: Math.max(0, Math.min(modelData.y * desk.height, desk.height - height))
+            // drop a picture (from the file manager) on a picture widget: it shows that one
+            DropArea {
+                id: drop
+                anchors.fill: parent
+                enabled: parent.modelData.type === "image"
+                onEntered: d => { d.accepted = d.hasUrls; }
+                onDropped: d => { const f = Pictures.fromDrop(d.urls); if (f !== "") { WidgetLayout.setOpt("desktop", parent.modelData.id, "imagePath", f); d.accept(); } }
+                Rectangle { anchors.fill: parent; visible: drop.containsDrag; radius: 12; color: Qt.alpha(Theme.accent, 0.18); border.width: 2; border.color: Theme.accent }
+            }
             // right-click: this widget's menu (its style, the editor, remove)
             MouseArea {
                 anchors.fill: parent

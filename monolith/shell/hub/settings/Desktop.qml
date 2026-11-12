@@ -25,8 +25,13 @@ ColumnLayout {
     }
     SettingRow {
         key: "widgets.imagePath"; def: "";
-        icon: "image"; title: "Picture widget"; desc: "An image file"
-        Field { text: Store.get("widgets.imagePath", ""); placeholder: "/path/to/picture.png"; onAccepted: v => { const p = v.trim().replace(/^~/, Wall.home); if (p !== Store.get("widgets.imagePath", "")) Store.set("widgets.imagePath", p); } }
+        icon: "image"; title: "Picture widget's picture"
+        desc: (Store.get("widgets.imagePath", "") !== "" ? Store.get("widgets.imagePath", "").replace(Wall.home, "~") : "None yet") + ". For picture widgets without their own (pick one per widget in the editor, or drop a picture on it)"
+        Row {
+            spacing: 6
+            Button { text: "Choose…"; icon: "folder_open"; primary: true; onClicked: Pictures.choose("Choose a picture for the picture widget", f => Store.set("widgets.imagePath", f)) }
+            Button { visible: Store.get("widgets.imagePath", "") !== ""; text: "Clear"; onClicked: Store.unset("widgets.imagePath") }
+        }
     }
     SettingRow { icon: "keyboard"; title: "From a keybind"; desc: "monolith widgets  ·  monolith widgets lock" }
 }

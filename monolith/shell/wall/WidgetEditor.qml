@@ -338,6 +338,7 @@ PanelWindow {
     }
 
     // ── the widgets ──
+    function pickPicture(id) { Pictures.choose("Choose a picture for the widget", f => ed.setOption(id, "imagePath", f)); }
     property bool optsOpen: false
     onSelectedChanged: optsOpen = false
     function setOption(id, k, v) {
@@ -388,6 +389,14 @@ PanelWindow {
             x: Math.max(0, Math.min(modelData.x * ed.width, ed.width - width))
             y: Math.max(0, Math.min(modelData.y * ed.height, ed.height - height))
             z: sel ? 10 : 1
+            // a picture dropped on a picture widget becomes its picture
+            DropArea {
+                anchors.fill: parent
+                enabled: wrap.modelData.type === "image"
+                onEntered: drag => { drag.accepted = drag.hasUrls; }
+                onDropped: drop => { const f = Pictures.fromDrop(drop.urls); if (f !== "") { ed.selected = wrap.modelData.id; ed.setOption(wrap.modelData.id, "imagePath", f); drop.accept(); } }
+                Rectangle { anchors.fill: parent; anchors.margins: -6; radius: 10; visible: parent.containsDrag; color: Qt.alpha(Theme.accent, 0.18); border.width: 2; border.color: Theme.accent; z: 20 }
+            }
             WidgetFace {
                 id: face
                 anchors.fill: parent
@@ -419,6 +428,7 @@ PanelWindow {
                     wrap.x = at.x; wrap.y = at.y;
                 }
                 onReleased: { ed.moving = null; ed.guides = []; ed.measures = []; WidgetLayout.update(ed.mode, wrap.modelData.id, { x: wrap.x / ed.width, y: wrap.y / ed.height }); }
+                onDoubleClicked: if (wrap.modelData.type === "image") ed.pickPicture(wrap.modelData.id)
             }
             // resize: from any edge or corner (inside the widget's limits and its look's shape; the
             // opposite side stays put). Edges catch on lines and the grid like a move; Ctrl: freely
@@ -487,6 +497,17 @@ PanelWindow {
                         onPicked: v => WidgetLayout.setFace(ed.mode, wrap.modelData, v)
                     }
                     // turn it a quarter clockwise, around its middle
+                    // a picture widget: pick its picture (a file dialog; the ≡ options have recent ones)
+                    Pressable {
+                        visible: wrap.modelData.type === "image"
+                        width: visible ? implicitWidth : 0; height: 32
+                        implicitWidth: picRow.implicitWidth + 16
+                        color: hovered ? Theme.containerHigh : Theme.accentContainer
+                        onClicked: ed.pickPicture(wrap.modelData.id)
+                        Row { id: picRow; anchors.centerIn: parent; spacing: 4
+                            Icon { name: "add_photo_alternate"; size: 18; color: Theme.onAccentContainer; anchors.verticalCenter: parent.verticalCenter }
+                            Label { text: "Picture…"; font.pixelSize: Theme.sizeSmall; strong: true; color: Theme.onAccentContainer; anchors.verticalCenter: parent.verticalCenter } }
+                    }
                     Pressable {
                         width: 32; height: 32
                         color: hovered ? Theme.containerHigh : "transparent"
@@ -607,11 +628,51 @@ PanelWindow {
                                 }
                             }
                             Field {
-                                visible: oc.modelData[2] === "text" || oc.modelData[2] === "file"
+                                visible: oc.modelData[2] === "text"
                                 width: parent.width
                                 text: String(oc.val || "")
-                                placeholder: oc.modelData[2] === "file" ? "/path/to/picture.png (Enter)" : "Type, then Enter"
-                                onAccepted: v => ed.setOption(wrap.modelData.id, oc.modelData[0], oc.modelData[2] === "file" ? v.trim().replace(/^~/, Wall.home) : v)
+                                placeholder: "Type, then Enter"
+                                onAccepted: v => ed.setOption(wrap.modelData.id, oc.modelData[0], v)
+                            }
+                            // a picture: Choose… (a file dialog in Pictures), your recent pictures to
+                            // click, or drop one on the widget; typing a path still works
+                            Column {
+                                visible: oc.modelData[2] === "file"
+                                width: parent.width
+                                spacing: 6
+                                Component.onCompleted: if (oc.modelData[2] === "file") Pictures.refresh()
+                                onVisibleChanged: if (visible) Pictures.refresh()
+                                Row {
+                                    spacing: 6
+                                    Button { text: "Choose…"; icon: "folder_open"; primary: true; height: 34; onClicked: Pictures.choose("Choose a picture for the widget", f => ed.setOption(wrap.modelData.id, oc.modelData[0], f)) }
+                                    Button { visible: String(oc.val || "") !== ""; text: "Clear"; height: 34; onClicked: ed.setOption(wrap.modelData.id, oc.modelData[0], "") }
+                                }
+                                Label { width: parent.width; elide: Text.ElideMiddle; muted: true; font.pixelSize: Theme.sizeTiny + 1; text: String(oc.val || "") !== "" ? String(oc.val).replace(Wall.home, "~") : "Or drop a picture on the widget" }
+                                Label { visible: Pictures.recent.length > 0; text: "Recent pictures"; muted: true; font.pixelSize: Theme.sizeTiny + 1 }
+                                Flow {
+                                    width: parent.width
+                                    spacing: 6
+                                    Repeater {
+                                        model: oc.modelData[2] === "file" ? Pictures.recent.slice(0, 12) : []
+                                        Rectangle {
+                                            required property string modelData
+                                            readonly property bool on: String(oc.val || "") === modelData
+                                            width: (parent.width - 3 * 6) / 4; height: width * 0.7
+                                            radius: 8
+                                            color: Theme.container
+                                            border.width: on ? 3 : 0; border.color: Theme.accent
+                                            clip: true
+                                            Image { anchors.fill: parent; anchors.margins: parent.on ? 3 : 0; source: Wall.url(parent.modelData); sourceSize: Qt.size(160, 112); fillMode: Image.PreserveAspectCrop; asynchronous: true }
+                                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: ed.setOption(wrap.modelData.id, oc.modelData[0], parent.modelData) }
+                                        }
+                                    }
+                                }
+                                Field {
+                                    width: parent.width; height: 34
+                                    text: ""
+                                    placeholder: "…or type a path, then Enter"
+                                    onAccepted: v => { if (v.trim() !== "") ed.setOption(wrap.modelData.id, oc.modelData[0], v.trim().replace(/^~/, Wall.home)); }
+                                }
                             }
                         }
                     }

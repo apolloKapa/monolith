@@ -186,7 +186,7 @@ Singleton {
         if (t === "clock" && (id === "analog" || id === "materialAnalog" || id === "lumen"))
             o.push(["showSeconds", "Seconds hand", "toggle", true]);
         if (t === "text") o.push(["textContent", "Text", "text", ""]);
-        if (t === "image") o.push(["imagePath", "Picture", "file", ""]);
+        if (t === "image") o.unshift(["imagePath", "Picture", "file", ""]);   // first: what a picture widget is about
         if (t === "github") o.push(["store:widgets.github.user", "GitHub username", "text", ""]);
         if (t === "visualizer") o.push(...visualiserOptions(id));
         return o;
