@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Notifications
 
 // The notification server: every notification is kept (the history page) and new ones are
@@ -14,6 +15,34 @@ Singleton {
     property var popups: []
     property var _until: ({})          // notification id -> when its popup leaves (ms)
     property bool hold: false          // the pointer is on the popups: nobody leaves
+
+    // another notification program holding the bus name (mako, dunst, swaync… usually started
+    // by D-Bus on its own while the shell was restarting): it then shows its own popups and
+    // Monolith gets nothing. "" when it's ours. Settings → Notifications offers to hand it back.
+    property string otherDaemon: ""
+    function checkOwner() { if (!ownerProc.running) ownerProc.running = true; }
+    Process {
+        id: ownerProc
+        command: ["sh", "-c", "busctl --user status org.freedesktop.Notifications 2>/dev/null | sed -n 's/^Comm=//p'"]
+        stdout: StdioCollector { onStreamFinished: { const c = text.trim(); notifs.otherDaemon = c !== "" && c !== "quickshell" && c !== "qs" ? c : ""; } }
+    }
+    Timer { interval: 4000; running: true; onTriggered: notifs.checkOwner() }
+    // (often while another one has it, so the warning goes as soon as it's ours again)
+    Timer { interval: notifs.otherDaemon !== "" ? 3000 : 60000; running: true; repeat: true; onTriggered: notifs.checkOwner() }
+    // stop it, keep D-Bus from starting it again (a user service file for its name that runs
+    // nothing; delete it to undo), and let Monolith take the name back
+    function takeBack() {
+        const who = otherDaemon;
+        if (!who) return;
+        Quickshell.execDetached(["sh", "-c",
+            "d=\"${XDG_DATA_HOME:-$HOME/.local/share}/dbus-1/services\"; mkdir -p \"$d\"; " +
+            "for f in /usr/share/dbus-1/services/*.service /usr/local/share/dbus-1/services/*.service; do " +
+            "  [ -f \"$f\" ] || continue; grep -q '^Name=org.freedesktop.Notifications' \"$f\" || continue; " +
+            "  b=$(basename \"$f\"); [ -e \"$d/$b\" ] || printf '[D-BUS Service]\\nName=org.freedesktop.Notifications\\nExec=/bin/false\\n# Monolith shows notifications; delete this file to let %s start again\\n' \"$b\" > \"$d/$b\"; done; " +
+            "pkill -x \"$1\"; sleep 1; true", "_", who]);
+        restartCheck.start();
+    }
+    Timer { id: restartCheck; interval: 2500; onTriggered: notifs.checkOwner() }
     // the screen each popup came up on: it stays there (switching windows to another screen
     // doesn't move it)
     property var _screen: ({})         // notification id -> output name

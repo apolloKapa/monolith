@@ -8,6 +8,7 @@ import "../../ui"
 ColumnLayout {
     id: notifSec
     spacing: 8
+    Component.onCompleted: Notifs.checkOwner()
     SettingRow {
         icon: "do_not_disturb_on"; title: "Do not disturb"; desc: "Only urgent notifications pop up; the rest wait in Notifications"
         Toggle { checked: Notifs.dnd; onToggled: on => Notifs.dnd = on }
@@ -30,22 +31,40 @@ ColumnLayout {
         icon: "science"; title: "Try it"; desc: "Send a test notification"
         Button { text: "Send"; icon: "send"; onClicked: Quickshell.execDetached(["notify-send", "-a", "Monolith", "This is how it looks", "Notifications pop up like this."]) }
     }
-    // where new ones pop up: out of the island, or as cards on any edge or corner
-    readonly property string where: Store.get("notifications.style", "island") === "corner" ? Store.get("notifications.position", "top-right") : "island"
+    // ── how new ones pop up: two themes, only ever one of them ──
+    readonly property bool side: Store.get("notifications.style", "island") === "corner"
     SettingRow {
-        keys: ["notifications.style", "notifications.position"];
-        icon: "notifications_active"; title: "Where they pop up"; desc: "On the screen you're using"
+        keys: ["notifications.style"];
+        icon: "notifications_active"; title: "Style"
+        desc: Theme.barSide !== "" ? "With the bar down the side there's no bar to drop out of: they come up at the side"
+            : notifSec.side ? "Side: cards stack at an edge or corner of the screen, like before"
+                            : "Island: they drop out of the bar at the top (a card under a floating bar)"
+        Segmented {
+            width: 240
+            opts: [["island", "Island"], ["corner", "Side"]]
+            value: notifSec.side ? "corner" : "island"
+            onPicked: v => Store.set("notifications.style", v)
+        }
+    }
+    SettingRow {
+        visible: notifSec.side || Theme.barSide !== ""
+        key: "notifications.position"; def: "top-right";
+        icon: "picture_in_picture"; title: "Where at the side"; desc: "On the screen you're using"
         Dropdown {
-            width: 260
-            opts: [["island", "Out of the bar (island)", "The bar grows to show it"],
-                   ["top-left", "Top left"], ["top", "Top"], ["top-right", "Top right"],
+            width: 220
+            opts: [["top-left", "Top left"], ["top", "Top"], ["top-right", "Top right"],
                    ["left", "Left"], ["right", "Right"],
                    ["bottom-left", "Bottom left"], ["bottom", "Bottom"], ["bottom-right", "Bottom right"]]
-            value: notifSec.where
-            onPicked: v => {
-                if (v === "island") Store.set("notifications.style", "island");
-                else { Store.set("notifications.style", "corner"); Store.set("notifications.position", v); }
-            }
+            value: Store.get("notifications.position", "top-right")
+            onPicked: v => Store.set("notifications.position", v)
         }
+    }
+    // another notification program took the bus: it shows its own popups (two kinds at once)
+    // and Monolith's never come
+    SettingRow {
+        visible: Notifs.otherDaemon !== ""
+        icon: "warning"; title: Notifs.otherDaemon + " is showing notifications"
+        desc: "Another notification program started and took them over, so its popups show instead of (or as well as) Monolith's. Use Monolith's stops it and keeps it from starting again."
+        Button { text: "Use Monolith's"; icon: "notifications"; primary: true; onClicked: Notifs.takeBack() }
     }
 }
