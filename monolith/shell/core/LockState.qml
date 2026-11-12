@@ -12,7 +12,7 @@ import Quickshell.Services.Pam
 Singleton {
     id: ls
     property bool locked: false
-    onLockedChanged: if (locked) Sounds.play("lock")
+    onLockedChanged: { typed = ""; if (locked) Sounds.play("lock"); }
     property string message: ""
     property bool busy: false
     property int failures: 0
@@ -59,6 +59,10 @@ Singleton {
         pam.start();
     }
     property string pending: ""
+    // what's typed so far, shared by every screen: the keyboard may be on a screen without the
+    // password box (Lock & idle → Password box on), and the box shows it wherever it is
+    property string typed: ""
+    onFailed: typed = ""
 
     PamContext {
         id: pam

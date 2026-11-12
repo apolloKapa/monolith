@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "../../core"
 import "../../ui"
 
@@ -40,6 +41,43 @@ ColumnLayout {
         visible: Idle.enabled
         icon: "play_circle"; title: "Not while playing"; desc: "Music or video playing counts as being here"
         Toggle { checked: Idle.mediaPauses; onToggled: on => Store.set("idle.mediaPauses", on) }
+    }
+    // ── the lock screen itself ──
+    Label { text: "Lock screen"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
+    SettingRow {
+        key: "lock.perScreen"; def: false;
+        visible: Quickshell.screens.length > 1
+        icon: "monitor"; title: "Each screen its own lock screen"
+        desc: WidgetLayout.lockPerScreen ? "Every screen has its own widgets and its own place for the password box (e.g. the clock on one, the password and news on the other)" : "Off: every screen shows the same lock screen"
+        Toggle { checked: WidgetLayout.lockPerScreen; onToggled: on => WidgetLayout.setLockPerScreen(on) }
+    }
+    SettingRow {
+        key: "lock.passwordScreen"; def: "";
+        visible: Quickshell.screens.length > 1
+        icon: "password"; title: "Password box on"
+        desc: WidgetLayout.passScreen === "" ? "Every screen" : "Only " + WidgetLayout.passScreen + ". You can type on any screen: the others show the dots and point you to it"
+        Dropdown {
+            opts: [["", "Every screen"]].concat(Quickshell.screens.map(x => [x.name, x.name + "  ·  " + x.width + "×" + x.height]))
+            value: WidgetLayout.passScreen
+            onPicked: v => { if (v === "") Store.unset("lock.passwordScreen"); else Store.set("lock.passwordScreen", v); }
+        }
+    }
+    // arranging it: once for all screens, or each screen on its own
+    SettingRow {
+        visible: !WidgetLayout.lockPerScreen || Quickshell.screens.length < 2
+        icon: "dashboard_customize"; title: "Arrange the lock screen"; desc: "Widgets and where the password box sits (drag them in the editor)"
+        Button { text: "Edit"; icon: "edit"; primary: true; onClicked: HubState.editWidgetsOn("lock") }
+    }
+    Repeater {
+        model: WidgetLayout.lockPerScreen && Quickshell.screens.length > 1 ? Quickshell.screens : []
+        SettingRow {
+            id: lsr
+            required property var modelData
+            readonly property int count: WidgetLayout.on("lock", modelData.name).length
+            icon: "dashboard_customize"; title: "Lock screen of " + modelData.name
+            desc: (count === 0 ? "No widgets" : count === 1 ? "1 widget" : count + " widgets") + (WidgetLayout.passOn(modelData.name) ? " and the password box" : ", no password box")
+            Button { text: "Edit"; icon: "edit"; primary: true; onClicked: HubState.editWidgetsOn("lock", lsr.modelData.name) }
+        }
     }
     SettingRow {
         key: "lock.media"; def: true;

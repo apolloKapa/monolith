@@ -109,7 +109,7 @@ WlSessionLock {
         // ── the widgets, where the widget editor put them (its Lock screen tab) ──
         Repeater {
             // (the media widget only while Lock & idle → Media on the lock screen is on)
-            model: WidgetLayout.on("lock", "").filter(i => i.type !== "media" || Store.get("lock.media", true) !== false)
+            model: WidgetLayout.on("lock", surface.shotName).filter(i => i.type !== "media" || Store.get("lock.media", true) !== false)
             WidgetFace {
                 required property var modelData
                 item: modelData
@@ -122,13 +122,50 @@ WlSessionLock {
             }
         }
 
+        // a screen without the password box still takes the typing (the keyboard may be here)
+        TextInput {
+            id: ghost
+            // (invisible items can't have the keyboard: a see-through 1 px one instead)
+            width: 1; height: 1; opacity: 0
+            enabled: !who.visible && !LockState.busy
+            focus: !who.visible
+            echoMode: TextInput.Password
+            readOnly: LockState.unlocking
+            onTextChanged: if (LockState.typed !== text) LockState.typed = text
+            onAccepted: if (text !== "") LockState.tryPassword(text)
+            Connections { target: LockState; function onTypedChanged() { if (ghost.text !== LockState.typed) ghost.text = LockState.typed; } }
+            Component.onCompleted: if (!who.visible) forceActiveFocus()
+        }
+        // there: what's been typed (as dots) or what went wrong, and where the box is
+        Rectangle {
+            visible: !who.visible
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom; anchors.bottomMargin: parent.height * 0.06
+            width: noteRow.implicitWidth + 32; height: 44; radius: 22
+            color: Qt.alpha(Theme.frame, 0.85)
+            opacity: surface.enter
+            Row {
+                id: noteRow
+                anchors.centerIn: parent; spacing: 10
+                Icon { name: "lock"; size: 18; filled: true; color: LockState.message !== "" ? Theme.danger : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+                Label {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: LockState.message !== "" ? LockState.message
+                        : LockState.typed !== "" ? "●".repeat(Math.min(24, LockState.typed.length)) + "   Enter to unlock"
+                        : "Type your password (the box is on " + WidgetLayout.passScreen + ")"
+                    color: LockState.message !== "" ? Theme.danger : Theme.text
+                }
+            }
+        }
         // ── the password pill, your picture inside it, the power buttons under it. Where the
         // widget editor put it (Lock screen tab: drag it; lock.password = its middle, as parts of
         // the screen), else at the bottom in the middle ──
         Column {
             id: who
-            readonly property var at: Store.get("lock.password", null)
-            readonly property bool placed: !!at && typeof at.x === "number" && typeof at.y === "number"
+            // only on the screen picked for it (Lock & idle → Password box on), else on every one
+            visible: WidgetLayout.passOn(surface.shotName)
+            readonly property var at: WidgetLayout.passAt(surface.shotName)
+            readonly property bool placed: !!at
             x: Math.max(0, Math.min(parent.width - width, placed ? at.x * parent.width - width / 2 : (parent.width - width) / 2))
             y: Math.max(0, Math.min(parent.height - height, placed ? at.y * parent.height - height / 2 : parent.height * 0.92 - height))
             spacing: 14
@@ -168,9 +205,12 @@ WlSessionLock {
                     color: Theme.text
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.sizeTitle
-                    focus: true
+                    focus: who.visible
                     enabled: !LockState.busy
                     onAccepted: if (text !== "") LockState.tryPassword(text)
+                    // the same typing on every screen
+                    onTextChanged: if (LockState.typed !== text) LockState.typed = text
+                    Connections { target: LockState; function onTypedChanged() { if (pw.text !== LockState.typed) pw.text = LockState.typed; } }
                     Label {
                         anchors.fill: parent
                         verticalAlignment: Text.AlignVCenter
@@ -189,7 +229,7 @@ WlSessionLock {
                     onClicked: if (pw.text !== "") LockState.tryPassword(pw.text)
                     Icon { anchors.centerIn: parent; name: LockState.busy ? "hourglass_top" : "arrow_forward"; size: 22; color: Theme.onAccent }
                 }
-                Component.onCompleted: pw.forceActiveFocus()
+                Component.onCompleted: if (who.visible) pw.forceActiveFocus()
             }
 
             Row {

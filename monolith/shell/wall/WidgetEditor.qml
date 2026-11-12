@@ -86,15 +86,15 @@ PanelWindow {
     // freely). Saved as its middle (lock.password); Reset puts it back at the bottom
     Item {
         id: pass
-        visible: ed.lockMode
+        visible: ed.lockMode && WidgetLayout.passOn(ed.modelData.name)
         width: 420; height: 122
         z: 5
-        readonly property var at: Store.get("lock.password", null)
+        readonly property var at: WidgetLayout.passAt(ed.modelData.name)
         readonly property bool placed: !!at && typeof at.x === "number" && typeof at.y === "number"
         // (read straight from Store: in onAtChanged the `placed` binding may not have caught up yet)
         function home() {
-            const a = Store.get("lock.password", null);
-            const ok = !!a && typeof a.x === "number" && typeof a.y === "number";
+            const a = WidgetLayout.passAt(ed.modelData.name);
+            const ok = !!a;
             x = Math.max(0, Math.min(ed.width - width, ok ? a.x * ed.width - width / 2 : (ed.width - width) / 2));
             y = Math.max(0, Math.min(ed.height - height, ok ? a.y * ed.height - height / 2 : ed.height * 0.92 - height));
         }
@@ -144,10 +144,10 @@ PanelWindow {
             }
             onReleased: {
                 ed.moving = null; ed.guides = []; ed.measures = [];
-                Store.set("lock.password", { x: (pass.x + pass.width / 2) / ed.width, y: (pass.y + pass.height / 2) / ed.height });
+                WidgetLayout.setPassAt(ed.modelData.name, { x: (pass.x + pass.width / 2) / ed.width, y: (pass.y + pass.height / 2) / ed.height });
             }
             // double-click: back to the bottom middle
-            onDoubleClicked: Store.unset("lock.password")
+            onDoubleClicked: WidgetLayout.setPassAt(ed.modelData.name, null)
         }
     }
     // a click on nothing: no selection
@@ -167,7 +167,7 @@ PanelWindow {
             if (!it || it === self) continue;
             out.push({ l: it.x, t: it.y, r: it.x + it.width, b: it.y + it.height });
         }
-        if (lockMode && self !== pass) out.push({ l: pass.x, t: pass.y, r: pass.x + pass.width, b: pass.y + pass.height });
+        if (lockMode && pass.visible && self !== pass) out.push({ l: pass.x, t: pass.y, r: pass.x + pass.width, b: pass.y + pass.height });
         return out;
     }
     // the lines along one axis (h: the x axis)
@@ -646,6 +646,14 @@ PanelWindow {
                 value: ed.mode
                 onPicked: v => { ed.selected = ""; HubState.editWidgets = v; }
             }
+            // more than one screen, and this layout is per screen: hop to the next one
+            Button {
+                readonly property var names: Quickshell.screens.map(x => x.name)
+                visible: names.length > 1 && (!ed.lockMode || WidgetLayout.lockPerScreen)
+                anchors.verticalCenter: parent.verticalCenter
+                text: ed.modelData.name; icon: "monitor"
+                onClicked: { ed.selected = ""; HubState.editWidgetsOn(ed.mode, names[(names.indexOf(ed.modelData.name) + 1) % names.length]); }
+            }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Add widget"; icon: "add"; primary: ed.adding; onClicked: { ed.adding = !ed.adding; ed.presetsOpen = false; } }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Presets"; icon: "auto_awesome_mosaic"; primary: ed.presetsOpen; onClicked: { ed.presetsOpen = !ed.presetsOpen; ed.adding = false; } }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Grid"; icon: ed.snap ? "grid_on" : "grid_off"; primary: ed.snap; onClicked: Store.set("widgets.snap", !ed.snap) }
@@ -663,7 +671,7 @@ PanelWindow {
                 property bool armed: false
                 anchors.verticalCenter: parent.verticalCenter
                 text: armed ? "Sure?" : "Reset"; icon: "restart_alt"
-                onClicked: { if (armed) { WidgetLayout.reset(ed.mode); if (ed.lockMode) Store.unset("lock.password"); armed = false; } else { armed = true; disarm.restart(); } }
+                onClicked: { if (armed) { WidgetLayout.reset(ed.mode, ed.modelData.name); armed = false; } else { armed = true; disarm.restart(); } }
                 Timer { id: disarm; interval: 4000; onTriggered: resetB.armed = false }
             }
             Button { anchors.verticalCenter: parent.verticalCenter; text: "Done"; icon: "check"; primary: true; onClicked: ed.done() }
@@ -673,7 +681,8 @@ PanelWindow {
         z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: bar.bottom; anchors.topMargin: 8
-        text: ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move (it lines up with the middle and the other widgets; Ctrl: freely)  ·  an edge or corner to resize  ·  ↻ turns it  ·  Esc when done"
+        text: (ed.lockMode && Quickshell.screens.length > 1 ? (WidgetLayout.lockPerScreen ? "The lock screen of " + ed.modelData.name + " only (the screen button above goes to the next)" : "Every screen shows this lock screen") + (WidgetLayout.passOn(ed.modelData.name) ? "" : "  ·  no password box here (Lock & idle → Password box on)") + "   ·   " : "") +
+              (ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move (it lines up with the middle and the other widgets; Ctrl: freely)  ·  an edge or corner to resize  ·  ↻ turns it  ·  Esc when done")
         color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.4)
         font.pixelSize: Theme.sizeSmall
     }

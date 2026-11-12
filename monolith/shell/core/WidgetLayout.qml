@@ -257,10 +257,53 @@ Singleton {
     ]
     function key(mode) { return mode === "lock" ? "lock.items" : "widgets.items"; }
     function items(mode) { return Store.get(key(mode), null) || (mode === "lock" ? lockDefault : desktopDefault); }
-    // the ones on a screen (an item without a screen shows on the first one)
+    // the ones on a screen (an item without a screen shows on the first one). The lock screen is the
+    // same on every screen, unless each screen has its own (Lock & idle → Each screen its own)
     function on(mode, screen) {
         const first = Quickshell.screens.length ? Quickshell.screens[0].name : "";
-        return items(mode).filter(i => (i.screen || first) === screen || mode === "lock");
+        if (mode === "lock" && !lockPerScreen) return items(mode);
+        return items(mode).filter(i => (i.screen || first) === screen);
+    }
+
+    // ── the lock screen, screen by screen ──
+    readonly property bool lockPerScreen: Store.get("lock.perScreen", false) === true
+    // the screen the password box is on: "" every screen (also when that screen isn't plugged in)
+    readonly property string passScreen: {
+        const s = Store.get("lock.passwordScreen", "") || "";
+        return s !== "" && Quickshell.screens.some(x => x.name === s) ? s : "";
+    }
+    function passOn(screen) { return passScreen === "" || passScreen === screen; }
+    function skey(screen) { return String(screen || "").replace(/\./g, "_"); }
+    // where the password box's middle is on a screen ({ x, y } as parts of it), or null: the bottom middle
+    function passAt(screen) {
+        const own = lockPerScreen ? Store.get("lock.passwordAt." + skey(screen), null) : null;
+        const a = own || Store.get("lock.password", null);
+        return a && typeof a.x === "number" && typeof a.y === "number" ? a : null;
+    }
+    function setPassAt(screen, v) {
+        if (lockPerScreen) { if (v) Store.set("lock.passwordAt." + skey(screen), v); else Store.unset("lock.passwordAt." + skey(screen)); }
+        else if (v) Store.set("lock.password", v); else Store.unset("lock.password");
+    }
+    // switching each-screen-its-own on: every screen starts from the shared layout (a copy each);
+    // off: the shared layout is the first screen's
+    function setLockPerScreen(on) {
+        if (on === lockPerScreen) return;
+        const names = Quickshell.screens.map(x => x.name);
+        const first = names.length ? names[0] : "";
+        if (on) {
+            const shared = items("lock");
+            const out = [];
+            names.forEach((n, k) => shared.forEach((it, j) => out.push(Object.assign({}, it, { id: it.id + "-" + k + "-" + j, screen: n }))));
+            save("lock", out);
+            const pa = Store.get("lock.password", null);
+            if (pa) for (const n of names) Store.set("lock.passwordAt." + skey(n), pa);
+        } else {
+            save("lock", items("lock").filter(i => (i.screen || first) === first).map(i => Object.assign({}, i, { screen: "" })));
+            const pa = Store.get("lock.passwordAt." + skey(first), null);
+            if (pa) Store.set("lock.password", pa);
+            Store.unset("lock.passwordAt");
+        }
+        Store.set("lock.perScreen", on);
     }
     function save(mode, list) { Store.set(key(mode), list); }
     function update(mode, id, changes) { save(mode, items(mode).map(i => i.id === id ? Object.assign({}, i, changes) : i)); }
@@ -287,7 +330,7 @@ Singleton {
         const id = type[0] + Date.now().toString(36);
         const s = spec[type];
         const d = s ? (s.faces[0][4] || s.size) : [0, 0];
-        save(mode, items(mode).concat([{ id: id, type: type, face: "", x: x === undefined ? 0.4 : x, y: y === undefined ? 0.4 : y, w: d[0], h: d[1], screen: mode === "lock" ? "" : screen }]));
+        save(mode, items(mode).concat([{ id: id, type: type, face: "", x: x === undefined ? 0.4 : x, y: y === undefined ? 0.4 : y, w: d[0], h: d[1], screen: mode === "lock" && !lockPerScreen ? "" : screen }]));
         return id;
     }
     // a new look: its own default size when it has one (a round look), else the size kept inside its shape
@@ -296,7 +339,18 @@ Singleton {
         const sz = fd && fd[4] ? fd[4] : size(Object.assign({}, it, { face: face }));
         update(mode, it.id, { face: face, w: sz[0], h: sz[1] });
     }
-    function reset(mode) { Store.set(key(mode), null); }
+    function reset(mode, screen) {
+        // one screen's own lock screen: back to the default arrangement there only
+        if (mode === "lock" && lockPerScreen && screen) {
+            const first = Quickshell.screens.length ? Quickshell.screens[0].name : "";
+            const others = items("lock").filter(i => (i.screen || first) !== screen);
+            save("lock", others.concat(lockDefault.map((it, j) => Object.assign({}, it, { id: it.id + "-" + Date.now().toString(36) + j, screen: screen }))));
+            setPassAt(screen, null);
+            return;
+        }
+        Store.set(key(mode), null);
+        if (mode === "lock") { Store.unset("lock.password"); Store.unset("lock.passwordAt"); }
+    }
 
     // ready-made arrangements (the old Monolith's presets): [id, name, icon, items as [type, face, x, y, w, h]]
     readonly property var presets: [
@@ -311,7 +365,9 @@ Singleton {
     function applyPreset(mode, id, screen) {
         const p = presets.find(x => x[0] === id);
         if (!p) return;
-        const keep = mode === "lock" ? [] : items(mode).filter(i => i.screen && i.screen !== screen);
-        save(mode, keep.concat(p[3].map((it, n) => ({ id: it[0][0] + Date.now().toString(36) + n, type: it[0], face: it[1], x: it[2], y: it[3], w: it[4], h: it[5], screen: mode === "lock" ? "" : screen }))));
+        const shared = mode === "lock" && !lockPerScreen;
+        const first = Quickshell.screens.length ? Quickshell.screens[0].name : "";
+        const keep = shared ? [] : items(mode).filter(i => (i.screen || first) !== screen);
+        save(mode, keep.concat(p[3].map((it, n) => ({ id: it[0][0] + Date.now().toString(36) + n, type: it[0], face: it[1], x: it[2], y: it[3], w: it[4], h: it[5], screen: shared ? "" : screen }))));
     }
 }
