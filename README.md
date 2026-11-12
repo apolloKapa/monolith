@@ -26,7 +26,7 @@ One command, on Arch or an Arch-based distro (CachyOS, EndeavourOS, ...) or on G
 curl -fsSL https://raw.githubusercontent.com/apolloKapa/monolith/main/install/get.sh | bash
 ```
 
-Once it's installed, **`monolith installer`** opens the installer again to update, reinstall or change options. Settings → About → Update does the same, and the status line shows when there's an update.
+Once it's installed, **`monolith installer`** opens the installer again to update, reinstall or change options. Settings → About → Update does the same, and the bar shows when there's an update.
 
 ### What the installer does
 
@@ -70,28 +70,28 @@ niri reloads its config as soon as you save, so keybind/monitor/layout edits app
 | **Keybinds** | `keybinds.kdl` (`Mod+Shift+/` lists them all) |
 | **Monitors**: resolution, refresh rate, position, scale, rotation, on/off | `output.kdl` (`niri msg outputs` shows names and modes). Settings → Displays sets on/off, resolution, refresh rate and scale here; `monolith installer` regenerates this file from your current setup |
 | **Workspaces** (and which monitor they live on) | `workspaces.kdl` |
-| **Keyboard layouts, mouse, touchpad, cursor** | `input.kdl`, or Settings → Keyboard & mouse / Appearance |
+| **Keyboard layouts, mouse, touchpad, cursor** | `input.kdl`, or Settings → Devices → Keyboard & mouse / Appearance |
 | **Apps that start with niri** | `autostart.kdl` |
 | **Gaps, column widths, window borders, animations** | `layout.kdl` |
 | **Window rules** (floating, sizes, rounded corners) | `rules.kdl` |
 | **Environment variables** | `env.kdl` |
-| **The shell**: colours, corners, font, status line, dock, widgets, notifications, idle, startup apps | Settings (`Mod+S`), saved in `~/.config/monolith/next.json` |
-| **Wallpapers** | `~/Pictures/Wallpapers`, pick with `Mod+W` |
+| **The shell**: styles, colours, bar, dock, widgets, lock screen, notifications, sounds, idle, startup apps | Settings (`Mod+S`, with a search box), saved in `~/.config/monolith/next.json`; profiles in `~/.config/monolith/profiles/` |
+| **Wallpapers** | `~/Pictures/Wallpapers` (live ones in `Live/`), pick with `Mod+W` |
 | **Helper scripts** (focuswin, snap, ...) | `~/.local/bin` (repo: `bin/`) |
 
 After editing a niri file, `niri validate` tells you if something's wrong.
 
 ## The shell
 
-Two things on screen:
+**The island** hangs from the top edge of each screen. Collapsed it's the bar: the control center button, search, the clock and weather, workspaces, now playing (or the window title), what's running (a recording, the timer, an update, game mode), tray, system stats, notifications, network, volume and power. Click a part and the island grows into its page, then shrinks back when you close it. Type on any page to search; Tab / Shift+Tab move between pages, Esc closes.
 
-- **The island**: one dark shape hanging from the top edge of each screen, joined to it by concave curves. Collapsed it's the bar: the control center button, search, the clock and weather, workspaces, now playing (or the window title), what's running (a recording, the timer, an update, game mode), tray, stats, notifications, network, volume and power. Each part opens its page: the island grows into it (the bar stays on top), and shrinks back when you close it. New notifications drop out of it on the screen you're using. Type on any page to search; Tab / Shift+Tab move between pages, Esc closes.
+The bar has five styles (Island, Fill, Frame, Solid, Modular), can sit at the top, bottom, left or right, and its modules can be dragged around in Settings → Bar. You pick which screens get it.
 
-The pages:
+### The pages
 
 | Page | What's on it |
 |---|---|
-| Search | apps (the ones you open most come first), `>` a command in the terminal, `:` emojis, `/` or `~` files, a calculator |
+| Search | apps (the ones you open most come first), `>` a command in your terminal, `:` emojis, `/` or `~` files, a calculator; an optional grid view and category tabs |
 | Control center | **Controls**: volume, mic and brightness, toggle tiles (Wi-Fi, Bluetooth, do not disturb, night light, stay awake, airplane mode, power mode, keyboard layout, record), now playing, lock / suspend / log out / restart / power off. **Overview**: weather, this month, the clipboard, this PC. **Monitor**: CPU, memory, GPU and temperature rings, disks, ping |
 | Notifications | history, actions, do not disturb |
 | Media | the player, synced lyrics (LRCLIB), a 10-band equaliser (EasyEffects) |
@@ -100,19 +100,69 @@ The pages:
 | Network | Wi-Fi (connect, forget, passwords), Ethernet, Bluetooth devices |
 | Clipboard | text and image history |
 | Windows | every window, switch or close |
-| Capture | screenshots and recordings through the capture menu (below), the focused window, recent screenshots |
-| Gaming | game mode (performance profile, do not disturb, screen kept awake, optionally the island tucked away), CPU and GPU load, temperatures, clock, power and memory with two-minute graphs, a performance overlay, ending a stuck program, LACT and Steam |
+| Capture | screenshots and recordings through the capture menu (below), with an optional delay; the focused window; recent screenshots |
+| Gaming | game mode (performance power profile, do not disturb, screen kept awake, optionally the island tucked away; it survives a shell restart), CPU and GPU load, temperatures, clock, power and memory with two-minute graphs, a performance overlay, ending a stuck program, LACT and Steam |
 | Tools | timer, notes, unit converter |
 | Wellbeing | screen time per app, the week, daily limits |
 | Keys | every niri keybind, searchable |
-| Wallpaper | a coverflow (or grid) of your pictures and videos, also per screen; the colours come from the wallpaper (matugen) |
-| Settings | appearance, wallpaper, status line, dock, desktop widgets, search, notifications, on-screen display, displays, keyboard & mouse, lock & idle, screenshots, software (startup apps, AppImages), wellbeing, about |
+| Wallpaper | a coverflow (or grid) of your pictures and live wallpapers; set one for every screen or just one ("Set on"), star favourites (S). The colours come from the wallpaper (matugen) |
+| Settings | everything below, with a search box that jumps straight to a setting |
 
-**The capture menu** (Print): the screens freeze and dim; drag an area (move it, resize it by the corners) or pick a whole screen, then save and copy (Enter), copy (Ctrl+C), edit (E), read the text (T), scan a QR code (Q), or switch to video (Tab) and record it.
+Small dropdowns also come out of the bar: notifications, sound, the tray's menus, and **the system monitor** (click the stats): two-minute graphs for CPU, GPU, memory, video memory and both temperatures, the GPU's clock and power, and the busiest apps by CPU, memory or video memory, each with a button to end it.
 
-**The lock screen**: the wallpaper blurred, a small island with the date and weather, a big clock, your latest notifications, what's playing, and the password pill with your picture.
+### Settings
 
-Also: the dock (pinned and open apps, right-click menu), the on-screen display, desktop widgets (clock, weather, now playing, calendar, system usage, notes, a picture), idle lock and screens off, and a polkit agent. Settings shows previews: the screens' arrangement (drag to move), icon packs with their icons, cursor themes with their pointers, fonts in themselves. The first start shows a short welcome.
+| Section | What's in it |
+|---|---|
+| General | you and the weather (your city or your connection's location), **profiles & backup** (save all settings under a name and switch, e.g. `monolith profile Gaming`; back up to a file and bring it back), updates and about |
+| Appearance | 17 styles (Material, Orbit, Liquid glass, Minimalist, Terminal, Brutal, Luxe, Poster, Bubbly, Paper, Arcade, OLED, Mainframe, Sakura, Fjord, Doodle, Shadow) and 96 colour themes, dark or light (apps can follow), font, icons, cursor, wallpaper, the **wallpaper playlist**, blur, opacity, shadows, grain, animation speed, other apps' colours (kitty, GTK, Qt), the terminal greeting (fastfetch) |
+| Bar | layout and modules, auto-hide, which screens have the bar and dock |
+| Menus & launcher | the launcher, where each menu opens |
+| Dock | position, size, auto-hide, magnify, pinned apps |
+| Desktop | widgets (arranged in a full-screen editor, with presets) and quick access (a tool strip on a screen edge) |
+| Windows | gaps, borders, focus ring, corners, animations (niri's config) |
+| Displays | arrange, resolution, refresh rate and scale; night light |
+| Devices | keyboard layouts, repeat, mouse and touchpad; microphone and camera |
+| Notifications | timeout, style, where they pop up, **what happens while an app is fullscreen** (show on another screen, hold them for one summary afterwards, or show over it), sounds, the on-screen pop-up |
+| Lock & idle | what happens when you're away (lock, dim, screens off, sleep, your own commands), and **the lock screen**: the same on every screen or each screen its own, and which screen has the password box |
+| Screenshots | folder, file type, the editor, the preview card, which tools the capture menu has, the delay, the text-recognition languages |
+| System monitor | what clicking the bar's stats opens, warnings when video memory, memory or a temperature stays too high |
+| Software | startup apps, AppImages |
+| Wellbeing | screen time and limits |
+
+Every setting shows a dot when it's changed from the default, and ↺ puts it back.
+
+### Wallpapers
+
+Pictures and live wallpapers (videos and GIFs) from `~/Pictures/Wallpapers` (live ones in `Wallpapers/Live`). A live wallpaper plays a copy made at each screen's size and goes to sleep on the screen with a fullscreen app (or everywhere in game mode), so it costs about as much as a picture. Each screen can have its own. The **playlist** changes the wallpaper every few minutes (from pictures, live wallpapers or your favourites, shuffled or in order, one per screen if you like) or at times of day you set. `monolith wallpaper next` skips ahead.
+
+### Capture
+
+**The capture menu** (Print): the screens freeze and dim; drag an area (move it, resize it by the corners) or pick a whole screen (F), then:
+
+| Key | |
+|---|---|
+| Enter | save (and copy) |
+| Ctrl+C | copy |
+| E | edit |
+| P | pin it on screen |
+| T | read the text (tesseract) |
+| Q | scan a QR code |
+| Tab | switch to video and record the area |
+
+After a shot a **preview card** comes up in a corner (edit, copy, pin, open the folder, delete). **The editor** is Monolith's own (pen, highlighter, line, arrow, box, oval, text, numbered steps, pixelate, crop, undo; saved at full size), or Satty / Swappy if you prefer. **Pinned shots** float over your windows: drag to move, scroll to make them see-through, double-click to let go. Which tools the menu shows, the file type (PNG, JPEG, WebP) and copying on save are in Settings → Screenshots.
+
+### Lock screen
+
+The wallpaper blurred, a small island with the date and weather, your widgets (a clock, notifications and what's playing by default) and the password pill with your picture and the sleep / restart / power off buttons (restart and power off are held for a second). Arrange it in the widget editor's Lock screen tab: the widgets **and the password box** can be dragged anywhere. With more than one screen, each screen can have its own lock screen (say the clock on one, the password and news on the other), and the password box can be on every screen or just one; you can type on any screen either way.
+
+### Notifications and sounds
+
+Notifications pop up in the island or stack at a screen corner, can be swiped (or thrown) away, and stay in the list. While a fullscreen app (a game) covers the screen they'd appear on, they go to another screen, or wait and come back as one summary, silently unless you want sound. **Interface sounds** (off by default) come in five packs (Soft, Glass, Pop, Retro, Wood) or your own folder, for clicks, switches, menus, volume steps, workspaces, screenshots, locking and wallpaper changes, each kind on or off.
+
+### Also
+
+The dock (pinned and open apps, right-click menu, a drag-and-drop editor), the on-screen display, desktop widgets (clocks, weather, now playing, lyrics, a visualizer, calendar, system usage, battery, GitHub contributions, notes, a picture and more, in several looks each), quick access on the screen edges (a calculator, a drawing pad, notes, a timer, a converter, usage), idle lock and screens off, a polkit agent, and the AppImages window (`Mod+I`: drop an AppImage on it and it becomes a normal app). Settings shows previews: the screens' arrangement (drag to move), the bar, icon packs, cursors, fonts. The first start shows a short welcome tour.
 
 ---
 
@@ -164,7 +214,8 @@ What stays niri-only: the Displays, Keyboard & mouse and Windows settings pages,
 | `Mod+Z` / `Mod+Space` | the hub: search apps, files (`/`, `~`), emojis (`:`), commands (`>`) |
 | `Mod+Tab` | windows (switcher and overview) |
 | `Mod+Alt+V` | clipboard history |
-| `Mod+Ctrl+scroll` | zoom (wooz): up opens it, scroll inside to zoom, down closes it |
+| `Mod+Ctrl+scroll` | zoom (wooz): up opens it, scroll inside to zoom, down closes it (`Mod+Ctrl+Z` opens it too) |
+| `Mod+I` | the AppImages window |
 
 **Monolith**
 
@@ -174,13 +225,14 @@ What stays niri-only: the Displays, Keyboard & mouse and Windows settings pages,
 | `Mod+S` / `Mod+Alt+H` | Settings |
 | `Mod+N` | Network |
 | `Mod+V` | Sound |
-| `Mod+A` | status line auto-hide |
+| `Mod+A` | bar auto-hide |
 | `Mod+Alt+C` | Clipboard |
 | `Mod+X` / `Mod+Alt+M` | Media |
 | `Mod+P` | Keys (every keybind) |
 | `Mod+W` / `Mod+Alt+W` | Wallpaper |
 | `Mod+L` / `Mod+Alt+L` | lock |
 | `Mod+Ctrl+Alt+L` | swaylock |
+| `Mod+G` | restart the shell |
 
 **Windows**
 
@@ -237,13 +289,20 @@ What stays niri-only: the Displays, Keyboard & mouse and Windows settings pages,
 | `monolith installer` | open the installer (update, reinstall, change options) |
 | `monolith installer --update` | update without the menu (what Settings → About → Update runs) |
 | `monolith start` / `stop` / `restart` | run / stop / restart the shell |
-| `monolith msg toggle <page>` | open/close a hub page: `launcher`, `system`, `settings`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `switcher`, `cheatsheet`, `emoji`, `autohide`, … |
+| `monolith msg toggle <page>` | open/close a page: `launcher`, `system` (control center), `settings`, `network`, `volume`, `music`, `clipboard`, `wallpaper`, `calendar`, `switcher`, `cheatsheet`, `gaming`, `tools`, `wellbeing`, `capture`, `emoji`, `autohide`, … |
 | `monolith settings [section]` | open Settings (e.g. `monolith settings display`) |
 | `monolith search <text>` | open Search with text typed (`:smile`, `~/Documents`) |
 | `monolith lock` | lock the screen |
-| `monolith screenshot [--full] [--edit]` | screenshot |
+| `monolith screenshot [--full] [--edit]` | the capture menu (`--full` alone: the whole screen at once; `--edit`: Enter opens the editor) |
+| `monolith capture-in <seconds> [screen]` | the capture menu after a countdown |
+| `monolith edit-image <file>` / `pin-image <file>` | a picture in the screenshot editor / pinned over the windows |
+| `monolith record-menu` | the capture menu, set to video |
+| `monolith wallpaper [next]` | the next wallpaper (the playlist's, else a random picture) |
+| `monolith profile [name]` | switch to a saved profile (no name: list them) |
+| `monolith widgets [lock]` / `dock` | arrange the desktop's (or lock screen's) widgets / edit the dock |
+| `monolith appimages` / `welcome` / `zoom in\|out` | the AppImages window / the welcome tour / zoom |
 | `monolith timer <minutes>` / `record [region]` | start a timer / start or stop recording |
-| `monolith set <setting> <json>` / `get <setting>` | change or read a setting, e.g. `monolith set status.position '"bottom"'` |
+| `monolith set <setting> <json>` / `get <setting>` | change or read a setting, e.g. `monolith set bar.position '"bottom"'` |
 | `monolith migrate` | move an older niri config (the classic shell's `monolithd`) over to this shell |
 
 Helper scripts in `bin/` (installed to `~/.local/bin`):
@@ -257,13 +316,14 @@ Helper scripts in `bin/` (installed to `~/.local/bin`):
 | `install/` | the installer: `get.sh` (one-command), `install.sh`, `modules/`, `strings.json` |
 | `install.sh` | runs `install/install.sh` from a clone |
 | `monolith/bin/monolith` | the command |
-| `monolith/shell/` | the shell: `core/` (services), `hub/` (the pages; `hub/settings/` the Settings sections), `status/`, `dock/`, `wall/`, `lock/`, `ui/` (shared parts), `scripts/` |
+| `monolith/shell/` | the shell: `core/` (services), `island/` (the bar), `hub/` (the pages; `hub/settings/` the Settings sections), `status/` (popups, dropdowns, quick access), `dock/`, `wall/` (wallpaper, widgets, picker, editor), `lock/`, `capture/` (capture menu, editor, pins), `ui/` (shared parts), `sounds/`, `themes/`, `scripts/` |
 | `monolith/SPEC.md` | the design and the feature list |
 | `monolith/dev/nested.sh` | runs the shell in a nested niri window, for trying changes |
 | `config/niri/` | the niri config |
 | `sddm/` | the SDDM login theme |
 | `config/monolith/settings.json` | default settings |
 | `bin/` | helper scripts |
+| `monolith/tools/` | generators: the interface sounds (`make_sounds.py`), the emoji list (`make_emoji.py`) |
 | `docs/media/` | the previews in this README |
 
 Installed files: the shell in `~/.local/share/monolith`; settings in `~/.config/monolith` (`next.json`); state in `~/.local/state/monolith`.
@@ -274,20 +334,22 @@ Installed files: the shell in `~/.local/share/monolith`; settings in `~/.config/
 
 1. edit the files under `monolith/` or `install/`
 2. bump the version in `monolith/version.txt`
-3. commit and push to the branch your machines install from (it's in `~/.local/share/monolith/install/source.env`)
+3. commit and push to `main` (and `next-shell`, which older installs still follow; each machine's branch is in `~/.local/share/monolith/install/source.env`)
 
-Every machine checks every few hours. When GitHub has a newer commit, the status line says so and Settings → About shows it; **Update** runs `monolith installer --update`, which refreshes the shell, installs any new dependencies, keeps your settings, niri config, login screen and wallpapers, and restarts the shell.
+Every machine checks every few hours. When GitHub has a newer commit, the bar says so and Settings → About shows it; **Update** runs `monolith installer --update`, which refreshes the shell, installs any new dependencies, keeps your settings, niri config, login screen and wallpapers, and restarts the shell.
 
-While the repo is private, the update check goes through the GitHub CLI (`gh auth login` once per machine).
+If you install from a private fork, the update check goes through the GitHub CLI (`gh auth login` once per machine).
 
 **Your own config changes**: niri files live in `config/niri/config/` (don't commit `output.kdl` / `workspaces.kdl`, they're generated per machine); helper scripts in `bin/`.
 
 ## Troubleshooting
 
 - **Nothing on screen:** run `quickshell -p ~/.local/share/monolith/shell/shell.qml` in a terminal to see errors.
-- **No weather:** the location comes from your internet connection (city level).
+- **No weather:** set your city in Settings → General → You & weather (or use your connection's location there).
+- **A setting you can't find:** the search box at the top of Settings.
 - **Wrong monitor layout:** Settings → Displays, or run `monolith installer` from inside niri, or edit `~/.config/niri/config/output.kdl`, then `niri validate`.
 - **Lock screen won't accept your password:** check `/etc/pam.d/monolith` exists (the installer adds it). If you're ever stuck, switch to a TTY (Ctrl+Alt+F3), log in, and run `monolith stop`.
+- **Stuck in game mode's power profile after a crash:** turn game mode on and off again (it remembers what to put back), or `powerprofilesctl set balanced`.
 
 ## Licence
 
