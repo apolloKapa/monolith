@@ -73,6 +73,40 @@ ColumnLayout {
         }
         return -1;
     }
+    // the picked picture's handle under a point on the pad: "l" "r" "t" "b" (a side: stretches
+    // one way) or two of them for a corner ("rb"…: keeps its shape, or stretches with Shift); ""
+    function handleAt(mx, my) {
+        const p = pickedPic;
+        if (!p) return "";
+        const x0 = (p.x - Sketch.ox) * Sketch.z, y0 = (p.y - Sketch.oy) * Sketch.z;
+        const x1 = x0 + p.w * Sketch.z, y1 = y0 + p.h * Sketch.z, r = 12;
+        const inX = mx > x0 - r && mx < x1 + r, inY = my > y0 - r && my < y1 + r;
+        if (!inX || !inY) return "";
+        const h = (Math.abs(mx - x0) < r ? "l" : Math.abs(mx - x1) < r ? "r" : "")
+                + (Math.abs(my - y0) < r ? "t" : Math.abs(my - y1) < r ? "b" : "");
+        // a side handle only near the middle of that side (the rest of the edge moves it)
+        if (h === "l" || h === "r") return Math.abs(my - (y0 + y1) / 2) < Math.max(r, (y1 - y0) * 0.25) ? h : "";
+        if (h === "t" || h === "b") return Math.abs(mx - (x0 + x1) / 2) < Math.max(r, (x1 - x0) * 0.25) ? h : "";
+        return h;
+    }
+    // the picture's new box when handle g.h is pulled by (dx, dy) in drawing units: the sides
+    // it's held by move, the opposite ones stay put; a corner keeps the shape (the way it's
+    // pulled furthest) unless `free` (Shift)
+    function resized(g, dx, dy, free) {
+        const hd = g.h, minS = 8 / Sketch.z;
+        let w = g.w + (hd.indexOf("r") !== -1 ? dx : hd.indexOf("l") !== -1 ? -dx : 0);
+        let h = g.h0 + (hd.indexOf("b") !== -1 ? dy : hd.indexOf("t") !== -1 ? -dy : 0);
+        if (hd.length === 2 && !free) {
+            const k = Math.max(w / g.w, h / g.h0);
+            w = g.w * k; h = g.h0 * k;
+        }
+        w = Math.max(minS, w); h = Math.max(minS, h);
+        return { w: w, h: h, x: hd.indexOf("l") !== -1 ? g.x + g.w - w : g.x, y: hd.indexOf("t") !== -1 ? g.y + g.h0 - h : g.y };
+    }
+    function handleCursor(h) {
+        return h === "l" || h === "r" ? Qt.SizeHorCursor : h === "t" || h === "b" ? Qt.SizeVerCursor
+             : h === "lt" || h === "rb" ? Qt.SizeFDiagCursor : h ? Qt.SizeBDiagCursor : Qt.ArrowCursor;
+    }
     // a picture file goes in: copied into the drawing's own folder, then placed (centred on
     // px, py on the pad; at most 60 % of what you see, so a huge photo doesn't swamp the view)
     function addPictureFile(path, px, py) {
@@ -407,7 +441,7 @@ ColumnLayout {
             x: ma.mouseX - width / 2; y: ma.mouseY - height / 2
             color: "transparent"; border.width: 1.5; border.color: Theme.text
         }
-        // the picked picture: its outline and the corner that sizes it
+        // the picked picture: its outline and the handles that size and stretch it
         Item {
             id: pickBox
             readonly property var pic: d.tool === "move" ? d.pickedPic : null
@@ -418,10 +452,20 @@ ColumnLayout {
             width: pic ? pic.w * Sketch.z + rev * 0 : 0
             height: pic ? pic.h * Sketch.z + rev * 0 : 0
             Rectangle { anchors.fill: parent; anchors.margins: -1; color: "transparent"; border.width: 2; border.color: Theme.accent; radius: 2 }
-            Rectangle {
-                x: parent.width - width / 2; y: parent.height - height / 2
-                width: 14; height: 14; radius: 7
-                color: Theme.accent; border.width: 2; border.color: Theme.frame
+            // eight handles: the corners (round: keep the shape; Shift stretches) and the sides
+            // (bars: stretch it one way)
+            Repeater {
+                model: [[0, 0], [0.5, 0], [1, 0], [0, 0.5], [1, 0.5], [0, 1], [0.5, 1], [1, 1]]
+                Rectangle {
+                    required property var modelData
+                    readonly property bool side: modelData[0] === 0.5 || modelData[1] === 0.5
+                    width: side ? (modelData[0] === 0.5 ? 22 : 8) : 14
+                    height: side ? (modelData[1] === 0.5 ? 22 : 8) : 14
+                    radius: side ? 4 : 7
+                    x: pickBox.width * modelData[0] - width / 2
+                    y: pickBox.height * modelData[1] - height / 2
+                    color: Theme.accent; border.width: 2; border.color: Theme.frame
+                }
             }
         }
         // image files dropped on the pad (from a file manager, or a saved drawing from the strip below)
@@ -463,7 +507,7 @@ ColumnLayout {
             preventStealing: true
             cursorShape: panning || d.tool === "hand" ? (pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor)
                        : d.tool === "eraser" ? Qt.BlankCursor
-                       : d.tool === "move" ? (grab && grab.size ? Qt.SizeFDiagCursor : (pressed && grab ? Qt.ClosedHandCursor : Qt.ArrowCursor))
+                       : d.tool === "move" ? (grab && grab.size ? d.handleCursor(grab.h) : (pressed && grab ? Qt.ClosedHandCursor : d.handleCursor(d.handleAt(mouseX, mouseY))))
                        : Qt.CrossCursor
             property bool panning: false
             property real lx: 0
@@ -477,16 +521,15 @@ ColumnLayout {
                 const w0 = d.toWorld(mouse.x, mouse.y);
                 // the move tool: pick the picture under the pointer and drag it (or its corner: size)
                 if (d.tool === "move") {
-                    const onCorner = d.pickedPic && Math.abs(mouse.x - (d.pickedPic.x + d.pickedPic.w - Sketch.ox) * Sketch.z) < 14
-                                                 && Math.abs(mouse.y - (d.pickedPic.y + d.pickedPic.h - Sketch.oy) * Sketch.z) < 14;
-                    const i = onCorner ? d.picked : d.picAt(w0);
+                    const handle = d.handleAt(mouse.x, mouse.y);
+                    const i = handle ? d.picked : d.picAt(w0);
                     d.picked = i;
                     if (i < 0) return;
                     before = Sketch.strokes;
                     const work = Sketch.strokes.slice();
                     work[i] = Object.assign({}, work[i]);
                     Sketch.strokes = work;
-                    grab = { i: i, size: onCorner, wx: w0.x, wy: w0.y, x: work[i].x, y: work[i].y, w: work[i].w, h: work[i].h };
+                    grab = { i: i, size: handle !== "", h: handle, wx: w0.x, wy: w0.y, x: work[i].x, y: work[i].y, w: work[i].w, h0: work[i].h };
                     return;
                 }
                 if (d.tool === "eraser") { before = Sketch.strokes; erase(w0); return; }
@@ -504,11 +547,8 @@ ColumnLayout {
                 if (d.tool === "move") {
                     if (!grab) return;
                     const s = Sketch.strokes[grab.i], dx = w0.x - grab.wx, dy = w0.y - grab.wy;
-                    if (grab.size) {
-                        // from the corner, keeping its shape
-                        const k = Math.max(8 / Math.max(grab.w, grab.h), Math.max((grab.w + dx) / grab.w, (grab.h + dy) / grab.h));
-                        s.w = grab.w * k; s.h = grab.h * k;
-                    } else { s.x = grab.x + dx; s.y = grab.y + dy; }
+                    if (grab.size) Object.assign(s, d.resized(grab, dx, dy, !!(mouse.modifiers & Qt.ShiftModifier)));
+                    else { s.x = grab.x + dx; s.y = grab.y + dy; }
                     Sketch.rev++;
                     return;
                 }
