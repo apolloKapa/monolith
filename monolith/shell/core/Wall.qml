@@ -85,6 +85,76 @@ Singleton {
             wall.picThumbs = Object.assign({}, wall.picThumbs, add);
         }
     }
+    // ── live wallpapers at each screen's size ──
+    // Decoding costs what the video's resolution costs, not the screen's: a 4K wallpaper on a
+    // 1440p screen decoded 4K for every screen it was on. So each screen plays a copy made at
+    // its own size (just big enough to cover it), made once on the GPU (VAAPI; the CPU's x264
+    // if that fails) in the background, kept in ~/.cache/monolith/live/. Until the copy is
+    // there (a few seconds), the original plays. A video that isn't bigger than the screen
+    // plays as it is.
+    readonly property string liveCacheDir: home + "/.cache/monolith/live"
+    property var liveCopies: ({})          // "path|WxH" -> the copy's path, or "" (being made / failed)
+    property var liveFailed: ({})
+    property var liveQueue: []
+    function liveKey(p, w, h) { return p + "|" + w + "x" + h; }
+    function liveCopyPath(p, w, h) { return liveCacheDir + "/" + Qt.md5(p) + "-" + w + "x" + h + ".mp4"; }
+    // what a screen w×h should play for video p: its copy, or the original until that's ready
+    // (only reads: a binding can use it. requestLive asks for the copy, from a handler)
+    function liveFor(p, w, h) {
+        if (!isVideo(p) || w <= 0 || h <= 0) return p;
+        return liveCopies[liveKey(p, Math.round(w), Math.round(h))] || p;
+    }
+    function requestLive(p, w, h) {
+        if (!isVideo(p) || w <= 0 || h <= 0) return;
+        w = Math.round(w); h = Math.round(h);
+        const k = liveKey(p, w, h);
+        // (a copy that failed is tried again after ten minutes)
+        if ((liveFailed[k] && Date.now() - liveFailed[k] < 600000) || liveCopies[k] !== undefined) return;
+        const c = Object.assign({}, liveCopies); c[k] = ""; liveCopies = c;
+        liveQueue = liveQueue.concat([{ p: p, w: w, h: h }]);
+        Qt.callLater(nextLiveCopy);
+    }
+    function nextLiveCopy() {
+        if (liveProc.running || !liveQueue.length) return;
+        const job = liveQueue[0];
+        liveQueue = liveQueue.slice(1);
+        liveProc.job = job;
+        // (sizes even, covering the screen: the video's aspect kept, cropped like the wallpaper is)
+        liveProc.command = ["sh", "-c",
+            "src=\"$1\"; out=\"$2\"; W=$3; H=$4; mkdir -p \"$(dirname \"$out\")\"; " +
+            "[ -s \"$out\" ] && [ \"$out\" -nt \"$src\" ] && { echo ok; exit 0; }; " +
+            "dims=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 \"$src\") || exit 1; " +
+            "vw=${dims%%,*}; vh=${dims##*,}; " +
+            // not bigger than the screen: nothing to gain
+            "[ \"$vw\" -le $((W + W / 10)) ] && [ \"$vh\" -le $((H + H / 10)) ] && { echo same; exit 0; }; " +
+            "if [ $((vw * H)) -gt $((vh * W)) ]; then oh=$H; ow=$(( (vw * H / vh + 1) / 2 * 2 )); else ow=$W; oh=$(( (vh * W / vw + 1) / 2 * 2 )); fi; " +
+            "tmp=\"$out.part.mp4\"; " +
+            "ffmpeg -v error -y -hwaccel vaapi -hwaccel_output_format vaapi -i \"$src\" -map 0:v:0 -map 0:a? -c:a copy " +
+            "  -vf \"scale_vaapi=w=$ow:h=$oh:format=nv12\" -c:v h264_vaapi -rc_mode QVBR -global_quality 24 -b:v 8M -maxrate 12M \"$tmp\" </dev/null " +
+            "|| ffmpeg -v error -y -i \"$src\" -map 0:v:0 -map 0:a? -c:a copy -vf \"scale=$ow:$oh:flags=lanczos\" " +
+            "  -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p \"$tmp\" </dev/null || { rm -f \"$tmp\"; exit 1; }; " +
+            "mv -f \"$tmp\" \"$out\" && echo ok",
+            "_", job.p, liveCopyPath(job.p, job.w, job.h), String(job.w), String(job.h)];
+        liveProc.running = true;
+    }
+    Process {
+        id: liveProc
+        property var job: null
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const j = liveProc.job;
+                if (!j) return;
+                const k = wall.liveKey(j.p, j.w, j.h), r = text.trim();
+                const c = Object.assign({}, wall.liveCopies);
+                if (r === "ok") c[k] = wall.liveCopyPath(j.p, j.w, j.h);
+                else if (r === "same") c[k] = j.p;
+                else { const f = Object.assign({}, wall.liveFailed); f[k] = Date.now(); wall.liveFailed = f; delete c[k]; }
+                wall.liveCopies = c;
+            }
+        }
+        onExited: Qt.callLater(wall.nextLiveCopy)
+    }
+
     // pick a video or GIF with a file dialog and copy it into the Live folder
     function addLive() { addProc.running = true; }
     Process {

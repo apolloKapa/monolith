@@ -25,8 +25,17 @@ Singleton {
     readonly property var focusedWindow: focusedWindowId !== null && windows[focusedWindowId] ? windows[focusedWindowId] : null
     readonly property string focusedTitle: focusedWindow ? (focusedWindow.title || "") : ""
     readonly property string focusedAppId: focusedWindow ? (focusedWindow.app_id || "") : ""
-    // niri 26.04 does not report fullscreen; kept for when it does
-    readonly property bool focusedFullscreen: !!(focusedWindow && focusedWindow.is_fullscreen === true)
+    // niri 26.04 does not report fullscreen (no is_fullscreen): a window covering its whole screen
+    // counts (a maximized one leaves the bar's room, so it doesn't). Used for pausing live
+    // wallpapers and keeping quick access away, which never happened while it read only the flag.
+    readonly property bool focusedFullscreen: !!focusedWindow && (focusedWindow.is_fullscreen === true || covers(focusedWindow))
+    function covers(w) {
+        const size = w && w.layout ? w.layout.window_size : null;
+        if (!size) return false;
+        const ws = workspaces.find(x => x.id === w.workspace_id);
+        const scr = ws ? Quickshell.screens.find(s => s.name === ws.output) : null;
+        return !!scr && size[0] >= scr.width - 1 && size[1] >= scr.height - 1;
+    }
     // the screen with the focused workspace
     readonly property string focusedOutput: { const w = workspaces.find(w => w.is_focused); return w ? (w.output || "") : ""; }
     readonly property string layoutName: layouts.length > layoutIndex ? layouts[layoutIndex] : ""

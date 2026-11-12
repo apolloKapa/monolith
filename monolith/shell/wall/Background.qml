@@ -22,6 +22,44 @@ PanelWindow {
     property string target: Wall.pathFor(modelData.name)
     property string current: ""
     readonly property bool video: Wall.isVideo(current)
+    // the file the video player has: the screen-sized copy of `current` (Wall.liveFor), or ""
+    // while it sleeps (a fullscreen app or Game mode: unloaded, its memory and decoder freed,
+    // its last frame frozen in its place). Changing it happens under the frozen frame, which
+    // fades once the new one plays, so there's no flash.
+    readonly property real pxW: Math.round(modelData.width * (modelData.devicePixelRatio || 1))
+    readonly property real pxH: Math.round(modelData.height * (modelData.devicePixelRatio || 1))
+    readonly property string want: video && !asleep ? Wall.liveFor(current, pxW, pxH) : ""
+    property string playing: ""
+    // (its copy at this screen's size, asked for when it's the one to show)
+    function askCopy() { if (video) Wall.requestLive(current, pxW, pxH); }
+    onCurrentChanged: Qt.callLater(askCopy)
+    onPxWChanged: Qt.callLater(askCopy)
+    onPxHChanged: Qt.callLater(askCopy)
+    property bool frozenWait: false      // the frozen frame waits for the video to play again
+    onWantChanged: {
+        if (swap.active) { playing = want; return; }        // a wallpaper change already covers it
+        if (playing === "" && !frozenWait) { playing = want; return; }   // the first one
+        if (!freeze.active) { freeze.active = true; fade.stop(); freeze.opacity = 1; content.scale = 1; }
+        frozenWait = true;
+        cut.restart();
+    }
+    // a few frames for the freeze to be drawn, then the player changes (or empties) under it
+    Timer { id: cut; interval: 60; onTriggered: { bg.playing = bg.want; if (bg.playing === "") vidFallback.stop(); else vidFallback.restart(); } }
+    // (never left frozen: a video that won't play lets the freeze go after a while)
+    Timer { id: vidFallback; interval: 3000; onTriggered: bg.thaw() }
+    function thaw() {
+        if (!frozenWait) return;
+        frozenWait = false;
+        vidFallback.stop();
+        swap.active = true;
+        swap.ready();
+    }
+    // while a fullscreen app is on (any screen) or Game mode: asleep, after a moment (a quick
+    // fullscreen toggle doesn't unload it); awake again at once
+    readonly property bool shouldSleep: Store.get("wallpaper.livePause", true) !== false && (Niri.focusedFullscreen || GameMode.active)
+    property bool asleep: false
+    onShouldSleepChanged: if (shouldSleep) sleepSoon.restart(); else { sleepSoon.stop(); asleep = false; }
+    Timer { id: sleepSoon; interval: 1500; onTriggered: bg.asleep = bg.shouldSleep }
     readonly property bool gif: Wall.isAnimated(current)
     function isLive(p) { return Wall.isVideo(p) || Wall.isAnimated(p); }
     function showPicture(p) {
@@ -124,21 +162,21 @@ PanelWindow {
                 id: vid
                 anchors.fill: parent
                 visible: bg.video
-                source: bg.video ? Wall.url(bg.current) : ""
+                source: bg.playing !== "" ? Wall.url(bg.playing) : ""
                 fillMode: VideoOutput.PreserveAspectCrop
                 loops: MediaPlayer.Infinite
                 muted: Store.get("wallpaper.liveSound", false) !== true
                 volume: 0.6
                 autoPlay: true
                 // its first frames are showing
-                onPositionChanged: if (bg.video && position > 0) swap.ready()
+                onPositionChanged: if (bg.video && position > 0) { swap.ready(); if (bg.frozenWait && bg.playing !== "") bg.thaw(); }
             }
             AnimatedImage {
                 anchors.fill: parent
                 visible: bg.gif
                 source: visible ? Wall.url(bg.current) : ""
                 fillMode: Image.PreserveAspectCrop
-                playing: visible && !bg.covered
+                playing: visible && !bg.asleep
                 onStatusChanged: if (status === AnimatedImage.Ready && bg.gif) swap.ready()
             }
         }
@@ -154,8 +192,6 @@ PanelWindow {
             }
         }
     }
-    readonly property bool covered: Store.get("wallpaper.livePause", true) !== false && Niri.focusedFullscreen && Niri.focusedOutput === modelData.name
-    onCoveredChanged: if (video) { if (covered) vid.pause(); else vid.play(); }
 
     // the desktop widgets, only on the first screen for now
     Widgets { screenName: bg.modelData.name; backdrop: wallLayer }
