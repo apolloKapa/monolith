@@ -140,6 +140,11 @@ Singleton {
     // something is being dragged onto the quick access tool (a picture onto the drawing pad):
     // it stays out (the pointer isn't "on" it while a drag goes on, so it would put itself away)
     property bool quickHold: false
+    // a window just went up into the Overlay layer (the island opening or showing a notification,
+    // the notification dropdown): going up puts it on top of the other Overlay windows, the
+    // thrown-notification layer too, so swiped cards flew under it. That layer goes back on top.
+    property int raised: 0
+    function raisedOverlay() { raised++; }
     function quick(edge, full) { quickReq = { screen: target(""), edge: edge || "", full: full, n: quickReq.n + 1 }; }
     IpcHandler {
         target: "quick"

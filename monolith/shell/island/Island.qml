@@ -21,7 +21,9 @@ PanelWindow {
 
     WlrLayershell.namespace: "monolith-island"
     // above fullscreen windows while open (a keybind over a game or video still shows it)
-    WlrLayershell.layer: shown || wasOpen || toastOn ? WlrLayer.Overlay : WlrLayer.Top
+    WlrLayershell.layer: overlay ? WlrLayer.Overlay : WlrLayer.Top
+    readonly property bool overlay: shown || wasOpen || toastOn
+    onOverlayChanged: if (overlay) Qt.callLater(HubState.raisedOverlay)
     // Settings is a window you work in: clicks elsewhere go to your other windows and don't
     // close it, and it takes the keyboard only when you click into it (Escape or its bar
     // button closes it)
@@ -128,6 +130,10 @@ PanelWindow {
     onToastOnChanged: if (toastOn) toastHost = toastWhere
     onToastWhereChanged: if (toastOn) toastHost = toastWhere
     readonly property bool toastGrows: toastOn && toastHost === "island"
+    // (holds them while the pointer is on one, only while one shows: see Notifs.holders)
+    readonly property bool toastHolding: toastOn && toastHover.hovered
+    onToastHoldingChanged: Notifs.setHold("island:" + modelData.name, toastHolding)
+    Component.onDestruction: Notifs.setHold("island:" + modelData.name, false)
     readonly property real toastW: Math.min(560, width - 40)
     // pages stay loaded while the island shrinks back after being open (not for a toast)
     property bool wasOpen: false
@@ -230,7 +236,7 @@ PanelWindow {
                 opacity: Math.max(0, Math.min(1, toastArea.fall * 1.8))
                 visible: opacity > 0.01
                 transform: Translate { y: (1 - toastArea.fall) * (win.bottom ? 1 : -1) * (toastArea.height * 0.7 + 20) }
-                HoverHandler { onHoveredChanged: Notifs.hold = hovered }
+                HoverHandler { id: toastHover }
                 Loader {
                     width: parent.width
                     active: win.toast !== null

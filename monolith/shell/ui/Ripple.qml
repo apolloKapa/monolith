@@ -33,6 +33,8 @@ Item {
         grow.start();
     }
     function release() { fade.restart(); }
+    // (never left glowing: when the press ends however it ends, the ink fades)
+    onPressedChanged: if (!pressed && alpha > 0 && !fade.running) release()
 
     NumberAnimation {
         id: grow; target: ripple; property: "spread"; from: 0; to: ripple.reach; duration: Theme.ms(420)

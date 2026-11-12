@@ -36,7 +36,10 @@ PanelWindow {
     // (a bar down the side has no island to drop out of: they always come up here then)
     visible: mine.length > 0 && (Store.get("notifications.style", "island") === "corner" || Theme.barSide !== "")
 
-    HoverHandler { onHoveredChanged: Notifs.hold = hovered }
+    HoverHandler { id: hh }
+    readonly property bool holding: hh.hovered && win.visible && win.mine.length > 0
+    onHoldingChanged: Notifs.setHold("corner:" + modelData.name, holding)
+    Component.onDestruction: Notifs.setHold("corner:" + modelData.name, false)
 
     Column {
         id: stack

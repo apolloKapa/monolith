@@ -14,7 +14,30 @@ Singleton {
     readonly property var list: server.trackedNotifications.values.slice().reverse()
     property var popups: []
     property var _until: ({})          // notification id -> when its popup leaves (ms)
-    property bool hold: false          // the pointer is on the popups: nobody leaves
+    // the pointer is on the popups: nobody leaves. One entry per place showing them (each screen's
+    // island, each screen's corner stack), each only while it shows some: a single flag set by
+    // "hovered" alone stuck on when the card under the pointer went away without a "left", and
+    // then nothing ever timed out again (they piled up under the notification list)
+    property var holders: ({})
+    readonly property bool hold: Object.keys(holders).length > 0
+    function setHold(who, on) {
+        if (!!holders[who] === on) return;
+        const h = Object.assign({}, holders);
+        if (on) h[who] = true; else delete h[who];
+        holders = h;
+    }
+    // opening the notification list (the bell's dropdown, the Notifications page): the popups
+    // have been seen, they go (they stay in the list); they used to stay up under it
+    Connections {
+        target: HubState
+        function onDropKindChanged() { notifs._listOpened(); }
+        function onOpenChanged() { notifs._listOpened(); }
+        function onPageChanged() { notifs._listOpened(); }
+    }
+    function _listOpened() {
+        const open = (HubState.dropKind === "notifications" && HubState.dropScreen !== "") || (HubState.open && HubState.page === "notifications");
+        if (open && popups.length) { _leave(popups.filter(p => !leaving[p.id])); holders = ({}); }
+    }
 
     // another notification program holding the bus name (mako, dunst, swaync… usually started
     // by D-Bus on its own while the shell was restarting): it then shows its own popups and

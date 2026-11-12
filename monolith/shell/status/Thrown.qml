@@ -28,6 +28,15 @@ PanelWindow {
     }
     WlrLayershell.namespace: "monolith-thrown"
     WlrLayershell.layer: WlrLayer.Overlay
+    // back on top of the Overlay windows when one went up over it (HubState.raised): mapped
+    // again, it's the newest. Only while nothing is in flight (it's empty and click-through then).
+    property bool up: true
+    visible: up
+    Connections {
+        target: HubState
+        function onRaisedChanged() { if (win.mine.length === 0 && rows.count === 0) restack.restart(); }
+    }
+    Timer { id: restack; interval: 30; onTriggered: { if (win.mine.length || rows.count) return; win.up = false; Qt.callLater(() => win.up = true); } }
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"

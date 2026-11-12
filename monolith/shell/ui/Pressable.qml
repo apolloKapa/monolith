@@ -12,6 +12,13 @@ Rectangle {
     property int cursor: Qt.PointingHandCursor
     signal clicked(var mouse)
     signal rightClicked()
+    // let go of a press that never got its release (the window's click area shrank, or the
+    // button was reused for something else mid-press): the shine and the pressed look stop
+    function resetPress() {
+        ma.enabled = false;
+        ma.enabled = Qt.binding(() => root.enabledInput);
+        ink.release();
+    }
 
     radius: Theme.corner(height)
     color: Theme.containerHigh

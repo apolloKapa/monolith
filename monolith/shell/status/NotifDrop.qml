@@ -15,6 +15,7 @@ PanelWindow {
     readonly property bool shown: HubState.dropScreen === modelData.name && HubState.dropKind === "notifications" && !HubState.open
 
     visible: shown || card.opacity > 0.01
+    onVisibleChanged: if (visible) Qt.callLater(HubState.raisedOverlay)
     WlrLayershell.namespace: "monolith-notifications"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None

@@ -25,6 +25,7 @@ Pressable {
     onClicked: {
         const def = notif.actions.find(a => a.identifier === "default");
         if (def) def.invoke();
+        card.resetPress();
         card.closed();
     }
 
@@ -97,6 +98,7 @@ Pressable {
         }
     }
     function release(go, dir, speed) {
+        card.resetPress();
         if (go) flying = true;
         if (throwId < 0) {
             // no copy (animations off, or it couldn't be made): as before, in its own window
@@ -122,7 +124,7 @@ Pressable {
     Timer { id: gone; interval: 190; onTriggered: card.closed() }
     // reused for the next notification (the island's): back in place at once
     property bool resetting: false
-    onNotifChanged: { resetting = true; flying = false; handed = false; pending = null; throwId = -1; handoff.stop(); swipeX = 0; resetting = false; }
+    onNotifChanged: { resetting = true; flying = false; handed = false; pending = null; throwId = -1; handoff.stop(); swipeX = 0; resetting = false; resetPress(); closeBtn.resetPress(); }
 
     RowLayout {
         id: body
@@ -158,9 +160,10 @@ Pressable {
                 Label { text: card.notif.appName || "Notification"; muted: true; font.pixelSize: Theme.sizeSmall }
                 Item { Layout.fillWidth: true }
                 Pressable {
+                    id: closeBtn
                     Layout.preferredWidth: 24; Layout.preferredHeight: 24
                     color: "transparent"
-                    onClicked: { card.notif.dismiss(); card.closed(); }
+                    onClicked: { closeBtn.resetPress(); card.notif.dismiss(); card.closed(); }
                     Icon { anchors.centerIn: parent; name: "close"; size: 16; color: Theme.subtext }
                 }
             }
@@ -187,7 +190,7 @@ Pressable {
                         height: 30
                         width: actLabel.implicitWidth + 24
                         color: Theme.selected
-                        onClicked: { modelData.invoke(); card.closed(); }
+                        onClicked: { resetPress(); modelData.invoke(); card.closed(); }
                         Label { id: actLabel; anchors.centerIn: parent; text: modelData.text; font.pixelSize: Theme.sizeSmall }
                     }
                 }
