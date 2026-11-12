@@ -20,7 +20,8 @@ PanelWindow {
     readonly property bool enabled: Store.get("quick.enabled", true) !== false
     readonly property var edges: { const e = Store.get("quick.edges", null); return Array.isArray(e) ? e : [Store.get("quick.edge", "right")]; }
     readonly property var tools: { const t = Store.get("quick.tools", ["calc", "convert", "notes", "timer", "draw", "usage"]); return t && t.length ? t : ["notes"]; }
-    readonly property int speed: Number(Store.get("quick.speed", 260))
+    // its own speed setting, scaled like every other animation (Theme → Effects → speed; 0 when off)
+    readonly property int speed: Theme.ms(Number(Store.get("quick.speed", 260)))
     readonly property int showDelay: Number(Store.get("quick.delay", 250))
     readonly property int hideDelay: Number(Store.get("quick.hideDelay", 600))
     readonly property real hit: Math.max(1, Number(Store.get("quick.edgeSize", 2)))
@@ -87,7 +88,8 @@ PanelWindow {
         if (expanded) { expanded = false; putAway.restart(); }
         else shown = false;
     }
-    Timer { id: putAway; interval: Math.round(qa.speed * 0.85); onTriggered: if (!qa.expanded) qa.shown = false }
+    // (the slide starts while it's still folding: the exit curve starts slowly, so it reads as one move)
+    Timer { id: putAway; interval: Math.round(qa.speed * 0.35); onTriggered: if (!qa.expanded) qa.shown = false }
     function fold() { if (expanded) expanded = false; else hide(); }
     function step(d) { const i = tools.indexOf(tool); tool = tools[Math.max(0, Math.min(tools.length - 1, (i < 0 ? 0 : i) + d))]; }
 
@@ -164,11 +166,13 @@ PanelWindow {
     // (out of a side edge the tool is beside the rail; out of the top or bottom, under / over it)
     readonly property real across: vertical ? contentW : contentH
     readonly property real along: vertical ? contentH : contentW
-    readonly property real thick: expanded ? railT + across + 16 : railT
-    readonly property real span: expanded ? Math.max(railL, along + 24) : railL
+    // (folding waits for the open tool to fade first, so the panel never closes over it)
+    readonly property bool roomy: expanded || content.visible
+    readonly property real thick: roomy ? railT + across + 16 : railT
+    readonly property real span: roomy ? Math.max(railL, along + 24) : railL
     // how far out it is (0: tucked into the edge), and the drag pulling it (a little rubber band)
     property real pull: 0
-    Behavior on pull { enabled: !drag.active; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+    Behavior on pull { enabled: !drag.active; NumberAnimation { duration: Theme.ms(180); easing.type: Easing.OutCubic } }
     property real slide: shown || expanded ? 0 : railT + ear + 30
     Behavior on slide { NumberAnimation { duration: qa.speed; easing.type: Easing.BezierSpline; easing.bezierCurve: qa.out ? Theme.springCurve : Theme.exitCurve } }
 
@@ -179,8 +183,11 @@ PanelWindow {
     readonly property real mid: Math.max(lo + bodyLong / 2 + ear, Math.min(hi - bodyLong / 2 - ear, pos))
     property real bodyLong: span
     property real bodyThick: thick
-    Behavior on bodyLong { NumberAnimation { duration: qa.speed; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-    Behavior on bodyThick { NumberAnimation { duration: qa.speed; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+    // opening springs out a little past its size; folding eases in without overshoot (a spring
+    // going smaller dipped below the rail and squashed it)
+    Behavior on bodyLong { NumberAnimation { duration: qa.speed; easing.type: Easing.BezierSpline; easing.bezierCurve: qa.expanded ? Theme.springCurve : qa.foldCurve } }
+    Behavior on bodyThick { NumberAnimation { duration: qa.speed; easing.type: Easing.BezierSpline; easing.bezierCurve: qa.expanded ? Theme.springCurve : qa.foldCurve } }
+    readonly property var foldCurve: [0.3, 0.0, 0.1, 1.0, 1, 1]
     readonly property real outBy: Math.max(-railT, Math.min(40, pull)) - slide      // >0: further out
 
     Item {
@@ -308,13 +315,15 @@ PanelWindow {
             y: qa.edge === "top" ? qa.railT + gap : (qa.edge === "bottom" ? body.height - qa.railT - gap - height : (body.height - height) / 2)
             width: qa.contentW
             height: qa.contentH
-            // in once the panel is most of the way open; out at once when it starts to fold
+            // in once the panel is most of the way open; when it folds, gone before the panel
+            // closes over it (it fades and shrinks towards the rail instead of being cut off)
             readonly property bool on: qa.expanded && qa.bodyThick > qa.railT + qa.across * 0.7
             opacity: on ? 1 : 0
-            scale: on ? 1 : 0.96
+            scale: on ? 1 : 0.92
+            transformOrigin: ({ left: Item.Left, right: Item.Right, top: Item.Top, bottom: Item.Bottom })[qa.edge]
             visible: opacity > 0.01
-            Behavior on opacity { NumberAnimation { duration: content.on ? Math.max(120, qa.speed * 0.6) : 90; easing.type: Easing.OutCubic } }
-            Behavior on scale { NumberAnimation { duration: content.on ? Math.max(120, qa.speed * 0.6) : 90; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: content.on ? Math.max(Theme.ms(120), qa.speed * 0.6) : Math.min(Theme.ms(70), qa.speed * 0.25); easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: content.on ? Math.max(Theme.ms(120), qa.speed * 0.6) : Math.min(Theme.ms(70), qa.speed * 0.25); easing.type: Easing.OutCubic } }
             Loader {
                 anchors.fill: parent
                 active: qa.expanded || content.visible
@@ -347,6 +356,7 @@ PanelWindow {
     readonly property bool typing: { const f = keys.Window.activeFocusItem; return qa.expanded && !!f && f !== keys && (f instanceof TextInput || f instanceof TextEdit); }
 
     // blur behind it (Theme → Effects)
-    BackgroundEffect.blurRegion: Theme.blur && qa.out ? blurShape : null
+    // (kept while it slides away: it used to vanish the moment hiding started)
+    BackgroundEffect.blurRegion: Theme.blur && body.visible ? blurShape : null
     Region { id: blurShape; item: body; radius: Theme.islandRadius }
 }
