@@ -28,7 +28,8 @@ FaceBase {
         case "1": return `M${x0} ${y0 + r} L${x1} ${y0} V${h}`;
         case "2": { const d = (y1 - y0 - r) * 0.45; return `${top} C${x1} ${y0 + r + d} ${x0} ${y1 - d} ${x0} ${y1} H${x1}`; }
         case "3": return `${top} V${ym - r} A${r} ${r} 0 0 1 ${x1 - r} ${ym} H${x0 + r * 0.3} M${x1 - r} ${ym} A${r} ${r} 0 0 1 ${x1} ${ym + r} V${y1 - r} A${r} ${r} 0 0 1 ${x0} ${y1 - r}`;
-        case "4": { const xs = x0 + (x1 - x0) * 0.68, yb = y0 + (y1 - y0) * 0.7; return `M${xs} ${h} V0 M${xs} ${s * 0.2} L${x0} ${yb} M0 ${yb} H${w}`; }
+        // one line: up the stem, down the slant, along the bar (three loose strokes left seams and stubs)
+        case "4": { const xs = x0 + (x1 - x0) * 0.68, yb = y0 + (y1 - y0) * 0.7; return `M${xs} ${h} V${y0} L${x0} ${yb} H${w}`; }
         case "5": { const yq = ym + 0.04 * h; return `M${x1} ${y0} H${x0} V${yq} H${x1 - r} A${r} ${r} 0 0 1 ${x1} ${yq + r} V${y1 - r} A${r} ${r} 0 0 1 ${x1 - r} ${y1} H${x0}`; }
         case "6": case "9": { const yq = ym + 0.04 * h; return `M${x1} ${y0} H${x0 + r} A${r} ${r} 0 0 0 ${x0} ${y0 + r} V${y1 - r} A${r} ${r} 0 0 0 ${x0 + r} ${y1} H${x1 - r} A${r} ${r} 0 0 0 ${x1} ${y1 - r} V${yq + r} A${r} ${r} 0 0 0 ${x1 - r} ${yq} H${x0}`; }
         case "7": return `M0 ${y0} H${x1} L${x0 + (x1 - x0) * 0.3} ${y1} V${h}`;
@@ -36,10 +37,15 @@ FaceBase {
         }
         return "";
     }
+    // the digits drawn opaque in one layer, the see-through applied to the whole: where a digit's
+    // strokes cross (the 4, the middle of the 3 and the 8) they no longer show brighter seams
+    readonly property color solid: Qt.rgba(f.mainC.r, f.mainC.g, f.mainC.b, 1)
     Row {
         anchors.centerIn: parent
         spacing: f.gap
-        opacity: 0.85
+        opacity: 0.85 * f.mainC.a
+        layer.enabled: true
+        layer.smooth: true
         Repeater {
             model: f.chars
             Item {
@@ -55,7 +61,7 @@ FaceBase {
                     preferredRendererType: Shape.CurveRenderer
                     ShapePath {
                         strokeWidth: f.stroke
-                        strokeColor: f.mainC
+                        strokeColor: f.solid
                         fillColor: "transparent"
                         capStyle: ShapePath.FlatCap
                         joinStyle: ShapePath.RoundJoin
@@ -67,7 +73,7 @@ FaceBase {
                     Rectangle {
                         required property int index
                         width: f.stroke * 1.1; height: width; radius: width / 2
-                        color: f.mainC
+                        color: f.solid
                         x: (cell.width - width) / 2
                         y: cell.height * (index === 0 ? 0.35 : 0.65) - height / 2
                     }
