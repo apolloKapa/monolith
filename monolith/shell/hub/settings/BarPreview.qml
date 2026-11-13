@@ -15,6 +15,11 @@ Column {
     readonly property var scr: Quickshell.screens.find(s => s.name === Niri.focusedOutput) || Quickshell.screens[0]
     readonly property real sw: scr ? scr.width : 1920
     readonly property real sh: scr ? scr.height : 1080
+    // how tall the drawn monitor may be (smaller where there's little room: the welcome tour on
+    // a short screen)
+    property real monitorH: 250
+    // everything but the monitor's screen (its bezel, the stand, the close-up, the caption)
+    readonly property real chromeH: stage.height - monitor.height + 2 * monitor.bezel
 
     // the island at rest, the way island/Island.qml draws it
     component Bar: IslandShape {
@@ -67,8 +72,8 @@ Column {
         Rectangle {
             id: monitor
             readonly property real bezel: 7
-            // up to 250 px tall (a tall screen is drawn narrower), never wider than the card
-            width: Math.min(stage.width - 48, Math.round(250 * pv.sw / pv.sh)) + 2 * bezel
+            // up to monitorH tall (a tall screen is drawn narrower), never wider than the card
+            width: Math.min(stage.width - 48, Math.round(pv.monitorH * pv.sw / pv.sh)) + 2 * bezel
             height: Math.round((width - 2 * bezel) * pv.sh / pv.sw) + 2 * bezel
             anchors.horizontalCenter: parent.horizontalCenter
             y: 18

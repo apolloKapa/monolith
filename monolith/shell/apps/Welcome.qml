@@ -44,8 +44,31 @@ PanelWindow {
 
     // your keybinds: the Monolith ones, read from niri's config
     FileView { id: kb; path: Quickshell.env("HOME") + "/.config/niri/config/keybinds.kdl" }
+    // on Hyprland: Monolith's keys file there (monolith.lua, or monolith.conf), written by
+    // `monolith hyprland on` / the installer
+    FileView { id: hkLua; path: Niri.hyprland ? Quickshell.env("HOME") + "/.config/hypr/monolith.lua" : ""; printErrors: false }
+    FileView { id: hkConf; path: Niri.hyprland ? Quickshell.env("HOME") + "/.config/hypr/monolith.conf" : ""; printErrors: false }
+    function hyprKeyFor(pattern) {
+        const word = pattern.replace(/"/g, "");
+        let best = "";
+        // hl.bind("SUPER + D", hl.dsp.exec_cmd(".../monolith msg toggle launcher"))
+        for (const l of (hkLua.text() || "").split("\n")) {
+            const m = l.match(/hl\.bind\("([^"]+)",\s*hl\.dsp\.exec_cmd\("([^"]*)"\)/);
+            if (m && m[2].indexOf("monolith") !== -1 && m[2].trim().endsWith(" " + word)
+                && (best === "" || m[1].split("+").length <= best.split("+").length)) best = m[1].replace(/\s*\+\s*/g, " + ");
+        }
+        // bind = SUPER SHIFT, S, exec, .../monolith screenshot
+        for (const l of (hkConf.text() || "").split("\n")) {
+            const m = l.match(/^\s*bindl?\s*=\s*([^,]*),\s*([^,]+),\s*exec,\s*(.*)$/);
+            if (!m || m[3].indexOf("monolith") === -1 || !m[3].trim().endsWith(" " + word)) continue;
+            const k = (m[1].trim() ? m[1].trim().split(/\s+/).join(" + ") + " + " : "") + m[2].trim();
+            if (best === "" || k.split("+").length <= best.split("+").length) best = k;
+        }
+        return best.replace(/SUPER/g, "Super").replace(/SHIFT/g, "Shift").replace(/CTRL/g, "Ctrl").replace(/ALT/g, "Alt");
+    }
     // the simplest binding for a command (fewest modifiers; the later one on a tie)
     function keyFor(pattern) {
+        if (Niri.hyprland) return hyprKeyFor(pattern);
         let best = "";
         for (const l of (kb.text() || "").split("\n")) {
             const m = l.match(/^\s*([A-Za-z0-9_+]+)\s[^{]*\{\s*spawn\b(.*);\s*\}/);
@@ -140,10 +163,24 @@ PanelWindow {
                     enabled: off === 0
                     Behavior on x { NumberAnimation { duration: Theme.ms(420); easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: Theme.ms(300); easing.type: Easing.OutCubic } }
-                    Loader {
+                    // (scrolls when a page is taller than the card: on a short screen the bar
+                    // styles were cut off under the preview)
+                    Flickable {
+                        id: pageFlick
                         anchors.fill: parent
-                        active: Math.abs(pg.off) <= 1
-                        sourceComponent: [hello, look, bar, dock, getAround, done][pg.index]
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        contentWidth: width
+                        contentHeight: Math.max(height, pageLoader.item ? pageLoader.item.implicitHeight : 0)
+                        interactive: contentHeight > height + 1
+                        SmoothWheel {}
+                        Loader {
+                            id: pageLoader
+                            width: pageFlick.width
+                            height: pageFlick.contentHeight
+                            active: Math.abs(pg.off) <= 1
+                            sourceComponent: [hello, look, bar, dock, getAround, done][pg.index]
+                        }
                     }
                 }
             }
@@ -325,9 +362,15 @@ PanelWindow {
         id: bar
         ColumnLayout {
             spacing: 14
-            Head { Layout.fillWidth: true; title: "Your bar"; line: "Five ways to wear it. This is your real bar, as it looks now:" }
-            BarPreview { Layout.fillWidth: true }
-            BarStyles { Layout.fillWidth: true }
+            Head { id: barHead; Layout.fillWidth: true; title: "Your bar"; line: "Five ways to wear it. This is your real bar, as it looks now:" }
+            // (the monitor gets the room that's left, so the styles below always fit: at its full
+            // 250 px they were cut off under it)
+            BarPreview {
+                id: barPv
+                Layout.fillWidth: true
+                monitorH: Math.max(80, Math.min(250, pages.height - barHead.implicitHeight - barStyles.implicitHeight - barPv.chromeH - 2 * 14 - 4))
+            }
+            BarStyles { id: barStyles; Layout.fillWidth: true }
             Item { Layout.fillHeight: true }
         }
     }
@@ -384,7 +427,7 @@ PanelWindow {
         id: getAround
         ColumnLayout {
             spacing: 14
-            Head { Layout.fillWidth: true; title: "Getting around"; line: "The keys worth knowing (yours, from niri's config), and a few things to try." }
+            Head { Layout.fillWidth: true; title: "Getting around"; line: "The keys worth knowing (yours, from " + (Niri.hyprland ? "Hyprland" : "niri") + "'s config), and a few things to try." }
             GridLayout {
                 Layout.fillWidth: true
                 columns: 2
