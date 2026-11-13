@@ -304,10 +304,15 @@ Singleton {
     onModeChanged: if (Store.loaded) { makePalette(path); followApps(); }
     // other apps go dark or light with the shell (Appearance → Apps follow dark or light), from
     // wherever it's changed (Settings, the picker, the welcome tour)
+    // dark or light for every app, not only GTK 4 (GTK 3's theme, Qt's palette through qt6ct):
+    // they stayed light while the shell was dark (scripts/app_colours.py mode)
     function followApps() {
         if (Store.get("theme.appsFollow", true) === false) return;
-        Quickshell.execDetached(["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", mode === "light" ? "prefer-light" : "prefer-dark"]);
+        Quickshell.execDetached(["python3", Qt.resolvedUrl("../scripts/app_colours.py").toString().replace("file://", ""), "mode",
+                                 mode === "light" ? "light" : "dark"].concat(Store.get("apps.qt", false) === true ? ["--palette-qt"] : []));
     }
+    // and at start (an install that never switched mode, an app's settings reset since)
+    Timer { interval: 3000; running: true; onTriggered: if (Store.loaded) wall.followApps() }
 
     property bool checked: false
     Component.onCompleted: rescan()

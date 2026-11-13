@@ -3,6 +3,13 @@
 
     app_colours.py apply TARGET...   write the colours for these targets: kitty gtk qt
     app_colours.py off TARGET        take them away again (your own settings stay)
+    app_colours.py mode dark|light [--palette-qt]
+                                     dark or light for every app (Appearance → Apps follow dark or
+                                     light), even with the colours above off: GTK 3 apps get
+                                     adw-gtk3(-dark) and the prefer-dark flag, GTK 4 the colour
+                                     scheme, Qt apps a plain dark or light qt6ct/qt5ct palette (with
+                                     the accent for selections). --palette-qt: Qt has the shell's
+                                     colours already (the qt target), so it's left alone.
 
 kitty: ~/.config/kitty/colors.conf (kitty.conf includes it), reloaded in open windows.
 gtk:   a marked block in ~/.config/gtk-3.0/gtk.css and gtk-4.0/gtk.css (GTK 3 and libadwaita
@@ -138,10 +145,75 @@ def qt(c, on=True):
             cp.write(f, space_around_delimiters=False)
 
 
+# plain greys for Qt in either mode (only the accent comes from the palette)
+GREYS = {
+    "dark": {"surface": "#1e1f22", "surface_container_lowest": "#141517", "surface_container_low": "#1a1b1e",
+             "surface_container": "#232428", "surface_container_high": "#2b2c31", "surface_container_highest": "#36373d",
+             "on_surface": "#e6e6e9", "outline": "#80828a"},
+    # (light: the bevel's light edge white and its dark edge grey, the other way round from dark)
+    "light": {"surface": "#fafafb", "surface_container_lowest": "#c4c4ca", "surface_container_low": "#f4f4f6",
+              "surface_container": "#d9d9de", "surface_container_high": "#ececf0", "surface_container_highest": "#ffffff",
+              "on_surface": "#1b1b1f", "outline": "#777981"},
+}
+
+
+def ini_set(path, section, key, value):
+    cp = configparser.RawConfigParser()
+    cp.optionxform = str
+    if os.path.exists(path):
+        try:
+            cp.read(path)
+        except configparser.Error:
+            return
+    if not cp.has_section(section):
+        cp.add_section(section)
+    cp.set(section, key, value)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        cp.write(f, space_around_delimiters=False)
+
+
+def follow(mode, palette_qt):
+    dark = mode != "light"
+    gs = ["gsettings", "set", "org.gnome.desktop.interface"]
+    subprocess.run(gs + ["color-scheme", "prefer-dark" if dark else "prefer-light"], stderr=subprocess.DEVNULL)
+    # GTK 3 only changes with its theme: adw-gtk3 / Adwaita in the right variant (a theme of
+    # your own, anything else, is left as it is)
+    try:
+        cur = subprocess.run(["gsettings", "get", "org.gnome.desktop.interface", "gtk-theme"],
+                             capture_output=True, text=True).stdout.strip().strip("'")
+    except OSError:
+        cur = ""
+    base = {"adw-gtk3": "adw-gtk3", "adw-gtk3-dark": "adw-gtk3", "Adwaita": "Adwaita", "Adwaita-dark": "Adwaita", "": "adw-gtk3"}.get(cur)
+    if base:
+        if base == "adw-gtk3" and not any(os.path.isdir(d + "/adw-gtk3") for d in ("/usr/share/themes", HOME + "/.themes", HOME + "/.local/share/themes")):
+            base = "Adwaita"
+        theme = base + ("-dark" if dark else "")
+        subprocess.run(gs + ["gtk-theme", theme], stderr=subprocess.DEVNULL)
+        for v in ("gtk-3.0", "gtk-4.0"):
+            ini_set(CONF + "/" + v + "/settings.ini", "Settings", "gtk-theme-name", theme)
+    for v in ("gtk-3.0", "gtk-4.0"):
+        ini_set(CONF + "/" + v + "/settings.ini", "Settings", "gtk-application-prefer-dark-theme", "1" if dark else "0")
+    # Qt: a plain palette in the mode (unless the shell's own colours are already there)
+    if not palette_qt:
+        try:
+            pal, _ = palette()
+        except (OSError, ValueError):
+            pal = {}
+        c = dict(GREYS["dark" if dark else "light"])
+        c["primary"] = pal.get("primary", "#7aa2f7" if dark else "#3b5bdb")
+        c["on_primary"] = pal.get("on_primary", "#000000" if dark else "#ffffff")
+        c["tertiary"] = pal.get("tertiary", c["primary"])
+        qt(c)
+
+
 def main():
     if len(sys.argv) < 3:
         sys.exit(__doc__)
     cmd, targets = sys.argv[1], sys.argv[2:]
+    if cmd == "mode":
+        follow(targets[0], "--palette-qt" in targets)
+        return
     c, mode = palette()
     if cmd == "apply":
         for t in targets:

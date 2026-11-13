@@ -13,7 +13,9 @@ Singleton {
     readonly property string ffScript: Qt.resolvedUrl("../scripts/fastfetch.py").toString().replace("file://", "")
 
     function apply() { later.restart(); }
-    function switchOff(t) { Quickshell.execDetached(["python3", script, "off", t]); }
+    // (Qt switched off: it goes back to the plain dark or light palette, not to qt6ct's default)
+    function switchOff(t) { Quickshell.execDetached(["python3", script, "off", t]); if (t === "qt") backToMode.restart(); }
+    Timer { id: backToMode; interval: 600; onTriggered: Wall.followApps() }
     Timer {
         id: later
         interval: 800
