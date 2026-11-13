@@ -27,7 +27,7 @@ Page {
         { id: "desktop", desc: "Widgets and the screen edges", title: "Desktop", icon: "widgets", tabs: [["desktop", "Widgets", "Desktop"], ["quickaccess", "Quick access (screen edges)", "QuickAccess"]] },
         { id: "windows", desc: "Gaps, borders, window corners and workspaces", title: "Windows", icon: "select_window", tabs: [["windows", "Windows", "Windows"], ["workspaces", "Workspaces per screen", "Workspaces"]] },
         { id: "display", desc: "Monitors, scaling and night light", title: "Displays", icon: "monitor", gap: true, tabs: [["display", "Monitors", "Display"], ["nightlight", "Night light", "Night"]] },
-        { id: "devices", desc: "Keyboard, mouse, microphone and camera", title: "Devices", icon: "keyboard", tabs: [["input", "Keyboard & mouse", "Input"], ["devices", "Microphone & camera", "Devices"]] },
+        { id: "devices", desc: "Keyboard, shortcuts, mouse, microphone and camera", title: "Devices", icon: "keyboard", tabs: [["input", "Keyboard & mouse", "Input"], ["keybinds", "Keyboard shortcuts", "Keybinds"], ["devices", "Microphone & camera", "Devices"]] },
         { id: "alerts", desc: "Notifications, sounds and pop-ups", title: "Notifications", icon: "notifications", tabs: [["notifications", "Notifications", "Notifications"], ["sounds", "Sounds", "SoundSettings"], ["osd", "On-screen pop-up", "Osd"]] },
         { id: "lock", desc: "Locking, sleeping and what happens when you're away", title: "Lock & idle", icon: "lock_clock", gap: true, tabs: [["idle", "Lock & idle", "Idle"]] },
         { id: "capture", desc: "Screenshots and recordings", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots", "Capture"]] },

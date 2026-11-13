@@ -93,7 +93,13 @@ EOF
             echo ""
             python3 "$HYPR_MODULES/merge_keys.py" hypr "$HYPR_DIR" "$src" "$m" "$kind" 2>/dev/null
         fi
-    } | hypr_files write keybinds
+    } | _hypr_my_changes | hypr_files write keybinds
+}
+# the keys you changed in Settings, put back on the freshly made keybinds (shell/scripts/keys.py)
+_hypr_my_changes() {
+    local k="$HOME/.local/share/monolith/shell/scripts/keys.py"
+    [ -f "$k" ] || k="$HYPR_MODULES/../../monolith/shell/scripts/keys.py"
+    if [ -f "$k" ] && [ -f "$HOME/.config/monolith/keys-hyprland.json" ]; then python3 "$k" hypr-apply --hyprland; else cat; fi
 }
 
 # Another shell's lines in the config: its start-up lines and every key that calls it (its
