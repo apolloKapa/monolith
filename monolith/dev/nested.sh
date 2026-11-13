@@ -18,7 +18,7 @@ cat > "$rt/niri.kdl" <<KDL
 input {
     keyboard {
         xkb {
-            layout "us,de"
+            layout "us"
         }
     }
 }
