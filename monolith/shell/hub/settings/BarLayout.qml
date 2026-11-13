@@ -257,7 +257,7 @@ ColumnLayout {
                     chip.ed.overZone = z ? z.zone : "";
                 }
             }
-            onReleased: { if (chip.ed.dragging) { chip.ed.dropAt(chip.ed.dragPos); chip.ed.dragging = false; chip.ed.overZone = ""; } }
+            onReleased: { if (chip.ed.dragging) { chip.ed.dropAt(chip.ed.dragPos); chip.ed.dragging = false; chip.ed.overZone = ""; } else chip.ed.showModTab(chip.key); }
             onCanceled: { chip.ed.dragging = false; chip.ed.overZone = ""; }
         }
     }
@@ -369,100 +369,6 @@ ColumnLayout {
     }
     Button { text: "Back to the default modules"; icon: "restart_alt"; onClicked: Store.set("bar.modules", null) }
 
-    // the modules' looks: each shown as the module itself
-    Label { text: "Modules"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
-    // the clock: one big live preview, and a toggle for each of its parts
-    Label { text: "Clock"; strong: true; Layout.leftMargin: 6 }
-    Rectangle {
-        Layout.fillWidth: true
-        Layout.preferredHeight: Math.max(110, clockBox.height + 40)
-        radius: Theme.corner(80, 10)
-        color: Theme.container
-        border.width: Theme.outlineW; border.color: Theme.outlineColor
-        // the clock module on a piece of bar, twice its real size
-        readonly property real k: 2
-        Rectangle {
-            id: clockBox
-            anchors.centerIn: parent
-            width: (clockPrev.implicitWidth + 16) * parent.k
-            height: Theme.islandH * parent.k
-            radius: Theme.barRound(Theme.islandH) * parent.k
-            color: Theme.frame
-            Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
-            IslandBar {
-                id: clockPrev
-                enabled: false
-                only: ["clock"]
-                scale: parent.parent.k
-                transformOrigin: Item.Center
-                anchors.centerIn: parent
-            }
-        }
-        Label {
-            anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 8
-            text: "Twice its real size"; muted: true; font.pixelSize: Theme.sizeSmall - 2
-        }
-    }
-    SettingRow {
-        key: "bar.clock.seconds";
-        icon: "timer"; title: "Seconds"; desc: "Hours, minutes and seconds"
-        Toggle { checked: clockPrev.clockSeconds; onToggled: on => Store.set("bar.clock.seconds", on) }
-    }
-    SettingRow {
-        key: "bar.clock.stackTime";
-        icon: "view_agenda"; title: "Hours over minutes"; desc: "The time stacked in lines instead of one row"
-        Toggle { checked: clockPrev.clockStackTime; onToggled: on => Store.set("bar.clock.stackTime", on) }
-    }
-    SettingRow {
-        key: "bar.clock.hour12";
-        icon: "schedule"; title: "12-hour time"; desc: "With AM / PM"
-        Toggle { checked: clockPrev.clock12; onToggled: on => Store.set("bar.clock.hour12", on) }
-    }
-    SettingRow {
-        key: "bar.clock.date";
-        icon: "calendar_today"; title: "Date"; desc: "The date beside the time"
-        Toggle { checked: clockPrev.clockDate; onToggled: on => Store.set("bar.clock.date", on) }
-    }
-    SettingRow {
-        key: "bar.clock.dateLayout";
-        visible: clockPrev.clockDate
-        icon: "splitscreen"; title: "Date layout"; desc: clockPrev.clockDateLayout === "stacked" ? "Two small lines beside the time" : "One line beside the time"
-        Segmented { width: 240; opts: [["stacked", "Stacked"], ["inline", "One line"]]; value: clockPrev.clockDateLayout; onPicked: v => Store.set("bar.clock.dateLayout", v) }
-    }
-    SettingRow {
-        key: "bar.clock.weekday";
-        visible: clockPrev.clockDate
-        icon: "event"; title: "Day of the week"; desc: "Its name with the date"
-        Toggle { checked: clockPrev.clockWeekday; onToggled: on => Store.set("bar.clock.weekday", on) }
-    }
-    Label { text: "Workspaces"; strong: true; Layout.leftMargin: 6; Layout.topMargin: 4 }
-    Label { text: "Shown with four sample workspaces: the second open, the first three with windows"; Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6 }
-    StylePick {
-        module: "workspaces"
-        opts: [["pills", "Pills"], ["dots", "Dots"], ["lines", "Lines"], ["rings", "Rings"], ["squares", "Squares"],
-               ["numbers", "Numbers"], ["numberPills", "Numbered pill"], ["bubbles", "Bubbles"]]
-        value: Store.get("bar.workspaces", "pills")
-        onPicked: v => Store.set("bar.workspaces", v)
-    }
-    SettingRow {
-        key: "bar.stats";
-        icon: "memory"; title: "System stats"; desc: "Which ones show"
-        Row {
-            spacing: 4
-            Repeater {
-                model: [["cpu", "CPU"], ["mem", "Memory"], ["temp", "CPU °"], ["gpu", "GPU"], ["vram", "VRAM"], ["gtemp", "GPU °"]]
-                Pressable {
-                    required property var modelData
-                    readonly property var which: Store.get("bar.stats", ["cpu", "temp"])
-                    readonly property bool on: which.indexOf(modelData[0]) !== -1
-                    height: 32; width: sl.implicitWidth + 24
-                    color: on ? Theme.accentContainer : Theme.control
-                    onClicked: Store.set("bar.stats", on ? which.filter(x => x !== modelData[0]) : which.concat([modelData[0]]))
-                    Label { id: sl; anchors.centerIn: parent; text: parent.modelData[1]; strong: parent.on; font.pixelSize: Theme.sizeSmall }
-                }
-            }
-        }
-    }
     // ── the visualiser module: its look ("bar.vis.*"); what it hears is cava's, shared with the
     // desktop visualiser widgets ──
     component VisPick: Dropdown {
@@ -473,102 +379,6 @@ ColumnLayout {
         value: String(Store.get("bar.vis." + k, d))
         onPicked: v => Store.set("bar.vis." + k, isNaN(Number(v)) || v === "" ? v : Number(v))
     }
-    Label { text: "Visualiser"; strong: true; Layout.leftMargin: 6; Layout.topMargin: 4 }
-    Label {
-        text: sec.used.indexOf("visualizer") === -1 ? "Not on the bar yet: drag Visualizer into a zone above. It shows while music plays."
-                                                    : "It shows while music plays. The preview is a still curve, twice its real size."
-        Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6
-    }
-    Rectangle {
-        Layout.fillWidth: true
-        Layout.preferredHeight: Theme.islandH * 2 + 40
-        radius: Theme.corner(80, 6)
-        color: Theme.container
-        border.width: Theme.outlineW; border.color: Theme.outlineColor
-        readonly property real k: 2
-        Rectangle {
-            anchors.centerIn: parent
-            width: (visPrev.implicitWidth + 16) * parent.k
-            height: Theme.islandH * parent.k
-            radius: Theme.barRound(Theme.islandH) * parent.k
-            color: Theme.frame
-            Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
-            IslandBar {
-                id: visPrev
-                enabled: false
-                only: ["visualizer"]
-                visPreview: true
-                scale: parent.parent.k
-                transformOrigin: Item.Center
-                anchors.centerIn: parent
-            }
-        }
-    }
-    SettingRow {
-        key: "bar.vis.style";
-        icon: "graphic_eq"; title: "Look"; desc: "Separate bars, or one smooth filled shape"
-        Segmented { width: 220; opts: [["bars", "Bars"], ["smooth", "Smooth"]]; value: String(Store.get("bar.vis.style", "bars")); onPicked: v => Store.set("bar.vis.style", v) }
-    }
-    SettingRow {
-        key: "bar.vis.bars"; def: 9;
-        icon: "bar_chart"; title: "Bars"; desc: "How many"
-        NumberBox { from: 3; to: 48; value: Number(Store.get("bar.vis.bars", 9)); onMoved: v => Store.set("bar.vis.bars", v) }
-    }
-    SettingRow {
-        key: "bar.vis.width"; def: 46;
-        icon: "width"; title: "Width"
-        NumberBox { from: 16; to: 300; slideTo: 200; unit: "px"; value: Number(Store.get("bar.vis.width", 46)); onMoved: v => Store.set("bar.vis.width", v) }
-    }
-    SettingRow {
-        key: "bar.vis.height"; def: 16;
-        icon: "height"; title: "Height"; desc: "Never taller than the bar allows"
-        NumberBox { from: 6; to: 60; slideTo: 40; unit: "px"; value: Number(Store.get("bar.vis.height", 16)); onMoved: v => Store.set("bar.vis.height", v) }
-    }
-    SettingRow {
-        key: "bar.vis.spacing"; def: 2;
-        visible: Store.get("bar.vis.style", "bars") !== "smooth"
-        icon: "space_bar"; title: "Gap between bars"
-        NumberBox { from: 0; to: 12; unit: "px"; value: Number(Store.get("bar.vis.spacing", 2)); onMoved: v => Store.set("bar.vis.spacing", v) }
-    }
-    SettingRow {
-        key: "bar.vis.anchor";
-        icon: "vertical_align_center"; title: "Grows from"
-        Segmented { width: 300; opts: [["bottom", "Bottom"], ["middle", "Middle"], ["top", "Top"]]; value: String(Store.get("bar.vis.anchor", "bottom")); onPicked: v => Store.set("bar.vis.anchor", v) }
-    }
-    SettingRow {
-        key: "bar.vis.roundness";
-        visible: Store.get("bar.vis.style", "bars") !== "smooth"
-        icon: "rounded_corner"; title: "Bar ends"
-        VisPick { k: "roundness"; d: "1"; opts: [["0", "Square"], ["0.35", "Slightly round"], ["0.7", "Round"], ["1", "Fully round"]] }
-    }
-    SettingRow {
-        key: "bar.vis.scale";
-        icon: "expand"; title: "How tall loud parts get"
-        VisPick { k: "scale"; d: "1"; opts: [["0.5", "50 %"], ["0.75", "75 %"], ["1", "100 %"], ["1.25", "125 %"], ["1.5", "150 %"]] }
-    }
-    SettingRow {
-        key: "bar.vis.rest";
-        icon: "horizontal_rule"; title: "Height when silent"
-        VisPick { k: "rest"; d: "2"; opts: [["0", "0 px"], ["1", "1 px"], ["2", "2 px"], ["3", "3 px"], ["4", "4 px"], ["6", "6 px"]] }
-    }
-    SettingRow {
-        key: "bar.vis.smoothing";
-        visible: Store.get("bar.vis.style", "bars") !== "smooth"
-        icon: "animation"; title: "Movement"
-        VisPick { k: "smoothing"; d: "70"; opts: [["0", "Instant"], ["40", "Snappy"], ["70", "Smooth"], ["120", "Smoother"], ["200", "Slow"]] }
-    }
-    SettingRow {
-        key: "bar.vis.fade"; def: true;
-        icon: "gradient"; title: "Fade towards the edges"
-        Toggle { checked: Store.get("bar.vis.fade", true) === true; onToggled: on => Store.set("bar.vis.fade", on) }
-    }
-    SettingRow {
-        key: "bar.vis.dynamic"; def: true;
-        visible: Store.get("bar.vis.style", "bars") !== "smooth"
-        icon: "opacity"; title: "Quiet bars are dimmer"
-        Toggle { checked: Store.get("bar.vis.dynamic", true) === true; onToggled: on => Store.set("bar.vis.dynamic", on) }
-    }
-    // colours: the accent, a theme colour, or any #rrggbb; the second one blends across it
     component VisColour: Row {
         id: vcl
         property string k: ""
@@ -600,32 +410,262 @@ ColumnLayout {
             onAccepted: v => { v = v.trim(); if (!v.startsWith("#")) v = "#" + v; if (/^#[0-9a-fA-F]{6}$/.test(v)) Store.set("bar.vis." + vcl.k, v); }
         }
     }
-    SettingRow {
-        key: "bar.vis.colour";
-        icon: "palette"; title: "Colour"
-        VisColour { k: "colour"; d: "accent" }
+    // the modules' own settings: a tab for each module that has some (a click on its chip in the
+    // zones above opens it too)
+    Label { text: "Module settings"; strong: true; Layout.leftMargin: 6; Layout.topMargin: 10 }
+    Label { text: "Pick a module (or click it in the zones above) to see its settings"; Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6 }
+    readonly property var modTabs: [["clock", "Clock", "schedule"], ["workspaces", "Workspaces", "view_week"], ["visualizer", "Visualiser", "graphic_eq"],
+                                    ["stats", "Stats", "memory"], ["media", "Now playing", "music_note"], ["sound", "Sound", "volume_up"]]
+    property string modTab: Store.get("settings.barModuleTab", "clock")
+    function showModTab(t) { if (modTabs.some(x => x[0] === t)) { modTab = t; Store.set("settings.barModuleTab", t); } }
+    IconTabs { opts: sec.modTabs; value: sec.modTab; onPicked: v => sec.showModTab(v) }
+    ColumnLayout {
+        property string modTab: "clock"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        // the clock: one big live preview, and a toggle for each of its parts
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: Math.max(110, clockBox.height + 40)
+            radius: Theme.corner(80, 10)
+            color: Theme.container
+            border.width: Theme.outlineW; border.color: Theme.outlineColor
+            // the clock module on a piece of bar, twice its real size
+            readonly property real k: 2
+            Rectangle {
+                id: clockBox
+                anchors.centerIn: parent
+                width: (clockPrev.implicitWidth + 16) * parent.k
+                height: Theme.islandH * parent.k
+                radius: Theme.barRound(Theme.islandH) * parent.k
+                color: Theme.frame
+                Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+                IslandBar {
+                    id: clockPrev
+                    enabled: false
+                    only: ["clock"]
+                    scale: parent.parent.k
+                    transformOrigin: Item.Center
+                    anchors.centerIn: parent
+                }
+            }
+            Label {
+                anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 8
+                text: "Twice its real size"; muted: true; font.pixelSize: Theme.sizeSmall - 2
+            }
+        }
+        SettingRow {
+            key: "bar.clock.seconds";
+            icon: "timer"; title: "Seconds"; desc: "Hours, minutes and seconds"
+            Toggle { checked: clockPrev.clockSeconds; onToggled: on => Store.set("bar.clock.seconds", on) }
+        }
+        SettingRow {
+            key: "bar.clock.stackTime";
+            icon: "view_agenda"; title: "Hours over minutes"; desc: "The time stacked in lines instead of one row"
+            Toggle { checked: clockPrev.clockStackTime; onToggled: on => Store.set("bar.clock.stackTime", on) }
+        }
+        SettingRow {
+            key: "bar.clock.hour12";
+            icon: "schedule"; title: "12-hour time"; desc: "With AM / PM"
+            Toggle { checked: clockPrev.clock12; onToggled: on => Store.set("bar.clock.hour12", on) }
+        }
+        SettingRow {
+            key: "bar.clock.date";
+            icon: "calendar_today"; title: "Date"; desc: "The date beside the time"
+            Toggle { checked: clockPrev.clockDate; onToggled: on => Store.set("bar.clock.date", on) }
+        }
+        SettingRow {
+            key: "bar.clock.dateLayout";
+            visible: clockPrev.clockDate
+            icon: "splitscreen"; title: "Date layout"; desc: clockPrev.clockDateLayout === "stacked" ? "Two small lines beside the time" : "One line beside the time"
+            Segmented { width: 240; opts: [["stacked", "Stacked"], ["inline", "One line"]]; value: clockPrev.clockDateLayout; onPicked: v => Store.set("bar.clock.dateLayout", v) }
+        }
+        SettingRow {
+            key: "bar.clock.weekday";
+            visible: clockPrev.clockDate
+            icon: "event"; title: "Day of the week"; desc: "Its name with the date"
+            Toggle { checked: clockPrev.clockWeekday; onToggled: on => Store.set("bar.clock.weekday", on) }
+        }
     }
-    SettingRow {
-        key: "bar.vis.colour2";
-        icon: "gradient"; title: "Blend into"; desc: "A second colour across the bars (none: one colour)"
-        VisColour { k: "colour2"; d: "" }
+    ColumnLayout {
+        property string modTab: "workspaces"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        Label { text: "Shown with four sample workspaces: the second open, the first three with windows"; Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6 }
+        StylePick {
+            module: "workspaces"
+            opts: [["pills", "Pills"], ["dots", "Dots"], ["lines", "Lines"], ["rings", "Rings"], ["squares", "Squares"],
+                   ["numbers", "Numbers"], ["numberPills", "Numbered pill"], ["bubbles", "Bubbles"]]
+            value: Store.get("bar.workspaces", "pills")
+            onPicked: v => Store.set("bar.workspaces", v)
+        }
     }
-    SettingRow {
-        key: "bar.vis.always"; def: false;
-        icon: "visibility"; title: "Show with nothing playing"; desc: "Flat bars that move with any sound, instead of hiding"
-        Toggle { checked: Store.get("bar.vis.always", false) === true; onToggled: on => Store.set("bar.vis.always", on) }
+    ColumnLayout {
+        property string modTab: "visualizer"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        Label {
+            text: sec.used.indexOf("visualizer") === -1 ? "Not on the bar yet: drag Visualizer into a zone above. It shows while music plays."
+                                                        : "It shows while music plays. The preview is a still curve, twice its real size."
+            Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6
+        }
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: Theme.islandH * 2 + 40
+            radius: Theme.corner(80, 6)
+            color: Theme.container
+            border.width: Theme.outlineW; border.color: Theme.outlineColor
+            readonly property real k: 2
+            Rectangle {
+                anchors.centerIn: parent
+                width: (visPrev.implicitWidth + 16) * parent.k
+                height: Theme.islandH * parent.k
+                radius: Theme.barRound(Theme.islandH) * parent.k
+                color: Theme.frame
+                Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+                IslandBar {
+                    id: visPrev
+                    enabled: false
+                    only: ["visualizer"]
+                    visPreview: true
+                    scale: parent.parent.k
+                    transformOrigin: Item.Center
+                    anchors.centerIn: parent
+                }
+            }
+        }
+        SettingRow {
+            key: "bar.vis.style";
+            icon: "graphic_eq"; title: "Look"; desc: "Separate bars, or one smooth filled shape"
+            Segmented { width: 220; opts: [["bars", "Bars"], ["smooth", "Smooth"]]; value: String(Store.get("bar.vis.style", "bars")); onPicked: v => Store.set("bar.vis.style", v) }
+        }
+        SettingRow {
+            key: "bar.vis.bars"; def: 9;
+            icon: "bar_chart"; title: "Bars"; desc: "How many"
+            NumberBox { from: 3; to: 48; value: Number(Store.get("bar.vis.bars", 9)); onMoved: v => Store.set("bar.vis.bars", v) }
+        }
+        SettingRow {
+            key: "bar.vis.width"; def: 46;
+            icon: "width"; title: "Width"
+            NumberBox { from: 16; to: 300; slideTo: 200; unit: "px"; value: Number(Store.get("bar.vis.width", 46)); onMoved: v => Store.set("bar.vis.width", v) }
+        }
+        SettingRow {
+            key: "bar.vis.height"; def: 16;
+            icon: "height"; title: "Height"; desc: "Never taller than the bar allows"
+            NumberBox { from: 6; to: 60; slideTo: 40; unit: "px"; value: Number(Store.get("bar.vis.height", 16)); onMoved: v => Store.set("bar.vis.height", v) }
+        }
+        SettingRow {
+            key: "bar.vis.spacing"; def: 2;
+            visible: Store.get("bar.vis.style", "bars") !== "smooth"
+            icon: "space_bar"; title: "Gap between bars"
+            NumberBox { from: 0; to: 12; unit: "px"; value: Number(Store.get("bar.vis.spacing", 2)); onMoved: v => Store.set("bar.vis.spacing", v) }
+        }
+        SettingRow {
+            key: "bar.vis.anchor";
+            icon: "vertical_align_center"; title: "Grows from"
+            Segmented { width: 300; opts: [["bottom", "Bottom"], ["middle", "Middle"], ["top", "Top"]]; value: String(Store.get("bar.vis.anchor", "bottom")); onPicked: v => Store.set("bar.vis.anchor", v) }
+        }
+        SettingRow {
+            key: "bar.vis.roundness";
+            visible: Store.get("bar.vis.style", "bars") !== "smooth"
+            icon: "rounded_corner"; title: "Bar ends"
+            VisPick { k: "roundness"; d: "1"; opts: [["0", "Square"], ["0.35", "Slightly round"], ["0.7", "Round"], ["1", "Fully round"]] }
+        }
+        SettingRow {
+            key: "bar.vis.scale";
+            icon: "expand"; title: "How tall loud parts get"
+            VisPick { k: "scale"; d: "1"; opts: [["0.5", "50 %"], ["0.75", "75 %"], ["1", "100 %"], ["1.25", "125 %"], ["1.5", "150 %"]] }
+        }
+        SettingRow {
+            key: "bar.vis.rest";
+            icon: "horizontal_rule"; title: "Height when silent"
+            VisPick { k: "rest"; d: "2"; opts: [["0", "0 px"], ["1", "1 px"], ["2", "2 px"], ["3", "3 px"], ["4", "4 px"], ["6", "6 px"]] }
+        }
+        SettingRow {
+            key: "bar.vis.smoothing";
+            visible: Store.get("bar.vis.style", "bars") !== "smooth"
+            icon: "animation"; title: "Movement"
+            VisPick { k: "smoothing"; d: "70"; opts: [["0", "Instant"], ["40", "Snappy"], ["70", "Smooth"], ["120", "Smoother"], ["200", "Slow"]] }
+        }
+        SettingRow {
+            key: "bar.vis.fade"; def: true;
+            icon: "gradient"; title: "Fade towards the edges"
+            Toggle { checked: Store.get("bar.vis.fade", true) === true; onToggled: on => Store.set("bar.vis.fade", on) }
+        }
+        SettingRow {
+            key: "bar.vis.dynamic"; def: true;
+            visible: Store.get("bar.vis.style", "bars") !== "smooth"
+            icon: "opacity"; title: "Quiet bars are dimmer"
+            Toggle { checked: Store.get("bar.vis.dynamic", true) === true; onToggled: on => Store.set("bar.vis.dynamic", on) }
+        }
+        // colours: the accent, a theme colour, or any #rrggbb; the second one blends across it
+        SettingRow {
+            key: "bar.vis.colour";
+            icon: "palette"; title: "Colour"
+            VisColour { k: "colour"; d: "accent" }
+        }
+        SettingRow {
+            key: "bar.vis.colour2";
+            icon: "gradient"; title: "Blend into"; desc: "A second colour across the bars (none: one colour)"
+            VisColour { k: "colour2"; d: "" }
+        }
+        SettingRow {
+            key: "bar.vis.always"; def: false;
+            icon: "visibility"; title: "Show with nothing playing"; desc: "Flat bars that move with any sound, instead of hiding"
+            Toggle { checked: Store.get("bar.vis.always", false) === true; onToggled: on => Store.set("bar.vis.always", on) }
+        }
+        SettingRow {
+            icon: "tune"; title: "What it hears"; desc: "Input, sensitivity, frequencies and the equaliser are cava's settings, shared with the desktop visualiser widgets (their settings in the widget editor)"
+        }
     }
-    SettingRow {
-        icon: "tune"; title: "What it hears"; desc: "Input, sensitivity, frequencies and the equaliser are cava's settings, shared with the desktop visualiser widgets (their settings in the widget editor)"
+    ColumnLayout {
+        property string modTab: "stats"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        SettingRow {
+            key: "bar.stats";
+            icon: "memory"; title: "System stats"; desc: "Which ones show"
+            Row {
+                spacing: 4
+                Repeater {
+                    model: [["cpu", "CPU"], ["mem", "Memory"], ["temp", "CPU °"], ["gpu", "GPU"], ["vram", "VRAM"], ["gtemp", "GPU °"]]
+                    Pressable {
+                        required property var modelData
+                        readonly property var which: Store.get("bar.stats", ["cpu", "temp"])
+                        readonly property bool on: which.indexOf(modelData[0]) !== -1
+                        height: 32; width: sl.implicitWidth + 24
+                        color: on ? Theme.accentContainer : Theme.control
+                        onClicked: Store.set("bar.stats", on ? which.filter(x => x !== modelData[0]) : which.concat([modelData[0]]))
+                        Label { id: sl; anchors.centerIn: parent; text: parent.modelData[1]; strong: parent.on; font.pixelSize: Theme.sizeSmall }
+                    }
+                }
+            }
+        }
     }
-    SettingRow {
-        key: "bar.mediaPeek"; def: true;
-        icon: "music_note"; title: "Now playing peek"; desc: "Hovering the Now playing module shows a small player under it"
-        Toggle { checked: Store.get("bar.mediaPeek", true) !== false; onToggled: on => Store.set("bar.mediaPeek", on) }
+    ColumnLayout {
+        property string modTab: "media"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        SettingRow {
+            key: "bar.mediaPeek"; def: true;
+            icon: "music_note"; title: "Now playing peek"; desc: "Hovering the Now playing module shows a small player under it"
+            Toggle { checked: Store.get("bar.mediaPeek", true) !== false; onToggled: on => Store.set("bar.mediaPeek", on) }
+        }
     }
-    SettingRow {
-        key: "bar.soundPercent"; def: true;
-        icon: "volume_up"; title: "Volume number"; desc: "Beside the sound icon"
-        Toggle { checked: Store.get("bar.soundPercent", true) !== false; onToggled: on => Store.set("bar.soundPercent", on) }
+    ColumnLayout {
+        property string modTab: "sound"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        SettingRow {
+            key: "bar.soundPercent"; def: true;
+            icon: "volume_up"; title: "Volume number"; desc: "Beside the sound icon"
+            Toggle { checked: Store.get("bar.soundPercent", true) !== false; onToggled: on => Store.set("bar.soundPercent", on) }
+        }
     }
 }

@@ -87,7 +87,17 @@ Page {
     }
     function seek() {
         if (findRow === "" || !loader.item) return;
-        const row = rowsIn(loader.item, []).find(r => r.title === findRow && r.visible);
+        const rows = rowsIn(loader.item, []).filter(r => r.title === findRow);
+        let row = rows.find(r => r.visible);
+        // on a tab of its page that isn't open (Bar → Module settings): open that tab, then look again
+        if (!row && loader.item.showModTab) {
+            for (const r of rows) for (let p = r.parent; p && p !== loader.item; p = p.parent)
+                if (p.modTab !== undefined && typeof p.modTab === "string" && p.visible === false && p.parent && p.parent === loader.item) {
+                    loader.item.showModTab(p.modTab);
+                    Qt.callLater(page.seek);
+                    return;
+                }
+        }
         findRow = "";
         if (!row) return;
         const y = row.mapToItem(loader.item, 0, 0).y;
