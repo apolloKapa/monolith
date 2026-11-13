@@ -1,77 +1,18 @@
 // Keybinds (Monolith defaults)
 // Part of Monolith's niri setup (included from ../config.kdl).
 
-// ===================== Keybinds =====================
 binds {
-    Mod+Shift+Slash { show-hotkey-overlay; }
-
+    // ── Apps ────────────────────────────────────────────────────────
+    // Programs on a key
     Mod+C hotkey-overlay-title="Open a Terminal: kitty" { spawn "kitty"; }
     Mod+B { spawn "librewolf"; }
     Mod+E { spawn "thunar"; }
     Mod+Escape { spawn "missioncenter"; }
 
-    Ctrl+Print { spawn "monolith" "screenshot" "--full"; }
-    Alt+Print { spawn "monolith" "screenshot" "--full" "--edit"; }
-
-    XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
-    XF86AudioStop        allow-when-locked=true { spawn-sh "playerctl stop"; }
-    XF86AudioPrev        allow-when-locked=true { spawn-sh "playerctl previous"; }
-    XF86AudioNext        allow-when-locked=true { spawn-sh "playerctl next"; }
-
+    // ── Monolith ────────────────────────────────────────────────────
+    // The launcher, control center, settings and the shell's other menus
+    Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+O repeat=false { toggle-overview; }
-    Mod+Ctrl+Z repeat=false { spawn-sh "pgrep -x wooz > /dev/null || wooz --mouse-track"; }
-
-
-    Mod+Q repeat=false { close-window; }
-
-    Mod+Left  { focus-column-left; }
-    Mod+Ctrl+Left  { move-column-left; }
-    Mod+Down  { focus-window-down; }
-    Mod+Ctrl+Down  { move-window-down; }
-    Mod+Up    { focus-window-up; }
-    Mod+Ctrl+Up    { move-window-up; }
-    Mod+Right { focus-column-right; }
-    Mod+Ctrl+Right { move-column-right; }
-    Mod+H hotkey-overlay-title="Restart the shell" { spawn "monolith" "restart"; }
-    Mod+J     { focus-window-down; }
-    Mod+K     { focus-window-up; }
-    Mod+L { spawn "monolith" "lock"; }
-
-    Mod+Shift+Left  { focus-monitor-left; }
-    Mod+Shift+Down  { focus-monitor-down; }
-    Mod+Shift+Up    { focus-monitor-up; }
-    Mod+Shift+Right { focus-monitor-right; }
-    Mod+Ctrl+H     { move-column-left; }
-    Mod+Ctrl+J     { move-window-down; }
-    Mod+Ctrl+K     { move-window-up; }
-    Mod+Ctrl+L     { move-column-right; }
-
-    Mod+Home { focus-column-first; }
-    Mod+End  { focus-column-last; }
-    Mod+Ctrl+Home { move-column-to-first; }
-    Mod+Ctrl+End  { move-column-to-last; }
-
-    Mod+Alt+Left  { focus-monitor-left; }
-    Mod+Alt+Down  { focus-monitor-down; }
-    Mod+Alt+Up    { focus-monitor-up; }
-    Mod+Alt+Right { focus-monitor-right; }
-    Mod+Shift+H     { focus-monitor-left; }
-    Mod+Shift+J     { focus-monitor-down; }
-    Mod+Shift+K     { focus-monitor-up; }
-    Mod+Shift+L     { focus-monitor-right; }
-
-    Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
-    Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }
-    Mod+Shift+Ctrl+Up    { move-column-to-monitor-up; }
-    Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
-    Mod+Shift+Ctrl+H     { move-column-to-monitor-left; }
-    Mod+Shift+Ctrl+J     { move-column-to-monitor-down; }
-    Mod+Shift+Ctrl+K     { move-column-to-monitor-up; }
-    Mod+Shift+Ctrl+L     { move-column-to-monitor-right; }
-
-    Mod+Page_Down      { focus-workspace-down; }
-    Mod+Page_Up        { focus-workspace-up; }
-    Mod+U              { focus-workspace-down; }
     Mod+D { spawn "monolith" "msg" "toggle" "system"; }
     Mod+S { spawn "monolith" "msg" "toggle" "settings"; }
     Mod+N { spawn "monolith" "msg" "toggle" "network"; }
@@ -84,22 +25,85 @@ binds {
     Mod+X { spawn "monolith" "msg" "toggle" "music"; }
     Mod+Alt+W { spawn "monolith" "msg" "toggle" "wallpaper"; }
     Mod+Alt+H { spawn "monolith" "msg" "toggle" "settings"; }
-    Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
-    Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
-    Mod+Ctrl+U         { move-column-to-workspace-down; }
-    Mod+Ctrl+I         { move-column-to-workspace-up; }
+    Mod+Period hotkey-overlay-title="Emoji" { spawn "monolith" "msg" "toggle" "emoji"; }
+    Mod+W { spawn "monolith" "msg" "toggle" "wallpaper"; }
+    Mod+Z { spawn "monolith" "msg" "toggle" "launcher"; }
+    Mod+Space { spawn "monolith" "msg" "toggle" "launcher"; }
+    Mod+I { spawn "monolith" "appimages"; }
+    Mod+Tab { spawn "monolith" "msg" "toggle" "switcher"; }
+    Mod+Alt+V { spawn "monolith" "msg" "toggle" "clipboard"; }
 
-    Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
-    Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
-    // zoom, like KDE: Meta+Ctrl+scroll up zooms in at the mouse, down zooms back out
-    // (moving a window to another workspace stays on Mod+Ctrl+Page_Up/Down and Mod+Ctrl+U/I)
-    Mod+Ctrl+WheelScrollUp   cooldown-ms=80 { spawn "monolith" "zoom" "in"; }
-    Mod+Ctrl+WheelScrollDown cooldown-ms=80 { spawn "monolith" "zoom" "out"; }
+    // ── Windows ─────────────────────────────────────────────────────
+    // Focus, move, close, float, fullscreen
+    Mod+Q repeat=false { close-window; }
+    Mod+Left  { focus-column-left; }
+    Mod+Ctrl+Left  { move-column-left; }
+    Mod+Down  { focus-window-down; }
+    Mod+Ctrl+Down  { move-window-down; }
+    Mod+Up    { focus-window-up; }
+    Mod+Ctrl+Up    { move-window-up; }
+    Mod+Right { focus-column-right; }
+    Mod+Ctrl+Right { move-column-right; }
+    Mod+J     { focus-window-down; }
+    Mod+K     { focus-window-up; }
+    Mod+Ctrl+H     { move-column-left; }
+    Mod+Ctrl+J     { move-window-down; }
+    Mod+Ctrl+K     { move-window-up; }
+    Mod+Ctrl+L     { move-column-right; }
+    Mod+Home { focus-column-first; }
+    Mod+End  { focus-column-last; }
+    Mod+Ctrl+Home { move-column-to-first; }
+    Mod+Ctrl+End  { move-column-to-last; }
     Mod+WheelScrollRight      { focus-column-right; }
     Mod+WheelScrollLeft       { focus-column-left; }
     Mod+Ctrl+WheelScrollRight { move-column-right; }
     Mod+Ctrl+WheelScrollLeft  { move-column-left; }
+    Mod+BracketLeft  { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+    Mod+Comma  { consume-window-into-column; }
+    Mod+R { toggle-window-floating; }
+    Mod+F { fullscreen-window; }
+    Mod+Shift+F { maximize-column; }
+    Mod+T { spawn-sh "niri msg -j focused-window | jq -e .is_floating >/dev/null && niri msg action toggle-window-floating; niri msg action maximize-column"; }
+    Mod+Ctrl+C { center-visible-columns; }
+    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+    Mod+Shift+W { toggle-column-tabbed-display; }
 
+    // ── Monitors ────────────────────────────────────────────────────
+    // Focus another screen, or send a window to it
+    Mod+Shift+Left  { focus-monitor-left; }
+    Mod+Shift+Down  { focus-monitor-down; }
+    Mod+Shift+Up    { focus-monitor-up; }
+    Mod+Shift+Right { focus-monitor-right; }
+    Mod+Alt+Left  { focus-monitor-left; }
+    Mod+Alt+Down  { focus-monitor-down; }
+    Mod+Alt+Up    { focus-monitor-up; }
+    Mod+Alt+Right { focus-monitor-right; }
+    Mod+Shift+H     { focus-monitor-left; }
+    Mod+Shift+J     { focus-monitor-down; }
+    Mod+Shift+K     { focus-monitor-up; }
+    Mod+Shift+L     { focus-monitor-right; }
+    Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+Up    { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
+    Mod+Shift+Ctrl+H     { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+J     { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+K     { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+L     { move-column-to-monitor-right; }
+    Mod+Shift+P { power-off-monitors; }
+
+    // ── Workspaces ──────────────────────────────────────────────────
+    // Switch workspace, or send a window to one (also with the scroll wheel)
+    Mod+Page_Down      { focus-workspace-down; }
+    Mod+Page_Up        { focus-workspace-up; }
+    Mod+U              { focus-workspace-down; }
+    Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
+    Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
+    Mod+Ctrl+U         { move-column-to-workspace-down; }
+    Mod+Ctrl+I         { move-column-to-workspace-up; }
+    Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
+    Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
     Mod+1 { focus-workspace 1; }
     Mod+2 { focus-workspace 2; }
     Mod+3 { focus-workspace 3; }
@@ -110,7 +114,6 @@ binds {
     Mod+8 { focus-workspace 8; }
     Mod+9 { focus-workspace 9; }
     Mod+0 { focus-workspace 10; }
-
     Mod+Ctrl+1 { move-column-to-workspace 1; }
     Mod+Ctrl+2 { move-column-to-workspace 2; }
     Mod+Ctrl+3 { move-column-to-workspace 3; }
@@ -121,7 +124,6 @@ binds {
     Mod+Ctrl+8 { move-column-to-workspace 8; }
     Mod+Ctrl+9 { move-column-to-workspace 9; }
     Mod+Ctrl+0 { move-column-to-workspace 10; }
-
     Mod+Shift+1 { move-column-to-workspace 1; }
     Mod+Shift+2 { move-column-to-workspace 2; }
     Mod+Shift+3 { move-column-to-workspace 3; }
@@ -133,55 +135,52 @@ binds {
     Mod+Shift+9 { move-column-to-workspace 9; }
     Mod+Shift+0 { move-column-to-workspace 10; }
 
-    Mod+BracketLeft  { consume-or-expel-window-left; }
-    Mod+BracketRight { consume-or-expel-window-right; }
-    Mod+Comma  { consume-window-into-column; }
-    Mod+Period hotkey-overlay-title="Emoji" { spawn "monolith" "msg" "toggle" "emoji"; }
-
-    Mod+R { toggle-window-floating; }
+    // ── Sizes ───────────────────────────────────────────────────────
+    // Window widths and heights
     Mod+Shift+R { switch-preset-column-width-back; }
     Mod+Ctrl+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R { reset-window-height; }
-
-    Mod+F { fullscreen-window; }
-    Mod+Shift+F { maximize-column; }
-    Mod+T { spawn-sh "niri msg -j focused-window | jq -e .is_floating >/dev/null && niri msg action toggle-window-floating; niri msg action maximize-column"; }
-
     Mod+Ctrl+F { expand-column-to-available-width; }
-    Mod+Ctrl+C { center-visible-columns; }
-
     Mod+Minus { set-column-width "-10%"; }
     Mod+Equal { set-column-width "+10%"; }
     Mod+Shift+Minus { set-window-height "-10%"; }
     Mod+Shift+Equal { set-window-height "+10%"; }
 
-    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
-    Mod+W { spawn "monolith" "msg" "toggle" "wallpaper"; }
-    Mod+Shift+W { toggle-column-tabbed-display; }
+    // ── Zoom ────────────────────────────────────────────────────────
+    // Magnify around the mouse
+    Mod+Ctrl+Z repeat=false { spawn-sh "pgrep -x wooz > /dev/null || wooz --mouse-track"; }
+    Mod+Ctrl+WheelScrollUp   cooldown-ms=80 { spawn "monolith" "zoom" "in"; }
+    Mod+Ctrl+WheelScrollDown cooldown-ms=80 { spawn "monolith" "zoom" "out"; }
 
-    Mod+M repeat=false { quit; }
-    Mod+Shift+E { quit; }
-    Ctrl+Alt+Delete { quit; }
-    Mod+Shift+P { power-off-monitors; }
-
-    // Launcher, window switcher, clipboard
-    Mod+Z { spawn "monolith" "msg" "toggle" "launcher"; }
-    Mod+Space { spawn "monolith" "msg" "toggle" "launcher"; }
-    Mod+I { spawn "monolith" "appimages"; }
-    Mod+Tab { spawn "monolith" "msg" "toggle" "switcher"; }
-    Mod+Alt+V { spawn "monolith" "msg" "toggle" "clipboard"; }
-
-    // Media keys, brightness, screenshots, lock
+    // ── Media, volume and brightness ────────────────────────────────
+    // Also work on the lock screen
+    XF86AudioPlay        allow-when-locked=true { spawn-sh "playerctl play-pause"; }
+    XF86AudioStop        allow-when-locked=true { spawn-sh "playerctl stop"; }
+    XF86AudioPrev        allow-when-locked=true { spawn-sh "playerctl previous"; }
+    XF86AudioNext        allow-when-locked=true { spawn-sh "playerctl next"; }
     XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
     XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"; }
     XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"; }
     XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
     XF86MonBrightnessDown { spawn "brightnessctl" "set" "5%-"; }
     XF86MonBrightnessUp   { spawn "brightnessctl" "set" "5%+"; }
+
+    // ── Screenshots ─────────────────────────────────────────────────
+    // Print: an area; with Ctrl, Alt, Shift or Mod for the whole screen and editing
+    Ctrl+Print { spawn "monolith" "screenshot" "--full"; }
+    Alt+Print { spawn "monolith" "screenshot" "--full" "--edit"; }
     Print { spawn "monolith" "screenshot"; }
     Shift+Print { spawn "monolith" "screenshot" "--edit"; }
     Mod+Print { spawn "monolith" "screenshot" "--full"; }
     Mod+Shift+S { spawn "monolith" "screenshot"; }
+
+    // ── Session ─────────────────────────────────────────────────────
+    // Lock, log out, screens off
+    Mod+H hotkey-overlay-title="Restart the shell" { spawn "monolith" "restart"; }
+    Mod+L { spawn "monolith" "lock"; }
+    Mod+M repeat=false { quit; }
+    Mod+Shift+E { quit; }
+    Ctrl+Alt+Delete { quit; }
     Mod+Ctrl+Alt+L { spawn "swaylock"; }
     Mod+Alt+L { spawn "monolith" "lock"; }
 }

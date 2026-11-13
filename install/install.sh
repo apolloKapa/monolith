@@ -130,7 +130,7 @@ setup_pam_service
 if [ "$DESKTOP" = hyprland ]; then
     # Monolith as Hyprland's shell (backs up ~/.config/hypr; `monolith hyprland off` undoes it)
     step "Hyprland"
-    hypr_switch || true
+    hypr_safe_switch || true
     upgrade_local_bin_commands
 else
 step "niri"

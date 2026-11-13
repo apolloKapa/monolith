@@ -19,7 +19,11 @@ import sys
 CONF = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
 HYPR = os.path.join(CONF, "hypr")
 LUA = os.path.exists(os.path.join(HYPR, "hyprland.lua"))
-FILE = os.path.join(HYPR, "monolith-borders." + ("lua" if LUA else "conf"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import hypr_files as hf  # noqa: E402
+# (in Monolith's folder, ~/.config/hypr/monolith/, loaded by its init; an older setup had it beside the config)
+FILE = hf.path("borders")
+OLD_FILE = os.path.join(HYPR, "monolith-borders." + ("lua" if LUA else "conf"))
 HEX = re.compile(r"^#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?$")
 
 
@@ -73,25 +77,13 @@ def apply(s):
             if v:
                 out.append("    %s = %s" % (key, v))
         out.append("}")
-    os.makedirs(HYPR, exist_ok=True)
-    tmp = FILE + ".part"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write("\n".join(out) + "\n")
-    os.replace(tmp, FILE)
-    main = os.path.join(HYPR, "hyprland.lua" if LUA else "hyprland.conf")
-    line = 'require("monolith-borders")' if LUA else "source = " + FILE
-    try:
-        text = open(main, encoding="utf-8").read()
-    except OSError:
-        return
-    if line not in text.splitlines():
-        with open(main, "a", encoding="utf-8") as f:
-            f.write(("" if text.endswith("\n") else "\n") + "\n" + line + "\n")
+    hf.migrate()
+    hf.write("borders", "\n".join(out) + "\n")
 
 
 def read():
     try:
-        first = open(FILE, encoding="utf-8").readline()
+        first = open(FILE if os.path.exists(FILE) else OLD_FILE, encoding="utf-8").readline()
         return json.loads(first.split(" monolith ", 1)[1])
     except (OSError, IndexError, ValueError):
         return {}

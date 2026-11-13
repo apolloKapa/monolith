@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Monolith as the shell on Hyprland, only when asked (the installer asks, default no; undo with
-# `monolith hyprland off`). It never uninstalls or edits another shell's own files: in
-# ~/.config/hypr it backs everything up, turns off (comments out) only the lines that start
-# Serpantinum or call it, and adds Monolith's start line and keys in a file of its own
-# (monolith.lua, or monolith.conf for a classic hyprland.conf), included at the end of the main
-# config. Hyprland reads hyprland.lua when there is one (Serpantinum's setup), else hyprland.conf.
+# Monolith as the shell on Hyprland, only when chosen (the installer's Desktop line, or
+# `monolith hyprland on`; `monolith hyprland off` undoes it). It never uninstalls or edits another
+# shell's own files. In ~/.config/hypr it backs everything up first, turns off (comments out)
+# another shell's start-up lines and keys, and keeps everything of its own in one labelled folder,
+# ~/.config/hypr/monolith/ (start, keybinds, workspaces, borders, cursor, and my-keys: yours,
+# never changed), loaded by monolith/init with one line at the end of your main config
+# (shell/scripts/hypr_files.py). Hyprland reads hyprland.lua when there is one, else hyprland.conf.
 
 HYPR_DIR="$HOME/.config/hypr"
 HYPR_BACKUP="$HOME/.config/hypr.before-monolith"
@@ -12,20 +13,27 @@ HYPR_MARK="monolith-off: "
 HYPR_MODULES="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 # Which keys Hyprland gets: "monolith" (Monolith's own layout, the same as on niri, made from its
 # niri keymap by hypr_keys.py; every other key in the config is turned off) or "mine" (your
-# config's keys stay; Serpantinum's keys are pointed at Monolith). Kept in Monolith's file, so
-# an update keeps the choice. Set by the installer's menu.
+# config's keys stay; another shell's become Monolith's, merge_keys.py). Kept in the keybinds
+# file, so an update keeps the choice. Set by the installer's menu.
 HYPR_KEYS="${HYPR_KEYS:-}"
-hypr_keys_saved() { sed -n 's/^[#-]* keys: \([a-z]*\)$/\1/p' "$HYPR_DIR/monolith.lua" "$HYPR_DIR/monolith.conf" 2>/dev/null | head -1; }
+# Monolith's folder helper: the installed shell's copy, or the repo's
+hypr_files() {
+    local f
+    for f in "$HOME/.local/share/monolith/shell/scripts/hypr_files.py" "$HYPR_MODULES/../../monolith/shell/scripts/hypr_files.py"; do
+        [ -f "$f" ] && { python3 "$f" "$@"; return; }
+    done
+    return 1
+}
+hypr_keys_saved() {
+    sed -n 's/^[#-]* keys: \([a-z]*\)$/\1/p' "$HYPR_DIR/monolith/keybinds.lua" "$HYPR_DIR/monolith/keybinds.conf" \
+        "$HYPR_DIR/monolith.lua" "$HYPR_DIR/monolith.conf" 2>/dev/null | head -1
+}
 # Monolith's niri keymap: the installed copy, or the repo's
 hypr_keys_source() {
     local f
     for f in "$HYPR_MODULES/../niri-keybinds.kdl" "$HYPR_MODULES/../../config/niri/config/keybinds.kdl"; do
         [ -f "$f" ] && { echo "$f"; return; }
     done
-}
-_hypr_monolith_keys() {
-    local src; src="$(hypr_keys_source)"
-    [ -n "$src" ] && python3 "$HYPR_MODULES/hypr_keys.py" "$src" "$1" "$HOME/.local/bin/monolith"
 }
 _hypr_keys_choice() {
     local k="${HYPR_KEYS:-$(hypr_keys_saved)}"
@@ -42,100 +50,53 @@ hypr_kind() {
     else echo none; fi
 }
 
-# already set up (by an earlier install)
+# already set up (by an earlier install: the folder, or an older version's monolith.lua)
 hypr_switched() {
-    [ -f "$HYPR_DIR/monolith.lua" ] || [ -f "$HYPR_DIR/monolith.conf" ]
+    [ -f "$HYPR_DIR/monolith/init.lua" ] || [ -f "$HYPR_DIR/monolith/init.conf" ] \
+        || [ -f "$HYPR_DIR/monolith.lua" ] || [ -f "$HYPR_DIR/monolith.conf" ]
 }
 
-# the keys: Serpantinum's (so they keep doing the same thing), as Monolith's commands.
-# "key|command" (key in Hyprland's words: mods then key)
-_hypr_binds() {
-    local m="$HOME/.local/bin/monolith"
-    cat <<EOF
-SUPER|D|$m msg toggle launcher
-SUPER|C|$m msg toggle clipboard
-SUPER|B|$m msg toggle system
-SUPER|M|$m msg toggle music
-SUPER|W|$m msg toggle wallpaper
-SUPER|S|$m msg toggle calendar
-SUPER|N|$m msg toggle network
-SUPER|V|$m msg toggle volume
-SUPER|H|$m msg toggle cheatsheet
-SUPER|A|$m msg toggle notifications
-SUPER|R|$m restart
-SUPER|L|$m lock
-|Print|$m screenshot
-SUPER SHIFT|S|$m screenshot
-|XF86AudioRaiseVolume|wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+
-|XF86AudioLowerVolume|wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
-|XF86AudioMute|wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
-|XF86AudioMicMute|wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
-|XF86MonBrightnessUp|brightnessctl set 5%+
-|XF86MonBrightnessDown|brightnessctl set 5%-
+# start (Monolith at login, its environment) and keybinds (in sections), in Monolith's folder
+_hypr_write() {
+    local kind="$1" c m="$HOME/.local/bin/monolith" src
+    [ "$kind" = lua ] && c="--" || c="#"
+    src="$(hypr_keys_source)"
+    if [ "$kind" = lua ]; then
+        hypr_files write start <<EOF
+-- Monolith starting at login, and its environment. Rewritten on every update.
+-- Qt apps (and the shell) take their icons and colours from qt6ct
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+hl.on("hyprland.start", function()
+  hl.exec_cmd("$m start --login")
+end)
 EOF
-}
-
-_hypr_write_lua() {
-    local f="$HYPR_DIR/monolith.lua" mods key cmd combo opts
+    else
+        hypr_files write start <<EOF
+# Monolith starting at login, and its environment. Rewritten on every update.
+env = QT_QPA_PLATFORMTHEME,qt6ct
+exec-once = $m start --login
+EOF
+    fi
     {
-        echo "-- Monolith as the shell (written by Monolith's installer; \`monolith hyprland off\` undoes it)"
-        echo "-- Qt apps (and the shell) take their icons and colours from qt6ct"
-        echo "hl.env(\"QT_QPA_PLATFORMTHEME\", \"qt6ct\")"
-        echo "hl.on(\"hyprland.start\", function()"
-        echo "  hl.exec_cmd(\"$HOME/.local/bin/monolith start --login\")"
-        echo "end)"
-        echo "-- keys: $(_hypr_keys_choice)"
-        if [ "$(_hypr_keys_choice)" = monolith ]; then
-            echo "-- Monolith's key layout (the same as on niri)"
-            _hypr_monolith_keys lua
-        elif [ -n "$(hypr_keys_source)" ]; then
-            echo "-- your keys, with Monolith in place of another shell's (install/modules/merge_keys.py)"
-            python3 "$HYPR_MODULES/merge_keys.py" hypr "$HYPR_DIR" "$(hypr_keys_source)" "$HOME/.local/bin/monolith" lua
+        echo "$c Monolith's keys, in sections. Rewritten on every update: keys of your own go in my-keys"
+        echo "$c (a key you set there wins, and Monolith leaves it out of this file)."
+        echo "$c keys: $(_hypr_keys_choice)"
+        echo ""
+        if [ -z "$src" ]; then
+            echo "$c (Monolith's keymap wasn't found: no keys)"
+        elif [ "$(_hypr_keys_choice)" = monolith ]; then
+            echo "$c Monolith's key layout, the same as on niri"
+            echo ""
+            python3 "$HYPR_MODULES/merge_keys.py" layout "$HYPR_DIR" "$src" "$m" "$kind"
         else
-        while IFS='|' read -r mods key cmd; do
-            combo="$key"; [ -n "$mods" ] && combo="${mods// / + } + $key"
-            # (volume and brightness keys also work on the lock screen; menus don't)
-            case "$key" in XF86*) opts=", { locked = true }" ;; *) opts="" ;; esac
-            echo "hl.bind(\"$combo\", hl.dsp.exec_cmd(\"$cmd\")$opts)"
-        done < <(_hypr_binds)
-        # workspaces 1-10 (Serpantinum switched them through its own shell)
-        echo "for i = 1, 10 do"
-        echo "  local key = i % 10"
-        echo "  hl.bind(\"SUPER + \" .. key, hl.dsp.focus({ workspace = i }))"
-        echo "  hl.bind(\"SUPER + SHIFT + \" .. key, hl.dsp.window.move({ workspace = i }))"
-        echo "end"
+            echo "$c Your config's keys stay as they are; another shell's are Monolith's now"
+            echo ""
+            python3 "$HYPR_MODULES/merge_keys.py" hypr "$HYPR_DIR" "$src" "$m" "$kind" 2>/dev/null
         fi
-    } > "$f"
-    grep -q '^require("monolith")' "$HYPR_DIR/hyprland.lua" || printf '\nrequire("monolith")\n' >> "$HYPR_DIR/hyprland.lua"
+    } | hypr_files write keybinds
 }
 
-_hypr_write_conf() {
-    local f="$HYPR_DIR/monolith.conf" mods key cmd
-    {
-        echo "# Monolith as the shell (written by Monolith's installer; \`monolith hyprland off\` undoes it)"
-        echo "env = QT_QPA_PLATFORMTHEME,qt6ct"
-        echo "exec-once = $HOME/.local/bin/monolith start --login"
-        echo "# keys: $(_hypr_keys_choice)"
-        if [ "$(_hypr_keys_choice)" = monolith ]; then
-            echo "# Monolith's key layout (the same as on niri)"
-            _hypr_monolith_keys conf
-        elif [ -n "$(hypr_keys_source)" ]; then
-            echo "# your keys, with Monolith in place of another shell's (install/modules/merge_keys.py)"
-            python3 "$HYPR_MODULES/merge_keys.py" hypr "$HYPR_DIR" "$(hypr_keys_source)" "$HOME/.local/bin/monolith" conf
-        else
-        while IFS='|' read -r mods key cmd; do
-            case "$key" in XF86*) echo "bindl = $mods, $key, exec, $cmd" ;; *) echo "bind = $mods, $key, exec, $cmd" ;; esac
-        done < <(_hypr_binds)
-        for i in 1 2 3 4 5 6 7 8 9 10; do
-            echo "bind = SUPER, $((i % 10)), workspace, $i"
-            echo "bind = SUPER SHIFT, $((i % 10)), movetoworkspace, $i"
-        done
-        fi
-    } > "$f"
-    grep -q "^source = $f" "$HYPR_DIR/hyprland.conf" || printf '\nsource = %s\n' "$f" >> "$HYPR_DIR/hyprland.conf"
-}
-
-# Serpantinum's lines in the config: its start (serpantinumd) and every key that calls it (its
+# Another shell's lines in the config: its start-up lines and every key that calls it (its
 # menus, lock, screenshots, volume, workspaces). Monolith's file binds the same keys again
 _hypr_turn_off() {
     local kind="$1" c ext f
@@ -151,6 +112,7 @@ _hypr_turn_off() {
     # (no keymap to merge with: Serpantinum's lines, the old way)
     if [ -z "$(hypr_keys_source)" ]; then
         while IFS= read -r -d '' f; do
+            case "$f" in "$HYPR_DIR/monolith/"*) continue ;; esac
             case "$(basename "$f")" in monolith*) continue ;; esac
             sed -i -E "/^[[:space:]]*(--|#)/! { /serpantinumd?([^a-zA-Z_-]|$)/ s/^([[:space:]]*)/\1${c}${HYPR_MARK}/ }" "$f"
         done < <(find "$HYPR_DIR" -name "*.$ext" -type f -print0)
@@ -165,11 +127,13 @@ hypr_switch() {
         return 1
     fi
     if hypr_switched; then
-        # (Monolith's own file is written again, so an update brings its fixes; a changed key
-        # choice applies too)
-        [ "$(_hypr_keys_choice)" = monolith ] && _hypr_turn_off "$kind"
-        if [ "$kind" = lua ]; then _hypr_write_lua; else _hypr_write_conf; fi
-        echo -e "  ${C_CYAN}Hyprland:${RESET} Monolith is already the shell there (its keys file is up to date)"
+        # (an older version's files move into the folder; Monolith's are written again, so an
+        # update brings its fixes, and a changed key choice applies too)
+        local choice; choice="$(_hypr_keys_choice)"
+        hypr_files migrate
+        HYPR_KEYS="$choice" _hypr_turn_off "$kind"
+        HYPR_KEYS="$choice" _hypr_write "$kind"
+        echo -e "  ${C_CYAN}Hyprland:${RESET} Monolith's files are up to date (${HYPR_DIR/#$HOME/\~}/monolith/)"
         return 0
     fi
     # the whole folder, once (a later reinstall keeps the first, untouched copy)
@@ -177,17 +141,42 @@ hypr_switch() {
         cp -a "$HYPR_DIR" "$HYPR_BACKUP" || { echo -e "  ${C_RED}Hyprland:${RESET} couldn't back up $HYPR_DIR, nothing changed"; return 1; }
     fi
     _hypr_turn_off "$kind"
-    if [ "$kind" = lua ]; then _hypr_write_lua; else _hypr_write_conf; fi
-    echo -e "  ${C_GREEN}Hyprland:${RESET} Monolith starts there from your next login (Serpantinum is still installed;"
-    echo -e "  its start line and keys are commented out). Backup: ${HYPR_BACKUP/#$HOME/\~}. Undo: monolith hyprland off"
+    _hypr_write "$kind"
+    echo -e "  ${C_GREEN}Hyprland:${RESET} Monolith starts there from your next login. Its files: ${HYPR_DIR/#$HOME/\~}/monolith/"
+    echo -e "  (your own keys go in monolith/my-keys). Backup: ${HYPR_BACKUP/#$HOME/\~}. Undo: monolith hyprland off"
+}
+
+# hypr_switch, with a safety net: inside a Hyprland session, if Hyprland reports config errors
+# afterwards that it didn't have before, the config goes back to how it was a moment ago.
+hypr_safe_switch() {
+    local snap before after rc
+    if [ -z "$HYPRLAND_INSTANCE_SIGNATURE" ] || ! command -v hyprctl >/dev/null 2>&1; then
+        hypr_switch; return
+    fi
+    snap="$(mktemp -d)" && cp -a "$HYPR_DIR" "$snap/hypr" || { hypr_switch; return; }
+    before="$(hyprctl configerrors 2>/dev/null)"
+    hypr_switch; rc=$?
+    hyprctl reload >/dev/null 2>&1
+    sleep 1.5
+    after="$(hyprctl configerrors 2>/dev/null)"
+    if [ "$after" != "$before" ] && [ -n "$(printf '%s' "$after" | tr -d '[:space:]')" ] && ! printf '%s' "$after" | grep -qix "no errors"; then
+        rm -rf "$HYPR_DIR" && cp -a "$snap/hypr" "$HYPR_DIR"
+        hyprctl reload >/dev/null 2>&1
+        echo -e "  ${C_RED}Hyprland:${RESET} the new config had errors, so it was put back as it was:"
+        printf '%s\n' "$after" | head -5 | sed 's/^/    /'
+        rc=1
+    fi
+    rm -rf "$snap"
+    return $rc
 }
 
 # put Hyprland's config back as it was before Monolith took over
 hypr_undo() {
     if [ ! -d "$HYPR_BACKUP" ]; then
-        # no backup (made by hand?): just remove Monolith's part and turn Serpantinum's lines back on
+        # no backup (made by hand?): just remove Monolith's part and turn the lines it turned off back on
         hypr_switched || { echo "Monolith isn't set up as the Hyprland shell."; return 0; }
         rm -f "$HYPR_DIR/monolith.lua" "$HYPR_DIR/monolith.conf"
+        hypr_files remove
         sed -i '/^require("monolith")$/d' "$HYPR_DIR/hyprland.lua" 2>/dev/null
         sed -i "\|^source = $HYPR_DIR/monolith.conf$|d" "$HYPR_DIR/hyprland.conf" 2>/dev/null
         find "$HYPR_DIR" \( -name "*.lua" -o -name "*.conf" \) -type f -exec sed -i -E "s/^([[:space:]]*)(-- |# )${HYPR_MARK}/\1/" {} +
@@ -197,5 +186,5 @@ hypr_undo() {
         mv "$HYPR_DIR" "$keep" && mv "$HYPR_BACKUP" "$HYPR_DIR"
         echo "(the config as Monolith left it is in ${keep/#$HOME/\~})"
     fi
-    echo "Hyprland's config is back as it was: Serpantinum starts there again from your next login."
+    echo "Hyprland's config is back as it was: your old shell starts there again from your next login."
 }

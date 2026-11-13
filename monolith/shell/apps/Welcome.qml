@@ -46,19 +46,25 @@ PanelWindow {
     FileView { id: kb; path: Quickshell.env("HOME") + "/.config/niri/config/keybinds.kdl" }
     // on Hyprland: Monolith's keys file there (monolith.lua, or monolith.conf), written by
     // `monolith hyprland on` / the installer
-    FileView { id: hkLua; path: Niri.hyprland ? Quickshell.env("HOME") + "/.config/hypr/monolith.lua" : ""; printErrors: false }
-    FileView { id: hkConf; path: Niri.hyprland ? Quickshell.env("HOME") + "/.config/hypr/monolith.conf" : ""; printErrors: false }
+    // (Monolith's folder: its keybinds and your my-keys; an older setup's monolith.lua/.conf too)
+    readonly property string hyprDir: Quickshell.env("HOME") + "/.config/hypr"
+    FileView { id: hkLua; path: Niri.hyprland ? wel.hyprDir + "/monolith/keybinds.lua" : ""; printErrors: false }
+    FileView { id: hkConf; path: Niri.hyprland ? wel.hyprDir + "/monolith/keybinds.conf" : ""; printErrors: false }
+    FileView { id: hkMyLua; path: Niri.hyprland ? wel.hyprDir + "/monolith/my-keys.lua" : ""; printErrors: false }
+    FileView { id: hkMyConf; path: Niri.hyprland ? wel.hyprDir + "/monolith/my-keys.conf" : ""; printErrors: false }
+    FileView { id: hkOldLua; path: Niri.hyprland ? wel.hyprDir + "/monolith.lua" : ""; printErrors: false }
+    FileView { id: hkOldConf; path: Niri.hyprland ? wel.hyprDir + "/monolith.conf" : ""; printErrors: false }
     function hyprKeyFor(pattern) {
         const word = pattern.replace(/"/g, "");
         let best = "";
         // hl.bind("SUPER + D", hl.dsp.exec_cmd(".../monolith msg toggle launcher"))
-        for (const l of (hkLua.text() || "").split("\n")) {
+        for (const l of ((hkMyLua.text() || "") + "\n" + (hkLua.text() || "") + "\n" + (hkOldLua.text() || "")).split("\n")) {
             const m = l.match(/hl\.bind\("([^"]+)",\s*hl\.dsp\.exec_cmd\("([^"]*)"\)/);
             if (m && m[2].indexOf("monolith") !== -1 && m[2].trim().endsWith(" " + word)
                 && (best === "" || m[1].split("+").length <= best.split("+").length)) best = m[1].replace(/\s*\+\s*/g, " + ");
         }
         // bind = SUPER SHIFT, S, exec, .../monolith screenshot
-        for (const l of (hkConf.text() || "").split("\n")) {
+        for (const l of ((hkMyConf.text() || "") + "\n" + (hkConf.text() || "") + "\n" + (hkOldConf.text() || "")).split("\n")) {
             const m = l.match(/^\s*bindl?\s*=\s*([^,]*),\s*([^,]+),\s*exec,\s*(.*)$/);
             if (!m || m[3].indexOf("monolith") === -1 || !m[3].trim().endsWith(" " + word)) continue;
             const k = (m[1].trim() ? m[1].trim().split(/\s+/).join(" + ") + " + " : "") + m[2].trim();

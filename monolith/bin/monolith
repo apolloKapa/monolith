@@ -157,7 +157,7 @@ case "$1" in
         C_GREEN=$'\e[32m'; C_YELLOW=$'\e[33m'; C_RED=$'\e[31m'; C_CYAN=$'\e[36m'; RESET=$'\e[0m'
         . "$mod"
         case "$2" in
-            on) hypr_switch ;;
+            on) hypr_safe_switch ;;
             off) hypr_undo ;;
             *) echo "monolith hyprland on   use Monolith as the shell on Hyprland (backs up ~/.config/hypr)"
                echo "monolith hyprland off  put Hyprland's config back as it was"

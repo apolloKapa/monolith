@@ -97,10 +97,18 @@ MONOLITH = "monolith"
 bind_re = re.compile(r"^\s*([A-Za-z0-9_+]+)((?:\s+[a-z-]+=(?:\"[^\"]*\"|\S+))*)\s*\{\s*(.*?);?\s*\}\s*$")
 
 
-def niri_binds(path):
-    """Every bind in a niri keybinds file: (key, props, action words, the line)."""
-    out = []
+SECTION = re.compile(r"^\s*//\s*──\s*(.+?)\s*─*\s*$")
+
+
+def niri_binds(path, sections=None):
+    """Every bind in a niri keybinds file: (key, props, action words, the line). With `sections`
+    (a dict), each bind's line maps to the section heading above it ("// ── Apps ──")."""
+    out, cur = [], ""
     for line in open(path, encoding="utf-8"):
+        h = SECTION.match(line)
+        if h:
+            cur = h.group(1)
+            continue
         if line.strip().startswith("//"):
             continue
         m = bind_re.match(line.rstrip("\n"))
@@ -112,6 +120,8 @@ def niri_binds(path):
             continue
         if words:
             out.append((m.group(1), m.group(2), words, line.rstrip("\n")))
+            if sections is not None:
+                sections[line.rstrip("\n")] = cur
     return out
 
 
@@ -125,11 +135,12 @@ def command_of(words, monolith):
 
 
 def translate(path, monolith):
-    """Monolith's niri keymap as Hyprland binds: [(mods, key, locked, lua line, conf line)]."""
+    """Monolith's niri keymap as Hyprland binds: [(mods, key, locked, lua line, conf line,
+    dispatcher, section)]."""
     global MONOLITH
     MONOLITH = monolith
-    out, seen = [], set()
-    for key, props, words, _ in niri_binds(path):
+    out, seen, secs = [], set(), {}
+    for key, props, words, raw in niri_binds(path, secs):
         name, args = words[0], words[1:]
         if name in ("spawn", "spawn-sh"):
             cmd = command_of(words, monolith)
@@ -149,10 +160,27 @@ def translate(path, monolith):
         locked = "allow-when-locked=true" in props
         lua = "hl.bind(%s, %s%s)" % (lua_str(" + ".join(mods + [k])), got[0], ", { locked = true }" if locked else "")
         conf = "%s = %s, %s, %s" % ("bindl" if locked else "bind", " ".join(mods), k, got[1])
-        out.append((mods, k, locked, lua, conf, got))
+        out.append((mods, k, locked, lua, conf, got, secs.get(raw, "")))
     return out
+
+
+def render(binds, lua, skip=()):
+    """Binds as lines, with a heading where a section starts; `skip`: keys (frozenset of mods,
+    lowercase key) to leave out."""
+    c = "--" if lua else "#"
+    lines, last = [], None
+    for b in binds:
+        if (frozenset(b[0]), b[1].lower()) in skip:
+            continue
+        if b[6] != last and b[6]:
+            if lines:
+                lines.append("")
+            lines.append("%s ── %s %s" % (c, b[6], "─" * max(3, 60 - len(b[6]))))
+            last = b[6]
+        lines.append(b[3] if lua else b[4])
+    return lines
 
 
 if __name__ == "__main__":
     src, fmt, monolith = sys.argv[1], sys.argv[2], sys.argv[3]
-    print("\n".join(b[3] if fmt == "lua" else b[4] for b in translate(src, monolith)))
+    print("\n".join(render(translate(src, monolith), fmt == "lua")))

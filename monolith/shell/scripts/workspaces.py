@@ -22,6 +22,9 @@ import os
 import shutil
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import hypr_files as hf  # noqa: E402
+
 HOME = os.path.expanduser("~")
 CONF = os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME, ".config")
 NIRI_FILE = os.path.join(CONF, "niri", "config", "workspaces.kdl")
@@ -88,17 +91,9 @@ def apply_hypr(screens):
             else:
                 out.append(f"workspace = {k}, monitor:{name}, persistent:true" + (", default:true" if k == first else ""))
         first += n
-    write(path, "\n".join(out) + "\n")
-    # included once, at the end of the main config
-    main = os.path.join(HYPR, "hyprland.lua" if lua else "hyprland.conf")
-    line = 'require("monolith-workspaces")' if lua else f"source = {path}"
-    try:
-        text = open(main, encoding="utf-8").read()
-    except OSError:
-        return
-    if line not in text:
-        with open(main, "a", encoding="utf-8") as f:
-            f.write(("" if text.endswith("\n") else "\n") + "\n" + line + "\n")
+    # (in Monolith's folder, ~/.config/hypr/monolith/, loaded by its init: scripts/hypr_files.py)
+    hf.migrate()
+    hf.write("workspaces", "\n".join(out) + "\n")
 
 
 def read_niri():
@@ -116,7 +111,9 @@ def read_niri():
 
 def read_hypr():
     counts = {}
-    path = os.path.join(HYPR, "monolith-workspaces." + ("lua" if hypr_lua() else "conf"))
+    path = hf.path("workspaces")
+    if not os.path.exists(path):        # (an older setup: beside the config)
+        path = os.path.join(HYPR, "monolith-workspaces." + ("lua" if hypr_lua() else "conf"))
     try:
         for l in open(path, encoding="utf-8"):
             l = l.strip()

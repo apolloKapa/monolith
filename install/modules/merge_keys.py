@@ -337,11 +337,65 @@ def split_lua_bind(text):
     return parts[0], parts[1], (parts[2] if len(parts) > 2 else "")
 
 
+FOLDER = "monolith"          # Monolith's own folder in ~/.config/hypr (its files: start, keybinds...)
+
+
+def user_files(cfg_dir, ext):
+    """Your config's files: everything but Monolith's own (its folder, and the monolith*.lua/.conf
+    files of older versions)."""
+    out = []
+    for r, ds, fs in os.walk(cfg_dir):
+        if os.path.abspath(r) == os.path.abspath(cfg_dir):
+            ds[:] = [d for d in ds if d != FOLDER]
+        out += [os.path.join(r, f) for f in fs if f.endswith(ext) and not f.startswith("monolith")]
+    return out
+
+
+def my_keys(cfg_dir, lua, variables):
+    """The keys in your own my-keys file (in Monolith's folder; never changed by Monolith):
+    Monolith leaves those keys to you."""
+    path = os.path.join(cfg_dir, FOLDER, "my-keys" + (".lua" if lua else ".conf"))
+    taken = set()
+    try:
+        lines = open(path, encoding="utf-8").read().split("\n")
+    except OSError:
+        return taken
+    c = "-- " if lua else "# "
+    for a, b, text, again in statements(lines, lua, c):
+        if again:
+            continue
+        if lua:
+            parts = split_lua_bind(text)
+            key = lua_key(parts[0], dict(variables)) if parts else None
+        else:
+            m = CONF_BIND.match(text)
+            f = [x.strip() for x in m.group(4).split(",")] if m else []
+            key = None
+            if len(f) >= 2:
+                mods = f[0]
+                for v in sorted(variables, key=len, reverse=True):
+                    mods = mods.replace(v, variables[v])
+                key = (norm_mods(mods), f[1])
+        if key and key[0] == "loop":
+            for dgt in "1234567890":
+                taken.add(sig(key[1], dgt))
+        elif key:
+            taken.add(sig(*key))
+    return taken
+
+
+def layout_hypr(cfg_dir, keymap, monolith, fmt):
+    """Monolith's own key layout, in sections, without the keys you set in my-keys."""
+    lua = fmt == "lua"
+    taken = my_keys(cfg_dir, lua, {"mainMod": "SUPER"} if lua else {})
+    binds = hk.translate(keymap, monolith)
+    print("\n".join(hk.render(binds, lua, skip=taken)))
+
+
 def merge_hypr(cfg_dir, keymap, monolith, fmt):
     lua = fmt == "lua"
     ext = ".lua" if lua else ".conf"
-    files = [os.path.join(r, f) for r, _, fs in os.walk(cfg_dir) for f in fs
-             if f.endswith(ext) and not f.startswith("monolith")]
+    files = user_files(cfg_dir, ext)
     # (Lua: names like mainMod; a classic config: $names. A Lua config's mainMod is SUPER unless set)
     variables = {"mainMod": "SUPER"} if lua else {}
     for path in files:
@@ -350,6 +404,8 @@ def merge_hypr(cfg_dir, keymap, monolith, fmt):
             if m:
                 variables[m.group(1) if lua else "$" + m.group(1)] = m.group(2)
     used, have, out = set(), set(), []
+    # (the keys in your my-keys file are yours too)
+    used |= my_keys(cfg_dir, lua, variables)
     counts = {"kept": 0, "switched": 0, "off": 0, "added": 0}
     c = "-- " if lua else "# "
 
@@ -445,8 +501,10 @@ def merge_hypr(cfg_dir, keymap, monolith, fmt):
                 have.add(re.sub(r"^\S*monolith\s+", "", cmd))
         if changed:
             open(path, "w", encoding="utf-8").write("\n".join(lines))
-    # Monolith's keys on the free ones
-    for mods, k, locked, lua_line, conf_line, got in hk.translate(keymap, monolith):
+    # Monolith's keys on the free ones, in their sections
+    add = []
+    for b in hk.translate(keymap, monolith):
+        mods, k, got = b[0], b[1], b[5]
         s = sig(mods, k)
         if s in used:
             continue
@@ -457,9 +515,15 @@ def merge_hypr(cfg_dir, keymap, monolith, fmt):
         used.add(s)
         if sub:
             have.add(sub)
-        out.append(lua_line if lua else conf_line)
+        add.append(b)
         counts["added"] += 1
-    print("\n".join(out))
+    cm = "--" if lua else "#"
+    lines = []
+    if out:
+        lines += [cm + " ── Your keys that ran another shell: now Monolith's ────────────", *out, ""]
+    lines += [cm + " (Monolith's keys below are on keys your config left free)", ""]
+    lines += hk.render(add, lua)
+    print("\n".join(lines))
     return counts
 
 
@@ -469,35 +533,34 @@ def off_all_hypr(cfg_dir, fmt):
     lua = fmt == "lua"
     c = "-- " if lua else "# "
     n = 0
-    for r, _, fs in os.walk(cfg_dir):
-        for f in fs:
-            if not f.endswith(".lua" if lua else ".conf") or f.startswith("monolith"):
+    for path in user_files(cfg_dir, ".lua" if lua else ".conf"):
+        lines = open(path, encoding="utf-8").read().split("\n")
+        changed = False
+        for a, b, text, again in statements(lines, lua, c):
+            if again:
                 continue
-            path = os.path.join(r, f)
-            lines = open(path, encoding="utf-8").read().split("\n")
-            changed = False
-            for a, b, text, again in statements(lines, lua, c):
-                if again:
+            if lua:
+                if not text.startswith("hl.bind(") or re.search(r"mouse:27[23]|mouse\s*=\s*true", text):
                     continue
-                if lua:
-                    if not text.startswith("hl.bind(") or re.search(r"mouse:27[23]|mouse\s*=\s*true", text):
-                        continue
-                else:
-                    m = CONF_BIND.match(text)
-                    if not m or "m" in m.group(3):
-                        continue
-                for k in range(a, b + 1):
-                    if lines[k].strip():
-                        lines[k] = re.match(r"\s*", lines[k]).group(0) + c + MARK + lines[k].strip()
-                changed = True
-                n += 1
-            if changed:
-                open(path, "w", encoding="utf-8").write("\n".join(lines))
+            else:
+                m = CONF_BIND.match(text)
+                if not m or "m" in m.group(3):
+                    continue
+            for k in range(a, b + 1):
+                if lines[k].strip():
+                    lines[k] = re.match(r"\s*", lines[k]).group(0) + c + MARK + lines[k].strip()
+            changed = True
+            n += 1
+        if changed:
+            open(path, "w", encoding="utf-8").write("\n".join(lines))
     return n
 
 
 if __name__ == "__main__":
     kind = sys.argv[1]
+    if kind == "layout":
+        layout_hypr(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+        sys.exit(0)
     if kind == "hypr-off-all":
         sys.stderr.write("your keys turned off: %d\n" % off_all_hypr(sys.argv[2], sys.argv[3]))
         sys.exit(0)
