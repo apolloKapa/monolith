@@ -139,6 +139,8 @@ setup_niri_config "$PROJECT_ROOT" "$NIRI_MODE"
 upgrade_screenshot_binds "$NIRI_DIR/config/keybinds.kdl" >/dev/null
 upgrade_rofi_binds "$NIRI_DIR/config/keybinds.kdl"
 upgrade_local_bin_commands
+# keeping your own niri config: your keys stay, another shell's become Monolith's
+[ "$NIRI_MODE" = keep ] && merge_niri_keys "$PROJECT_ROOT"
 fi
 # an older config (the classic shell's monolithd, its zoom script) moves over to this shell
 "$BIN_DIR/monolith" migrate

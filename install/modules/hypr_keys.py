@@ -12,8 +12,6 @@ import re
 import shlex
 import sys
 
-src, fmt, monolith = sys.argv[1], sys.argv[2], sys.argv[3]
-LUA = fmt == "lua"
 
 DIRS = {"left": "l", "right": "r", "up": "u", "down": "d"}
 WORDS = {"left": "left", "right": "right", "up": "up", "down": "down"}
@@ -85,9 +83,9 @@ def action(name, args):
         return ('hl.dsp.dpms({ action = "disable" })', "dpms, off")
     # niri's own windows that Monolith has too
     if name == "show-hotkey-overlay":
-        return exec_of(monolith + " msg toggle cheatsheet")
+        return exec_of(MONOLITH + " msg toggle cheatsheet")
     if name == "toggle-overview":
-        return exec_of(monolith + " msg toggle switcher")
+        return exec_of(MONOLITH + " msg toggle switcher")
     return None
 
 
@@ -95,47 +93,66 @@ def exec_of(cmd):
     return ("hl.dsp.exec_cmd(%s)" % lua_str(cmd), "exec, " + cmd)
 
 
+MONOLITH = "monolith"
 bind_re = re.compile(r"^\s*([A-Za-z0-9_+]+)((?:\s+[a-z-]+=(?:\"[^\"]*\"|\S+))*)\s*\{\s*(.*?);?\s*\}\s*$")
-out = []
-seen = set()
-for line in open(src, encoding="utf-8"):
-    if line.strip().startswith("//"):
-        continue
-    m = bind_re.match(line.rstrip("\n"))
-    if not m:
-        continue
-    key, props, body = m.group(1), m.group(2), m.group(3).strip()
-    try:
-        words = shlex.split(body)
-    except ValueError:
-        continue
-    if not words:
-        continue
-    name, args = words[0], words[1:]
-    if name in ("spawn", "spawn-sh"):
-        cmd = args[0] if name == "spawn-sh" else " ".join(shlex.quote(a) if re.search(r"\s", a) else a for a in args)
-        # (niri's own commands mean nothing on Hyprland)
-        if "niri msg" in cmd:
-            continue
-        cmd = re.sub(r"^(\S*/)?monolith(?=\s|$)", monolith, cmd)
-        got = exec_of(cmd)
-    else:
-        got = action(name, args)
-    if not got:
-        continue
-    mods, k = keyspec(key)
-    combo = (mods, k)
-    if repr(combo) in seen:
-        continue
-    seen.add(repr(combo))
-    locked = "allow-when-locked=true" in props
-    mouse = k.startswith("mouse_")
-    if LUA:
-        opts = []
-        if locked:
-            opts.append("locked = true")
-        out.append("hl.bind(%s, %s%s)" % (lua_str(" + ".join(mods + [k])), got[0], (", { " + ", ".join(opts) + " }") if opts else ""))
-    else:
-        out.append("%s = %s, %s, %s" % ("bindl" if locked else "bind", " ".join(mods), k, got[1]))
 
-print("\n".join(out))
+
+def niri_binds(path):
+    """Every bind in a niri keybinds file: (key, props, action words, the line)."""
+    out = []
+    for line in open(path, encoding="utf-8"):
+        if line.strip().startswith("//"):
+            continue
+        m = bind_re.match(line.rstrip("\n"))
+        if not m:
+            continue
+        try:
+            words = shlex.split(m.group(3).strip())
+        except ValueError:
+            continue
+        if words:
+            out.append((m.group(1), m.group(2), words, line.rstrip("\n")))
+    return out
+
+
+def command_of(words, monolith):
+    """A spawn's command line (monolith pointed at its full path), or None."""
+    name, args = words[0], words[1:]
+    if name not in ("spawn", "spawn-sh") or not args:
+        return None
+    cmd = args[0] if name == "spawn-sh" else " ".join(shlex.quote(a) if re.search(r"\s", a) else a for a in args)
+    return re.sub(r"^(\S*/)?monolith(?=\s|$)", monolith, cmd)
+
+
+def translate(path, monolith):
+    """Monolith's niri keymap as Hyprland binds: [(mods, key, locked, lua line, conf line)]."""
+    global MONOLITH
+    MONOLITH = monolith
+    out, seen = [], set()
+    for key, props, words, _ in niri_binds(path):
+        name, args = words[0], words[1:]
+        if name in ("spawn", "spawn-sh"):
+            cmd = command_of(words, monolith)
+            # (niri's own commands mean nothing on Hyprland)
+            if not cmd or "niri msg" in cmd:
+                continue
+            got = exec_of(cmd)
+        else:
+            got = action(name, args)
+        if not got:
+            continue
+        mods, k = keyspec(key)
+        sig = (frozenset(mods), k.lower())
+        if sig in seen:
+            continue
+        seen.add(sig)
+        locked = "allow-when-locked=true" in props
+        lua = "hl.bind(%s, %s%s)" % (lua_str(" + ".join(mods + [k])), got[0], ", { locked = true }" if locked else "")
+        conf = "%s = %s, %s, %s" % ("bindl" if locked else "bind", " ".join(mods), k, got[1])
+        out.append((mods, k, locked, lua, conf, got))
+    return out
+
+
+if __name__ == "__main__":
+    src, fmt, monolith = sys.argv[1], sys.argv[2], sys.argv[3]
+    print("\n".join(b[3] if fmt == "lua" else b[4] for b in translate(src, monolith)))

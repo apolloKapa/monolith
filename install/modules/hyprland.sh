@@ -88,6 +88,9 @@ _hypr_write_lua() {
         if [ "$(_hypr_keys_choice)" = monolith ]; then
             echo "-- Monolith's key layout (the same as on niri)"
             _hypr_monolith_keys lua
+        elif [ -n "$(hypr_keys_source)" ]; then
+            echo "-- your keys, with Monolith in place of another shell's (install/modules/merge_keys.py)"
+            python3 "$HYPR_MODULES/merge_keys.py" hypr "$HYPR_DIR" "$(hypr_keys_source)" "$HOME/.local/bin/monolith" lua
         else
         while IFS='|' read -r mods key cmd; do
             combo="$key"; [ -n "$mods" ] && combo="${mods// / + } + $key"
@@ -116,6 +119,9 @@ _hypr_write_conf() {
         if [ "$(_hypr_keys_choice)" = monolith ]; then
             echo "# Monolith's key layout (the same as on niri)"
             _hypr_monolith_keys conf
+        elif [ -n "$(hypr_keys_source)" ]; then
+            echo "# your keys, with Monolith in place of another shell's (install/modules/merge_keys.py)"
+            python3 "$HYPR_MODULES/merge_keys.py" hypr "$HYPR_DIR" "$(hypr_keys_source)" "$HOME/.local/bin/monolith" conf
         else
         while IFS='|' read -r mods key cmd; do
             case "$key" in XF86*) echo "bindl = $mods, $key, exec, $cmd" ;; *) echo "bind = $mods, $key, exec, $cmd" ;; esac
@@ -134,6 +140,9 @@ _hypr_write_conf() {
 _hypr_turn_off() {
     local kind="$1" c ext f
     if [ "$kind" = lua ]; then c="-- "; ext="lua"; else c="# "; ext="conf"; fi
+    # another shell's keys and start-up lines (its bar, notifications, wallpaper) go first, whatever
+    # shell it is (the keys come back as Monolith's in Monolith's file)
+    [ -n "$(hypr_keys_source)" ] && python3 "$HYPR_MODULES/merge_keys.py" hypr "$HYPR_DIR" "$(hypr_keys_source)" "$HOME/.local/bin/monolith" "$kind" >/dev/null 2>&1
     while IFS= read -r -d '' f; do
         case "$(basename "$f")" in monolith.lua|monolith.conf) continue ;; esac
         # (only lines that aren't already comments)

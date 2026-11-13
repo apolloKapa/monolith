@@ -165,6 +165,29 @@ print(changed)
 PY
 }
 
+# "keep mine": your niri config's keys stay, another shell's become Monolith's (its launcher, lock,
+# screenshots...), its start-up lines (a bar, notifications, wallpaper) are turned off, and
+# Monolith's keys go on the keys that are free. A config that already runs Monolith is left alone.
+# Backed up first; if niri doesn't accept the result, the backup goes back.
+merge_niri_keys() {
+    local project_root="$1" keymap="$1/config/niri/config/keybinds.kdl" backup="$NIRI_DIR.before-monolith-keys"
+    [ -d "$NIRI_DIR" ] && [ -f "$keymap" ] || return 0
+    # (a config that already runs Monolith is yours as it is: what's in it is there on purpose)
+    grep -rqs 'monolith' "$NIRI_DIR"/config.kdl "$NIRI_DIR"/config/*.kdl && return 0
+    rm -rf "$backup"; cp -a "$NIRI_DIR" "$backup" || return 0
+    local extra=""
+    local summary
+    summary=$(python3 "$project_root/install/modules/merge_keys.py" niri "$NIRI_DIR" "$keymap" "$BIN_DIR/monolith" $extra 2>&1 >/dev/null)
+    if command -v niri >/dev/null 2>&1 && [ -f "$NIRI_DIR/config.kdl" ] && ! niri validate -c "$NIRI_DIR/config.kdl" >/dev/null 2>&1; then
+        rm -rf "$NIRI_DIR"; mv "$backup" "$NIRI_DIR"
+        echo -e "  ${C_YELLOW}niri:${RESET} your config is left as it was (merging Monolith's keys into it didn't validate)"
+        return 0
+    fi
+    diff -rq "$backup" "$NIRI_DIR" >/dev/null 2>&1 && { rm -rf "$backup"; return 0; }
+    echo -e "  ${C_GREEN}niri:${RESET} your config, with Monolith in place of another shell: $summary"
+    echo -e "        (backup: ${backup/#$HOME/\~})"
+}
+
 setup_niri_config() {
     local project_root="$1"
     local mode="${2:-replace}"   # replace | keep

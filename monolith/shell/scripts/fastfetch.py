@@ -296,12 +296,16 @@ def write_target(name):
     write_fits(body)
 
 
-# Narrower terminals (a 1080p screen, a split window): the preset again with fastfetch's small
-# logo, and with none, next to config.jsonc, and how wide each comes out; `monolith fastfetch`
-# runs the widest that fits (the full one wrapped every line where it didn't).
-FIT_SMALL = CONF + "/fastfetch/monolith-small.jsonc"
-FIT_PLAIN = CONF + "/fastfetch/monolith-plain.jsonc"
+# Narrower terminals (a 1080p screen, a split window): the preset again with its logo above the
+# info instead of beside it, then with fastfetch's small distro logo (beside, then above), next to
+# config.jsonc, and how wide each comes out; `monolith fastfetch` runs the first that fits, so
+# there's always a logo (the full one wrapped every line where it didn't fit).
+FITS = ["top", "small", "smalltop"]
 FIT_WIDTHS = CONF + "/fastfetch/monolith-widths.json"
+
+
+def fit_path(key):
+    return CONF + "/fastfetch/monolith-" + key + ".jsonc"
 
 
 def measure(cfg):
@@ -318,26 +322,43 @@ def write_fits(body):
         data = json.loads(strip_jsonc(body))
     except ValueError:
         return
+    old = data.get("logo") if isinstance(data.get("logo"), dict) else ({"source": data["logo"]} if isinstance(data.get("logo"), str) else {})
     pic = picture_of(data)
-    variants = {}
-    for key, logo, target in (("small", {"type": "small"}, FIT_SMALL), ("plain", "none", FIT_PLAIN)):
+    # (a picture isn't drawn in --pipe: its cells are added to the text's width by hand)
+    pic_w = int(pic.get("width") or 0) if pic else 0
+    widths = {}
+    # the text alone, for pictures
+    bare = dict(data); bare["logo"] = {"type": "none"}
+    open(fit_path("bare"), "w").write(json.dumps(bare))
+    text_w = measure(fit_path("bare"))
+    os.remove(fit_path("bare"))
+    for key in FITS:
         d = dict(data)
-        if logo == "none":
-            d["logo"] = {"type": "none"}
+        if key.startswith("small"):
+            # the distro's small built-in logo, in the preset's logo colours (a picture: half its size)
+            if pic:
+                lg = dict(pic); lg["width"] = max(8, pic_w // 2) if pic_w else 16
+                lg.pop("height", None)
+            else:
+                lg = {"type": "small"}; lg.update({k: v for k, v in old.items() if k in ("color",)})
         else:
-            # the distro's small built-in logo, in the preset's logo colours
-            old = data.get("logo") if isinstance(data.get("logo"), dict) else {}
-            d["logo"] = dict(logo, **{k: v for k, v in old.items() if k in ("color", "padding")})
-        open(target, "w").write("// Monolith: the preset in use, for a narrower terminal (" + key + "). Rewritten with it.\n"
-                                + json.dumps(d, indent=2) + "\n")
-        variants[key] = measure(target)
-    full = measure(TARGET)
-    if pic:
-        # (a picture isn't drawn in --pipe: its width in cells, plus its padding, on top of the text)
-        pad = pic.get("padding", {}) if isinstance(pic.get("padding"), dict) else {}
-        full = variants["plain"] + int(pic.get("width") or 0) + int(pad.get("left", 0) or 0) + int(pad.get("right", 2) or 2)
-    variants["full"] = full
-    json.dump(variants, open(FIT_WIDTHS, "w"))
+            lg = dict(old) if old else {}
+        if key.endswith("top"):
+            lg["position"] = "top"
+        d["logo"] = lg
+        open(fit_path(key), "w").write("// Monolith: the preset in use, for a narrower terminal (" + key + "). Rewritten with it.\n"
+                                       + json.dumps(d, indent=2) + "\n")
+        if pic:
+            lw = d["logo"].get("width") or pic_w
+            widths[key] = max(text_w, int(lw)) if key.endswith("top") else text_w + int(lw) + 3
+        else:
+            widths[key] = measure(fit_path(key))
+    widths["full"] = text_w + pic_w + 3 if pic else measure(TARGET)
+    json.dump(widths, open(FIT_WIDTHS, "w"))
+    # (the logo-less files of the version before go)
+    for gone in ("plain",):
+        if os.path.exists(fit_path(gone)):
+            os.remove(fit_path(gone))
 
 
 # ── preview: run fastfetch and replay its output on a small character grid ──

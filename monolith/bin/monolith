@@ -174,14 +174,13 @@ case "$1" in
         [ -n "$cols" ] || cols=$(stty size 2>/dev/null </dev/tty | cut -d' ' -f2)
         cfg="$dir/config.jsonc"
         if [ -n "$cols" ] && [ -f "$dir/monolith-widths.json" ]; then
+            # (the first that fits: the logo beside, above, then the small logo beside, above; none
+            # fits: the narrowest of them. There's always a logo)
             pick=$(python3 -c 'import json,sys; w=json.load(open(sys.argv[1])); c=int(sys.argv[2])
-for k in ("full","small","plain"):
-    if 0 < w.get(k,0) <= c: print(k); break
-else: print("plain")' "$dir/monolith-widths.json" "$cols" 2>/dev/null)
-            case "$pick" in
-                small) [ -f "$dir/monolith-small.jsonc" ] && cfg="$dir/monolith-small.jsonc" ;;
-                plain) [ -f "$dir/monolith-plain.jsonc" ] && cfg="$dir/monolith-plain.jsonc" ;;
-            esac
+order=[k for k in ("full","top","small","smalltop") if w.get(k,0) > 0]
+fit=[k for k in order if w[k] <= c]
+print(fit[0] if fit else min(order, key=lambda k: w[k]) if order else "full")' "$dir/monolith-widths.json" "$cols" 2>/dev/null)
+            [ -n "$pick" ] && [ "$pick" != full ] && [ -f "$dir/monolith-$pick.jsonc" ] && cfg="$dir/monolith-$pick.jsonc"
         fi
         exec fastfetch -c "$cfg" "$@"
         ;;
