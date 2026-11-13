@@ -102,7 +102,13 @@ ColumnLayout {
             // the cleaning runs in a terminal and asks before removing anything
             Button {
                 text: modelData[0] === "world" ? "Show" : "Clean…"
-                onClicked: { HubState.close(); Quickshell.execDetached(["sh", "-c", Prefs.terminal + " sh \"$1\" run \"$2\"", "_", sec.cleanScript, modelData[0]]); }
+                // start the terminal before closing the hub: closing unloads this page, and its
+                // properties (the script path, the check's id) are gone after that
+                onClicked: {
+                    const cmd = ["sh", "-c", Prefs.terminal + " sh \"$1\" run \"$2\"", "_", sec.cleanScript, modelData[0]];
+                    Quickshell.execDetached(cmd);
+                    HubState.close();
+                }
             }
         }
     }

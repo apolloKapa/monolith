@@ -130,8 +130,8 @@ Page {
                 onClicked: { if (armed) { GameMode.killFocused(); armed = false; } else { armed = true; disarm.restart(); } }
                 Timer { id: disarm; interval: 4000; onTriggered: kill.armed = false }
             }
-            Button { Layout.fillWidth: true; icon: "tune"; text: "GPU settings (LACT)"; onClicked: { HubState.close(); Quickshell.execDetached(["lact", "gui"]); } }
-            Button { Layout.fillWidth: true; icon: "stadia_controller"; text: "Steam"; onClicked: { HubState.close(); Quickshell.execDetached(["steam"]); } }
+            Button { Layout.fillWidth: true; icon: "tune"; text: "GPU settings (LACT)"; onClicked: { Quickshell.execDetached(["lact", "gui"]); HubState.close(); } }
+            Button { Layout.fillWidth: true; icon: "stadia_controller"; text: "Steam"; onClicked: { Quickshell.execDetached(["steam"]); HubState.close(); } }
         }
     }
 }

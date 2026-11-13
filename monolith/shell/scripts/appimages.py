@@ -6,9 +6,12 @@
   appimages.py add FOLDER FILE [--keep]   set one up: moved into FOLDER (--keep: left where it
                                           is), made runnable, and given an app entry with the
                                           name, description and icon from inside it
-  appimages.py remove FILE [--delete]     take its app entry (and icon) away; --delete: the file too
-  appimages.py sync FOLDER                set up every AppImage in FOLDER that has no entry, and
-                                          drop entries made here whose file has gone
+  appimages.py remove FILE [--delete]     take its app entry (and icon) away; --delete: the file too.
+                                          Without --delete the file is remembered as removed, so
+                                          sync doesn't set it up again
+  appimages.py sync FOLDER                set up every AppImage in FOLDER that has no entry (and
+                                          wasn't removed), and drop entries made here whose file
+                                          has gone
 
 Entries are ~/.local/share/applications/appimage-<name>.desktop marked X-Monolith-AppImage=<file>
 (the same as the classic Monolith made, so those carry on). The name and icon come from the
@@ -31,6 +34,32 @@ DATA = os.environ.get("XDG_DATA_HOME") or os.path.join(HOME, ".local/share")
 APPS = os.path.join(DATA, "applications")
 ICONS = os.path.join(DATA, "icons", "hicolor")
 MARK = "X-Monolith-AppImage"
+# AppImages taken out of the apps with Remove (the file kept): sync leaves these alone
+STATE = os.path.join(os.environ.get("XDG_STATE_HOME") or os.path.join(HOME, ".local/state"), "monolith")
+REMOVED = os.path.join(STATE, "appimages-removed.json")
+
+
+def removed_files():
+    try:
+        with open(REMOVED, encoding="utf-8") as fh:
+            v = json.load(fh)
+        return set(v) if isinstance(v, list) else set()
+    except (OSError, ValueError):
+        return set()
+
+
+def set_removed(path, on):
+    files = removed_files()
+    if on == (path in files):
+        return
+    files = (files | {path}) if on else (files - {path})
+    # forget files that are gone
+    files = {f for f in files if os.path.exists(f)}
+    os.makedirs(STATE, exist_ok=True)
+    tmp = REMOVED + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(sorted(files), fh, indent=1)
+    os.replace(tmp, REMOVED)
 # what's carried over from the AppImage's own entry
 CARRY = ("Name", "GenericName", "Comment", "Categories", "Keywords", "MimeType", "StartupWMClass",
          "Terminal", "StartupNotify", "SingleMainWindow", "PrefersNonDefaultGPU")
@@ -153,6 +182,8 @@ def free_path(folder, base):
 
 def add(folder, path, keep=False):
     path = os.path.realpath(os.path.expanduser(path))
+    # adding it by hand undoes an earlier Remove
+    set_removed(path, False)
     if not os.path.isfile(path):
         return {"ok": False, "file": path, "error": "There's no file there"}
     if not is_appimage(path):
@@ -190,6 +221,7 @@ def add(folder, path, keep=False):
         with open(entry, "w", encoding="utf-8") as fh:
             fh.write("\n".join(lines) + "\n")
         refresh()
+        set_removed(path, False)
         return {"ok": True, "file": path, "name": name, "entry": entry, "icon": icon}
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -207,6 +239,8 @@ def remove(path, delete=False):
                 os.remove(f)
     if delete and os.path.isfile(path):
         os.remove(path)
+    if os.path.isfile(path):
+        set_removed(path, True)
     refresh()
     return {"ok": True, "file": path}
 
@@ -239,8 +273,9 @@ def listing(folder):
 
 def sync(folder):
     done = []
+    skip = removed_files()
     for it in listing(folder)["items"]:
-        if not it["added"] and it["inFolder"]:
+        if not it["added"] and it["inFolder"] and it["file"] not in skip:
             done.append(add(folder, it["file"], keep=True))
     for g in listing(folder)["gone"]:
         os.remove(g["entry"])
