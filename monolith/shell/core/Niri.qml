@@ -15,6 +15,13 @@ Singleton {
     // running on Hyprland (it sets this for everything it starts)
     readonly property bool hyprland: (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") || "") !== ""
     readonly property string compositor: hyprland ? "Hyprland" : "niri"
+    // Hyprland reads hyprland.lua when there is one (and then its dispatchers are Lua)
+    property bool hyprLua: false
+    Process {
+        running: niri.hyprland
+        command: ["sh", "-c", "[ -f \"${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprland.lua\" ] && echo lua"]
+        stdout: StdioCollector { onStreamFinished: niri.hyprLua = text.trim() === "lua" }
+    }
 
     property var workspaces: []          // sorted by output, then idx
     property var windows: ({})           // id -> window
@@ -60,6 +67,19 @@ Singleton {
         const i = args.indexOf("--id");
         const id = i !== -1 ? String(args[i + 1]) : "";
         const addr = "address:0x" + id.replace(/^0x/, "");
+        // a Lua config (hyprland.lua, Hyprland 0.55+): dispatch takes Lua (hl.dsp.*) instead
+        if (hyprLua) {
+            const ws = /^[0-9]+$/.test(String(args[1])) ? args[1] : JSON.stringify(String(args[1]));
+            const lua = ({
+                "quit": "hl.dsp.exit()",
+                "power-off-monitors": 'hl.dsp.dpms({ action = "disable" })',
+                "power-on-monitors": 'hl.dsp.dpms({ action = "enable" })',
+                "focus-window": 'hl.dsp.focus({ window = "' + addr + '" })',
+                "close-window": id !== "" ? 'hl.dsp.window.close({ window = "' + addr + '" })' : "hl.dsp.window.close()",
+                "focus-workspace": "hl.dsp.focus({ workspace = " + ws + " })"
+            })[args[0]];
+            if (lua) { Hyprland.dispatch(lua); return; }
+        }
         switch (args[0]) {
         case "quit": Hyprland.dispatch("exit"); break;
         case "power-off-monitors": Hyprland.dispatch("dpms off"); break;

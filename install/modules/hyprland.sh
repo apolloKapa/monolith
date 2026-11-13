@@ -69,8 +69,8 @@ _hypr_write_lua() {
         # workspaces 1-10 (Serpantinum switched them through its own shell)
         echo "for i = 1, 10 do"
         echo "  local key = i % 10"
-        echo "  hl.bind(\"SUPER + \" .. key, hl.dsp.exec_cmd(\"hyprctl dispatch workspace \" .. i))"
-        echo "  hl.bind(\"SUPER + SHIFT + \" .. key, hl.dsp.exec_cmd(\"hyprctl dispatch movetoworkspace \" .. i))"
+        echo "  hl.bind(\"SUPER + \" .. key, hl.dsp.focus({ workspace = i }))"
+        echo "  hl.bind(\"SUPER + SHIFT + \" .. key, hl.dsp.window.move({ workspace = i }))"
         echo "end"
     } > "$f"
     grep -q '^require("monolith")' "$HYPR_DIR/hyprland.lua" || printf '\nrequire("monolith")\n' >> "$HYPR_DIR/hyprland.lua"
@@ -112,7 +112,9 @@ hypr_switch() {
         return 1
     fi
     if hypr_switched; then
-        echo -e "  ${C_CYAN}Hyprland:${RESET} Monolith is already the shell there"
+        # (Monolith's own file is written again, so an update brings its fixes)
+        if [ "$kind" = lua ]; then _hypr_write_lua; else _hypr_write_conf; fi
+        echo -e "  ${C_CYAN}Hyprland:${RESET} Monolith is already the shell there (its keys file is up to date)"
         return 0
     fi
     # the whole folder, once (a later reinstall keeps the first, untouched copy)

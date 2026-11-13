@@ -30,7 +30,9 @@ running() { pgrep -f "quickshell -p $qml" >/dev/null; }
 on_hyprland() { [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; }
 start() {
     running && return
-    if on_hyprland; then hyprctl dispatch exec "quickshell -p '$qml'" >/dev/null
+    # (Hyprland: straight from here, detached. Going through `hyprctl dispatch exec` broke on
+    # Hyprland 0.55+ with a Lua config, where dispatch takes a Lua expression: nothing started)
+    if on_hyprland; then setsid -f quickshell -p "$qml" >/dev/null 2>&1 < /dev/null
     else niri msg action spawn -- quickshell -p "$qml"; fi
 }
 # any copy of the shell (an installed one, a checkout)
