@@ -15,6 +15,9 @@ PanelWindow {
     screen: modelData
     readonly property bool shown: HubState.peekScreen === modelData.name && !HubState.open && !!player
     readonly property var player: Mpris.players.values.find(p => p.isPlaying) || Mpris.players.values[0] || null
+    // play / pause shows its new state at once (ui/Optimistic)
+    Optimistic { id: playO; actual: !!(pk.player && pk.player.isPlaying); patience: 3000 }
+    function togglePlay() { playO.set(!playO.value); pk.player.togglePlaying(); }
 
     visible: shown || card.opacity > 0.01
     WlrLayershell.namespace: "monolith-media-peek"
@@ -29,7 +32,7 @@ PanelWindow {
     // the position, moving every frame
     PlayPosition { id: pp; player: pk.player; active: pk.shown }
 
-    Rectangle {
+    SmoothRect {
         id: card
         width: 360; height: 128
         readonly property point at: Theme.dropPos(HubState.peekX, HubState.peekY, width, height, pk.width, pk.height)
@@ -47,7 +50,7 @@ PanelWindow {
         CardShadow {}
         HoverHandler { onHoveredChanged: HubState.peekCardHover = hovered }
 
-        Rectangle {
+        SmoothRect {
             id: art
             x: 12; y: 12
             width: 104; height: 104
@@ -56,7 +59,7 @@ PanelWindow {
             Icon { anchors.centerIn: parent; visible: cov.status !== Image.Ready; name: "music_note"; size: 40; color: Theme.subtext }
             Image { id: cov; anchors.fill: parent; visible: false; source: pk.player ? (pk.player.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(208, 208); asynchronous: true }
             MultiEffect { anchors.fill: parent; source: cov; visible: cov.status === Image.Ready; maskEnabled: true; maskSource: artMask }
-            Rectangle { id: artMask; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
+            SmoothRect { id: artMask; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { HubState.peekScreen = ""; HubState.toggle("media", pk.modelData.name); } }
         }
         Column {
@@ -78,14 +81,14 @@ PanelWindow {
             x: art.x + art.width + 10; anchors.bottom: parent.bottom; anchors.bottomMargin: 12
             spacing: 4
             Repeater {
-                model: [["skip_previous", 0], [pk.player && pk.player.isPlaying ? "pause" : "play_arrow", 1], ["skip_next", 2]]
+                model: [["skip_previous", 0], [playO.value ? "pause" : "play_arrow", 1], ["skip_next", 2]]
                 Pressable {
                     required property var modelData
                     width: modelData[1] === 1 ? 48 : 36; height: 36
                     color: modelData[1] === 1 ? Theme.accent : (hovered ? Theme.containerHigh : "transparent")
                     ink: modelData[1] === 1 ? Theme.onAccent : Theme.text
                     enabledInput: !!pk.player
-                    onClicked: modelData[1] === 0 ? pk.player.previous() : (modelData[1] === 1 ? pk.player.togglePlaying() : pk.player.next())
+                    onClicked: modelData[1] === 0 ? pk.player.previous() : (modelData[1] === 1 ? pk.togglePlay() : pk.player.next())
                     Icon { anchors.centerIn: parent; name: parent.modelData[0]; filled: true; size: 21; color: parent.modelData[1] === 1 ? Theme.onAccent : Theme.text }
                 }
             }

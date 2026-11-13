@@ -69,6 +69,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     horizontalAlignment: ll.hAlign
                     wrapMode: Text.WordWrap
+                    Balance {}   // balanced lines (ui/Balance)
                     text: row.modelData.text !== "" ? row.modelData.text : "♪"
                     font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: ll.size
                     color: row.dist === 0 ? ll.activeInk : ll.ink
@@ -100,6 +101,7 @@ Item {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
+            Balance {}   // balanced lines (ui/Balance)
             text: Lyrics.state === "loading" ? "Looking for lyrics…" : "No lyrics for this song"
             color: Theme.subtext
             font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: Math.max(11, Math.min(14, ll.size * 0.8))

@@ -49,7 +49,7 @@ GridLayout {
                 }
             }
         }
-        Label { visible: !Weather.ready; width: parent.width; wrapMode: Text.Wrap; text: Weather.loc ? "Getting the weather…" : "No weather yet: set your city in Settings → General → You & weather"; muted: true }
+        Label { visible: !Weather.ready; width: parent.width; wrapMode: Text.Wrap; text: Weather.loc ? "Getting the weather…" : "No weather yet: set your city in Settings → General → You & weather"; muted: true; Balance {} }
     }
 
     // ── this month, today filled ──
@@ -92,7 +92,7 @@ GridLayout {
                 }
             }
         }
-        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: HubState.page = "calendar" }
+        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: HubState.go("calendar") }
     }
 
     // ── the latest clipboard entries (click one to copy it again) ──

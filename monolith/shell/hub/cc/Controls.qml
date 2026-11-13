@@ -35,6 +35,15 @@ RowLayout {
     }
     Process { id: profProc; command: ["sh", "-c", "powerprofilesctl get 2>/dev/null"]; stdout: StdioCollector { onStreamFinished: cc.profile = text.trim() } }
     Component.onCompleted: poll()
+    // optimistic: a tile shows its new state the moment it's clicked, and keeps it while the
+    // system catches up (a poll that ran before the change landed doesn't flip it back); if the
+    // change never lands, the tile goes back and gives a little shake (ui/Optimistic)
+    Optimistic { id: wifiO; actual: cc.wifiOn }
+    Optimistic { id: btO; actual: !!(cc.bt && cc.bt.enabled) }
+    Optimistic { id: profO; actual: cc.profile }
+    Optimistic { id: playO; actual: !!(cc.player && cc.player.isPlaying); patience: 3000 }
+    // look again soon after a change, so a change that landed shows as settled quickly
+    Timer { id: soon; interval: 700; onTriggered: cc.poll() }
     Timer { interval: 3000; running: HubState.open; repeat: true; onTriggered: cc.poll() }
 
     // a toggle tile: its icon on top (in a shape that turns accent when on), a dot that says
@@ -45,8 +54,16 @@ RowLayout {
         property string title: ""
         property string status: ""
         property bool on: false
+        property Optimistic opt: null       // its optimistic state, if it has one
+        readonly property bool pending: !!opt && opt.pending
         Layout.fillWidth: true
         Layout.preferredHeight: 104
+        // a change that didn't happen: a little wobble as it goes back (rotation: Rise owns the
+        // tile's transform)
+        property real shake: 1
+        rotation: Math.sin(tile.shake * Math.PI * 6) * (1 - tile.shake) * 2.5
+        NumberAnimation { id: shakeAnim; target: tile; property: "shake"; from: 0; to: 1; duration: Theme.ms(420); easing.type: Easing.OutCubic }
+        Connections { target: tile.opt; function onFailed() { shakeAnim.restart(); Sounds.play("error"); } }
         Rise {}
         radius: Theme.corner(56, 8)
         color: on ? Theme.accentContainer : Theme.containerHigh
@@ -67,6 +84,16 @@ RowLayout {
             y: 18
             width: tile.on ? 22 : 8; height: 8; radius: 4
             color: tile.on ? Theme.accent : Theme.faint
+            // (breathes while the system catches up)
+            id: dot
+            opacity: tile.pending ? breath : 1
+            property real breath: 1
+            SequentialAnimation on breath {
+                running: tile.pending; loops: Animation.Infinite
+                NumberAnimation { to: 0.35; duration: Theme.ms(420); easing.type: Easing.InOutSine }
+                NumberAnimation { to: 1; duration: Theme.ms(420); easing.type: Easing.InOutSine }
+                onRunningChanged: if (!running) dot.breath = 1
+            }
             Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
             Behavior on color { ColorAnimation { duration: Theme.ms(200) } }
         }
@@ -108,15 +135,15 @@ RowLayout {
             rowSpacing: 8
             columnSpacing: 8
             Tile {
-                icon: "wifi"; title: "Wi-Fi"; on: cc.wifiOn
-                onClicked: { cc.wifiOn = !cc.wifiOn; Quickshell.execDetached(["nmcli", "radio", "wifi", cc.wifiOn ? "on" : "off"]); }
-                onRightClicked: HubState.page = "network"
+                icon: "wifi"; title: "Wi-Fi"; on: wifiO.value; opt: wifiO
+                onClicked: { wifiO.set(!wifiO.value); Quickshell.execDetached(["nmcli", "radio", "wifi", wifiO.value ? "on" : "off"]); soon.restart(); }
+                onRightClicked: HubState.go("network")
             }
             Tile {
-                icon: "bluetooth"; title: "Bluetooth"; on: !!(cc.bt && cc.bt.enabled)
+                icon: "bluetooth"; title: "Bluetooth"; on: btO.value; opt: btO
                 status: !cc.bt ? "No adapter" : ""
-                onClicked: if (cc.bt) cc.bt.enabled = !cc.bt.enabled
-                onRightClicked: HubState.page = "network"
+                onClicked: if (cc.bt) { btO.set(!btO.value); cc.bt.enabled = btO.value; }
+                onRightClicked: HubState.go("network")
             }
             Tile {
                 icon: "do_not_disturb_on"; title: "Do not disturb"; on: Notifs.dnd
@@ -134,23 +161,27 @@ RowLayout {
             }
             Tile {
                 icon: "airplanemode_active"; title: "Airplane mode"
-                on: !cc.wifiOn && !(cc.bt && cc.bt.enabled)
+                on: !wifiO.value && !btO.value
+                opt: wifiO.pending ? wifiO : btO
                 onClicked: {
-                    const goOff = cc.wifiOn || (cc.bt && cc.bt.enabled);
-                    cc.wifiOn = !goOff;
+                    const goOff = wifiO.value || btO.value;
+                    wifiO.set(!goOff);
                     Quickshell.execDetached(["nmcli", "radio", "wifi", goOff ? "off" : "on"]);
-                    if (cc.bt) cc.bt.enabled = !goOff;
+                    if (cc.bt) { btO.set(!goOff); cc.bt.enabled = !goOff; }
+                    soon.restart();
                 }
             }
             Tile {
-                icon: cc.profile === "performance" ? "bolt" : (cc.profile === "power-saver" ? "energy_savings_leaf" : "balance")
-                title: "Power mode"
-                on: cc.profile === "performance"
-                status: cc.profile === "" ? "—" : cc.profile.charAt(0).toUpperCase() + cc.profile.slice(1).replace("-", " ")
+                readonly property string prof: profO.value || ""
+                icon: prof === "performance" ? "bolt" : (prof === "power-saver" ? "energy_savings_leaf" : "balance")
+                title: "Power mode"; opt: profO
+                on: prof === "performance"
+                status: prof === "" ? "—" : prof.charAt(0).toUpperCase() + prof.slice(1).replace("-", " ")
                 onClicked: {
                     const order = ["power-saver", "balanced", "performance"];
-                    cc.profile = order[(order.indexOf(cc.profile) + 1) % order.length];
-                    Quickshell.execDetached(["powerprofilesctl", "set", cc.profile]);
+                    profO.set(order[(order.indexOf(prof) + 1) % order.length]);
+                    Quickshell.execDetached(["powerprofilesctl", "set", profO.value]);
+                    soon.restart();
                 }
             }
             Tile {
@@ -302,11 +333,11 @@ RowLayout {
                         color: Theme.accent; ink: Theme.onAccent
                         enabledInput: !!cc.player
                         opacity: enabledInput ? 1 : 0.4
-                        onClicked: cc.player.togglePlaying()
-                        Icon { anchors.centerIn: parent; name: cc.player && cc.player.isPlaying ? "pause" : "play_arrow"; size: 24; filled: true; color: Theme.onAccent }
+                        onClicked: { playO.set(!playO.value); cc.player.togglePlaying(); }
+                        Icon { anchors.centerIn: parent; name: playO.value ? "pause" : "play_arrow"; size: 24; filled: true; color: Theme.onAccent }
                     }
                     Pressable { width: 44; height: 44; color: Theme.containerHigh; enabledInput: !!cc.player && cc.player.canGoNext; opacity: enabledInput ? 1 : 0.4; onClicked: cc.player.next(); Icon { anchors.centerIn: parent; name: "skip_next"; size: 22; filled: true } }
-                    Pressable { width: 44; height: 44; color: Theme.containerHigh; onClicked: HubState.page = "media"; Icon { anchors.centerIn: parent; name: "open_in_full"; size: 19 } }
+                    Pressable { width: 44; height: 44; color: Theme.containerHigh; onClicked: HubState.go("media"); Icon { anchors.centerIn: parent; name: "open_in_full"; size: 19 } }
                 }
             }
         }

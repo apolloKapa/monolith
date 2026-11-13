@@ -52,7 +52,7 @@ PanelWindow {
     }
 
     readonly property real rowH: 36
-    Rectangle {
+    SmoothRect {
         id: card
         // as wide as its longest entry needs, within reason
         width: Math.round(Math.max(220, Math.min(420, col.wantW + 16)))

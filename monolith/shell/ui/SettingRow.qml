@@ -4,7 +4,7 @@ import "../core"
 
 // A settings row: an icon bubble, the setting's name and what it does, and its control on
 // the right (put the control inside the row).
-Rectangle {
+SmoothRect {
     id: row
     property string icon: ""
     property string title: ""

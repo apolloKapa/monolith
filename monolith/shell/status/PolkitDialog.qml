@@ -29,7 +29,7 @@ Scope {
             NumberAnimation { target: card; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
             NumberAnimation { target: card; property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
         }
-        Rectangle {
+        SmoothRect {
             id: card
             anchors.centerIn: parent
             width: 460
@@ -60,7 +60,7 @@ Scope {
                         Label { text: win.flow ? (win.flow.actionId || "") : ""; muted: true; font.pixelSize: Theme.sizeSmall }
                     }
                 }
-                Label { width: parent.width; text: win.flow ? win.flow.message : ""; wrapMode: Text.Wrap }
+                Label { width: parent.width; text: win.flow ? win.flow.message : ""; wrapMode: Text.Wrap; Balance {} }
                 Rectangle {
                     width: parent.width
                     height: 52

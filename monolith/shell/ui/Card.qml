@@ -2,7 +2,7 @@ import QtQuick
 import "../core"
 
 // A tonal card inside the island: a title row (icon + name) and its content below.
-Rectangle {
+SmoothRect {
     id: card
     property string icon: ""
     property string title: ""

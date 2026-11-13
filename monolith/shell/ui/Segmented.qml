@@ -2,7 +2,7 @@ import QtQuick
 import "../core"
 
 // A segmented choice: options as [[value, label], …]; the picked one sits on a gliding pill.
-Rectangle {
+SmoothRect {
     id: seg
     property var opts: []
     property string value: ""

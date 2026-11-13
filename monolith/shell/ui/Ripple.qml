@@ -12,7 +12,9 @@ Item {
     property bool hovered: false
     property bool pressed: false
 
-    Rectangle {
+    // (continuous corners like the control's: the ink below is clipped to this same shape)
+    SmoothRect {
+        id: stateLayer
         anchors.fill: parent
         radius: ripple.radius
         color: ripple.ink
@@ -50,7 +52,8 @@ Item {
         anchors.fill: parent
         visible: ripple.alpha > 0.001
         property vector2d itemSize: Qt.vector2d(width, height)
-        property real shapeRadius: ripple.radius
+        property real shapeRadius: stateLayer.curved ? stateLayer.extent : ripple.radius
+        property real shapeExpo: stateLayer.curved ? stateLayer.expo : 2
         property vector2d center: Qt.vector2d(ripple.cx, ripple.cy)
         property real rippleRadius: ripple.spread
         property color inkColor: ripple.ink

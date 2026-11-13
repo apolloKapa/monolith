@@ -24,7 +24,7 @@ Item {
         maskEnabled: true
         maskSource: grainMask
     }
-    Rectangle { id: grainMask; anchors.fill: parent; radius: fx.radius; visible: false; layer.enabled: Theme.fxGrain }
+    SmoothRect { id: grainMask; anchors.fill: parent; radius: fx.radius; visible: false; layer.enabled: Theme.fxGrain }
     // edge: a thin light along the top, brightest in the middle
     Rectangle {
         visible: Theme.fxEdge

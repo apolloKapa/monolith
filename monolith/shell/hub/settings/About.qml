@@ -144,6 +144,6 @@ ColumnLayout {
     }
     SettingRow {
         icon: "keyboard_command_key"; title: "Keybinds"; desc: "Every keybind is on the Keys page"
-        Button { text: "Open"; onClicked: HubState.page = "keys" }
+        Button { text: "Open"; onClicked: HubState.go("keys") }
     }
 }

@@ -199,7 +199,7 @@ PanelWindow {
     // at most this many (0: all)
     function limit(l) { const n = Number(Store.get("dock.maxApps", 0)); return n > 0 ? l.slice(0, n) : l; }
 
-    Rectangle {
+    SmoothRect {
         id: capsule
         readonly property real cell: Number(Store.get("dock.size", 56))
         readonly property real opacityBg: Number(Store.get("dock.opacity", 1))
@@ -590,6 +590,6 @@ PanelWindow {
     Region {
         id: blurShape
         item: dock.shown ? capsule : null
-        radius: capsule.radius
+        radius: capsule.blurRadius
     }
 }

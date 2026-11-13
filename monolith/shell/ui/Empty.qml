@@ -33,7 +33,7 @@ Item {
         }
         Item { width: 1; height: 2 }
         Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: em.title; strong: true; font.pixelSize: Theme.sizeTitle }
-        Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: em.sub; muted: true; wrapMode: Text.WordWrap; elide: Text.ElideNone; visible: text !== "" }
+        Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: em.sub; muted: true; wrapMode: Text.WordWrap; elide: Text.ElideNone; visible: text !== ""; Balance {} }
         Item { width: 1; height: 4; visible: em.button !== "" }
         Button { visible: em.button !== ""; anchors.horizontalCenter: parent.horizontalCenter; text: em.button; icon: em.buttonIcon; primary: true; onClicked: em.acted() }
     }

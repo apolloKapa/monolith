@@ -53,7 +53,7 @@ PanelWindow {
         Icon { anchors.centerIn: parent; name: parent.icon; size: 20; filled: parent.on; color: parent.on ? Theme.onAccent : Theme.text }
     }
 
-    Rectangle {
+    SmoothRect {
         id: card
         width: 250
         height: col.implicitHeight + 16

@@ -101,7 +101,7 @@ PanelWindow {
     readonly property real bubble: 64
     readonly property real panelW: Math.min(width - 80, 1560)
     readonly property real panelH: Math.min(height - 100, 860)
-    Rectangle {
+    SmoothRect {
         id: panel
         readonly property real w: win.bubble + (win.panelW - win.bubble) * win.grow
         readonly property real h: win.bubble + (win.panelH - win.bubble) * win.grow
@@ -202,17 +202,11 @@ PanelWindow {
                 Icon { anchors.centerIn: parent; visible: Wall.isVideo(card.path); name: "movie"; size: 44; color: Theme.subtext }
                 // its small copy once Wall has made it (the full picture only if that failed)
                 readonly property string thumbState: Wall.picThumbState(card.path)
-                // waiting: a soft shimmer instead of an empty card
-                Rectangle {
+                // waiting: the picture's colours as a soft blur (its BlurHash) until it's in
+                Placeholder {
                     anchors.fill: parent
-                    visible: !Wall.isVideo(card.path) && pic.status !== Image.Ready
-                    color: Theme.containerHigh
-                    SequentialAnimation on opacity {
-                        running: parent.visible && win.shown
-                        loops: Animation.Infinite
-                        NumberAnimation { from: 0.35; to: 0.8; duration: 700; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: 0.8; to: 0.35; duration: 700; easing.type: Easing.InOutSine }
-                    }
+                    source: Wall.isVideo(card.path) ? "" : card.path
+                    loading: !Wall.isVideo(card.path) && pic.status !== Image.Ready && win.shown
                 }
                 Image {
                     id: pic
@@ -328,6 +322,12 @@ PanelWindow {
                 scale: hot ? 1.03 : 1
                 Behavior on scale { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
                 Icon { anchors.centerIn: parent; name: "movie"; size: 40; color: Theme.faint; visible: still.status !== Image.Ready && !lc.gif }
+                // waiting: the video's first frame as a soft blur (its BlurHash) until the still is in
+                Placeholder {
+                    anchors.fill: parent
+                    source: lc.path
+                    loading: still.status !== Image.Ready && !lc.gif && win.shown
+                }
                 // the still (a video's first second, made by Wall.makeThumbs)
                 Image {
                     id: still
@@ -568,6 +568,6 @@ PanelWindow {
         id: blurShape
         // (gone the moment it starts closing: the blur cannot fade out with it)
         item: win.shown ? panel : null
-        radius: panel.radius
+        radius: panel.blurRadius
     }
 }

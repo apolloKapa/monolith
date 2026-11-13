@@ -167,7 +167,7 @@ Pressable {
                     Icon { anchors.centerIn: parent; name: "close"; size: 16; color: Theme.subtext }
                 }
             }
-            Label { Layout.fillWidth: true; text: card.notif.summary; strong: true; wrapMode: Text.Wrap; maximumLineCount: 2 }
+            Label { Layout.fillWidth: true; text: card.notif.summary; strong: true; wrapMode: Text.Wrap; maximumLineCount: 2; Balance {} }
             Label {
                 Layout.fillWidth: true
                 visible: text !== ""

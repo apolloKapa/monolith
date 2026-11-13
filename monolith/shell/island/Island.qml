@@ -384,7 +384,7 @@ PanelWindow {
                         }
                         onTextEdited: {
                             if (text === "" || win.usesQuery) return;
-                            if (win.tabbed) HubState.page = "search"; else text = "";
+                            if (win.tabbed) HubState.go("search"); else text = "";
                         }
                         Keys.onEscapePressed: { if (text !== "") text = ""; else HubState.close(); }
                         Keys.onTabPressed: event => { if (win.tabbed) { HubState.step((event.modifiers & Qt.ShiftModifier) ? -1 : 1); event.accepted = true; } else event.accepted = false; }
@@ -427,7 +427,7 @@ PanelWindow {
                             color: "transparent"
                             radius: height / 2
                             Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-                            onClicked: { HubState.page = modelData; query.forceActiveFocus(); }
+                            onClicked: { HubState.go(modelData); query.forceActiveFocus(); }
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 6
@@ -514,7 +514,7 @@ PanelWindow {
     }
 
     // ── a notification under a floating bar (Solid, Modular): its own card ──
-    Rectangle {
+    SmoothRect {
         id: toastCard
         readonly property bool on: win.toastOn && win.toastHost === "card"
         width: win.toastW
@@ -535,7 +535,7 @@ PanelWindow {
     }
 
     // ── the floating card (menus in the middle or on the right) ──
-    Rectangle {
+    SmoothRect {
         id: floatCard
         visible: !win.docked && opacity > 0.01
         // whole pixels: a fractional card size blurs what's in it
@@ -684,8 +684,8 @@ PanelWindow {
             bx: drop.x + drop.e; by: drop.y; bw: drop.bodyW; bh: drop.height
             r: drop.rr; e: drop.e
         }
-        Region { item: blurBox.on ? blurBox : null; radius: floatCard.radius * blurBox.k }
-        Region { item: toastCard.on && toastCard.opacity > 0.6 ? toastCard : null; radius: toastCard.radius }
+        Region { item: blurBox.on ? blurBox : null; radius: floatCard.blurRadius * blurBox.k }
+        Region { item: toastCard.on && toastCard.opacity > 0.6 ? toastCard : null; radius: toastCard.blurRadius }
     }
     // Where the floating card's blur is. The blur can't fade: it's there or it isn't. Kept on
     // until the card had faded out, it stayed behind as an empty blurred box after the menu

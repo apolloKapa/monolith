@@ -55,15 +55,19 @@ Rectangle {
         closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutside
         // fades in with a little zoom from the field, and out the same way
         transformOrigin: dd.fit.up ? QQC.Popup.Bottom : QQC.Popup.Top
+        // (interruptible: opening while it's still closing, or closing mid-open, carries on from
+        // where it is instead of jumping to the start; closed it rests faded and zoomed out)
+        opacity: 0
+        scale: Theme.popScale
         enter: Transition {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
-            NumberAnimation { property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+            NumberAnimation { property: "opacity"; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
         }
         exit: Transition {
-            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
-            NumberAnimation { property: "scale"; from: 1; to: Theme.popScale; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
+            NumberAnimation { property: "opacity"; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale"; to: Theme.popScale; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
         }
-        background: Rectangle {
+        background: SmoothRect {
             radius: Theme.corner(48, 6)
             color: Theme.frame
             border.width: Math.max(1, Theme.outlineW)

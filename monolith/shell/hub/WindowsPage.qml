@@ -123,7 +123,7 @@ Page {
                                     anchors.margins: 10
                                     spacing: 6
                                     Image { width: 32; height: 32; sourceSize: Qt.size(64, 64); source: page.iconOf(card.modelData); smooth: true; mipmap: true }
-                                    Label { width: parent.width; text: card.modelData.title || card.modelData.app_id; font.pixelSize: Theme.sizeSmall; maximumLineCount: 2; wrapMode: Text.Wrap }
+                                    Label { width: parent.width; text: card.modelData.title || card.modelData.app_id; font.pixelSize: Theme.sizeSmall; maximumLineCount: 2; wrapMode: Text.Wrap; Balance {} }
                                 }
                             }
                         }

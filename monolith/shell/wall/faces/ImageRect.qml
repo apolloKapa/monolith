@@ -33,6 +33,6 @@ FaceBase {
         Rectangle { id: mask; anchors.fill: parent; radius: 0; visible: false; layer.enabled: true }
         Icon { id: noPic; anchors.centerIn: parent; anchors.verticalCenterOffset: hint.visible ? -10 : 0; visible: img.status !== Image.Ready; name: "image"; size: Math.max(16, Math.min(box.width, box.height) * 0.35); color: Theme.subtext }
         // nothing picked yet: how to pick one (when there's room for it)
-        Label { id: hint; anchors.horizontalCenter: parent.horizontalCenter; anchors.top: noPic.bottom; anchors.topMargin: 4; visible: noPic.visible && f.path === "" && box.width >= 150 && box.height >= 110; width: box.width - 20; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; text: f.editing ? "Double-click to pick a picture, or drop one here" : "Drop a picture here (or right-click)"; muted: true; font.pixelSize: Theme.sizeSmall }
+        Label { id: hint; anchors.horizontalCenter: parent.horizontalCenter; anchors.top: noPic.bottom; anchors.topMargin: 4; visible: noPic.visible && f.path === "" && box.width >= 150 && box.height >= 110; width: box.width - 20; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; text: f.editing ? "Double-click to pick a picture, or drop one here" : "Drop a picture here (or right-click)"; muted: true; font.pixelSize: Theme.sizeSmall; Balance {} }
     }
 }

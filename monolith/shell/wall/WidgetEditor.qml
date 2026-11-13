@@ -33,11 +33,11 @@ PanelWindow {
     // the whole editor fades in with a little zoom, and out when it closes (the window is clear
     // underneath, so what's behind shows through the fade)
     color: "transparent"
-    Component.onCompleted: { syncSlots(); if (shown) edIn.restart(); else contentItem.opacity = 0; }
+    Component.onCompleted: { syncSlots(); contentItem.opacity = 0; contentItem.scale = 1 + (1 - Theme.popScale) / 2; if (shown) edIn.restart(); }
     ParallelAnimation {
         id: edIn
-        NumberAnimation { target: ed.contentItem; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
-        NumberAnimation { target: ed.contentItem; property: "scale"; from: 1 + (1 - Theme.popScale) / 2; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+        NumberAnimation { target: ed.contentItem; property: "opacity"; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: ed.contentItem; property: "scale"; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
     }
     ParallelAnimation {
         id: edOut
@@ -49,7 +49,8 @@ PanelWindow {
         selected = shown ? HubState.editSelect : ""; adding = false; presetsOpen = false;
         HubState.editSelect = "";
         if (shown) keys.forceActiveFocus();
-        if (shown) edIn.restart(); else edOut.restart();
+        // (interruptible: each starts from wherever the other left it)
+        if (shown) { edOut.stop(); edIn.restart(); } else { edIn.stop(); edOut.restart(); }
     }
 
     function done() { HubState.editWidgets = ""; }
@@ -939,6 +940,7 @@ PanelWindow {
         // wraps (centred) instead of running off the sides of a narrow screen
         width: Math.min(implicitWidth, ed.width - 48)
         wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter
+        Balance {}   // balanced lines (ui/Balance)
         text: (ed.lockMode && Quickshell.screens.length > 1 ? (WidgetLayout.lockPerScreen ? "The lock screen of " + ed.modelData.name + " only (the screen button above goes to the next)" : "Every screen shows this lock screen") + (WidgetLayout.passOn(ed.modelData.name) ? "" : "  ·  no password box here (Lock & idle → Password box on)") + "   ·   " : "") +
               (ed.list.length === 0 ? "Nothing here yet: Add widget" : "Drag to move (it lines up with the middle and the other widgets; Ctrl: freely)  ·  an edge or corner to resize  ·  ↻ turns it  ·  Esc when done")
         color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.4)

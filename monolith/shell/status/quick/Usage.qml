@@ -228,7 +228,7 @@ GridLayout {
                     }
                 }
             }
-            Label { anchors.centerIn: parent; width: parent.width - 20; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap; visible: u.snapshots.length === 0; text: "Snapshot keeps how the system is doing right now, to look at or copy later"; muted: true; font.pixelSize: Theme.sizeSmall }
+            Label { anchors.centerIn: parent; width: parent.width - 20; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap; visible: u.snapshots.length === 0; text: "Snapshot keeps how the system is doing right now, to look at or copy later"; muted: true; font.pixelSize: Theme.sizeSmall; Balance {} }
         }
     }
 }

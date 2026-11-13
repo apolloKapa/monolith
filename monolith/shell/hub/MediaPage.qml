@@ -26,6 +26,8 @@ Page {
     readonly property var player: players.length === 0 ? null
         : (chosen >= 0 && chosen < players.length ? players[chosen] : (players.find(p => p.isPlaying) || players[0]))
     readonly property string art: player ? (player.trackArtUrl || "") : ""
+    // play / pause shows its new state at once (ui/Optimistic)
+    Optimistic { id: playO; actual: !!(page.player && page.player.isPlaying); patience: 3000 }
 
     // ── the cover's colour: the most colourful of its main colours, made readable ──
     ColorQuantizer { id: cq; source: page.art; depth: 3 }
@@ -115,7 +117,7 @@ Page {
             Icon { anchors.centerIn: parent; name: "music_off"; size: 46; color: Theme.subtext }
         }
         Label { anchors.horizontalCenter: parent.horizontalCenter; text: "Nothing is playing"; strong: true; font.pixelSize: Theme.sizeTitle + 4 }
-        Label { anchors.horizontalCenter: parent.horizontalCenter; width: Math.min(implicitWidth, page.width - 64); wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter; text: "Play something in any app (a music player, a browser, a video) and it shows up here"; muted: true }
+        Label { anchors.horizontalCenter: parent.horizontalCenter; width: Math.min(implicitWidth, page.width - 64); wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter; text: "Play something in any app (a music player, a browser, a video) and it shows up here"; muted: true; Balance {} }
     }
 
     // ── top: the cover and the track ──
@@ -130,7 +132,7 @@ Page {
         Item {
             id: cover
             width: top.height; height: top.height
-            Rectangle {
+            SmoothRect {
                 anchors.fill: parent
                 radius: Theme.corner(top.height, 10)
                 color: Theme.control
@@ -138,6 +140,8 @@ Page {
                 layer.effect: MultiEffect { shadowEnabled: true; shadowColor: Qt.alpha(page.tone, 0.55); shadowBlur: 1; blurMax: 40; shadowVerticalOffset: 6 }
             }
             Icon { anchors.centerIn: parent; name: "music_note"; size: 64; color: Theme.faint; visible: coverImg.status !== Image.Ready }
+            // a cover that takes a moment (a big file): its colours as a soft blur until it's in
+            Placeholder { anchors.fill: parent; radius: Theme.corner(top.height, 10); source: page.art; loading: page.art !== "" && coverImg.status !== Image.Ready }
             Image {
                 id: coverImg
                 anchors.fill: parent
@@ -156,7 +160,7 @@ Page {
                 maskSource: coverMask
                 NumberAnimation on opacity { id: fadeIn; from: 0.2; to: 1; duration: Theme.ms(450); easing.type: Easing.OutCubic }
             }
-            Rectangle { id: coverMask; visible: false; width: cover.width; height: cover.height; radius: Theme.corner(top.height, 10); layer.enabled: true }
+            SmoothRect { id: coverMask; visible: false; width: cover.width; height: cover.height; radius: Theme.corner(top.height, 10); layer.enabled: true }
         }
 
         ColumnLayout {
@@ -303,10 +307,10 @@ Page {
                     radius: Theme.square ? 0 : 32
                     color: page.tone; ink: page.onTone
                     enabledInput: !!page.player && (page.player.canPause || page.player.canPlay)
-                    onClicked: page.player.togglePlaying()
+                    onClicked: { playO.set(!playO.value); page.player.togglePlaying(); }
                     scale: pressed ? 0.94 : 1
                     Behavior on scale { NumberAnimation { duration: Theme.ms(120); easing.type: Easing.OutCubic } }
-                    Icon { anchors.centerIn: parent; name: page.player && page.player.isPlaying ? "pause" : "play_arrow"; size: 34; filled: true; color: page.onTone }
+                    Icon { anchors.centerIn: parent; name: playO.value ? "pause" : "play_arrow"; size: 34; filled: true; color: page.onTone }
                 }
                 Ctl { icon: "skip_next"; enabledInput: !!page.player && page.player.canGoNext; onClicked: page.player.next() }
                 Ctl {
@@ -567,6 +571,7 @@ Page {
                 width: lyricList.width
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
+                Balance {}   // balanced lines (ui/Balance)
                 text: modelData.text === "" ? "♪" : modelData.text
                 font.family: Theme.fontFamily
                 font.pixelSize: dist === 0 ? 23 : 16
@@ -590,6 +595,7 @@ Page {
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
+                Balance {}   // balanced lines (ui/Balance)
                 text: Lyrics.state === "loading" ? "Looking for lyrics…" : (Lyrics.plain !== "" ? Lyrics.plain : "No lyrics found for this song")
                 color: Lyrics.plain !== "" ? Theme.text : Theme.subtext
                 font.family: Theme.fontFamily; font.pixelSize: Lyrics.plain !== "" ? 14 : 15

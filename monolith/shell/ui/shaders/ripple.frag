@@ -10,21 +10,28 @@ layout(std140, binding = 0) uniform buf {
     float qt_Opacity;
     vec2 itemSize;
     float shapeRadius;
+    float shapeExpo;     // the corners' superellipse exponent (2: round; see SmoothRect)
     vec2 center;
     float rippleRadius;
     vec4 inkColor;
     float inkAlpha;
 };
 
-float sdRoundBox(vec2 p, vec2 b, float r) {
+float sdRoundBox(vec2 p, vec2 b, float r, float n) {
     r = min(r, min(b.x, b.y));
     vec2 q = abs(p) - b + r;
-    return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
+    vec2 m = max(q, 0.0);
+    float c = length(m);
+    if (n > 2.01 && r > 0.0 && (m.x > 0.0 || m.y > 0.0)) {
+        vec2 u = m / r;
+        c = r * pow(pow(u.x, n) + pow(u.y, n), 1.0 / n);
+    }
+    return min(max(q.x, q.y), 0.0) + c - r;
 }
 
 void main() {
     vec2 px = qt_TexCoord0 * itemSize;
-    float shape = sdRoundBox(px - itemSize * 0.5, itemSize * 0.5, shapeRadius);
+    float shape = sdRoundBox(px - itemSize * 0.5, itemSize * 0.5, shapeRadius, shapeExpo);
     float inside = 1.0 - smoothstep(-0.75, 0.75, shape);
     float d = length(px - center);
     // a soft rim so the edge of the ink isn't a hard line

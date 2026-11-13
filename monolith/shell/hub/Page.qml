@@ -29,5 +29,23 @@ FocusScope {
             NumberAnimation { duration: current ? Theme.popInMs : (HubState.switching ? Theme.ms(110) : Theme.popOutMs); easing.type: Easing.OutCubic }
         }
     }
+    // view transition: one open menu turning into another slides along the menus' order (the new
+    // one in from the side it sits on, the old one out the other way) as they cross-fade.
+    // Interruptible: switching back mid-way carries on from where it is.
+    id: pg
+    property real shift: 0
+    transform: Translate { x: pg.shift }
+    readonly property real travel: Math.min(36, width * 0.06)
+    onCurrentChanged: {
+        slide.stop();
+        if (!HubState.switching || HubState.snap || !Theme.animOn) { shift = 0; return; }
+        // (coming in from fully gone: from its side; caught mid-way out: from where it is)
+        if (current && opacity < 0.05) shift = HubState.dir * travel;
+        slide.to = current ? 0 : -HubState.dir * travel;
+        slide.duration = current ? Theme.popInMs : Theme.ms(160);
+        slide.easing.bezierCurve = current ? Theme.enterCurve : Theme.exitCurve;
+        slide.start();
+    }
+    NumberAnimation { id: slide; target: pg; property: "shift"; to: 0; easing.type: Easing.BezierSpline }
     Behavior on scale { enabled: !HubState.snap; NumberAnimation { duration: current ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: current ? Theme.enterCurve : Theme.exitCurve } }
 }

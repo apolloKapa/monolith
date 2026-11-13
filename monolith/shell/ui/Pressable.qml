@@ -2,7 +2,7 @@ import QtQuick
 import "../core"
 
 // Anything clickable: a rounded tonal shape with a ripple. Children go inside.
-Rectangle {
+SmoothRect {
     id: root
     property alias hovered: ma.containsMouse
     property alias pressed: ma.pressed

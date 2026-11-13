@@ -61,12 +61,24 @@ Singleton {
     // just after it, so the two don't sit on top of each other while the card morphs
     property bool switching: false
     function switched() { switching = true; switchEnd.restart(); }
+    // view transitions: which way one open menu turns into another. +1: the new one is further
+    // along the menus (pages) than the old, so it comes in from the right and the old one leaves
+    // to the left; -1 the other way (hub/Page.qml)
+    property int dir: 1
+    function aim(p) { dir = pages.indexOf(p) >= pages.indexOf(page) ? 1 : -1; }
+    // another menu in the open hub (tabs, "open in full", a tile's right click…): always through
+    // here, so the old page leaves and the new one slides in instead of the two overlapping
+    function go(p) {
+        if (!p || p === page || pages.indexOf(p) === -1) return;
+        if (open) { aim(p); switched(); }
+        page = p;
+    }
     property Timer switchEnd: Timer { interval: 450; onTriggered: hub.switching = false }
     function show(p, screen) {
         if (p === "wallpaper") { showWall(screen); return; }
         const next = p && pages.indexOf(p) !== -1 ? p : page;
         if (!open && next !== page) { snap = true; Qt.callLater(() => { hub.snap = false; }); }
-        if (open && next !== page) switched();
+        if (open && next !== page) { aim(next); switched(); }
         if (p && pages.indexOf(p) !== -1) page = p;
         screenName = target(screen);
         wallOpen = false;
@@ -113,7 +125,7 @@ Singleton {
     // Settings opened at a section (keybinds, the island, other pages)
     property string settingsSection: "appearance"
     function openSettings(section, screen) { if (section) settingsSection = section; show("settings", screen); }
-    function step(d) { if (open) switched(); page = pages[(pages.indexOf(page) + d + pages.length) % pages.length]; }
+    function step(d) { const p = pages[(pages.indexOf(page) + d + pages.length) % pages.length]; if (open) { dir = d > 0 ? 1 : -1; switched(); } page = p; }
 
     IpcHandler {
         target: "hub"

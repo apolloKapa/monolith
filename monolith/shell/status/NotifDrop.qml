@@ -34,7 +34,7 @@ PanelWindow {
     }
     onShownChanged: if (shown) keys.forceActiveFocus()
 
-    Rectangle {
+    SmoothRect {
         id: card
         width: 420
         readonly property real listH: Notifs.list.length === 0 ? 170 : Math.min(list.contentHeight, 520)

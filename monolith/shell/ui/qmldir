@@ -31,3 +31,8 @@ IconTabs 1.0 IconTabs.qml
 Rise 1.0 Rise.qml
 LiquidPane 1.0 LiquidPane.qml
 EdgeBlur 1.0 EdgeBlur.qml
+SmoothRect 1.0 SmoothRect.qml
+SmoothBorder 1.0 SmoothBorder.qml
+Optimistic 1.0 Optimistic.qml
+Balance 1.0 Balance.qml
+Placeholder 1.0 Placeholder.qml

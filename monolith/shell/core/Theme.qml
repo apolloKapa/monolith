@@ -125,6 +125,10 @@ Singleton {
     readonly property color outlineColor: ({ accent: accent, accentSoft: Qt.alpha(accent, 0.5), ink: text, text: text,
                                              rule: Qt.alpha(text, 0.22) })[Look.style.outlineRole || "rule"] || Qt.alpha(text, 0.22)
     function corner(height, extra) { return Math.max(0, Math.min(height / 2, radius + (extra || 0))); }
+    // continuous corners (Appearance → Corner rounding): corners are superellipse arcs that ease
+    // out of the straight sides instead of quarter circles (ui/SmoothRect); 0: plain round corners
+    readonly property real cornerSmooth: Look.style.square || Store.get("theme.continuousCorners", true) === false ? 0
+                                         : Math.max(0, Math.min(1, Number(Store.get("theme.cornerSmoothing", 0.6))))
 
     // ── motion (Material: emphasized decelerate in, emphasized accelerate out) ──
     readonly property var enterCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]

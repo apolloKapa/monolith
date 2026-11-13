@@ -57,7 +57,7 @@ PanelWindow {
     }
     onShownChanged: if (shown) keys.forceActiveFocus()
 
-    Rectangle {
+    SmoothRect {
         id: card
         width: 460
         height: Math.min(dd.height - 80, col.implicitHeight + 24)

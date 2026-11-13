@@ -2,7 +2,7 @@ import QtQuick
 import "../core"
 
 // A one-line text field; `accepted(text)` on Enter or when it loses focus.
-Rectangle {
+SmoothRect {
     id: fld
     property alias text: input.text
     property string placeholder: ""

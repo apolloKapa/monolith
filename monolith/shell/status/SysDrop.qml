@@ -31,7 +31,7 @@ PanelWindow {
 
     function gb(b) { return (b / 1073741824).toFixed(1) + " GB"; }
 
-    Rectangle {
+    SmoothRect {
         id: card
         width: 520
         height: Math.min(dd.height - 80, col.implicitHeight + 24)

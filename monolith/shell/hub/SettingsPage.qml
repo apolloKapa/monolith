@@ -109,6 +109,11 @@ Page {
     readonly property var category: categories.find(c => c.tabs.some(t => t[0] === section)) || categories[0]
     readonly property var tab: category.tabs.find(t => t[0] === section) || category.tabs[0]
     readonly property string file: section === "welcome" ? "Welcome" : tab[2]
+    // every page in the order they're listed, and which way the last change went (+1: down)
+    readonly property var pageOrder: categories.reduce((a, c) => a.concat(c.tabs.map(t => t[2])), [])
+    property int pageDir: 1
+    property string lastFile: ""
+    function aimPage() { pageDir = pageOrder.indexOf(file) >= pageOrder.indexOf(lastFile) ? 1 : -1; lastFile = file; }
 
     RowLayout {
         anchors.fill: parent
@@ -392,7 +397,12 @@ Page {
                 // loaded while the page is open; the section reloads its data each time
                 active: page.current && HubState.open
                 source: "settings/" + page.file + ".qml"
-                onSourceChanged: { flick.keepH = 0; flick.contentY = 0; pageIn.restart(); popAnim.restart(); }
+                onSourceChanged: { flick.keepH = 0; flick.contentY = 0; pageIn.restart(); popAnim.restart(); page.aimPage(); slideIn.restart(); }
+                // view transition: the new page comes up from below when it's further down the
+                // list of sections than the last one, down from above when it's higher up
+                property real shiftY: 0
+                transform: Translate { y: loader.shiftY }
+                NumberAnimation { id: slideIn; target: loader; property: "shiftY"; from: page.pageDir * 28; to: 0; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
                 // a search result: its row, once the page is laid out
                 onLoaded: if (page.findRow !== "") seekLater.restart()
                 Timer { id: seekLater; interval: 80; onTriggered: page.seek() }

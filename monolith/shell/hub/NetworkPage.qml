@@ -18,7 +18,12 @@ Page {
     property var devices: []          // nmcli devices
     property var ips: ({})            // device -> its IPv4 address
     property var saved: ({})          // names of the saved Wi-Fi connections
-    property bool wifiOn: false
+    // Wi-Fi's radio: what nmcli says, and what the page shows. Optimistic (ui/Optimistic): the
+    // switch moves at once and stays put while nmcli catches up (a poll that ran before the
+    // change landed used to flip it back for a moment)
+    property bool wifiReal: false
+    Optimistic { id: radioO; actual: page.wifiReal }
+    readonly property bool wifiOn: radioO.value
     property var activeNet: null      // the Wi-Fi network we're on
     property bool listed: false       // a first scan came back
     property bool scanning: false
@@ -68,7 +73,7 @@ Page {
     property bool restoring: true
     Component.onCompleted: {
         const c = HubState.netCache;
-        if (c.devices) { devices = c.devices; ips = c.ips || ({}); saved = c.saved || ({}); wifiOn = c.wifiOn === true; }
+        if (c.devices) { devices = c.devices; ips = c.ips || ({}); saved = c.saved || ({}); wifiReal = c.wifiOn === true; }
         if (c.list) { sync(c.list); activeNet = c.list.find(n => n.active) || null; listed = true; }
         restoring = false;
     }
@@ -83,7 +88,7 @@ Page {
         command: ["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "dev"]
         stdout: StdioCollector { onStreamFinished: page.devices = text.trim().split("\n").filter(l => l).map(l => { const p = page.fields(l); return { name: p[0], type: p[1], state: p[2], conn: p[3] || "" }; }) }
     }
-    Process { id: radioProc; command: ["nmcli", "-t", "radio", "wifi"]; stdout: StdioCollector { onStreamFinished: page.wifiOn = text.trim() === "enabled" } }
+    Process { id: radioProc; command: ["nmcli", "-t", "radio", "wifi"]; stdout: StdioCollector { onStreamFinished: page.wifiReal = text.trim() === "enabled" } }
     Process {
         id: ipProc
         command: ["nmcli", "-t", "-f", "GENERAL.DEVICE,IP4.ADDRESS", "dev", "show"]
@@ -155,7 +160,7 @@ Page {
     function closePrompt() { openSsid = ""; error = ""; errorSsid = ""; }
     function openRow(ssid, mode) { error = ""; errorSsid = ""; openMode = mode; openSsid = ssid; }
     function setWifi(on) {
-        wifiOn = on;
+        radioO.set(on);
         if (!on) { nets.clear(); listed = false; activeNet = null; closePrompt(); }
         Quickshell.execDetached(["nmcli", "radio", "wifi", on ? "on" : "off"]);
         soon.restart();

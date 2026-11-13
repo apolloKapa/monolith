@@ -80,7 +80,7 @@ PanelWindow {
     }
     Timer { interval: 2000; repeat: true; running: osd.here && Store.get("osd.enabled", true) !== false; onTriggered: rfk.running = true }
 
-    Rectangle {
+    SmoothRect {
         id: pill
         anchors.fill: parent
         // upright: the level as a bar filling upwards, the number under it
@@ -170,6 +170,6 @@ PanelWindow {
         height: on ? Math.round(pill.height * pill.scale) : 0
         x: Math.round((pill.width - width) / 2)
         y: Math.round((pill.height - height) / 2)
-        radius: pill.radius * pill.scale
+        radius: pill.blurRadius * pill.scale
     }
 }
