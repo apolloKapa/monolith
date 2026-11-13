@@ -120,7 +120,9 @@ Page {
                                 onRightClicked: Niri.action(["close-window", "--id", String(modelData.id)])
                                 Column {
                                     anchors.fill: parent
-                                    anchors.margins: 10
+                                    anchors.topMargin: 10; anchors.bottomMargin: 10
+                                    // (in from the sides as far as very round corners need)
+                                    anchors.leftMargin: Theme.inset(card.radius, 10); anchors.rightMargin: anchors.leftMargin
                                     spacing: 6
                                     Image { width: 32; height: 32; sourceSize: Qt.size(64, 64); source: page.iconOf(card.modelData); smooth: true; mipmap: true }
                                     Label { width: parent.width; text: card.modelData.title || card.modelData.app_id; font.pixelSize: Theme.sizeSmall; maximumLineCount: 2; wrapMode: Text.Wrap; Balance {} }

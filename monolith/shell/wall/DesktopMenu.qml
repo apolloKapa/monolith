@@ -35,7 +35,7 @@ PanelWindow {
         property string icon
         property string text
         property bool danger: false
-        width: card.width - 16; height: 40
+        width: card.width - 2 * card.pad; height: 40
         color: hovered ? (danger ? Qt.alpha(Theme.danger, 0.16) : Theme.containerHigh) : "transparent"
         Row {
             x: 12; anchors.verticalCenter: parent.verticalCenter
@@ -56,7 +56,7 @@ PanelWindow {
     SmoothRect {
         id: card
         width: 250
-        height: col.implicitHeight + 16
+        height: col.implicitHeight + 2 * card.pad
         // where it was opened (kept while it fades out, when the menu's place is already cleared)
         property point at: Qt.point(0, 0)
         Connections { target: dm; function onAtChanged() { if (dm.at.screen !== "") card.at = Qt.point(dm.at.x, dm.at.y); } }
@@ -64,6 +64,8 @@ PanelWindow {
         x: Math.min(card.at.x, dm.width - width - 8)
         y: Math.min(card.at.y, dm.height - height - 8)
         radius: Theme.corner(60, 10)
+        // room inside: more when the corners are very round (Theme.inset)
+        readonly property real pad: Theme.inset(radius, 8)
         color: Theme.frame
         border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
         CardShadow {}
@@ -76,7 +78,7 @@ PanelWindow {
 
         Column {
             id: col
-            x: 8; y: 8
+            x: card.pad; y: card.pad
             spacing: 2
 
             // ── on a widget ──
@@ -91,7 +93,7 @@ PanelWindow {
                 Label { x: 8; visible: dm.item && (WidgetLayout.faces[dm.item.type] || []).length > 1; text: "Style"; muted: true; font.pixelSize: Theme.sizeSmall }
                 Dropdown {
                     x: 8
-                    width: card.width - 32
+                    width: card.width - 2 * card.pad - 16
                     visible: dm.item && (WidgetLayout.faces[dm.item.type] || []).length > 1
                     opts: dm.item ? (WidgetLayout.faces[dm.item.type] || []) : []
                     value: dm.item ? WidgetLayout.faceId(dm.item.type, dm.item.face) : ""

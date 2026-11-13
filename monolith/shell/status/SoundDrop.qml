@@ -60,12 +60,14 @@ PanelWindow {
     SmoothRect {
         id: card
         width: 460
-        height: Math.min(dd.height - 80, col.implicitHeight + 24)
+        height: Math.min(dd.height - 80, col.implicitHeight + 2 * card.pad)
         Behavior on height { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.OutCubic } }
         readonly property point at: Theme.dropPos(HubState.dropX, HubState.dropY, width, height, dd.width, dd.height)
         x: at.x
         y: at.y
         radius: Theme.corner(80, 14)
+        // room inside: more when the corners are very round (Theme.inset)
+        readonly property real pad: Theme.inset(radius, 12)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
         clip: true
@@ -81,9 +83,9 @@ PanelWindow {
         Flickable {
             id: scroller
             SmoothWheel {}
-            x: 12; y: 12
-            width: card.width - 24
-            height: card.height - 24
+            x: card.pad; y: card.pad
+            width: card.width - 2 * card.pad
+            height: card.height - 2 * card.pad
             contentHeight: col.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds

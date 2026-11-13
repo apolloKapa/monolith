@@ -38,12 +38,14 @@ PanelWindow {
         id: card
         width: 420
         readonly property real listH: Notifs.list.length === 0 ? 170 : Math.min(list.contentHeight, 520)
-        height: head.height + 8 + listH + 24
+        height: head.height + 8 + listH + 2 * card.pad
         Behavior on height { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.OutCubic } }
         readonly property point at: Theme.dropPos(HubState.dropX, HubState.dropY, width, height, dd.width, dd.height)
         x: at.x
         y: at.y
         radius: Theme.corner(80, 14)
+        // room inside: more when the corners are very round (Theme.inset)
+        readonly property real pad: Theme.inset(radius, 12)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
         // drops down from the bar with a little zoom, and goes back up the same way
@@ -57,8 +59,8 @@ PanelWindow {
 
         RowLayout {
             id: head
-            x: 12; y: 12
-            width: card.width - 24
+            x: card.pad; y: card.pad
+            width: card.width - 2 * card.pad
             height: 40
             Label { Layout.leftMargin: 4; text: Notifs.list.length === 0 ? "Notifications" : Notifs.list.length + (Notifs.list.length === 1 ? " notification" : " notifications"); strong: true }
             Item { Layout.fillWidth: true }
@@ -85,7 +87,7 @@ PanelWindow {
         }
 
         Empty {
-            x: 12; y: list.y
+            x: card.pad; y: list.y
             width: list.width; height: card.listH
             visible: Notifs.list.length === 0
             icon: Notifs.dnd ? "do_not_disturb_on" : "notifications_paused"
@@ -96,8 +98,8 @@ PanelWindow {
         ListView {
             SmoothWheel {}
             id: list
-            x: 12; y: head.y + head.height + 8
-            width: card.width - 24
+            x: card.pad; y: head.y + head.height + 8
+            width: card.width - 2 * card.pad
             height: card.listH
             clip: true
             spacing: 8

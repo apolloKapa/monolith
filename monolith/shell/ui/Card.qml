@@ -7,7 +7,7 @@ SmoothRect {
     property string icon: ""
     property string title: ""
     default property alias content: slot.data
-    property real pad: 14
+    property real pad: Theme.inset(radius, 14)
     property bool cascade: false      // on a menu: comes up with the others when the page opens
     Rise { on: card.cascade }
     HoverHandler { id: hov }

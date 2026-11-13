@@ -55,13 +55,15 @@ PanelWindow {
     SmoothRect {
         id: card
         // as wide as its longest entry needs, within reason
-        width: Math.round(Math.max(220, Math.min(420, col.wantW + 16)))
-        height: Math.min(dd.height - 80, col.implicitHeight + 16)
+        width: Math.round(Math.max(220, Math.min(420, col.wantW + 2 * card.pad)))
+        height: Math.min(dd.height - 80, col.implicitHeight + 2 * card.pad)
         Behavior on height { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
         readonly property point at: Theme.dropPos(HubState.dropX, HubState.dropY, width, height, dd.width, dd.height)
         x: at.x
         y: at.y
         radius: Theme.corner(80, 14)
+        // room inside: more when the corners are very round (Theme.inset)
+        readonly property real pad: Theme.inset(radius, 8)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
         // (no clip here: it would cut the shadow square round the rounded corners; the list
@@ -77,9 +79,9 @@ PanelWindow {
         Flickable {
             id: scroller
             SmoothWheel {}
-            x: 8; y: 8
-            width: card.width - 16
-            height: card.height - 16
+            x: card.pad; y: card.pad
+            width: card.width - 2 * card.pad
+            height: card.height - 2 * card.pad
             contentHeight: col.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds

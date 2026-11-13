@@ -47,8 +47,10 @@ ColumnLayout {
         color: on ? Theme.accentContainer : Theme.containerHigh
         border.width: on ? 2 : 0
         border.color: Theme.accent
-        Label { x: 14; y: 10; text: tc.title; strong: true; color: tc.on ? Theme.onAccentContainer : Theme.text }
-        Icon { visible: tc.on; x: parent.width - 30; y: 9; name: "check_circle"; size: 18; filled: true; color: Theme.accent }
+        // (in from the corners as far as their roundness needs: Theme.inset)
+        readonly property real pad: Theme.inset(radius, 14)
+        Label { x: tc.pad; y: 10; width: parent.width - 2 * tc.pad - 20; text: tc.title; strong: true; color: tc.on ? Theme.onAccentContainer : Theme.text }
+        Icon { visible: tc.on; x: parent.width - tc.pad - 16; y: 9; name: "check_circle"; size: 18; filled: true; color: Theme.accent }
         Rectangle {
             x: 10; y: 36
             width: parent.width - 20; height: 50

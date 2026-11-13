@@ -89,7 +89,8 @@ PanelWindow {
     readonly property Item currentLoader: pages.children.find(l => l.pageId === HubState.page) || null
     readonly property Item currentPage: currentLoader ? currentLoader.item : null
 
-    readonly property real pad: Theme.islandPad
+    // (more when the corners are very round: Theme.inset)
+    readonly property real pad: Theme.inset(Theme.islandRadius, Theme.islandPad)
     readonly property real fieldH: 46
     // each menu is its own window; Settings → Menus can put them back together with tabs
     readonly property bool tabbed: Store.get("menus.tabs", false) === true
