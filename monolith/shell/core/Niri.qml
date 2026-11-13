@@ -172,7 +172,9 @@ Singleton {
                 app_id: o["class"] || (t.wayland ? t.wayland.appId : "") || "",
                 workspace_id: t.workspace ? t.workspace.id : null,
                 is_focused: t.activated === true, is_floating: o.floating === true,
-                is_fullscreen: (o.fullscreen || 0) > 0, pid: o.pid || 0,
+                // (Hyprland: 0 none, 1 maximised, 2 fullscreen. Counting a maximised window as
+                // fullscreen put the live wallpaper to sleep whenever one was open)
+                is_fullscreen: Number(o.fullscreen || 0) >= 2, pid: o.pid || 0,
                 // where it is on its screen (the dock's "dodge windows" reads this, as on niri)
                 layout: at && size ? { tile_pos_in_workspace_view: [at[0] - (mon ? mon.x : 0), at[1] - (mon ? mon.y : 0)], tile_size: size } : null
             };
