@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC
 import "../core"
+import "popfit.js" as PopFit
 
 // A drop-down choice: shows the picked option; click it for the list. Options are
 // [value, label] pairs (a label can be followed by a description as a third item).
@@ -34,17 +35,26 @@ Rectangle {
         rotation: menu.visible ? 180 : 0
         Behavior on rotation { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
     }
-    MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: menu.visible ? menu.close() : menu.open() }
+    MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: menu.visible ? menu.close() : dd.openList() }
+
+    // the list's full height, and where it goes (see popfit.js: inside the card or page)
+    readonly property real listH: listCol.implicitHeight + 12
+    property var fit: ({ y: height + 4, h: listH, up: false })
+    function openList() {
+        fit = PopFit.place(dd, listH, 4);
+        menu.open();
+    }
 
     QQC.Popup {
         id: menu
-        y: dd.height + 4
+        y: dd.fit.y
         width: dd.width
+        height: dd.fit.h
         padding: 6
         modal: false
         closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutside
         // fades in with a little zoom from the field, and out the same way
-        transformOrigin: QQC.Popup.Top
+        transformOrigin: dd.fit.up ? QQC.Popup.Bottom : QQC.Popup.Top
         enter: Transition {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
             NumberAnimation { property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
@@ -59,7 +69,23 @@ Rectangle {
             border.width: Math.max(1, Theme.outlineW)
             border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
         }
-        contentItem: Column {
+        onOpened: {
+            // the picked one in view
+            const i = dd.opts.findIndex(o => String(o[0]) === dd.value);
+            if (i >= 0 && listCol.children[i]) {
+                const c = listCol.children[i];
+                scroller.contentY = Math.max(0, Math.min(scroller.contentHeight - scroller.height, c.y + c.height / 2 - scroller.height / 2));
+            } else scroller.contentY = 0;
+        }
+        contentItem: Flickable {
+            id: scroller
+            clip: true
+            contentHeight: listCol.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
+            interactive: contentHeight > height
+            SmoothWheel {}
+          Column {
+            id: listCol
             spacing: 2
             Repeater {
                 model: dd.opts
@@ -80,6 +106,7 @@ Rectangle {
                     Icon { visible: parent.on; anchors.right: parent.right; anchors.rightMargin: 10; anchors.verticalCenter: parent.verticalCenter; name: "check"; size: 18; color: Theme.onAccentContainer }
                 }
             }
+          }
         }
     }
 }

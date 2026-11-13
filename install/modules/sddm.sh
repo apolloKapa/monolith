@@ -40,6 +40,36 @@ resolve_sddm_backend() {
     return 1
 }
 
+# The pointer for the login screen. Without a CursorTheme SDDM's greeter (and the X server or
+# weston under it) had no cursor theme on some PCs, and showed no pointer at all. Picks the
+# theme niri uses when it's installed system-wide (SDDM runs as its own user, so ~/.icons
+# themes don't count), else a common one, else the first theme that has cursors.
+sddm_cursor_theme() {
+    local want="" size="" t dir
+    local niri_input="$HOME/.config/niri/config/input.kdl"
+    if [ -f "$niri_input" ]; then
+        want=$(sed -n 's/^[[:space:]]*xcursor-theme[[:space:]]*"\([^"]*\)".*/\1/p' "$niri_input" | head -n 1)
+        size=$(sed -n 's/^[[:space:]]*xcursor-size[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$niri_input" | head -n 1)
+    fi
+    for t in "$want" breeze_cursors Breeze_Light Adwaita; do
+        [ -n "$t" ] || continue
+        for dir in /usr/share/icons /usr/local/share/icons; do
+            if [ -d "$dir/$t/cursors" ]; then
+                printf '%s\n%s\n' "$t" "${size:-24}"
+                return 0
+            fi
+        done
+    done
+    for dir in /usr/share/icons/*/cursors; do
+        [ -d "$dir" ] || continue
+        t="${dir%/cursors}"; t="${t##*/}"
+        [ "$t" = default ] && continue
+        printf '%s\n%s\n' "$t" "${size:-24}"
+        return 0
+    done
+    return 1
+}
+
 setup_sddm() {
     local project_root="$1"
     local install_state="${2:-$INSTALL_STATE}"
@@ -143,8 +173,10 @@ DisplayCommand=$sddm_theme_dest/Xsetup
 EOF
     fi
 
-    if [ "$PM_SDDM_CURSOR_FIX" = true ]; then
-        pm_configure_sddm_cursor /etc/sddm.conf.d/10-monolith.conf
+    local cursor_out cursor_theme cursor_size
+    if cursor_out=$(sddm_cursor_theme); then
+        { read -r cursor_theme; read -r cursor_size; } <<< "$cursor_out"
+        sudo sed -i "/^\[Theme\]/a CursorTheme=$cursor_theme\nCursorSize=$cursor_size" /etc/sddm.conf.d/10-monolith.conf
     fi
 
     if declare -f pm_enable_display_manager >/dev/null; then

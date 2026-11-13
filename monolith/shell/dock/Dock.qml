@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "../core"
@@ -52,6 +53,50 @@ PanelWindow {
     property bool editing: false
     property int dragIndex: -1
     property point dragPos: Qt.point(0, 0)
+    // a drag in the editor: the icon hangs from the pointer and swings as it's carried (the
+    // ghost below); the others slide aside to show where it lands; let go and it drops into
+    // that slot, then the order is saved
+    property point dragWin: Qt.point(0, 0)        // the pointer, in the window
+    property point grabAt: Qt.point(0, 0)         // where the icon was picked up, in the icon
+    property bool dropping: false
+    readonly property int dropTarget: dragIndex >= 0 ? indexAt(dragPos) : -1
+    readonly property real slotStep: capsule.cell + appsRow.spacing
+    // how far tile i slides to make room (the dragged one's gap moves to the target)
+    function shiftOf(i) {
+        const f = dragIndex, t = dropTarget;
+        if (f < 0 || i === f) return 0;
+        if (f < t && i > f && i <= t) return -slotStep;
+        if (f > t && i >= t && i < f) return slotStep;
+        return 0;
+    }
+    function startDrag(i, grab, win) {
+        grabAt = grab; dragWin = win;
+        ghost.app = items[i] || null;
+        ghost.reset(win);
+        dragIndex = i;
+    }
+    function endDrag(commit) {
+        const from = dragIndex, to = dropTarget;
+        if (from < 0) return;
+        if (!commit || !Theme.animOn) {
+            dragIndex = -1;
+            if (commit) Qt.callLater(() => dock.movePinned(from, to));
+            return;
+        }
+        // fly into the slot it lands in, upright, then save (saving rebuilds the dock)
+        const slot = appsRow.mapToItem(dock.contentItem, vertical ? 0 : to * slotStep, vertical ? to * slotStep : 0);
+        dropping = true;
+        ghost.land(slot.x + grabAt.x, slot.y + grabAt.y);
+        landLater.from = from; landLater.to = to;
+        landLater.restart();
+    }
+    Timer {
+        id: landLater
+        property int from: -1
+        property int to: -1
+        interval: Theme.ms(200)
+        onTriggered: { dock.dropping = false; dock.dragIndex = -1; dock.movePinned(from, to); }
+    }
     property string pickQuery: ""
     function movePinned(from, to) {
         if (from === to || from < 0) return;
@@ -214,8 +259,16 @@ PanelWindow {
                     required property var modelData
                     required property int index
                     cursor: dock.editing ? Qt.OpenHandCursor : Qt.ArrowCursor
-                    opacity: dock.dragIndex === index ? 0.3 : 1
+                    // (carried: the ghost shows it; its slot is the gap)
+                    opacity: dock.dragIndex === index ? 0 : 1
                     Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
+                    // slides aside while another one is carried over it
+                    transform: Translate {
+                        x: dock.vertical ? 0 : dock.shiftOf(app.index)
+                        y: dock.vertical ? dock.shiftOf(app.index) : 0
+                        Behavior on x { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
+                        Behavior on y { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
+                    }
                     // in the editor the icons wiggle (each a little out of step), so it's clear they can be moved
                     rotation: 0
                     SequentialAnimation on rotation {
@@ -243,18 +296,24 @@ PanelWindow {
                         property bool moved: false
                         onPressed: mouse => { start = Qt.point(mouse.x, mouse.y); moved = false; }
                         onPositionChanged: mouse => {
-                            if (!pressed) return;
-                            if (!moved && Math.abs(mouse.x - start.x) + Math.abs(mouse.y - start.y) > 6) { moved = true; dock.dragIndex = app.index; }
-                            if (moved) dock.dragPos = mapToItem(appsRow, mouse.x, mouse.y);
+                            if (!pressed || dock.dropping) return;
+                            if (!moved && Math.abs(mouse.x - start.x) + Math.abs(mouse.y - start.y) > 6) {
+                                moved = true;
+                                dock.dragPos = mapToItem(appsRow, mouse.x, mouse.y);
+                                dock.startDrag(app.index, start, mapToItem(dock.contentItem, mouse.x, mouse.y));
+                            }
+                            if (moved) {
+                                dock.dragPos = mapToItem(appsRow, mouse.x, mouse.y);
+                                dock.dragWin = mapToItem(dock.contentItem, mouse.x, mouse.y);
+                            }
                         }
                         // end the drag first, then reorder: saving rebuilds the dock (this tile too)
                         onReleased: {
-                            const from = app.index, to = dock.indexAt(dock.dragPos), wasMoved = moved;
-                            dock.dragIndex = -1;
+                            const wasMoved = moved;
                             moved = false;
-                            if (wasMoved) Qt.callLater(() => dock.movePinned(from, to));
+                            if (wasMoved) dock.endDrag(true);
                         }
-                        onCanceled: dock.dragIndex = -1
+                        onCanceled: { moved = false; dock.endDrag(false); }
                     }
                     // editing: unpin
                     Rectangle {
@@ -328,6 +387,64 @@ PanelWindow {
                 onClicked: dock.editing = false
                 Icon { anchors.centerIn: parent; name: "check"; size: 26; color: Theme.onAccent }
             }
+        }
+    }
+
+    // the icon being carried: hangs from where it was picked up and swings like it's dangling
+    // from the pointer (a little pendulum, run every frame: it leans back against the way it's
+    // pulled, overshoots and settles when you stop), a touch bigger, with a shadow
+    Item {
+        id: ghost
+        property var app: null
+        z: 50
+        visible: dock.dragIndex >= 0 && app !== null
+        width: capsule.cell; height: capsule.cell
+        // the pointer, less where in the icon it was picked up (so it doesn't jump)
+        x: (landing ? landX : dock.dragWin.x) - dock.grabAt.x
+        y: (landing ? landY : dock.dragWin.y) - dock.grabAt.y
+        Behavior on x { enabled: ghost.landing; NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
+        Behavior on y { enabled: ghost.landing; NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
+        property bool landing: false
+        property real landX: 0
+        property real landY: 0
+        function land(px, py) { landX = px; landY = py; landing = true; }
+        // the swing (degrees), its speed, and how fast the pointer is going
+        property real ang: 0
+        property real angV: 0
+        property real vel: 0
+        property real lastX: 0
+        property real lastY: 0
+        function reset(p) { landing = false; ang = 0; angV = 0; vel = 0; lastX = p.x; lastY = p.y; }
+        FrameAnimation {
+            running: ghost.visible && Theme.animOn
+            onTriggered: {
+                const dt = Math.min(0.05, Math.max(0.001, frameTime));
+                const px = ghost.landing ? ghost.landX : dock.dragWin.x, py = ghost.landing ? ghost.landY : dock.dragWin.y;
+                // along the dock: sideways on a bottom/top one, up and down on a side one
+                const inst = (dock.vertical ? py - ghost.lastY : px - ghost.lastX) / dt;
+                ghost.lastX = px; ghost.lastY = py;
+                ghost.vel += (inst - ghost.vel) * Math.min(1, dt * 18);
+                // leans against the pull (more the faster), springs back, settles; landing: upright
+                const target = ghost.landing ? 0 : Math.max(-32, Math.min(32, -ghost.vel * 0.04));
+                const acc = 170 * (target - ghost.ang) - 7 * ghost.angV;
+                ghost.angV += acc * dt;
+                ghost.ang += ghost.angV * dt;
+            }
+        }
+        // the pivot: the top middle of the icon, as if it hangs from there
+        transform: Rotation { origin.x: ghost.width / 2; origin.y: 0; angle: Theme.animOn ? ghost.ang : 0 }
+        // pops up a little as it's picked up
+        scale: dock.dragIndex >= 0 && !landing ? 1.12 : 1
+        Behavior on scale { NumberAnimation { duration: Theme.ms(180); easing.type: Easing.OutBack; easing.overshoot: 1.6 } }
+        Image {
+            id: ghostIcon
+            anchors.centerIn: parent
+            width: Math.round(capsule.cell * 0.68); height: width
+            sourceSize: Qt.size(128, 128)
+            source: ghost.app ? dock.iconFor(ghost.app.icon) : ""
+            smooth: true; mipmap: true
+            layer.enabled: ghost.visible
+            layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: 0.6; shadowColor: Qt.rgba(0, 0, 0, 0.45); shadowVerticalOffset: ghost.landing ? 1 : 6 }
         }
     }
 

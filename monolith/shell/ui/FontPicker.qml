@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as QQC
 import "../core"
+import "popfit.js" as PopFit
 
 // A font drop-down: shows the font in use (written in it); click it for every font, each
 // written in itself, with a search. Rows are a fixed height, so hovering never moves anything.
@@ -32,16 +33,18 @@ Rectangle {
         elide: Text.ElideRight
     }
     Icon { id: arrow; anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; name: "expand_more"; size: 20; rotation: pop.visible ? 180 : 0; Behavior on rotation { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } } }
-    MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pop.visible ? pop.close() : pop.open() }
+    MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pop.visible ? pop.close() : fp.openList() }
+    property var fit: ({ y: height + 4, h: 380, up: false })
+    function openList() { fit = PopFit.place(fp, 380, 4); pop.open(); }
 
     QQC.Popup {
         id: pop
-        y: fp.height + 4
+        y: fp.fit.y
         width: Math.max(fp.width, 360)
-        height: 380
+        height: fp.fit.h
         padding: 8
         closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutside
-        transformOrigin: QQC.Popup.Top
+        transformOrigin: fp.fit.up ? QQC.Popup.Bottom : QQC.Popup.Top
         enter: Transition {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
             NumberAnimation { property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }

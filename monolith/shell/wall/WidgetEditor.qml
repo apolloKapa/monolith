@@ -603,15 +603,68 @@ PanelWindow {
                 color: Theme.accent
                 Label { id: angL; anchors.centerIn: parent; text: Math.round(wrap.liveAng) + "°"; strong: true; color: Theme.onAccent }
             }
+            // ── where its little bar and its settings go: together, above it when they fit (clear
+            // of the editor's toolbar), else under it, else beside it (right, then left), else on
+            // the roomier of above and under (the settings scroll). Kept on the screen, and they
+            // glide to a new place instead of jumping (they used to flip with no motion and could
+            // hang off the screen's sides).
+            readonly property bool optsShown: sel && ed.optsOpen
+            readonly property real dockGap: 14
+            readonly property real topLimit: 104                 // under the toolbar and its hint
+            readonly property real bottomLimit: ed.height - 20
+            readonly property real barW: wb.implicitWidth + 12
+            readonly property real barH: 40
+            readonly property real panelW: Math.min(360, ed.width - 24)
+            readonly property real panelWant: optCol.implicitHeight + 24
+            // (the settings scroll: they need some room, not all of it)
+            readonly property real need: barH + (optsShown ? 8 + Math.min(panelWant, 240) : 0)
+            readonly property real roomUp: y - dockGap - topLimit
+            readonly property real roomDown: bottomLimit - (y + height) - dockGap
+            readonly property real sideW: Math.max(barW, optsShown ? panelW : 0)
+            readonly property real roomRight: ed.width - 12 - (x + width) - dockGap
+            readonly property real roomLeft: x - dockGap - 12
+            // (first where all of it fits without scrolling, then where enough of it does)
+            readonly property real full: barH + (optsShown ? 8 + panelWant : 0)
+            readonly property bool sideFits: bottomLimit - topLimit >= full
+            readonly property string dock: roomUp >= full ? "up" : roomDown >= full ? "down"
+                : sideFits && roomRight >= sideW ? "right" : sideFits && roomLeft >= sideW ? "left"
+                : roomUp >= need ? "up" : roomDown >= need ? "down"
+                : roomRight >= sideW ? "right" : roomLeft >= sideW ? "left"
+                : (roomUp >= roomDown ? "up" : "down")
+            readonly property bool sideDock: dock === "left" || dock === "right"
+            // the settings' height: what they want, cut to the room on that side
+            readonly property real panelH: {
+                const room = dock === "up" ? roomUp : dock === "down" ? roomDown : bottomLimit - topLimit;
+                return Math.max(Math.min(panelWant, 160), Math.min(panelWant, room - barH - 8));
+            }
+            // above, the bar also keeps clear of the twist handle off the top-right corner
+            function clampX(lx, w) { return Math.max(12, Math.min(ed.width - 12 - w, x + lx)) - x; }
+            readonly property real barX: dock === "right" ? width + dockGap : dock === "left" ? -dockGap - barW : clampX((width - barW) / 2, barW)
+            readonly property real panelX: dock === "right" ? width + dockGap : dock === "left" ? -dockGap - panelW : clampX((width - panelW) / 2, panelW)
+            readonly property bool overTwist: barX + barW > width / 2 + ww / 2 - 10
+            readonly property real sideTop: Math.max(topLimit, Math.min(bottomLimit - barH - (optsShown ? 8 + panelH : 0), y)) - y
+            readonly property real barY: dock === "up" ? -(overTwist ? 40 : dockGap) - barH
+                : dock === "down" ? height + dockGap : sideTop
+            readonly property real panelY: dock === "up" ? barY - 8 - panelH : barY + barH + 8
+            // glides while it changes side or is pushed along an edge; follows a drag directly
+            readonly property int glideMs: Theme.ms(280)
+
             // its own little bar: the name, the look, its settings, remove
             Rectangle {
                 id: wbar
-                visible: wrap.sel
-                anchors.bottom: wrap.y > 70 ? parent.top : undefined
-                anchors.top: wrap.y > 70 ? undefined : parent.bottom
-                anchors.bottomMargin: 12; anchors.topMargin: 12
-                anchors.horizontalCenter: parent.horizontalCenter
-                height: 40; width: wb.implicitWidth + 12
+                opacity: wrap.sel ? 1 : 0
+                scale: wrap.sel ? 1 : Theme.popScale
+                visible: opacity > 0.01
+                transformOrigin: wrap.dock === "up" ? Item.Bottom : wrap.dock === "down" ? Item.Top : wrap.dock === "right" ? Item.Left : Item.Right
+                Behavior on opacity { NumberAnimation { duration: wrap.sel ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: wrap.sel ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: wrap.sel ? Theme.enterCurve : Theme.exitCurve } }
+                z: 21
+                x: wrap.barX
+                y: wrap.barY
+                Behavior on x { enabled: wrap.sel; NumberAnimation { duration: wrap.glideMs; easing.type: Easing.OutCubic } }
+                Behavior on y { enabled: wrap.sel; NumberAnimation { duration: wrap.glideMs; easing.type: Easing.OutCubic } }
+                CardShadow {}
+                height: wrap.barH; width: wrap.barW
                 radius: Theme.corner(32, 4)
                 color: Theme.frame
                 border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
@@ -659,24 +712,23 @@ PanelWindow {
             }
             // its settings: under (or over) its little bar
             Rectangle {
-                opacity: (wrap.sel && ed.optsOpen) ? 1 : 0
-                scale: (wrap.sel && ed.optsOpen) ? 1 : Theme.popScale
+                opacity: wrap.optsShown ? 1 : 0
+                scale: wrap.optsShown ? 1 : Theme.popScale
                 visible: opacity > 0.01
-                // over its little bar when there's room up there (clear of the editor's toolbar),
-                // else under the widget, whichever side has more room
-                readonly property bool barUp: wrap.y > 70
-                readonly property real roomUp: barUp ? wrap.y - 12 - 40 - 8 - 96 : 0
-                readonly property real roomDown: ed.height - wrap.y - wrap.height - (barUp ? 12 : 12 + 40 + 8) - 24
-                readonly property bool up: barUp && (roomUp >= optCol.implicitHeight + 24 || roomUp >= roomDown)
-                transformOrigin: up ? Item.Bottom : Item.Top
-                Behavior on opacity { NumberAnimation { duration: (wrap.sel && ed.optsOpen) ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-                Behavior on scale { NumberAnimation { duration: (wrap.sel && ed.optsOpen) ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: (wrap.sel && ed.optsOpen) ? Theme.enterCurve : Theme.exitCurve } }
+                // (see dock above: with its little bar, glides when the place changes)
+                transformOrigin: wrap.dock === "up" ? Item.Bottom : wrap.dock === "down" ? Item.Top : wrap.dock === "right" ? Item.TopLeft : Item.TopRight
+                Behavior on opacity { NumberAnimation { duration: wrap.optsShown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: wrap.optsShown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: wrap.optsShown ? Theme.enterCurve : Theme.exitCurve } }
                 z: 20
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: up ? -12 - 40 - 8 - height : wrap.height + (barUp ? 12 : 12 + 40 + 8)
-                width: 360
+                x: wrap.panelX
+                y: wrap.panelY
+                Behavior on x { enabled: wrap.optsShown; NumberAnimation { duration: wrap.glideMs; easing.type: Easing.OutCubic } }
+                Behavior on y { enabled: wrap.optsShown; NumberAnimation { duration: wrap.glideMs; easing.type: Easing.OutCubic } }
+                Behavior on height { enabled: wrap.optsShown; NumberAnimation { duration: wrap.glideMs; easing.type: Easing.OutCubic } }
+                CardShadow {}
+                width: wrap.panelW
                 // long lists (the visualiser's) scroll
-                height: Math.min(optCol.implicitHeight + 24, Math.max(160, up ? roomUp : roomDown))
+                height: wrap.panelH
                 radius: Theme.corner(60, 10)
                 color: Theme.frame
                 border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline

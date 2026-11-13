@@ -144,7 +144,7 @@ ColumnLayout {
     }
 
     // ── icons ──
-    SettingRow { icon: "interests"; title: "Icons"; desc: "The icon pack apps and the shell use" + (sec.iconTheme ? " (now " + sec.iconTheme + ")" : "") }
+    SettingRow { icon: "interests"; title: "Icons"; desc: "The icon pack apps and the shell use" + (sec.iconTheme ? " (now " + sec.iconTheme + ")" : "") + ". The shell restarts for a moment to load a new one" }
     GridLayout {
         Layout.fillWidth: true
         columns: 2
@@ -156,7 +156,9 @@ ColumnLayout {
                 title: modelData.title
                 samples: modelData.samples
                 on: sec.iconTheme === modelData.name
-                onClicked: { sec.iconTheme = modelData.name; Quickshell.execDetached(["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", modelData.name]); }
+                // (everywhere: GTK, Qt and KDE apps and the shell; the shell restarts to load
+                // them, Qt reads icons once, and comes back here)
+                onClicked: if (!sec.iconTheme || sec.iconTheme !== modelData.name) { sec.iconTheme = modelData.name; Quickshell.execDetached(["sh", sec.script.replace("themes.py", "icon_theme.sh"), modelData.name]); }
             }
         }
     }
