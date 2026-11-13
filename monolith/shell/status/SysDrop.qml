@@ -7,10 +7,8 @@ import "../core"
 import "../ui"
 
 // The system monitor dropdown: a click on the bar's stats drops it out under them. Live graphs
-// of the last two minutes (CPU, GPU, memory, video memory, both temperatures), the GPU's power
-// and clock, and the busiest processes by CPU, memory or video memory, each with a button to
-// end it (a second click within a few seconds forces it). "More" opens the control center's
-// Monitor tab.
+// of the last two minutes (CPU, GPU, memory, video memory, both temperatures) and the GPU's power
+// and clock. "More" opens the control center's Monitor tab.
 PanelWindow {
     id: dd
     required property var modelData
@@ -28,21 +26,10 @@ PanelWindow {
     Item { id: full; anchors.fill: parent }
     MouseArea { anchors.fill: parent; onClicked: HubState.closeDrop() }
     Item { id: keys; focus: true; Keys.onEscapePressed: HubState.closeDrop() }
-    onShownChanged: if (shown) { keys.forceActiveFocus(); top.running = true; }
+    onShownChanged: if (shown) keys.forceActiveFocus()
 
-    // ── the processes, every two seconds while it's open ──
-    property string sortBy: Store.get("sysmon.sort", "cpu")
-    property var procs: []
-    Process {
-        id: top
-        command: ["python3", Qt.resolvedUrl("../scripts/top.py").toString().replace("file://", ""), dd.sortBy, "8"]
-        stdout: StdioCollector { onStreamFinished: { try { dd.procs = JSON.parse(text); } catch (e) {} } }
-    }
-    Timer { interval: 2000; repeat: true; running: dd.shown; onTriggered: if (!top.running) top.running = true }
-    onSortByChanged: { Store.set("sysmon.sort", sortBy); if (!top.running) top.running = true; }
 
     function gb(b) { return (b / 1073741824).toFixed(1) + " GB"; }
-    function mb(b) { return b >= 1073741824 ? gb(b) : Math.round(b / 1048576) + " MB"; }
 
     Rectangle {
         id: card
@@ -118,46 +105,6 @@ PanelWindow {
                     Tile { icon: "device_thermostat"; name: "GPU temperature"; value: Stats.gpuTemp > 0 ? Math.round(Stats.gpuTemp) + "°" : "—"; hist: Stats.gpuTempHist; now: Stats.gpuTemp / 100; hot: Number(Stats.warn.gpuTemp || 95) / 100 }
                 }
 
-                // ── the busiest processes ──
-                RowLayout {
-                    Layout.fillWidth: true
-                    Label { Layout.leftMargin: 4; text: "Busiest"; strong: true }
-                    Item { Layout.fillWidth: true }
-                    Segmented { Layout.preferredWidth: 270; height: 32; opts: [["cpu", "CPU"], ["mem", "Memory"], ["vram", "Video mem"]]; value: dd.sortBy; onPicked: v => dd.sortBy = v }
-                }
-                Item {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 14
-                    Row {
-                        x: 170; spacing: 14
-                        Repeater {
-                            model: ["CPU", "Memory", "Video"]
-                            Label { required property string modelData; width: index === 0 ? 64 : 72; required property int index; horizontalAlignment: Text.AlignRight; text: modelData; muted: true; font.pixelSize: Theme.sizeTiny }
-                        }
-                    }
-                }
-                Repeater {
-                    model: dd.procs
-                    Rectangle {
-                        id: pr
-                        required property var modelData
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 44
-                        radius: Theme.corner(44, 2)
-                        color: ph.hovered ? Theme.containerHigh : "transparent"
-                        HoverHandler { id: ph }
-                        Label { x: 12; anchors.verticalCenter: parent.verticalCenter; width: 150; text: pr.modelData.name; elide: Text.ElideRight; strong: true; font.pixelSize: Theme.sizeSmall + 1 }
-                        Row {
-                            anchors.left: parent.left; anchors.leftMargin: 170
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 14
-                            Label { width: 64; horizontalAlignment: Text.AlignRight; text: pr.modelData.cpu.toFixed(pr.modelData.cpu < 10 ? 1 : 0) + "%"; font.pixelSize: Theme.sizeSmall; strong: dd.sortBy === "cpu"; muted: dd.sortBy !== "cpu" }
-                            Label { width: 72; horizontalAlignment: Text.AlignRight; text: dd.mb(pr.modelData.mem); font.pixelSize: Theme.sizeSmall; strong: dd.sortBy === "mem"; muted: dd.sortBy !== "mem" }
-                            Label { width: 72; horizontalAlignment: Text.AlignRight; text: pr.modelData.vram > 0 ? dd.mb(pr.modelData.vram) : "—"; font.pixelSize: Theme.sizeSmall; strong: dd.sortBy === "vram"; muted: dd.sortBy !== "vram" }
-                        }
-                    }
-                }
-                Label { visible: dd.procs.length === 0; Layout.alignment: Qt.AlignHCenter; text: "Looking…"; muted: true; font.pixelSize: Theme.sizeSmall }
                 RowLayout {
                     Layout.fillWidth: true
                     Item { Layout.fillWidth: true }

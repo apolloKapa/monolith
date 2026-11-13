@@ -168,8 +168,8 @@ PanelWindow {
         y: win.bottom ? win.height - height - (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
                       : (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
         // (turning into another menu: it springs to the new size with a little overshoot, see blob)
-        Behavior on bodyW { NumberAnimation { duration: HubState.switching ? Theme.ms(620) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
-        Behavior on height { NumberAnimation { duration: HubState.switching ? Theme.ms(620) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
+        Behavior on bodyW { NumberAnimation { duration: HubState.switching ? Theme.ms(520) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
+        Behavior on height { NumberAnimation { duration: HubState.switching ? Theme.ms(520) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
         Behavior on r { enabled: !win.blobbing; NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
         Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
 
@@ -535,8 +535,8 @@ PanelWindow {
         height: Math.round(win.openH - Theme.islandH + win.pad)
         // morphs from one menu to the next while open; a menu opened fresh takes its own size
         // at once (it used to stretch from the last menu's size as it faded in)
-        Behavior on width { enabled: !HubState.snap; NumberAnimation { duration: HubState.switching ? Theme.ms(620) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
-        Behavior on height { enabled: !HubState.snap; NumberAnimation { duration: HubState.switching ? Theme.ms(620) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
+        Behavior on width { enabled: !HubState.snap; NumberAnimation { duration: HubState.switching ? Theme.ms(520) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
+        Behavior on height { enabled: !HubState.snap; NumberAnimation { duration: HubState.switching ? Theme.ms(520) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
         // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
         // "top" means by the bar: next to it at the bottom when the bar is there
         // (by a bar down the side: beside it, in the middle of that edge)
@@ -613,7 +613,9 @@ PanelWindow {
         id: wobble
         onTriggered: {
             const dt = Math.min(0.033, Math.max(0.001, frameTime));
-            const k = 220, c = 7;
+            // (a stiffer, quicker spring at a higher animation speed: Effects → Animation speeds;
+            // it used to take its full second whatever the speed)
+            const sp = 1 / Math.max(0.1, Theme.animScale), k = 260 * sp * sp, c = 12 * sp;
             win.jvx += (-k * (win.jx - 1) - c * win.jvx) * dt;
             win.jvy += (-k * (win.jy - 1) - c * win.jvy) * dt;
             win.jx = Math.max(0.86, Math.min(1.14, win.jx + win.jvx * dt));
