@@ -415,10 +415,93 @@ ColumnLayout {
     Label { text: "Module settings"; strong: true; Layout.leftMargin: 6; Layout.topMargin: 10 }
     Label { text: "Pick a module (or click it in the zones above) to see its settings"; Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6 }
     readonly property var modTabs: [["clock", "Clock", "schedule"], ["workspaces", "Workspaces", "view_week"], ["visualizer", "Visualiser", "graphic_eq"],
-                                    ["stats", "Stats", "memory"], ["media", "Now playing", "music_note"], ["sound", "Sound", "volume_up"]]
+                                    ["stats", "System stats", "memory"], ["media", "Now playing", "music_note"], ["sound", "Sound", "volume_up"],
+                                    ["weather", "Weather", "partly_cloudy_day"], ["title", "Window title", "title"], ["notifications", "Notifications", "notifications"],
+                                    ["battery", "Battery", "battery_full"], ["keyboard", "Keyboard layout", "keyboard"], ["bluetooth", "Bluetooth", "bluetooth"],
+                                    ["tray", "Tray", "apps"]]
     property string modTab: Store.get("settings.barModuleTab", "clock")
     function showModTab(t) { if (modTabs.some(x => x[0] === t)) { modTab = t; Store.set("settings.barModuleTab", t); } }
-    IconTabs { opts: sec.modTabs; value: sec.modTab; onPicked: v => sec.showModTab(v) }
+    // the modules as chips (wrapping), the open one filled; a dot on the ones that are on the bar
+    Flow {
+        Layout.fillWidth: true
+        spacing: 6
+        Repeater {
+            model: sec.modTabs
+            Pressable {
+                required property var modelData
+                readonly property bool on: sec.modTab === modelData[0]
+                readonly property bool onBar: sec.used.indexOf(modelData[0] === "stats" ? "stats" : modelData[0]) !== -1
+                height: 36; width: mtr.implicitWidth + 26
+                color: on ? Theme.accentContainer : (hovered ? Theme.control : Theme.containerHigh)
+                onClicked: sec.showModTab(modelData[0])
+                Row {
+                    id: mtr
+                    anchors.centerIn: parent
+                    spacing: 6
+                    Icon { name: modelData[2]; size: 17; filled: parent.parent.on; color: parent.parent.on ? Theme.onAccentContainer : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+                    Label { text: modelData[1]; strong: parent.parent.on; color: parent.parent.on ? Theme.onAccentContainer : Theme.text; font.pixelSize: Theme.sizeSmall + 1; anchors.verticalCenter: parent.verticalCenter }
+                    Rectangle { visible: parent.parent.onBar; width: 6; height: 6; radius: 3; color: parent.parent.on ? Theme.onAccentContainer : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+                }
+            }
+        }
+    }
+    // a module on a piece of bar, twice its real size
+    component ModPreview: Rectangle {
+        id: mp
+        property string module: ""
+        property string empty: "Nothing to show right now"
+        Layout.fillWidth: true
+        Layout.preferredHeight: Theme.islandH * 2 + 40
+        radius: Theme.corner(80, 6)
+        color: Theme.container
+        border.width: Theme.outlineW; border.color: Theme.outlineColor
+        Rectangle {
+            anchors.centerIn: parent
+            visible: mpBar.contentLen > 2
+            width: (mpBar.implicitWidth + 16) * 2
+            height: Theme.islandH * 2
+            radius: Theme.barRound(Theme.islandH) * 2
+            color: Theme.frame
+            Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+            IslandBar {
+                id: mpBar
+                enabled: false
+                screenName: Niri.focusedOutput || (Quickshell.screens.length ? Quickshell.screens[0].name : "")
+                only: [mp.module]
+                scale: 2
+                transformOrigin: Item.Center
+                anchors.centerIn: parent
+            }
+        }
+        Label { anchors.centerIn: parent; visible: mpBar.contentLen <= 2; text: mp.empty; muted: true; font.pixelSize: Theme.sizeSmall }
+        Label { anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 8; text: "Twice its real size"; muted: true; font.pixelSize: Theme.sizeSmall - 2 }
+    }
+    // a toggle row for "bar.<k>"
+    component ModToggle: SettingRow {
+        id: mt
+        property string k: ""
+        property bool d: true
+        key: "bar." + k; def: d
+        Toggle { checked: Store.get("bar." + mt.k, mt.d) === true; onToggled: on => Store.set("bar." + mt.k, on) }
+    }
+    component ModChoice: SettingRow {
+        id: mc
+        property string k: ""
+        property string d: ""
+        property var opts: []
+        key: "bar." + k
+        Segmented { width: Math.min(420, 110 * mc.opts.length); opts: mc.opts; value: String(Store.get("bar." + mc.k, mc.d)); onPicked: v => Store.set("bar." + mc.k, v) }
+    }
+    component ModNumber: SettingRow {
+        id: mn
+        property string k: ""
+        property real d: 0
+        property real lo: 0
+        property real hi: 100
+        property string unit: "px"
+        key: "bar." + k; def: d
+        NumberBox { from: mn.lo; to: mn.hi; unit: mn.unit; value: Number(Store.get("bar." + mn.k, mn.d)); onMoved: v => Store.set("bar." + mn.k, v) }
+    }
     ColumnLayout {
         property string modTab: "clock"
         visible: sec.modTab === modTab
@@ -500,6 +583,17 @@ ColumnLayout {
                    ["numbers", "Numbers"], ["numberPills", "Numbered pill"], ["bubbles", "Bubbles"]]
             value: Store.get("bar.workspaces", "pills")
             onPicked: v => Store.set("bar.workspaces", v)
+        }
+        ModToggle { k: "ws.hideEmpty"; d: false; icon: "filter_alt"; title: "Hide empty workspaces"; desc: "Only the ones with windows, and the one you're on" }
+        ModToggle { k: "ws.scroll"; d: true; icon: "mouse"; title: "Scroll to switch"; desc: "The wheel over the workspaces goes to the next or previous one" }
+        SettingRow {
+            key: "bar.ws.gap"
+            icon: "space_bar"; title: "Space between them"; desc: Number(Store.get("bar.ws.gap", -1)) < 0 ? "Automatic (by style)" : Store.get("bar.ws.gap", -1) + " px"
+            RowLayout {
+                spacing: 8
+                Button { visible: Number(Store.get("bar.ws.gap", -1)) >= 0; text: "Automatic"; onClicked: Store.unset("bar.ws.gap") }
+                NumberBox { from: 0; to: 16; unit: "px"; value: Math.max(0, Number(Store.get("bar.ws.gap", -1)) < 0 ? 5 : Number(Store.get("bar.ws.gap", 5))); onMoved: v => Store.set("bar.ws.gap", v) }
+            }
         }
     }
     ColumnLayout {
@@ -626,6 +720,7 @@ ColumnLayout {
         visible: sec.modTab === modTab
         Layout.fillWidth: true
         spacing: 8
+        ModPreview { module: "stats" }
         SettingRow {
             key: "bar.stats";
             icon: "memory"; title: "System stats"; desc: "Which ones show"
@@ -645,12 +740,25 @@ ColumnLayout {
                 }
             }
         }
+        ModToggle { k: "stats.icons"; d: true; icon: "image"; title: "Icons"; desc: "An icon before each number" }
+        ModNumber { k: "stats.gap"; d: 6; lo: 0; hi: 20; icon: "space_bar"; title: "Space between them" }
+        SettingRow {
+            key: "sysmon.dropdown"; def: true
+            icon: "monitoring"; title: "A click opens"; desc: "The system monitor under it, or the control center's Monitor tab"
+            Segmented { width: 300; opts: [["drop", "Dropdown"], ["cc", "Control center"]]; value: Store.get("sysmon.dropdown", true) === false ? "cc" : "drop"; onPicked: v => Store.set("sysmon.dropdown", v === "drop") }
+        }
     }
     ColumnLayout {
         property string modTab: "media"
         visible: sec.modTab === modTab
         Layout.fillWidth: true
         spacing: 8
+        ModPreview { module: "media"; empty: "Play something to see it" }
+        ModChoice { k: "media.text"; d: "title"; icon: "text_fields"; title: "Text"; opts: [["title", "Title"], ["artist", "Artist"], ["both", "Both"], ["none", "None"]] }
+        ModNumber { k: "media.maxWidth"; d: 200; lo: 60; hi: 600; icon: "width"; title: "Longest text"; desc: "Longer names are cut with …" }
+        ModToggle { k: "media.art"; d: true; icon: "album"; title: "Album art" }
+        ModToggle { k: "media.round"; d: true; icon: "circle"; title: "Round art"; desc: "Off: a rounded square" }
+        ModToggle { k: "media.spin"; d: true; icon: "autorenew"; title: "Art spins while it plays" }
         SettingRow {
             key: "bar.mediaPeek"; def: true;
             icon: "music_note"; title: "Now playing peek"; desc: "Hovering the Now playing module shows a small player under it"
@@ -662,10 +770,80 @@ ColumnLayout {
         visible: sec.modTab === modTab
         Layout.fillWidth: true
         spacing: 8
+        ModPreview { module: "sound" }
         SettingRow {
             key: "bar.soundPercent"; def: true;
             icon: "volume_up"; title: "Volume number"; desc: "Beside the sound icon"
             Toggle { checked: Store.get("bar.soundPercent", true) !== false; onToggled: on => Store.set("bar.soundPercent", on) }
         }
+        ModToggle { k: "sound.sign"; d: false; icon: "percent"; title: "% after the number" }
+        ModToggle { k: "sound.scroll"; d: true; icon: "mouse"; title: "Scroll to change the volume"; desc: "The wheel over the sound icon" }
+        ModNumber { k: "sound.step"; d: 5; lo: 1; hi: 20; unit: "%"; icon: "stairs"; title: "Volume step"; desc: "How much one wheel notch changes" }
+    }
+    ColumnLayout {
+        property string modTab: "weather"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        ModPreview { module: "weather"; empty: "No weather yet (Settings → General → You & weather)" }
+        ModToggle { k: "weather.icon"; d: true; icon: "partly_cloudy_day"; title: "Icon" }
+        ModToggle { k: "weather.feels"; d: false; icon: "thermostat"; title: "Feels-like temperature"; desc: "Instead of the measured one" }
+        ModToggle { k: "weather.unit"; d: false; icon: "device_thermostat"; title: "Show °C / °F"; desc: "Off: just °" }
+        ModToggle { k: "weather.desc"; d: false; icon: "short_text"; title: "Description"; desc: "Clear, Cloudy, Rain… beside it" }
+    }
+    ColumnLayout {
+        property string modTab: "title"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        ModPreview { module: "title"; empty: "No window focused" }
+        ModChoice { k: "title.text"; d: "title"; icon: "text_fields"; title: "Text"; opts: [["title", "Title"], ["app", "App name"], ["both", "Both"]] }
+        ModChoice { k: "title.icon"; d: "generic"; icon: "image"; title: "Icon"; opts: [["generic", "Window"], ["app", "App's icon"], ["none", "None"]] }
+        ModNumber { k: "title.maxWidth"; d: 220; lo: 60; hi: 800; icon: "width"; title: "Longest text"; desc: "Longer titles are cut with …" }
+    }
+    ColumnLayout {
+        property string modTab: "notifications"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        ModPreview { module: "notifications" }
+        ModToggle { k: "notif.count"; d: true; icon: "tag"; title: "How many"; desc: "The number beside the bell" }
+        ModToggle { k: "notif.hideEmpty"; d: false; icon: "visibility_off"; title: "Hide when there are none" }
+    }
+    ColumnLayout {
+        property string modTab: "battery"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        ModPreview { module: "battery"; empty: "No laptop battery here: it only shows on laptops" }
+        ModToggle { k: "battery.percent"; d: true; icon: "percent"; title: "Percentage" }
+        ModNumber { k: "battery.low"; d: 20; lo: 5; hi: 50; unit: "%"; icon: "battery_alert"; title: "Low at"; desc: "Below this it turns red" }
+    }
+    ColumnLayout {
+        property string modTab: "keyboard"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        ModPreview { module: "keyboard"; empty: "Shows when niri reports a keyboard layout" }
+        ModToggle { k: "kb.icon"; d: true; icon: "keyboard"; title: "Icon" }
+        ModToggle { k: "kb.full"; d: false; icon: "text_fields"; title: "Full name"; desc: "English (US) instead of EN" }
+    }
+    ColumnLayout {
+        property string modTab: "bluetooth"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        ModPreview { module: "bluetooth"; empty: "No Bluetooth adapter found" }
+        ModToggle { k: "bt.count"; d: true; icon: "tag"; title: "Connected devices"; desc: "How many, beside the icon" }
+        ModToggle { k: "bt.hideOff"; d: false; icon: "visibility_off"; title: "Hide when Bluetooth is off" }
+    }
+    ColumnLayout {
+        property string modTab: "tray"
+        visible: sec.modTab === modTab
+        Layout.fillWidth: true
+        spacing: 8
+        ModPreview { module: "tray"; empty: "No tray icons right now" }
+        ModNumber { k: "tray.size"; d: 16; lo: 12; hi: 28; icon: "photo_size_select_small"; title: "Icon size" }
+        ModNumber { k: "tray.gap"; d: 2; lo: 0; hi: 16; icon: "space_bar"; title: "Space between icons" }
     }
 }

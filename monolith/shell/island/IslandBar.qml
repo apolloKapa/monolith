@@ -26,6 +26,8 @@ Item {
     // spread out, the middle stays in the middle: the shortest it can be without the sides running into it
     readonly property real spreadWidth: len(midZone) > 0 ? len(midZone) + 2 * Math.max(len(leftZone), len(rightZone)) + 2 * gap + 2 * Theme.islandPad : fitLength
     // the length the bar needs (its width, or its height when it's vertical)
+    // how long the modules alone are (0: none of them has anything to show)
+    readonly property real contentLen: len(leftZone) + len(midZone) + len(rightZone)
     readonly property real needWidth: Theme.barSpread ? spreadWidth : fitLength
     implicitHeight: vertical ? fitLength : Theme.islandH
     function open(p) { HubState.toggle(p, bar.screenName); }
@@ -41,6 +43,8 @@ Item {
     property var only: null
     // the visualiser shown even with nothing playing, as a still curve (its settings' preview)
     property bool visPreview: false
+    // a module's own setting (Settings → Bar → Layout & modules → Module settings): "bar.<k>"
+    function mopt(k, d) { const v = Store.get("bar." + k, d); return v === undefined || v === null || v === "" ? d : v; }
     property string clockStyleAs: ""
     property string wsStyleAs: ""
     // previews show made-up workspaces (four, the second one open, the first and third with
@@ -105,6 +109,7 @@ Item {
         id: m
         default property alias content: inner.data
         property real pad: 9
+        property real spacing: bar.vertical ? 2 : 6
         // (stacked on a vertical bar: less room above and below)
         readonly property real vpad: Math.round(pad * 0.7)
         height: bar.vertical ? inner.implicitHeight + 2 * vpad : Theme.islandH - 10
@@ -115,7 +120,7 @@ Item {
             id: inner
             x: bar.vertical ? Math.round((m.width - width) / 2) : m.pad
             y: bar.vertical ? m.vpad : Math.round((m.height - height) / 2)
-            spacing: bar.vertical ? 2 : 6
+            spacing: m.spacing
         }
     }
     // a round icon module
@@ -233,8 +238,9 @@ Item {
         Mod {
             property bool want: Weather.ready
             onClicked: bar.open("calendar")
-            Icon { name: Weather.ready ? Weather.icon(Weather.current.code, Weather.current.day) : ""; size: 16; color: Theme.accent }
-            Label { text: Weather.ready ? Math.round(Weather.current.temp) + "°" : ""; font.pixelSize: Theme.sizeSmall }
+            Icon { visible: bar.mopt("weather.icon", true) === true; name: Weather.ready ? Weather.icon(Weather.current.code, Weather.current.day) : ""; size: 16; color: Theme.accent }
+            Label { text: Weather.ready ? Math.round(bar.mopt("weather.feels", false) === true ? Weather.current.feels : Weather.current.temp) + (bar.mopt("weather.unit", false) === true ? Weather.unit : "°") : ""; font.pixelSize: Theme.sizeSmall }
+            Label { visible: !bar.vertical && bar.mopt("weather.desc", false) === true; text: Weather.ready ? Weather.describe(Weather.current.code) : ""; muted: true; font.pixelSize: Theme.sizeSmall }
         }
     }
 
@@ -244,12 +250,24 @@ Item {
         Item {
             width: bar.vertical ? Theme.islandH - 10 : ws.width + 14
             height: bar.vertical ? ws.height + 14 : Theme.islandH - 10
+            // the wheel over it: the next / previous workspace
+            WheelHandler {
+                enabled: !bar.wsSample && !bar.only && bar.mopt("ws.scroll", true) === true
+                onWheel: event => {
+                    const l = Niri.workspacesOn(bar.screenName), i = l.findIndex(w => w.is_active);
+                    const d = (event.angleDelta.y || -event.angleDelta.x) > 0 ? -1 : 1;
+                    if (i < 0 || i + d < 0 || i + d >= l.length) return;
+                    Niri.focusWorkspace(l[i + d].idx);
+                }
+            }
             Line {
                 id: ws
                 anchors.centerIn: parent
-                spacing: ["numbers", "numberPills", "bubbles"].indexOf(bar.wsStyle) !== -1 ? 3 : 5
+                spacing: Number(bar.mopt("ws.gap", -1)) >= 0 ? Number(bar.mopt("ws.gap", -1)) : (["numbers", "numberPills", "bubbles"].indexOf(bar.wsStyle) !== -1 ? 3 : 5)
                 Repeater {
-                    model: bar.wsSample ? bar.sampleWorkspaces : Niri.workspacesOn(bar.screenName)
+                    // (only the ones with windows, and the open one, when empty ones are hidden)
+                    model: { const l = bar.wsSample ? bar.sampleWorkspaces : Niri.workspacesOn(bar.screenName);
+                             return bar.mopt("ws.hideEmpty", false) === true ? l.filter(w => w.is_active || (w.busy !== undefined ? w.busy : Niri.workspaceHasWindows(w.id))) : l; }
                     Rectangle {
                         required property var modelData
                         readonly property bool active: modelData.is_active
@@ -307,7 +325,8 @@ Item {
                 }
             }
             Rectangle {
-                width: 22; height: 22; radius: 11
+                visible: bar.mopt("media.art", true) === true || bar.vertical
+                width: 22; height: 22; radius: bar.mopt("media.round", true) === true ? 11 : 5
                 color: Theme.control
                 clip: true
                 Image {
@@ -315,19 +334,39 @@ Item {
                     source: bar.player ? (bar.player.trackArtUrl || "") : ""
                     fillMode: Image.PreserveAspectCrop
                     sourceSize: Qt.size(64, 64)
-                    RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: bar.player !== null }
+                    rotation: 0
+                    RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: bar.player !== null && bar.mopt("media.spin", true) === true }
                 }
             }
-            Label { visible: !bar.vertical; text: bar.player ? bar.player.trackTitle : ""; font.pixelSize: Theme.sizeSmall; width: Math.min(implicitWidth, 200) }
+            Label {
+                readonly property string what: String(bar.mopt("media.text", "title"))
+                visible: !bar.vertical && what !== "none"
+                text: !bar.player ? "" : what === "artist" ? (bar.player.trackArtist || "") : what === "both" ? bar.player.trackTitle + (bar.player.trackArtist ? "  ·  " + bar.player.trackArtist : "") : bar.player.trackTitle
+                font.pixelSize: Theme.sizeSmall
+                elide: Text.ElideRight
+                width: Math.min(implicitWidth, Number(bar.mopt("media.maxWidth", 200)))
+            }
         }
     }
     Component {
         id: titleC
         Mod {
+            id: titleMod
             property bool want: Niri.focusedTitle !== ""
             onClicked: bar.open("windows")
-            Icon { name: "select_window"; size: 16; color: Theme.subtext }
-            Label { visible: !bar.vertical; text: Niri.focusedTitle; muted: true; font.pixelSize: Theme.sizeSmall; width: Math.min(implicitWidth, 220) }
+            readonly property string iconMode: String(bar.mopt("title.icon", "generic"))       // generic | app | none
+            readonly property var entry: Niri.focusedAppId !== "" ? DesktopEntries.heuristicLookup(Niri.focusedAppId) : null
+            Icon { visible: titleMod.iconMode === "generic" || bar.vertical; name: "select_window"; size: 16; color: Theme.subtext }
+            Image { visible: titleMod.iconMode === "app" && !bar.vertical; width: 16; height: 16; sourceSize: Qt.size(32, 32); source: Quickshell.iconPath(titleMod.entry ? titleMod.entry.icon : Niri.focusedAppId, "application-x-executable") }
+            Label {
+                readonly property string what: String(bar.mopt("title.text", "title"))     // title | app | both
+                readonly property string app: titleMod.entry ? titleMod.entry.name : Niri.focusedAppId
+                visible: !bar.vertical
+                text: what === "app" ? app : what === "both" ? app + "  ·  " + Niri.focusedTitle : Niri.focusedTitle
+                muted: true; font.pixelSize: Theme.sizeSmall
+                elide: Text.ElideRight
+                width: Math.min(implicitWidth, Number(bar.mopt("title.maxWidth", 220)))
+            }
         }
     }
 
@@ -363,15 +402,16 @@ Item {
     Component {
         id: trayC
         Line {
-            spacing: 2
+            spacing: Number(bar.mopt("tray.gap", 2))
             Repeater {
                 model: SystemTray.items
                 Pressable {
                     id: trayItem
                     required property var modelData
-                    width: 28; height: 28
+                    readonly property real size: Number(bar.mopt("tray.size", 16))
+                    width: size + 12; height: size + 12
                     color: hovered ? Theme.containerHigh : "transparent"
-                    Image { anchors.centerIn: parent; width: 16; height: 16; source: modelData.icon; sourceSize: Qt.size(32, 32); smooth: true; mipmap: true }
+                    Image { anchors.centerIn: parent; width: trayItem.size; height: trayItem.size; source: modelData.icon; sourceSize: Qt.size(32, 32); smooth: true; mipmap: true }
                     onClicked: modelData.activate()
                     // its menu, drawn by Monolith (status/TrayMenu.qml); an icon without one gets
                     // its secondary action
@@ -390,6 +430,7 @@ Item {
         id: statsC
         Mod {
             id: statsMod
+            spacing: bar.vertical ? 2 : Number(bar.mopt("stats.gap", 6))
             readonly property var which: Store.get("bar.stats", ["cpu", "temp"])
             // the system monitor drops down under it (Settings → System monitor), or the control center's Monitor
             onClicked: {
@@ -404,7 +445,7 @@ Item {
                 Line {
                     required property var modelData
                     spacing: bar.vertical ? 0 : 3
-                    Icon { name: modelData[1]; size: 15; color: Theme.subtext }
+                    Icon { visible: bar.mopt("stats.icons", true) === true; name: modelData[1]; size: 15; color: Theme.subtext }
                     Label { text: modelData[2]; font.pixelSize: Theme.sizeSmall }
                 }
             }
@@ -416,6 +457,7 @@ Item {
         Mod {
             id: notifMod
             pad: 7
+            property bool want: bar.only || bar.mopt("notif.hideEmpty", false) !== true || Notifs.list.length > 0
             // the list drops down right under the bell (over it when the bar is at the bottom)
             onClicked: {
                 const p = bar.edgePoint(notifMod);
@@ -426,7 +468,7 @@ Item {
                 size: 18; filled: Notifs.list.length > 0
                 color: Notifs.list.length > 0 && !Notifs.dnd ? Theme.accent : Theme.text
             }
-            Label { visible: Notifs.list.length > 0; text: Notifs.list.length; font.pixelSize: Theme.sizeSmall }
+            Label { visible: Notifs.list.length > 0 && bar.mopt("notif.count", true) === true; text: Notifs.list.length; font.pixelSize: Theme.sizeSmall }
         }
     }
     Component { id: netC; Glyph { icon: bar.netIcon; on: true; onClicked: bar.open("network") } }
@@ -444,7 +486,16 @@ Item {
                 name: bar.muted || bar.volume === 0 ? "volume_off" : (bar.volume < 0.4 ? "volume_down" : "volume_up")
                 size: 18; filled: true; color: bar.muted ? Theme.subtext : Theme.text
             }
-            Label { visible: Store.get("bar.soundPercent", true) !== false; text: Math.round(bar.volume * 100); font.pixelSize: Theme.sizeSmall }
+            Label { visible: Store.get("bar.soundPercent", true) !== false; text: Math.round(bar.volume * 100) + (bar.mopt("sound.sign", false) === true ? "%" : ""); font.pixelSize: Theme.sizeSmall }
+            // the wheel over it: the volume, a step at a time
+            WheelHandler {
+                enabled: !bar.only && bar.mopt("sound.scroll", true) === true
+                onWheel: event => {
+                    if (!bar.sink || !bar.sink.audio) return;
+                    const step = Number(bar.mopt("sound.step", 5)) / 100, d = (event.angleDelta.y || event.angleDelta.x) > 0 ? step : -step;
+                    bar.sink.audio.volume = Math.max(0, Math.min(1, Math.round((bar.volume + d) * 100) / 100));
+                }
+            }
         }
     }
     // the battery (laptops; hidden when there's none)
@@ -456,11 +507,11 @@ Item {
             pad: 7
             onClicked: bar.open("quick")
             Icon {
-                name: !parent.parent.dev ? "battery_full" : (parent.parent.dev.state === UPowerDeviceState.Charging ? "battery_charging_full" : (parent.parent.dev.percentage < 0.2 ? "battery_alert" : "battery_full"))
+                name: !parent.parent.dev ? "battery_full" : (parent.parent.dev.state === UPowerDeviceState.Charging ? "battery_charging_full" : (parent.parent.dev.percentage < Number(bar.mopt("battery.low", 20)) / 100 ? "battery_alert" : "battery_full"))
                 size: 18; filled: true
-                color: parent.parent.dev && parent.parent.dev.percentage < 0.2 ? Theme.danger : Theme.text
+                color: parent.parent.dev && parent.parent.dev.percentage < Number(bar.mopt("battery.low", 20)) / 100 ? Theme.danger : Theme.text
             }
-            Label { text: parent.parent.dev ? Math.round(parent.parent.dev.percentage * 100) + "%" : ""; font.pixelSize: Theme.sizeSmall }
+            Label { visible: bar.mopt("battery.percent", true) === true; text: parent.parent.dev ? Math.round(parent.parent.dev.percentage * 100) + "%" : ""; font.pixelSize: Theme.sizeSmall }
         }
     }
     Component {
@@ -468,8 +519,8 @@ Item {
         Mod {
             property bool want: Niri.layoutName !== ""
             onClicked: Niri.action(["switch-layout", "next"])
-            Icon { name: "keyboard"; size: 16; color: Theme.subtext }
-            Label { text: Niri.layoutName.substring(0, 2).toUpperCase(); font.pixelSize: Theme.sizeSmall; strong: true }
+            Icon { visible: bar.mopt("kb.icon", true) === true; name: "keyboard"; size: 16; color: Theme.subtext }
+            Label { text: bar.mopt("kb.full", false) === true && !bar.vertical ? Niri.layoutName : Niri.layoutName.substring(0, 2).toUpperCase(); font.pixelSize: Theme.sizeSmall; strong: true }
         }
     }
     // Bluetooth: the adapter's state; how many devices are connected beside it
@@ -478,7 +529,7 @@ Item {
         Mod {
             readonly property var adapter: Bluetooth.defaultAdapter
             readonly property int connected: Bluetooth.devices.values.filter(d => d.connected).length
-            property bool want: !!adapter
+            property bool want: !!adapter && (bar.only || bar.mopt("bt.hideOff", false) !== true || adapter.enabled)
             pad: 7
             onClicked: bar.open("network")
             Icon {
@@ -486,7 +537,7 @@ Item {
                 size: 18; filled: true
                 color: parent.parent.adapter && parent.parent.adapter.enabled ? Theme.text : Theme.subtext
             }
-            Label { visible: parent.parent.connected > 0; text: parent.parent.connected; font.pixelSize: Theme.sizeSmall }
+            Label { visible: parent.parent.connected > 0 && bar.mopt("bt.count", true) === true; text: parent.parent.connected; font.pixelSize: Theme.sizeSmall }
         }
     }
     // audio bars while something plays (cava runs only while they show)
