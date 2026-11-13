@@ -39,10 +39,16 @@ Item {
             // played: the wave
             g.strokeStyle = c;
             g.beginPath();
-            for (let i = 0; i <= Math.max(1, Math.floor(x)); i += 2) {
-                const y = mid + amp * Math.sin(i / Math.max(6, height * 0.9) + p);
+            // centred on the line: full height in the middle, easing onto the line at the start
+            // and at the knob (so it leaves and meets the flat part level, whatever the phase)
+            const k = Math.max(4, height * 0.6), ease = k * 1.6;
+            for (let i = 0; i <= Math.max(1, Math.floor(x)); i += 1) {
+                const t = Math.max(0, Math.min(1, i / ease, (x - i) / ease));
+                const env = t * t * (3 - 2 * t);
+                const y = mid + amp * env * Math.sin(i / k + p);
                 if (i === 0) g.moveTo(lw / 2, y); else g.lineTo(i, y);
             }
+            if (x > 1) g.lineTo(x, mid);
             g.stroke();
         }
     }
