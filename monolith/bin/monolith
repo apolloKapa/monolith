@@ -164,6 +164,27 @@ case "$1" in
                if hypr_switched; then echo "(now: on)"; else echo "(now: off)"; fi ;;
         esac
         ;;
+    # fastfetch that fits the terminal: the preset as it is, with a small logo, or without one,
+    # whichever is the widest that fits (scripts/fastfetch.py measures them when it writes them)
+    fastfetch)
+        shift
+        dir="${XDG_CONFIG_HOME:-$HOME/.config}/fastfetch"
+        cols="${COLUMNS:-}"
+        [ -n "$cols" ] || cols=$(tput cols 2>/dev/null) || cols=""
+        [ -n "$cols" ] || cols=$(stty size 2>/dev/null </dev/tty | cut -d' ' -f2)
+        cfg="$dir/config.jsonc"
+        if [ -n "$cols" ] && [ -f "$dir/monolith-widths.json" ]; then
+            pick=$(python3 -c 'import json,sys; w=json.load(open(sys.argv[1])); c=int(sys.argv[2])
+for k in ("full","small","plain"):
+    if 0 < w.get(k,0) <= c: print(k); break
+else: print("plain")' "$dir/monolith-widths.json" "$cols" 2>/dev/null)
+            case "$pick" in
+                small) [ -f "$dir/monolith-small.jsonc" ] && cfg="$dir/monolith-small.jsonc" ;;
+                plain) [ -f "$dir/monolith-plain.jsonc" ] && cfg="$dir/monolith-plain.jsonc" ;;
+            esac
+        fi
+        exec fastfetch -c "$cfg" "$@"
+        ;;
     migrate) migrate ;;
     *) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' ;;
 esac

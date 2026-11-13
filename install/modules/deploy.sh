@@ -113,29 +113,43 @@ setup_kitty_config() {
 # fish gets its own conf.d file; bash and zsh a marked block at the end of their rc. Done once:
 # if you take it out again, updates leave it out. Skipped when your shell already runs fastfetch.
 setup_kitty_fastfetch() {
-    local flag="$STATE_DIR/kitty_fastfetch.done"
-    [ -e "$flag" ] && return 0
+    local flag="$STATE_DIR/kitty_fastfetch.done" fresh=true
+    # (done before: only Monolith's own file or block is brought up to date; one you took out
+    # stays out)
+    [ -e "$flag" ] && fresh=false
     command -v fastfetch &>/dev/null || return 0
     local login_shell rc
     login_shell="$(basename "$(getent passwd "$USER" 2>/dev/null | cut -d: -f7)")"
     [ -n "$login_shell" ] || login_shell="$(basename "${SHELL:-bash}")"
     case "$login_shell" in
         fish)
-            local fish_dir="${XDG_CONFIG_HOME:-$HOME/.config}/fish"
-            if ! grep -qs 'fastfetch' "$fish_dir/config.fish" "$fish_dir"/conf.d/*.fish; then
+            local fish_dir="${XDG_CONFIG_HOME:-$HOME/.config}/fish" ff="${XDG_CONFIG_HOME:-$HOME/.config}/fish/conf.d/monolith-fastfetch.fish"
+            # (fastfetch that fits the terminal: `monolith fastfetch`; typed without options, the same)
+            if { [ "$fresh" = true ] && ! grep -qs 'fastfetch' "$fish_dir/config.fish" "$fish_dir"/conf.d/*.fish; } || grep -qs '^# Added by the Monolith installer' "$ff"; then
                 mkdir -p "$fish_dir/conf.d"
                 printf '%s\n' "# Added by the Monolith installer: fastfetch when kitty opens (delete this file to stop it)" \
+                    "# (sized to the terminal: the preset, with a small logo, or without one)" \
+                    "function fastfetch --wraps fastfetch" \
+                    "    if test (count \$argv) -eq 0; and test -x ~/.local/bin/monolith" \
+                    "        ~/.local/bin/monolith fastfetch" \
+                    "    else" \
+                    "        command fastfetch \$argv" \
+                    "    end" \
+                    "end" \
                     "if status is-interactive; and set -q KITTY_WINDOW_ID" "    fastfetch" "end" \
-                    > "$fish_dir/conf.d/monolith-fastfetch.fish"
-                echo -e "  ${C_GREEN}kitty:${RESET} fastfetch shows when kitty opens ($fish_dir/conf.d/monolith-fastfetch.fish)"
+                    > "$ff"
+                echo -e "  ${C_GREEN}kitty:${RESET} fastfetch shows when kitty opens, sized to the terminal ($ff)"
             fi
             ;;
         bash|zsh)
             rc="$HOME/.${login_shell}rc"
-            if ! grep -qs 'fastfetch' "$rc"; then
+            # (an older block of Monolith's goes, for the one that fits the terminal)
+            local had=false
+            grep -qs '^# >>> monolith fastfetch' "$rc" && { had=true; sed -i '/^# >>> monolith fastfetch/,/^# <<< monolith fastfetch <<</d' "$rc"; }
+            if { [ "$fresh" = true ] || [ "$had" = true ]; } && ! grep -qs 'fastfetch' "$rc"; then
                 printf '\n%s\n' "# >>> monolith fastfetch (added by the Monolith installer: fastfetch when kitty opens) >>>
 if [[ \$- == *i* && -n \"\$KITTY_WINDOW_ID\" ]]; then
-    fastfetch
+    if [ -x ~/.local/bin/monolith ]; then ~/.local/bin/monolith fastfetch; else fastfetch; fi
 fi
 # <<< monolith fastfetch <<<" >> "$rc"
                 echo -e "  ${C_GREEN}kitty:${RESET} fastfetch shows when kitty opens (end of $rc)"

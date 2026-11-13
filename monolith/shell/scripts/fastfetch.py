@@ -293,6 +293,51 @@ def write_target(name):
     os.makedirs(os.path.dirname(TARGET), exist_ok=True)
     body = coloured(open(path(name)).read())
     open(TARGET, "w").write(HEADER % (name, path(name)) + body)
+    write_fits(body)
+
+
+# Narrower terminals (a 1080p screen, a split window): the preset again with fastfetch's small
+# logo, and with none, next to config.jsonc, and how wide each comes out; `monolith fastfetch`
+# runs the widest that fits (the full one wrapped every line where it didn't).
+FIT_SMALL = CONF + "/fastfetch/monolith-small.jsonc"
+FIT_PLAIN = CONF + "/fastfetch/monolith-plain.jsonc"
+FIT_WIDTHS = CONF + "/fastfetch/monolith-widths.json"
+
+
+def measure(cfg):
+    """How many columns fastfetch's output takes with this config (its text, no colours)."""
+    try:
+        out = subprocess.run(["fastfetch", "-c", cfg, "--pipe", "true"], capture_output=True, text=True, timeout=20).stdout
+    except (OSError, subprocess.SubprocessError):
+        return 0
+    return max((len(plain(l).rstrip()) for l in out.splitlines()), default=0)
+
+
+def write_fits(body):
+    try:
+        data = json.loads(strip_jsonc(body))
+    except ValueError:
+        return
+    pic = picture_of(data)
+    variants = {}
+    for key, logo, target in (("small", {"type": "small"}, FIT_SMALL), ("plain", "none", FIT_PLAIN)):
+        d = dict(data)
+        if logo == "none":
+            d["logo"] = {"type": "none"}
+        else:
+            # the distro's small built-in logo, in the preset's logo colours
+            old = data.get("logo") if isinstance(data.get("logo"), dict) else {}
+            d["logo"] = dict(logo, **{k: v for k, v in old.items() if k in ("color", "padding")})
+        open(target, "w").write("// Monolith: the preset in use, for a narrower terminal (" + key + "). Rewritten with it.\n"
+                                + json.dumps(d, indent=2) + "\n")
+        variants[key] = measure(target)
+    full = measure(TARGET)
+    if pic:
+        # (a picture isn't drawn in --pipe: its width in cells, plus its padding, on top of the text)
+        pad = pic.get("padding", {}) if isinstance(pic.get("padding"), dict) else {}
+        full = variants["plain"] + int(pic.get("width") or 0) + int(pad.get("left", 0) or 0) + int(pad.get("right", 2) or 2)
+    variants["full"] = full
+    json.dump(variants, open(FIT_WIDTHS, "w"))
 
 
 # ── preview: run fastfetch and replay its output on a small character grid ──
