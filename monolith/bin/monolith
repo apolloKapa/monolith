@@ -32,7 +32,9 @@ start() {
     running && return
     # (Hyprland: straight from here, detached. Going through `hyprctl dispatch exec` broke on
     # Hyprland 0.55+ with a Lua config, where dispatch takes a Lua expression: nothing started)
-    if on_hyprland; then setsid -f quickshell -p "$qml" >/dev/null 2>&1 < /dev/null
+    # (Qt reads the icon theme from qt6ct only with this set: niri's config sets it, a
+    # Hyprland config may not)
+    if on_hyprland; then QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}" setsid -f quickshell -p "$qml" >/dev/null 2>&1 < /dev/null
     else niri msg action spawn -- quickshell -p "$qml"; fi
 }
 # any copy of the shell (an installed one, a checkout)

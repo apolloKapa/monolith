@@ -57,6 +57,8 @@ _hypr_write_lua() {
     local f="$HYPR_DIR/monolith.lua" mods key cmd combo opts
     {
         echo "-- Monolith as the shell (written by Monolith's installer; \`monolith hyprland off\` undoes it)"
+        echo "-- Qt apps (and the shell) take their icons and colours from qt6ct"
+        echo "hl.env(\"QT_QPA_PLATFORMTHEME\", \"qt6ct\")"
         echo "hl.on(\"hyprland.start\", function()"
         echo "  hl.exec_cmd(\"$HOME/.local/bin/monolith start --login\")"
         echo "end)"
@@ -80,6 +82,7 @@ _hypr_write_conf() {
     local f="$HYPR_DIR/monolith.conf" mods key cmd
     {
         echo "# Monolith as the shell (written by Monolith's installer; \`monolith hyprland off\` undoes it)"
+        echo "env = QT_QPA_PLATFORMTHEME,qt6ct"
         echo "exec-once = $HOME/.local/bin/monolith start --login"
         while IFS='|' read -r mods key cmd; do
             case "$key" in XF86*) echo "bindl = $mods, $key, exec, $cmd" ;; *) echo "bind = $mods, $key, exec, $cmd" ;; esac

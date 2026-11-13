@@ -75,12 +75,20 @@ ColumnLayout {
         }
     }
 
-    Component.onCompleted: NiriConf.read(["cursor|xcursor-theme", "cursor|xcursor-size"], v => {
+    // (Hyprland: its cursor, set with hyprctl and kept in Monolith's own file: scripts/hypr_cursor.sh)
+    readonly property string hyprCursor: sec.script.replace("themes.py", "hypr_cursor.sh")
+    Process {
+        running: Niri.hyprland
+        command: ["sh", sec.hyprCursor, "read"]
+        stdout: StdioCollector { onStreamFinished: { const p = text.trim().split(" "); if (p[0]) sec.cursorTheme = p[0]; sec.cursorSize = Number(p[1] || 24); } }
+    }
+    Component.onCompleted: if (!Niri.hyprland) NiriConf.read(["cursor|xcursor-theme", "cursor|xcursor-size"], v => {
         cursorTheme = NiriConf.unquote(v["cursor|xcursor-theme"]);
         cursorSize = Number(v["cursor|xcursor-size"] || 24);
     })
     function setCursor(name, size) {
         cursorTheme = name; cursorSize = size;
+        if (Niri.hyprland) { Quickshell.execDetached(["sh", sec.hyprCursor, name, String(size)]); return; }
         NiriConf.set("cursor", "xcursor-theme", NiriConf.quote(name));
         NiriConf.set("cursor", "xcursor-size", size);
         Quickshell.execDetached(["sh", "-c", "gsettings set org.gnome.desktop.interface cursor-theme \"$1\"; gsettings set org.gnome.desktop.interface cursor-size \"$2\"", "_", name, String(size)]);
@@ -179,7 +187,7 @@ ColumnLayout {
 
     // ── cursors: the pointers on a light tile, so dark and light themes both show ──
     SettingRow {
-        icon: "arrow_selector_tool"; title: "Cursor"; desc: "Theme and size, for niri and apps" + (sec.cursorTheme ? " (now " + sec.cursorTheme + ")" : "")
+        icon: "arrow_selector_tool"; title: "Cursor"; desc: "Theme and size, for " + (Niri.hyprland ? "Hyprland" : "niri") + " and apps" + (sec.cursorTheme ? " (now " + sec.cursorTheme + ")" : "")
         // applied once you stop dragging
         NumberBox {
             from: 8; to: 128; slideTo: 96; step: 2; unit: "px"; value: sec.cursorSize
