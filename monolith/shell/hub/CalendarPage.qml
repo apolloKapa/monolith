@@ -136,7 +136,7 @@ Page {
         height: 150
         radius: Theme.corner(80, 10)
         color: Theme.container
-        Label { anchors.centerIn: parent; visible: !Weather.ready; text: "Getting the weather…"; muted: true }
+        Label { anchors.centerIn: parent; visible: !Weather.ready; text: (Weather.noPlace ? "No location: set your city in Settings → General" : "Getting the weather…"); muted: true }
         RowLayout {
             visible: Weather.ready
             anchors.fill: parent

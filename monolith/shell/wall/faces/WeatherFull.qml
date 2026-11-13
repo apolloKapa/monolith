@@ -24,7 +24,7 @@ FaceBase {
     Text {
         anchors.centerIn: parent
         visible: !wt.ready
-        text: "Getting the weather…"
+        text: (Weather.noPlace ? "No location: set your city in Settings → General" : "Getting the weather…")
         color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Math.max(11, f.inner * 0.09)
     }
     RowLayout {

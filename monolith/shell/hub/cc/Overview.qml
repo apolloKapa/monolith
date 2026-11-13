@@ -49,7 +49,7 @@ GridLayout {
                 }
             }
         }
-        Label { visible: !Weather.ready; width: parent.width; wrapMode: Text.Wrap; text: Weather.loc ? "Getting the weather…" : "No weather yet: set your city in Settings → General → You & weather"; muted: true; Balance {} }
+        Label { visible: !Weather.ready; width: parent.width; wrapMode: Text.Wrap; text: Weather.loc || !Weather.noPlace ? "Getting the weather…" : "No weather yet: set your city in Settings → General → You & weather"; muted: true; Balance {} }
     }
 
     // ── this month, today filled ──

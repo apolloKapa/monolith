@@ -16,6 +16,9 @@ Singleton {
     property var hours: []          // [{ time, temp, code, rain }]
     property var days: []           // [{ date, max, min, code }]
     readonly property bool ready: current !== null
+    // no place set and none found from the connection either: the widgets say so (instead of
+    // "Getting the weather…" for ever)
+    property bool noPlace: false
 
     function icon(code, day) {
         if (code === 0) return day === false ? "clear_night" : "clear_day";
@@ -68,5 +71,36 @@ Singleton {
         }
     }
     Timer { interval: Number(Store.get("weather.interval", 20)) * 60 * 1000; running: true; repeat: true; triggeredOnStart: true; onTriggered: w.refresh() }
-    onLocChanged: refresh()
+    onLocChanged: { if (loc) noPlace = false; refresh(); }
+
+    // No place set (a new install): found from the connection, like Settings → General's
+    // "From my connection" button, rounded to about a kilometre and kept as found automatically.
+    // A place you set yourself is never replaced. (ipwho.is, then ipapi.co)
+    Timer { interval: 4000; running: true; onTriggered: if (!w.loc) w.findPlace() }
+    property int tries: 0
+    function findPlace() {
+        finder.command = ["sh", "-c",
+            "curl -sf --max-time 10 'https://ipwho.is/?fields=success,city,latitude,longitude,timezone' " +
+            "|| curl -sf --max-time 10 'https://ipapi.co/json/'"];
+        finder.running = true;
+    }
+    Process {
+        id: finder
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let d = null;
+                try { d = JSON.parse(text); } catch (e) {}
+                const lat = d ? Number(d.latitude) : NaN, lon = d ? Number(d.longitude) : NaN;
+                if (!w.loc && !isNaN(lat) && !isNaN(lon) && d.success !== false) {
+                    const tz = d.timezone ? (typeof d.timezone === "string" ? d.timezone : (d.timezone.id || "auto")) : "auto";
+                    Store.set("weather.location", { city: d.city || "", latitude: Math.round(lat * 100) / 100, longitude: Math.round(lon * 100) / 100, timezone: tz, source: "auto" });
+                } else if (!w.loc) {
+                    // offline at start, maybe: try again in a while, a few times
+                    w.tries++;
+                    if (w.tries < 4) retry.restart(); else w.noPlace = true;
+                }
+            }
+        }
+    }
+    Timer { id: retry; interval: 60000; onTriggered: if (!w.loc) w.findPlace() }
 }
