@@ -25,7 +25,7 @@ Singleton {
         if (picking) return;
         picking = true;
         const p = chooserC.createObject(pics, { command: ["sh", "-c",
-            "zenity --file-selection --title=\"$1\" --filename=\"$2/\" --file-filter='Pictures | *.png *.jpg *.jpeg *.webp *.gif *.PNG *.JPG *.JPEG *.WEBP *.GIF' 2>/dev/null", "_", title || "Choose a picture", pics.dir] });
+            "command -v zenity >/dev/null || { notify-send -a Monolith \"Cannot open the file picker\" \"It needs zenity: install it, or run the Monolith installer again\"; exit 1; }; zenity --file-selection --title=\"$1\" --filename=\"$2/\" --file-filter='Pictures | *.png *.jpg *.jpeg *.webp *.gif *.PNG *.JPG *.JPEG *.WEBP *.GIF' 2>/dev/null", "_", title || "Choose a picture", pics.dir] });
         const out = outC.createObject(p);
         p.stdout = out;
         let file = "";

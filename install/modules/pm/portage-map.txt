@@ -62,6 +62,7 @@ python-pillow             dev-python/pillow
 qt6-websockets            dev-qt/qtwebsockets
 grim                      gui-apps/grim
 playerctl                 media-sound/playerctl
+zenity                    gnome-extra/zenity
 satty                     gui-apps/satty                      # (guru)
 xdg-desktop-portal-gtk    sys-apps/xdg-desktop-portal-gtk
 slurp                     gui-apps/slurp

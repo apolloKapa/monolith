@@ -57,6 +57,7 @@ REQUIRED_PKGS=(
     "qt5ct" "qt6ct" "adwaita-icon-theme" "gpu-screen-recorder" "wf-recorder" "adw-gtk-theme" "wl-gammarelay-rs"
     "wlsunset" "upower"   # night light, and batteries (the battery widgets, a mouse's or headset's)
     "fastfetch" "nano"   # Theme -> Fastfetchlings: the presets, and an editor to write them in
+    "zenity"             # the file pickers (a picture for a widget or a fastfetch preset, adding wallpapers, importing a profile)
 )
 
 # what niri + the Monolith keybinds/autostart call

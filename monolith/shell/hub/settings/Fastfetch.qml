@@ -29,8 +29,8 @@ ColumnLayout {
     Process {
         id: picker
         property string preset: ""
-        command: ["zenity", "--file-selection", "--title=A picture for the " + preset + " preset",
-                  "--file-filter=Pictures | *.png *.jpg *.jpeg *.webp *.gif *.bmp *.PNG *.JPG *.JPEG *.WEBP *.GIF", "--file-filter=All files | *"]
+        // (without zenity there's no picker: say so, instead of the button doing nothing)
+        command: ["sh", "-c", "command -v zenity >/dev/null || { notify-send -a Monolith \"Cannot open the file picker\" \"It needs zenity: install it, or run the Monolith installer again\"; exit 1; }; exec zenity --file-selection --title=\"$1\" --file-filter='Pictures | *.png *.jpg *.jpeg *.webp *.gif *.bmp *.PNG *.JPG *.JPEG *.WEBP *.GIF' --file-filter='All files | *'", "_", "A picture for the " + preset + " preset"]
         stdout: StdioCollector { onStreamFinished: { const f = text.trim(); if (f !== "") sec.run(["picture", picker.preset, f]); } }
     }
     function pickPicture(name) { picker.preset = name; picker.running = true; }
