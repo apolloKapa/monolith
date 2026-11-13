@@ -39,11 +39,23 @@ Item {
         return Qt.point(0, 0);
     }
     property point origin: Qt.point(0, 0)
+    // A pane inside something turned by a quarter (the quick access bar on a side edge is the
+    // bar's shape rotated): its own x and y run along other screen axes, so it reads a copy of
+    // the wallpaper turned the same way (`turned`), and its place is given in that copy. 0 for
+    // everything else, which reads the wallpaper as it is.
+    property int turn: 0                     // 0, 90, 180 or 270 (clockwise, like Item.rotation)
     function place() {
         if (!lp.Window.window) return;
         const p = lp.mapToItem(null, 0, 0);
+        const q = lp.mapToItem(null, 1, 0);
+        const dx = q.x - p.x, dy = q.y - p.y;
+        const t = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 0 : 180) : (dy >= 0 ? 90 : 270);
+        if (t !== turn) turn = t;
         const w = windowOrigin();
-        const o = Qt.point(Math.round(p.x + w.x), Math.round(p.y + w.y));
+        const X = p.x + w.x, Y = p.y + w.y, W = Screen.width, H = Screen.height;
+        // the pane's top left in the (turned) copy of the wallpaper
+        const c = t === 0 ? [X, Y] : (t === 90 ? [Y, W - X] : (t === 180 ? [W - X, H - Y] : [H - Y, X]));
+        const o = Qt.point(Math.round(c[0]), Math.round(c[1]));
         if (o.x !== origin.x || o.y !== origin.y) origin = o;
     }
     FrameAnimation { running: lp.visible && lp.live; onTriggered: lp.place() }
@@ -86,6 +98,44 @@ Item {
         cache: true
     }
 
+    // the wallpaper turned against the pane's quarter turn, so the shader reads it along the
+    // pane's own axes (only made while the pane is turned)
+    Item {
+        id: turnedWall
+        readonly property bool on: lp.turn !== 0 && wallTex.status === Image.Ready
+        readonly property bool side: lp.turn === 90 || lp.turn === 270
+        width: side ? Screen.height : Screen.width
+        height: side ? Screen.width : Screen.height
+        visible: on
+        x: -100000                           // (drawn only into turnedTex, never on screen)
+        Image {
+            source: turnedWall.on ? wallTex.source : ""
+            sourceSize: wallTex.sourceSize
+            width: Screen.width; height: Screen.height
+            fillMode: Image.PreserveAspectCrop
+            smooth: true
+            asynchronous: true
+            transformOrigin: Item.TopLeft
+            // (screen X,Y lands where the turned pane looks for it: see place())
+            rotation: -lp.turn
+            x: lp.turn === 270 ? Screen.height : (lp.turn === 180 ? Screen.width : 0)
+            y: lp.turn === 90 ? Screen.width : (lp.turn === 180 ? Screen.height : 0)
+        }
+    }
+    ShaderEffectSource {
+        id: turnedTex
+        sourceItem: turnedWall.on ? turnedWall : null
+        hideSource: true
+        live: false
+        mipmap: true
+        smooth: true
+        visible: false
+        textureSize: Qt.size(Math.max(1, Math.round(turnedWall.width / 2)), Math.max(1, Math.round(turnedWall.height / 2)))
+        // (redrawn when the wallpaper or the turn changes)
+        Connections { target: turnedWall; function onOnChanged() { turnedTex.scheduleUpdate(); } }
+    }
+    Connections { target: lp; function onTurnChanged() { turnedTex.scheduleUpdate(); } }
+
     // until the wallpaper has loaded (or when there's none): a plain tinted pane
     Rectangle {
         anchors.fill: parent
@@ -97,12 +147,13 @@ Item {
     ShaderEffect {
         anchors.fill: parent
         visible: wallTex.status === Image.Ready
-        readonly property variant backdrop: wallTex
+        readonly property variant backdrop: turnedWall.on ? turnedTex : wallTex
         readonly property vector2d paneSize: Qt.vector2d(width, height)
         readonly property vector4d corners: Qt.vector4d(lp.topLeft >= 0 ? lp.topLeft : lp.radius, lp.topRight >= 0 ? lp.topRight : lp.radius,
                                                         lp.bottomRight >= 0 ? lp.bottomRight : lp.radius, lp.bottomLeft >= 0 ? lp.bottomLeft : lp.radius)
         readonly property vector2d origin: Qt.vector2d(lp.origin.x, lp.origin.y)
-        readonly property vector2d screen: Qt.vector2d(Math.max(1, Screen.width), Math.max(1, Screen.height))
+        readonly property vector2d screen: turnedWall.on ? Qt.vector2d(Math.max(1, turnedWall.width), Math.max(1, turnedWall.height))
+                                                          : Qt.vector2d(Math.max(1, Screen.width), Math.max(1, Screen.height))
         readonly property real bezel: lp.bezel
         readonly property real depth: lp.depth
         readonly property real index: lp.index
