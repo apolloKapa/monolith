@@ -239,8 +239,8 @@ Item {
             property bool want: Weather.ready
             onClicked: bar.open("calendar")
             Icon { visible: bar.mopt("weather.icon", true) === true; name: Weather.ready ? Weather.icon(Weather.current.code, Weather.current.day) : ""; size: 16; color: Theme.accent }
-            Label { text: Weather.ready ? Math.round(bar.mopt("weather.feels", false) === true ? Weather.current.feels : Weather.current.temp) + (bar.mopt("weather.unit", false) === true ? Weather.unit : "°") : ""; font.pixelSize: Theme.sizeSmall }
-            Label { visible: !bar.vertical && bar.mopt("weather.desc", false) === true; text: Weather.ready ? Weather.describe(Weather.current.code) : ""; muted: true; font.pixelSize: Theme.sizeSmall }
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; text: Weather.ready ? Math.round(bar.mopt("weather.feels", false) === true ? Weather.current.feels : Weather.current.temp) + (bar.mopt("weather.unit", false) === true ? Weather.unit : "°") : ""; font.pixelSize: Theme.sizeSmall }
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; visible: !bar.vertical && bar.mopt("weather.desc", false) === true; text: Weather.ready ? Weather.describe(Weather.current.code) : ""; muted: true; font.pixelSize: Theme.sizeSmall }
         }
     }
 
@@ -338,7 +338,7 @@ Item {
                     RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: bar.player !== null && bar.mopt("media.spin", true) === true }
                 }
             }
-            Label {
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering;
                 readonly property string what: String(bar.mopt("media.text", "title"))
                 visible: !bar.vertical && what !== "none"
                 text: !bar.player ? "" : what === "artist" ? (bar.player.trackArtist || "") : what === "both" ? bar.player.trackTitle + (bar.player.trackArtist ? "  ·  " + bar.player.trackArtist : "") : bar.player.trackTitle
@@ -358,7 +358,7 @@ Item {
             readonly property var entry: Niri.focusedAppId !== "" ? DesktopEntries.heuristicLookup(Niri.focusedAppId) : null
             Icon { visible: titleMod.iconMode === "generic" || bar.vertical; name: "select_window"; size: 16; color: Theme.subtext }
             Image { visible: titleMod.iconMode === "app" && !bar.vertical; width: 16; height: 16; sourceSize: Qt.size(32, 32); source: Quickshell.iconPath(titleMod.entry ? titleMod.entry.icon : Niri.focusedAppId, "application-x-executable") }
-            Label {
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering;
                 readonly property string what: String(bar.mopt("title.text", "title"))     // title | app | both
                 readonly property string app: titleMod.entry ? titleMod.entry.name : Niri.focusedAppId
                 visible: !bar.vertical
@@ -389,7 +389,7 @@ Item {
                 SequentialAnimation on opacity { running: live.mode === "rec"; loops: Animation.Infinite; NumberAnimation { to: 0.3; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
             }
             Icon { visible: live.mode !== "rec"; name: live.mode === "timer" ? "timer" : "upgrade"; size: 16; color: Theme.accent }
-            Label {
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering;
                 text: live.mode === "rec" ? Tasks.fmt(Tasks.recSeconds) : (live.mode === "timer" ? Tasks.fmt(Tasks.remaining) : String(Updates.available))
                 font.pixelSize: Theme.sizeSmall; strong: true
             }
@@ -446,7 +446,7 @@ Item {
                     required property var modelData
                     spacing: bar.vertical ? 0 : 3
                     Icon { visible: bar.mopt("stats.icons", true) === true; name: modelData[1]; size: 15; color: Theme.subtext }
-                    Label { text: modelData[2]; font.pixelSize: Theme.sizeSmall }
+                    Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; text: modelData[2]; font.pixelSize: Theme.sizeSmall }
                 }
             }
         }
@@ -468,7 +468,7 @@ Item {
                 size: 18; filled: Notifs.list.length > 0
                 color: Notifs.list.length > 0 && !Notifs.dnd ? Theme.accent : Theme.text
             }
-            Label { visible: Notifs.list.length > 0 && bar.mopt("notif.count", true) === true; text: Notifs.list.length; font.pixelSize: Theme.sizeSmall }
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; visible: Notifs.list.length > 0 && bar.mopt("notif.count", true) === true; text: Notifs.list.length; font.pixelSize: Theme.sizeSmall }
         }
     }
     Component { id: netC; Glyph { icon: bar.netIcon; on: true; onClicked: bar.open("network") } }
@@ -486,7 +486,7 @@ Item {
                 name: bar.muted || bar.volume === 0 ? "volume_off" : (bar.volume < 0.4 ? "volume_down" : "volume_up")
                 size: 18; filled: true; color: bar.muted ? Theme.subtext : Theme.text
             }
-            Label { visible: Store.get("bar.soundPercent", true) !== false; text: Math.round(bar.volume * 100) + (bar.mopt("sound.sign", false) === true ? "%" : ""); font.pixelSize: Theme.sizeSmall }
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; visible: Store.get("bar.soundPercent", true) !== false; text: Math.round(bar.volume * 100) + (bar.mopt("sound.sign", false) === true ? "%" : ""); font.pixelSize: Theme.sizeSmall }
             // the wheel over it: the volume, a step at a time
             WheelHandler {
                 enabled: !bar.only && bar.mopt("sound.scroll", true) === true
@@ -511,7 +511,7 @@ Item {
                 size: 18; filled: true
                 color: parent.parent.dev && parent.parent.dev.percentage < Number(bar.mopt("battery.low", 20)) / 100 ? Theme.danger : Theme.text
             }
-            Label { visible: bar.mopt("battery.percent", true) === true; text: parent.parent.dev ? Math.round(parent.parent.dev.percentage * 100) + "%" : ""; font.pixelSize: Theme.sizeSmall }
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; visible: bar.mopt("battery.percent", true) === true; text: parent.parent.dev ? Math.round(parent.parent.dev.percentage * 100) + "%" : ""; font.pixelSize: Theme.sizeSmall }
         }
     }
     Component {
@@ -520,7 +520,7 @@ Item {
             property bool want: Niri.layoutName !== ""
             onClicked: Niri.action(["switch-layout", "next"])
             Icon { visible: bar.mopt("kb.icon", true) === true; name: "keyboard"; size: 16; color: Theme.subtext }
-            Label { text: bar.mopt("kb.full", false) === true && !bar.vertical ? Niri.layoutName : Niri.layoutName.substring(0, 2).toUpperCase(); font.pixelSize: Theme.sizeSmall; strong: true }
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; text: bar.mopt("kb.full", false) === true && !bar.vertical ? Niri.layoutName : Niri.layoutName.substring(0, 2).toUpperCase(); font.pixelSize: Theme.sizeSmall; strong: true }
         }
     }
     // Bluetooth: the adapter's state; how many devices are connected beside it
@@ -537,7 +537,7 @@ Item {
                 size: 18; filled: true
                 color: parent.parent.adapter && parent.parent.adapter.enabled ? Theme.text : Theme.subtext
             }
-            Label { visible: parent.parent.connected > 0 && bar.mopt("bt.count", true) === true; text: parent.parent.connected; font.pixelSize: Theme.sizeSmall }
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; visible: parent.parent.connected > 0 && bar.mopt("bt.count", true) === true; text: parent.parent.connected; font.pixelSize: Theme.sizeSmall }
         }
     }
     // audio bars while something plays (cava runs only while they show)
