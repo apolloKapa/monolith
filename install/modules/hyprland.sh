@@ -9,6 +9,28 @@
 HYPR_DIR="$HOME/.config/hypr"
 HYPR_BACKUP="$HOME/.config/hypr.before-monolith"
 HYPR_MARK="monolith-off: "
+HYPR_MODULES="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+# Which keys Hyprland gets: "monolith" (Monolith's own layout, the same as on niri, made from its
+# niri keymap by hypr_keys.py; every other key in the config is turned off) or "mine" (your
+# config's keys stay; Serpantinum's keys are pointed at Monolith). Kept in Monolith's file, so
+# an update keeps the choice. Set by the installer's menu.
+HYPR_KEYS="${HYPR_KEYS:-}"
+hypr_keys_saved() { sed -n 's/^[#-]* keys: \([a-z]*\)$/\1/p' "$HYPR_DIR/monolith.lua" "$HYPR_DIR/monolith.conf" 2>/dev/null | head -1; }
+# Monolith's niri keymap: the installed copy, or the repo's
+hypr_keys_source() {
+    local f
+    for f in "$HYPR_MODULES/../niri-keybinds.kdl" "$HYPR_MODULES/../../config/niri/config/keybinds.kdl"; do
+        [ -f "$f" ] && { echo "$f"; return; }
+    done
+}
+_hypr_monolith_keys() {
+    local src; src="$(hypr_keys_source)"
+    [ -n "$src" ] && python3 "$HYPR_MODULES/hypr_keys.py" "$src" "$1" "$HOME/.local/bin/monolith"
+}
+_hypr_keys_choice() {
+    local k="${HYPR_KEYS:-$(hypr_keys_saved)}"
+    [ "$k" = monolith ] && [ -n "$(hypr_keys_source)" ] && echo monolith || echo mine
+}
 
 hypr_present() {
     command -v Hyprland >/dev/null 2>&1 || command -v hyprland >/dev/null 2>&1 || [ -d "$HYPR_DIR" ]
@@ -62,6 +84,11 @@ _hypr_write_lua() {
         echo "hl.on(\"hyprland.start\", function()"
         echo "  hl.exec_cmd(\"$HOME/.local/bin/monolith start --login\")"
         echo "end)"
+        echo "-- keys: $(_hypr_keys_choice)"
+        if [ "$(_hypr_keys_choice)" = monolith ]; then
+            echo "-- Monolith's key layout (the same as on niri)"
+            _hypr_monolith_keys lua
+        else
         while IFS='|' read -r mods key cmd; do
             combo="$key"; [ -n "$mods" ] && combo="${mods// / + } + $key"
             # (volume and brightness keys also work on the lock screen; menus don't)
@@ -74,6 +101,7 @@ _hypr_write_lua() {
         echo "  hl.bind(\"SUPER + \" .. key, hl.dsp.focus({ workspace = i }))"
         echo "  hl.bind(\"SUPER + SHIFT + \" .. key, hl.dsp.window.move({ workspace = i }))"
         echo "end"
+        fi
     } > "$f"
     grep -q '^require("monolith")' "$HYPR_DIR/hyprland.lua" || printf '\nrequire("monolith")\n' >> "$HYPR_DIR/hyprland.lua"
 }
@@ -84,6 +112,11 @@ _hypr_write_conf() {
         echo "# Monolith as the shell (written by Monolith's installer; \`monolith hyprland off\` undoes it)"
         echo "env = QT_QPA_PLATFORMTHEME,qt6ct"
         echo "exec-once = $HOME/.local/bin/monolith start --login"
+        echo "# keys: $(_hypr_keys_choice)"
+        if [ "$(_hypr_keys_choice)" = monolith ]; then
+            echo "# Monolith's key layout (the same as on niri)"
+            _hypr_monolith_keys conf
+        else
         while IFS='|' read -r mods key cmd; do
             case "$key" in XF86*) echo "bindl = $mods, $key, exec, $cmd" ;; *) echo "bind = $mods, $key, exec, $cmd" ;; esac
         done < <(_hypr_binds)
@@ -91,6 +124,7 @@ _hypr_write_conf() {
             echo "bind = SUPER, $((i % 10)), workspace, $i"
             echo "bind = SUPER SHIFT, $((i % 10)), movetoworkspace, $i"
         done
+        fi
     } > "$f"
     grep -q "^source = $f" "$HYPR_DIR/hyprland.conf" || printf '\nsource = %s\n' "$f" >> "$HYPR_DIR/hyprland.conf"
 }
@@ -104,6 +138,15 @@ _hypr_turn_off() {
         case "$(basename "$f")" in monolith.lua|monolith.conf) continue ;; esac
         # (only lines that aren't already comments)
         sed -i -E "/^[[:space:]]*(--|#)/! { /serpantinumd?([^a-zA-Z_-]|$)/ s/^([[:space:]]*)/\1${c}${HYPR_MARK}/ }" "$f"
+        # Monolith's own key layout: every other key goes too (it would fire alongside), except
+        # mouse drags and gestures, which Monolith's layout doesn't have
+        if [ "$(_hypr_keys_choice)" = monolith ]; then
+            if [ "$kind" = lua ]; then
+                sed -i -E "/^[[:space:]]*--/! { /hl\.bind\(/ { /mouse:27[23]|mouse = true/! s/^([[:space:]]*)/\1${c}${HYPR_MARK}/ } }" "$f"
+            else
+                sed -i -E "/^[[:space:]]*#/! { /^[[:space:]]*bind[a-z]*[[:space:]]*=/ { /^[[:space:]]*bindm/! s/^([[:space:]]*)/\1${c}${HYPR_MARK}/ } }" "$f"
+            fi
+        fi
     done < <(find "$HYPR_DIR" -name "*.$ext" -type f -print0)
 }
 
@@ -115,7 +158,9 @@ hypr_switch() {
         return 1
     fi
     if hypr_switched; then
-        # (Monolith's own file is written again, so an update brings its fixes)
+        # (Monolith's own file is written again, so an update brings its fixes; a changed key
+        # choice applies too)
+        [ "$(_hypr_keys_choice)" = monolith ] && _hypr_turn_off "$kind"
         if [ "$kind" = lua ]; then _hypr_write_lua; else _hypr_write_conf; fi
         echo -e "  ${C_CYAN}Hyprland:${RESET} Monolith is already the shell there (its keys file is up to date)"
         return 0

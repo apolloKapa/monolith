@@ -92,6 +92,8 @@ TARGET_COMMIT="$(repo_commit "$PROJECT_ROOT")"
 
 bootstrap_installer_deps
 DESKTOP="$(guess_desktop)"
+# Hyprland's keys: what Monolith set up last time, else your own
+HYPR_KEYS="$(hypr_keys_saved)"; HYPR_KEYS="${HYPR_KEYS:-mine}"
 
 
 if [ "$UPDATE_ONLY" = true ]; then

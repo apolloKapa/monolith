@@ -136,7 +136,7 @@ binds {
     Mod+BracketLeft  { consume-or-expel-window-left; }
     Mod+BracketRight { consume-or-expel-window-right; }
     Mod+Comma  { consume-window-into-column; }
-    Mod+Period { expel-window-from-column; }
+    Mod+Period hotkey-overlay-title="Emoji" { spawn "monolith" "msg" "toggle" "emoji"; }
 
     Mod+R { toggle-window-floating; }
     Mod+Shift+R { switch-preset-column-width-back; }

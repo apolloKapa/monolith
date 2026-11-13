@@ -328,6 +328,15 @@ run_installer_ui() {
             "Apps for the keybinds (kitty, librewolf, thunar, mission center) $(on_off "$OPT_KEYBIND_APPS")"
         )
         local actions=(desktop packages keybind_apps)
+        # Hyprland: which keys (Monolith's layout, the same as on niri, or your own)
+        if [ "$DESKTOP" = hyprland ]; then
+            local keys_label
+            [ "$HYPR_KEYS" = monolith ] \
+                && keys_label="${C_GREEN}[Monolith's, the same as on niri]${RESET} ${DIM}(your other keys are turned off)${RESET}" \
+                || keys_label="${C_GREEN}[keep mine]${RESET}"
+            labels+=("Hyprland keys $keys_label")
+            actions+=(hyprkeys)
+        fi
         # (niri's own config only matters on niri)
         if [ "$DESKTOP" != hyprland ]; then
             labels+=("niri config (keybinds, displays, workspaces) $niri_label")
@@ -371,6 +380,7 @@ run_installer_ui() {
         case "$chosen" in
             desktop) DESKTOP=$([ "$DESKTOP" = hyprland ] && echo niri || echo hyprland)
                      cursor=0; printf "\033[2J\033[H" ;;
+            hyprkeys) HYPR_KEYS=$([ "$HYPR_KEYS" = monolith ] && echo mine || echo monolith) ;;
             packages) show_package_overview ;;
             keybind_apps) OPT_KEYBIND_APPS=$([ "$OPT_KEYBIND_APPS" = true ] && echo false || echo true) ;;
             niri) NIRI_MODE=$([ "$NIRI_MODE" = replace ] && echo keep || echo replace) ;;

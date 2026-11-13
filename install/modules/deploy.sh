@@ -33,6 +33,8 @@ deploy_shell() {
     # a copy of the installer, so `monolith installer` works without the repo around
     cp -r "$project_root/install" "$SHELL_HOME/install"
     printf 'REPO_SLUG="%s"\nMONOLITH_BRANCH="%s"\n' "$REPO_SLUG" "$MONOLITH_BRANCH" > "$SHELL_HOME/install/source.env"
+    # Monolith's niri keymap, which Hyprland's key layout is made from (modules/hyprland.sh)
+    cp "$project_root/config/niri/config/keybinds.kdl" "$SHELL_HOME/install/niri-keybinds.kdl" 2>/dev/null || true
     chmod +x "$SHELL_HOME"/bin/* "$SHELL_HOME"/install/*.sh "$SHELL_HOME"/shell/scripts/*
     ln -sf "$SHELL_HOME/bin/monolith" "$BIN_DIR/monolith"
     # the fonts that come with Monolith (Settings → Theme → Colours & icons → Font)
