@@ -328,15 +328,61 @@ PanelWindow {
                     width: parent.width
                     height: win.fieldH
                     radius: Theme.corner(height)
-                    color: win.usesQuery || win.tabbed ? Theme.containerHigh : "transparent"
-                    // a menu of its own: its name instead of a search field
+                    color: win.usesQuery || win.tabbed ? Theme.containerHigh : Qt.alpha(Theme.containerHigh, 0)
+                    Behavior on color { ColorAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
+                    // a menu of its own: its name instead of a search field. Switching menus, the
+                    // name slides out and the new one in from the same side the page comes from
                     Label {
-                        visible: !win.usesQuery && !win.tabbed
-                        anchors.left: fieldIcon.right; anchors.leftMargin: 12
+                        id: menuTitle
+                        readonly property bool on: !win.usesQuery && !win.tabbed
+                        readonly property string want: (win.pageInfo[HubState.page] || win.pageInfo.search).title
+                        property real shift: 0
+                        visible: opacity > 0.01
+                        opacity: 0
+                        anchors.left: fieldIcon.right; anchors.leftMargin: 12 + shift
                         anchors.verticalCenter: parent.verticalCenter
-                        text: (win.pageInfo[HubState.page] || win.pageInfo.search).title
                         strong: true
                         font.pixelSize: Theme.sizeTitle + 2
+                        function update() {
+                            titleSwap.stop(); titleIn.stop(); titleOut.stop();
+                            if (!Theme.animOn || !win.shown) { text = want; opacity = on ? 1 : 0; shift = 0; return; }
+                            if (!on) { titleOut.start(); return; }
+                            if (opacity < 0.05 || text === want) { text = want; if (opacity < 0.05) shift = HubState.dir * 14; titleIn.start(); return; }
+                            titleSwap.start();
+                        }
+                        // (after both have settled: the menu and whether it has a search field change
+                        // together, in no set order)
+                        onWantChanged: Qt.callLater(update)
+                        onOnChanged: Qt.callLater(update)
+                        Component.onCompleted: { text = want; opacity = on ? 1 : 0; }
+                        Connections { target: win; function onShownChanged() { if (win.shown) { menuTitle.titleSwap.stop(); menuTitle.text = menuTitle.want; menuTitle.shift = 0; menuTitle.opacity = menuTitle.on ? 1 : 0; } } }
+                        property alias titleSwap: titleSwapAnim
+                        SequentialAnimation {
+                            id: titleSwapAnim
+                            ParallelAnimation {
+                                NumberAnimation { target: menuTitle; property: "opacity"; to: 0; duration: Theme.ms(110); easing.type: Easing.InCubic }
+                                NumberAnimation { target: menuTitle; property: "shift"; to: -HubState.dir * 10; duration: Theme.ms(110); easing.type: Easing.InCubic }
+                            }
+                            ScriptAction { script: { menuTitle.text = menuTitle.want; menuTitle.shift = HubState.dir * 14; } }
+                            ParallelAnimation {
+                                NumberAnimation { target: menuTitle; property: "opacity"; to: 1; duration: Theme.ms(260); easing.type: Easing.OutCubic }
+                                NumberAnimation { target: menuTitle; property: "shift"; to: 0; duration: Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+                            }
+                        }
+                        SequentialAnimation {
+                            id: titleIn
+                            // (a beat after the search field has gone)
+                            PauseAnimation { duration: Theme.ms(70) }
+                            ParallelAnimation {
+                                NumberAnimation { target: menuTitle; property: "opacity"; to: 1; duration: Theme.ms(260); easing.type: Easing.OutCubic }
+                                NumberAnimation { target: menuTitle; property: "shift"; to: 0; duration: Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+                            }
+                        }
+                        ParallelAnimation {
+                            id: titleOut
+                            NumberAnimation { target: menuTitle; property: "opacity"; to: 0; duration: Theme.ms(120); easing.type: Easing.OutCubic }
+                            NumberAnimation { target: menuTitle; property: "shift"; to: -HubState.dir * 10; duration: Theme.ms(160); easing.type: Easing.OutCubic }
+                        }
                     }
                     Rectangle {
                         id: fieldTile
@@ -380,11 +426,26 @@ PanelWindow {
                         focus: win.shown
                         // still takes the keys (Esc, arrows for the page) on a menu without a search
                         opacity: win.usesQuery || win.tabbed ? 1 : 0
+                        // (goes quickly, so it's gone before a menu's name slides in over it)
+                        // (and comes back a beat after a menu's name has gone)
+                        Behavior on opacity {
+                            SequentialAnimation {
+                                PauseAnimation { duration: win.usesQuery || win.tabbed ? Theme.ms(70) : 0 }
+                                NumberAnimation { duration: win.usesQuery || win.tabbed ? Theme.ms(200) : Theme.ms(80); easing.type: Easing.OutCubic }
+                            }
+                        }
                         Label {
+                            id: queryHint
                             anchors.fill: parent
                             verticalAlignment: Text.AlignVCenter
                             visible: query.text === ""
-                            text: HubState.page === "search" ? "Search apps   ·   > run   ·   : emoji   ·   / files" : (HubState.page === "clipboard" ? "Filter the clipboard" : (HubState.page === "keys" ? "Filter keybinds" : "Type to search"))
+                            // (a menu without a search field keeps the last wording while it fades out)
+                            readonly property string want: HubState.page === "search" ? "Search apps   ·   > run   ·   : emoji   ·   / files" : (HubState.page === "clipboard" ? "Filter the clipboard" : (HubState.page === "keys" ? "Filter keybinds" : "Type to search"))
+                            property string kept: want
+                            function keep() { if (win.usesQuery || win.tabbed) kept = want; }
+                            onWantChanged: Qt.callLater(keep)
+                            Connections { target: win; function onUsesQueryChanged() { Qt.callLater(queryHint.keep); } }
+                            text: kept
                             muted: true
                             font.pixelSize: Theme.sizeTitle
                         }
@@ -481,6 +542,9 @@ PanelWindow {
                             readonly property bool isCur: HubState.page === modelData
                             readonly property real ownW: Math.min(win.maxOpenW, (win.pageInfo[modelData] || win.pageInfo.search).w)
                             width: isCur ? pages.width : ownW
+                            // (and its own height: tied to the room there is, it grew or shrank with
+                            // the new menu's card and reflowed as it faded)
+                            readonly property bool leaving: !isCur && !!item && win.shown
                             x: Math.round((pages.width - width) / 2)
                             // built in the background, so opening a menu for the first time doesn't
                             // freeze everything for a moment (the card's change raced ahead while
@@ -488,7 +552,7 @@ PanelWindow {
                             asynchronous: true
                             // the room there is (a page's own height was used as is, so on a
                             // short screen it was laid out taller than the card and spilled out)
-                            height: pages.height
+                            height: leaving ? item.implicitHeight : pages.height
                             active: win.here && (seen || (win.open && HubState.page === modelData))
                             source: "../hub/" + modelData.charAt(0).toUpperCase() + modelData.slice(1) + "Page.qml"
                             onLoaded: {
@@ -715,7 +779,13 @@ PanelWindow {
         id: blurBox
         // (and only once the menu's own page is showing: the card comes in a moment before it,
         // and an empty blurred card read as a ghost of the menu)
-        readonly property bool pageIn: !!win.currentPage && win.currentPage.opacity > 0.6
+        readonly property bool pageReady: !!win.currentPage && win.currentPage.opacity > 0.6
+        readonly property bool pageIn: held || pageReady
+        // once a page has come in, it stays while the card does: switching menus used to drop
+        // it until the new page was in, so the card flashed see-through (washed out) every time
+        property bool held: false
+        onPageReadyChanged: if (pageReady && win.shown) held = true
+        Connections { target: win; function onShownChanged() { if (!win.shown) blurBox.held = false; } }
         readonly property bool on: !win.docked && pageIn && (Theme.fxUnfold ? floatCard.unfold > 0.04 : (win.shown && floatCard.opacity > 0.4))
         readonly property real part: Theme.fxUnfold ? Math.max(0.01, floatCard.unfold) : 1
         // the card zooms in and out from its own corner or side: the blur shrinks with it

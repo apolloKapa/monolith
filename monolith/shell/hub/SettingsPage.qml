@@ -44,7 +44,7 @@ Page {
         command: ["python3", Qt.resolvedUrl("../scripts/settings_index.py").toString().replace("file://", "")]
         stdout: StdioCollector { onStreamFinished: { try { page.index = JSON.parse(text); } catch (e) {} } }
     }
-    onCurrentChanged: if (current && !index.length && !indexProc.running) indexProc.running = true
+    onCurrentChanged: { if (current) seenOpen = true; if (current && !index.length && !indexProc.running) indexProc.running = true; }
     // a page's file -> [its tab id, category title, tab title]
     function placeOf(file) {
         for (const c of categories) for (const t of c.tabs) if (t[2] === file) return [t[0], c.title, t[1], c.icon];
@@ -113,6 +113,12 @@ Page {
     readonly property var pageOrder: categories.reduce((a, c) => a.concat(c.tabs.map(t => t[2])), [])
     property int pageDir: 1
     property string lastFile: ""
+    // laid out: the sidebar's unfolding animates only after this
+    property bool settled: false
+    Timer { interval: 250; running: true; onTriggered: page.settled = true }
+    // shown since the hub opened (its section stays loaded until the hub closes)
+    property bool seenOpen: false
+    Connections { target: HubState; function onOpenChanged() { if (!HubState.open) page.seenOpen = false; } }
     function aimPage() { pageDir = pageOrder.indexOf(file) >= pageOrder.indexOf(lastFile) ? 1 : -1; lastFile = file; }
 
     RowLayout {
@@ -212,8 +218,16 @@ Page {
                     id: list
                     width: parent.width
                     spacing: 2
+                    // (shown once every section is made: Settings is built in the background, where
+                    // the sections arrive over a few frames and not in order, and the list stacked
+                    // whichever had arrived, so it seemed to scroll into place)
+                    property int made: 0
+                    opacity: made >= page.categories.length ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
                     Repeater {
                         model: page.categories
+                        onItemAdded: list.made++
+                        onItemRemoved: list.made--
                         Column {
                             id: sec
                             required property var modelData
@@ -261,7 +275,9 @@ Page {
                                 width: parent.width
                                 height: sec.cur ? pages.implicitHeight + 4 : 0
                                 clip: true
-                                Behavior on height { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
+                                // (not while the page is first built: the open section unfolded from
+                                // nothing and pushed everything below it down as Settings came in)
+                                Behavior on height { enabled: page.settled; NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
                                 Rectangle { x: 21; y: 2; width: 2; height: pages.implicitHeight - 4; radius: 1; color: Theme.hairline }
                                 // the open page's highlight and its mark on the line: one of each per
                                 // section, gliding to the page you pick (the mark stretches on its way:
@@ -395,8 +411,9 @@ Page {
                 id: loader
                 width: flick.width
                 // loaded while the page is open; the section reloads its data each time
-                // (kept while the page fades out, so it doesn't empty first)
-                active: (page.current && HubState.open) || page.opacity > 0.01
+                // (kept while the hub stays open, so switching back to Settings doesn't rebuild it
+                // and leave it empty for a moment; built again, with fresh data, on the next opening)
+                active: (page.seenOpen && HubState.open) || page.opacity > 0.01
                 source: "settings/" + page.file + ".qml"
                 // (built in the background: a section built in one go froze the menu for a moment;
                 // it comes up once it's ready)
