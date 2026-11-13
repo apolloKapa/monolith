@@ -786,7 +786,10 @@ PanelWindow {
         property bool held: false
         onPageReadyChanged: if (pageReady && win.shown) held = true
         Connections { target: win; function onShownChanged() { if (!win.shown) blurBox.held = false; } }
-        readonly property bool on: !win.docked && pageIn && (Theme.fxUnfold ? floatCard.unfold > 0.04 : (win.shown && floatCard.opacity > 0.4))
+        // (opening: once the card is all the way in. Switched on while the card was still part
+        // see-through, the bright blurred backdrop showed through it for a few frames and then
+        // dimmed as the card filled in: a flash every time a menu opened)
+        readonly property bool on: !win.docked && pageIn && (Theme.fxUnfold ? floatCard.unfold > 0.04 : (win.shown && floatCard.opacity > 0.97))
         readonly property real part: Theme.fxUnfold ? Math.max(0.01, floatCard.unfold) : 1
         // the card zooms in and out from its own corner or side: the blur shrinks with it
         readonly property real k: floatCard.scale
