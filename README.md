@@ -105,7 +105,7 @@ The bar has five styles (Island, Fill, Frame, Solid, Modular), can sit at the to
 | Tools | timer, notes, unit converter |
 | Wellbeing | screen time for a day (against the day before, the busiest hour, the daily average), that week's bars and the month as a heatmap; each app's own view (its hours, its week, a daily limit); a week as days × hours; its settings behind the gear (tracking, a daily goal, every limit) |
 | Keys | every niri keybind, searchable |
-| Wallpaper | a coverflow (or grid) of your pictures and live wallpapers; set one for every screen or just one ("Set on"), star favourites (S). The colours come from the wallpaper (matugen) |
+| Wallpaper | a coverflow (or grid) of your pictures and live wallpapers; set one for every screen or just one ("Set on"), star favourites (S) and find them on the Favourites tab. The colours come from the wallpaper (matugen) |
 | Settings | everything below, with a search box that jumps straight to a setting |
 
 Small dropdowns also come out of the bar: notifications, sound, the tray's menus, and **the system monitor** (click the stats): two-minute graphs for CPU, GPU, memory, video memory and both temperatures, the GPU's clock and power, and the busiest apps by CPU, memory or video memory, each with a button to end it.

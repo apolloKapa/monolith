@@ -41,16 +41,24 @@ PanelWindow {
     readonly property string currentPath: Wall.pathFor(aimName || screenName)
     function pick(p) { if (aimName === "") Wall.set(p); else Wall.setFor(aimName, p); }
     readonly property bool coverflow: Store.get("wallpaper.view", "flow") === "flow"
-    // Pictures or Live (videos and GIFs); the tab you used last
-    readonly property bool liveTab: Store.get("wallpaper.tab", "pictures") === "live"
+    // Pictures, Live (videos and GIFs) or Favourites (the starred ones of both); the tab you used last
+    readonly property string tab: { const t = Store.get("wallpaper.tab", "pictures"); return t === "live" || t === "favs" ? t : "pictures"; }
+    readonly property bool liveTab: tab === "live"
+    readonly property bool favTab: tab === "favs"
+    readonly property bool picTab: tab === "pictures"
+    readonly property var tabs: ["pictures", "live", "favs"]
     // the cards' list: replaced only when the pictures themselves change (every saved setting
     // re-runs Store.get bindings, and a new list would send the views back to the top)
     property var picList: []
     property var liveList: []
-    readonly property var list: liveTab ? liveList : picList
+    property var favList: []
+    readonly property var list: liveTab ? liveList : favTab ? favList : picList
     function syncList() {
         if (Wall.pictures.join("\n") !== picList.join("\n")) picList = Wall.pictures;
         if (Wall.live.join("\n") !== liveList.join("\n")) liveList = Wall.live;
+        // (in the folder's order; a starred file that's gone isn't shown)
+        const favs = Wall.images.filter(i => Wall.isFav(i));
+        if (favs.join("\n") !== favList.join("\n")) favList = favs;
     }
     // the scroll of both grids, noted when it closes or changes tab (the wheel animates contentY,
     // so there's no "movement ended" to listen to)
@@ -58,8 +66,9 @@ PanelWindow {
         if (!placed) return;
         if (grid.contentHeight > 0) Wall.rememberPos("gridY", grid.contentY);
         if (liveGrid.contentHeight > 0) Wall.rememberPos("liveY", liveGrid.contentY);
+        if (favGrid.contentHeight > 0) Wall.rememberPos("favY", favGrid.contentY);
     }
-    Connections { target: Wall; function onImagesChanged() { win.syncList(); } }
+    Connections { target: Wall; function onImagesChanged() { win.syncList(); } function onFavouritesChanged() { win.syncList(); } }
 
     // back where you were last time; the first time, at the wallpaper you have
     // (until it has put the views back, their moves aren't "where you were")
@@ -72,6 +81,7 @@ PanelWindow {
         else grid.positionViewAtIndex(pic, GridView.Center);
         if (pos.liveY !== undefined) liveGrid.contentY = Math.min(pos.liveY, Math.max(0, liveGrid.contentHeight - liveGrid.height));
         else liveGrid.positionViewAtIndex(vid, GridView.Center);
+        if (pos.favY !== undefined) favGrid.contentY = Math.min(pos.favY, Math.max(0, favGrid.contentHeight - favGrid.height));
         placed = true;
     }
     function opened() { syncList(); Wall.rescan(); Qt.callLater(restorePos); keys.forceActiveFocus(); }
@@ -89,8 +99,8 @@ PanelWindow {
 
     // ── the bubble that becomes the panel ──
     readonly property real bubble: 64
-    readonly property real panelW: Math.min(width - 80, 1180)
-    readonly property real panelH: Math.min(height - 120, 640)
+    readonly property real panelW: Math.min(width - 80, 1560)
+    readonly property real panelH: Math.min(height - 100, 860)
     Rectangle {
         id: panel
         readonly property real w: win.bubble + (win.panelW - win.bubble) * win.grow
@@ -123,13 +133,13 @@ PanelWindow {
                 id: keys
                 focus: true
                 Keys.onEscapePressed: HubState.wallOpen = false
-                readonly property var g: win.liveTab ? liveGrid : grid
-                readonly property bool f: win.coverflow && !win.liveTab
+                readonly property var g: win.liveTab ? liveGrid : win.favTab ? favGrid : grid
+                readonly property bool f: win.coverflow && win.picTab
                 Keys.onLeftPressed: if (f) flow.decrementCurrentIndex(); else g.moveCurrentIndexLeft()
                 Keys.onRightPressed: if (f) flow.incrementCurrentIndex(); else g.moveCurrentIndexRight()
                 Keys.onUpPressed: if (!f) g.moveCurrentIndexUp()
                 Keys.onDownPressed: if (!f) g.moveCurrentIndexDown()
-                Keys.onTabPressed: Store.set("wallpaper.tab", win.liveTab ? "pictures" : "live")
+                Keys.onTabPressed: Store.set("wallpaper.tab", win.tabs[(win.tabs.indexOf(win.tab) + 1) % win.tabs.length])
                 Keys.onReturnPressed: { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) win.pick(win.list[i]); }
                 // S: star the one under the cursor (a favourite, for the playlist)
                 Keys.onPressed: event => { if (event.key === Qt.Key_S) { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) Wall.toggleFav(win.list[i]); event.accepted = true; } }
@@ -141,7 +151,7 @@ PanelWindow {
                 height: 40
                 Icon { name: "wallpaper"; size: 22; filled: true; color: Theme.accent }
                 Label { text: "Wallpaper"; strong: true; font.pixelSize: Theme.sizeTitle + 2 }
-                Segmented { Layout.leftMargin: 10; Layout.preferredWidth: 200; height: 36; opts: [["pictures", "Pictures"], ["live", "Live"]]; value: win.liveTab ? "live" : "pictures"; onPicked: v => Store.set("wallpaper.tab", v) }
+                Segmented { Layout.leftMargin: 10; Layout.preferredWidth: 330; height: 36; opts: [["pictures", "Pictures"], ["live", "Live"], ["favs", "Favourites"]]; value: win.tab; onPicked: v => Store.set("wallpaper.tab", v) }
                 // which screen a click sets: all of them, or just one
                 Label { visible: Quickshell.screens.length > 1; Layout.leftMargin: 10; text: "Set on"; muted: true; font.pixelSize: Theme.sizeSmall }
                 Segmented {
@@ -153,10 +163,11 @@ PanelWindow {
                 }
                 Label {
                     Layout.leftMargin: 8; Layout.fillWidth: true; elide: Text.ElideRight; muted: true; font.pixelSize: Theme.sizeSmall
-                    text: win.liveTab ? Wall.live.length + (Wall.live.length === 1 ? " live wallpaper" : " live wallpapers") + "   ·   hover to preview"
+                    text: win.favTab ? win.favList.length + (win.favList.length === 1 ? " favourite" : " favourites") + "   ·   S or the star to add or remove"
+                        : win.liveTab ? Wall.live.length + (Wall.live.length === 1 ? " live wallpaper" : " live wallpapers") + "   ·   hover to preview"
                                       : Wall.dir.replace(Wall.home, "~") + "   ·   " + Wall.pictures.length + " pictures"
                 }
-                Segmented { visible: !win.liveTab; Layout.preferredWidth: 180; height: 36; opts: [["flow", "Coverflow"], ["grid", "Grid"]]; value: win.coverflow ? "flow" : "grid"; onPicked: v => Store.set("wallpaper.view", v) }
+                Segmented { visible: win.picTab; Layout.preferredWidth: 180; height: 36; opts: [["flow", "Coverflow"], ["grid", "Grid"]]; value: win.coverflow ? "flow" : "grid"; onPicked: v => Store.set("wallpaper.view", v) }
                 Segmented { Layout.preferredWidth: 160; height: 36; opts: [["dark", "Dark"], ["light", "Light"]]; value: Theme.modeName; onPicked: v => Store.set("theme.mode", v) }
                 Pressable {
                     Layout.preferredWidth: 36; Layout.preferredHeight: 36
@@ -222,7 +233,7 @@ PanelWindow {
             PathView {
                 id: flow
                 onCurrentIndexChanged: if (win.placed && win.shown && win.picList.length) Wall.rememberPos("flow", currentIndex)
-                visible: win.coverflow && !win.liveTab
+                visible: win.coverflow && win.picTab
                 y: head.height + 12
                 width: parent.width
                 height: parent.height - y - 34
@@ -232,7 +243,7 @@ PanelWindow {
                 preferredHighlightEnd: 0.5
                 highlightRangeMode: PathView.StrictlyEnforceRange
                 highlightMoveDuration: 380
-                readonly property real cardW: Math.min(560, width * 0.46)
+                readonly property real cardW: Math.min(760, width * 0.46)
                 readonly property real cardH: Math.min(cardW * 0.6, height - 20)
                 path: Path {
                     startX: 0; startY: flow.height / 2
@@ -293,7 +304,7 @@ PanelWindow {
                 WheelHandler { onWheel: event => { if (event.angleDelta.y > 0 || event.angleDelta.x > 0) flow.decrementCurrentIndex(); else flow.incrementCurrentIndex(); } }
             }
             Label {
-                visible: win.coverflow && !win.liveTab && win.picList.length > 0
+                visible: win.coverflow && win.picTab && win.picList.length > 0
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
                 width: parent.width * 0.7
@@ -458,7 +469,7 @@ PanelWindow {
             GridView {
                 SmoothWheel {}
                 id: grid
-                visible: !win.coverflow && !win.liveTab
+                visible: !win.coverflow && win.picTab
                 y: head.height + 12
                 width: parent.width
                 height: parent.height - y
@@ -487,6 +498,65 @@ PanelWindow {
                     }
                     HoverHandler { id: ghov }
                     Star { path: gcell.modelData; hot: ghov.hovered; anchors.margins: 10 }
+                }
+            }
+
+            // ── favourites: the starred pictures and live wallpapers together ──
+            Empty {
+                anchors.centerIn: favGrid
+                width: favGrid.width
+                visible: win.favTab && win.favList.length === 0
+                icon: "star"
+                title: "No favourites yet"
+                sub: "Star a wallpaper (the star in a card's corner, or S on the one you're on) and it shows up here. The playlist can play just your favourites too."
+            }
+            GridView {
+                SmoothWheel {}
+                id: favGrid
+                visible: win.favTab
+                y: head.height + 12
+                width: parent.width
+                height: parent.height - y
+                clip: true
+                cellWidth: width / 4
+                cellHeight: cellWidth * 0.62
+                model: win.favList
+                boundsBehavior: Flickable.StopAtBounds
+                delegate: Item {
+                    id: fcell
+                    required property string modelData
+                    required property int index
+                    readonly property bool moving: Wall.isVideo(modelData) || Wall.isAnimated(modelData)
+                    readonly property bool cur: modelData === win.currentPath
+                    readonly property bool keyed: favGrid.currentIndex === index && favGrid.activeFocus
+                    width: favGrid.cellWidth
+                    height: favGrid.cellHeight
+                    Card {
+                        visible: !fcell.moving
+                        anchors.fill: parent
+                        anchors.margins: 6
+                        path: fcell.moving ? "" : fcell.modelData
+                        current: fcell.cur || fcell.keyed
+                    }
+                    Bubble { visible: fcell.cur && !fcell.moving; anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 16; size: 26; icon: "check"; on: true }
+                    LiveCard {
+                        visible: fcell.moving
+                        anchors.fill: parent
+                        anchors.margins: 6
+                        path: fcell.moving ? fcell.modelData : ""
+                        hot: fcell.moving && (fma.containsMouse || fcell.keyed)
+                        current: fcell.cur
+                    }
+                    MouseArea {
+                        id: fma
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: mouse => { if (mouse.button === Qt.RightButton) Wall.setFor(win.screenName, fcell.modelData); else win.pick(fcell.modelData); }
+                    }
+                    // (below the LIVE badge on a live one)
+                    Star { path: fcell.modelData; hot: fma.containsMouse; anchors.topMargin: fcell.moving ? 40 : 12 }
                 }
             }
         }
