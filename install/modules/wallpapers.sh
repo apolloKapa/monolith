@@ -60,12 +60,21 @@ install_wallpapers() {
     mkdir -p "$wallpaper_dir"
 
     local sync_success=false
+    # a copy of another pack (installs before 2.5.7 used Serpantinum's; the fallback used once)
+    # is downloaded again from the right repo: refreshing it kept giving the old pictures
+    if [ -d "$clone_dir/.git" ]; then
+        local have_url
+        have_url=$(git -C "$clone_dir" remote get-url origin 2>/dev/null)
+        if [ "${have_url%.git}" != "${wallpaper_repo%.git}" ]; then
+            rm -rf "$clone_dir"
+        fi
+    fi
     if [ -d "$clone_dir/.git" ]; then
         if gitx -C "$clone_dir" fetch --depth 1 origin 2>/dev/null; then
-            if git -C "$clone_dir" reset --hard FETCH_HEAD 2>/dev/null || \
-               git -C "$clone_dir" reset --hard origin/HEAD 2>/dev/null || \
-               git -C "$clone_dir" reset --hard origin/main 2>/dev/null || \
-               git -C "$clone_dir" reset --hard origin/master 2>/dev/null; then
+            if git -C "$clone_dir" reset -q --hard FETCH_HEAD 2>/dev/null || \
+               git -C "$clone_dir" reset -q --hard origin/HEAD 2>/dev/null || \
+               git -C "$clone_dir" reset -q --hard origin/main 2>/dev/null || \
+               git -C "$clone_dir" reset -q --hard origin/master 2>/dev/null; then
                 sync_success=true
             fi
         fi
@@ -97,20 +106,25 @@ install_wallpapers() {
         done < <(find "$src_dir" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o -iname "*.webp" \) 2>/dev/null)
 
         local total=${#files[@]}
-        local count=0
+        local count=0 added=0
 
         if [ "$total" -gt 0 ]; then
             for file in "${files[@]}"; do
+                [ -e "$wallpaper_dir/${file##*/}" ] || added=$((added + 1))
                 cp "$file" "$wallpaper_dir/" 2>/dev/null || true
                 count=$((count + 1))
                 render_wallpaper_progress "$count" "$total" "Installing wallpapers"
             done
             echo ""
+            echo -e "  wallpapers: $added new, $((total - added)) already there (in $wallpaper_dir)"
         else
             find "$src_dir" -type f ! -name "README.md" ! -name "LICENSE" ! -path "*/.git/*" -exec cp {} "$wallpaper_dir/" \; 2>/dev/null || true
         fi
     else
-        if [ -z "$(ls -A "$wallpaper_dir" 2>/dev/null | grep -iE '\.(jpg|jpeg|png|gif|webp)$')" ]; then
+        if [ -n "$(ls -A "$wallpaper_dir" 2>/dev/null | grep -iE '\.(jpg|jpeg|png|gif|webp)$')" ]; then
+            # (it used to skip this silently: the installer seemed to do nothing)
+            echo -e "  ${C_YELLOW}wallpapers:${RESET} $wallpaper_dir already has pictures, so no random ones were added. Pick \"full pack\" in the installer's menu to get all of them."
+        else
             local random_pics=()
             while IFS= read -r pic; do
                 [[ -n "$pic" ]] && random_pics+=("$pic")
