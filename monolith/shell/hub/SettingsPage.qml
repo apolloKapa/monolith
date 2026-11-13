@@ -376,7 +376,14 @@ Page {
             id: flick
             Layout.fillWidth: true
             Layout.fillHeight: true
-            contentHeight: loader.item ? loader.item.implicitHeight + 8 : 0
+            // the page never gets shorter than what's on screen: a tab or a setting that hides rows
+            // used to shrink it under you, and the view jumped up to its new end. The room left
+            // below goes away as you scroll back up.
+            readonly property real realH: loader.item ? loader.item.implicitHeight + 8 : 0
+            property real keepH: 0
+            contentHeight: Math.max(realH, keepH)
+            onRealHChanged: keepH = Math.max(keepH > realH ? keepH : 0, contentY + height)
+            onContentYChanged: if (keepH > realH) keepH = Math.max(realH, Math.min(keepH, contentY + height))
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             Loader {
@@ -385,7 +392,7 @@ Page {
                 // loaded while the page is open; the section reloads its data each time
                 active: page.current && HubState.open
                 source: "settings/" + page.file + ".qml"
-                onSourceChanged: { flick.contentY = 0; pageIn.restart(); popAnim.restart(); }
+                onSourceChanged: { flick.keepH = 0; flick.contentY = 0; pageIn.restart(); popAnim.restart(); }
                 // a search result: its row, once the page is laid out
                 onLoaded: if (page.findRow !== "") seekLater.restart()
                 Timer { id: seekLater; interval: 80; onTriggered: page.seek() }
