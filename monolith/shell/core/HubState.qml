@@ -52,8 +52,21 @@ Singleton {
     function target(screen) { return screen || Niri.focusedOutput || screenName; }
     function showWall(screen) { wallScreen = target(screen); open = false; wallOpen = true; }
 
+    // a different menu opened while the hub is closed (or still closing): it comes up on its
+    // own, at its own size, instead of carrying on from the last one's closing animation (half
+    // faded, the old page still fading out over it, the card stretching from the old size).
+    // True only while the opening happens; animations that would carry on are skipped then.
+    property bool snap: false
+    // one open menu turning into another: the old page leaves quickly and the new one comes in
+    // just after it, so the two don't sit on top of each other while the card morphs
+    property bool switching: false
+    function switched() { switching = true; switchEnd.restart(); }
+    property Timer switchEnd: Timer { interval: 450; onTriggered: hub.switching = false }
     function show(p, screen) {
         if (p === "wallpaper") { showWall(screen); return; }
+        const next = p && pages.indexOf(p) !== -1 ? p : page;
+        if (!open && next !== page) { snap = true; Qt.callLater(() => { hub.snap = false; }); }
+        if (open && next !== page) switched();
         if (p && pages.indexOf(p) !== -1) page = p;
         screenName = target(screen);
         wallOpen = false;
@@ -100,7 +113,7 @@ Singleton {
     // Settings opened at a section (keybinds, the island, other pages)
     property string settingsSection: "appearance"
     function openSettings(section, screen) { if (section) settingsSection = section; show("settings", screen); }
-    function step(d) { page = pages[(pages.indexOf(page) + d + pages.length) % pages.length]; }
+    function step(d) { if (open) switched(); page = pages[(pages.indexOf(page) + d + pages.length) % pages.length]; }
 
     IpcHandler {
         target: "hub"

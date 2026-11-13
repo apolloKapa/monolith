@@ -280,11 +280,11 @@ PanelWindow {
                 height: (win.shown ? goalH : parent.height) - y - (win.docked && !Theme.fullBar && win.bottom ? Theme.islandH + 2 : win.pad)
                 opacity: win.shown ? 1 : 0
                 visible: opacity > 0.01
-                Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+                Behavior on opacity { enabled: !HubState.snap; NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
                 // and a little zoom, from the bar's side
                 scale: win.shown || Theme.fxUnfold ? 1 : Theme.popScale
                 transformOrigin: win.bottom && win.docked ? Item.Bottom : Item.Top
-                Behavior on scale { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
+                Behavior on scale { enabled: !HubState.snap; NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
                 // Unfold (Theme → Effects): the menu opens out of a thin bright line through its
                 // middle and folds back into it
                 // (a floating menu unfolds whole, card and all: see floatCard; here it's the
@@ -532,8 +532,10 @@ PanelWindow {
         // whole pixels: a fractional card size blurs what's in it
         width: Math.round(win.openW + 2 * win.pad)
         height: Math.round(win.openH - Theme.islandH + win.pad)
-        Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
-        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
+        // morphs from one menu to the next while open; a menu opened fresh takes its own size
+        // at once (it used to stretch from the last menu's size as it faded in)
+        Behavior on width { enabled: !HubState.snap; NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
+        Behavior on height { enabled: !HubState.snap; NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
         // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
         // "top" means by the bar: next to it at the bottom when the bar is there
         // (by a bar down the side: beside it, in the middle of that edge)
@@ -557,8 +559,8 @@ PanelWindow {
         // Unfold (Theme → Effects): instead, the whole card opens out of a thin bright line through
         // its middle and folds back into it
         readonly property real unfold: openArea.unfold
-        opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (win.shown ? 1 : 0)
-        scale: win.shown || Theme.fxUnfold ? 1 : Theme.popScale
+        opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : win.cardFade
+        scale: Theme.fxUnfold ? 1 : Theme.popScale + (1 - Theme.popScale) * win.cardZoom
         transform: Scale {
             origin.x: floatCard.width / 2; origin.y: floatCard.height / 2
             yScale: Theme.fxUnfold ? Math.max(0.006, floatCard.unfold) : 1
@@ -575,8 +577,6 @@ PanelWindow {
             opacity: 1 - floatCard.unfold
         }
         transformOrigin: onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
-        Behavior on opacity { enabled: !Theme.fxUnfold; NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
         CardShadow {}
         MouseArea { anchors.fill: parent }
         PanelFx { anchors.fill: parent; radius: floatCard.radius }
@@ -587,7 +587,27 @@ PanelWindow {
     // open, or still shrinking back
     readonly property bool open: shown || wasOpen
 
-    onShownChanged: if (shown) { tilePop.restart(); tileTurn.restart(); wasOpen = true; query.text = HubState.preset; HubState.preset = ""; query.forceActiveFocus(); }
+    // the floating card's fade and zoom (0 hidden … 1 shown). Run as animations rather than
+    // Behaviors so a menu opened fresh (HubState.snap) starts from hidden: it carried on from
+    // wherever the last menu's closing had got to
+    property real cardFade: 0
+    property real cardZoom: 0
+    ParallelAnimation {
+        id: cardIn
+        NumberAnimation { target: win; property: "cardFade"; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: win; property: "cardZoom"; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+    }
+    ParallelAnimation {
+        id: cardOut
+        NumberAnimation { target: win; property: "cardFade"; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
+    }
+    onShownChanged: {
+        if (shown) { cardOut.stop(); if (HubState.snap) { cardFade = 0; cardZoom = 0; } cardIn.restart(); }
+        else { cardIn.stop(); cardOut.restart(); }
+    }
+    Connections { target: win; function onShownChanged() { if (win.shown) win.opened(); } }
+    function opened() { tilePop.restart(); tileTurn.restart(); wasOpen = true; query.text = HubState.preset; HubState.preset = ""; query.forceActiveFocus(); }
     Connections {
         target: HubState
         function onPresetRequested() { if (win.shown && HubState.preset !== "") { query.text = HubState.preset; HubState.preset = ""; } }

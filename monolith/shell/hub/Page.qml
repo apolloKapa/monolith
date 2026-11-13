@@ -19,6 +19,15 @@ FocusScope {
     // fades in with a little zoom, and out the same way (like everything that appears)
     scale: current ? 1 : Theme.popScale
     transformOrigin: Item.Top
-    Behavior on opacity { NumberAnimation { duration: current ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-    Behavior on scale { NumberAnimation { duration: current ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: current ? Theme.enterCurve : Theme.exitCurve } }
+    // (skipped when a different menu opens over this one's closing: see HubState.snap)
+    // (switching from another open menu: this one waits a moment for the old one to go, and the
+    // old one goes quicker)
+    Behavior on opacity {
+        enabled: !HubState.snap
+        SequentialAnimation {
+            PauseAnimation { duration: current && HubState.switching ? Theme.ms(90) : 0 }
+            NumberAnimation { duration: current ? Theme.popInMs : (HubState.switching ? Theme.ms(110) : Theme.popOutMs); easing.type: Easing.OutCubic }
+        }
+    }
+    Behavior on scale { enabled: !HubState.snap; NumberAnimation { duration: current ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: current ? Theme.enterCurve : Theme.exitCurve } }
 }
