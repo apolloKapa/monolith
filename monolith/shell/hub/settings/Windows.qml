@@ -11,7 +11,7 @@ ColumnLayout {
     property var v: ({})
     function reload() {
         NiriConf.read(["layout|gaps", "layout/border|on", "layout/border|off", "layout/border|width", "layout/focus-ring|off", "layout/focus-ring|on",
-                       "window-rule|geometry-corner-radius"], r => sec.v = r);
+                       "window-rule|geometry-corner-radius", "recent-windows|off", "recent-windows|open-delay-ms", "recent-windows/previews|max-height"], r => sec.v = r);
     }
     Component.onCompleted: reload()
     function has(k) { return v[k] !== null && v[k] !== undefined; }
@@ -56,5 +56,34 @@ ColumnLayout {
     SettingRow {
         icon: "animation"; title: "Window animations"; desc: "How fast windows, workspaces and the overview move: in Appearance → Animation speeds"
         Button { text: "Open"; icon: "arrow_forward"; onClicked: HubState.openSettings("animations") }
+    }
+
+    // ── Alt+Tab: niri's window switcher (live previews), in the shell's look (core/AltTab) ──
+    SectionHead { text: "Alt+Tab"; visible: !Niri.hyprland }
+    SettingRow {
+        visible: !Niri.hyprland
+        icon: "tab"; title: "Window switcher"; desc: "Alt+Tab (Alt+Shift+Tab back) shows your windows, most recent first, with live previews; let go of Alt to switch"
+        Toggle { checked: !sec.has("recent-windows|off"); onToggled: on => { const c = Object.assign({}, sec.v); c["recent-windows|off"] = on ? null : ""; sec.v = c; NiriConf.flag("recent-windows", "off", !on); } }
+    }
+    SettingRow {
+        visible: !Niri.hyprland && !sec.has("recent-windows|off")
+        key: "alttab.theme"; def: true
+        icon: "palette"; title: "In the theme's look"; desc: "The chosen window is outlined in your accent colour, with your corners; it follows the wallpaper and theme"
+        Toggle { checked: Store.get("alttab.theme", true) !== false; onToggled: on => Store.set("alttab.theme", on) }
+    }
+    SettingRow {
+        visible: !Niri.hyprland && !sec.has("recent-windows|off")
+        icon: "photo_size_select_large"; title: "Preview size"; desc: "How big each window's preview is"
+        Segmented {
+            width: 300
+            opts: [["320", "Small"], ["480", "Medium"], ["640", "Large"]]
+            value: { const h = sec.num("recent-windows/previews|max-height", 480); return h <= 400 ? "320" : (h <= 560 ? "480" : "640"); }
+            onPicked: h => sec.put("recent-windows/previews", "max-height", h)
+        }
+    }
+    SettingRow {
+        visible: !Niri.hyprland && !sec.has("recent-windows|off")
+        icon: "timer"; title: "Show after"; desc: "A quick Alt+Tab just switches to the last window; held this long, the switcher shows"
+        NumberBox { from: 0; to: 1000; slideTo: 600; step: 10; unit: "ms"; value: sec.num("recent-windows|open-delay-ms", 150); onMoved: x => sec.put("recent-windows", "open-delay-ms", Math.round(x)) }
     }
 }
