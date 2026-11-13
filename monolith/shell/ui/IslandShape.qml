@@ -21,20 +21,30 @@ Item {
     readonly property real e: Math.max(0, Math.min(ear, height / 2))
     readonly property real rr: Math.max(0, Math.min(r, height - e, bodyW / 2))
 
+    // the shadow, under the body: a RectangularShadow (a shader), so the island can grow into a
+    // menu without its shape being rendered off-screen and blurred again on every frame (that
+    // made menus stutter and open late on older laptops). It runs up past the screen's edge, so
+    // only the sides and the round lower corners cast it.
+    // (cut off at the edge it hangs from: a shape hanging under the bar mustn't shade the bar)
+    Item {
+        x: -80; y: 0
+        width: s.width + 160; height: s.height + 80
+        clip: true
+        visible: s.shadow && Theme.shadowOn && s.height > 1
+        transform: Scale { origin.y: s.height / 2; yScale: s.flipped ? -1 : 1 }
+        RectangularShadow {
+            x: 80 + s.e; y: -s.rr - 40
+            width: s.bodyW; height: s.height + s.rr + 40
+            radius: s.rr
+            blur: Theme.shadowPx
+            offset: Qt.vector2d(Theme.shadowX, Theme.shadowY)
+            color: Theme.shadowColor
+        }
+    }
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer
         transform: Scale { origin.y: s.height / 2; yScale: s.flipped ? -1 : 1 }
-        // only the shape goes through the shadow effect: what sits in the island (the bar, a
-        // menu, a notification) is drawn directly, so it stays sharp
-        layer.enabled: s.shadow
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: Theme.shadowBlur
-            shadowColor: Theme.shadowColor
-            shadowVerticalOffset: Theme.shadowY
-            shadowHorizontalOffset: Theme.shadowX
-        }
         ShapePath {
             fillColor: s.fill
             // the style's outline (none by default)

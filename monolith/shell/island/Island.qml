@@ -442,7 +442,10 @@ PanelWindow {
                 }
 
                 // the pages: built on the screen the island is open on, each when first opened,
-                // and let go once it closes
+                // and kept (hidden) for a few minutes after it closes, so opening it again doesn't
+                // build it all over again (on an older laptop that was a good part of a second
+                // before anything moved). Search, the launcher, is built soon after the shell
+                // starts and kept.
                 Item {
                     id: pages
                     y: win.compact ? field.height + 8 : tabs.y + tabs.height + 10
@@ -461,14 +464,18 @@ PanelWindow {
                             // the room there is (a page's own height was used as is, so on a
                             // short screen it was laid out taller than the card and spilled out)
                             height: pages.height
-                            active: win.here && win.open && (seen || HubState.page === modelData)
+                            active: win.here && (seen || (win.open && HubState.page === modelData))
                             source: "../hub/" + modelData.charAt(0).toUpperCase() + modelData.slice(1) + "Page.qml"
                             onLoaded: {
                                 Qt.callLater(() => pl.seen = true);
                                 if (item.hasOwnProperty("query")) item.query = Qt.binding(() => query.text);
                                 if (modelData === "search") item.done.connect(() => { query.text = ""; HubState.close(); });
                             }
-                            Connections { target: win; function onOpenChanged() { if (!win.open) pl.seen = false; } }
+                            readonly property bool keep: modelData === "search"
+                            Connections { target: win; function onOpenChanged() { if (win.open) letGo.stop(); else if (!pl.keep) letGo.restart(); } }
+                            Timer { id: letGo; interval: 5 * 60 * 1000; onTriggered: if (!win.open) pl.seen = false }
+                            // the launcher ready before it's first needed (when the shell has settled)
+                            Timer { interval: 4000; running: pl.keep && win.here; onTriggered: pl.seen = true }
                         }
                     }
                 }
@@ -587,8 +594,10 @@ PanelWindow {
         function onRefocus() { if (win.shown) query.forceActiveFocus(); }
     }
 
-    // blur behind it (Theme → Effects), shaped like it
-    BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
+    // blur behind it (Theme → Effects), shaped like it. Not over a fullscreen app: blurring a
+    // game or a video under the menu on every frame made menus late there on older laptops
+    readonly property bool overFullscreen: Niri.fullscreenOn(modelData.name)
+    BackgroundEffect.blurRegion: Theme.blur && !overFullscreen ? blurShape : null
     Region {
         id: blurShape
         // (a screen with the bar turned off has no bar to blur behind: only its open menu)

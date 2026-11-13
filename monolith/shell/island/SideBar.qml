@@ -110,7 +110,7 @@ PanelWindow {
     }
 
     // blur behind it (Theme → Effects), shaped like it (the Frame's band blurs behind itself)
-    BackgroundEffect.blurRegion: Theme.blur && !win.tucked && Theme.barStyle !== "modular" && !(Theme.barStyle === "frame" && Theme.frameBand) ? blurShape : null
+    BackgroundEffect.blurRegion: Theme.blur && !Niri.fullscreenOn(modelData.name) && !win.tucked && Theme.barStyle !== "modular" && !(Theme.barStyle === "frame" && Theme.frameBand) ? blurShape : null
     // (cut exactly like what's drawn: a square blur showed as a lighter patch in rounded corners)
     Region {
         id: blurShape

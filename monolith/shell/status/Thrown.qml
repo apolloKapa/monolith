@@ -16,7 +16,16 @@ PanelWindow {
     // "held", and the ones already thrown never got their let-go again: several thrown at once
     // left frozen cards on the screen.) Only rows that came or went change now.
     ListModel { id: rows }
+    // (raised again when a swipe starts, if an Overlay window went up over it since: see below)
     onMineChanged: {
+        if (buried && mine.length > 0 && rows.count === 0) {
+            buried = false; up = false;
+            Qt.callLater(() => { win.up = true; win.sync(); });
+            return;
+        }
+        sync();
+    }
+    function sync() {
         const ids = mine.map(f => f.id);
         for (let i = rows.count - 1; i >= 0; i--)
             if (ids.indexOf(rows.get(i).fid) === -1) rows.remove(i);
@@ -29,14 +38,16 @@ PanelWindow {
     WlrLayershell.namespace: "monolith-thrown"
     WlrLayershell.layer: WlrLayer.Overlay
     // back on top of the Overlay windows when one went up over it (HubState.raised): mapped
-    // again, it's the newest. Only while nothing is in flight (it's empty and click-through then).
+    // again, it's the newest. That's done when the next swipe starts, not when the other window
+    // goes up: it used to be remade (a full-screen surface on every screen) each time a menu
+    // opened, right as the menu started moving, which made menus late on older laptops.
     property bool up: true
+    property bool buried: false
     visible: up
     Connections {
         target: HubState
-        function onRaisedChanged() { if (win.mine.length === 0 && rows.count === 0) restack.restart(); }
+        function onRaisedChanged() { win.buried = true; }
     }
-    Timer { id: restack; interval: 30; onTriggered: { if (win.mine.length || rows.count) return; win.up = false; Qt.callLater(() => win.up = true); } }
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"

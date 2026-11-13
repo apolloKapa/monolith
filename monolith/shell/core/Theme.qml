@@ -225,6 +225,8 @@ Singleton {
     // the colour shadows are made of (a theme colour by name, or any #rrggbb)
     readonly property color shadowBase: shadowTint === "accent" ? accent : (shadowTint === "ink" ? text : (/^#[0-9a-fA-F]{6}$/.test(shadowTint) ? shadowTint : "#000000"))
     readonly property real shadowBlur: hardShadow > 0 ? 0 : shadowSoftness
+    // the same softness for RectangularShadow (its blur is in pixels: MultiEffect's blurMax is 32, but its blur looked tighter than that)
+    readonly property real shadowPx: shadowBlur * 22
     readonly property color shadowColor: !shadowOn ? "transparent" : (hardShadow > 0 ? text : Qt.alpha(shadowBase, Math.min(1, (dark ? 0.55 : 0.28) * shadowStrength)))
     readonly property real shadowY: hardShadow > 0 ? hardShadow : shadowDistance
     readonly property real shadowX: hardShadow > 0 ? hardShadow : shadowSideways
