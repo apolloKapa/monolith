@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fastfetch presets (Settings -> Fastfetch). Presets are fastfetch configs in
+"""Fastfetch presets (Settings -> Appearance -> Fastfetchlings). Presets are fastfetch configs in
 ~/.config/monolith/fastfetch/NAME.jsonc; {{colors.ROLE.VARIANT.hex}} (.red, .green, .blue too) or {{ROLE}} in them becomes the
 shell's colour (as the shell shows it: the wallpaper's or a colour theme's). The one in use is written to fastfetch's own config.
 
@@ -13,6 +13,7 @@ shell's colour (as the shell shows it: the wallpaper's or a colour theme's). The
     fastfetch.py picsize NAME small|medium|large          the picture's size
     fastfetch.py text NAME         back to the text logo NAME had before its picture
     fastfetch.py support           "yes" if this fastfetch can show pictures at all
+    fastfetch.py seed              copy in the bundled presets that are missing (list does it too)
 """
 import html
 import json
@@ -31,7 +32,59 @@ STATE_DIR = (os.environ.get("XDG_STATE_HOME") or HOME + "/.local/state") + "/mon
 # the shell's colours as it shows them (the wallpaper's, or a colour theme's); the wallpaper
 # palette only until the shell has written that
 PALETTE = STATE_DIR + "/shell-palette.json" if os.path.exists(STATE_DIR + "/shell-palette.json") else STATE_DIR + "/next-palette.json"
-HEADER = '// Monolith: the "%s" preset with the shell\'s colours, rewritten when they change.\n// Change it in Settings -> Fastfetch (%s), not here.\n'
+HEADER = '// Monolith: the "%s" preset with the shell\'s colours, rewritten when they change.\n// Change it in Settings -> Appearance -> Fastfetchlings (%s), not here.\n'
+
+
+# the presets Monolith comes with (Classic, Minimal, Monolith, Side), copied into DIR the first
+# time they're missing there. DIR/.seeded remembers which were copied, so one you delete stays
+# deleted. (The rewritten shell had lost them: a new install showed no presets at all.)
+BUNDLED = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "fastfetch")
+SEEDED = DIR + "/.seeded"
+# the fallback when the bundled ones can't be found and there are no presets at all
+FALLBACK = """// Monolith: a short list in your theme colours (built in: the bundled presets were missing)
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
+  "logo": { "type": "small", "padding": { "top": 1, "right": 3 }, "color": { "1": "{{primary}}", "2": "{{tertiary}}" } },
+  "display": { "separator": "  ", "color": { "keys": "{{primary}}", "output": "{{on_surface}}" } },
+  "modules": ["title", "separator", "os", "kernel", "wm", "shell", "uptime", "memory", "break", { "type": "colors", "symbol": "circle" }]
+}
+"""
+
+
+def seed():
+    os.makedirs(DIR, exist_ok=True)
+    try:
+        done = set(open(SEEDED).read().split("\n"))
+    except OSError:
+        done = set()
+    added = []
+    try:
+        bundled = sorted(f for f in os.listdir(BUNDLED) if f.endswith(".jsonc"))
+    except OSError:
+        bundled = []
+    for f in bundled:
+        if f in done:
+            continue
+        if not os.path.exists(os.path.join(DIR, f)):
+            try:
+                shutil.copy(os.path.join(BUNDLED, f), os.path.join(DIR, f))
+            except OSError:
+                continue
+        added.append(f)
+    if added:
+        with open(SEEDED, "a") as fh:
+            fh.write("".join(f + "\n" for f in added))
+    # nothing bundled and nothing of your own: one built-in preset, so the page isn't empty
+    if not any(f.endswith(".jsonc") for f in os.listdir(DIR)):
+        open(os.path.join(DIR, "Monolith.jsonc"), "w").write(FALLBACK)
+    # nothing in use yet and no fastfetch config of your own: the Monolith one (or the first)
+    if not active() and not os.path.exists(TARGET):
+        names = sorted(f[:-6] for f in os.listdir(DIR) if f.endswith(".jsonc"))
+        if names:
+            try:
+                write_target("Monolith" if "Monolith" in names else names[0])
+            except OSError:
+                pass
 
 
 def presets():
@@ -447,6 +500,7 @@ def main():
     if not a:
         sys.exit(__doc__)
     if a[0] == "list":
+        seed()
         cur = active()
         items = []
         for n in presets():
@@ -490,6 +544,8 @@ def main():
         set_size(a[1], a[2])
     elif a[0] == "text":
         back_to_text(a[1])
+    elif a[0] == "seed":
+        seed()
     elif a[0] == "support":
         print("yes" if image_support() else "no")
 

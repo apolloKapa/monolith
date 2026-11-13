@@ -32,19 +32,34 @@ Item {
         clip: true
         visible: s.shadow && Theme.shadowOn && s.height > 1
         transform: Scale { origin.y: s.height / 2; yScale: s.flipped ? -1 : 1 }
-        RectangularShadow {
+        // (loaded by URL: an older Qt doesn't have it, see RectShadow.qml)
+        Loader {
             x: 80 + s.e; y: -s.rr - 40
             width: s.bodyW; height: s.height + s.rr + 40
-            radius: s.rr
-            blur: Theme.shadowPx
-            offset: Qt.vector2d(Theme.shadowX, Theme.shadowY)
-            color: Theme.shadowColor
+            active: Theme.rectShadows
+            source: "RectShadow.qml"
+            onLoaded: {
+                item.radius = Qt.binding(() => s.rr);
+                item.blur = Qt.binding(() => Theme.shadowPx);
+                item.offset = Qt.binding(() => Qt.vector2d(Theme.shadowX, Theme.shadowY));
+                item.color = Qt.binding(() => Theme.shadowColor);
+            }
         }
     }
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer
         transform: Scale { origin.y: s.height / 2; yScale: s.flipped ? -1 : 1 }
+        // on a Qt without RectangularShadow: the shape casts its shadow the old way (blurred
+        // off-screen, slower while it changes size)
+        layer.enabled: s.shadow && !Theme.rectShadows
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowBlur: Theme.shadowBlur
+            shadowColor: Theme.shadowColor
+            shadowVerticalOffset: Theme.shadowY
+            shadowHorizontalOffset: Theme.shadowX
+        }
         ShapePath {
             fillColor: s.fill
             // the style's outline (none by default)

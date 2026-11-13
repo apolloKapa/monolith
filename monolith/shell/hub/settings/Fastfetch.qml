@@ -40,7 +40,7 @@ ColumnLayout {
     }
 
     SettingRow {
-        icon: "terminal"; title: "Terminal greeting (fastfetch)"; desc: "The system info a new terminal shows (fastfetch). Pick a preset below; New makes your own. It takes the wallpaper's colours unless you keep fastfetch's own"
+        icon: "terminal"; title: "Fastfetchlings"; desc: "The system info a new terminal shows (fastfetch). Pick a preset below; New makes your own. It takes the wallpaper's colours unless you keep fastfetch's own"
         Row {
             spacing: 6
             Button { text: "New"; icon: "add"; onClicked: sec.run(["new"]) }
@@ -182,7 +182,8 @@ ColumnLayout {
                     x: 12 + (pic.visible ? pic.x - 12 + pic.width + 3 * cellFm.averageCharacterWidth : 0)
                     y: 12
                     textFormat: Text.RichText
-                    text: modelData.html
+                    // (no output: fastfetch missing, or the preset doesn't load)
+                    text: modelData.html || "<span style='color:" + Theme.subtext + "'>No preview: fastfetch isn't installed, or this preset has an error (Edit it to see)</span>"
                     color: Theme.text
                     font.family: "monospace"
                     font.pixelSize: 11

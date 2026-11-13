@@ -227,6 +227,18 @@ Singleton {
     readonly property real shadowBlur: hardShadow > 0 ? 0 : shadowSoftness
     // the same softness for RectangularShadow (its blur is in pixels: MultiEffect's blurMax is 32, but its blur looked tighter than that)
     readonly property real shadowPx: shadowBlur * 22
+    // RectangularShadow (Qt 6.9+) is there: cards and the island draw their shadows with it. On an
+    // older Qt they fall back to blurring a copy of their shape (slower while they change size)
+    readonly property bool rectShadows: {
+        try {
+            const o = Qt.createQmlObject("import QtQuick; import QtQuick.Effects; RectangularShadow { visible: false }", theme, "rectShadowCheck");
+            o.destroy();
+            return true;
+        } catch (e) {
+            console.warn("Monolith: this Qt has no RectangularShadow (needs 6.9); shadows use the slower blur");
+            return false;
+        }
+    }
     readonly property color shadowColor: !shadowOn ? "transparent" : (hardShadow > 0 ? text : Qt.alpha(shadowBase, Math.min(1, (dark ? 0.55 : 0.28) * shadowStrength)))
     readonly property real shadowY: hardShadow > 0 ? hardShadow : shadowDistance
     readonly property real shadowX: hardShadow > 0 ? hardShadow : shadowSideways

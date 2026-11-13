@@ -115,7 +115,7 @@ Small dropdowns also come out of the bar: notifications, sound, the tray's menus
 | Section | What's in it |
 |---|---|
 | General | you and the weather (your city or your connection's location), **profiles & backup** (save all settings under a name and switch, e.g. `monolith profile Gaming`; back up to a file and bring it back), updates and about |
-| Appearance | 17 styles (Material, Orbit, Liquid glass, Minimalist, Terminal, Brutal, Luxe, Poster, Bubbly, Paper, Arcade, OLED, Mainframe, Sakura, Fjord, Doodle, Shadow) and 96 colour themes, dark or light (apps can follow), font, icons, cursor, wallpaper, the **wallpaper playlist**, blur, opacity, shadows, grain, animation speed, other apps' colours (kitty, GTK, Qt), the terminal greeting (fastfetch) |
+| Appearance | 17 styles (Material, Orbit, Liquid glass, Minimalist, Terminal, Brutal, Luxe, Poster, Bubbly, Paper, Arcade, OLED, Mainframe, Sakura, Fjord, Doodle, Shadow) and 96 colour themes, dark or light (apps can follow), font, icons, cursor, wallpaper, the **wallpaper playlist**, blur, opacity, shadows, grain, animation speed, other apps' colours (kitty, GTK, Qt), Fastfetchlings (the terminal greeting: fastfetch presets with live previews) |
 | Bar | layout and modules, auto-hide, which screens have the bar and dock |
 | Menus & launcher | the launcher, where each menu opens |
 | Dock | position, size, auto-hide, magnify, pinned apps |

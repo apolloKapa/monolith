@@ -17,14 +17,23 @@ Item {
     property real radius: parent && parent.radius !== undefined ? parent.radius : 0
     // (liquid glass: the card's fill is nearly clear, so the shadow is cast by a solid copy)
     property color color: Theme.liquid ? Qt.alpha(Theme.frame, 1) : (parent && parent.color !== undefined ? parent.color : Theme.frame)
-    RectangularShadow {
+    // (loaded by URL: an older Qt doesn't have it, see RectShadow.qml)
+    Loader {
         anchors.fill: parent
-        visible: Theme.shadowOn
-        radius: cs.radius
-        blur: Theme.shadowPx
-        offset: Qt.vector2d(Theme.shadowX, cs.offsetY)
-        color: Theme.shadowColor
+        active: Theme.rectShadows && Theme.shadowOn
+        source: "RectShadow.qml"
+        onLoaded: {
+            item.radius = Qt.binding(() => cs.radius);
+            item.blur = Qt.binding(() => Theme.shadowPx);
+            item.offset = Qt.binding(() => Qt.vector2d(Theme.shadowX, cs.offsetY));
+            item.color = Qt.binding(() => Theme.shadowColor);
+        }
     }
-    // the card's fill under the card, as the shadow's source used to draw it
-    Rectangle { anchors.fill: parent; radius: cs.radius; color: cs.color }
+    // the card's fill under the card, as the shadow's source used to draw it; on a Qt without
+    // RectangularShadow it casts the shadow itself, the old way (blurred off-screen)
+    Rectangle {
+        anchors.fill: parent; radius: cs.radius; color: cs.color
+        layer.enabled: !Theme.rectShadows
+        layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: Theme.shadowBlur; shadowColor: Theme.shadowColor; shadowVerticalOffset: cs.offsetY; shadowHorizontalOffset: Theme.shadowX }
+    }
 }

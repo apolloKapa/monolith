@@ -84,6 +84,9 @@ deploy_dotfiles_extras() {
     ensure_bin_on_path
     setup_kitty_config "$project_root"
     setup_kitty_fastfetch
+    # the Fastfetchlings presets (Settings -> Appearance): the bundled ones that are missing, and
+    # the Monolith one in use when you have no fastfetch config of your own
+    command -v python3 >/dev/null && python3 "$SHELL_HOME/shell/scripts/fastfetch.py" seed >/dev/null 2>&1 || true
 }
 
 # kitty: Monolith's matugen writes ~/.config/kitty/colors.conf, but kitty only reads kitty.conf.
