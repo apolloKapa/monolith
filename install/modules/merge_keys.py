@@ -106,6 +106,17 @@ def is_direct(sub):
     return sub.startswith("!")
 
 
+# a key that is only a modifier (Super, Alt or Ctrl tapped on its own): another shell's launcher on
+# a tap of Super, say. It can't be carried over: on its own it fires on every press of Super, also
+# when Super is held for Super+1, Super+Q..., and the menu kept popping up. It's turned off, and
+# Monolith's key for the same thing (the launcher: Super+Space) goes on instead.
+LONE = re.compile(r"^(super|alt|ctrl|control|shift|meta|hyper)(_[lr])?$", re.I)
+
+
+def lone_modifier(key):
+    return bool(key) and bool(LONE.match(key[1]))
+
+
 def shellish(cmd):
     return bool(cmd) and bool(SHELL.search(cmd)) and "monolith" not in cmd
 
@@ -152,6 +163,11 @@ def merge_niri(cfg_dir, keymap, monolith, add_keys=True):
                 continue
             k = sig(m.group(1).split("+")[:-1], m.group(1).split("+")[-1])
             cmd = hk.command_of(words, monolith)
+            if lone_modifier((None, m.group(1).split("+")[-1])) and cmd and shellish(cmd):
+                lines[i] = re.match(r"\s*", line).group(0) + "// " + MARK + line.strip()
+                counts["off"] += 1
+                changed = True
+                continue
             if cmd and shellish(cmd):
                 sub = intent(cmd)
                 ind = re.match(r"\s*", line).group(0)
@@ -282,6 +298,12 @@ def merge_hypr(cfg_dir, keymap, monolith, fmt):
                 key = (mods.split(), m.group(4).strip())
                 cmd = m.group(6) if m.group(5).strip() == "exec" else None
             if again and not (cmd and shellish(cmd)):
+                continue
+            if key and lone_modifier(key) and cmd and (shellish(cmd) or "monolith" in cmd):
+                if not again:
+                    lines[i] = (m.group(1) or "") + c + MARK + line.strip()
+                    changed = True
+                    counts["off"] += 1
                 continue
             if cmd and shellish(cmd):
                 sub = intent(cmd)
