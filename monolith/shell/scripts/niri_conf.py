@@ -5,9 +5,13 @@ everything you wrote) as it is. niri reloads the file by itself.
     niri_conf.py set  FILE BLOCK KEY VALUE...   set `KEY VALUE...` inside BLOCK (added if missing)
     niri_conf.py flag FILE BLOCK KEY on|off     a line that is just `KEY` (like `off`, `tap`)
     niri_conf.py get  FILE BLOCK KEY            print the value, nothing if unset
+    niri_conf.py unset FILE BLOCK KEY           remove the KEY line (niri's default again)
 
     niri_conf.py json FILE BLOCK|KEY...         several values as JSON (null = unset, "" = a bare flag)
 
+A KEY can also be a small block (`window-open { duration-ms 150; curve "ease-out-expo"; }`):
+set writes it on one line, replacing it whether it was on one line or spread over several, and
+get gives it on one line ("{ duration-ms 150; curve ... }").
 BLOCK is a path of node headers split by '/', e.g. 'input/mouse' or 'output "DP-1"'; '-' is the
 top level. Values are written as given: quote strings yourself ('"us,de"').
 FILE can be niri's config folder (~/.config/niri): then the file that already has the block is
@@ -128,6 +132,18 @@ def pick_file(target, path, key=None):
     return main
 
 
+def key_end(lines, k):
+    """The last line of the KEY at line k: itself, or the closing brace of a block it opens."""
+    d, j = 0, k
+    while j < len(lines):
+        c = strip_comment(lines[j])
+        d += c.count("{") - c.count("}")
+        if d <= 0:
+            return j
+        j += 1
+    return k
+
+
 def value_of(lines, path, key):
     b = block_of(lines, path)
     if not b:
@@ -135,7 +151,14 @@ def value_of(lines, path, key):
     k = key_line(lines, *b, key)
     if k is None:
         return None
-    return strip_comment(lines[k]).strip()[len(key):].strip()
+    e = key_end(lines, k)
+    if e == k:
+        return strip_comment(lines[k]).strip()[len(key):].strip()
+    # a block over several lines: on one line, its statements split by ";"
+    first = strip_comment(lines[k]).strip()[len(key):].strip()
+    inner = [strip_comment(l).strip().rstrip(";") for l in lines[k + 1:e]]
+    inner = [x for x in inner if x]
+    return first.rstrip("{").strip() + ("{ " + "; ".join(inner) + "; }" if inner else "{ }")
 
 
 def main():
@@ -167,7 +190,10 @@ def main():
         if k is None:
             lines.insert(c, new)
         else:
-            lines[k] = new
+            lines[k:key_end(lines, k) + 1] = [new]
+    elif cmd == "unset":
+        if k is not None:
+            del lines[k:key_end(lines, k) + 1]
     elif cmd == "flag":
         on = args and args[0] == "on"
         if on and k is None:

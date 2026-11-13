@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import "../../core"
 import "../../ui"
 
-// Windows: niri's gaps, borders, focus ring, rounded corners and animation speed (written to
+// Windows: niri's gaps, borders, focus ring and rounded corners (written to
 // niri's config; niri applies them at once).
 ColumnLayout {
     id: sec
@@ -11,7 +11,7 @@ ColumnLayout {
     property var v: ({})
     function reload() {
         NiriConf.read(["layout|gaps", "layout/border|on", "layout/border|off", "layout/border|width", "layout/focus-ring|off", "layout/focus-ring|on",
-                       "window-rule|geometry-corner-radius", "animations|slowdown", "animations|off"], r => sec.v = r);
+                       "window-rule|geometry-corner-radius"], r => sec.v = r);
     }
     Component.onCompleted: reload()
     function has(k) { return v[k] !== null && v[k] !== undefined; }
@@ -52,12 +52,9 @@ ColumnLayout {
         // (windows are cut to the rounded shape too: clip-to-geometry)
         NumberBox { from: 0; to: 100; slideTo: 40; unit: "px"; value: sec.num("window-rule|geometry-corner-radius", 0); onMoved: x => { sec.put("window-rule", "geometry-corner-radius", x); sec.put("window-rule", "clip-to-geometry", "true"); } }
     }
+    // (window animations and their speeds: Appearance → Animation speeds)
     SettingRow {
-        icon: "animation"; title: "Window animations"
-        Toggle { checked: !sec.has("animations|off"); onToggled: on => { const c = Object.assign({}, sec.v); c["animations|off"] = on ? null : ""; sec.v = c; NiriConf.flag("animations", "off", !on); } }
-    }
-    SettingRow {
-        icon: "speed"; title: "Window animation speed"; desc: "niri's slowdown: lower is faster"
-        NumberBox { from: 0.05; to: 10; slideTo: 3; step: 0.05; decimals: 2; unit: "×"; value: sec.num("animations|slowdown", 1); onMoved: x => sec.put("animations", "slowdown", x.toFixed(2)) }
+        icon: "animation"; title: "Window animations"; desc: "How fast windows, workspaces and the overview move: in Appearance → Animation speeds"
+        Button { text: "Open"; icon: "arrow_forward"; onClicked: HubState.openSettings("animations") }
     }
 }

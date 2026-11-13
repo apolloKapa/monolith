@@ -9,6 +9,7 @@ Desktop 1.0 Desktop.qml
 Devices 1.0 Devices.qml
 Display 1.0 Display.qml
 Dock 1.0 Dock.qml
+Animations 1.0 Animations.qml
 Effects 1.0 Effects.qml
 Fastfetch 1.0 Fastfetch.qml
 General 1.0 General.qml

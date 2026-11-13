@@ -14,6 +14,7 @@ Singleton {
     signal changed()
 
     function set(block, key, value) { push(["set", nc.dir, block, key, String(value)]); }
+    function unset(block, key) { push(["unset", nc.dir, block, key]); }
     function flag(block, key, on) { push(["flag", nc.dir, block, key, on ? "on" : "off"]); }
     function quote(s) { return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\""; }
     function unquote(v) { return v === null || v === undefined ? "" : String(v).replace(/^"(.*)"$/, "$1"); }
