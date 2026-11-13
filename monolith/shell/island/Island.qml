@@ -150,7 +150,7 @@ PanelWindow {
         id: island
         bodyW: win.grown ? win.openW : (win.toastGrows ? Math.max(win.restW, 520) : win.restW)
         height: win.grown ? win.openH : (win.toastGrows ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
-        r: win.grown || win.toastGrows ? Theme.islandRadius : (Theme.fullBar ? (win.barShort ? Theme.islandRadius / 2 : 0) : Theme.barRound(height))
+        r: win.grown || win.toastGrows ? Theme.islandRadius + (win.grown ? win.blobT * 30 : 0) : (Theme.fullBar ? (win.barShort ? Theme.islandRadius / 2 : 0) : Theme.barRound(height))
         // a floating bar draws its own rounded background (Solid) or none at all (Modular: its
         // sections have pills), so the hanging shape stays empty
         // the Frame paints the bar's background itself (as part of one shape), so here it's empty
@@ -167,9 +167,10 @@ PanelWindow {
         flipped: win.bottom
         y: win.bottom ? win.height - height - (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
                       : (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
-        Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
-        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
-        Behavior on r { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
+        // (turning into another menu: it springs to the new size with a little overshoot, see blob)
+        Behavior on bodyW { NumberAnimation { duration: HubState.switching ? Theme.ms(620) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
+        Behavior on height { NumberAnimation { duration: HubState.switching ? Theme.ms(620) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
+        Behavior on r { enabled: !win.blobbing; NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
         Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
 
         // Solid: one rounded floating bar; Modular gets one too while a notification drops out
@@ -534,8 +535,8 @@ PanelWindow {
         height: Math.round(win.openH - Theme.islandH + win.pad)
         // morphs from one menu to the next while open; a menu opened fresh takes its own size
         // at once (it used to stretch from the last menu's size as it faded in)
-        Behavior on width { enabled: !HubState.snap; NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
-        Behavior on height { enabled: !HubState.snap; NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
+        Behavior on width { enabled: !HubState.snap; NumberAnimation { duration: HubState.switching ? Theme.ms(620) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
+        Behavior on height { enabled: !HubState.snap; NumberAnimation { duration: HubState.switching ? Theme.ms(620) : Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: HubState.switching ? Theme.springCurve : Theme.sizeCurve } }
         // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
         // "top" means by the bar: next to it at the bottom when the bar is there
         // (by a bar down the side: beside it, in the middle of that edge)
@@ -551,7 +552,8 @@ PanelWindow {
         readonly property real topRoom: win.bottom || win.side ? 16 : Theme.islandH + Theme.barMargin + 14
         readonly property real bottomRoom: win.bottom ? Theme.islandH + Theme.barMargin + 14 : 16
         y: onTop ? topRoom : (onBottom ? win.height - height - bottomRoom : Math.max(topRoom, Math.min(win.height - height - bottomRoom, Math.round((win.height - height) / 2))))
-        radius: Theme.islandRadius
+        // (puffs up rounder while it turns into another menu: see blob)
+        radius: Theme.islandRadius + win.blobT * Math.min(width, height) * 0.16
         color: Theme.frame
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
@@ -561,11 +563,15 @@ PanelWindow {
         readonly property real unfold: openArea.unfold
         opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : win.cardFade
         scale: Theme.fxUnfold ? 1 : Theme.popScale + (1 - Theme.popScale) * win.cardZoom
-        transform: Scale {
-            origin.x: floatCard.width / 2; origin.y: floatCard.height / 2
-            yScale: Theme.fxUnfold ? Math.max(0.006, floatCard.unfold) : 1
-            xScale: Theme.fxUnfold ? 0.96 + 0.04 * floatCard.unfold : 1
-        }
+        transform: [
+            Scale {
+                origin.x: floatCard.width / 2; origin.y: floatCard.height / 2
+                yScale: Theme.fxUnfold ? Math.max(0.006, floatCard.unfold) : 1
+                xScale: Theme.fxUnfold ? 0.96 + 0.04 * floatCard.unfold : 1
+            },
+            // the blob's wobble (squash and stretch)
+            Scale { origin.x: floatCard.width / 2; origin.y: floatCard.height / 2; xScale: win.jx; yScale: win.jy }
+        ]
         Rectangle {
             z: 100
             visible: Theme.fxUnfold && floatCard.unfold < 0.98 && floatCard.unfold > 0.001
@@ -586,6 +592,58 @@ PanelWindow {
 
     // open, or still shrinking back
     readonly property bool open: shown || wasOpen
+
+    // ── the blob: one open menu turning into another (Tab, a keybind, a bar button) ──
+    // The card springs to the new menu's size with a little overshoot, puffs up rounder for a
+    // moment, and wobbles like jelly: wider means a little shorter for a moment and the other way
+    // round, a couple of times, settling. (A menu growing out of the bar keeps its edge on the
+    // bar: it gets the overshoot and the puff, not the wobble.)
+    property real blobT: 0
+    readonly property bool blobbing: blobPuff.running
+    SequentialAnimation {
+        id: blobPuff
+        NumberAnimation { target: win; property: "blobT"; to: 1; duration: Theme.ms(180); easing.type: Easing.OutCubic }
+        NumberAnimation { target: win; property: "blobT"; to: 0; duration: Theme.ms(560); easing.type: Easing.InOutSine }
+    }
+    property real jx: 1
+    property real jy: 1
+    property real jvx: 0
+    property real jvy: 0
+    FrameAnimation {
+        id: wobble
+        onTriggered: {
+            const dt = Math.min(0.033, Math.max(0.001, frameTime));
+            const k = 220, c = 7;
+            win.jvx += (-k * (win.jx - 1) - c * win.jvx) * dt;
+            win.jvy += (-k * (win.jy - 1) - c * win.jvy) * dt;
+            win.jx = Math.max(0.86, Math.min(1.14, win.jx + win.jvx * dt));
+            win.jy = Math.max(0.86, Math.min(1.14, win.jy + win.jvy * dt));
+            if (Math.abs(win.jx - 1) + Math.abs(win.jy - 1) < 0.0008 && Math.abs(win.jvx) + Math.abs(win.jvy) < 0.01) {
+                win.jx = 1; win.jy = 1; win.jvx = 0; win.jvy = 0; stop();
+            }
+        }
+    }
+    function blob(ow, oh) {
+        if (!Theme.animOn) return;
+        const nw = docked ? openW : openW + 2 * pad, nh = docked ? openH : openH - Theme.islandH + pad;
+        const dw = (nw - ow) / Math.max(1, ow), dh = (nh - oh) / Math.max(1, oh);
+        blobPuff.restart();
+        if (!docked && Math.abs(dw) + Math.abs(dh) > 0.02) {
+            // pulled wider it stretches that way and gives in height, and the other way round
+            jvx += Math.max(-2, Math.min(2, 4 * dw - 2 * dh));
+            jvy += Math.max(-2, Math.min(2, 4 * dh - 2 * dw));
+            wobble.start();
+        }
+    }
+    Connections {
+        target: HubState
+        function onPageChanged() {
+            if (!win.shown || !HubState.switching) return;
+            // the size it has now; the new one once the bindings have caught up
+            const ow = win.docked ? island.bodyW : floatCard.width, oh = win.docked ? island.height : floatCard.height;
+            Qt.callLater(() => win.blob(ow, oh));
+        }
+    }
 
     // the floating card's fade and zoom (0 hidden … 1 shown). Run as animations rather than
     // Behaviors so a menu opened fresh (HubState.snap) starts from hidden: it carried on from
