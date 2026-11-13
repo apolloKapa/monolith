@@ -648,7 +648,10 @@ PanelWindow {
         // Unfold (Theme → Effects): instead, the whole card opens out of a thin bright line through
         // its middle and folds back into it
         readonly property real unfold: openArea.unfold
-        opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : win.cardFade
+        // (opening, the card itself is there at once, with its blur, and only zooms the last bit;
+        // its contents fade in. Faded in, there was always a moment of a half-there panel: over
+        // the sharp backdrop, or brighter than the end with the blur behind it. Closing, it fades)
+        opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (win.shown ? 1 : win.cardFade)
         scale: Theme.fxUnfold ? 1 : Theme.popScale + (1 - Theme.popScale) * win.cardZoom
         transform: Scale {
             origin.x: floatCard.width / 2; origin.y: floatCard.height / 2
@@ -786,10 +789,11 @@ PanelWindow {
         property bool held: false
         onPageReadyChanged: if (pageReady && win.shown) held = true
         Connections { target: win; function onShownChanged() { if (!win.shown) blurBox.held = false; } }
-        // (opening: once the card is all the way in. Switched on while the card was still part
-        // see-through, the bright blurred backdrop showed through it for a few frames and then
-        // dimmed as the card filled in: a flash every time a menu opened)
-        readonly property bool on: !win.docked && pageIn && (Theme.fxUnfold ? floatCard.unfold > 0.04 : (win.shown && floatCard.opacity > 0.97))
+        // (opening: from the very start, so the card fades in over a backdrop that's already
+        // blurred and the look only ever settles towards the final one. Switched on part-way, it
+        // jumped: on at 40 % the bright blur shone through the half-faded card (a flash); on at
+        // the end, the card came in over the sharp backdrop and the blur then swept in)
+        readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04 : win.shown)
         readonly property real part: Theme.fxUnfold ? Math.max(0.01, floatCard.unfold) : 1
         // the card zooms in and out from its own corner or side: the blur shrinks with it
         readonly property real k: floatCard.scale
