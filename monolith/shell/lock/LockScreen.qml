@@ -251,30 +251,40 @@ WlSessionLock {
                         property real level: 0
                         property bool done: false
                         readonly property bool open: held && (pressed || level > 0.001)
+                        property bool auto: false        // clicked: filling by itself (a second click cancels)
+                        property real downAt: 0
                         width: open ? lbt.implicitWidth + 56 : 44; height: 44
                         Behavior on width { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
                         color: Qt.alpha(Theme.frame, 0.75)
                         onPressedChanged: {
-                            if (!held || done) return;
+                            if (pressed) downAt = Date.now();
+                            if (!held || done || auto) return;
                             if (pressed) { lbDrain.stop(); lbFill.duration = Math.max(1, 1000 * (1 - level)); lbFill.restart(); }
                             else if (level < 1) { lbFill.stop(); lbDrain.duration = Theme.ms(320 * level + 1); lbDrain.restart(); }
                         }
-                        onClicked: if (!held) Power.run(modelData[1])
+                        onClicked: {
+                            if (!held) { Power.run(modelData[1]); return; }
+                            if (done) return;
+                            if (auto) { auto = false; lbFill.stop(); lbDrain.duration = Theme.ms(320 * level + 1); lbDrain.restart(); return; }
+                            if (Date.now() - downAt > 300) return;     // (letting go of a hold early: backing out)
+                            auto = true; lbDrain.stop(); lbFill.duration = Math.max(1, 1000 * (1 - level)); lbFill.restart();
+                        }
                         // a real second, whatever the animation speed
                         NumberAnimation {
                             id: lbFill
                             target: lb; property: "level"; to: 1
+                            // full, still held: it happens (see Controls.qml: checked when the fill finishes)
+                            onFinished: if (lb.held && !lb.done && (lb.pressed || lb.auto) && lb.level >= 0.999) { lb.done = true; lb.auto = false; Power.run(lb.modelData[1]); lbUndo.restart(); }
                         }
                         NumberAnimation { id: lbDrain; target: lb; property: "level"; to: 0; easing.type: Easing.OutCubic }
                         // full: it happens right then
-                        onLevelChanged: if (held && level >= 0.999 && !done && lbFill.running) { done = true; Power.run(modelData[1]); lbUndo.restart(); }
                         Timer { id: lbUndo; interval: 2500; onTriggered: { lb.done = false; lbDrain.duration = Theme.ms(320 * lb.level + 1); lbDrain.restart(); } }
                         Row {
                             id: lbFace
                             anchors.centerIn: parent
                             spacing: 8
                             Icon { name: lb.modelData[0]; size: 20; anchors.verticalCenter: parent.verticalCenter }
-                            Text { id: lbt; visible: lb.open; text: "Hold to " + lb.modelData[2].toLowerCase(); color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
+                            Text { id: lbt; visible: lb.open; text: lb.auto ? "Click to cancel" : "Hold to " + lb.modelData[2].toLowerCase(); color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
                         }
                         // the red, cut to the round button; the icon and name light on it
                         Item {

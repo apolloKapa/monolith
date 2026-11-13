@@ -342,9 +342,10 @@ RowLayout {
             }
         }
 
-        // power: each with its name under it; log out, restart and off have to be held for a
-        // second: red fills the button from the left while you hold, and letting go early
-        // drains it back
+        // power: each with its name under it; log out, restart and off take a second: hold the
+        // button, or click it once and it fills by itself; red fills it from the left and when
+        // it's full it happens. Letting go of a hold early, or clicking again while it fills by
+        // itself, drains it back (nothing happens)
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -365,31 +366,47 @@ RowLayout {
                     // how full it is (0..1) while held; full = it happens
                     property real level: 0
                     property bool done: false
+                    property bool auto: false            // clicked: filling by itself
                     Layout.fillWidth: true
                     Layout.preferredHeight: 64
                     Rise { delay: 200 + pb.index * 45 }
                     radius: Theme.corner(56, 4)
                     color: risky ? Qt.alpha(Theme.danger, hovered ? 0.3 : 0.18) : (hovered ? Theme.control : Theme.containerHigh)
+                    property real downAt: 0
                     onPressedChanged: {
-                        if (!held || done) return;
+                        if (pressed) downAt = Date.now();
+                        if (!held || done || auto) return;
                         // (each run's length is worked out when it starts: bound to the level it
                         // changes, the animation never reported finishing)
                         if (pressed) { draining.stop(); filling.duration = Math.max(1, 1000 * (1 - level)); filling.restart(); }
                         else if (level < 1) { filling.stop(); draining.duration = Theme.ms(320 * level + 1); draining.restart(); }
                     }
                     onClicked: {
-                        if (held) { if (!done) kick.restart(); return; }
+                        if (held) {
+                            if (done) return;
+                            // a click: it fills by itself; a second click while it does: cancelled
+                            if (auto) { auto = false; filling.stop(); draining.duration = Theme.ms(320 * level + 1); draining.restart(); return; }
+                            // (only a quick click: letting go of a hold early is backing out)
+                            if (Date.now() - downAt > 300) return;
+                            auto = true; draining.stop(); filling.duration = Math.max(1, 1000 * (1 - level)); filling.restart();
+                            return;
+                        }
                         go.restart();
                         modelData[2]();
                     }
                     // a real second, whatever the animation speed (Theme → Effects)
+                    // full (the second is up, still held): it happens right then. (Checked when the
+                    // fill finishes: the last step to full lands as the animation stops, so a check
+                    // on the level "while running" missed it and nothing happened)
                     NumberAnimation {
                         id: filling
                         target: pb; property: "level"; to: 1
+                        onFinished: pb.fire()
                     }
+                    function fire() { if (held && !done && (pressed || auto) && level >= 0.999) { done = true; auto = false; go.restart(); modelData[2](); undo.restart(); } }
                     NumberAnimation { id: draining; target: pb; property: "level"; to: 0; easing.type: Easing.OutCubic }
                     // full: it happens right then, while you're still holding
-                    onLevelChanged: if (held && level >= 0.999 && !done && filling.running) { done = true; go.restart(); modelData[2](); undo.restart(); }
+
                     // (log out / an action that didn't happen: the button comes back)
                     Timer { id: undo; interval: 2500; onTriggered: { pb.done = false; draining.duration = Theme.ms(320 * pb.level + 1); draining.restart(); } }
 
@@ -459,7 +476,7 @@ RowLayout {
                             id: faceLabel
                             anchors.horizontalCenter: parent.horizontalCenter
                             y: 39
-                            text: pb.held && !pb.done && (pb.pressed || pb.level > 0.001) ? "Hold…" : pb.modelData[1]
+                            text: pb.held && !pb.done && pb.auto ? "Cancel" : (pb.held && !pb.done && (pb.pressed || pb.level > 0.001) ? "Hold…" : pb.modelData[1])
                             font.pixelSize: Theme.sizeSmall
                             color: pb.risky ? Theme.danger : Theme.subtext
                         }
