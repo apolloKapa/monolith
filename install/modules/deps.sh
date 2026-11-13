@@ -71,6 +71,14 @@ KEYBIND_PKGS=(
 
 OPT_KEYBIND_APPS=true
 
+# the desktop Monolith runs on: niri (its own setup) or Hyprland (Monolith takes over as its shell,
+# see hyprland.sh). Guessed: Hyprland if you're in it now, or Monolith already runs there, or it's
+# installed and niri isn't
+guess_desktop() {
+    if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ] || hypr_switched \
+        || { hypr_present && ! command -v niri >/dev/null 2>&1; }; then echo hyprland; else echo niri; fi
+}
+
 FAILED_PKGS=()
 
 # reads a package list file (one per line, # comments allowed)
@@ -91,9 +99,12 @@ resolve_pkg() {
 target_packages() {
     local project_root="$1" p
     for p in "${REQUIRED_PKGS[@]}"; do echo "$p"; done
+    # (Hyprland as the desktop: no niri, its Xwayland helper or its portal; Hyprland brings its own)
+    local skip=" "
+    [ "$DESKTOP" = hyprland ] && skip=" niri xwayland-satellite xdg-desktop-portal-gnome "
     if [ "$OPT_KEYBIND_APPS" = true ]; then
-        for p in "${KEYBIND_PKGS[@]}"; do resolve_pkg "$p"; done
-    else
+        for p in "${KEYBIND_PKGS[@]}"; do [[ "$skip" == *" $p "* ]] || resolve_pkg "$p"; done
+    elif [ "$DESKTOP" != hyprland ]; then
         echo niri
     fi
     if [ "$OPT_SDDM" = true ]; then sddm_packages; fi

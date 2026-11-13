@@ -193,6 +193,25 @@ EOF
 }
 
 # "Monolith Settings" and "AppImages" in the app launcher
+# the `monolith` command (in ~/.local/bin) works when typed: that folder on PATH for bash, zsh
+# and fish (Arch's shells don't add it). One marked line per file, only if it isn't there yet.
+# (Compositor configs call Monolith by its full path, so they never depend on this.)
+ensure_local_bin_path() {
+    local line='[ -d "$HOME/.local/bin" ] && case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$HOME/.local/bin:$PATH" ;; esac  # added by Monolith'
+    local f
+    for f in "$HOME/.bashrc" "$HOME/.zshrc"; do
+        # (bash always; zsh when it's there)
+        [ "$f" = "$HOME/.zshrc" ] && ! command -v zsh >/dev/null 2>&1 && [ ! -f "$f" ] && continue
+        [ -f "$f" ] && grep -q "added by Monolith" "$f" && continue
+        printf '\n%s\n' "$line" >> "$f"
+    done
+    if command -v fish >/dev/null 2>&1; then
+        mkdir -p "$HOME/.config/fish/conf.d"
+        [ -f "$HOME/.config/fish/conf.d/monolith.fish" ] || \
+            printf '# added by Monolith: the monolith command\nfish_add_path -g %s/.local/bin\n' "$HOME" > "$HOME/.config/fish/conf.d/monolith.fish"
+    fi
+}
+
 install_desktop_entry() {
     local apps_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
     mkdir -p "$apps_dir"

@@ -187,7 +187,7 @@ The installer reads displays from the running niri. If you install from a TTY, n
 
 The shell also runs on [Hyprland](https://hyprland.org). It notices by itself (Hyprland sets `HYPRLAND_INSTANCE_SIGNATURE`) and reads workspaces, windows, the focused screen and the keyboard layout from Quickshell's Hyprland module instead of niri. Window switching and closing, workspaces, layout switching, turning screens off when idle and logging out use Hyprland's dispatchers.
 
-When Hyprland is on the PC, the installer asks whether to use Monolith as the shell there too (the answer is no unless you type `y`). Or run `monolith hyprland on` any time. It:
+The installer's first menu line, **Desktop**, picks niri or Hyprland (it starts on Hyprland when you run it from a Hyprland session). With Hyprland it doesn't install or set up niri; instead Monolith becomes Hyprland's shell. On niri you can still do that later with `monolith hyprland on`. Either way it:
 
 - backs up `~/.config/hypr` to `~/.config/hypr.before-monolith`
 - turns off (comments out, marked `monolith-off:`) only the lines that start Serpantinum or call it; Serpantinum itself stays installed

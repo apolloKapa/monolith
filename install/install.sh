@@ -91,6 +91,7 @@ TARGET_VERSION="$(repo_version "$PROJECT_ROOT")"
 TARGET_COMMIT="$(repo_commit "$PROJECT_ROOT")"
 
 bootstrap_installer_deps
+DESKTOP="$(guess_desktop)"
 
 
 if [ "$UPDATE_ONLY" = true ]; then
@@ -119,16 +120,24 @@ pgrep -f 'quickshell -p [^ ]*/quickshell/Shell\.qml' >/dev/null && SHELL_WAS_RUN
 pkill -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null || true
 command -v monolithd >/dev/null 2>&1 && monolithd stop >/dev/null 2>&1 || true
 deploy_shell "$PROJECT_ROOT"
+ensure_local_bin_path
 install_desktop_entry "$PROJECT_ROOT"
 deploy_dotfiles_extras "$PROJECT_ROOT"
 setup_pam_service
 
+if [ "$DESKTOP" = hyprland ]; then
+    # Monolith as Hyprland's shell (backs up ~/.config/hypr; `monolith hyprland off` undoes it)
+    step "Hyprland"
+    hypr_switch || true
+    upgrade_local_bin_commands
+else
 step "niri"
 setup_niri_config "$PROJECT_ROOT" "$NIRI_MODE"
 # screenshot binds -> Monolith's screenshot tool, and let its keys (e.g. Meta+C copy) through niri
 upgrade_screenshot_binds "$NIRI_DIR/config/keybinds.kdl" >/dev/null
 upgrade_rofi_binds "$NIRI_DIR/config/keybinds.kdl"
 upgrade_local_bin_commands
+fi
 # an older config (the classic shell's monolithd, its zoom script) moves over to this shell
 "$BIN_DIR/monolith" migrate
 
@@ -151,20 +160,6 @@ share_with_other_shell
 step "Services"
 setup_services
 write_version_state "$PROJECT_ROOT"
-
-# Hyprland on this PC: Monolith can be its shell too, but only if you say so (it changes
-# ~/.config/hypr; a backup is kept and `monolith hyprland off` undoes it)
-if [ "$UPDATE_ONLY" != true ] && hypr_present && ! hypr_switched && [ "$(hypr_kind)" != none ] \
-        && { : < /dev/tty; } 2>/dev/null; then
-    printf "\n%s%sHyprland is on this PC.%s Use Monolith as the shell there too?\n" "$BOLD" "$C_CYAN" "$RESET"
-    other_shell_installed && printf "  This turns off Serpantinum's start line and keys in ~/.config/hypr (Serpantinum stays installed).\n"
-    printf "  Your Hyprland config is backed up first; %smonolith hyprland off%s puts it back.\n" "$BOLD" "$RESET"
-    hypr_answer=""
-    read -r -p "  [y] yes   [N] no, leave Hyprland as it is: " hypr_answer < /dev/tty || true
-    if [[ "$hypr_answer" =~ ^[Yy] ]]; then
-        hypr_switch && HYPR_SWITCHED=true
-    fi
-fi
 
 # switch over right away when we're inside a niri session (no reboot needed). niri only runs
 # spawn-at-startup at login, so a fresh install has to start the shell itself. In any other

@@ -318,14 +318,23 @@ run_installer_ui() {
             *)      wp_label="${DIM}[none]${RESET}" ;;
         esac
 
+        local desk_label
+        [ "$DESKTOP" = hyprland ] \
+            && desk_label="${C_GREEN}[Hyprland]${RESET} ${DIM}(Monolith replaces its shell, backup kept)${RESET}" \
+            || desk_label="${C_GREEN}[niri]${RESET}"
         local labels=(
+            "Desktop $desk_label"
             "Packages overview"
             "Apps for the keybinds (kitty, librewolf, thunar, mission center) $(on_off "$OPT_KEYBIND_APPS")"
-            "niri config (keybinds, displays, workspaces) $niri_label"
-            "Login screen (SDDM theme) $(on_off "$OPT_SDDM")"
-            "Wallpapers $wp_label"
         )
-        local actions=(packages keybind_apps niri sddm wallpapers)
+        local actions=(desktop packages keybind_apps)
+        # (niri's own config only matters on niri)
+        if [ "$DESKTOP" != hyprland ]; then
+            labels+=("niri config (keybinds, displays, workspaces) $niri_label")
+            actions+=(niri)
+        fi
+        labels+=("Login screen (SDDM theme) $(on_off "$OPT_SDDM")" "Wallpapers $wp_label")
+        actions+=(sddm wallpapers)
         if [ "$INSTALL_STATE" = current ]; then
             labels+=("${BOLD}${C_GREEN}Update${RESET}" "${BOLD}${C_YELLOW}Reinstall (fresh settings)${RESET}" "${DIM}Exit${RESET}")
             actions+=(install reinstall exit)
@@ -360,6 +369,8 @@ run_installer_ui() {
         done
 
         case "$chosen" in
+            desktop) DESKTOP=$([ "$DESKTOP" = hyprland ] && echo niri || echo hyprland)
+                     cursor=0; printf "\033[2J\033[H" ;;
             packages) show_package_overview ;;
             keybind_apps) OPT_KEYBIND_APPS=$([ "$OPT_KEYBIND_APPS" = true ] && echo false || echo true) ;;
             niri) NIRI_MODE=$([ "$NIRI_MODE" = replace ] && echo keep || echo replace) ;;
@@ -420,16 +431,18 @@ draw_completion_screen() {
         for fp in "${FAILED_PKGS[@]}"; do printf "    - %s%s%s\n" "$C_YELLOW" "$fp" "$RESET"; done
         printf "\n"
     fi
-    if [ "$MONOLITH_STARTED" = true ]; then
+    if [ "$DESKTOP" = hyprland ]; then
+        printf "  Log out of %sHyprland%s and back in: Monolith starts there instead of your old shell.\n" "$BOLD" "$RESET"
+        printf "  Super+D opens the launcher, Super+B the control center. %smonolith hyprland off%s undoes the switch.\n" "$BOLD" "$RESET"
+    elif [ "$MONOLITH_STARTED" = true ]; then
         printf "  Monolith is running now. Next time you log in, pick %sniri%s for the Monolith keybinds and layout.\n" "$BOLD" "$RESET"
+        printf "  Super+Space opens the hub: search, settings and everything else.\n"
     else
         printf "  Log in to %sniri%s and Monolith starts by itself.\n" "$BOLD" "$RESET"
+        printf "  Super+Space opens the hub: search, settings and everything else.\n"
     fi
-    printf "  Super+Space opens the hub: search, settings and everything else.\n"
-    # Hyprland is here too
-    if [ "$HYPR_SWITCHED" = true ]; then
-        printf "  On %sHyprland%s Monolith starts from your next login there too (%smonolith hyprland off%s undoes it).\n" "$BOLD" "$RESET" "$BOLD" "$RESET"
-    elif hypr_present && ! hypr_switched; then
+    # niri chosen, Hyprland here too
+    if [ "$DESKTOP" != hyprland ] && hypr_present && ! hypr_switched; then
         printf "  To use Monolith on Hyprland too: %smonolith hyprland on%s (backs up ~/.config/hypr first).\n" "$BOLD" "$RESET"
     fi
     printf "  Run %smonolith installer%s any time to update or change these choices.\n\n" "$BOLD" "$RESET"
