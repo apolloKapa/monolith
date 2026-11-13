@@ -143,20 +143,18 @@ _hypr_turn_off() {
     # another shell's keys and start-up lines (its bar, notifications, wallpaper) go first, whatever
     # shell it is (the keys come back as Monolith's in Monolith's file)
     [ -n "$(hypr_keys_source)" ] && python3 "$HYPR_MODULES/merge_keys.py" hypr "$HYPR_DIR" "$(hypr_keys_source)" "$HOME/.local/bin/monolith" "$kind" >/dev/null 2>&1
-    while IFS= read -r -d '' f; do
-        case "$(basename "$f")" in monolith.lua|monolith.conf) continue ;; esac
-        # (only lines that aren't already comments)
-        sed -i -E "/^[[:space:]]*(--|#)/! { /serpantinumd?([^a-zA-Z_-]|$)/ s/^([[:space:]]*)/\1${c}${HYPR_MARK}/ }" "$f"
-        # Monolith's own key layout: every other key goes too (it would fire alongside), except
-        # mouse drags and gestures, which Monolith's layout doesn't have
-        if [ "$(_hypr_keys_choice)" = monolith ]; then
-            if [ "$kind" = lua ]; then
-                sed -i -E "/^[[:space:]]*--/! { /hl\.bind\(/ { /mouse:27[23]|mouse = true/! s/^([[:space:]]*)/\1${c}${HYPR_MARK}/ } }" "$f"
-            else
-                sed -i -E "/^[[:space:]]*#/! { /^[[:space:]]*bind[a-z]*[[:space:]]*=/ { /^[[:space:]]*bindm/! s/^([[:space:]]*)/\1${c}${HYPR_MARK}/ } }" "$f"
-            fi
-        fi
-    done < <(find "$HYPR_DIR" -name "*.$ext" -type f -print0)
+    # Monolith's own key layout: every other key goes too (it would fire alongside), except mouse
+    # drags and gestures; whole statements, never half of one (that would break the config)
+    if [ "$(_hypr_keys_choice)" = monolith ]; then
+        python3 "$HYPR_MODULES/merge_keys.py" hypr-off-all "$HYPR_DIR" "$kind" >/dev/null 2>&1
+    fi
+    # (no keymap to merge with: Serpantinum's lines, the old way)
+    if [ -z "$(hypr_keys_source)" ]; then
+        while IFS= read -r -d '' f; do
+            case "$(basename "$f")" in monolith*) continue ;; esac
+            sed -i -E "/^[[:space:]]*(--|#)/! { /serpantinumd?([^a-zA-Z_-]|$)/ s/^([[:space:]]*)/\1${c}${HYPR_MARK}/ }" "$f"
+        done < <(find "$HYPR_DIR" -name "*.$ext" -type f -print0)
+    fi
 }
 
 hypr_switch() {

@@ -11,7 +11,8 @@ Singleton {
     readonly property int passes: Number(Store.get("theme.blurStrength", 3))
     readonly property string text: "// Written by Monolith from its settings (Theme → Effects). Changes here are replaced.\n"
         + "blur {\n    passes " + passes + "\n    offset " + (1 + passes * 0.6).toFixed(1) + "\n}\n"
-    onTextChanged: if (Store.loaded) later.restart()
+    // (niri's only: on Hyprland it made a stray ~/.config/niri with just this file in it)
+    onTextChanged: if (Store.loaded && !Niri.hyprland) later.restart()
     Timer { id: later; interval: 500; onTriggered: { file.setText(ns.text); include.running = true; } }
     FileView { id: file; path: ns.dir + "/config/monolith-shell.kdl"; printErrors: false }
     // the include line, once

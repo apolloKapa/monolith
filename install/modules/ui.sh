@@ -441,9 +441,12 @@ draw_completion_screen() {
         for fp in "${FAILED_PKGS[@]}"; do printf "    - %s%s%s\n" "$C_YELLOW" "$fp" "$RESET"; done
         printf "\n"
     fi
-    if [ "$DESKTOP" = hyprland ]; then
+    if [ "$DESKTOP" = hyprland ] && [ "$MONOLITH_STARTED" = true ]; then
+        printf "  Monolith is running again on %sHyprland%s, updated.\n" "$BOLD" "$RESET"
+        printf "  Your keys are listed in the welcome tour (%smonolith welcome%s). %smonolith hyprland off%s puts your old config back.\n" "$BOLD" "$RESET" "$BOLD" "$RESET"
+    elif [ "$DESKTOP" = hyprland ]; then
         printf "  Log out of %sHyprland%s and back in: Monolith starts there instead of your old shell.\n" "$BOLD" "$RESET"
-        printf "  Super+D opens the launcher, Super+B the control center. %smonolith hyprland off%s undoes the switch.\n" "$BOLD" "$RESET"
+        printf "  Your keys are listed in the welcome tour (%smonolith welcome%s, Getting around). %smonolith hyprland off%s undoes the switch.\n" "$BOLD" "$RESET" "$BOLD" "$RESET"
     elif [ "$MONOLITH_STARTED" = true ]; then
         printf "  Monolith is running now. Next time you log in, pick %sniri%s for the Monolith keybinds and layout.\n" "$BOLD" "$RESET"
         printf "  Super+Space opens the hub: search, settings and everything else.\n"

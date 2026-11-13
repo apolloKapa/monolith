@@ -46,11 +46,11 @@ SHELL = re.compile(r"""(?ix)
 INTENTS = [
     # keys that do something straight away keep doing it (not a panel)
     (r"mic\w*.*(mute|toggle)|(mute|toggle).*mic", "!wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),
-    (r"vol\w*.*(raise|up|increase|\+)|(raise|increase).*vol", "!wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"),
-    (r"vol\w*.*(lower|down|decrease|-\s*$|\d%-)|(lower|decrease).*vol", "!wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
+    (r"vol\w*.*(raise|up|increase|increment|inc\b|\+)|(raise|increase|increment).*vol", "!wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"),
+    (r"vol\w*.*(lower|down|decrease|decrement|dec\b|-\s*$|\d%-)|(lower|decrease|decrement).*vol", "!wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
     (r"vol\w*.*(mute|toggle)|(mute).*(vol|sink|audio)", "!wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),
-    (r"bright\w*.*(raise|up|increase|\+)", "!brightnessctl set 5%+"),
-    (r"bright\w*.*(lower|down|decrease|-)", "!brightnessctl set 5%-"),
+    (r"bright\w*.*(raise|up|increase|increment|inc\b|\+)", "!brightnessctl set 5%+"),
+    (r"bright\w*.*(lower|down|decrease|decrement|dec\b|-)", "!brightnessctl set 5%-"),
     (r"(screenshot|hyprshot|grimblast|grim|flameshot|satty|swappy).*(output|screen|full|monitor|-o\b).*(edit|annotate|satty|swappy)|"
      r"(screenshot|hyprshot|grimblast|grim|flameshot).*(edit|annotate|satty|swappy).*(output|screen|full|monitor)", "screenshot --full --edit"),
     (r"(screenshot|hyprshot|grimblast|grim|flameshot|satty|swappy).*(edit|annotate|satty|swappy)|swappy|satty", "screenshot --edit"),
@@ -78,12 +78,14 @@ INTENTS = [
 
 
 # started at login by another shell setup and doing a job Monolith does itself (a shell or bar,
-# notifications, the wallpaper): turned off, or there'd be two of each. Helpers (the clipboard
+# notifications, the wallpaper, idle locking): turned off, or there'd be two of each (Monolith locks
+# and sleeps on idle itself: Settings -> Lock & idle). Helpers (the clipboard
 # watcher Monolith's clipboard reads, idle, polkit...) stay.
 AUTOSTART_OFF = re.compile(r"""(?ix)
     \b(quickshell|qs\b|inir|serpantinumd?|noctalia|caelestia|dms\s+run|ags\b|astal|eww\b|waybar|hyprpanel|
        nwg-(panel|dock|drawer)|ironbar|yambar|swaync|mako|dunst|fnott|
-       hyprpaper|swww(-daemon)?|awww(-daemon)?|swaybg|mpvpaper|wpaperd|waypaper)\b""")
+       hyprpaper|swww(-daemon)?|awww(-daemon)?|swaybg|mpvpaper|wpaperd|waypaper|
+       hypridle|swayidle)\b""")
 
 
 def autostart_off(cmd):
@@ -225,23 +227,114 @@ def merge_niri(cfg_dir, keymap, monolith, add_keys=True):
 
 
 # ── Hyprland ──
-LUA_BIND = re.compile(r"^(\s*)hl\.bind\((.+?),\s*(hl\.dsp\..*)$")
-CONF_BIND = re.compile(r"^(\s*)(bind[a-z]*)\s*=\s*([^,]*),\s*([^,]+),\s*([^,]+)(?:,\s*(.*))?$")
+CONF_BIND = re.compile(r"^(\s*)(bind([a-z]*))\s*=\s*(.*)$")
+MODWORDS = re.compile(r"SUPER|SHIFT|CTRL|CONTROL|ALT|MOD[1-5]|META|WIN|LOGO")
+
+
+def norm_mods(text):
+    """Modifiers however they're written: "SUPER SHIFT", "SUPERSHIFT", "SUPER_SHIFT", "Super + Shift"."""
+    return MODWORDS.findall(text.upper())
+
+
+def paren_depth(text):
+    """How many ( are still open at the end of `text` (strings and comments skipped)."""
+    d, q, i = 0, None, 0
+    while i < len(text):
+        ch = text[i]
+        if q:
+            if ch == "\\":
+                i += 2
+                continue
+            if ch == q:
+                q = None
+        elif ch in "\"'":
+            q = ch
+        elif text.startswith("--", i):
+            break
+        elif ch == "(":
+            d += 1
+        elif ch == ")":
+            d -= 1
+        i += 1
+    return d
+
+
+def statements(lines, lua, c):
+    """Each statement: (first line, last line, its text, was it turned off already). A Lua call
+    written over several lines is one statement (turned off whole, never half: that would break
+    the config)."""
+    out, i, n = [], 0, len(lines)
+    pre = c + MARK
+    while i < n:
+        raw = lines[i]
+        st = raw.strip()
+        again = st.startswith(pre)
+        body = st[len(pre):] if again else st
+        if not again and st.startswith(("--", "#")) or not body:
+            i += 1
+            continue
+        j, text = i, body
+        if lua and re.match(r"hl\.(bind|exec_cmd)\(", body):
+            while paren_depth(text) > 0 and j + 1 < n:
+                j += 1
+                nxt = lines[j].strip()
+                text += " " + (nxt[len(pre):] if again and nxt.startswith(pre) else nxt)
+        out.append((i, j, text, again))
+        i = j + 1
+    return out
 
 
 def lua_key(expr, variables):
-    """A bind's key from its Lua expression (strings joined with .., variables like mainMod)."""
+    """A bind's key from its Lua expression (strings joined with .., variables like mainMod).
+    A key made in a loop ("SUPER + " .. i): ("loop", its modifiers)."""
     parts = [p.strip() for p in expr.split("..")]
     out = ""
-    for p in parts:
+    for k, p in enumerate(parts):
         if p.startswith('"') and p.endswith('"'):
             out += p[1:-1]
         elif p in variables:
             out += variables[p]
+        elif k == len(parts) - 1 and re.match(r"^[\w.\[\]]+$", p):
+            return ("loop", norm_mods(out))
         else:
-            return None        # computed (a loop's key): not known
+            return None
     toks = [t.strip() for t in out.split("+") if t.strip()]
-    return (toks[:-1], toks[-1]) if toks else None
+    if not toks:
+        return None
+    return (norm_mods(" ".join(toks[:-1])), toks[-1])
+
+
+def split_lua_bind(text):
+    """hl.bind(KEY, DISPATCH[, OPTS]) -> (key expression, dispatch text, options text or "")."""
+    m = re.match(r"^hl\.bind\((.*)\)\s*;?\s*$", text)
+    if not m:
+        return None
+    args, parts, d, q, cur = m.group(1), [], 0, None, ""
+    i = 0
+    while i < len(args):
+        ch = args[i]
+        if q:
+            cur += ch
+            if ch == "\\" and i + 1 < len(args):
+                cur += args[i + 1]; i += 2; continue
+            if ch == q:
+                q = None
+        elif ch in "\"'":
+            q = ch; cur += ch
+        elif ch in "({[":
+            d += 1; cur += ch
+        elif ch in ")}]":
+            d -= 1; cur += ch
+        elif ch == "," and d == 0:
+            parts.append(cur.strip()); cur = ""
+        else:
+            cur += ch
+        i += 1
+    if cur.strip():
+        parts.append(cur.strip())
+    if len(parts) < 2:
+        return None
+    return parts[0], parts[1], (parts[2] if len(parts) > 2 else "")
 
 
 def merge_hypr(cfg_dir, keymap, monolith, fmt):
@@ -253,71 +346,93 @@ def merge_hypr(cfg_dir, keymap, monolith, fmt):
     variables = {"mainMod": "SUPER"} if lua else {}
     for path in files:
         for line in open(path, encoding="utf-8"):
-            m = re.match(r'^\s*(?:_G\.)?(\w+)\s*=\s*(?:_G\.\w+\s+or\s+)?"([^"]*)"', line) if lua else re.match(r"^\s*\$(\w+)\s*=\s*(\S+)", line)
+            m = re.match(r'^\s*(?:local\s+)?(?:_G\.)?(\w+)\s*=\s*(?:_G\.\w+\s+or\s+)?"([^"]*)"', line) if lua else re.match(r"^\s*\$(\w+)\s*=\s*(\S+)", line)
             if m:
                 variables[m.group(1) if lua else "$" + m.group(1)] = m.group(2)
     used, have, out = set(), set(), []
     counts = {"kept": 0, "switched": 0, "off": 0, "added": 0}
     c = "-- " if lua else "# "
+
+    def turn_off(lines, a, b):
+        for k in range(a, b + 1):
+            if lines[k].strip() and not lines[k].strip().startswith(c + MARK):
+                lines[k] = re.match(r"\s*", lines[k]).group(0) + c + MARK + lines[k].strip()
+
     for path in files:
         lines = open(path, encoding="utf-8").read().split("\n")
         changed = False
-        for i, line in enumerate(lines):
-            # a key turned off by an earlier run: still switched to Monolith (Monolith's file is
-            # written again on every update), left as it is in your file
-            again = False
-            st = line.strip()
-            for pre in ("-- " + MARK, "# " + MARK):
-                if st.startswith(pre):
-                    line, again = re.match(r"\s*", line).group(0) + st[len(pre):], True
-            if not again and st.startswith(("--", "#")):
-                continue
-            a = (re.match(r'^(\s*)hl\.exec_cmd\(\s*"((?:[^"\\]|\\.)*)"', line) if lua
-                 else re.match(r"^(\s*)exec(?:-once)?\s*=\s*(.*)$", line))
-            if a:
-                if not again and autostart_off(a.group(2)):
-                    lines[i] = a.group(1) + c + MARK + line.strip()
-                    counts["autostart off"] = counts.get("autostart off", 0) + 1
-                    changed = True
-                continue
+        for a, b, text, again in statements(lines, lua, c):
+            # start-up lines of another shell's
             if lua:
-                m = LUA_BIND.match(line)
-                if not m:
-                    continue
-                key = lua_key(m.group(2), variables)
-                em = re.search(r'exec_cmd\(\s*"((?:[^"\\]|\\.)*)"', m.group(3))
-                cmd = em.group(1) if em else None
+                am = re.match(r'^hl\.exec_cmd\(\s*"((?:[^"\\]|\\.)*)"', text)
             else:
-                m = CONF_BIND.match(line)
+                am = re.match(r"^exec(?:-once)?\s*=\s*(.*)$", text)
+            if am:
+                if not again and autostart_off(am.group(1)):
+                    turn_off(lines, a, b); changed = True
+                    counts["autostart off"] = counts.get("autostart off", 0) + 1
+                continue
+            flags, opts = "", ""
+            if lua:
+                parts = split_lua_bind(text)
+                if not parts:
+                    continue
+                key = lua_key(parts[0], variables)
+                em = re.search(r'exec_cmd\(\s*"((?:[^"\\]|\\.)*)"', parts[1])
+                cmd = em.group(1) if em else None
+                opts = parts[2]
+            else:
+                m = CONF_BIND.match(text)
                 if not m:
                     continue
-                mods = m.group(3)
-                # (longest names first, so $mainMod2 isn't taken for $mainMod)
+                flags = m.group(3)
+                f = [x.strip() for x in m.group(4).split(",")]
+                if "d" in flags and len(f) >= 4:          # bindd: a description before the dispatcher
+                    f = f[:2] + f[3:]
+                if len(f) < 3:
+                    continue
+                mods = f[0]
                 for v in sorted(variables, key=len, reverse=True):
                     mods = mods.replace(v, variables[v])
-                key = (mods.split(), m.group(4).strip())
-                cmd = m.group(6) if m.group(5).strip() == "exec" else None
+                key = (norm_mods(mods), f[1])
+                cmd = ", ".join(f[3:]) if f[2] == "exec" else None
+            # a loop's keys (SUPER + 1..0, say): taken, whatever they do; unless it's another
+            # shell's (its workspace keys): then it's turned off and Monolith's go there
+            if key and key[0] == "loop" and cmd and shellish(cmd):
+                if not again:
+                    turn_off(lines, a, b); changed = True
+                    counts["off"] += 1
+                continue
+            if key and key[0] == "loop":
+                for dgt in "1234567890":
+                    used.add(sig(key[1], dgt))
+                counts["kept"] += 1
+                continue
             if again and not (cmd and shellish(cmd)):
                 continue
             if key and lone_modifier(key) and cmd and (shellish(cmd) or "monolith" in cmd):
                 if not again:
-                    lines[i] = (m.group(1) or "") + c + MARK + line.strip()
-                    changed = True
+                    turn_off(lines, a, b); changed = True
                     counts["off"] += 1
                 continue
             if cmd and shellish(cmd):
                 sub = intent(cmd)
                 if not again:
-                    lines[i] = (m.group(1) or "") + c + MARK + line.strip()
-                    changed = True
+                    turn_off(lines, a, b); changed = True
                 if sub and key:
                     full = command_for(sub, monolith)
-                    # (media keys: also on the lock screen, as they were)
-                    locked = key[1].startswith("XF86") and is_direct(sub)
+                    combo = " + ".join(key[0] + [key[1]])
                     if lua:
-                        out.append('hl.bind(%s, hl.dsp.exec_cmd(%s)%s)' % (hk.lua_str(" + ".join(key[0] + [key[1]])), hk.lua_str(full), ", { locked = true }" if locked else ""))
+                        # (its options stay: repeating, locked...; media keys on the lock screen too)
+                        o = opts
+                        if not o and key[1].startswith("XF86") and is_direct(sub):
+                            o = "{ locked = true }"
+                        out.append("hl.bind(%s, hl.dsp.exec_cmd(%s)%s)" % (hk.lua_str(combo), hk.lua_str(full), (", " + o) if o else ""))
                     else:
-                        out.append("%s = %s, %s, exec, %s" % ("bindl" if locked else "bind", " ".join(key[0]), key[1], full))
+                        fl = flags.replace("d", "")
+                        if not fl and key[1].startswith("XF86") and is_direct(sub):
+                            fl = "l"
+                        out.append("bind%s = %s, %s, exec, %s" % (fl, " ".join(key[0]), key[1], full))
                     used.add(sig(*key)); have.add(sub)
                     counts["switched"] += 1
                 elif not again:
@@ -348,8 +463,44 @@ def merge_hypr(cfg_dir, keymap, monolith, fmt):
     return counts
 
 
+def off_all_hypr(cfg_dir, fmt):
+    """Monolith's own key layout: every key in your config turned off (whole statements, never
+    half of one), except mouse drags and gestures."""
+    lua = fmt == "lua"
+    c = "-- " if lua else "# "
+    n = 0
+    for r, _, fs in os.walk(cfg_dir):
+        for f in fs:
+            if not f.endswith(".lua" if lua else ".conf") or f.startswith("monolith"):
+                continue
+            path = os.path.join(r, f)
+            lines = open(path, encoding="utf-8").read().split("\n")
+            changed = False
+            for a, b, text, again in statements(lines, lua, c):
+                if again:
+                    continue
+                if lua:
+                    if not text.startswith("hl.bind(") or re.search(r"mouse:27[23]|mouse\s*=\s*true", text):
+                        continue
+                else:
+                    m = CONF_BIND.match(text)
+                    if not m or "m" in m.group(3):
+                        continue
+                for k in range(a, b + 1):
+                    if lines[k].strip():
+                        lines[k] = re.match(r"\s*", lines[k]).group(0) + c + MARK + lines[k].strip()
+                changed = True
+                n += 1
+            if changed:
+                open(path, "w", encoding="utf-8").write("\n".join(lines))
+    return n
+
+
 if __name__ == "__main__":
     kind = sys.argv[1]
+    if kind == "hypr-off-all":
+        sys.stderr.write("your keys turned off: %d\n" % off_all_hypr(sys.argv[2], sys.argv[3]))
+        sys.exit(0)
     if kind == "niri":
         r = merge_niri(sys.argv[2], sys.argv[3], sys.argv[4], "--no-add" not in sys.argv)
         if "--no-add" in sys.argv:

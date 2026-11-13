@@ -204,7 +204,7 @@ write_version_state() {
     cat > "$VERSION_FILE" <<EOF
 MONOLITH_VERSION="$(repo_version "$project_root")"
 MONOLITH_COMMIT="$(repo_commit "$project_root")"
-SELECTED_COMPOSITORS="niri"
+SELECTED_COMPOSITORS="${DESKTOP:-niri}"
 EOF
 }
 

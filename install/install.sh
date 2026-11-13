@@ -171,6 +171,12 @@ write_version_state "$PROJECT_ROOT"
 if [ -n "$WAYLAND_DISPLAY" ] && [ -n "$NIRI_SOCKET" ] && { [ "$UPDATE_ONLY" != true ] || [ "$SHELL_WAS_RUNNING" = true ]; }; then
     "$BIN_DIR/monolith" start >/dev/null 2>&1 < /dev/null
     MONOLITH_STARTED=true
+# Hyprland with Monolith as its shell: the shell this install stopped comes back straight away (it
+# stayed gone until the next login after every update). Not when another shell is still running
+# this session (switching over happens at the next login)
+elif [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ] && [ "$SHELL_WAS_RUNNING" = true ] && hypr_switched; then
+    "$BIN_DIR/monolith" start >/dev/null 2>&1 < /dev/null
+    MONOLITH_STARTED=true
 fi
 
 if [ "$UPDATE_ONLY" = true ]; then
