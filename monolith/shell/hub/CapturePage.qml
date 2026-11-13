@@ -68,8 +68,8 @@ Page {
             columns: 3
             rowSpacing: 8
             columnSpacing: 8
-            Action { icon: "screenshot_region"; title: "Region"; sub: page.delay > 0 ? "Pick an area, in " + page.delay + " s" : "Pick an area"; onClicked: Capture.startIn(page.delay, { mode: "region" }) }
-            Action { icon: "screenshot_monitor"; title: "Screen"; sub: page.delay > 0 ? "The whole screen, in " + page.delay + " s" : "The whole screen"; onClicked: Capture.startIn(page.delay, { mode: "screen" }) }
+            Action { icon: "screenshot_region"; title: "Region"; sub: page.delay > 0 ? "Pick an area, in " + page.delay + " s" : "Pick an area"; onClicked: Capture.startIn(page.delay, { mode: "region", closeHub: true }) }
+            Action { icon: "screenshot_monitor"; title: "Screen"; sub: page.delay > 0 ? "The whole screen, in " + page.delay + " s" : "The whole screen"; onClicked: Capture.startIn(page.delay, { mode: "screen", closeHub: true }) }
             // niri's own window screenshot; on Hyprland, the focused window's area through grim,
             // saved to Screenshots and copied (as niri's does)
             Action {
@@ -87,13 +87,13 @@ Page {
             Action {
                 icon: page.recording ? "stop_circle" : "videocam"; on: page.recording
                 title: page.recording ? "Stop recording" : "Record region"; sub: page.recording ? "Saves to ~/Videos/Recordings" : "Pick an area"
-                onClicked: page.recording ? Tasks.stopRecording() : Capture.start({ kind: "video", mode: "region" })
+                onClicked: page.recording ? Tasks.stopRecording() : Capture.start({ kind: "video", mode: "region", closeHub: true })
             }
             Action {
                 icon: "screen_record"; title: "Record screen"; sub: "The whole screen"
                 enabledInput: !page.recording
                 opacity: page.recording ? 0.5 : 1
-                onClicked: Capture.start({ kind: "video", mode: "screen" })
+                onClicked: Capture.start({ kind: "video", mode: "screen", closeHub: true })
             }
         }
 

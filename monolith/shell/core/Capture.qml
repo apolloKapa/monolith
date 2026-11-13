@@ -46,8 +46,10 @@ Singleton {
         screenName = "";
         freezing = true;
         readFolder();
-        // an open island closes first, so it isn't in the picture
-        if (HubState.open) { HubState.close(); freezeLater.restart(); } else freezeNow();
+        // open menus stay open and are in the picture (a screenshot of a menu is often the point);
+        // only when the shot was started from a menu's own button (Capture: Region, Screen…) does
+        // that menu get out of the way first
+        if (opts.closeHub && HubState.open) { HubState.close(); freezeLater.restart(); } else freezeNow();
     }
     Timer { id: freezeLater; interval: 450; onTriggered: cap.freezeNow() }
     function freezeNow() {
@@ -223,7 +225,7 @@ Singleton {
         if (active || freezing || countdown > 0) return;
         if (!(secs > 0)) { start(opts); return; }
         delayedOpts = opts || {};
-        if (HubState.open) HubState.close();
+        if (delayedOpts.closeHub && HubState.open) HubState.close();
         countdown = secs;
         tick.restart();
     }
