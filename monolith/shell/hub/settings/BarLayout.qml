@@ -463,6 +463,161 @@ ColumnLayout {
             }
         }
     }
+    // ── the visualiser module: its look ("bar.vis.*"); what it hears is cava's, shared with the
+    // desktop visualiser widgets ──
+    component VisPick: Dropdown {
+        id: vp
+        property string k: ""
+        property string d: ""
+        width: 200
+        value: String(Store.get("bar.vis." + k, d))
+        onPicked: v => Store.set("bar.vis." + k, isNaN(Number(v)) || v === "" ? v : Number(v))
+    }
+    Label { text: "Visualiser"; strong: true; Layout.leftMargin: 6; Layout.topMargin: 4 }
+    Label {
+        text: sec.used.indexOf("visualizer") === -1 ? "Not on the bar yet: drag Visualizer into a zone above. It shows while music plays."
+                                                    : "It shows while music plays. The preview is a still curve, twice its real size."
+        Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6
+    }
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: Theme.islandH * 2 + 40
+        radius: Theme.corner(80, 6)
+        color: Theme.container
+        border.width: Theme.outlineW; border.color: Theme.outlineColor
+        readonly property real k: 2
+        Rectangle {
+            anchors.centerIn: parent
+            width: (visPrev.implicitWidth + 16) * parent.k
+            height: Theme.islandH * parent.k
+            radius: Theme.barRound(Theme.islandH) * parent.k
+            color: Theme.frame
+            Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+            IslandBar {
+                id: visPrev
+                enabled: false
+                only: ["visualizer"]
+                visPreview: true
+                scale: parent.parent.k
+                transformOrigin: Item.Center
+                anchors.centerIn: parent
+            }
+        }
+    }
+    SettingRow {
+        key: "bar.vis.style";
+        icon: "graphic_eq"; title: "Look"; desc: "Separate bars, or one smooth filled shape"
+        Segmented { width: 220; opts: [["bars", "Bars"], ["smooth", "Smooth"]]; value: String(Store.get("bar.vis.style", "bars")); onPicked: v => Store.set("bar.vis.style", v) }
+    }
+    SettingRow {
+        key: "bar.vis.bars"; def: 9;
+        icon: "bar_chart"; title: "Bars"; desc: "How many"
+        NumberBox { from: 3; to: 48; value: Number(Store.get("bar.vis.bars", 9)); onMoved: v => Store.set("bar.vis.bars", v) }
+    }
+    SettingRow {
+        key: "bar.vis.width"; def: 46;
+        icon: "width"; title: "Width"
+        NumberBox { from: 16; to: 300; slideTo: 200; unit: "px"; value: Number(Store.get("bar.vis.width", 46)); onMoved: v => Store.set("bar.vis.width", v) }
+    }
+    SettingRow {
+        key: "bar.vis.height"; def: 16;
+        icon: "height"; title: "Height"; desc: "Never taller than the bar allows"
+        NumberBox { from: 6; to: 60; slideTo: 40; unit: "px"; value: Number(Store.get("bar.vis.height", 16)); onMoved: v => Store.set("bar.vis.height", v) }
+    }
+    SettingRow {
+        key: "bar.vis.spacing"; def: 2;
+        visible: Store.get("bar.vis.style", "bars") !== "smooth"
+        icon: "space_bar"; title: "Gap between bars"
+        NumberBox { from: 0; to: 12; unit: "px"; value: Number(Store.get("bar.vis.spacing", 2)); onMoved: v => Store.set("bar.vis.spacing", v) }
+    }
+    SettingRow {
+        key: "bar.vis.anchor";
+        icon: "vertical_align_center"; title: "Grows from"
+        Segmented { width: 300; opts: [["bottom", "Bottom"], ["middle", "Middle"], ["top", "Top"]]; value: String(Store.get("bar.vis.anchor", "bottom")); onPicked: v => Store.set("bar.vis.anchor", v) }
+    }
+    SettingRow {
+        key: "bar.vis.roundness";
+        visible: Store.get("bar.vis.style", "bars") !== "smooth"
+        icon: "rounded_corner"; title: "Bar ends"
+        VisPick { k: "roundness"; d: "1"; opts: [["0", "Square"], ["0.35", "Slightly round"], ["0.7", "Round"], ["1", "Fully round"]] }
+    }
+    SettingRow {
+        key: "bar.vis.scale";
+        icon: "expand"; title: "How tall loud parts get"
+        VisPick { k: "scale"; d: "1"; opts: [["0.5", "50 %"], ["0.75", "75 %"], ["1", "100 %"], ["1.25", "125 %"], ["1.5", "150 %"]] }
+    }
+    SettingRow {
+        key: "bar.vis.rest";
+        icon: "horizontal_rule"; title: "Height when silent"
+        VisPick { k: "rest"; d: "2"; opts: [["0", "0 px"], ["1", "1 px"], ["2", "2 px"], ["3", "3 px"], ["4", "4 px"], ["6", "6 px"]] }
+    }
+    SettingRow {
+        key: "bar.vis.smoothing";
+        visible: Store.get("bar.vis.style", "bars") !== "smooth"
+        icon: "animation"; title: "Movement"
+        VisPick { k: "smoothing"; d: "70"; opts: [["0", "Instant"], ["40", "Snappy"], ["70", "Smooth"], ["120", "Smoother"], ["200", "Slow"]] }
+    }
+    SettingRow {
+        key: "bar.vis.fade"; def: true;
+        icon: "gradient"; title: "Fade towards the edges"
+        Toggle { checked: Store.get("bar.vis.fade", true) === true; onToggled: on => Store.set("bar.vis.fade", on) }
+    }
+    SettingRow {
+        key: "bar.vis.dynamic"; def: true;
+        visible: Store.get("bar.vis.style", "bars") !== "smooth"
+        icon: "opacity"; title: "Quiet bars are dimmer"
+        Toggle { checked: Store.get("bar.vis.dynamic", true) === true; onToggled: on => Store.set("bar.vis.dynamic", on) }
+    }
+    // colours: the accent, a theme colour, or any #rrggbb; the second one blends across it
+    component VisColour: Row {
+        id: vcl
+        property string k: ""
+        property string d: ""
+        readonly property string val: String(Store.get("bar.vis." + k, d))
+        spacing: 8
+        Repeater {
+            model: [["", "None"], ["accent", "Accent"], ["primary", ""], ["secondary", ""], ["tertiary", ""], ["text", ""], ["white", ""]].filter(c => vcl.d !== "accent" || c[0] !== "")
+            Rectangle {
+                required property var modelData
+                readonly property bool on: vcl.val === modelData[0]
+                width: 30; height: 30; radius: 15
+                readonly property var m: ({ "": Theme.containerHigh, accent: Theme.accent, text: Theme.text, white: "#ffffff",
+                    primary: Theme.m("primary", Theme.accent), secondary: Theme.m("secondary", Theme.subtext), tertiary: Theme.m("tertiary", Theme.accent) })
+                color: m[modelData[0]]
+                border.width: 1
+                border.color: Theme.hairline
+                // the picked one: a ring round it
+                Rectangle { anchors.fill: parent; anchors.margins: -4; radius: width / 2; color: "transparent"; border.width: 2; border.color: Theme.text; visible: parent.on }
+                Icon { anchors.centerIn: parent; visible: parent.modelData[0] === ""; name: "format_color_reset"; size: 16; color: Theme.subtext }
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Store.set("bar.vis." + vcl.k, parent.modelData[0]) }
+            }
+        }
+        Field {
+            anchors.verticalCenter: parent.verticalCenter
+            width: 100
+            text: vcl.val.startsWith("#") ? vcl.val : ""
+            placeholder: "#rrggbb"
+            onAccepted: v => { v = v.trim(); if (!v.startsWith("#")) v = "#" + v; if (/^#[0-9a-fA-F]{6}$/.test(v)) Store.set("bar.vis." + vcl.k, v); }
+        }
+    }
+    SettingRow {
+        key: "bar.vis.colour";
+        icon: "palette"; title: "Colour"
+        VisColour { k: "colour"; d: "accent" }
+    }
+    SettingRow {
+        key: "bar.vis.colour2";
+        icon: "gradient"; title: "Blend into"; desc: "A second colour across the bars (none: one colour)"
+        VisColour { k: "colour2"; d: "" }
+    }
+    SettingRow {
+        key: "bar.vis.always"; def: false;
+        icon: "visibility"; title: "Show with nothing playing"; desc: "Flat bars that move with any sound, instead of hiding"
+        Toggle { checked: Store.get("bar.vis.always", false) === true; onToggled: on => Store.set("bar.vis.always", on) }
+    }
+    SettingRow {
+        icon: "tune"; title: "What it hears"; desc: "Input, sensitivity, frequencies and the equaliser are cava's settings, shared with the desktop visualiser widgets (their settings in the widget editor)"
+    }
     SettingRow {
         key: "bar.mediaPeek"; def: true;
         icon: "music_note"; title: "Now playing peek"; desc: "Hovering the Now playing module shows a small player under it"

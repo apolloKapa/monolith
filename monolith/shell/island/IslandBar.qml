@@ -39,6 +39,8 @@ Item {
     readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["updates", "live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
     // previews (Settings → Bar) can show just some modules, in a style of their own
     property var only: null
+    // the visualiser shown even with nothing playing, as a still curve (its settings' preview)
+    property bool visPreview: false
     property string clockStyleAs: ""
     property string wsStyleAs: ""
     // previews show made-up workspaces (four, the second one open, the first and third with
@@ -488,16 +490,41 @@ Item {
         }
     }
     // audio bars while something plays (cava runs only while they show)
+    // (its look: Settings → Bar → Layout & modules → Visualiser, "bar.vis.*")
     Component {
         id: visC
         Mod {
-            property bool want: bar.player !== null
+            id: vm
+            function opt(k, d) { const v = Store.get("bar.vis." + k, d); return v === undefined || v === null || v === "" ? d : v; }
+            function tint(v, d) {
+                const m = { accent: Theme.accent, text: Theme.text, white: "#ffffff", black: "#000000",
+                    primary: Theme.m("primary", Theme.accent), secondary: Theme.m("secondary", Theme.subtext), tertiary: Theme.m("tertiary", Theme.accent) };
+                return m[v] !== undefined ? m[v] : (String(v).startsWith("#") ? v : d);
+            }
+            readonly property real wantW: Number(opt("width", 46))
+            readonly property real wantH: Math.min(Theme.islandH - 14, Number(opt("height", 16)))
+            readonly property int wantN: Number(opt("bars", 9))
+            property bool want: bar.visPreview || bar.player !== null || opt("always", false) === true
             onClicked: bar.open("media")
             Faces.CavaBars {
-                width: bar.vertical ? 24 : 46; height: 16
-                count: bar.vertical ? 5 : 9; spacing: 2; minLen: 2
-                live: bar.player !== null
-                color: Theme.accent
+                // (down a side bar: as wide as the bar allows, with fewer bars to match)
+                width: bar.vertical ? Math.min(vm.wantW, Theme.islandH - 26) : vm.wantW
+                height: vm.wantH
+                count: bar.vertical ? Math.max(3, Math.round(vm.wantN * width / Math.max(1, vm.wantW))) : vm.wantN
+                spacing: Number(vm.opt("spacing", 2))
+                minLen: Number(vm.opt("rest", 2))
+                continuous: vm.opt("style", "bars") === "smooth"
+                mirror: vm.opt("anchor", "bottom") === "middle"
+                flip: vm.opt("anchor", "bottom") === "top"
+                roundness: Number(vm.opt("roundness", 1))
+                scaleY: Number(vm.opt("scale", 1))
+                fade: vm.opt("fade", true) === true
+                dynamic: vm.opt("dynamic", true) === true
+                smoothMs: Number(vm.opt("smoothing", 70))
+                live: bar.player !== null || (vm.opt("always", false) === true && !bar.visPreview)
+                preview: bar.visPreview
+                color: vm.tint(vm.opt("colour", "accent"), Theme.accent)
+                color2: vm.tint(vm.opt("colour2", ""), color)
             }
         }
     }
