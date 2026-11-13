@@ -395,16 +395,22 @@ Page {
                 id: loader
                 width: flick.width
                 // loaded while the page is open; the section reloads its data each time
-                active: page.current && HubState.open
+                // (kept while the page fades out, so it doesn't empty first)
+                active: (page.current && HubState.open) || page.opacity > 0.01
                 source: "settings/" + page.file + ".qml"
-                onSourceChanged: { flick.keepH = 0; flick.contentY = 0; pageIn.restart(); popAnim.restart(); page.aimPage(); slideIn.restart(); }
+                // (built in the background: a section built in one go froze the menu for a moment;
+                // it comes up once it's ready)
+                asynchronous: true
+                onSourceChanged: { flick.keepH = 0; flick.contentY = 0; pageIn.stop(); slideIn.stop(); opacity = 0; page.aimPage(); popAnim.restart(); }
                 // view transition: the new page comes up from below when it's further down the
                 // list of sections than the last one, down from above when it's higher up
                 property real shiftY: 0
                 transform: Translate { y: loader.shiftY }
                 NumberAnimation { id: slideIn; target: loader; property: "shiftY"; from: page.pageDir * 28; to: 0; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
                 // a search result: its row, once the page is laid out
-                onLoaded: if (page.findRow !== "") seekLater.restart()
+                // (comes in only for a different section: reopening Settings rebuilds the same one)
+                property url shown: ""
+                onLoaded: { if (source !== shown) { shown = source; pageIn.restart(); slideIn.restart(); } else opacity = 1; if (page.findRow !== "") seekLater.restart(); }
                 Timer { id: seekLater; interval: 80; onTriggered: page.seek() }
                 // the page fades in while its rows come up one after another (ui/SettingRow)
                 NumberAnimation { id: pageIn; target: loader; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }

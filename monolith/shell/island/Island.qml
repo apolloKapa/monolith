@@ -111,7 +111,12 @@ PanelWindow {
     // as tall as the page wants, but never past the screen: a floating card keeps clear of the bar
     // and the screen's edges (on a short screen, 720 px, it ran off the bottom)
     readonly property real maxOpenH: docked ? height - 40 : height - floatCard.topRoom - floatCard.bottomRoom + Theme.islandH - pad
-    readonly property real openH: Math.min(maxOpenH, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + (currentPage ? currentPage.implicitHeight : 200) + pad)
+    readonly property real openH: Math.min(maxOpenH, Theme.islandH + fieldH + (compact ? 8 : 8 + tabsH + 10) + pageH + pad)
+    // the page's height; while a page is still being built (pages build in the background) the
+    // last one's, so the card doesn't shrink to a guess and grow again
+    property real pageH: 200
+    readonly property real wantPageH: currentPage ? currentPage.implicitHeight : -1
+    onWantPageHChanged: if (wantPageH >= 0) pageH = wantPageH
     readonly property real restW: Theme.barWidth(width, bar.needWidth)
     readonly property bool barShort: restW < width - 2 * Theme.barMargin - 1   // a full bar that doesn't reach the screen's sides
     // the bar can be off on some screens (Settings → Bar); menus still open there
@@ -278,7 +283,7 @@ PanelWindow {
             Item {
                 id: openArea
                 // in the island, or in the floating card
-                parent: !win.docked ? floatCard : (Theme.fullBar ? dropBody : body)
+                parent: !win.docked ? cardClip : (Theme.fullBar ? dropBody : body)
                 // laid out at the size the menu is going to (not the size it has while it grows or
                 // shrinks there), so the page doesn't reflow and seem to rescale on every change;
                 // kept in the middle while the card around it catches up
@@ -470,7 +475,17 @@ PanelWindow {
                             required property string modelData
                             readonly property string pageId: modelData
                             property bool seen: false
-                            width: pages.width
+                            // switching menus: the page that's going keeps the width it had (it
+                            // used to jump to the new menu's width and stretch as it faded), in
+                            // the middle; the one coming fills the room
+                            readonly property bool isCur: HubState.page === modelData
+                            readonly property real ownW: Math.min(win.maxOpenW, (win.pageInfo[modelData] || win.pageInfo.search).w)
+                            width: isCur ? pages.width : ownW
+                            x: Math.round((pages.width - width) / 2)
+                            // built in the background, so opening a menu for the first time doesn't
+                            // freeze everything for a moment (the card's change raced ahead while
+                            // the old page sat there, fully drawn, stretched across it)
+                            asynchronous: true
                             // the room there is (a page's own height was used as is, so on a
                             // short screen it was laid out taller than the card and spilled out)
                             height: pages.height
@@ -590,6 +605,9 @@ PanelWindow {
         CardShadow {}
         MouseArea { anchors.fill: parent }
         PanelFx { anchors.fill: parent; radius: floatCard.radius }
+        // what's inside (openArea) is laid out at the size the menu is going to; this keeps it
+        // within the card while the card grows to that size (it showed past the card's edges)
+        Item { id: cardClip; anchors.fill: parent; clip: true; z: 1 }
         // pages let go once it has faded out
         onOpacityChanged: if (!win.shown && opacity < 0.01) win.wasOpen = false
     }
