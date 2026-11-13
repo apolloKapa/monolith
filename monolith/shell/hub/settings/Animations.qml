@@ -106,6 +106,74 @@ ColumnLayout {
 
     // ── the shell ──
     SectionHead { text: "The shell (menus, the bar, pop-ups)" }
+    // live preview: a pill gliding across a track and back at the shell's speed, with the same
+    // timings (Theme.ms) and curves the menus use, so it shows how fast they'll feel. It changes
+    // as soon as the speed does; with animations off it sits still in the middle
+    SmoothRect {
+        id: track
+        Layout.fillWidth: true
+        Layout.preferredHeight: 72
+        radius: Theme.corner(72, 6)
+        color: Theme.container
+        border.width: Theme.outlineW; border.color: Theme.outlineColor
+        readonly property real pad: Theme.inset(radius, 12)
+        readonly property real farX: width - pill.width - pad
+        SmoothRect {
+            id: groove
+            x: track.pad; anchors.verticalCenter: parent.verticalCenter
+            width: parent.width - 2 * track.pad; height: 6
+            radius: 3
+            color: Theme.control
+        }
+        // the trail: the part of the groove the pill has covered
+        SmoothRect {
+            x: track.pad; anchors.verticalCenter: parent.verticalCenter
+            width: Math.max(0, pill.x + pill.width / 2 - track.pad); height: 6
+            radius: 3
+            color: Qt.alpha(Theme.accent, 0.35)
+            visible: Theme.animOn
+        }
+        SmoothRect {
+            id: pill
+            width: 104; height: 44
+            anchors.verticalCenter: parent.verticalCenter
+            x: track.pad
+            radius: Theme.corner(height)
+            color: Theme.accent
+            Label {
+                anchors.centerIn: parent
+                text: Theme.animOn ? Number(Store.get("theme.animSpeed", 1)).toFixed(2) + " ×" : "off"
+                color: Theme.onAccent; strong: true
+            }
+        }
+        // off: still, in the middle
+        states: State {
+            when: !Theme.animOn
+            PropertyChanges { target: pill; x: (track.width - pill.width) / 2; scale: 1 }
+        }
+        SequentialAnimation {
+            id: glide
+            running: Theme.animOn && track.visible && track.width > 0
+            loops: Animation.Infinite
+            onRunningChanged: if (!running) { pill.scale = 1; if (Theme.animOn) pill.x = track.pad; }
+            // across, the way a menu comes in (emphasized, decelerating)
+            NumberAnimation { target: pill; property: "x"; to: track.farX; duration: Theme.ms(700); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+            // a little bounce on arrival (the island's spring)
+            NumberAnimation { target: pill; property: "scale"; to: 1.1; duration: Theme.ms(120); easing.type: Easing.OutQuad }
+            NumberAnimation { target: pill; property: "scale"; to: 1; duration: Theme.ms(320); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve }
+            PauseAnimation { duration: 450 }
+            // and back
+            NumberAnimation { target: pill; property: "x"; to: track.pad; duration: Theme.ms(700); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+            NumberAnimation { target: pill; property: "scale"; to: 1.1; duration: Theme.ms(120); easing.type: Easing.OutQuad }
+            NumberAnimation { target: pill; property: "scale"; to: 1; duration: Theme.ms(320); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve }
+            PauseAnimation { duration: 450 }
+        }
+        // a new speed starts it over at once (instead of finishing the old, slower lap first)
+        Connections {
+            target: Theme
+            function onAnimScaleChanged() { if (glide.running) { glide.stop(); pill.x = track.pad; pill.scale = 1; glide.start(); } }
+        }
+    }
     SettingRow {
         key: "theme.animations";
         icon: "animation"; title: "Animations"; desc: "Off: the bar, menus and pop-ups appear at once, with no movement"
