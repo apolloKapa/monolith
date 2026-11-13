@@ -80,6 +80,7 @@ source "$MODULES_DIR/pam.sh"
 source "$MODULES_DIR/sddm.sh"
 source "$MODULES_DIR/wallpapers.sh"
 source "$MODULES_DIR/migrate.sh"
+source "$MODULES_DIR/hyprland.sh"
 source "$MODULES_DIR/ui.sh"
 source "$MODULES_DIR/strings.sh"
 
@@ -150,6 +151,20 @@ share_with_other_shell
 step "Services"
 setup_services
 write_version_state "$PROJECT_ROOT"
+
+# Hyprland on this PC: Monolith can be its shell too, but only if you say so (it changes
+# ~/.config/hypr; a backup is kept and `monolith hyprland off` undoes it)
+if [ "$UPDATE_ONLY" != true ] && hypr_present && ! hypr_switched && [ "$(hypr_kind)" != none ] \
+        && { : < /dev/tty; } 2>/dev/null; then
+    printf "\n%s%sHyprland is on this PC.%s Use Monolith as the shell there too?\n" "$BOLD" "$C_CYAN" "$RESET"
+    other_shell_installed && printf "  This turns off Serpantinum's start line and keys in ~/.config/hypr (Serpantinum stays installed).\n"
+    printf "  Your Hyprland config is backed up first; %smonolith hyprland off%s puts it back.\n" "$BOLD" "$RESET"
+    hypr_answer=""
+    read -r -p "  [y] yes   [N] no, leave Hyprland as it is: " hypr_answer < /dev/tty || true
+    if [[ "$hypr_answer" =~ ^[Yy] ]]; then
+        hypr_switch && HYPR_SWITCHED=true
+    fi
+fi
 
 # switch over right away when we're inside a niri session (no reboot needed). niri only runs
 # spawn-at-startup at login, so a fresh install has to start the shell itself. In any other

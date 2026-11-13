@@ -185,16 +185,15 @@ The installer reads displays from the running niri. If you install from a TTY, n
 
 ## Running on Hyprland
 
-The shell also runs on [Hyprland](https://hyprland.org). It notices by itself (Hyprland sets `HYPRLAND_INSTANCE_SIGNATURE`) and reads workspaces, windows, the focused screen and the keyboard layout from Quickshell's Hyprland module instead of niri. Window switching and closing, workspaces, layout switching, turning screens off when idle and logging out use Hyprland's dispatchers. The installer sets Monolith up for niri and never edits your Hyprland config, so add these lines to `~/.config/hypr/hyprland.conf` yourself:
+The shell also runs on [Hyprland](https://hyprland.org). It notices by itself (Hyprland sets `HYPRLAND_INSTANCE_SIGNATURE`) and reads workspaces, windows, the focused screen and the keyboard layout from Quickshell's Hyprland module instead of niri. Window switching and closing, workspaces, layout switching, turning screens off when idle and logging out use Hyprland's dispatchers.
 
-```
-exec-once = ~/.local/bin/monolith start --login
-bind = SUPER, Space, exec, ~/.local/bin/monolith hub search
-bind = SUPER, A, exec, ~/.local/bin/monolith msg toggle system
-bind = SUPER, V, exec, ~/.local/bin/monolith msg toggle clipboard
-bind = SUPER SHIFT, S, exec, ~/.local/bin/monolith screenshot
-bind = SUPER, L, exec, ~/.local/bin/monolith lock
-```
+When Hyprland is on the PC, the installer asks whether to use Monolith as the shell there too (the answer is no unless you type `y`). Or run `monolith hyprland on` any time. It:
+
+- backs up `~/.config/hypr` to `~/.config/hypr.before-monolith`
+- turns off (comments out, marked `monolith-off:`) only the lines that start Serpantinum or call it; Serpantinum itself stays installed
+- adds Monolith's start line and keys in a file of its own, `~/.config/hypr/monolith.lua` (for a Lua config, `hyprland.lua`) or `monolith.conf` (for `hyprland.conf`), included at the end of your config. The keys are the ones Serpantinum used: Super+D launcher, Super+C clipboard, Super+B control center, Super+M media, Super+W wallpapers, Super+S calendar, Super+N network, Super+V sound, Super+H keybinds, Super+A notifications, Super+L lock, Print screenshot, Super+1…0 workspaces
+
+Log in to Hyprland again and Monolith starts. `monolith hyprland off` puts the backed-up config back, so Serpantinum starts there again.
 
 What stays niri-only: the Displays, Keyboard & mouse and Windows settings pages, the cursor theme and the screenshot folder setting change niri's config, so on Hyprland they show a note and you set those in `hyprland.conf`. The window switcher's overview button uses the [hyprexpo](https://github.com/hyprwm/hyprland-plugins) plugin when it's loaded.
 

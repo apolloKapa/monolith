@@ -426,10 +426,11 @@ draw_completion_screen() {
         printf "  Log in to %sniri%s and Monolith starts by itself.\n" "$BOLD" "$RESET"
     fi
     printf "  Super+Space opens the hub: search, settings and everything else.\n"
-    # Hyprland is here too: Monolith runs on it, but the installer leaves its config alone
-    if command -v Hyprland >/dev/null 2>&1 || command -v hyprland >/dev/null 2>&1; then
-        printf "  On Hyprland: add %sexec-once = ~/.local/bin/monolith start --login%s to ~/.config/hypr/hyprland.conf\n" "$BOLD" "$RESET"
-        printf "  (and the keybinds you want; the README's \"Running on Hyprland\" has examples).\n"
+    # Hyprland is here too
+    if [ "$HYPR_SWITCHED" = true ]; then
+        printf "  On %sHyprland%s Monolith starts from your next login there too (%smonolith hyprland off%s undoes it).\n" "$BOLD" "$RESET" "$BOLD" "$RESET"
+    elif hypr_present && ! hypr_switched; then
+        printf "  To use Monolith on Hyprland too: %smonolith hyprland on%s (backs up ~/.config/hypr first).\n" "$BOLD" "$RESET"
     fi
     printf "  Run %smonolith installer%s any time to update or change these choices.\n\n" "$BOLD" "$RESET"
 

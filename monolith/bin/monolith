@@ -143,6 +143,23 @@ case "$1" in
         done
         echo "No installer found." >&2; exit 1
         ;;
+    # Monolith as the shell on Hyprland too (or not): changes ~/.config/hypr, with a backup
+    hyprland)
+        mod=""
+        for i in "$HOME/.local/share/monolith/install/modules/hyprland.sh" "$here/../install/modules/hyprland.sh"; do
+            [ -f "$i" ] && { mod="$i"; break; }
+        done
+        [ -n "$mod" ] || { echo "Monolith's installer files aren't here; run: monolith installer" >&2; exit 1; }
+        C_GREEN=$'\e[32m'; C_YELLOW=$'\e[33m'; C_RED=$'\e[31m'; C_CYAN=$'\e[36m'; RESET=$'\e[0m'
+        . "$mod"
+        case "$2" in
+            on) hypr_switch ;;
+            off) hypr_undo ;;
+            *) echo "monolith hyprland on   use Monolith as the shell on Hyprland (backs up ~/.config/hypr)"
+               echo "monolith hyprland off  put Hyprland's config back as it was"
+               if hypr_switched; then echo "(now: on)"; else echo "(now: off)"; fi ;;
+        esac
+        ;;
     migrate) migrate ;;
     *) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//' ;;
 esac
