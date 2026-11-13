@@ -22,7 +22,9 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
-    mask: Region { item: pk.shown ? card : null }
+    // (the card's place, worked out here: handed the card, the region was read once while it was
+    // still zooming in from 94 % and its edge let clicks through to the window behind)
+    mask: Region { x: card.x; y: card.y; width: pk.shown ? card.width : 0; height: pk.shown ? card.height : 0 }
 
     // the position, moving every frame
     PlayPosition { id: pp; player: pk.player; active: pk.shown }

@@ -24,7 +24,16 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
-    mask: Region { item: win.tucked ? sensor : hit }
+    // (the bar's part worked out from where the box is: a region handed the click area inside the
+    // box only followed that item's own place, so it stayed where the box was when the bar
+    // started sliding back in from auto-hide)
+    mask: Region {
+        item: win.tucked ? sensor : null
+        Region {
+            x: box.x + hit.x; y: box.y + hit.y
+            width: win.tucked ? 0 : hit.width; height: win.tucked ? 0 : hit.height
+        }
+    }
 
     // auto-hide (Settings → Bar): it slides off the edge and comes back when the pointer touches it
     readonly property bool autohide: Store.get("status.autohide", false) === true

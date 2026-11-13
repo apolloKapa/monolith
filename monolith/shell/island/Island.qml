@@ -46,7 +46,16 @@ PanelWindow {
     Region {
         id: pinnedMask
         item: island
-        Region { item: floatCard.visible ? floatCard : null }
+        // (the card as it is now, zoom included: taken from the card itself, the region was read
+        // once while it was still zooming in from 94 % and the card's edge then let clicks through)
+        Region {
+            readonly property bool on: floatCard.visible
+            readonly property real k: floatCard.scale
+            width: on ? Math.ceil(floatCard.width * k) : 0
+            height: on ? Math.ceil(floatCard.height * k) : 0
+            x: Math.floor(floatCard.x + (floatCard.width - floatCard.width * k) * blurBox.fx)
+            y: Math.floor(floatCard.y + (floatCard.height - floatCard.height * k) * blurBox.fy)
+        }
         Region { item: win.dropped || drop.height > 1 ? dropBody : null }
     }
     Item { id: fullArea; anchors.fill: parent }
@@ -626,12 +635,41 @@ PanelWindow {
         // each part is cut exactly like what's drawn there: a square blur showed as a lighter
         // patch round the corners of a rounded bar
         readonly property bool barOn: (win.barHere && !(Theme.frameBand && !win.grown)) || win.toastGrows || (win.shown && win.docked)
+        // (these are worked out from where the bar is, not handed the bar's parts: a region taken
+        // from an item only follows that item's own position and size, so when the bar slid away
+        // (auto-hide) its parts didn't move themselves and the blur stayed behind where it was)
         // Solid (and Modular with a notification out of it): its rounded rectangle
-        Region { item: blurShape.barOn && solidBg.visible ? solidBg : null; radius: solidBg.radius }
+        Region {
+            readonly property bool on: blurShape.barOn && solidBg.visible
+            x: island.x; y: island.y
+            width: on ? island.width : 0; height: on ? island.height : 0
+            radius: solidBg.radius
+        }
         // Modular: only its pills (not the gaps between them)
-        Region { item: blurShape.barOn && !solidBg.visible && Theme.barStyle === "modular" && bar.leftPill.visible ? bar.leftPill : null; radius: bar.leftPill.radius }
-        Region { item: blurShape.barOn && !solidBg.visible && Theme.barStyle === "modular" && bar.midPill.visible ? bar.midPill : null; radius: bar.midPill.radius }
-        Region { item: blurShape.barOn && !solidBg.visible && Theme.barStyle === "modular" && bar.rightPill.visible ? bar.rightPill : null; radius: bar.rightPill.radius }
+        readonly property bool pillsOn: blurShape.barOn && !solidBg.visible && Theme.barStyle === "modular"
+        readonly property real pillX: island.x + body.x + bar.x
+        readonly property real pillY: island.y + body.y + bar.y
+        Region {
+            readonly property Item p: bar.leftPill
+            readonly property bool on: blurShape.pillsOn && p.visible
+            x: blurShape.pillX + p.x; y: blurShape.pillY + p.y
+            width: on ? p.width : 0; height: on ? p.height : 0
+            radius: p.radius
+        }
+        Region {
+            readonly property Item p: bar.midPill
+            readonly property bool on: blurShape.pillsOn && p.visible
+            x: blurShape.pillX + p.x; y: blurShape.pillY + p.y
+            width: on ? p.width : 0; height: on ? p.height : 0
+            radius: p.radius
+        }
+        Region {
+            readonly property Item p: bar.rightPill
+            readonly property bool on: blurShape.pillsOn && p.visible
+            x: blurShape.pillX + p.x; y: blurShape.pillY + p.y
+            width: on ? p.width : 0; height: on ? p.height : 0
+            radius: p.radius
+        }
         // the hanging shapes (Island, Fill, Frame): square against the edge, its ears too
         EdgeBlur {
             on: blurShape.barOn && !island.empty

@@ -162,7 +162,14 @@ PanelWindow {
     Region {
         id: blurShape
         // (only while it is fully there: the blur cannot fade out with it)
-        item: osd.visible && hold.running ? pill : null
-        radius: pill.radius
+        // (worked out from the card's size and zoom, not taken from the card: an item's region
+        // was read once while the card was still zoomed in from 94 % and never followed the zoom,
+        // so the blur sat off the card, short of it on one side and past it on the other)
+        readonly property bool on: osd.visible && hold.running
+        width: on ? Math.round(pill.width * pill.scale) : 0
+        height: on ? Math.round(pill.height * pill.scale) : 0
+        x: Math.round((pill.width - width) / 2)
+        y: Math.round((pill.height - height) / 2)
+        radius: pill.radius * pill.scale
     }
 }
