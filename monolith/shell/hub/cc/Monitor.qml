@@ -58,7 +58,10 @@ ColumnLayout {
             Layout.fillHeight: true
             icon: "hard_drive"; title: "Disks"
             property var list: []
+            // (read again each time the control center opens: the page stays built between opens)
+            Connections { target: HubState; function onOpenChanged() { if (HubState.open && HubState.page === "quick") diskRead.running = true; } }
             Process {
+                id: diskRead
                 running: true
                 command: ["sh", "-c", "df -B1 --output=target,size,used -x tmpfs -x devtmpfs -x efivarfs -x overlay 2>/dev/null | tail -n +2"]
                 stdout: StdioCollector {

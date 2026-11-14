@@ -2,8 +2,8 @@ import QtQuick
 import "../core"
 
 // A hub page: shows while it's the current one, fading in as the card morphs to its size.
-// Pages are built when first opened (Island.qml) and then kept for a while, so they open at
-// once next time: `current` is true while it's the page showing in an open hub (it turns true
+// Pages are built when first opened (Island.qml) and then kept, so they open at once next
+// time: `current` is true while it's the page showing in an open hub (it turns true
 // just after creation, and again on every opening), so pages refresh their data in
 // onCurrentChanged.
 //

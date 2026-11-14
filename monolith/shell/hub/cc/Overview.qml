@@ -103,7 +103,10 @@ GridLayout {
         Layout.preferredHeight: 230
         icon: "content_paste"; title: "Clipboard"
         property var entries: []
+        // (read again each time the control center opens: the page stays built between opens)
+        Connections { target: HubState; function onOpenChanged() { if (HubState.open && HubState.page === "quick") clipRead.running = true; } }
         Process {
+            id: clipRead
             running: true
             command: ["sh", "-c", "cliphist list 2>/dev/null | head -4"]
             stdout: StdioCollector { onStreamFinished: clip.entries = text.split("\n").filter(l => l).map(l => ({ line: l, text: l.substring(l.indexOf("\t") + 1) })) }

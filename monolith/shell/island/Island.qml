@@ -527,9 +527,9 @@ PanelWindow {
                 }
 
                 // the pages: built on the screen the island is open on, each when first opened,
-                // and kept (hidden) for a few minutes after it closes, so opening it again doesn't
-                // build it all over again (on an older laptop that was a good part of a second
-                // before anything moved). Search, the launcher, is built soon after the shell
+                // and kept (hidden) after it closes, so opening it again doesn't build it all over
+                // again (on an older laptop that was a good part of a second before anything
+                // moved). Search, the launcher, is built soon after the shell
                 // starts and kept.
                 Item {
                     id: pages
@@ -569,9 +569,11 @@ PanelWindow {
                                 if (item.hasOwnProperty("query")) item.query = Qt.binding(() => query.text);
                                 if (modelData === "search") item.done.connect(() => { query.text = ""; HubState.close(); });
                             }
+                            // (kept once built: let go a few minutes after closing, the next open
+                            // rebuilt it in the background while the card was already coming in, so
+                            // the card grew to the last menu's height, then jumped to this one's
+                            // and the page faded in late, the first open after a while only)
                             readonly property bool keep: modelData === "search"
-                            Connections { target: win; function onOpenChanged() { if (win.open) letGo.stop(); else if (!pl.keep) letGo.restart(); } }
-                            Timer { id: letGo; interval: 5 * 60 * 1000; onTriggered: if (!win.open) pl.seen = false }
                             // the launcher ready before it's first needed (when the shell has settled)
                             Timer { interval: 4000; running: pl.keep && win.here; onTriggered: pl.seen = true }
                         }
