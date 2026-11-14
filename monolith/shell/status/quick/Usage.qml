@@ -200,6 +200,7 @@ GridLayout {
         radius: Theme.corner(80, 4)
         color: Theme.container
         ListView {
+            SmoothWheel {}
             anchors.fill: parent; anchors.margins: 6
             clip: true
             spacing: 2

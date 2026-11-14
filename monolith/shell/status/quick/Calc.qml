@@ -127,6 +127,7 @@ GridLayout {
     // the history: click one to use it again
     // (narrow: the last three, over the keys)
     ListView {
+        SmoothWheel {}
         Layout.fillWidth: true
         Layout.preferredHeight: c.history.length === 0 || c.wide ? 0 : Math.min(3, c.history.length) * 30
         visible: c.history.length > 0 && !c.wide
@@ -196,6 +197,7 @@ GridLayout {
             radius: Theme.corner(80, 4)
             color: Theme.container
             ListView {
+                SmoothWheel {}
                 anchors.fill: parent; anchors.margins: 6
                 clip: true
                 spacing: 2

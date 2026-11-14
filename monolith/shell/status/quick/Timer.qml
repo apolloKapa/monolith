@@ -143,6 +143,7 @@ GridLayout {
             }
             // laps: the time at each, and how long that lap took
             ListView {
+                SmoothWheel {}
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.minimumHeight: 80
@@ -188,6 +189,7 @@ GridLayout {
             radius: Theme.corner(80, 4)
             color: Theme.container
             ListView {
+                SmoothWheel {}
                 anchors.fill: parent; anchors.margins: 6
                 clip: true
                 spacing: 2

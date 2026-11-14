@@ -182,6 +182,7 @@ GridLayout {
 
     // the amount in every other unit: click one to convert to it, or copy it
     component UnitList: ListView {
+        SmoothWheel {}
         clip: true
         spacing: 2
         model: cv.units[cv.kind].map((u, i) => i).filter(i => i !== cv.fromI && i !== cv.toI)
@@ -198,6 +199,7 @@ GridLayout {
     }
     // what you converted: click to bring it back, or copy the answer
     component HistoryList: ListView {
+        SmoothWheel {}
         clip: true
         spacing: 2
         model: cv.history

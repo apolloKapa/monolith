@@ -706,6 +706,7 @@ ColumnLayout {
         sortField: FolderListModel.Time
     }
     ListView {
+        SmoothWheel { horizontal: true }
         visible: d.showSaved
         Layout.fillWidth: true
         Layout.preferredHeight: 92

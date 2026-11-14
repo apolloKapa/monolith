@@ -84,6 +84,7 @@ Item {
         }
         // ── deleted notes ──
         ListView {
+            SmoothWheel {}
             visible: nb.showTrash
             y: head.height + 6; width: parent.width; height: parent.height - y
             clip: true
@@ -112,6 +113,7 @@ Item {
             Text { anchors.centerIn: parent; visible: Notes.trash.length === 0; text: "Nothing deleted"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: nb.fontSize - 1 }
         }
         ListView {
+            SmoothWheel { enabled: nb.live }
             id: lv
             visible: !nb.showTrash
             y: head.height + 6 + (filterBox.visible ? filterBox.height + 6 : 0); width: parent.width; height: parent.height - y

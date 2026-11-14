@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import "../../core"
 import "../../ui"
 
@@ -13,7 +14,7 @@ ColumnLayout {
     function has(spec) { return v[spec] !== null && v[spec] !== undefined; }
     function reload() {
         NiriConf.read(["input/keyboard/xkb|layout", "input/keyboard/xkb|options", "input/keyboard|repeat-delay", "input/keyboard|repeat-rate", "input/keyboard|numlock",
-                       "input/mouse|accel-speed", "input/mouse|accel-profile", "input/mouse|natural-scroll",
+                       "input/mouse|accel-speed", "input/mouse|accel-profile", "input/mouse|natural-scroll", "input/mouse|scroll-factor",
                        "input/touchpad|accel-speed", "input/touchpad|tap", "input/touchpad|natural-scroll", "input/touchpad|dwt"], r => sec.v = r);
     }
     Component.onCompleted: reload()
@@ -55,6 +56,29 @@ ColumnLayout {
     SettingRow {
         icon: "trending_flat"; title: "No acceleration"; desc: "The pointer moves exactly as far as the mouse (good for games)"
         Toggle { checked: NiriConf.unquote(sec.val("input/mouse|accel-profile", "")) === "flat"; onToggled: on => sec.put("input/mouse", "accel-profile", on ? "\"flat\"" : "\"adaptive\"") }
+    }
+    // the mouse wheel's speed: niri's scroll-factor, or on Hyprland input:scroll_factor in
+    // Monolith's file (scripts/hypr_input.py). Apps and Monolith's own menus follow it
+    // (the compositor makes each notch a bigger or smaller step)
+    readonly property string hyprInput: Qt.resolvedUrl("../../scripts/hypr_input.py").toString().replace("file://", "")
+    property real hyprScroll: 1
+    Process {
+        running: Niri.hyprland
+        command: ["python3", sec.hyprInput, "read"]
+        stdout: StdioCollector { onStreamFinished: { try { const f = Number(JSON.parse(text).scroll_factor); if (f > 0) sec.hyprScroll = f; } catch (e) {} } }
+    }
+    Process { id: hyprSet }
+    Timer { id: hyprWrite; interval: 350; onTriggered: { hyprSet.command = ["python3", sec.hyprInput, "set", "scroll_factor", sec.hyprScroll.toFixed(2)]; hyprSet.running = true; } }
+    SettingRow {
+        icon: "unfold_more"; title: "Mouse scroll speed"; desc: "How far one notch of the wheel scrolls, in apps and Monolith's menus. 1× is normal"
+        NumberBox {
+            from: 0.1; to: 5; slideTo: 3; step: 0.05; decimals: 2; unit: "×"
+            value: Niri.hyprland ? sec.hyprScroll : Number(sec.val("input/mouse|scroll-factor", 1))
+            onMoved: x => {
+                if (Niri.hyprland) { sec.hyprScroll = x; hyprWrite.restart(); }
+                else sec.put("input/mouse", "scroll-factor", x.toFixed(2));
+            }
+        }
     }
     SettingRow {
         icon: "swap_vert"; title: "Natural scrolling (mouse)"

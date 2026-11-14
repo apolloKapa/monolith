@@ -402,6 +402,7 @@ Page {
                 anchors.left: hyIcon.right; anchors.leftMargin: 10; anchors.right: parent.right; anchors.rightMargin: 12; y: 10
                 wrapMode: Text.WordWrap; font.pixelSize: Theme.sizeSmall
                 text: (parent.niriPages[page.file] || "") + ": these settings are niri's, so they apply when you log into niri. On Hyprland, set them in ~/.config/hypr/hyprland.conf."
+                      + (page.file === "Input" ? " Mouse scroll speed works on Hyprland too." : "")
             }
         }
         Flickable {
