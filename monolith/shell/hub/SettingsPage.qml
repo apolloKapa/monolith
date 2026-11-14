@@ -27,7 +27,10 @@ Page {
         { id: "desktop", desc: "Widgets and the screen edges", title: "Desktop", icon: "widgets", tabs: [["desktop", "Widgets", "Desktop"], ["quickaccess", "Quick access (screen edges)", "QuickAccess"]] },
         { id: "windows", desc: "Gaps, borders, window corners and workspaces", title: "Windows", icon: "select_window", tabs: [["windows", "Windows", "Windows"], ["workspaces", "Workspaces per screen", "Workspaces"]] },
         { id: "display", desc: "Monitors, scaling and night light", title: "Displays", icon: "monitor", gap: true, tabs: [["display", "Monitors", "Display"], ["nightlight", "Night light", "Night"]] },
-        { id: "devices", desc: "Keyboard, shortcuts, mouse, microphone and camera", title: "Devices", icon: "keyboard", tabs: [["input", "Keyboard & mouse", "Input"], ["keybinds", "Keyboard shortcuts", "Keybinds"], ["devices", "Microphone & camera", "Devices"]] },
+        { id: "devices", desc: "Keyboard, mouse, microphone and camera", title: "Devices", icon: "keyboard", tabs: [["input", "Keyboard & mouse", "Input"], ["devices", "Microphone & camera", "Devices"]] },
+        // every tab is settings/Keybinds.qml: it shows the keymap sections its tab id names
+        // (keys-<word>: the sections starting with that word; keybinds: all of them)
+        { id: "shortcuts", desc: "Every key and what it does, by purpose", title: "Keyboard shortcuts", icon: "keyboard_command_key", tabs: [["keybinds", "All shortcuts", "Keybinds"], ["keys-apps", "Apps", "Keybinds"], ["keys-monolith", "Monolith", "Keybinds"], ["keys-windows", "Windows", "Keybinds"], ["keys-sizes", "Window sizes", "Keybinds"], ["keys-workspaces", "Workspaces", "Keybinds"], ["keys-monitors", "Monitors", "Keybinds"], ["keys-media", "Media, volume & brightness", "Keybinds"], ["keys-screenshots", "Screenshots", "Keybinds"], ["keys-zoom", "Zoom", "Keybinds"], ["keys-session", "Session", "Keybinds"], ["keys-other", "Other", "Keybinds"]] },
         { id: "alerts", desc: "Notifications, sounds and pop-ups", title: "Notifications", icon: "notifications", tabs: [["notifications", "Notifications", "Notifications"], ["sounds", "Sounds", "SoundSettings"], ["osd", "On-screen pop-up", "Osd"]] },
         { id: "lock", desc: "Locking, sleeping and what happens when you're away", title: "Lock & idle", icon: "lock_clock", gap: true, tabs: [["idle", "Lock & idle", "Idle"]] },
         { id: "capture", desc: "Screenshots and recordings", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots", "Capture"]] },
@@ -110,16 +113,22 @@ Page {
     readonly property var tab: category.tabs.find(t => t[0] === section) || category.tabs[0]
     readonly property string file: section === "welcome" ? "Welcome" : tab[2]
     // every page in the order they're listed, and which way the last change went (+1: down)
-    readonly property var pageOrder: categories.reduce((a, c) => a.concat(c.tabs.map(t => t[2])), [])
+    // (tab ids: several tabs can share one file)
+    readonly property var pageOrder: categories.reduce((a, c) => a.concat(c.tabs.map(t => t[0])), [])
     property int pageDir: 1
-    property string lastFile: ""
+    property string lastTab: ""
+    // another tab of the same file (Keyboard shortcuts): no new page is loaded, so it comes in here
+    readonly property string tabId: section === "welcome" ? "welcome" : tab[0]
+    onTabIdChanged: if (loader.status === Loader.Ready && String(loader.source).endsWith("/" + file + ".qml")) {
+        flick.keepH = 0; flick.contentY = 0; aimPage(); loader.opacity = 0; pageIn.restart(); slideIn.restart();
+    }
     // laid out: the sidebar's unfolding animates only after this
     property bool settled: false
     Timer { interval: 250; running: true; onTriggered: page.settled = true }
     // shown since the hub opened (its section stays loaded until the hub closes)
     property bool seenOpen: false
     Connections { target: HubState; function onOpenChanged() { if (!HubState.open) page.seenOpen = false; } }
-    function aimPage() { pageDir = pageOrder.indexOf(file) >= pageOrder.indexOf(lastFile) ? 1 : -1; lastFile = file; }
+    function aimPage() { pageDir = pageOrder.indexOf(tabId) >= pageOrder.indexOf(lastTab) ? 1 : -1; lastTab = tabId; }
 
     RowLayout {
         anchors.fill: parent

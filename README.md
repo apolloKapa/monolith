@@ -216,7 +216,7 @@ What stays niri-only: the Displays, Keyboard & mouse and Windows settings pages,
 | `Mod+Z` / `Mod+Space` | the hub: search apps, files (`/`, `~`), emojis (`:`), commands (`>`) |
 | `Mod+Tab` | windows (switcher and overview) |
 | `Mod+Alt+V` | clipboard history |
-| `Mod+Ctrl+scroll` | zoom (wooz): up opens it, scroll inside to zoom, down closes it (`Mod+Ctrl+Z` opens it too) |
+| `Mod+Ctrl+scroll` | zoom around the mouse (wooz): up zooms in a step, down zooms out, the last step out closes it (`Mod+Ctrl+Z` turns it on or off; Esc closes it) |
 | `Mod+I` | the AppImages window |
 
 **Monolith**

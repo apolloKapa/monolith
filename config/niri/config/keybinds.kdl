@@ -148,7 +148,7 @@ binds {
 
     // ── Zoom ────────────────────────────────────────────────────────
     // Magnify around the mouse
-    Mod+Ctrl+Z repeat=false { spawn-sh "pgrep -x wooz > /dev/null || wooz --mouse-track"; }
+    Mod+Ctrl+Z repeat=false { spawn "monolith" "zoom" "toggle"; }
     Mod+Ctrl+WheelScrollUp   cooldown-ms=80 { spawn "monolith" "zoom" "in"; }
     Mod+Ctrl+WheelScrollDown cooldown-ms=80 { spawn "monolith" "zoom" "out"; }
 

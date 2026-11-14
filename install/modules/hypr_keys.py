@@ -77,6 +77,14 @@ def action(name, args):
         px = (1 if m.group(1) == "+" else -1) * int(m.group(2)) * 10
         x, y = (px, 0) if name == "set-column-width" else (0, px)
         return ("hl.dsp.window.resize({ x = %d, y = %d, relative = true })" % (x, y), "resizeactive, %d %d" % (x, y))
+    # niri's columns: Hyprland's scrolling layout (general.layout = "scrolling") has them as layout
+    # messages (other layouts ignore them)
+    msg = {"consume-or-expel-window-left": "consume_or_expel prev", "consume-or-expel-window-right": "consume_or_expel next",
+           "consume-window-into-column": "consume", "expel-window-from-column": "expel",
+           "center-column": "center", "center-visible-columns": "center",
+           "switch-preset-column-width": "colresize +conf", "switch-preset-column-width-back": "colresize -conf"}.get(name)
+    if msg:
+        return ("hl.dsp.layout(%s)" % lua_str(msg), "layoutmsg, " + msg)
     if name == "quit":
         return ("hl.dsp.exit()", "exit,")
     if name == "power-off-monitors":

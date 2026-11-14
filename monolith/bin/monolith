@@ -10,7 +10,7 @@
 #   monolith capture-in <seconds> [screen]    the capture overlay after a countdown
 #   monolith edit-image <file>                a picture in the screenshot editor
 #   monolith pin-image <file>                 a picture pinned over the windows
-#   monolith zoom in | out
+#   monolith zoom in | out | toggle | off      zoom in steps around the mouse
 #   monolith welcome                             the welcome tour
 #   monolith dock                                the dock editor (or hold an app in the dock)
 #   monolith widgets [lock]                      arrange the desktop's (or lock screen's) widgets
@@ -50,8 +50,8 @@ page_for() {
     esac
 }
 
-# older configs started the shell with monolithd, zoomed with a script of the old shell, or
-# called the trial command (monolith-next); this moves those lines over. Nothing else changes.
+# older configs started the shell with monolithd, zoomed with a script of the old shell (or
+# opened wooz at 1x on Mod+Ctrl+Z), or called the trial command (monolith-next); this moves those lines over. Nothing else changes.
 migrate() {
     for f in "$niri_conf"/config.kdl "$niri_conf"/config/*.kdl; do
         [ -f "$f" ] || continue
@@ -62,6 +62,7 @@ migrate() {
             -e 's|^\([[:space:]]*\)spawn-at-startup .*monolithd.* start".*$|\1spawn-at-startup "'"$HOME"'/.local/bin/monolith" "start" "--login"|' \
             -e 's|^// (monolith-next) spawn-at-startup .*$||' \
             -e '/the new shell (monolith-next back undoes this)/d' \
+            -e 's|spawn-sh "pgrep -x wooz > /dev/null [|][|] wooz --mouse-track";|spawn "'"$HOME"'/.local/bin/monolith" "zoom" "toggle";|' \
             "$f"
     done
     # the trial left two login lines; keep one
@@ -120,12 +121,47 @@ case "$1" in
         ipc capture start photo "$([ $full = 1 ] && echo screen || echo region)" "$edit_b"
         ;;
     zoom)
-        # wooz: a zoomable picture of the screen. The first step opens it (scroll in it to zoom,
-        # Esc or zooming out closes it).
+        # Hyprland zooms the live screen itself (cursor.zoom_factor, around the mouse): each step
+        # 1.25x more or less, up to 10x (its most); off at 1x. Toggle: 2x or off.
+        if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
+            case "$2" in
+                in) f='math.min(z * 1.25, 10)' ;;
+                out) f='(z / 1.25 < 1.05) and 1 or z / 1.25' ;;
+                off) f='1' ;;
+                *) f='(z > 1) and 1 or 2' ;;
+            esac
+            if [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprland.lua" ]; then
+                exec hyprctl eval "local z = hl.get_config('cursor.zoom_factor') or 1; hl.config({ cursor = { zoom_factor = $f } })" >/dev/null
+            fi
+            # (a classic hyprland.conf: the same with keyword)
+            z=$(hyprctl getoption cursor:zoom_factor -j 2>/dev/null | sed -n 's/.*"float": *\([0-9.]*\).*/\1/p')
+            z=$(awk -v z="${z:-1}" -v a="$2" 'BEGIN { if (a == "in") z = z * 1.25; else if (a == "out") z = z / 1.25; else if (a == "off") z = 1; else z = (z > 1) ? 1 : 2;
+                if (z < 1.05) z = 1; if (z > 10) z = 10; print z }')
+            exec hyprctl keyword cursor:zoom_factor "$z" >/dev/null
+        fi
+        # niri: wooz: a zoomable picture of the screen around the mouse. Each step opens it again at the
+        # next zoom (keys can't reach it while it's open: the compositor takes Mod+Ctrl+scroll,
+        # and a pretend key press closes it); the last step out closes it. Inside it, plain scroll
+        # zooms too, Esc or a right click closes it.
+        state="${XDG_RUNTIME_DIR:-/tmp}/monolith-zoom"
+        exec 9>"$state.lock"; flock 9    # quick scrolls take turns
+        steps="0 33 50 67 75 83 88 92"   # how much of the screen is cut away: 1.5x .. 12x
+        cur=0
+        if pgrep -x wooz >/dev/null; then cur=$(cat "$state" 2>/dev/null); cur=${cur:-2}; fi
         case "$2" in
-            out|off) pkill -x wooz ;;
-            *) pgrep -x wooz >/dev/null || exec wooz ;;
+            in) next=$((cur < 7 ? cur + 1 : 7)) ;;
+            out) next=$((cur > 0 ? cur - 1 : 0)) ;;
+            off) next=0 ;;
+            *) next=$((cur > 0 ? 0 : 2)) ;;
         esac
+        [ "$next" = "$cur" ] && exit 0
+        # the picture is of the screen, so the old one goes first
+        pkill -x wooz
+        i=0; while pgrep -x wooz >/dev/null && [ $i -lt 40 ]; do sleep 0.025; i=$((i + 1)); done
+        echo "$next" > "$state"
+        [ "$next" = 0 ] && exit 0
+        pct=$(echo $steps | cut -d' ' -f$((next + 1)))
+        exec wooz --zoom-in "$pct%" --mouse-track --invert-scroll 9>&-
         ;;
     dock) ipc dock edit ;;
     widgets) ipc widgets edit "${2:-desktop}" ;;

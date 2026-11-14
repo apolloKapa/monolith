@@ -5,7 +5,9 @@ import Quickshell.Io
 import "../../core"
 import "../../ui"
 
-// Devices → Keyboard shortcuts: every key, in the keymap's sections, with what it does. Change a
+// Keyboard shortcuts: every key, in the keymap's sections, with what it does. Each tab of the
+// section is this page showing one purpose (HubState.settingsSection "keys-<word>": the keymap
+// sections starting with that word; "keys-other": the ones no tab names; "keybinds": all). Change a
 // key (press the new one), remove it, or add one that runs a program. scripts/keys.py does the
 // work: niri's keybinds.kdl (checked by niri, undone if it isn't accepted), or on Hyprland
 // Monolith's monolith/keybinds file (kept across updates; undone if Hyprland reports an error).
@@ -19,6 +21,27 @@ ColumnLayout {
     property string recording: ""      // the key being changed ("+" while adding a new one)
     property string newKey: ""          // the key picked for a new shortcut
     property bool busy: false
+    readonly property string group: HubState.settingsSection.startsWith("keys-") ? HubState.settingsSection.slice(5) : ""
+    readonly property var groups: ["apps", "monolith", "windows", "sizes", "workspaces", "monitors", "media", "screenshots", "zoom", "session"]
+    function inGroup(section) {
+        const s = section.toLowerCase();
+        if (group === "") return true;
+        if (group === "other") return !groups.some(g => s.startsWith(g));
+        return s.startsWith(group);
+    }
+    readonly property var shown: {
+        const out = [];
+        let last = null;
+        for (const it of items) {
+            if (!inGroup(it.section)) continue;
+            if (filter && (it.label + " " + it.title + " " + it.section).toLowerCase().indexOf(filter) < 0) continue;
+            // a tab of one purpose has its name as the page title already
+            if (it.section !== last && (group === "" || group === "other")) out.push({ head: it.section });
+            last = it.section;
+            out.push(it);
+        }
+        return out;
+    }
 
     function load() { reader.running = true; }
     Component.onCompleted: load()
@@ -88,7 +111,7 @@ ColumnLayout {
 
     Label {
         Layout.fillWidth: true; wrapMode: Text.Wrap; muted: true
-        text: "Every keyboard shortcut, and what it does. Click a key to change it, then press the new one (Esc cancels)."
+        text: (sec.group === "" ? "Every keyboard shortcut, and what it does; the tabs show them by purpose. " : "") + "Click a key to change it, then press the new one (Esc cancels)."
             + (Niri.hyprland ? " On Hyprland your changes stay after updates. Keys in your own my-keys file (~/.config/hypr/monolith/my-keys) are changed there." : " niri checks every change; one it doesn't accept is undone.")
     }
     Label { visible: sec.error !== ""; Layout.fillWidth: true; wrapMode: Text.Wrap; text: sec.error; color: Theme.danger }
@@ -96,6 +119,7 @@ ColumnLayout {
 
     // add one
     SettingRow {
+        visible: sec.group === "" || sec.group === "apps"
         Layout.fillWidth: true
         icon: "add"
         title: "Add a shortcut"
@@ -111,19 +135,10 @@ ColumnLayout {
             }
         }
     }
-    Field { id: search; Layout.fillWidth: true; placeholder: "Search keys or what they do"; onTextChanged: sec.filter = text.toLowerCase() }
+    Field { id: search; visible: sec.group === ""; Layout.fillWidth: true; placeholder: "Search keys or what they do"; onTextChanged: sec.filter = text.toLowerCase() }
 
     Repeater {
-        model: {
-            const out = [];
-            let last = null;
-            for (const it of sec.items) {
-                if (sec.filter && (it.label + " " + it.title + " " + it.section).toLowerCase().indexOf(sec.filter) < 0) continue;
-                if (it.section !== last) { out.push({ head: it.section }); last = it.section; }
-                out.push(it);
-            }
-            return out;
-        }
+        model: sec.shown
         delegate: Loader {
             required property var modelData
             Layout.fillWidth: true
@@ -148,5 +163,10 @@ ColumnLayout {
                 }
             }
         }
+    }
+    Label {
+        visible: sec.items.length > 0 && sec.shown.length === 0
+        Layout.fillWidth: true; muted: true; wrapMode: Text.Wrap
+        text: sec.filter ? "Nothing matches." : "No shortcuts here."
     }
 }
