@@ -49,16 +49,23 @@ def action(name, args):
     if m:
         d = DIRS[m.group(2)]
         return ("hl.dsp.window.move({ monitor = %s })" % lua_str(d), "movewindow, mon:" + d)
+    # a number is the screen's own Nth workspace, as on niri (Hyprland's m~N): workspace N itself
+    # belongs to one screen, so Mod+1 on another screen jumped over to it
     if name == "focus-workspace" and args:
-        return ("hl.dsp.focus({ workspace = %s })" % args[0], "workspace, " + args[0])
+        w = "m~" + args[0] if args[0].isdigit() else args[0].strip('"')
+        return ("hl.dsp.focus({ workspace = %s })" % lua_str(w), "workspace, " + w)
     if name in ("move-column-to-workspace", "move-window-to-workspace") and args:
-        return ("hl.dsp.window.move({ workspace = %s })" % args[0], "movetoworkspace, " + args[0])
+        w = "m~" + args[0] if args[0].isdigit() else args[0].strip('"')
+        return ("hl.dsp.window.move({ workspace = %s })" % lua_str(w), "movetoworkspace, " + w)
+    # the next / previous workspace of this screen, empty ones too, stopping at the ends (as on
+    # niri). Hyprland's m+1 skips empty workspaces and wraps around: with only 1 and 2 in use,
+    # scrolling down went 1, 2, 1, 2... and the screen shook up and down
     if name in ("focus-workspace-down", "focus-workspace-up"):
         w = "m+1" if name.endswith("down") else "m-1"
-        return ("hl.dsp.focus({ workspace = %s })" % lua_str(w), "workspace, " + w)
+        return ("monolith_ws_step(%d)" % (1 if name.endswith("down") else -1), "workspace, " + w)
     if name in ("move-column-to-workspace-down", "move-column-to-workspace-up", "move-window-to-workspace-down", "move-window-to-workspace-up"):
         w = "m+1" if name.endswith("down") else "m-1"
-        return ("hl.dsp.window.move({ workspace = %s })" % lua_str(w), "movetoworkspace, " + w)
+        return ("monolith_ws_step(%d, true)" % (1 if name.endswith("down") else -1), "movetoworkspace, " + w)
     if name == "close-window":
         return ("hl.dsp.window.close()", "killactive,")
     if name == "toggle-window-floating":
@@ -192,7 +199,7 @@ def translate(path, monolith):
         # (a scroll key's own cooldown: Lua configs have no shared wait between scroll keys, see
         # scroll_delay; zoom has none)
         cd = re.search(r"cooldown-ms=(\d+)", props)
-        if cd and "Wheel" in key and what.startswith("hl.dsp."):
+        if cd and "Wheel" in key and (what.startswith("hl.dsp.") or what.startswith("monolith_ws_step(")):
             # (one wait for the keys on the same modifiers, both directions: a wheel's stray tick
             # the other way switched straight back, and the screen shook)
             what = "monolith_cooldown(%s, %s, %s)" % (cd.group(1), what, lua_str("+".join(mods)))
@@ -215,20 +222,54 @@ def scroll_delay(path, lua):
     # Lua: no shared wait (zoom glides in small steps however fast you scroll); a scroll key with
     # a cooldown in niri (switching workspaces) waits on its own instead
     return ["-- scroll-wheel keys: no shared wait; each one with a cooldown (as in niri) waits on its own",
-            "hl.config({ binds = { scroll_event_delay = 0 } })"] + COOLDOWN_LUA + [""]
+            "hl.config({ binds = { scroll_event_delay = 0 } })", ""]
 
 
-# a key that waits `ms` before it (or another key of its group) works again (niri's cooldown-ms)
+# a key that waits `ms` before it (or another key of its group) works again (niri's cooldown-ms);
+# `what` is a dispatcher, or a function (monolith_ws_step's)
 COOLDOWN_LUA = [
     "local monolith_busy = {}",
     "local function monolith_cooldown(ms, what, group)",
     "  return function()",
     "    if monolith_busy[group] then return end",
     "    monolith_busy[group] = true",
-    "    hl.dispatch(what)",
+    "    if type(what) == \"function\" then what() else hl.dispatch(what) end",
     "    hl.timer(function() monolith_busy[group] = false end, { timeout = ms, type = \"oneshot\" })",
     "  end",
     "end"]
+
+
+# the next (d = 1) or previous (-1) workspace of the focused screen, by number, empty ones too,
+# stopping at the first and last (move: take the window there)
+WS_STEP_LUA = [
+    "local function monolith_ws_step(d, move)",
+    "  return function()",
+    "    local mon, cur = hl.get_active_monitor(), hl.get_active_workspace()",
+    "    if not mon or not cur then return end",
+    "    local ids = {}",
+    "    for _, w in ipairs(hl.get_workspaces()) do",
+    "      if w.id > 0 and w.monitor and w.monitor.name == mon.name then ids[#ids + 1] = w.id end",
+    "    end",
+    "    table.sort(ids)",
+    "    for i, id in ipairs(ids) do",
+    "      if id == cur.id then",
+    "        local n = ids[i + d]",
+    "        if n then hl.dispatch(move and hl.dsp.window.move({ workspace = n }) or hl.dsp.focus({ workspace = n })) end",
+    "        return",
+    "      end",
+    "    end",
+    "  end",
+    "end"]
+
+
+def helpers(lines):
+    """The Lua helpers the bind lines use, to go above them."""
+    out = []
+    if any("monolith_cooldown(" in l for l in lines):
+        out += COOLDOWN_LUA + [""]
+    if any("monolith_ws_step(" in l for l in lines):
+        out += WS_STEP_LUA + [""]
+    return out
 
 
 def render(binds, lua, skip=()):
