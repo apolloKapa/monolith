@@ -72,6 +72,11 @@ Item {
         return clock12 ? t + (timeStacked ? "\n" : " ") + Qt.formatTime(d, "AP") : t;
     }
     readonly property string wsStyle: wsStyleAs || Store.get("bar.workspaces", "pills")
+    // how the open workspace's highlight goes over when you switch (Bar → Workspaces → Switching
+    // animation): worm, slide, bouncy, hop, fade; grow (no highlight: the pills change), none
+    readonly property string wsAnim: { const a = Theme.animOn ? String(mopt("ws.anim", "worm")) : "none";
+                                      return ["worm", "slide", "bouncy", "hop", "fade", "grow", "none"].indexOf(a) >= 0 ? a : "worm"; }
+    readonly property bool wsHighlight: ["grow", "none"].indexOf(wsAnim) < 0
     // each workspace style: how long along the bar and how thick across, how round, and how it's
     // filled, edged and numbered when it's open, has windows, or is empty
     function wsLook(st, active, busy) {
@@ -244,12 +249,19 @@ Item {
         }
     }
 
-    // workspaces on this screen, in their style
+    // workspaces on this screen, in their style. Animated: the open one's highlight slides over to
+    // the next like a worm (the edge going first leads, the other catches up), pills grow and fade
+    // into their new look, swell under the pointer, give on a click, and pop in and out.
     Component {
         id: wsC
         Item {
+            id: wsBox
             width: bar.vertical ? Theme.islandH - 10 : ws.width + 14
             height: bar.vertical ? ws.height + 14 : Theme.islandH - 10
+            // (only the ones with windows, and the open one, when empty ones are hidden)
+            readonly property var list: { const l = bar.wsSample ? bar.sampleWorkspaces : Niri.workspacesOn(bar.screenName);
+                                          return bar.mopt("ws.hideEmpty", false) === true ? l.filter(w => w.is_active || (w.busy !== undefined ? w.busy : Niri.workspaceHasWindows(w.id))) : l; }
+            readonly property int activeIndex: list.findIndex(w => w.is_active)
             // the wheel over it: the next / previous workspace
             WheelHandler {
                 enabled: !bar.wsSample && !bar.only && bar.mopt("ws.scroll", true) === true
@@ -260,19 +272,77 @@ Item {
                     Niri.focusWorkspace(l[i + d].idx);
                 }
             }
+
+            // the open workspace's highlight: its two ends follow the open pill on springs; the one
+            // on the side it's heading leads, the other trails, so it stretches over and settles
+            Rectangle {
+                id: hi
+                readonly property Item at: wsBox.activeIndex >= 0 ? reps.itemAt(wsBox.activeIndex) : null
+                visible: !!at && bar.wsHighlight
+                // (over the other pills, so they don't show through it as it slides past them)
+                z: 1
+                // where the open pill is, along the bar and across it
+                readonly property real toA: at ? (bar.vertical ? ws.y + at.y : ws.x + at.x) : 0
+                readonly property real toB: at ? toA + (bar.vertical ? at.height : at.width) : 0
+                readonly property real thick: at ? (bar.vertical ? at.width : at.height) : 0
+                property int dir: 1                  // which way it's going (+1: on along the bar)
+                property real a: toA
+                property real b: toB
+                property real fromA: toA             // where this move started (hop: its arc)
+                property bool ready: false
+                Component.onCompleted: Qt.callLater(() => hi.ready = true)
+                onToAChanged: {
+                    dir = toA >= a ? 1 : -1;
+                    fromA = a;
+                    if (bar.wsAnim === "fade" && ready) fadeIn.restart();
+                }
+                // each animation's two springs (the end it's heading to, the other one), how much
+                // they give: worm stretches (the leading end quick, the other slow), the rest move
+                // in one piece; bouncy overshoots and wobbles back
+                readonly property var spr: ({ worm: [13, 7, 0.55], slide: [10, 10, 0.6], bouncy: [9, 9, 0.16], hop: [8, 8, 0.75] })[bar.wsAnim] || [10, 10, 0.6]
+                readonly property bool moves: hi.ready && ["worm", "slide", "bouncy", "hop"].indexOf(bar.wsAnim) >= 0
+                Behavior on a { enabled: hi.moves; SpringAnimation { spring: hi.dir > 0 ? hi.spr[1] : hi.spr[0]; damping: hi.spr[2]; epsilon: 0.2 } }
+                Behavior on b { enabled: hi.moves; SpringAnimation { spring: hi.dir > 0 ? hi.spr[0] : hi.spr[1]; damping: hi.spr[2]; epsilon: 0.2 } }
+                // hop: up and over in an arc, highest halfway
+                readonly property real hop: bar.wsAnim !== "hop" || Math.abs(toA - fromA) < 1 ? 0
+                    : Math.sin(Math.PI * Math.max(0, Math.min(1, (a - fromA) / (toA - fromA)))) * Math.min(9, Math.abs(toA - fromA) * 0.25)
+                // fade: out where it was, in where it's going (it doesn't travel)
+                NumberAnimation { id: fadeIn; target: hi; property: "opacity"; from: 0; to: 1; duration: Theme.ms(240); easing.type: Easing.OutCubic }
+                x: bar.vertical ? (wsBox.width - thick) / 2 - hop : a
+                y: bar.vertical ? a : (wsBox.height - thick) / 2 - hop
+                width: bar.vertical ? thick : Math.max(1, b - a)
+                height: bar.vertical ? Math.max(1, b - a) : thick
+                radius: at ? at.radius : 0
+                color: Theme.accent
+                scale: at ? at.scale : 1
+                // numbered styles: the open one's number, on the highlight
+                Text {
+                    visible: !!hi.at && hi.at.look.num
+                    anchors.centerIn: parent
+                    text: hi.at ? hi.at.modelData.idx : ""
+                    color: Theme.onAccent
+                    font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall; font.weight: Font.DemiBold
+                }
+            }
+
             Line {
                 id: ws
                 anchors.centerIn: parent
                 spacing: Number(bar.mopt("ws.gap", -1)) >= 0 ? Number(bar.mopt("ws.gap", -1)) : (["numbers", "numberPills", "bubbles"].indexOf(bar.wsStyle) !== -1 ? 3 : 5)
                 Repeater {
-                    // (only the ones with windows, and the open one, when empty ones are hidden)
-                    model: { const l = bar.wsSample ? bar.sampleWorkspaces : Niri.workspacesOn(bar.screenName);
-                             return bar.mopt("ws.hideEmpty", false) === true ? l.filter(w => w.is_active || (w.busy !== undefined ? w.busy : Niri.workspaceHasWindows(w.id))) : l; }
+                    id: reps
+                    // (a count, not the list itself: a new list on every switch rebuilt every pill,
+                    // and a pill made just now has nothing to animate from, so nothing moved)
+                    model: wsBox.list.length
                     Rectangle {
-                        required property var modelData
-                        readonly property bool active: modelData.is_active
+                        id: pill
+                        required property int index
+                        readonly property var modelData: wsBox.list[index] || ({ idx: 0, is_active: false, busy: false, id: -1 })
+                        readonly property bool active: modelData.is_active === true
                         readonly property bool busy: modelData.busy !== undefined ? modelData.busy : Niri.workspaceHasWindows(modelData.id)
                         readonly property var look: bar.wsLook(bar.wsStyle, active, busy)
+                        // (the open one's own colour comes from the sliding highlight over it)
+                        readonly property var idleLook: bar.wsLook(bar.wsStyle, false, busy)
                         // (the open one stretches along the bar: down it on a vertical one)
                         readonly property real along: look.along
                         readonly property real across: look.across
@@ -280,20 +350,41 @@ Item {
                         height: bar.vertical ? along : across
                         // round as the theme's corners allow (squares: a little rounded)
                         radius: look.r >= 1 ? Theme.corner(Math.min(width, height)) : Math.min(Math.min(width, height) / 2, Theme.radius * look.r)
-                        color: look.fill
-                        border.width: look.edge
+                        color: active && bar.wsHighlight ? (idleLook.fill === "transparent" ? "transparent" : Qt.alpha(idleLook.fill, 0)) : look.fill
+                        border.width: active && bar.wsHighlight ? 0 : look.edge
                         border.color: busy ? Theme.subtext : Theme.control
-                        Behavior on width { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-                        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
-                        Behavior on color { ColorAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
+                        Behavior on width { enabled: bar.wsAnim !== "none"; NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+                        Behavior on height { enabled: bar.wsAnim !== "none"; NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
+                        Behavior on color { enabled: bar.wsAnim !== "none"; ColorAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
+                        Behavior on border.width { enabled: bar.wsAnim !== "none"; NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
+                        // swells under the pointer, gives a little when clicked, pops in when it appears
+                        property bool born: false
+                        property real press: 1
+                        Component.onCompleted: born = true
+                        scale: (born ? 1 : 0.2) * (mouse.containsMouse && !bar.wsSample ? 1.18 : 1) * press
+                        opacity: born ? 1 : 0
+                        Behavior on scale { enabled: Theme.animOn; SpringAnimation { spring: 5; damping: 0.32; epsilon: 0.005 } }
+                        Behavior on opacity { enabled: Theme.animOn; NumberAnimation { duration: Theme.ms(180) } }
+                        SequentialAnimation {
+                            id: tap
+                            NumberAnimation { target: pill; property: "press"; to: 0.78; duration: Theme.ms(70); easing.type: Easing.OutQuad }
+                            NumberAnimation { target: pill; property: "press"; to: 1; duration: Theme.ms(260); easing.type: Easing.OutBack; easing.overshoot: 3 }
+                        }
                         Text {
-                            visible: parent.look.num
+                            visible: pill.look.num && !(pill.active && bar.wsHighlight)
                             anchors.centerIn: parent
-                            text: parent.modelData.idx
-                            color: parent.active ? Theme.onAccent : (parent.busy ? Theme.text : Theme.faint)
+                            text: pill.modelData.idx
+                            color: pill.active ? Theme.onAccent : (pill.busy ? Theme.text : Theme.faint)
+                            Behavior on color { enabled: Theme.animOn; ColorAnimation { duration: Theme.ms(220) } }
                             font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall; font.weight: Font.DemiBold
                         }
-                        MouseArea { anchors.fill: parent; anchors.margins: -4; enabled: !bar.wsSample; cursorShape: Qt.PointingHandCursor; onClicked: Niri.focusWorkspace(parent.modelData.idx) }
+                        MouseArea {
+                            id: mouse
+                            anchors.fill: parent; anchors.margins: -4
+                            enabled: !bar.wsSample; hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: { if (Theme.animOn) tap.restart(); Niri.focusWorkspace(pill.modelData.idx); }
+                        }
                     }
                 }
             }

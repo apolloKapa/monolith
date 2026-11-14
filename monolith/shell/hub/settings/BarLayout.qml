@@ -584,6 +584,19 @@ ColumnLayout {
             value: Store.get("bar.workspaces", "pills")
             onPicked: v => Store.set("bar.workspaces", v)
         }
+        SettingRow {
+            key: "bar.ws.anim"
+            icon: "animation"; title: "Switching animation"
+            desc: ({ worm: "Stretches over to the next one, the front end first", slide: "Glides over in one piece", bouncy: "Slides over and wobbles into place",
+                     hop: "Jumps over in a little arc", fade: "Fades out where it was and in where it's going", grow: "No highlight: the pills themselves grow and change colour",
+                     none: "Switches at once" })[String(Store.get("bar.ws.anim", "worm"))] || ""
+            Dropdown {
+                width: 180; height: 36
+                opts: [["worm", "Worm"], ["slide", "Slide"], ["bouncy", "Bouncy"], ["hop", "Hop"], ["fade", "Fade"], ["grow", "Grow"], ["none", "None"]]
+                value: String(Store.get("bar.ws.anim", "worm"))
+                onPicked: v => Store.set("bar.ws.anim", v)
+            }
+        }
         ModToggle { k: "ws.hideEmpty"; d: false; icon: "filter_alt"; title: "Hide empty workspaces"; desc: "Only the ones with windows, and the one you're on" }
         ModToggle { k: "ws.scroll"; d: true; icon: "mouse"; title: "Scroll to switch"; desc: "The wheel over the workspaces goes to the next or previous one" }
         SettingRow {
