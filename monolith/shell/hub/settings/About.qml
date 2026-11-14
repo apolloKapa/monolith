@@ -89,9 +89,9 @@ ColumnLayout {
                     }
                 }
                 Button {
-                    visible: !Updates.newer
-                    text: "Check for updates"; icon: "refresh"
-                    enabled: Updates.state !== "checking"
+                    // (also next to "Update now": a newer one may be out since this check)
+                    text: Updates.state === "checking" ? "Checking…" : (Updates.newer ? "Check again" : "Check for updates"); icon: "refresh"
+                    enabled: Updates.state !== "checking" && Updates.state !== "updating"
                     onClicked: Updates.check()
                 }
                 Button {
