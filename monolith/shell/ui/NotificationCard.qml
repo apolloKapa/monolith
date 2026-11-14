@@ -42,6 +42,8 @@ Pressable {
     property int throwId: -1            // its copy, while swiped
     property bool handed: false         // the copy is on screen: this one hides
     property var pending: null          // let go before the copy was ready: what to do then
+    // held under the pointer (the island keeps showing this one meanwhile, see Island's toast)
+    readonly property bool held: swipe.active && !flying
     transform: Translate { x: card.swipeX }
     opacity: handed ? 0 : Math.max(0, 1 - Math.abs(swipeX) / (width * 1.1))
     Behavior on swipeX { enabled: !swipe.active && !card.resetting; NumberAnimation { duration: card.flying ? 180 : 260; easing.type: card.flying ? Easing.InCubic : Easing.OutBack } }
@@ -53,13 +55,18 @@ Pressable {
         const scr = card.screenName || HubState.screenName || Niri.focusedOutput || "";
         const sx = swipeX;
         swipeX = 0;                       // photographed in place; the copy gets the offset
+        // the press ripple: photographed without it, and handed to the copy to carry on
+        const rp = card.rippleItem;
+        const ink = rp && rp.alpha > 0.001 ? { cx: rp.cx, cy: rp.cy, spread: rp.spread, alpha: rp.alpha, color: rp.ink, radius: card.radius } : null;
+        if (rp) rp.visible = false;
         const ok = card.grabToImage(r => {
-            card.throwId = Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height);
+            if (rp) rp.visible = true;
+            card.throwId = Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height, ink);
             Throw.dragTo(card.throwId, card.swipeX);
             handoff.restart();
         });
         swipeX = sx;
-        if (!ok) throwId = -1;
+        if (!ok) { throwId = -1; if (rp) rp.visible = true; }
     }
     function handOver() {
         if (handed || throwId < 0) return;
@@ -145,7 +152,12 @@ Pressable {
     Timer { id: gone; interval: 190; onTriggered: card.closed() }
     // reused for the next notification (the island's): back in place at once
     property bool resetting: false
-    onNotifChanged: { resetting = true; flying = false; handed = false; pending = null; throwId = -1; handoff.stop(); swipeX = 0; resetting = false; resetPress(); closeBtn.resetPress(); }
+    // (mid-swipe: the drag ends, and its copy fades away instead of staying frozen where it was held)
+    onNotifChanged: {
+        if (throwId >= 0 && !flying) Throw.drop(throwId);
+        if (swipe.active) { swipe.enabled = false; swipe.enabled = Qt.binding(() => card.swipeable && !card.flying); }
+        resetting = true; flying = false; handed = false; pending = null; throwId = -1; handoff.stop(); swipeX = 0; resetting = false; resetPress(); closeBtn.resetPress();
+    }
 
     RowLayout {
         id: body

@@ -24,15 +24,10 @@ RowLayout {
 
     // ── state read from the system (polled while open) ──
     property bool wifiOn: false
-    property real brightness: -1          // -1: no backlight (desktop)
     property string profile: ""           // power-profiles-daemon: power-saver | balanced | performance
-    function poll() { wifiProc.running = true; briProc.running = true; profProc.running = true; }
+    // (brightness: core/Brightness, a laptop's backlight or the monitors' own over DDC/CI)
+    function poll() { wifiProc.running = true; Brightness.readAll(); profProc.running = true; }
     Process { id: wifiProc; command: ["nmcli", "-t", "radio", "wifi"]; stdout: StdioCollector { onStreamFinished: cc.wifiOn = text.trim() === "enabled" } }
-    Process {
-        id: briProc
-        command: ["sh", "-c", "brightnessctl -c backlight -m 2>/dev/null | head -1 | cut -d, -f4"]
-        stdout: StdioCollector { onStreamFinished: { const v = parseInt(text); cc.brightness = isNaN(v) ? -1 : v / 100; } }
-    }
     Process { id: profProc; command: ["sh", "-c", "powerprofilesctl get 2>/dev/null"]; stdout: StdioCollector { onStreamFinished: cc.profile = text.trim() } }
     Component.onCompleted: poll()
     // optimistic: a tile shows its new state the moment it's clicked, and keeps it while the
@@ -227,11 +222,11 @@ RowLayout {
                     onIconClicked: if (cc.source && cc.source.audio) cc.source.audio.muted = !cc.source.audio.muted
                 }
                 Level {
-                    visible: cc.brightness >= 0
+                    visible: Brightness.available
                     name: "Brightness"
                     icon: "light_mode"
-                    value: Math.max(0, cc.brightness)
-                    onMoved: v => { cc.brightness = v; Quickshell.execDetached(["brightnessctl", "-c", "backlight", "set", Math.max(1, Math.round(v * 100)) + "%"]); }
+                    value: Brightness.level
+                    onMoved: v => Brightness.set(Math.round(v * 100))
                 }
             }
         }

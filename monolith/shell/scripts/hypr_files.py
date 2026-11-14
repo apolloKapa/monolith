@@ -25,7 +25,7 @@ import sys
 CONF = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
 HYPR = os.path.join(CONF, "hypr")
 FOLDER = os.path.join(HYPR, "monolith")
-ORDER = ["start", "keybinds", "workspaces", "borders", "cursor", "animations", "my-keys"]
+ORDER = ["start", "monitors", "keybinds", "workspaces", "borders", "cursor", "animations", "my-keys"]
 HEADERS = {
     "start": "Monolith starting at login, and its environment. Rewritten on every update.",
     "keybinds": "Monolith's keys, in sections. Rewritten on every update: put keys of your own in my-keys.",
@@ -33,6 +33,7 @@ HEADERS = {
     "borders": "Window borders (Settings -> Windows). Rewritten by Settings.",
     "cursor": "The cursor (Settings -> Appearance). Rewritten by Settings.",
     "animations": "Switching workspaces (Settings -> Appearance). Rewritten by Settings.",
+    "monitors": "Screens (Settings -> Displays). Rewritten by Settings.",
 }
 
 

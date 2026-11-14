@@ -146,7 +146,10 @@ PanelWindow {
     // (on the screen it came up on: it stays there when you switch windows to another screen)
     readonly property var myToasts: Notifs.popupsOn(modelData.name, Quickshell.screens.length ? Quickshell.screens[0].name : "").filter(p => !Notifs.leaving[p.id])
     readonly property bool toastOn: !side && !shown && myToasts.length > 0 && Store.get("notifications.style", "island") !== "corner"
-    readonly property var toast: myToasts.length > 0 ? myToasts[0] : null
+    // the newest, unless one is held under the pointer: that one stays until it's let go (a new
+    // notification took its place mid-swipe, and the swiped copy froze where it was held)
+    property var heldToast: null
+    readonly property var toast: heldToast && myToasts.indexOf(heldToast) >= 0 ? heldToast : (myToasts.length > 0 ? myToasts[0] : null)
     // where it shows, like the menus of each bar: the island grows into it; a full-width bar
     // stays put and it drops out of the bar as its own shape; a floating bar (Solid, Modular)
     // gets a card just under it. (Growing a full or floating bar made the whole bar come down.)
@@ -271,6 +274,7 @@ PanelWindow {
                     sourceComponent: NotificationCard {
                         notif: win.toast
                         screenName: win.modelData.name
+                        onHeldChanged: win.heldToast = held ? notif : null
                         onClosed: Notifs.dismissPopup(win.toast, flying)
                     }
                 }

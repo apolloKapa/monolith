@@ -31,7 +31,7 @@ ColumnLayout {
         Toggle { checked: Store.get("osd.show.volume", true) !== false; onToggled: on => Store.set("osd.show.volume", on) }
     }
     Repeater {
-        model: [["layout", "Keyboard layout", "keyboard"], ["caps", "Caps Lock", "keyboard_capslock"], ["num", "Num Lock", "pin"], ["airplane", "Airplane mode", "airplanemode_active"]]
+        model: [["brightness", "Brightness", "brightness_medium"], ["layout", "Keyboard layout", "keyboard"], ["caps", "Caps Lock", "keyboard_capslock"], ["num", "Num Lock", "pin"], ["airplane", "Airplane mode", "airplanemode_active"]]
         SettingRow {
             required property var modelData
             icon: modelData[2]; title: modelData[1]

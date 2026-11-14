@@ -62,15 +62,32 @@ PanelWindow {
     Timer { id: sleepSoon; interval: 1500; onTriggered: bg.asleep = bg.shouldSleep }
     readonly property bool gif: Wall.isAnimated(current)
     function isLive(p) { return Wall.isVideo(p) || Wall.isAnimated(p); }
+    // the picture most recently asked for: the layer holding it never lets go of it
+    property string wantedUrl: ""
     function showPicture(p) {
         const u = Wall.url(p);
+        wantedUrl = u;
         const shown = showA ? a : b;
         // already the picture underneath (a video was over it): nothing will load, it's ready now
         if (String(shown.source) === u && shown.status === Image.Ready) { Qt.callLater(swap.ready); return; }
         const next = showA ? b : a;
+        // (going back to the one just left, still in the other layer: the same source again
+        // loads nothing and says nothing, so the fade never came: it shows it now)
+        if (String(next.source) === u && next.status === Image.Ready) { showA = !showA; Qt.callLater(swap.ready); return; }
         next.source = u;
     }
+    // a new wallpaper goes in once the picking has settled for a moment: switching quickly (the
+    // picker, clicked through) started a picture or a video player for every one passed by, and
+    // live ones a conversion each, until things broke. The first one, and one on its own, go at once.
+    property double lastPick: 0
     onTargetChanged: {
+        const now = Date.now(), quick = now - lastPick < 400;
+        lastPick = now;
+        if (current === "" || !quick && !settleIn.running) { settleIn.stop(); applyTarget(); }
+        else settleIn.restart();
+    }
+    Timer { id: settleIn; interval: 220; onTriggered: bg.applyTarget() }
+    function applyTarget() {
         if (current === target) return;
         // the first one (settings still loading at start): straight in, nothing to animate from
         if (current === "") { current = target; if (target !== "" && !isLive(target)) showPicture(target); return; }
@@ -80,7 +97,7 @@ PanelWindow {
         if (!isLive(current) && !isLive(target)) { current = target; showPicture(target); return; }
         swap.begin();
     }
-    Component.onCompleted: { current = target; if (current !== "" && !isLive(current)) a.source = Wall.url(current); }
+    Component.onCompleted: { current = target; if (current !== "" && !isLive(current)) { wantedUrl = Wall.url(current); a.source = wantedUrl; } }
 
     QtObject {
         id: swap
@@ -128,8 +145,10 @@ PanelWindow {
         cache: false
         sourceSize: Qt.size(bg.width, bg.height)
         Behavior on opacity { NumberAnimation { duration: Theme.ms(700); easing.type: Easing.InOutCubic } }
-        // the picture that just faded out lets go of its memory (a whole screen's worth)
-        onOpacityChanged: if (opacity === 0 && source !== "") source = ""
+        // the picture that just faded out lets go of its memory (a whole screen's worth); not the
+        // one just asked for: switching quickly put the next picture into the layer that was still
+        // fading out, and when that fade ended it threw the new picture away (a blank wallpaper)
+        onOpacityChanged: if (opacity === 0 && source !== "" && String(source) !== bg.wantedUrl) source = ""
     }
     // everything that makes up the wallpaper, in one item the widgets' glass can blur
     Item {

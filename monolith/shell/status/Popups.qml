@@ -41,6 +41,29 @@ PanelWindow {
     onHoldingChanged: Notifs.setHold("corner:" + modelData.name, holding)
     Component.onDestruction: Notifs.setHold("corner:" + modelData.name, false)
 
+    // the cards, kept by notification: a new one is added where it goes and drops in on its own,
+    // the others glide to their new places, a leaving one slides off. (The list used to be handed
+    // straight to the Repeater: every notification that came or went rebuilt every card, and they
+    // all dropped in again at once, into each other, when they came in quickly.)
+    // At most `most` show; the rest wait in a "+N more" chip (the notification list).
+    readonly property int most: 5
+    readonly property var order: { const l = win.fromBottom ? win.mine.slice().reverse() : win.mine; return win.fromBottom ? l.slice(Math.max(0, l.length - most)) : l.slice(0, most); }
+    readonly property int hidden: Math.max(0, win.mine.length - most)
+    ListModel { id: cards }
+    function sync() {
+        const ids = order.map(n => n.id);
+        for (let i = cards.count - 1; i >= 0; i--) if (ids.indexOf(cards.get(i).nid) < 0) cards.remove(i);
+        for (let i = 0; i < ids.length; i++) {
+            let at = -1;
+            for (let j = i; j < cards.count; j++) if (cards.get(j).nid === ids[i]) { at = j; break; }
+            if (at < 0) cards.insert(i, { nid: ids[i] });
+            else if (at !== i) cards.move(at, i, 1);
+        }
+    }
+    onOrderChanged: sync()
+    Component.onCompleted: sync()
+    function notifOf(id) { return win.mine.find(n => n.id === id) || null; }
+
     Column {
         id: stack
         width: parent.width
@@ -48,15 +71,24 @@ PanelWindow {
         spacing: 8
         // the others glide to their new places when one comes or goes
         move: Transition { NumberAnimation { properties: "y"; duration: 260; easing.type: Easing.OutCubic } }
+        // "+N more" where the stack ends at the bottom: above them all
+        Pressable {
+            visible: win.fromBottom && win.hidden > 0
+            width: moreL.implicitWidth + 24; height: visible ? 26 : 0
+            color: Theme.containerHigh
+            onClicked: HubState.toggle("notifications", win.modelData.name)
+            Label { id: moreL; anchors.centerIn: parent; text: "+" + win.hidden + " more"; font.pixelSize: Theme.sizeSmall; strong: true }
+        }
         Repeater {
-            // newest nearest the edge they come from
-            model: win.fromBottom ? win.mine.slice().reverse() : win.mine
+            model: cards
             Item {
                 id: slot
-                required property var modelData
+                required property int nid
+                readonly property var modelData: win.notifOf(nid)
+                visible: modelData !== null
                 width: stack.width
-                height: pc.implicitHeight
-                readonly property bool leaving: !!Notifs.leaving[modelData.id]
+                height: modelData ? cardH : 0
+                readonly property bool leaving: !!modelData && !!Notifs.leaving[modelData.id]
                 // 0: up out of sight (down, at the bottom), 1: in place
                 property real drop: 0
                 Component.onCompleted: drop = 1
@@ -65,21 +97,36 @@ PanelWindow {
                 property real away: leaving ? 1 : 0
                 Behavior on away { NumberAnimation { duration: Notifs.leaveMs; easing.type: Easing.InCubic } }
                 opacity: Math.min(1, drop * 1.6) * (1 - away)
-                NotificationCard {
-                    id: pc
-                    notif: slot.modelData
-                    popup: true
+                Loader {
+                    active: slot.modelData !== null
                     width: slot.width
-                    height: implicitHeight
-                    y: (1 - slot.drop) * (win.fromBottom ? 1 : -1) * (height * 0.6 + 24)
-                    x: slot.away * (win.corner.endsWith("left") ? -1 : 1) * (width * 0.5)
-                    onClosed: Notifs.dismissPopup(slot.modelData, pc.flying)
-                    screenName: win.modelData.name
-                    windowOffset: Qt.point(
-                        win.anchors.right && !win.anchors.left ? win.screen.width - win.width - win.margins.right : (win.anchors.left && !win.anchors.right ? win.margins.left : (win.screen.width - win.width) / 2),
-                        win.anchors.top && !win.anchors.bottom ? win.margins.top : (win.anchors.bottom && !win.anchors.top ? win.screen.height - win.height - win.margins.bottom : (win.screen.height - win.height) / 2))
+                    sourceComponent: NotificationCard {
+                        id: pc
+                        notif: slot.modelData
+                        popup: true
+                        width: slot.width
+                        height: implicitHeight
+                        y: (1 - slot.drop) * (win.fromBottom ? 1 : -1) * (height * 0.6 + 24)
+                        x: slot.away * (win.corner.endsWith("left") ? -1 : 1) * (width * 0.5)
+                        onClosed: Notifs.dismissPopup(slot.modelData, pc.flying)
+                        onImplicitHeightChanged: slot.cardH = implicitHeight
+                        Component.onCompleted: slot.cardH = implicitHeight
+                        screenName: win.modelData.name
+                        windowOffset: Qt.point(
+                            win.anchors.right && !win.anchors.left ? win.screen.width - win.width - win.margins.right : (win.anchors.left && !win.anchors.right ? win.margins.left : (win.screen.width - win.width) / 2),
+                            win.anchors.top && !win.anchors.bottom ? win.margins.top : (win.anchors.bottom && !win.anchors.top ? win.screen.height - win.height - win.margins.bottom : (win.screen.height - win.height) / 2))
+                    }
                 }
+                property real cardH: 0
             }
+        }
+        // "+N more" under them at the top
+        Pressable {
+            visible: !win.fromBottom && win.hidden > 0
+            width: moreT.implicitWidth + 24; height: visible ? 26 : 0
+            color: Theme.containerHigh
+            onClicked: HubState.toggle("notifications", win.modelData.name)
+            Label { id: moreT; anchors.centerIn: parent; text: "+" + win.hidden + " more"; font.pixelSize: Theme.sizeSmall; strong: true }
         }
     }
 }

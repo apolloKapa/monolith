@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import "../../core"
 import "../../ui"
 
@@ -21,6 +22,10 @@ ColumnLayout {
     property string recording: ""      // the key being changed ("+" while adding a new one)
     property string newKey: ""          // the key picked for a new shortcut
     property bool busy: false
+    // a key that's taken, waiting for "Replace?": { key, label, other (its item), from (the key
+    // being changed, or "+" for a new one) }
+    property var clash: null
+    property string note: ""            // a short "done" line after a change
     readonly property string group: HubState.settingsSection.startsWith("keys-") ? HubState.settingsSection.slice(5) : ""
     readonly property var groups: ["apps", "monolith", "windows", "sizes", "workspaces", "monitors", "media", "screenshots", "zoom", "session"]
     function inGroup(section) {
@@ -58,19 +63,70 @@ ColumnLayout {
         id: writer
         stdout: StdioCollector {
             onStreamFinished: {
+                let ok = false;
+                try { const d = JSON.parse(text); ok = d.ok; sec.error = d.ok ? "" : d.error; } catch (e) { sec.error = "Something went wrong"; }
+                // the next step (Replace: the other key goes, then this one moves), or done
+                if (ok && sec.queue.length) { const next = sec.queue[0]; sec.queue = sec.queue.slice(1); sec.start(next); return; }
+                if (!ok) sec.queue = [];
+                else if (sec.doneNote) sec.note = sec.doneNote;
                 sec.busy = false;
-                try { const d = JSON.parse(text); sec.error = d.ok ? "" : d.error; } catch (e) { sec.error = "Something went wrong"; }
                 sec.load();
             }
         }
     }
-    function run(args) {
-        busy = true; error = "";
-        writer.command = ["python3", script].concat(args);
-        writer.running = true;
+    property var queue: []
+    property string doneNote: ""
+    function start(args) { writer.command = ["python3", script].concat(args); writer.running = true; }
+    // one change, or several in a row (each only if the one before worked)
+    function run(args, more, done) {
+        busy = true; error = ""; note = "";
+        queue = more || [];
+        doneNote = done || "";
+        start(args);
+    }
+    // the same key, however it's written ("Super+Shift+s" / "Shift+Super+S")
+    function norm(k) {
+        const p = String(k).split("+");
+        const order = ["Super", "Ctrl", "Alt", "Shift"];
+        const mods = p.slice(0, -1).map(m => m.charAt(0).toUpperCase() + m.slice(1).toLowerCase()).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+        return mods.concat([String(p[p.length - 1]).toLowerCase()]).join("+");
+    }
+    function pretty(k) { return String(k).replace(/_/g, " ").replace(/\+/g, " + "); }
+    // a key was pressed while picking: use it, or ask first when another shortcut has it
+    function picked(k) {
+        const from = recording;
+        recording = "";
+        error = ""; note = "";
+        if (from !== "+" && norm(from) === norm(k)) return;            // the same key again: nothing to do
+        const other = items.find(it => norm(it.key) === norm(k) && (from === "+" || norm(it.key) !== norm(from)));
+        if (other) { clash = { key: k, other: other, from: from }; return; }
+        use(from, k);
+    }
+    function use(from, k) {
+        if (from === "+") newKey = k;
+        else run(["change", from, k], [], pretty(k) + " is set");
+    }
+    // Replace: the other shortcut goes, then this one takes its key
+    function replace() {
+        const c = clash; clash = null;
+        if (!c) return;
+        if (c.from === "+") { run(["remove", c.other.key], [], pretty(c.key) + " is free now: pick what it runs and press Add"); newKey = c.key; return; }
+        run(["remove", c.other.key], [["change", c.from, c.key]], pretty(c.key) + " is set (it was " + c.other.title + ")");
     }
 
-    // a pressed key, in niri's words ("Super+Shift+S"); "" for a lone modifier
+    // a pressed key, in niri's words ("Super+Shift+S"); "" for a lone modifier. By where the key
+    // is on the keyboard (its scan code) first, so it's the same key whatever layout is on and
+    // whether Shift is held: Greek letters and Shift+1's "!" weren't understood, and the press
+    // was ignored
+    readonly property var scan: ({
+        10: "1", 11: "2", 12: "3", 13: "4", 14: "5", 15: "6", 16: "7", 17: "8", 18: "9", 19: "0", 20: "Minus", 21: "Equal",
+        24: "Q", 25: "W", 26: "E", 27: "R", 28: "T", 29: "Y", 30: "U", 31: "I", 32: "O", 33: "P", 34: "BracketLeft", 35: "BracketRight",
+        38: "A", 39: "S", 40: "D", 41: "F", 42: "G", 43: "H", 44: "J", 45: "K", 46: "L", 47: "Semicolon", 48: "Apostrophe", 49: "Grave",
+        51: "Backslash", 52: "Z", 53: "X", 54: "C", 55: "V", 56: "B", 57: "N", 58: "M", 59: "Comma", 60: "Period", 61: "Slash",
+        9: "Escape", 22: "BackSpace", 23: "Tab", 36: "Return", 65: "Space", 104: "Return", 107: "Print",
+        67: "F1", 68: "F2", 69: "F3", 70: "F4", 71: "F5", 72: "F6", 73: "F7", 74: "F8", 75: "F9", 76: "F10", 95: "F11", 96: "F12",
+        110: "Home", 111: "Up", 112: "Page_Up", 113: "Left", 114: "Right", 115: "End", 116: "Down", 117: "Page_Down", 118: "Insert", 119: "Delete"
+    })
     readonly property var names: ({
         [Qt.Key_Return]: "Return", [Qt.Key_Enter]: "Return", [Qt.Key_Escape]: "Escape", [Qt.Key_Tab]: "Tab", [Qt.Key_Space]: "Space",
         [Qt.Key_Backspace]: "BackSpace", [Qt.Key_Delete]: "Delete", [Qt.Key_Insert]: "Insert", [Qt.Key_Home]: "Home", [Qt.Key_End]: "End",
@@ -82,7 +138,7 @@ ColumnLayout {
     })
     function keyName(e) {
         if ([Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_Meta, Qt.Key_Super_L, Qt.Key_Super_R, Qt.Key_AltGr].indexOf(e.key) >= 0) return "";
-        let k = names[e.key];
+        let k = scan[e.nativeScanCode] || names[e.key];
         if (!k && e.key >= Qt.Key_F1 && e.key <= Qt.Key_F24) k = "F" + (e.key - Qt.Key_F1 + 1);
         if (!k && ((e.key >= Qt.Key_A && e.key <= Qt.Key_Z) || (e.key >= Qt.Key_0 && e.key <= Qt.Key_9))) k = String.fromCharCode(e.key);
         if (!k) return "";
@@ -99,15 +155,20 @@ ColumnLayout {
         focus: sec.recording !== ""
         Keys.onPressed: e => {
             e.accepted = true;
-            if (e.key === Qt.Key_Escape && !(e.modifiers & Qt.MetaModifier)) { sec.recording = ""; return; }
+            if (e.isAutoRepeat) return;
+            if (e.key === Qt.Key_Escape && e.modifiers === Qt.NoModifier) { sec.recording = ""; return; }
             const k = sec.keyName(e);
             if (!k) return;
-            if (sec.recording === "+") sec.newKey = k;
-            else sec.run(["change", sec.recording, k]);
-            sec.recording = "";
+            sec.picked(k);
         }
     }
-    onRecordingChanged: if (recording !== "") catcher.forceActiveFocus()
+    onRecordingChanged: if (recording !== "") { clash = null; catcher.forceActiveFocus(); }
+    // while picking, every key comes here, even ones niri / Hyprland use for themselves (it asks
+    // the compositor to hold its own shortcuts back): those never arrived, so pressing one did nothing
+    ShortcutInhibitor {
+        window: sec.Window.window
+        enabled: sec.recording !== ""
+    }
 
     Label {
         Layout.fillWidth: true; wrapMode: Text.Wrap; muted: true
@@ -115,7 +176,38 @@ ColumnLayout {
             + (Niri.hyprland ? " On Hyprland your changes stay after updates. Keys in your own my-keys file (~/.config/hypr/monolith/my-keys) are changed there." : " niri checks every change; one it doesn't accept is undone.")
     }
     Label { visible: sec.error !== ""; Layout.fillWidth: true; wrapMode: Text.Wrap; text: sec.error; color: Theme.danger }
+    Label { visible: sec.note !== "" && sec.error === ""; Layout.fillWidth: true; wrapMode: Text.Wrap; text: sec.note; color: Theme.accent }
     Label { visible: sec.recording !== ""; Layout.fillWidth: true; strong: true; color: Theme.accent; text: "Press the new key… (Esc cancels)" }
+    // the key is taken: replace the other shortcut, or keep it and pick another key
+    Rectangle {
+        visible: sec.clash !== null
+        Layout.fillWidth: true
+        implicitHeight: clashCol.implicitHeight + 24
+        radius: Theme.corner(56, 10)
+        color: Theme.containerHigh
+        border.width: 1; border.color: Qt.alpha(Theme.danger, 0.6)
+        ColumnLayout {
+            id: clashCol
+            x: 14; y: 12; width: parent.width - 28
+            spacing: 8
+            Label {
+                Layout.fillWidth: true; wrapMode: Text.Wrap; strong: true
+                text: sec.clash ? sec.pretty(sec.clash.key) + " is already used by \u201c" + sec.clash.other.title + "\u201d" : ""
+            }
+            Label {
+                Layout.fillWidth: true; wrapMode: Text.Wrap; muted: true
+                text: !sec.clash ? "" : sec.clash.other.mine
+                    ? "That one is in your own my-keys file, so it can't be replaced from here: change it there, or pick another key."
+                    : "Replace it? \u201c" + sec.clash.other.title + "\u201d will have no key then."
+            }
+            RowLayout {
+                spacing: 8
+                Button { visible: sec.clash && !sec.clash.other.mine; text: "Replace"; primary: true; enabled: !sec.busy; onClicked: sec.replace() }
+                Button { text: "Pick another key"; onClicked: { const f = sec.clash.from; sec.clash = null; sec.recording = f; } }
+                Button { text: "Cancel"; onClicked: sec.clash = null }
+            }
+        }
+    }
 
     // add one
     SettingRow {

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import "../core"
+import "../ui"
 
 // Swiped notifications (core/Throw): held under the pointer, then thrown, slid off or sprung
 // back. Always there (an empty, click-through layer: making it when a swipe starts took a frame
@@ -32,7 +33,7 @@ PanelWindow {
         for (const f of mine) {
             let have = false;
             for (let i = 0; i < rows.count; i++) if (rows.get(i).fid === f.id) { have = true; break; }
-            if (!have) rows.append({ fid: f.id, url: f.url, fx: f.x, fy: f.y, fw: f.w, fh: f.h });
+            if (!have) rows.append({ fid: f.id, url: f.url, fx: f.x, fy: f.y, fw: f.w, fh: f.h, fink: f.ink ? JSON.stringify(f.ink) : "" });
         }
     }
     WlrLayershell.namespace: "monolith-thrown"
@@ -63,6 +64,7 @@ PanelWindow {
             required property real fy
             required property real fw
             required property real fh
+            required property string fink
             // (what the rest reads, as before)
             readonly property var modelData: ({ id: fid, x: fx, y: fy, w: fw, h: fh })
             source: url
@@ -82,7 +84,35 @@ PanelWindow {
             x: phase === "held" || phase === "back" ? modelData.x + dx : px
             y: phase === "held" || phase === "back" ? modelData.y : py
             // fades as it goes sideways (held and sliding); falling it stays solid
-            opacity: phase === "fall" ? 1 : Math.max(0, 1 - Math.abs(phase === "slide" ? travelled : dx) / (width * 1.1))
+            opacity: dropFade * (phase === "fall" ? 1 : Math.max(0, 1 - Math.abs(phase === "slide" ? travelled : dx) / (width * 1.1)))
+            // the press ripple, carried on from where it was when grabbed: it spreads to the edges
+            // and fades, as on the card (the photograph has none: it froze half-grown there)
+            readonly property var inkAt: fink !== "" ? JSON.parse(fink) : null
+            Ripple {
+                id: rip
+                visible: !!card.inkAt
+                anchors.fill: parent
+                radius: card.inkAt ? card.inkAt.radius : 0
+                ink: card.inkAt ? card.inkAt.color : "white"
+                cx: card.inkAt ? card.inkAt.cx : 0
+                cy: card.inkAt ? card.inkAt.cy : 0
+                spread: card.inkAt ? card.inkAt.spread : 0
+                alpha: card.inkAt ? card.inkAt.alpha : 0
+            }
+            ParallelAnimation {
+                running: !!card.inkAt
+                NumberAnimation { target: rip; property: "spread"; to: rip.reach; duration: Theme.ms(Math.max(120, 420 * (1 - rip.spread / Math.max(1, rip.reach)))); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve }
+                SequentialAnimation {
+                    PauseAnimation { duration: Theme.ms(120) }
+                    NumberAnimation { target: rip; property: "alpha"; to: 0; duration: Theme.ms(300); easing.type: Easing.OutCubic }
+                }
+            }
+            // its card went on to another notification mid-swipe: it fades away where it is
+            NumberAnimation {
+                id: dropAnim; target: card; property: "dropFade"; to: 0; duration: Theme.ms(180); easing.type: Easing.OutCubic
+                onFinished: Throw.land(card.modelData.id)
+            }
+            property real dropFade: 1
             // springing back home: a little past it and back, then the real card takes over (it
             // shows first and the copy goes a frame later, so they overlap instead of flickering)
             NumberAnimation {
@@ -107,6 +137,7 @@ PanelWindow {
                     card.spin = mode === "fall" ? Math.max(-720, Math.min(720, vx * 0.35 + (Math.random() - 0.5) * 120)) : 0;
                     card.phase = mode;
                 }
+                function onDrop(id) { if (id === card.modelData.id && card.phase === "held") { card.phase = "drop"; dropAnim.restart(); } }
                 function onSpringBack(id) {
                     if (id !== card.modelData.id) return;
                     card.phase = "back";

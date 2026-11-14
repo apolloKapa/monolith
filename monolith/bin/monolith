@@ -11,6 +11,7 @@
 #   monolith edit-image <file>                a picture in the screenshot editor
 #   monolith pin-image <file>                 a picture pinned over the windows
 #   monolith zoom in | out | toggle | off      zoom in steps around the mouse
+#   monolith brightness up | down | <0-100>      screen brightness (backlight or DDC/CI monitors)
 #   monolith welcome                             the welcome tour
 #   monolith dock                                the dock editor (or hold an app in the dock)
 #   monolith widgets [lock]                      arrange the desktop's (or lock screen's) widgets
@@ -63,6 +64,7 @@ migrate() {
             -e 's|^// (monolith-next) spawn-at-startup .*$||' \
             -e '/the new shell (monolith-next back undoes this)/d' \
             -e 's|spawn-sh "pgrep -x wooz > /dev/null [|][|] wooz --mouse-track";|spawn "'"$HOME"'/.local/bin/monolith" "zoom" "toggle";|' \
+            -e 's|spawn "brightnessctl" "set" "5%\([-+]\)";|spawn "'"$HOME"'/.local/bin/monolith" "brightness" "BRI\1";|; s|"brightness" "BRI-"|"brightness" "down"|; s|"brightness" "BRI+"|"brightness" "up"|' \
             "$f"
     done
     # the trial left two login lines; keep one
@@ -119,6 +121,14 @@ case "$1" in
         fi
         edit_b=$([ $edit = 1 ] && echo true || echo false)
         ipc capture start photo "$([ $full = 1 ] && echo screen || echo region)" "$edit_b"
+        ;;
+    # screen brightness: a laptop's backlight, or each monitor's own over DDC/CI (core/Brightness)
+    brightness)
+        case "$2" in
+            up|down) ipc brightness "$2" ;;
+            ''|get) ipc brightness get ;;
+            *) ipc brightness set "$2" ;;
+        esac
         ;;
     zoom)
         # Hyprland zooms the live screen itself (cursor.zoom_factor, around the mouse): each step

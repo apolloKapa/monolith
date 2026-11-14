@@ -110,8 +110,13 @@ Singleton {
         const k = liveKey(p, w, h);
         // (a copy that failed is tried again after ten minutes)
         if ((liveFailed[k] && Date.now() - liveFailed[k] < 600000) || liveCopies[k] !== undefined) return;
-        const c = Object.assign({}, liveCopies); c[k] = ""; liveCopies = c;
-        liveQueue = liveQueue.concat([{ p: p, w: w, h: h }]);
+        const c = Object.assign({}, liveCopies); c[k] = "";
+        // only the newest waits for each screen size: flicking through live wallpapers queued a
+        // 4K conversion for every one passed by, all run one after another (the ones dropped
+        // can be asked for again later)
+        for (const j of liveQueue) if (j.w === w && j.h === h) delete c[liveKey(j.p, j.w, j.h)];
+        liveCopies = c;
+        liveQueue = liveQueue.filter(j => j.w !== w || j.h !== h).concat([{ p: p, w: w, h: h }]);
         Qt.callLater(nextLiveCopy);
     }
     function nextLiveCopy() {
@@ -291,7 +296,12 @@ Singleton {
         const pool = images.filter(i => i !== path && !isVideo(i));
         if (pool.length > 0) set(pool[Math.floor(Math.random() * pool.length)]);
     }
+    // (one at a time: asked again while one runs, the newest goes next. It used to be dropped,
+    // so after switching quickly the colours were an earlier wallpaper's)
+    property string paletteNext: ""
     function makePalette(p) {
+        if (paletteProc.running) { paletteNext = p; return; }
+        paletteNext = "";
         // videos: the colours of their first frame
         paletteProc.command = ["sh", "-c",
             "mkdir -p \"$(dirname \"$2\")\"; src=\"$1\"; " +
@@ -300,7 +310,7 @@ Singleton {
             "_", p, wall.paletteFile, wall.mode];
         paletteProc.running = true;
     }
-    Process { id: paletteProc }
+    Process { id: paletteProc; onExited: if (wall.paletteNext !== "") wall.makePalette(wall.paletteNext) }
     onModeChanged: if (Store.loaded) { makePalette(path); followApps(); }
     // other apps go dark or light with the shell (Appearance → Apps follow dark or light), from
     // wherever it's changed (Settings, the picker, the welcome tour)

@@ -6,7 +6,7 @@ import Quickshell.Io
 import "../core"
 import "../ui"
 
-// The OSD: a pill near the bottom when the volume, mute or keyboard layout changes.
+// The OSD: a pill near the bottom when the volume, mute, brightness or keyboard layout changes.
 PanelWindow {
     id: osd
     required property var modelData
@@ -42,6 +42,14 @@ PanelWindow {
         function onVolumeChanged() { osd.flash("volume"); if (osd.here) Sounds.play("tick"); }
         function onMutedChanged() { osd.flash("volume"); }
     }
+    Connections {
+        target: Brightness
+        function onChanged() { osd.flash("brightness"); }
+    }
+    // the level the bar shows: the volume or the brightness
+    readonly property bool hasLevel: kind === "volume" || kind === "brightness"
+    readonly property real level: kind === "brightness" ? Brightness.level : Math.min(1, audio ? audio.volume : 0)
+    readonly property bool dim: kind === "volume" && !!audio && audio.muted
     Connections {
         target: Niri
         function onLayoutIndexChanged() { osd.flash("layout"); }
@@ -92,8 +100,8 @@ PanelWindow {
             Rectangle {
                 anchors.bottom: parent.bottom
                 width: parent.width; radius: 5
-                height: osd.kind === "volume" ? parent.height * Math.min(1, osd.audio ? osd.audio.volume : 0) : parent.height
-                color: osd.audio && osd.audio.muted && osd.kind === "volume" ? Theme.faint : Theme.accent
+                height: osd.hasLevel ? parent.height * osd.level : parent.height
+                color: osd.dim ? Theme.faint : Theme.accent
                 Behavior on height { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
             }
         }
@@ -101,7 +109,7 @@ PanelWindow {
             visible: osd.vertical
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom; anchors.bottomMargin: 12
-            text: osd.kind === "volume" ? (osd.audio ? Math.round(osd.audio.volume * 100) : "") : ({ caps: osd.caps === 1 ? "On" : "Off", num: osd.num === 1 ? "On" : "Off", airplane: osd.air === 1 ? "On" : "Off" })[osd.kind] || Niri.layoutName.substring(0, 2).toUpperCase()
+            text: osd.kind === "volume" ? (osd.audio ? Math.round(osd.audio.volume * 100) : "") : osd.kind === "brightness" ? Math.round(osd.level * 100) : ({ caps: osd.caps === 1 ? "On" : "Off", num: osd.num === 1 ? "On" : "Off", airplane: osd.air === 1 ? "On" : "Off" })[osd.kind] || Niri.layoutName.substring(0, 2).toUpperCase()
             font.pixelSize: Theme.sizeSmall; strong: true
         }
         radius: Theme.corner(height, 8)
@@ -119,11 +127,12 @@ PanelWindow {
             y: osd.vertical ? 12 : (parent.height - height) / 2
             size: 40
             on: true
-            icon: ({ layout: "keyboard", caps: "keyboard_capslock", num: "pin", airplane: osd.air === 1 ? "airplanemode_active" : "airplanemode_inactive" })[osd.kind]
+            icon: ({ layout: "keyboard", caps: "keyboard_capslock", num: "pin", airplane: osd.air === 1 ? "airplanemode_active" : "airplanemode_inactive",
+                     brightness: osd.level < 0.34 ? "brightness_low" : (osd.level < 0.67 ? "brightness_medium" : "brightness_high") })[osd.kind]
                 || (osd.audio && (osd.audio.muted || osd.audio.volume === 0) ? "volume_off" : "volume_up")
         }
         Label {
-            visible: osd.kind !== "volume" && !osd.vertical
+            visible: !osd.hasLevel && !osd.vertical
             anchors.left: ob.right; anchors.leftMargin: 14
             anchors.verticalCenter: parent.verticalCenter
             text: osd.kind === "layout" ? Niri.layoutName
@@ -133,26 +142,26 @@ PanelWindow {
             strong: true
         }
         Item {
-            visible: osd.kind === "volume" && !osd.vertical
+            visible: osd.hasLevel && !osd.vertical
             anchors.left: ob.right; anchors.leftMargin: 14
             anchors.right: pct.left; anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             height: 8
             Rectangle { anchors.fill: parent; radius: 4; color: Theme.control }
             Rectangle {
-                width: parent.width * Math.min(1, osd.audio ? osd.audio.volume : 0)
+                width: parent.width * osd.level
                 height: parent.height
                 radius: 4
-                color: osd.audio && osd.audio.muted ? Theme.faint : Theme.accent
+                color: osd.dim ? Theme.faint : Theme.accent
                 Behavior on width { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
             }
         }
         Label {
             id: pct
-            visible: osd.kind === "volume" && !osd.vertical
+            visible: osd.hasLevel && !osd.vertical
             anchors.right: parent.right; anchors.rightMargin: 16
             anchors.verticalCenter: parent.verticalCenter
-            text: osd.audio ? Math.round(osd.audio.volume * 100) + "%" : ""
+            text: osd.kind === "brightness" ? Math.round(osd.level * 100) + "%" : (osd.audio ? Math.round(osd.audio.volume * 100) + "%" : "")
             font.pixelSize: Theme.sizeSmall
         }
     }

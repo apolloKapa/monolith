@@ -11,11 +11,28 @@ ColumnLayout {
     id: sec
     spacing: 8
     property var outputs: []
-
+    readonly property string hyprScript: Qt.resolvedUrl("../../scripts/hypr_monitors.py").toString().replace("file://", "")
+    // a change to one screen: niri's output config, or on Hyprland Monolith's monitors file
+    // (key: mode "WxH@R" / position "x=X y=Y" / scale / off)
+    Process { id: hyprSet; onExited: requery.restart() }
+    property var hyprQueue: []
+    function put(o, key, value) {
+        if (!Niri.hyprland) {
+            if (key === "off") NiriConf.flag(block(o), "off", value);
+            else if (key === "mode") NiriConf.set(block(o), "mode", NiriConf.quote(value));
+            else NiriConf.set(block(o), key, value);
+            return;
+        }
+        hyprQueue = hyprQueue.concat([["python3", hyprScript, "set", o.name, key, key === "off" ? (value ? "1" : "0") : String(value)]]);
+        hyprNext();
+    }
+    function hyprNext() { if (hyprSet.running || !hyprQueue.length) return; hyprSet.command = hyprQueue[0]; hyprQueue = hyprQueue.slice(1); hyprSet.running = true; }
+    Connections { target: hyprSet; function onRunningChanged() { if (!hyprSet.running) sec.hyprNext(); } }
     Process {
         id: query
         running: true
-        command: ["niri", "msg", "-j", "outputs"]
+        // (Hyprland: its screens in niri's shape, scripts/hypr_monitors.py)
+        command: Niri.hyprland ? ["python3", sec.hyprScript, "read"] : ["niri", "msg", "-j", "outputs"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -108,7 +125,7 @@ ColumnLayout {
             pos = p; dirty = true;
         }
         function apply() {
-            for (const m of mons) if (pos[m.name]) NiriConf.set("output " + NiriConf.quote(m.name), "position", "x=" + Math.round(pos[m.name][0]) + " y=" + Math.round(pos[m.name][1]));
+            for (const m of mons) if (pos[m.name]) sec.put({ name: m.name }, "position", "x=" + Math.round(pos[m.name][0]) + " y=" + Math.round(pos[m.name][1]));
             dirty = false;
         }
 
@@ -210,7 +227,7 @@ ColumnLayout {
                     Toggle {
                         checked: card.on
                         // never the last screen that's on
-                        onToggled: on => { if (on || sec.onCount() > 1) NiriConf.flag(sec.block(card.o), "off", !on); }
+                        onToggled: on => { if (on || sec.onCount() > 1) sec.put(card.o, "off", !on); }
                     }
                 }
                 // every size and rate the screen offers
@@ -223,7 +240,7 @@ ColumnLayout {
                         value: card.cur ? card.cur.width + "x" + card.cur.height : ""
                         onPicked: v => {
                             const best = card.o.modes.filter(m => m.width + "x" + m.height === v).sort((a, b) => b.refresh_rate - a.refresh_rate)[0];
-                            if (best) NiriConf.set(sec.block(card.o), "mode", NiriConf.quote(sec.modeStr(best)));
+                            if (best) sec.put(card.o, "mode", sec.modeStr(best));
                         }
                     }
                 }
@@ -236,7 +253,7 @@ ColumnLayout {
                         value: card.cur ? String(card.cur.refresh_rate) : ""
                         onPicked: v => {
                             const m = card.rates.find(r => String(r.refresh_rate) === v);
-                            if (m) NiriConf.set(sec.block(card.o), "mode", NiriConf.quote(sec.modeStr(m)));
+                            if (m) sec.put(card.o, "mode", sec.modeStr(m));
                         }
                     }
                 }
@@ -248,7 +265,7 @@ ColumnLayout {
                         from: 0.5; to: 4; slideTo: 2.5; step: 0.05; decimals: 2; factor: 100; unit: "%"
                         value: card.o.logical ? card.o.logical.scale : 1
                         onMoved: v => scaleLater.go(v)
-                        Timer { id: scaleLater; property real v: 1; interval: 700; function go(x) { v = x; restart(); } onTriggered: NiriConf.set(sec.block(card.o), "scale", v.toFixed(2)) }
+                        Timer { id: scaleLater; property real v: 1; interval: 700; function go(x) { v = x; restart(); } onTriggered: sec.put(card.o, "scale", v.toFixed(2)) }
                     }
                 }
             }

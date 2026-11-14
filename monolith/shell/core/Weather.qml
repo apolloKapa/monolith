@@ -52,7 +52,7 @@ Singleton {
             + "&timezone=" + encodeURIComponent(loc.timezone || "auto")
             + "&current=temperature_2m,apparent_temperature,weather_code,is_day"
             + "&hourly=temperature_2m,weather_code,precipitation_probability&forecast_hours=24"
-            + "&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=6"
+            + "&daily=temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset&forecast_days=6"
             + (metric ? "" : "&temperature_unit=fahrenheit");
         fetch.command = ["curl", "-sf", "--max-time", "15", u];
         fetch.running = true;
@@ -65,7 +65,9 @@ Singleton {
                     const d = JSON.parse(text);
                     w.current = { temp: d.current.temperature_2m, feels: d.current.apparent_temperature, code: d.current.weather_code, day: d.current.is_day === 1 };
                     w.hours = d.hourly.time.map((t, i) => ({ time: t.substring(11, 16), temp: d.hourly.temperature_2m[i], code: d.hourly.weather_code[i], rain: d.hourly.precipitation_probability[i] }));
-                    w.days = d.daily.time.map((t, i) => ({ date: t, max: d.daily.temperature_2m_max[i], min: d.daily.temperature_2m_min[i], code: d.daily.weather_code[i] }));
+                    // (sunrise / sunset as "HH:MM", local: night light's sun schedule on Hyprland)
+                    w.days = d.daily.time.map((t, i) => ({ date: t, max: d.daily.temperature_2m_max[i], min: d.daily.temperature_2m_min[i], code: d.daily.weather_code[i],
+                                                           sunrise: d.daily.sunrise ? String(d.daily.sunrise[i]).substring(11, 16) : "", sunset: d.daily.sunset ? String(d.daily.sunset[i]).substring(11, 16) : "" }));
                 } catch (e) {}
             }
         }

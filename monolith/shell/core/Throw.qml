@@ -22,12 +22,15 @@ Singleton {
     signal letGo(int id, real vx, real vy, string mode)
     signal springBack(int id)
     signal home(int id)                        // sprung back: the real card shows again
+    signal drop(int id)                        // its card went on to another notification: it fades away
     // Clear: every card on screen is thrown at once, each its own way (ui/NotificationCard)
     signal scatter()
     property int scattered: 0                  // how many cards took part in the last one
-    function launch(screen, url, x, y, w, h) {
+    // `ink`: the card's press ripple as it was when grabbed ({ cx, cy, spread, alpha, color,
+    // radius }), which the copy plays on (photographed, it froze half-grown), or null
+    function launch(screen, url, x, y, w, h, ink) {
         seq++;
-        flying = flying.concat([{ id: seq, screen: screen, url: url, x: x, y: y, w: w, h: h }]);
+        flying = flying.concat([{ id: seq, screen: screen, url: url, x: x, y: y, w: w, h: h, ink: ink || null }]);
         return seq;
     }
     function land(id) { flying = flying.filter(f => f.id !== id); }

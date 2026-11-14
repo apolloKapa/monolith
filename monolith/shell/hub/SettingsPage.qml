@@ -389,7 +389,7 @@ Page {
         // on Hyprland: these pages change niri's settings (its config file), which apply when you
         // log into niri; Hyprland takes its own from hyprland.conf
         Rectangle {
-            readonly property var niriPages: ({ Display: "Monitors", Input: "Keyboard and mouse", Capture: "Where screenshots are saved" })
+            readonly property var niriPages: ({ Input: "Keyboard and mouse", Capture: "Where screenshots are saved" })
             visible: Niri.hyprland && niriPages[page.file] !== undefined
             Layout.fillWidth: true
             Layout.preferredHeight: visible ? hyNote.implicitHeight + 20 : 0

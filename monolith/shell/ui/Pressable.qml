@@ -30,6 +30,8 @@ SmoothRect {
     scale: ma.pressed && enabledInput ? 1 - Math.min(0.08, 6 / Math.max(40, width)) : 1
     Behavior on scale { NumberAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
 
+    // (the ripple, for a copy of this that carries it on: ui/NotificationCard's swipe)
+    readonly property alias rippleItem: ink
     Ripple {
         id: ink
         radius: root.radius
