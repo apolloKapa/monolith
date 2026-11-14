@@ -37,13 +37,18 @@ Rectangle {
     }
     MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: menu.visible ? menu.close() : dd.openList() }
 
-    // the list's full height, and where it goes (see popfit.js: inside the card or page)
-    readonly property real listH: listCol.implicitHeight + 12
+    // the list's full height, worked out from the options (each row is 38 tall, 52 with a
+    // description, 2 between them, 6 round the list), and where it goes (see popfit.js: inside
+    // the card or page). It used to be measured from the list itself, which isn't laid out
+    // before its first opening: it measured one row, so the list opened one row tall
+    readonly property real listH: opts.reduce((h, o) => h + (o.length > 2 ? 52 : 38), 0) + Math.max(0, opts.length - 1) * 2 + 12
     property var fit: ({ y: height + 4, h: listH, up: false })
     function openList() {
         fit = PopFit.place(dd, listH, 4);
         menu.open();
     }
+    // (options that change while it's open: fitted again)
+    onListHChanged: if (menu.visible) fit = PopFit.place(dd, listH, 4)
 
     QQC.Popup {
         id: menu
@@ -75,16 +80,20 @@ Rectangle {
         }
         onOpened: {
             // the picked one in view
+            // (worked out from the rows' heights too: not laid out yet on the first opening)
             const i = dd.opts.findIndex(o => String(o[0]) === dd.value);
-            if (i >= 0 && listCol.children[i]) {
-                const c = listCol.children[i];
-                scroller.contentY = Math.max(0, Math.min(scroller.contentHeight - scroller.height, c.y + c.height / 2 - scroller.height / 2));
+            if (i >= 0) {
+                let y = 0;
+                for (let k = 0; k < i; k++) y += (dd.opts[k].length > 2 ? 52 : 38) + 2;
+                const h = dd.opts[i].length > 2 ? 52 : 38;
+                const full = dd.listH - 12;
+                scroller.contentY = Math.max(0, Math.min(full - scroller.height, y + h / 2 - scroller.height / 2));
             } else scroller.contentY = 0;
         }
         contentItem: Flickable {
             id: scroller
             clip: true
-            contentHeight: listCol.implicitHeight
+            contentHeight: Math.max(listCol.implicitHeight, dd.listH - 12)
             boundsBehavior: Flickable.StopAtBounds
             interactive: contentHeight > height
             SmoothWheel {}
