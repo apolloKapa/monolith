@@ -55,22 +55,41 @@ def saved():
         return {}
 
 
+def fix(s):
+    """A screen that has been off since login shows as 0x0 at -1,-1: it comes on at its best
+    mode, beside the others, instead."""
+    if not re.match(r"[1-9]\d*x[1-9]\d*@", s.get("mode", "")):
+        s["mode"] = "preferred"
+    if s.get("position") in (None, "", "-1 -1"):
+        s["position"] = "auto"
+
+
 def write(state):
     lua = hf.kind() == "lua"
     c = "--" if lua else "#"
+    for s in state.values():
+        if not s.get("off"):
+            fix(s)
     out = [c + " monolith " + json.dumps(state, separators=(",", ":")),
            c + " Written by Monolith (Settings -> Displays). Changes here are replaced."]
     for name, s in sorted(state.items()):
         if s.get("off"):
             out.append('hl.monitor({ output = "%s", disabled = true })' % name if lua else "monitor = %s, disable" % name)
             continue
+        pos = s["position"].replace(" ", "x")
         if lua:
-            out.append('hl.monitor({ output = "%s", mode = "%s", position = "%s", scale = %s, transform = %d })'
-                       % (name, s["mode"], s["position"].replace(" ", "x"), s["scale"], s.get("transform", 0)))
+            # (disabled = false said outright: hl.monitor merges the rules for a screen, so one
+            # your config turns off would stay off)
+            out.append('hl.monitor({ output = "%s", mode = "%s", position = "%s", scale = %s, transform = %d, disabled = false })'
+                       % (name, s["mode"], pos, s["scale"], s.get("transform", 0)))
         else:
-            out.append("monitor = %s, %s, %s, %s, transform, %d" % (name, s["mode"], s["position"].replace(" ", "x"), s["scale"], s.get("transform", 0)))
+            out.append("monitor = %s, %s, %s, %s, transform, %d" % (name, s["mode"], pos, s["scale"], s.get("transform", 0)))
     hf.migrate()
+    new = not os.path.exists(hf.path("monitors"))
     hf.write("monitors", "\n".join(out) + "\n")
+    if new:
+        # (Hyprland watches the files it loaded: a new one is only read on a reload)
+        subprocess.run(["hyprctl", "reload"], capture_output=True, timeout=5)
 
 
 def main():
@@ -91,6 +110,8 @@ def main():
             s = {"mode": "%dx%d@%.3f" % (m["width"], m["height"], m.get("refreshRate", 60)),
                  "position": "%d %d" % (m.get("x", 0), m.get("y", 0)), "scale": round(m.get("scale", 1), 2),
                  "transform": m.get("transform", 0), "off": bool(m.get("disabled"))}
+            if m.get("disabled") and not m.get("width"):
+                s["mode"], s["position"] = "preferred", "auto"
         if key == "off":
             s["off"] = value in ("1", "true")
         elif key == "mode":
