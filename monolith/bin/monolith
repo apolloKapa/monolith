@@ -122,11 +122,11 @@ case "$1" in
         ;;
     zoom)
         # Hyprland zooms the live screen itself (cursor.zoom_factor, around the mouse): each step
-        # 1.25x more or less, up to 10x (its most); off at 1x. Toggle: 2x or off.
+        # 1.1x more or less, up to 10x (its most); off at 1x. Toggle: 2x or off.
         if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
             case "$2" in
-                in) f='math.min(z * 1.25, 10)' ;;
-                out) f='(z / 1.25 < 1.05) and 1 or z / 1.25' ;;
+                in) f='math.min(z * 1.1, 10)' ;;
+                out) f='(z / 1.1 < 1.02) and 1 or z / 1.1' ;;
                 off) f='1' ;;
                 *) f='(z > 1) and 1 or 2' ;;
             esac
@@ -135,8 +135,8 @@ case "$1" in
             fi
             # (a classic hyprland.conf: the same with keyword)
             z=$(hyprctl getoption cursor:zoom_factor -j 2>/dev/null | sed -n 's/.*"float": *\([0-9.]*\).*/\1/p')
-            z=$(awk -v z="${z:-1}" -v a="$2" 'BEGIN { if (a == "in") z = z * 1.25; else if (a == "out") z = z / 1.25; else if (a == "off") z = 1; else z = (z > 1) ? 1 : 2;
-                if (z < 1.05) z = 1; if (z > 10) z = 10; print z }')
+            z=$(awk -v z="${z:-1}" -v a="$2" 'BEGIN { if (a == "in") z = z * 1.1; else if (a == "out") z = z / 1.1; else if (a == "off") z = 1; else z = (z > 1) ? 1 : 2;
+                if (z < 1.02) z = 1; if (z > 10) z = 10; print z }')
             exec hyprctl keyword cursor:zoom_factor "$z" >/dev/null
         fi
         # niri: wooz: a zoomable picture of the screen around the mouse. Each step opens it again at the

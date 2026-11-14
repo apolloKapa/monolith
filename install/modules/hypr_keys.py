@@ -97,6 +97,18 @@ def action(name, args):
     return None
 
 
+# `monolith zoom ...` as Lua run by Hyprland itself: the live zoom (cursor.zoom_factor) around the
+# mouse, 1.1x a notch (small steps, and no wait between notches: smooth however fast you
+# scroll) up to 10x (Hyprland's most), off at 1x; toggle: 2x or off
+_Z = "function() local z = hl.get_config(\"cursor.zoom_factor\") or 1; hl.config({ cursor = { zoom_factor = %s } }) end"
+ZOOM_LUA = {
+    "in": _Z % "math.min(z * 1.1, 10)",
+    "out": _Z % "(z / 1.1 < 1.02) and 1 or z / 1.1",
+    "toggle": _Z % "(z > 1) and 1 or 2",
+    "off": _Z % "1",
+}
+
+
 def exec_of(cmd):
     return ("hl.dsp.exec_cmd(%s)" % lua_str(cmd), "exec, " + cmd)
 
@@ -152,10 +164,20 @@ def translate(path, monolith):
         name, args = words[0], words[1:]
         if name in ("spawn", "spawn-sh"):
             cmd = command_of(words, monolith)
-            # (niri's own commands mean nothing on Hyprland)
-            if not cmd or "niri msg" in cmd:
+            if not cmd:
                 continue
-            got = exec_of(cmd)
+            # niri's own commands mean nothing on Hyprland: a script around niri actions (Mod+T:
+            # take the window out of floating, then maximize its column) becomes its last action
+            z = re.match(r"^\S*monolith zoom (in|out|toggle|off)$", cmd)
+            if "niri msg" in cmd:
+                acts = re.findall(r"niri msg action ([a-z-]+)", cmd)
+                got = action(acts[-1], []) if acts else None
+            elif z:
+                # zoom runs inside Hyprland (Lua): a program per scroll notch queued up, so fast
+                # scrolling zoomed slowly, a notch at a time
+                got = (ZOOM_LUA[z.group(1)], "exec, " + cmd)
+            else:
+                got = exec_of(cmd)
         else:
             got = action(name, args)
         if not got:
@@ -166,10 +188,45 @@ def translate(path, monolith):
             continue
         seen.add(sig)
         locked = "allow-when-locked=true" in props
-        lua = "hl.bind(%s, %s%s)" % (lua_str(" + ".join(mods + [k])), got[0], ", { locked = true }" if locked else "")
+        what = got[0]
+        # (a scroll key's own cooldown: Lua configs have no shared wait between scroll keys, see
+        # scroll_delay; zoom has none)
+        cd = re.search(r"cooldown-ms=(\d+)", props)
+        if cd and "Wheel" in key and what.startswith("hl.dsp."):
+            what = "monolith_cooldown(%s, %s)" % (cd.group(1), what)
+        lua = "hl.bind(%s, %s%s)" % (lua_str(" + ".join(mods + [k])), what, ", { locked = true }" if locked else "")
         conf = "%s = %s, %s, %s" % ("bindl" if locked else "bind", " ".join(mods), k, got[1])
         out.append((mods, k, locked, lua, conf, got, secs.get(raw, "")))
     return out
+
+
+def scroll_delay(path, lua):
+    """Hyprland waits 300 ms between scroll-wheel keys (one wait for them all: fast scrolling
+    zoomed a notch at a time); niri's keymap gives each its own cooldown-ms. The shortest one
+    (zoom's), as a config line; none when no scroll key has one."""
+    ms = [int(m.group(1)) for k, props, _, _ in niri_binds(path) if "Wheel" in k
+          for m in [re.search(r"cooldown-ms=(\d+)", props)] if m]
+    if not ms:
+        return []
+    if not lua:
+        return ["# the wait between scroll-wheel keys (niri's shortest cooldown)", "binds:scroll_event_delay = %d" % min(ms), ""]
+    # Lua: no shared wait (zoom glides in small steps however fast you scroll); a scroll key with
+    # a cooldown in niri (switching workspaces) waits on its own instead
+    return ["-- scroll-wheel keys: no shared wait; each one with a cooldown (as in niri) waits on its own",
+            "hl.config({ binds = { scroll_event_delay = 0 } })"] + COOLDOWN_LUA + [""]
+
+
+# a key that waits `ms` before it works again (niri's cooldown-ms), for binds made with it
+COOLDOWN_LUA = [
+    "local function monolith_cooldown(ms, what)",
+    "  local busy = false",
+    "  return function()",
+    "    if busy then return end",
+    "    busy = true",
+    "    hl.dispatch(what)",
+    "    hl.timer(function() busy = false end, { timeout = ms, type = \"oneshot\" })",
+    "  end",
+    "end"]
 
 
 def render(binds, lua, skip=()):

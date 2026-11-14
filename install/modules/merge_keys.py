@@ -389,7 +389,7 @@ def layout_hypr(cfg_dir, keymap, monolith, fmt):
     lua = fmt == "lua"
     taken = my_keys(cfg_dir, lua, {"mainMod": "SUPER"} if lua else {})
     binds = hk.translate(keymap, monolith)
-    print("\n".join(hk.render(binds, lua, skip=taken)))
+    print("\n".join(hk.scroll_delay(keymap, lua) + hk.render(binds, lua, skip=taken)))
 
 
 def merge_hypr(cfg_dir, keymap, monolith, fmt):
@@ -522,7 +522,11 @@ def merge_hypr(cfg_dir, keymap, monolith, fmt):
     if out:
         lines += [cm + " ── Your keys that ran another shell: now Monolith's ────────────", *out, ""]
     lines += [cm + " (Monolith's keys below are on keys your config left free)", ""]
-    lines += hk.render(add, lua)
+    keys = hk.render(add, lua)
+    # (a scroll key with its own cooldown needs the helper; Hyprland's own wait stays as it is)
+    if lua and any("monolith_cooldown(" in l for l in keys):
+        lines += hk.COOLDOWN_LUA + [""]
+    lines += keys
     print("\n".join(lines))
     return counts
 
