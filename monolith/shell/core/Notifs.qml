@@ -124,7 +124,7 @@ Singleton {
     // system | pack | file (a file picked before there was a choice: file)
     function soundStyle() { return Store.get("notifications.soundStyle", Store.get("notifications.soundFile", "") !== "" ? "file" : "system"); }
     function playSound(urgent) {
-        // the sound pack's own chime (Settings → Sounds), else your file or the system's
+        // the sound pack's own chime (Settings → Sound → Sounds), else your file or the system's
         const style = soundStyle();
         if (style === "pack") { Sounds.playAlways(urgent ? "error" : "notify"); return; }
         const own = style === "file" ? Store.get("notifications.soundFile", "") : "";

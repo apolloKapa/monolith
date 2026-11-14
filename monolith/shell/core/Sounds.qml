@@ -2,7 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// Interface sounds (Settings → Notifications → Sounds): short blips for clicks, switches, menus,
+// Interface sounds (Settings → Sound → Sounds): short blips for clicks, switches, menus,
 // dropping things, volume steps, workspaces, screenshots, locking and wallpapers. Made by
 // tools/make_sounds.py in packs (sounds/<pack>/<event>.wav, each its own voice), or your own
 // folder with files of the same names. Played with pw-play as "event" sounds at their own volume.

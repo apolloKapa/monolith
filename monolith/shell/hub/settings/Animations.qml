@@ -196,7 +196,7 @@ ColumnLayout {
 
     // ── niri ──
     SectionHead { text: "Windows (niri)"; visible: !Niri.hyprland }
-    Label { visible: Niri.hyprland; text: "Window animations are niri's: on Hyprland, set them in hyprland.conf"; muted: true; Layout.leftMargin: 6 }
+    Label { visible: Niri.hyprland; Layout.fillWidth: true; wrapMode: Text.Wrap; text: "On Hyprland, switching workspaces is in the next tab (Workspace switching); other window animations are in your Hyprland config (hyprland.lua or hyprland.conf)."; muted: true; Layout.leftMargin: 6 }
     SettingRow {
         visible: !Niri.hyprland
         icon: "animation"; title: "Window animations"; desc: "Off: windows, workspaces and the overview move at once"

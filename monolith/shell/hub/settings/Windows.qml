@@ -145,7 +145,7 @@ ColumnLayout {
     }
     // (window animations and their speeds: Appearance → Animation speeds)
     SettingRow {
-        icon: "animation"; title: "Window animations"; desc: "How fast windows, workspaces and the overview move: in Appearance → Animation speeds"
+        icon: "animation"; title: "Window animations"; desc: "How fast windows, workspaces and the overview move: in Animations → Speeds & windows"
         Button { text: "Open"; icon: "arrow_forward"; onClicked: HubState.openSettings("animations") }
     }
 

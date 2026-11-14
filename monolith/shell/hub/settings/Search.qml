@@ -120,11 +120,11 @@ ColumnLayout {
         }
     }
 
-    // (hiding apps has its own tab: Software → Apps)
+    // (hiding apps has its own tab: Menus & launcher → Apps in the launcher)
     Label { text: "Hidden apps"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
     SettingRow {
         icon: "visibility_off"; title: "Hide apps from the launcher"
-        desc: ((Store.get("search.hidden", []) || []).length || "No") + " hidden now. Pick which apps show in Software → Apps (or right-click one in the launcher → Hide)"
+        desc: ((Store.get("search.hidden", []) || []).length || "No") + " hidden now. Pick which apps show in Apps in the launcher, the next tab (or right-click one in the launcher → Hide)"
         Button { text: "Open"; onClicked: HubState.settingsSection = "apps" }
     }
 }

@@ -19,10 +19,12 @@ Page {
     // a single page just opens). A page is [id, title, file in settings/]; HubState.settingsSection
     // is a page id. `gap` puts a separator above a section.
     readonly property var categories: [
-        { id: "general", desc: "Who you are, the weather, updates", title: "General", icon: "person", tabs: [["general", "You & weather", "General"], ["profiles", "Profiles & backup", "Profiles"], ["about", "Updates & about", "About"]] },
-        { id: "theme", desc: "How everything looks: style, colours, wallpaper, motion", title: "Appearance", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Dark mode, font & icons", "Appearance"], ["wallpaper", "Wallpaper", "Wallpaper"], ["playlist", "Wallpaper playlist", "WallPlaylist"], ["effects", "Effects", "Effects"], ["animations", "Animation speeds", "Animations"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Fastfetchlings", "Fastfetch"]] },
-        { id: "bar", desc: "What the bar shows and where it sits", title: "Bar", icon: "toolbar", tabs: [["bar", "Layout & modules", "BarLayout"], ["status", "Auto-hide", "Status"], ["barscreens", "Bar & dock per screen", "BarScreens"]] },
-        { id: "menus", desc: "The launcher and where menus open", title: "Menus & launcher", icon: "apps", tabs: [["search", "Launcher", "Search"], ["menus", "Where menus open", "Menus"]] },
+        { id: "general", desc: "Who you are, the weather, profiles and updates", title: "General", icon: "person", tabs: [["general", "You & weather", "General"], ["profiles", "Profiles & backup", "Profiles"], ["about", "Updates & about", "About"]] },
+        { id: "theme", desc: "How everything looks: style, colours, fonts, effects", title: "Appearance", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Dark mode, font & icons", "Appearance"], ["effects", "Effects", "Effects"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Fastfetchlings", "Fastfetch"]] },
+        { id: "wallpaper", desc: "Your wallpaper, and changing it by itself", title: "Wallpaper", icon: "wallpaper", tabs: [["wallpaper", "Wallpaper", "Wallpaper"], ["playlist", "Playlist", "WallPlaylist"]] },
+        { id: "animations", desc: "How fast things move, and how workspaces switch", title: "Animations", icon: "animation", tabs: [["animations", "Speeds & windows", "Animations"], ["wsswitch", "Workspace switching", "WorkspaceSwitch"]] },
+        { id: "bar", desc: "What the bar shows and where it sits", title: "Bar", icon: "toolbar", gap: true, tabs: [["bar", "Layout & modules", "BarLayout"], ["status", "Auto-hide", "Status"], ["barscreens", "Bar & dock per screen", "BarScreens"]] },
+        { id: "menus", desc: "The launcher, its apps, and where menus open", title: "Menus & launcher", icon: "apps", tabs: [["search", "Launcher", "Search"], ["apps", "Apps in the launcher", "Apps"], ["menus", "Where menus open", "Menus"]] },
         { id: "dock", desc: "Your pinned and running apps", title: "Dock", icon: "dock_to_bottom", tabs: [["dock", "Dock", "Dock"]] },
         { id: "desktop", desc: "Widgets and the screen edges", title: "Desktop", icon: "widgets", tabs: [["desktop", "Widgets", "Desktop"], ["quickaccess", "Quick access (screen edges)", "QuickAccess"]] },
         { id: "windows", desc: "Gaps, borders, window corners and workspaces", title: "Windows", icon: "select_window", tabs: [["windows", "Windows", "Windows"], ["workspaces", "Workspaces per screen", "Workspaces"]] },
@@ -31,11 +33,12 @@ Page {
         // every tab is settings/Keybinds.qml: it shows the keymap sections its tab id names
         // (keys-<word>: the sections starting with that word; keybinds: all of them)
         { id: "shortcuts", desc: "Every key and what it does, by purpose", title: "Keyboard shortcuts", icon: "keyboard_command_key", tabs: [["keybinds", "All shortcuts", "Keybinds"], ["keys-apps", "Apps", "Keybinds"], ["keys-monolith", "Monolith", "Keybinds"], ["keys-windows", "Windows", "Keybinds"], ["keys-sizes", "Window sizes", "Keybinds"], ["keys-workspaces", "Workspaces", "Keybinds"], ["keys-monitors", "Monitors", "Keybinds"], ["keys-media", "Media, volume & brightness", "Keybinds"], ["keys-screenshots", "Screenshots", "Keybinds"], ["keys-zoom", "Zoom", "Keybinds"], ["keys-session", "Session", "Keybinds"], ["keys-other", "Other", "Keybinds"]] },
-        { id: "alerts", desc: "Notifications, sounds and pop-ups", title: "Notifications", icon: "notifications", tabs: [["notifications", "Notifications", "Notifications"], ["sounds", "Sounds", "SoundSettings"], ["osd", "On-screen pop-up", "Osd"]] },
+        { id: "alerts", desc: "Do not disturb, how long they stay and where they pop up", title: "Notifications", icon: "notifications", gap: true, tabs: [["notifications", "Notifications", "Notifications"]] },
+        { id: "sound", desc: "Notification and interface sounds, and the volume pop-up", title: "Sound", icon: "volume_up", tabs: [["sounds", "Sounds", "SoundSettings"], ["osd", "Volume & brightness pop-up", "Osd"]] },
         { id: "lock", desc: "Locking, sleeping and what happens when you're away", title: "Lock & idle", icon: "lock_clock", gap: true, tabs: [["idle", "Lock & idle", "Idle"]] },
         { id: "capture", desc: "Screenshots and recordings", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots", "Capture"]] },
         { id: "sysmon", desc: "Live graphs, the busiest apps, and warnings when it runs hot or full", title: "System monitor", icon: "monitoring", tabs: [["sysmon", "System monitor", "SysMon"]] },
-        { id: "software", desc: "Apps and updates for this PC", title: "Software", icon: "deployed_code", tabs: [["software", "Software", "Software"], ["apps", "Apps", "Apps"]] }
+        { id: "software", desc: "Apps that start with you, and AppImages", title: "Startup & AppImages", icon: "deployed_code", tabs: [["software", "Startup apps & AppImages", "Software"]] }
     ]
     // ── search: every row of every page (scripts/settings_index.py reads their titles and
     // descriptions), plus the pages themselves. A result opens its page, scrolls to the row and

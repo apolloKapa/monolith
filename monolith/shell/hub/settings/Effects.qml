@@ -84,5 +84,5 @@ ColumnLayout {
         Segmented { width: 260; opts: [["off", "Off"], ["soft", "Soft"], ["strong", "Strong"]]; value: Theme.widgetShadow; onPicked: v => Store.set("widgets.shadow", v) }
     }
 
-    // (the shell's and niri's animations: Appearance → Animation speeds, Animations.qml)
+    // (the shell's and niri's animations: Animations → Speeds & windows, Animations.qml)
 }

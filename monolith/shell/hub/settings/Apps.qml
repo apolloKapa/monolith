@@ -4,7 +4,7 @@ import Quickshell
 import "../../core"
 import "../../ui"
 
-// Software → Apps: which apps show in the launcher. Every installed app with a switch (off: hidden
+// Menus & launcher → Apps in the launcher: which apps show in the launcher. Every installed app with a switch (off: hidden
 // from the launcher, still installed), a search box, a Hidden filter, Show all, and a button to
 // open any of them (a hidden one too).
 ColumnLayout {

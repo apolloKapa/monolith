@@ -8,6 +8,7 @@ hyprland.conf), which your main config includes with one line.
     workspaces  Settings -> Windows -> Workspaces per screen         (rewritten by Settings)
     borders     Settings -> Windows -> window borders                (rewritten by Settings)
     cursor      Settings -> Appearance -> Cursor                     (rewritten by Settings)
+    animations  Settings -> Animations -> Workspace switching        (rewritten by Settings)
     my-keys     YOUR keys: never changed by Monolith; a key you set here wins (Monolith leaves
                 that key out of its own)
 
@@ -24,13 +25,14 @@ import sys
 CONF = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
 HYPR = os.path.join(CONF, "hypr")
 FOLDER = os.path.join(HYPR, "monolith")
-ORDER = ["start", "keybinds", "workspaces", "borders", "cursor", "my-keys"]
+ORDER = ["start", "keybinds", "workspaces", "borders", "cursor", "animations", "my-keys"]
 HEADERS = {
     "start": "Monolith starting at login, and its environment. Rewritten on every update.",
     "keybinds": "Monolith's keys, in sections. Rewritten on every update: put keys of your own in my-keys.",
     "workspaces": "Workspaces per screen (Settings -> Windows). Rewritten by Settings.",
     "borders": "Window borders (Settings -> Windows). Rewritten by Settings.",
     "cursor": "The cursor (Settings -> Appearance). Rewritten by Settings.",
+    "animations": "Switching workspaces (Settings -> Appearance). Rewritten by Settings.",
 }
 
 

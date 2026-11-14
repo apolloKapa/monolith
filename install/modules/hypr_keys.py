@@ -193,7 +193,9 @@ def translate(path, monolith):
         # scroll_delay; zoom has none)
         cd = re.search(r"cooldown-ms=(\d+)", props)
         if cd and "Wheel" in key and what.startswith("hl.dsp."):
-            what = "monolith_cooldown(%s, %s)" % (cd.group(1), what)
+            # (one wait for the keys on the same modifiers, both directions: a wheel's stray tick
+            # the other way switched straight back, and the screen shook)
+            what = "monolith_cooldown(%s, %s, %s)" % (cd.group(1), what, lua_str("+".join(mods)))
         lua = "hl.bind(%s, %s%s)" % (lua_str(" + ".join(mods + [k])), what, ", { locked = true }" if locked else "")
         conf = "%s = %s, %s, %s" % ("bindl" if locked else "bind", " ".join(mods), k, got[1])
         out.append((mods, k, locked, lua, conf, got, secs.get(raw, "")))
@@ -216,15 +218,15 @@ def scroll_delay(path, lua):
             "hl.config({ binds = { scroll_event_delay = 0 } })"] + COOLDOWN_LUA + [""]
 
 
-# a key that waits `ms` before it works again (niri's cooldown-ms), for binds made with it
+# a key that waits `ms` before it (or another key of its group) works again (niri's cooldown-ms)
 COOLDOWN_LUA = [
-    "local function monolith_cooldown(ms, what)",
-    "  local busy = false",
+    "local monolith_busy = {}",
+    "local function monolith_cooldown(ms, what, group)",
     "  return function()",
-    "    if busy then return end",
-    "    busy = true",
+    "    if monolith_busy[group] then return end",
+    "    monolith_busy[group] = true",
     "    hl.dispatch(what)",
-    "    hl.timer(function() busy = false end, { timeout = ms, type = \"oneshot\" })",
+    "    hl.timer(function() monolith_busy[group] = false end, { timeout = ms, type = \"oneshot\" })",
     "  end",
     "end"]
 
