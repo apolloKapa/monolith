@@ -70,7 +70,7 @@ ColumnLayout {
     Process { id: hyprSet }
     Timer { id: hyprWrite; interval: 350; onTriggered: { hyprSet.command = ["python3", sec.hyprInput, "set", "scroll_factor", sec.hyprScroll.toFixed(2)]; hyprSet.running = true; } }
     SettingRow {
-        icon: "unfold_more"; title: "Mouse scroll speed"; desc: "How far one notch of the wheel scrolls, in apps and Monolith's menus. 1× is normal"
+        icon: "unfold_more"; title: "Mouse scroll speed"; desc: "How far one notch of the wheel scrolls, everywhere (apps and Monolith). 1× is normal"
         NumberBox {
             from: 0.1; to: 5; slideTo: 3; step: 0.05; decimals: 2; unit: "×"
             value: Niri.hyprland ? sec.hyprScroll : Number(sec.val("input/mouse|scroll-factor", 1))
@@ -78,6 +78,17 @@ ColumnLayout {
                 if (Niri.hyprland) { sec.hyprScroll = x; hyprWrite.restart(); }
                 else sec.put("input/mouse", "scroll-factor", x.toFixed(2));
             }
+        }
+    }
+    // Monolith's own menus and lists (ui/SmoothWheel), on top of the mouse's speed; works on any
+    // compositor (Monolith's setting)
+    SettingRow {
+        key: "menus.scrollSpeed"; def: 1
+        icon: "menu_open"; title: "Menu scroll speed"; desc: "How far one notch scrolls Monolith's menus, Settings and lists, on top of the mouse scroll speed. 1× is normal"
+        NumberBox {
+            from: 0.25; to: 4; slideTo: 3; step: 0.05; decimals: 2; unit: "×"
+            value: Number(Store.get("menus.scrollSpeed", 1))
+            onMoved: x => Store.set("menus.scrollSpeed", Number(x.toFixed(2)))
         }
     }
     SettingRow {

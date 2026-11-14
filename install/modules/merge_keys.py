@@ -384,13 +384,65 @@ def my_keys(cfg_dir, lua, variables):
     return taken
 
 
+# niri's own mouse: Super + left button drags a window, Super + right button resizes it (built
+# into niri, so not in its keymap)
+MOUSE_DRAG = [("mouse:272", "hl.dsp.window.drag()", "movewindow", "move"),
+              ("mouse:273", "hl.dsp.window.resize()", "resizewindow", "resize")]
+
+
+def mouse_taken(cfg_dir, lua):
+    """The mouse buttons (272 left, 273 right) your config or my-keys already drags with: active
+    lines only (the ones Monolith turned off don't count)."""
+    files = user_files(cfg_dir, ".lua" if lua else ".conf")
+    mine = os.path.join(cfg_dir, FOLDER, "my-keys" + (".lua" if lua else ".conf"))
+    if os.path.exists(mine):
+        files.append(mine)
+    taken = set()
+    for path in files:
+        try:
+            text = open(path, encoding="utf-8").read()
+        except OSError:
+            continue
+        for line in text.split("\n"):
+            s = line.strip()
+            if not s or s.startswith("--") or s.startswith("#"):
+                continue
+            if lua and not s.startswith("hl.bind("):
+                continue
+            if not lua and not re.match(r"bind\w*\s*=", s):
+                continue
+            for btn in ("272", "273"):
+                if "mouse:" + btn in s:
+                    taken.add(btn)
+    return taken
+
+
+def mouse_binds(cfg_dir, lua):
+    """Moving and resizing windows with Super and the mouse, as on niri (the ones your config
+    doesn't already have)."""
+    taken = mouse_taken(cfg_dir, lua)
+    c = "--" if lua else "#"
+    lines = []
+    for key, dsp, conf, what in MOUSE_DRAG:
+        if key.split(":")[1] in taken:
+            continue
+        if lua:
+            lines.append('hl.bind("SUPER + %s", %s, { mouse = true })' % (key, dsp))
+        else:
+            lines.append("bindm = SUPER, %s, %s" % (key, conf))
+    if lines:
+        lines = ["", "%s ── Windows with the mouse (as on niri) %s" % (c, "─" * 22),
+                 "%s Super + left button drags a window, Super + right button resizes it" % c] + lines
+    return lines
+
+
 def layout_hypr(cfg_dir, keymap, monolith, fmt):
     """Monolith's own key layout, in sections, without the keys you set in my-keys."""
     lua = fmt == "lua"
     taken = my_keys(cfg_dir, lua, {"mainMod": "SUPER"} if lua else {})
     binds = hk.translate(keymap, monolith)
     keys = hk.render(binds, lua, skip=taken)
-    print("\n".join(hk.scroll_delay(keymap, lua) + (hk.helpers(keys) if lua else []) + keys))
+    print("\n".join(hk.scroll_delay(keymap, lua) + (hk.helpers(keys) if lua else []) + keys + mouse_binds(cfg_dir, lua)))
 
 
 def merge_hypr(cfg_dir, keymap, monolith, fmt):

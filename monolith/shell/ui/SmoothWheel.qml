@@ -13,7 +13,8 @@ WheelHandler {
         while (p && (p.contentY === undefined || p.flickableDirection === undefined)) p = p.parent;
         return p;
     }
-    property real step: 110                 // pixels per wheel notch
+    // pixels per wheel notch: 110 × Menu scroll speed (Settings → Devices → Keyboard & mouse)
+    property real step: 110 * Math.max(0.1, Math.min(5, Number(Store.get("menus.scrollSpeed", 1)) || 1))
     property bool horizontal: false
     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     property real target: 0
