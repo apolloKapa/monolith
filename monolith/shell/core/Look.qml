@@ -20,6 +20,20 @@ Singleton {
     property var themeNames: []
     property var fileColors: null
     readonly property var colors: paletteName === "style" ? (style.colors || null) : (paletteName === "wallpaper" ? null : fileColors)
+    // a colour theme may give apps colours of their own (`apps`, e.g. Twilight: a dark shell
+    // framing light apps) and say whether apps are dark or light (`appsMode`)
+    property var fileApps: null
+    property string fileAppsMode: ""
+    readonly property bool fromFile: paletteName !== "style" && paletteName !== "wallpaper"
+    readonly property var appColors: fromFile ? fileApps : null
+    // dark or light for the apps (scripts/app_colours.py mode): the wallpaper's follow your
+    // setting; a palette's follow the palette itself (a light theme made apps light), or its appsMode
+    readonly property string appsMode: {
+        if (!colors) return Store.get("theme.mode", "dark");
+        if (fromFile && (fileAppsMode === "dark" || fileAppsMode === "light")) return fileAppsMode;
+        return lum(Qt.color(colors.base || "#000000")) < 0.5 ? "dark" : "light";
+    }
+    function lum(c) { return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; }
 
     function pickStyle(id) { Store.set("theme.style", id); Store.set("theme.palette", ""); }
     function pickPalette(name) { Store.set("theme.palette", name); }
@@ -27,8 +41,15 @@ Singleton {
     FileView {
         path: look.paletteName !== "style" && look.paletteName !== "wallpaper" ? look.themesDir + "/" + look.paletteName + ".json" : ""
         printErrors: false
-        onLoaded: { try { look.fileColors = JSON.parse(text()).colors || null; } catch (e) { look.fileColors = null; } }
-        onLoadFailed: look.fileColors = null
+        onLoaded: {
+            try {
+                const d = JSON.parse(text());
+                look.fileColors = d.colors || null;
+                look.fileApps = d.apps || null;
+                look.fileAppsMode = d.appsMode || "";
+            } catch (e) { look.fileColors = null; look.fileApps = null; look.fileAppsMode = ""; }
+        }
+        onLoadFailed: { look.fileColors = null; look.fileApps = null; look.fileAppsMode = ""; }
     }
     Process {
         running: true

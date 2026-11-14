@@ -319,8 +319,10 @@ Singleton {
     function followApps() {
         if (Store.get("theme.appsFollow", true) === false) return;
         Quickshell.execDetached(["python3", Qt.resolvedUrl("../scripts/app_colours.py").toString().replace("file://", ""), "mode",
-                                 mode === "light" ? "light" : "dark"].concat(Store.get("apps.qt", false) === true ? ["--palette-qt"] : []));
+                                 Look.appsMode === "light" ? "light" : "dark"].concat(Store.get("apps.qt", false) === true ? ["--palette-qt"] : []));
     }
+    // a colour theme can make apps dark or light by itself (a light theme, Twilight's light apps)
+    Connections { target: Look; function onAppsModeChanged() { if (Store.loaded) wall.followApps(); } }
     // and at start (an install that never switched mode, an app's settings reset since)
     Timer { interval: 3000; running: true; onTriggered: if (Store.loaded) wall.followApps() }
 

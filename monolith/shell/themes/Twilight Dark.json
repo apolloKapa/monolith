@@ -1,0 +1,28 @@
+{
+  "name": "Twilight Dark",
+  "desc": "Deep dusk everywhere, no pure black",
+  "colors": {
+    "base": "#171828",
+    "mantle": "#11121f",
+    "crust": "#0d0e19",
+    "text": "#e7e5f2",
+    "subtext0": "#a4a4bf",
+    "subtext1": "#c6c5da",
+    "surface0": "#202238",
+    "surface1": "#282a43",
+    "surface2": "#33354e",
+    "overlay0": "#6e7091",
+    "overlay1": "#8a8ba8",
+    "overlay2": "#a4a4bf",
+    "mauve": "#8e91f0",
+    "blue": "#9ea1f5",
+    "sapphire": "#8e91f0",
+    "pink": "#b9a1ec",
+    "peach": "#e9a84c",
+    "yellow": "#efc27c",
+    "red": "#e8899d",
+    "maroon": "#d8708a",
+    "green": "#8cc7a8",
+    "teal": "#84bfd0"
+  }
+}

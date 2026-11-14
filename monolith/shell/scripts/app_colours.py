@@ -37,7 +37,11 @@ def palette():
     except (OSError, ValueError):
         mode = "dark"
     src = STATE + "/shell-palette.json"
-    roles = json.load(open(src if os.path.exists(src) else STATE + "/next-palette.json")).get("colors", {})
+    data = json.load(open(src if os.path.exists(src) else STATE + "/next-palette.json"))
+    roles = data.get("colors", {})
+    # a colour theme's palette says itself whether it's dark or light (Twilight: light apps)
+    if data.get("mode") in ("dark", "light"):
+        mode = data["mode"]
     out = {}
     for k, v in roles.items():
         pick = v.get(mode) or v.get("default") or {}
@@ -50,6 +54,22 @@ def mix(a, b, t):
     pa = [int(a[i:i + 2], 16) for i in (1, 3, 5)]
     pb = [int(b[i:i + 2], 16) for i in (1, 3, 5)]
     return "#%02x%02x%02x" % tuple(round(x + (y - x) * t) for x, y in zip(pa, pb))
+
+
+def luminance(h):
+    v = [int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    v = [x / 12.92 if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4 for x in v]
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]
+
+
+def readable(col, bg, ratio=4.5):
+    """col darkened just enough to be read on a light background (WCAG contrast ratio)."""
+    lb = luminance(bg)
+    for i in range(21):
+        out = mix(col, "#000000", i * 0.05)
+        if (lb + 0.05) / (luminance(out) + 0.05) >= ratio:
+            return out
+    return out
 
 
 def kitty(c, mode):
@@ -66,6 +86,11 @@ def kitty(c, mode):
     if mode == "dark":
         norm[7] = mix(c.get("on_surface_variant", fg), fg, 0.65)
         bright[7] = fg
+    else:
+        # (the colours are made for dark terminals: on a light one they came out pale, a green
+        # prompt at 2.3:1; each is darkened just until it reads)
+        for i in range(1, 7):
+            norm[i], bright[i] = readable(norm[i], bg), readable(bright[i], bg)
     lines = ["# Monolith: the shell's colours (Settings -> App colours). Rewritten on every change.",
              "background " + bg, "foreground " + fg, "cursor " + c["primary"], "cursor_text_color " + bg,
              "selection_background " + c["primary_container"], "selection_foreground " + c["on_primary_container"],

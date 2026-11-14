@@ -108,8 +108,16 @@ ColumnLayout {
 
     // ── colours ──
     function lum(hex) { const c = Qt.color(hex || "#000"); return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; }
-    readonly property var darkThemes: themes.filter(t => lum(t.colors.base) < 0.5)
-    readonly property var lightThemes: themes.filter(t => lum(t.colors.base) >= 0.5)
+    // the search above the themes: by name or description, any order of words ("light twi")
+    property string themeFilter: ""
+    function matches(t) {
+        const words = themeFilter.toLowerCase().split(/\s+/).filter(w => w);
+        const hay = (t.name + " " + (t.desc || "") + " " + (lum(t.colors.base) < 0.5 ? "dark" : "light")).toLowerCase();
+        return words.every(w => hay.indexOf(w) !== -1);
+    }
+    readonly property var shownThemes: themeFilter.trim() === "" ? themes : themes.filter(t => matches(t))
+    readonly property var darkThemes: shownThemes.filter(t => lum(t.colors.base) < 0.5)
+    readonly property var lightThemes: shownThemes.filter(t => lum(t.colors.base) >= 0.5)
 
     Label { text: "Colours"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.leftMargin: 4; Layout.topMargin: 10 }
     SettingRow {
@@ -129,7 +137,8 @@ ColumnLayout {
         property var th: ({ name: "", colors: {} })
         readonly property var k: th.colors
         readonly property bool on: Look.paletteName === th.name
-        Layout.fillWidth: true
+        // a quarter of the row, also when a search leaves only one or two (they stretched)
+        Layout.preferredWidth: (sec.width - 24) / 4
         Layout.preferredHeight: 92
         radius: Theme.corner(92, 4)
         color: k.base || Theme.containerHigh
@@ -146,13 +155,15 @@ ColumnLayout {
                 Text { width: parent.width - 30; text: tc.th.name; elide: Text.ElideRight; color: tc.k.text || Theme.text; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeBody; font.weight: Font.DemiBold }
                 Icon { visible: tc.on; name: "check_circle"; filled: true; size: 18; color: tc.k.mauve || Theme.accent }
             }
-            // a panel with an accent button and a line of text
+            // a panel with an accent button and a line of text (a theme with apps colours of its
+            // own, like Twilight's light windows in a dark shell: the panel is an app in those)
             Rectangle {
+                readonly property var a: tc.th.apps || tc.k
                 width: parent.width; height: 26
                 radius: 6
-                color: tc.k.surface0 || Theme.container
-                Rectangle { x: 6; anchors.verticalCenter: parent.verticalCenter; width: 34; height: 14; radius: 7; color: tc.k.mauve || Theme.accent }
-                Rectangle { x: 48; anchors.verticalCenter: parent.verticalCenter; width: parent.width * 0.4; height: 5; radius: 2.5; color: Qt.alpha(tc.k.text || Theme.text, 0.6) }
+                color: (tc.th.apps ? a.base : a.surface0) || Theme.container
+                Rectangle { x: 6; anchors.verticalCenter: parent.verticalCenter; width: 34; height: 14; radius: 7; color: parent.a.mauve || Theme.accent }
+                Rectangle { x: 48; anchors.verticalCenter: parent.verticalCenter; width: parent.width * 0.4; height: 5; radius: 2.5; color: Qt.alpha(parent.a.text || Theme.text, 0.6) }
             }
             // its accents
             Row {
@@ -164,15 +175,28 @@ ColumnLayout {
             }
         }
     }
-    Label { text: "Dark themes  ·  " + sec.darkThemes.length; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6 }
+    Field {
+        id: themeSearch
+        Layout.fillWidth: true
+        placeholder: "Find a colour theme (" + sec.themes.length + ")"
+        onTextChanged: sec.themeFilter = text
+    }
+    Label {
+        visible: sec.themeFilter.trim() !== "" && sec.shownThemes.length === 0
+        text: "No colour theme matches \u201c" + sec.themeFilter.trim() + "\u201d"
+        muted: true; Layout.leftMargin: 6
+    }
+    Label { visible: sec.darkThemes.length > 0; text: "Dark themes  ·  " + sec.darkThemes.length; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6 }
     GridLayout {
+        visible: sec.darkThemes.length > 0
         Layout.fillWidth: true
         columns: 4
         rowSpacing: 8; columnSpacing: 8
         Repeater { model: sec.darkThemes; ThemeCard { required property var modelData; th: modelData } }
     }
-    Label { text: "Light themes  ·  " + sec.lightThemes.length; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 6 }
+    Label { visible: sec.lightThemes.length > 0; text: "Light themes  ·  " + sec.lightThemes.length; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 6 }
     GridLayout {
+        visible: sec.lightThemes.length > 0
         Layout.fillWidth: true
         columns: 4
         rowSpacing: 8; columnSpacing: 8

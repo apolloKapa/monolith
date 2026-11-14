@@ -37,7 +37,33 @@ Singleton {
         return stock && !catppuccin ? Qt.tint(Theme.accent, Qt.rgba(1, 1, 1, Theme.dark ? 0.45 : 0.25)) : Qt.color(t);
     }
     function hex(c) { const h = v => ("0" + Math.round(v * 255).toString(16)).slice(-2); return "#" + h(c.r) + h(c.g) + h(c.b); }
+    // Material roles from a palette of the apps' own (a colour theme's `apps`, e.g. Twilight's light
+    // windows under its dark shell), made the way Theme makes the shell's from a palette
+    function lumOf(col) { return 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b; }
+    function rolesFrom(p) {
+        const q = (n, f) => Qt.color(p[n] || f);
+        const base = q("base", "#f2f1f7"), s0 = q("surface0", base), s1 = q("surface1", s0), text = q("text", "#1c1d30");
+        const accent = q("mauve", "#5558d4");
+        const onAccent = lumOf(accent) > 0.5 ? Theme.mix(accent, Qt.color("#000000"), 0.78) : Qt.color("#ffffff");
+        const map = {
+            primary: accent, on_primary: onAccent, primary_container: Theme.mix(s1, accent, 0.35), on_primary_container: text,
+            secondary: q("blue", accent), on_secondary: q("crust", "#000000"), secondary_container: Theme.mix(s1, accent, 0.22), on_secondary_container: text,
+            tertiary: q("teal", accent), on_tertiary: q("crust", "#000000"), tertiary_container: s1, on_tertiary_container: text,
+            error: q("red", "#ba1a1a"), on_error: q("crust", "#000000"),
+            background: base, on_background: text, surface: base, on_surface: text,
+            surface_variant: s1, on_surface_variant: q("subtext0", text),
+            surface_container_lowest: q("crust", base), surface_container_low: q("mantle", base), surface_container: q("mantle", base),
+            surface_container_high: s0, surface_container_highest: s1,
+            outline: q("overlay0", text), outline_variant: q("surface2", s1),
+            inverse_surface: text, inverse_on_surface: base, inverse_primary: Theme.mix(s1, accent, 0.35),
+            shadow: "#000000", scrim: "#000000", source_color: accent
+        };
+        const out = {};
+        for (const k in map) out[k] = hex(Qt.color(map[k]));
+        return out;
+    }
     readonly property var shellRoles: {
+        if (Look.appColors) return rolesFrom(Look.appColors);
         const out = {};
         if (!Look.colors) {
             for (const k in Theme.roles) { const r = Theme.roles[k]; out[k] = r.color || (r.default && r.default.color) || r; }
@@ -65,7 +91,8 @@ Singleton {
         if (!Look.colors && Object.keys(Theme.roles).length > 0) return JSON.stringify({ colors: Theme.roles }, null, 1);
         const colors = {};
         for (const k in shellRoles) { const v = { color: shellRoles[k] }; colors[k] = { default: v, dark: v, light: v }; }
-        return JSON.stringify({ colors: colors }, null, 1);
+        // (mode: whether these colours are dark or light, for the terminal's bright colours)
+        return JSON.stringify({ mode: Look.appsMode, colors: colors }, null, 1);
     }
     readonly property string paletteFile: Quickshell.env("HOME") + "/.local/state/monolith/shell-palette.json"
     onShellPaletteChanged: writeLater.restart()

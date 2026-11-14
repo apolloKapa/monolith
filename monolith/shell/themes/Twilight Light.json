@@ -1,0 +1,28 @@
+{
+  "name": "Twilight Light",
+  "desc": "Soft morning mist, no pure white",
+  "colors": {
+    "base": "#f4f2f6",
+    "mantle": "#f4f2f6",
+    "crust": "#e7e4ee",
+    "text": "#232438",
+    "subtext0": "#505269",
+    "subtext1": "#43445a",
+    "surface0": "#ddd9e7",
+    "surface1": "#d3d0df",
+    "surface2": "#c6c2d4",
+    "overlay0": "#7f7c96",
+    "overlay1": "#6d6a85",
+    "overlay2": "#5e5b75",
+    "mauve": "#5558d4",
+    "blue": "#4246b8",
+    "sapphire": "#4246b8",
+    "pink": "#7451b8",
+    "peach": "#875212",
+    "yellow": "#8a5a12",
+    "red": "#a8445c",
+    "maroon": "#a8445c",
+    "green": "#2f7a58",
+    "teal": "#2c7385"
+  }
+}
