@@ -66,8 +66,29 @@ Pressable {
         handed = true;
         if (pending) { const p = pending; pending = null; p(); }
     }
+    // Clear (core/Notifs): thrown away with the rest, each in its own direction. Falling: tossed
+    // up and to a random side, spinning; sliding: off to a random side
+    function scatter() {
+        if (!card.visible || !card.Window.window || !card.Window.window.visible || throwId >= 0 || flying) return;
+        const p = card.mapToItem(null, -swipeX, 0);
+        const scr = card.screenName || HubState.screenName || Niri.focusedOutput || "";
+        const dir = Math.random() < 0.5 ? -1 : 1;
+        const falls = Throw.mode === "fall";
+        const vx = dir * (falls ? 300 + Math.random() * 1700 : 1100 + Math.random() * 1600);
+        const vy = -(500 + Math.random() * 1100);
+        const ok = card.grabToImage(r => {
+            const id = Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height);
+            card.throwId = id;
+            card.pending = null;
+            handoff.restart();
+            // (straight away, not on ready: Clear takes the real card a moment later)
+            Qt.callLater(() => Throw.letGo(id, vx, vy, Throw.mode));
+        });
+        if (ok) { flying = true; Throw.scattered++; }
+    }
     Connections {
         target: Throw
+        function onScatter() { card.scatter(); }
         function onReady(id) { if (id === card.throwId) card.handOver(); }
         function onHome(id) { if (id === card.throwId) { card.throwId = -1; card.resetting = true; card.swipeX = 0; card.resetting = false; card.handed = false; } }
     }

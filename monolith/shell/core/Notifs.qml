@@ -166,9 +166,22 @@ Singleton {
                 alive.length + " notifications while you were in fullscreen", body + ". They're in the notification list."]);
         }
     }
+    // Clear: with animations on, the cards on screen are thrown all over first (core/Throw;
+    // copies fly, so the real ones can go a moment later, once the copies are up)
     function clearAll() {
+        Throw.scattered = 0;
+        if (Throw.on) Throw.scatter();
+        if (Throw.scattered > 0) clearLater.restart(); else clearNow();
+    }
+    function clearNow() {
         for (const n of server.trackedNotifications.values.slice()) n.dismiss();
         popups = [];
+    }
+    Timer { id: clearLater; interval: 260; onTriggered: notifs.clearNow() }
+    // `qs ipc call notifications clear`: the same as the Clear button (thrown away too)
+    IpcHandler {
+        target: "notifications"
+        function clear(): void { notifs.clearAll(); }
     }
 
     NotificationServer {

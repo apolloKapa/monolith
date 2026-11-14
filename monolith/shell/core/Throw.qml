@@ -22,6 +22,9 @@ Singleton {
     signal letGo(int id, real vx, real vy, string mode)
     signal springBack(int id)
     signal home(int id)                        // sprung back: the real card shows again
+    // Clear: every card on screen is thrown at once, each its own way (ui/NotificationCard)
+    signal scatter()
+    property int scattered: 0                  // how many cards took part in the last one
     function launch(screen, url, x, y, w, h) {
         seq++;
         flying = flying.concat([{ id: seq, screen: screen, url: url, x: x, y: y, w: w, h: h }]);
