@@ -177,18 +177,25 @@ PanelWindow {
 
             // a video wallpaper: looping, over the pictures (which stay as the backdrop); muted unless
             // Sound is on, and paused while a fullscreen app covers this screen (Wallpaper → Live)
-            Video {
-                id: vid
+            // (made only while a video is on: a player that's always there, even empty, started
+            // the whole video stack, its decoders and a Vulkan device, on every screen)
+            Loader {
                 anchors.fill: parent
-                visible: bg.video
-                source: bg.playing !== "" ? Wall.url(bg.playing) : ""
-                fillMode: VideoOutput.PreserveAspectCrop
-                loops: MediaPlayer.Infinite
-                muted: Store.get("wallpaper.liveSound", false) !== true
-                volume: 0.6
-                autoPlay: true
-                // its first frames are showing
-                onPositionChanged: if (bg.video && position > 0) { swap.ready(); if (bg.frozenWait && bg.playing !== "") bg.thaw(); }
+                active: bg.video || bg.playing !== ""
+                sourceComponent: Component {
+                    Video {
+                        anchors.fill: parent
+                        visible: bg.video
+                        source: bg.playing !== "" ? Wall.url(bg.playing) : ""
+                        fillMode: VideoOutput.PreserveAspectCrop
+                        loops: MediaPlayer.Infinite
+                        muted: Store.get("wallpaper.liveSound", false) !== true
+                        volume: 0.6
+                        autoPlay: true
+                        // its first frames are showing
+                        onPositionChanged: if (bg.video && position > 0) { swap.ready(); if (bg.frozenWait && bg.playing !== "") bg.thaw(); }
+                    }
+                }
             }
             AnimatedImage {
                 anchors.fill: parent

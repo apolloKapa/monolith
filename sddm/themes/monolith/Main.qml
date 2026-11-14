@@ -81,6 +81,10 @@ Rectangle {
 
     Connections {
         target: typeof sddm !== "undefined" ? sddm : null
+        // logged in: close the login screen ourselves. Left to SDDM, the greeter didn't exit in
+        // the 5 s it waits ("Process crashed" in sddm.log at every login) and stayed running,
+        // orphaned, for the whole session (about 200 MB)
+        function onLoginSucceeded() { Qt.quit(); }
         function onLoginFailed() {
             root.errorMessage = "ACCESS DENIED";
             pwd.text = "";

@@ -29,14 +29,26 @@ ipc() { quickshell ipc -p "$qml" call "$@"; }
 running() { pgrep -f "quickshell -p $qml" >/dev/null; }
 # started by the compositor (so it gets the session's environment): niri, or Hyprland
 on_hyprland() { [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; }
+# Qt's renderer for the shell: Vulkan when there's a Vulkan driver. With OpenGL every window of
+# the shell (about a dozen on two screens) gets its own GL context and driver threads; on Vulkan
+# they share one device: about a quarter less memory (366 -> 273 MB on two screens) and a third
+# of the threads. A QSG_RHI_BACKEND already set (opengl, to go back) is left alone.
+renderer() {
+    [ -n "$QSG_RHI_BACKEND" ] && { echo "$QSG_RHI_BACKEND"; return; }
+    for d in /usr/share/vulkan/icd.d /etc/vulkan/icd.d; do
+        ls "$d"/*.json >/dev/null 2>&1 && { echo vulkan; return; }
+    done
+    echo opengl
+}
 start() {
     running && return
+    rhi=$(renderer)
     # (Hyprland: straight from here, detached. Going through `hyprctl dispatch exec` broke on
     # Hyprland 0.55+ with a Lua config, where dispatch takes a Lua expression: nothing started)
     # (Qt reads the icon theme from qt6ct only with this set: niri's config sets it, a
     # Hyprland config may not)
-    if on_hyprland; then QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}" setsid -f quickshell -p "$qml" >/dev/null 2>&1 < /dev/null
-    else niri msg action spawn -- quickshell -p "$qml"; fi
+    if on_hyprland; then QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}" QSG_RHI_BACKEND="$rhi" setsid -f quickshell -p "$qml" >/dev/null 2>&1 < /dev/null
+    else niri msg action spawn -- env QSG_RHI_BACKEND="$rhi" quickshell -p "$qml"; fi
 }
 # any copy of the shell (an installed one, a checkout)
 stop() { pkill -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null; }
