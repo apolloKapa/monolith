@@ -28,7 +28,7 @@ PanelWindow {
     // box only followed that item's own place, so it stayed where the box was when the bar
     // started sliding back in from auto-hide)
     mask: Region {
-        item: win.tucked ? sensor : null
+        item: win.tucked && !win.covered ? sensor : null
         Region {
             x: box.x + hit.x; y: box.y + hit.y
             width: win.tucked ? 0 : hit.width; height: win.tucked ? 0 : hit.height
@@ -37,7 +37,9 @@ PanelWindow {
 
     // auto-hide (Settings → Bar): it slides off the edge and comes back when the pointer touches it
     readonly property bool autohide: Store.get("status.autohide", false) === true
-    readonly property bool tucked: autohide && !sensorHover.hovered && !barHover.hovered && !HubState.open && HubState.dropScreen === ""
+    // (Hyprland: slid away for a borderless window as big as the screen, see Island)
+    readonly property bool covered: Niri.hyprland && Niri.fullscreenOn(modelData.name)
+    readonly property bool tucked: (autohide || covered) && (covered || (!sensorHover.hovered && !barHover.hovered)) && !HubState.open && HubState.dropScreen === ""
     Item {
         id: sensor
         x: win.onLeft ? 0 : win.width - 3

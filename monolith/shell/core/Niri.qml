@@ -176,7 +176,9 @@ Singleton {
                 // fullscreen put the live wallpaper to sleep whenever one was open)
                 is_fullscreen: Number(o.fullscreen || 0) >= 2, pid: o.pid || 0,
                 // where it is on its screen (the dock's "dodge windows" reads this, as on niri)
-                layout: at && size ? { tile_pos_in_workspace_view: [at[0] - (mon ? mon.x : 0), at[1] - (mon ? mon.y : 0)], tile_size: size } : null
+                // (window_size: what covers() reads, so a borderless window the size of the screen
+                // counts as fullscreen, as on niri)
+                layout: at && size ? { tile_pos_in_workspace_view: [at[0] - (mon ? mon.x : 0), at[1] - (mon ? mon.y : 0)], tile_size: size, window_size: size } : null
             };
             m[w.id] = w;
             if (w.is_focused) fid = w.id;

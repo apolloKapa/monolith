@@ -39,7 +39,7 @@ PanelWindow {
     // (no bar on this screen: nothing takes clicks there, unless a notification is showing)
     Region {
         id: plainMask
-        item: win.shown ? fullArea : (!(win.barHere || win.toastGrows) ? null : (win.tucked ? sensor : island))
+        item: win.shown ? fullArea : (!(win.barHere || win.toastGrows) ? null : (win.tucked ? (win.covered ? null : sensor) : island))
         // a notification out of a full-width bar, or under a floating one
         Region { item: !win.shown && drop.height > 1 ? dropBody : null }
         Region { item: !win.shown && toastCard.visible ? toastCard : null }
@@ -64,7 +64,11 @@ PanelWindow {
     // auto-hide (Settings → Status line): the collapsed island slides up, and comes back when
     // the pointer touches the top edge
     readonly property bool autohide: Store.get("status.autohide", false) === true
-    readonly property bool tucked: autohide && !win.shown && !sensorHover.hovered && !barHover.hovered
+    // Hyprland: a window as big as the screen that isn't fullscreen (a game's borderless mode)
+    // sits under the bar, so the bar slides away for it (real fullscreen covers the bar already);
+    // the screen's top edge doesn't bring it back then, it would catch the game's mouse
+    readonly property bool covered: Niri.hyprland && Niri.fullscreenOn(modelData.name)
+    readonly property bool tucked: (autohide || covered) && !win.shown && (covered || (!sensorHover.hovered && !barHover.hovered))
     Item { id: sensor; x: island.x; y: Theme.barBottom ? win.height - 3 : 0; width: island.width; height: 3; HoverHandler { id: sensorHover } }
     readonly property bool bottom: Theme.barBottom
 
