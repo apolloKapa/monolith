@@ -97,7 +97,41 @@ resolve_pkg() {
 }
 
 # the full list for the current menu choices
-target_packages() {
+# ── how each package is installed (Packages overview): c compile / install, b binary (Gentoo:
+# its prebuilt package from Gentoo's binhost when one matches, else it's compiled), x off (not
+# installed by Monolith). Kept in ~/.config/monolith/package-picks, a line per package changed
+PKG_PICKS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/monolith/package-picks"
+declare -gA PKG_PICK=()
+picks_load() {
+    PKG_PICK=()
+    [ -f "$PKG_PICKS_FILE" ] || return 0
+    local name mode
+    while read -r name mode; do
+        [[ -n "$name" && "$mode" =~ ^[cbx]$ ]] && PKG_PICK["$name"]="$mode"
+    done < "$PKG_PICKS_FILE"
+}
+picks_save() {
+    mkdir -p "$(dirname "$PKG_PICKS_FILE")"
+    local name
+    {
+        echo "# how Monolith installs these (the installer's Packages overview): c compile, b binary, x off"
+        for name in "${!PKG_PICK[@]}"; do
+            [ "${PKG_PICK[$name]}" != c ] && echo "$name ${PKG_PICK[$name]}"
+        done | sort
+    } > "$PKG_PICKS_FILE"
+}
+pick_of() { local m="${PKG_PICK[$1]:-c}"; [ "$PM_NAME" != portage ] && [ "$m" = b ] && m=c; echo "$m"; }
+# what Monolith can't run without: never left out
+pkg_needed() {
+    case " quickshell python pipewire wireplumber qt6-wayland qt6-multimedia jq git $([ "$DESKTOP" = hyprland ] || echo niri) " in
+        *" $1 "*) return 0 ;;
+    esac
+    return 1
+}
+picks_load
+
+# every package Monolith wants, whatever its pick (the overview lists these)
+all_target_packages() {
     local project_root="$1" p
     for p in "${REQUIRED_PKGS[@]}"; do echo "$p"; done
     # (Hyprland as the desktop: no niri, its Xwayland helper or its portal; Hyprland brings its own)
@@ -110,6 +144,15 @@ target_packages() {
     fi
     if [ "$OPT_SDDM" = true ]; then sddm_packages; fi
     for p in "${PM_EXTRA_PKGS[@]}"; do echo "$p"; done
+}
+
+# the ones to install: those not set to Off (what Monolith needs stays in)
+target_packages() {
+    local p
+    while IFS= read -r p; do
+        [ "$(pick_of "$p")" = x ] && ! pkg_needed "$p" && continue
+        echo "$p"
+    done < <(all_target_packages "$@")
 }
 
 suppress_tty_sleep() {

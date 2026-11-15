@@ -273,55 +273,111 @@ draw_banner() {
     printf "\n%s\n\n" "$(grad_rule 80 ━)"
 }
 
-# the packages Monolith wants and which are still to install, as a list you scroll through (the
-# menu's own keys). It was fzf's, which the installer never installs: on a fresh system at a TTY
-# (where you'd run it) nothing showed, and the console can't draw fzf's rounded borders either
+# The packages Monolith wants, and how each is installed: a ▶ on the one you're on (↑/↓), ←/→
+# to change it. Gentoo: Compile, Binary (Gentoo's prebuilt package when its version and USE
+# match, else compiled) or Off; elsewhere Install or Off (the packages there come prebuilt).
+# Off: Monolith doesn't install it (one it needs can't be turned off). c / b / x set the one
+# you're on, C / B / X all of them. Kept in ~/.config/monolith/package-picks (deps.sh).
 show_package_overview() {
-    local target_list=()
-    mapfile -t target_list < <(target_packages "$PROJECT_ROOT" | awk '!seen[$0]++')
+    local names=()
+    mapfile -t names < <(all_target_packages "$PROJECT_ROOT" | awk '!seen[$0]++')
     local missing_raw
-    missing_raw=$(pm_missing_pkgs "${target_list[@]}")
+    missing_raw=$(pm_missing_pkgs "${names[@]}")
     declare -A is_missing
     while IFS= read -r p; do
         [[ -n "$p" ]] && is_missing["$p"]=1
     done <<< "$missing_raw"
-
     # still to install first, then the rest
-    local lines=() done_lines=() n_missing=0
-    for pkg in "${target_list[@]}"; do
-        if [[ -n "${is_missing[$pkg]}" ]]; then
-            lines+=("${C_YELLOW}to install ${RESET} $pkg"); n_missing=$((n_missing + 1))
-        else
-            done_lines+=("${C_GREEN}installed  ${RESET} $pkg")
-        fi
-    done
-    lines+=("${done_lines[@]}")
+    local list=() p
+    for p in "${names[@]}"; do [[ -n "${is_missing[$p]}" ]] && list+=("$p"); done
+    for p in "${names[@]}"; do [[ -z "${is_missing[$p]}" ]] && list+=("$p"); done
 
-    local top=0 total=${#lines[@]} rows
+    local modes labels
+    if [ "$PM_NAME" = portage ]; then modes=(c b x); labels=(Compile Binary Off)
+    else modes=(c x); labels=(Install Off); fi
+    local mcolor=("$C_GREEN" $'\e[36m' "$C_RED")
+    [ "$PM_NAME" = portage ] || mcolor=("$C_GREEN" "$C_RED")
+
+    local total=${#list[@]} cur=0 top=0 rows msg="" i j k
+    set_pick() {   # set_pick name mode
+        if [ "$2" = x ] && pkg_needed "$1"; then msg="$1: Monolith needs it, it can't be off"; return; fi
+        PKG_PICK["$1"]="$2"
+    }
     while true; do
         rows=$(stty size 2>/dev/null </dev/tty | cut -d' ' -f1)
         [[ "$rows" =~ ^[0-9]+$ ]] || rows=24
-        local page=$(( rows - 5 )); (( page < 3 )) && page=3
-        (( top > total - page )) && top=$(( total - page ))
-        (( top < 0 )) && top=0
-        printf "\033[2J\033[H"
-        printf " %sPackages%s  %d in all: %s%d to install%s, %d installed\n\n" "$BOLD" "$RESET" "$total" \
-            "$C_YELLOW" "$n_missing" "$RESET" "$(( total - n_missing ))"
-        local i
-        for (( i = top; i < top + page && i < total; i++ )); do
-            printf "  %s\033[K\n" "${lines[$i]}"
+        local page=$(( rows - 7 )); (( page < 3 )) && page=3
+        (( cur < 0 )) && cur=0; (( cur >= total )) && cur=$(( total - 1 ))
+        (( cur < top )) && top=$cur
+        (( cur >= top + page )) && top=$(( cur - page + 1 ))
+        # the counts
+        local nc=0 nb=0 nx=0 n_missing=0 m
+        for p in "${list[@]}"; do
+            m=$(pick_of "$p"); case $m in c) ((++nc)) ;; b) ((++nb)) ;; x) ((++nx)) ;; esac
+            [[ -n "${is_missing[$p]}" ]] && ((++n_missing))
         done
-        printf "\n %s%d-%d of %d   ↑/↓ or j/k to scroll, Space/b a page, q or Esc to go back%s" "$DIM" \
-            "$(( top + 1 ))" "$(( i ))" "$total" "$RESET"
-        case "$(read_key)" in
-            UP|[kK]) top=$(( top - 1 )) ;;
-            DOWN|[jJ]) top=$(( top + 1 )) ;;
-            SPACE|[fF]) top=$(( top + page )) ;;
-            [bB]) top=$(( top - page )) ;;
-            [gG]) top=0 ;;
+        printf "\033[2J\033[H"
+        printf " %sPackages%s  %d: %s%d to install%s, %d installed    " "$BOLD" "$RESET" "$total" "$C_YELLOW" "$n_missing" "$RESET" "$(( total - n_missing ))"
+        if [ "$PM_NAME" = portage ]; then
+            printf "%s%d compile%s · %s%d binary%s · %s%d off%s\n" "$C_GREEN" "$nc" "$RESET" $'\e[36m' "$nb" "$RESET" "$C_RED" "$nx" "$RESET"
+            printf " %sBinary: Gentoo's prebuilt package when its version and USE match ours, else it's compiled. Off: not installed.%s\n\n" "$DIM" "$RESET"
+        else
+            printf "%s%d install%s · %s%d off%s\n" "$C_GREEN" "$nc" "$RESET" "$C_RED" "$nx" "$RESET"
+            printf " %sOff: Monolith doesn't install it (what it needs can't be off).%s\n\n" "$DIM" "$RESET"
+        fi
+        for (( i = top; i < top + page && i < total; i++ )); do
+            p=${list[$i]}
+            m=$(pick_of "$p")
+            local mark="  " st name opts=""
+            [ "$i" -eq "$cur" ] && mark="${BOLD}${C_GREEN}▶${RESET} "
+            if [[ -n "${is_missing[$p]}" ]]; then st="${C_YELLOW}to install${RESET}"; else st="${DIM}installed ${RESET}"; fi
+            name="$p"; pkg_needed "$p" && name="$p*"
+            for k in "${!modes[@]}"; do
+                if [ "${modes[$k]}" = "$m" ]; then
+                    opts+=" ${BOLD}${mcolor[$k]}[${labels[$k]}]${RESET}"
+                else
+                    opts+=" ${DIM} ${labels[$k]} ${RESET}"
+                fi
+            done
+            if [ "$i" -eq "$cur" ]; then
+                printf "%s%s  %s%-28.28s%s%s\033[K\n" "$mark" "$st" "$BOLD" "$name" "$RESET" "$opts"
+            else
+                printf "%s%s  %-28.28s%s\033[K\n" "$mark" "$st" "$name" "$opts"
+            fi
+        done
+        printf "\n %s%d/%d   ↑/↓ package   ←/→ how it's installed   %s this one, %s all   (* needed)   q / Esc / Enter: back%s" \
+            "$DIM" "$(( cur + 1 ))" "$total" "$([ "$PM_NAME" = portage ] && echo "c/b/x" || echo "c/x")" \
+            "$([ "$PM_NAME" = portage ] && echo "C/B/X" || echo "C/X")" "$RESET"
+        [ -n "$msg" ] && printf "\n %s%s%s" "$C_YELLOW" "$msg" "$RESET"
+        msg=""
+        local key; key=$(read_key)
+        p=${list[$cur]}
+        m=$(pick_of "$p")
+        local idx=0
+        for k in "${!modes[@]}"; do [ "${modes[$k]}" = "$m" ] && idx=$k; done
+        case "$key" in
+            UP|[kK]) cur=$(( cur - 1 )) ;;
+            DOWN|[jJ]) cur=$(( cur + 1 )) ;;
+            SPACE) cur=$(( cur + page )) ;;
+            RIGHT|[lL]) set_pick "$p" "${modes[$(( (idx + 1) % ${#modes[@]} ))]}" ;;
+            LEFT|[hH]) set_pick "$p" "${modes[$(( (idx - 1 + ${#modes[@]}) % ${#modes[@]} ))]}" ;;
+            c) set_pick "$p" c ;;
+            b) [ "$PM_NAME" = portage ] && set_pick "$p" b ;;
+            x) set_pick "$p" x ;;
+            C|B|X)
+                local want=${key,,}
+                [ "$want" = b ] && [ "$PM_NAME" != portage ] && continue
+                for p in "${list[@]}"; do
+                    { [ "$want" = x ] && pkg_needed "$p"; } && continue
+                    PKG_PICK["$p"]="$want"
+                done
+                [ "$want" = x ] && msg="all off but what Monolith needs" ;;
+            g) cur=0 ;;
+            G) cur=$(( total - 1 )) ;;
             ESC|[qQ]|ENTER) break ;;
         esac
     done
+    picks_save
     printf "\033[2J\033[H"
 }
 
@@ -350,7 +406,7 @@ run_installer_ui() {
             || desk_label="${C_GREEN}[niri]${RESET}"
         local labels=(
             "Desktop $desk_label"
-            "Packages overview"
+            "Packages $([ "$PM_NAME" = portage ] && echo "(compile, binary or off, each)" || echo "(install or off, each)")"
             "Apps for the keybinds (kitty, librewolf, thunar, mission center) $(on_off "$OPT_KEYBIND_APPS")"
         )
         local actions=(desktop packages keybind_apps)

@@ -174,15 +174,34 @@ pm_prepare_repos() {
     portage_write_conf
 }
 
+# PORTAGE_BIN_ATOMS: the packages picked as Binary (Packages overview). They come from Gentoo's
+# binhost when it has one matching their version and USE (--getbinpkg, limited to them by
+# --usepkg-include); anything else is still compiled
+PORTAGE_BIN_ATOMS=()
 portage_emerge() {
-    local masks=() d
+    local masks=() d bin=()
     for d in package.use package.accept_keywords package.license; do
         masks+=("/etc/portage/$d/zz-monolith-autounmask")
     done
+    if [ ${#PORTAGE_BIN_ATOMS[@]} -gt 0 ]; then
+        bin=(--getbinpkg=y "--usepkg-include=${PORTAGE_BIN_ATOMS[*]}")
+    fi
     sudo env CONFIG_PROTECT_MASK="${masks[*]}" \
         emerge --ask=n --noreplace --keep-going --with-bdeps=y \
         --autounmask=y --autounmask-continue=y --autounmask-use=y --autounmask-license=y \
-        --autounmask-keep-masks=y "$@"
+        --autounmask-keep-masks=y "${bin[@]}" "$@"
+}
+
+# the Binary picks among these package names, as atoms (PORTAGE_BIN_ATOMS)
+portage_bin_for() {
+    PORTAGE_BIN_ATOMS=()
+    local p a
+    for p in "$@"; do
+        declare -f pick_of >/dev/null && [ "$(pick_of "$p")" = b ] || continue
+        a="$(portage_atoms "$p")"
+        case "$a" in "" | src:* | unknown:*) continue ;; esac
+        PORTAGE_BIN_ATOMS+=($a)
+    done
 }
 
 pm_bootstrap_install() {
@@ -234,8 +253,14 @@ pm_install_batch() {
         esac
     done
     if [ ${#atoms[@]} -gt 0 ]; then
-        echo -e "\e[36m[ INFO ]\e[0m Building ${#atoms[@]} packages from source with Portage. This can take a while.\n"
+        portage_bin_for "$@"
+        if [ ${#PORTAGE_BIN_ATOMS[@]} -gt 0 ]; then
+            echo -e "\e[36m[ INFO ]\e[0m Installing ${#atoms[@]} packages with Portage: ${#PORTAGE_BIN_ATOMS[@]} from Gentoo's binaries where it has them, the rest built from source. This can take a while.\n"
+        else
+            echo -e "\e[36m[ INFO ]\e[0m Building ${#atoms[@]} packages from source with Portage. This can take a while.\n"
+        fi
         portage_emerge "${atoms[@]}" || true
+        PORTAGE_BIN_ATOMS=()
     fi
     for p in "${srcs[@]}"; do portage_build_src "$p" || true; done
     mapfile -t PM_BATCH_LEFT < <(pm_missing_pkgs "$@")
@@ -248,7 +273,7 @@ pm_install_pkg() {
         "") return 0 ;;
         unknown:*) echo "No Gentoo package known for $1"; return 1 ;;
         src:*) portage_build_src "${a#src:}" ;;
-        *) portage_emerge $a ;;
+        *) portage_bin_for "$1"; portage_emerge $a; local r=$?; PORTAGE_BIN_ATOMS=(); return $r ;;
     esac
 }
 
