@@ -11,9 +11,9 @@ Item {
     property Item target: null
     property real p: 1
     property bool going: false
-    // (and only while the target shows: one taken by the Blackwall stays at p 1, hidden, and the
-    // effect and its frame clock would have run on for nothing)
-    readonly property bool on: Theme.cyber && !!target && target.visible && (going ? p > 0.001 : p < 0.999)
+    // (and only while the target shows: one taken by the Blackwall stays at p 1, hidden or
+    // see-through (the dock), and the effect and its frame clock would have run on for nothing)
+    readonly property bool on: Theme.cyber && !!target && target.visible && target.opacity > 0.001 && (going ? p > 0.001 : p < 0.999)
     // seconds since it started, and a fresh pattern each time
     property real t: 0
     property real seed: 0

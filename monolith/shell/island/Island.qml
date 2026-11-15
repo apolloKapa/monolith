@@ -217,7 +217,8 @@ PanelWindow {
         Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
 
         // Solid: one rounded floating bar; Modular gets one too while a notification drops out
-        Rectangle {
+        // (a SmoothRect: the Cyberpunk style cuts its corner)
+        SmoothRect {
             id: solidBg
             anchors.fill: parent
             visible: Theme.barFloats && (Theme.barStyle === "solid" || win.toastGrows)
@@ -226,6 +227,7 @@ PanelWindow {
             border.width: Theme.outlineW
             border.color: Theme.outlineColor
             CardShadow { visible: win.barSolid || win.toastOn || Theme.barOpacity > 0.3 }
+            PanelFx { anchors.fill: parent; radius: solidBg.radius; visible: Theme.chamfer }
         }
         // Frame: a notification dropping out gets a background below the bar only (the frame
         // already paints the bar's strip; painting it again would show darker in see-through styles)

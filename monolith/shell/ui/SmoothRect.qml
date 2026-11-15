@@ -16,7 +16,7 @@ Item {
     readonly property real half: Math.max(0, Math.min(width, height) / 2)
     readonly property real r: Math.max(0, Math.min(radius, half))
     // cut corners (Theme.chamfer, the Cyberpunk style): a superellipse with exponent 1 is a
-    // straight line across the corner; the shader cuts only the top-left and bottom-right ones
+    // straight line across the corner; the shader cuts only the bottom-right one
     readonly property bool cut: Theme.chamfer && r >= 2
     // how far the curve reaches along each side (never past the middle: a capsule stays one)
     readonly property real extent: cut ? r : Math.min(half, r * (1 + 0.85 * smoothing))

@@ -18,8 +18,13 @@ Item {
     property bool flipped: false            // standing on the bottom edge instead (the bar at the bottom)
     width: bodyW + 2 * e
     // the curves never grow past what the size allows
-    readonly property real e: Math.max(0, Math.min(ear, height / 2))
+    // (no ears in the Cyberpunk style: it hangs straight down, square on the left, cut on the right)
+    readonly property real e: Theme.chamfer ? 0 : Math.max(0, Math.min(ear, height / 2))
     readonly property real rr: Math.max(0, Math.min(r, height - e, bodyW / 2))
+    // Cyberpunk (Theme.chamfer): the lower right corner is cut straight across (an arc of a huge
+    // radius is a straight line) and the lower left one is square
+    readonly property real arcR: Theme.chamfer ? 100000 : rr
+    readonly property real lr: Theme.chamfer ? 0 : rr
 
     // the shadow, under the body: a RectangularShadow (a shader), so the island can grow into a
     // menu without its shape being rendered off-screen and blurred again on every frame (that
@@ -71,9 +76,9 @@ Item {
             // right ear: from the edge down into the body's side
             PathQuad { controlX: s.width - s.e; controlY: 0; x: s.width - s.e; y: s.e }
             PathLine { x: s.width - s.e; y: s.height - s.rr }
-            PathArc { x: s.width - s.e - s.rr; y: s.height; radiusX: s.rr; radiusY: s.rr; direction: PathArc.Clockwise }
-            PathLine { x: s.e + s.rr; y: s.height }
-            PathArc { x: s.e; y: s.height - s.rr; radiusX: s.rr; radiusY: s.rr; direction: PathArc.Clockwise }
+            PathArc { x: s.width - s.e - s.rr; y: s.height; radiusX: s.arcR; radiusY: s.arcR; direction: PathArc.Clockwise }
+            PathLine { x: s.e + s.lr; y: s.height }
+            PathArc { x: s.e; y: s.height - s.lr; radiusX: Math.max(0.01, s.lr); radiusY: Math.max(0.01, s.lr); direction: PathArc.Clockwise }
             PathLine { x: s.e; y: s.e }
             // left ear: back up to the edge
             PathQuad { controlX: s.e; controlY: 0; x: 0; y: 0 }

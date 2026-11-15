@@ -18,8 +18,8 @@ layout(std140, binding = 0) uniform buf {
 };
 
 float sdRoundBox(vec2 p, vec2 b, float r, float n) {
-    // (cut corners, exponent 1: only the top-left and bottom-right, as in smooth.frag)
-    if (n < 1.5 && (p.x < 0.0) != (p.y < 0.0)) r = 0.0;
+    // (cut corners, exponent 1: only the bottom-right one, as in smooth.frag)
+    if (n < 1.5 && !(p.x > 0.0 && p.y > 0.0)) r = 0.0;
     r = min(r, min(b.x, b.y));
     vec2 q = abs(p) - b + r;
     vec2 m = max(q, 0.0);

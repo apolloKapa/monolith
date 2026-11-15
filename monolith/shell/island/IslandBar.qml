@@ -155,7 +155,7 @@ Item {
         }
     }
     // Modular: each section on a floating pill of its own
-    component ZonePill: Rectangle {
+    component ZonePill: SmoothRect {
         property Item zone
         visible: Theme.barStyle === "modular" && !bar.only && bar.len(zone) > 0
         x: bar.vertical ? 0 : zone.x - 8

@@ -210,15 +210,20 @@ PanelWindow {
         width: appsRow.width + 16
         height: appsRow.height + 16
         // slides in from its edge
-        x: dock.side === "left" ? (dock.shown ? dock.margin : -width - 8) : (dock.side === "right" ? (dock.shown ? parent.width - width - dock.margin : parent.width + 8) : Math.round((parent.width - width) / 2))
-        y: dock.side === "bottom" ? (dock.shown ? parent.height - height - dock.margin : parent.height + 8) : (dock.vertical ? Math.round((parent.height - height) / 2) : (dock.shown ? dock.margin : -height - 8))
+        // (Cyberpunk: it doesn't slide; it glitches in and the Blackwall takes it, cyP)
+        readonly property bool home: dock.shown || Theme.cyber
+        x: dock.side === "left" ? (home ? dock.margin : -width - 8) : (dock.side === "right" ? (home ? parent.width - width - dock.margin : parent.width + 8) : Math.round((parent.width - width) / 2))
+        y: dock.side === "bottom" ? (home ? parent.height - height - dock.margin : parent.height + 8) : (dock.vertical ? Math.round((parent.height - height) / 2) : (home ? dock.margin : -height - 8))
         Behavior on x { enabled: dock.vertical; NumberAnimation { duration: dock.shown ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         Behavior on y { enabled: !dock.vertical; NumberAnimation { duration: dock.shown ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         // and fades in with a little zoom as it slides in, out the same way
-        opacity: dock.shown ? 1 : 0
+        opacity: Theme.cyber ? (cyP > 0.002 ? 1 : 0) : (dock.shown ? 1 : 0)
         scale: dock.shown ? 1 : Theme.popScale
+        property real cyP: dock.shown ? 1 : 0
+        Behavior on cyP { NumberAnimation { duration: dock.shown ? Theme.fxInMs : Theme.fxOutMs } }
+        CyberFx { target: capsule; p: dock.shown ? capsule.cyP : 1 - capsule.cyP; going: !dock.shown }
         transformOrigin: dock.side === "top" ? Item.Top : (dock.side === "left" ? Item.Left : (dock.side === "right" ? Item.Right : Item.Bottom))
-        Behavior on opacity { NumberAnimation { duration: dock.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on opacity { enabled: !Theme.cyber; NumberAnimation { duration: dock.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: dock.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         // its own roundness (−1: the theme's)
         radius: Number(Store.get("dock.radius", -1)) >= 0 ? Math.min(Number(Store.get("dock.radius", -1)), Math.min(width, height) / 2) : Theme.corner(Math.min(width, height), 8)
@@ -250,7 +255,7 @@ PanelWindow {
                 if (v !== Number(Store.get("dock.margin", 12))) Store.set("dock.margin", v);
             }
         }
-        PanelFx { anchors.fill: parent; radius: capsule.radius; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge) }
+        PanelFx { anchors.fill: parent; radius: capsule.radius; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge || Theme.chamfer) }
         Grid {
             id: appsRow
             anchors.centerIn: parent

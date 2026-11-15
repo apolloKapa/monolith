@@ -24,9 +24,9 @@ layout(std140, binding = 0) uniform buf {
 // corners of extent r
 float sdSmoothBox(vec2 p, vec2 b, float r, float n) {
     r = clamp(r, 0.0, min(b.x, b.y));
-    // cut corners (exponent 1, the Cyberpunk style): only the top-left and bottom-right are cut,
-    // the other two stay square, as on a HUD
-    if (n < 1.5 && (p.x < 0.0) != (p.y < 0.0)) r = 0.0;
+    // cut corners (exponent 1, the Cyberpunk style): only the bottom-right one is cut, the
+    // other three stay square
+    if (n < 1.5 && !(p.x > 0.0 && p.y > 0.0)) r = 0.0;
     vec2 q = abs(p) - b + r;
     vec2 m = max(q, 0.0);
     float corner = 0.0;
