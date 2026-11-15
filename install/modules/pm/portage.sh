@@ -195,8 +195,26 @@ PORTAGE_SRC_ATOMS=()
 # Monolith's own binhost (.github/workflows/binhost.yml): what Gentoo's doesn't prebuild, for the
 # stable branch, any x86-64 CPU. With it and Gentoo's, a stable system never compiles
 MONOLITH_BINHOST="${MONOLITH_BINHOST:-https://github.com/apolloKapa/monolith/releases/download/binhost}"
+# Monolith's signing key in Portage's keyring, trusted like Gentoo's (getuto signs Gentoo's keys
+# with a local key; this one gets the same): a system that takes only signed binaries
+# (FEATURES=binpkg-request-signature, as gentoo-install sets it) takes Monolith's too
+portage_trust_key() {
+    local key="$PROJECT_ROOT/monolith/binhost/monolith-binhost.asc" fpr G=/etc/portage/gnupg
+    [ -f "$key" ] || return 0
+    fpr=$(cat "$PROJECT_ROOT/monolith/binhost/monolith-binhost.fpr" 2>/dev/null)
+    [ -n "$fpr" ] || return 0
+    [ -f "$G/mykeyid" ] || sudo getuto >/dev/null 2>&1 || return 0
+    sudo gpg --homedir "$G" --batch --list-keys "$fpr" >/dev/null 2>&1 \
+        && sudo gpg --homedir "$G" --batch --list-keys --with-colons "$fpr" | grep -q '^pub:f' && return 0
+    sudo gpg --homedir "$G" --batch --quiet --import "$key" 2>/dev/null
+    sudo gpg --homedir "$G" --batch --quiet --pinentry-mode loopback --passphrase-file "$G/pass" \
+        --default-key "$(sudo cat "$G/mykeyid")" --quick-lsign-key "$fpr" >/dev/null 2>&1
+    sudo gpg --homedir "$G" --batch --check-trustdb >/dev/null 2>&1 || true
+}
+
 portage_binrepo() {
     local f=/etc/portage/binrepos.conf/monolith.conf
+    portage_trust_key
     [ -f "$f" ] && grep -qF "$MONOLITH_BINHOST" "$f" && return 0
     # (a stage3's single binrepos.conf file becomes a folder first)
     if [ -f /etc/portage/binrepos.conf ]; then

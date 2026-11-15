@@ -64,6 +64,24 @@ timeout --signal=INT "${MINUTES}m" emerge --oneshot --quiet-build=y \
 code=$?
 [ "$code" -eq 124 ] && say "Time's up: what was built is kept, the next run goes on from there"
 
+# ── signed: Portage on gentoo-install's systems takes only signed binaries ─────────────────────
+# (FEATURES=binpkg-request-signature; one setting for every binhost). The key comes from the
+# workflow's secret (BINHOST_GPG_KEY, imported into /root/.gnupg); its public half is
+# monolith-binhost.asc, which the installers add to Portage's keyring. Every package is signed,
+# the ones carried over from earlier runs too (gpkg-sign signs a signed one again)
+if [ -n "${BINHOST_SIGNING_FPR:-}" ]; then
+    say "Signing the packages with $BINHOST_SIGNING_FPR"
+    mkdir -p /run/lock
+    n=0
+    while IFS= read -r f; do
+        BINPKG_GPG_SIGNING_GPG_HOME=/root/.gnupg BINPKG_GPG_SIGNING_KEY="$BINHOST_SIGNING_FPR" \
+            gpkg-sign "$f" >/dev/null 2>&1 && n=$((n + 1))
+    done < <(find /var/cache/binpkgs -name '*.gpkg.tar')
+    say "Signed $n"
+else
+    say "No signing key: the packages are left unsigned (gentoo-install's systems won't take them)"
+fi
+
 # ── the index, without what's gone from the tree ────────────────────────────────────────────────
 command -v eclean-pkg >/dev/null || emerge --oneshot --getbinpkg --quiet app-portage/gentoolkit
 command -v eclean-pkg >/dev/null && eclean-pkg >/dev/null 2>&1

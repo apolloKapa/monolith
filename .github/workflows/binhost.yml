@@ -54,14 +54,26 @@ jobs:
           ls prev | wc -l
 
       - name: Build
+        env:
+          # the binhost's signing key (gpg --armor --export-secret-keys); its public half is
+          # monolith/binhost/monolith-binhost.asc
+          BINHOST_GPG_KEY: ${{ secrets.BINHOST_GPG_KEY }}
         run: |
-          sudo mkdir -p "$ROOT/monolith" "$ROOT/prev" "$ROOT/out"
+          sudo mkdir -p "$ROOT/monolith" "$ROOT/prev" "$ROOT/out" "$ROOT/root/.gnupg"
+          sudo chmod 700 "$ROOT/root/.gnupg"
+          FPR=""
+          if [ -n "$BINHOST_GPG_KEY" ]; then
+            # (imported inside, by the stage3's own gpg)
+            printf '%s\n' "$BINHOST_GPG_KEY" | sudo install -m 600 /dev/stdin "$ROOT/root/bh-key.asc"
+            FPR=$(cat monolith/binhost/monolith-binhost.fpr)
+          fi
           sudo cp -r . "$ROOT/monolith/"
           sudo cp -r prev/. "$ROOT/prev/"
           sudo cp /etc/resolv.conf "$ROOT/etc/resolv.conf"
           for d in proc sys dev; do sudo mount --rbind "/$d" "$ROOT/$d"; done
           sudo chroot "$ROOT" /usr/bin/env -i HOME=/root TERM=dumb PATH=/usr/sbin:/usr/bin:/sbin:/bin \
-            MAKEOPTS="-j$(nproc)" bash -c '
+            MAKEOPTS="-j$(nproc)" BINHOST_SIGNING_FPR="$FPR" bash -c '
+              [ -f /root/bh-key.asc ] && { gpg --homedir /root/.gnupg --batch --quiet --import /root/bh-key.asc; rm -f /root/bh-key.asc; }
               python3 /monolith/monolith/binhost/publish.py --unflatten /prev /var/cache/binpkgs
               bash /monolith/monolith/binhost/build.sh --minutes 290
               python3 /monolith/monolith/binhost/publish.py /var/cache/binpkgs /out'
