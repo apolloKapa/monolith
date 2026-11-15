@@ -292,6 +292,20 @@ show_package_overview() {
     for p in "${names[@]}"; do [[ -n "${is_missing[$p]}" ]] && list+=("$p"); done
     for p in "${names[@]}"; do [[ -z "${is_missing[$p]}" ]] && list+=("$p"); done
 
+    # Gentoo: which of them it prebuilds at all (its binhost index); the rest can only compile (°)
+    declare -A has_bin=()
+    local bin_known=false
+    if [ "$PM_NAME" = portage ] && declare -f pm_binary_pkgs >/dev/null; then
+        printf "\033[2J\033[H %sChecking which packages Gentoo prebuilds…%s" "$DIM" "$RESET"
+        local got=()
+        mapfile -t got < <(pm_binary_pkgs "${list[@]}")
+        if [ ${#got[@]} -gt 0 ]; then
+            bin_known=true
+            for p in "${got[@]}"; do has_bin["$p"]=1; done
+        fi
+    fi
+    no_bin() { $bin_known && [ -z "${has_bin[$1]}" ]; }
+
     local modes labels
     if [ "$PM_NAME" = portage ]; then modes=(c b x); labels=(Compile Binary Off)
     else modes=(c x); labels=(Install Off); fi
@@ -301,6 +315,7 @@ show_package_overview() {
     local total=${#list[@]} cur=0 top=0 rows msg="" i j k
     set_pick() {   # set_pick name mode
         if [ "$2" = x ] && pkg_needed "$1"; then msg="$1: Monolith needs it, it can't be off"; return; fi
+        if [ "$2" = b ] && no_bin "$1"; then msg="Gentoo doesn't prebuild $1: it's compiled"; PKG_PICK["$1"]=c; return; fi
         PKG_PICK["$1"]="$2"
     }
     while true; do
@@ -313,14 +328,15 @@ show_package_overview() {
         # the counts
         local nc=0 nb=0 nx=0 n_missing=0 m
         for p in "${list[@]}"; do
-            m=$(pick_of "$p"); case $m in c) ((++nc)) ;; b) ((++nb)) ;; x) ((++nx)) ;; esac
+            m=$(pick_of "$p"); [ "$m" = b ] && no_bin "$p" && m=c
+            case $m in c) ((++nc)) ;; b) ((++nb)) ;; x) ((++nx)) ;; esac
             [[ -n "${is_missing[$p]}" ]] && ((++n_missing))
         done
         printf "\033[2J\033[H"
         printf " %sPackages%s  %d: %s%d to install%s, %d installed    " "$BOLD" "$RESET" "$total" "$C_YELLOW" "$n_missing" "$RESET" "$(( total - n_missing ))"
         if [ "$PM_NAME" = portage ]; then
             printf "%s%d compile%s · %s%d binary%s · %s%d off%s\n" "$C_GREEN" "$nc" "$RESET" $'\e[36m' "$nb" "$RESET" "$C_RED" "$nx" "$RESET"
-            printf " %sBinary: Gentoo's prebuilt package when its version and USE match ours, else it's compiled. Off: not installed.%s\n\n" "$DIM" "$RESET"
+            printf " %sBinary: Gentoo's prebuilt package (and its dependencies') when the version and USE match, else compiled. ° Gentoo doesn't prebuild it.%s\n\n" "$DIM" "$RESET"
         else
             printf "%s%d install%s · %s%d off%s\n" "$C_GREEN" "$nc" "$RESET" "$C_RED" "$nx" "$RESET"
             printf " %sOff: Monolith doesn't install it (what it needs can't be off).%s\n\n" "$DIM" "$RESET"
@@ -331,9 +347,13 @@ show_package_overview() {
             local mark="  " st name opts=""
             [ "$i" -eq "$cur" ] && mark="${BOLD}${C_GREEN}▶${RESET} "
             if [[ -n "${is_missing[$p]}" ]]; then st="${C_YELLOW}to install${RESET}"; else st="${DIM}installed ${RESET}"; fi
-            name="$p"; pkg_needed "$p" && name="$p*"
+            name="$p"; pkg_needed "$p" && name="$name*"; no_bin "$p" && name="$name°"
+            # (one Gentoo doesn't prebuild, saved as Binary before: it's compiled)
+            no_bin "$p" && [ "$m" = b ] && m=c
             for k in "${!modes[@]}"; do
-                if [ "${modes[$k]}" = "$m" ]; then
+                if [ "${modes[$k]}" = b ] && no_bin "$p"; then
+                    opts+=" ${DIM} ------ ${RESET}"
+                elif [ "${modes[$k]}" = "$m" ]; then
                     opts+=" ${BOLD}${mcolor[$k]}[${labels[$k]}]${RESET}"
                 else
                     opts+=" ${DIM} ${labels[$k]} ${RESET}"
@@ -359,19 +379,26 @@ show_package_overview() {
             UP|[kK]) cur=$(( cur - 1 )) ;;
             DOWN|[jJ]) cur=$(( cur + 1 )) ;;
             SPACE) cur=$(( cur + page )) ;;
-            RIGHT|[lL]) set_pick "$p" "${modes[$(( (idx + 1) % ${#modes[@]} ))]}" ;;
-            LEFT|[hH]) set_pick "$p" "${modes[$(( (idx - 1 + ${#modes[@]}) % ${#modes[@]} ))]}" ;;
+            RIGHT|[lL]|LEFT|[hH])
+                local step=1; [[ "$key" == LEFT || "$key" == [hH] ]] && step=$(( ${#modes[@]} - 1 ))
+                local nxt=$(( (idx + step) % ${#modes[@]} ))
+                # (no Binary on what Gentoo doesn't prebuild: straight past it)
+                [ "${modes[$nxt]}" = b ] && no_bin "$p" && nxt=$(( (nxt + step) % ${#modes[@]} ))
+                set_pick "$p" "${modes[$nxt]}" ;;
             c) set_pick "$p" c ;;
             b) [ "$PM_NAME" = portage ] && set_pick "$p" b ;;
             x) set_pick "$p" x ;;
             C|B|X)
                 local want=${key,,}
                 [ "$want" = b ] && [ "$PM_NAME" != portage ] && continue
+                local skipped=0
                 for p in "${list[@]}"; do
                     { [ "$want" = x ] && pkg_needed "$p"; } && continue
+                    if [ "$want" = b ] && no_bin "$p"; then PKG_PICK["$p"]=c; skipped=$((skipped + 1)); continue; fi
                     PKG_PICK["$p"]="$want"
                 done
-                [ "$want" = x ] && msg="all off but what Monolith needs" ;;
+                [ "$want" = x ] && msg="all off but what Monolith needs"
+                [ "$want" = b ] && [ "$skipped" -gt 0 ] && msg="$skipped Gentoo doesn't prebuild (°) stay Compile; the binaries' dependencies come prebuilt too" ;;
             g) cur=0 ;;
             G) cur=$(( total - 1 )) ;;
             ESC|[qQ]|ENTER) break ;;

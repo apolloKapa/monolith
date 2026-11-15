@@ -174,17 +174,22 @@ pm_prepare_repos() {
     portage_write_conf
 }
 
-# PORTAGE_BIN_ATOMS: the packages picked as Binary (Packages overview). They come from Gentoo's
-# binhost when it has one matching their version and USE (--getbinpkg, limited to them by
-# --usepkg-include); anything else is still compiled
+# Binary picks (Packages overview): with any package set to Binary, everything comes from Gentoo's
+# binhost where it has a package matching the version and USE (--getbinpkg), the dependencies
+# too: they're most of what gets installed (about 280 for Monolith's 90), and limiting binaries
+# to the picks themselves (--usepkg-include, until 2.9.54) compiled all of them. The packages
+# picked as Compile stay compiled (--usepkg-exclude, PORTAGE_SRC_ATOMS); what Gentoo doesn't
+# prebuild (37 of Monolith's 92) or prebuilds at an older version is compiled anyway
 PORTAGE_BIN_ATOMS=()
+PORTAGE_SRC_ATOMS=()
 portage_emerge() {
     local masks=() d bin=()
     for d in package.use package.accept_keywords package.license; do
         masks+=("/etc/portage/$d/zz-monolith-autounmask")
     done
     if [ ${#PORTAGE_BIN_ATOMS[@]} -gt 0 ]; then
-        bin=(--getbinpkg=y "--usepkg-include=${PORTAGE_BIN_ATOMS[*]}")
+        bin=(--getbinpkg=y)
+        [ ${#PORTAGE_SRC_ATOMS[@]} -gt 0 ] && bin+=("--usepkg-exclude=${PORTAGE_SRC_ATOMS[*]}")
     fi
     sudo env CONFIG_PROTECT_MASK="${masks[*]}" \
         emerge --ask=n --noreplace --keep-going --with-bdeps=y \
@@ -192,15 +197,47 @@ portage_emerge() {
         --autounmask-keep-masks=y "${bin[@]}" "$@"
 }
 
-# the Binary picks among these package names, as atoms (PORTAGE_BIN_ATOMS)
+# the Binary and the Compile picks among these package names, as atoms (PORTAGE_BIN_ATOMS,
+# PORTAGE_SRC_ATOMS)
 portage_bin_for() {
-    PORTAGE_BIN_ATOMS=()
-    local p a
+    PORTAGE_BIN_ATOMS=(); PORTAGE_SRC_ATOMS=()
+    declare -f pick_of >/dev/null || return 0
+    local p a m
     for p in "$@"; do
-        declare -f pick_of >/dev/null && [ "$(pick_of "$p")" = b ] || continue
         a="$(portage_atoms "$p")"
         case "$a" in "" | src:* | unknown:*) continue ;; esac
-        PORTAGE_BIN_ATOMS+=($a)
+        m="$(pick_of "$p")"
+        [ "$m" = b ] && PORTAGE_BIN_ATOMS+=($a)
+        [ "$m" = c ] && PORTAGE_SRC_ATOMS+=($a)
+    done
+}
+
+# Gentoo's binhost index (its Packages file): the one Portage keeps, else a copy downloaded into
+# ~/.cache/monolith (refreshed daily), for the overview to tell which packages it prebuilds
+portage_binhost_index() {
+    local f
+    for f in /var/cache/binhost/*/Packages; do [ -s "$f" ] && { echo "$f"; return 0; }; done
+    local cache="${XDG_CACHE_HOME:-$HOME/.cache}/monolith/binhost-Packages" uri
+    if [ -s "$cache" ] && [ -n "$(find "$cache" -mmin -1440 2>/dev/null)" ]; then echo "$cache"; return 0; fi
+    uri=$(sed -n 's/^[[:space:]]*sync-uri[[:space:]]*=[[:space:]]*//p' /etc/portage/binrepos.conf /etc/portage/binrepos.conf/* 2>/dev/null | head -1)
+    [ -n "$uri" ] || return 1
+    mkdir -p "$(dirname "$cache")"
+    curl -fsL --max-time 60 -o "$cache.part" "${uri%/}/Packages" && mv "$cache.part" "$cache" && { echo "$cache"; return 0; }
+    rm -f "$cache.part"
+    [ -s "$cache" ] && echo "$cache"
+}
+
+# the package names (of these) Gentoo prebuilds, one a line (any version); nothing when the index
+# can't be had (then nothing is marked)
+pm_binary_pkgs() {
+    local idx p a have
+    idx=$(portage_binhost_index) || return 0
+    have=$(sed -n 's/^CPV: //p' "$idx" | sed 's/-[0-9][^ ]*$//' | sort -u)
+    for p in "$@"; do
+        a="$(portage_atoms "$p")"
+        case "$a" in "" | src:* | unknown:*) continue ;; esac
+        a=${a%% *}
+        grep -qxF "$a" <<< "$have" && echo "$p"
     done
 }
 
@@ -255,7 +292,7 @@ pm_install_batch() {
     if [ ${#atoms[@]} -gt 0 ]; then
         portage_bin_for "$@"
         if [ ${#PORTAGE_BIN_ATOMS[@]} -gt 0 ]; then
-            echo -e "\e[36m[ INFO ]\e[0m Installing ${#atoms[@]} packages with Portage: ${#PORTAGE_BIN_ATOMS[@]} from Gentoo's binaries where it has them, the rest built from source. This can take a while.\n"
+            echo -e "\e[36m[ INFO ]\e[0m Installing ${#atoms[@]} packages with Portage: Gentoo's binaries wherever it has them (their dependencies too), ${#PORTAGE_SRC_ATOMS[@]} picked to compile, the rest built from source. This can take a while.\n"
         else
             echo -e "\e[36m[ INFO ]\e[0m Building ${#atoms[@]} packages from source with Portage. This can take a while.\n"
         fi
