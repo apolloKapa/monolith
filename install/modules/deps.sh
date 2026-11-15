@@ -120,21 +120,30 @@ picks_save() {
         done | sort
     } > "$PKG_PICKS_FILE"
 }
-pick_of() {
+# pick_of_r NAME sets REPLY (no subshell: the overview asks it for every package on every
+# redraw); pick_of NAME prints it
+pick_of_r() {
     # (the important ones: always installed, and on Gentoo always as binaries)
-    if pkg_needed "$1"; then [ "$PM_NAME" = portage ] && echo b || echo c; return; fi
-    local m="${PKG_PICK[$1]:-c}"; [ "$PM_NAME" != portage ] && [ "$m" = b ] && m=c; echo "$m"
+    if pkg_needed "$1"; then [ "$PM_NAME" = portage ] && REPLY=b || REPLY=c; return; fi
+    REPLY="${PKG_PICK[$1]:-c}"; [ "$PM_NAME" != portage ] && [ "$REPLY" = b ] && REPLY=c
+    return 0
 }
+pick_of() { pick_of_r "$1"; echo "$REPLY"; }
 # the important ones: what the shell needs to come up working the first time (Qt's Wayland and
 # multimedia modules, quickshell, the scripts' python, the palette's matugen, the audio, the
 # clipboard, niri on niri). Never off, and on Gentoo binaries (with their dependencies), so a
 # compile failure can't leave a grey screen. Where Gentoo has no binary (quickshell, niri), they
 # compile on binaries of everything under them
+# (the list worked out once per desktop choice: this is asked many times, and a subshell each
+# time made the overview slow to redraw)
+PKG_NEEDED_LIST=""; PKG_NEEDED_FOR="-"
 pkg_needed() {
-    case " quickshell qt6-wayland qt6-multimedia python matugen jq git wl-clipboard pipewire wireplumber $([ "$DESKTOP" = hyprland ] || echo "niri xwayland-satellite") " in
-        *" $1 "*) return 0 ;;
-    esac
-    return 1
+    if [ "$PKG_NEEDED_FOR" != "${DESKTOP:-}" ]; then
+        PKG_NEEDED_FOR="${DESKTOP:-}"
+        PKG_NEEDED_LIST=" quickshell qt6-wayland qt6-multimedia python matugen jq git wl-clipboard pipewire wireplumber "
+        [ "${DESKTOP:-}" = hyprland ] || PKG_NEEDED_LIST+="niri xwayland-satellite "
+    fi
+    [[ "$PKG_NEEDED_LIST" == *" $1 "* ]]
 }
 picks_load
 

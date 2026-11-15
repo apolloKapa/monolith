@@ -104,7 +104,11 @@ reclaim_notifications() {
 # keeps the current one (regular clipboard only: holding the selection too broke selecting text)
 keep_clipboard() {
     command -v wl-clip-persist >/dev/null || return 0
-    pgrep -x wl-clip-persist >/dev/null && return 0
+    # (one of this session's, not a nested session's or the last login's still on its way out)
+    local p
+    for p in $(pgrep -x -u "$(id -u)" wl-clip-persist); do
+        tr '\0' '\n' < "/proc/$p/environ" 2>/dev/null | grep -qx "WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-1}" && return 0
+    done
     setsid -f wl-clip-persist --clipboard regular >/dev/null 2>&1 < /dev/null
 }
 

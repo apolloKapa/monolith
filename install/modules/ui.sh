@@ -331,7 +331,7 @@ show_package_overview() {
         # the counts
         local nc=0 nb=0 nx=0 n_missing=0 m
         for p in "${list[@]}"; do
-            m=$(pick_of "$p"); [ "$m" = b ] && no_bin "$p" && m=c
+            pick_of_r "$p"; m=$REPLY; [ "$m" = b ] && no_bin "$p" && m=c
             case $m in c) ((++nc)) ;; b) ((++nb)) ;; x) ((++nx)) ;; esac
             [[ -n "${is_missing[$p]}" ]] && ((++n_missing))
         done
@@ -346,7 +346,7 @@ show_package_overview() {
         fi
         for (( i = top; i < top + page && i < total; i++ )); do
             p=${list[$i]}
-            m=$(pick_of "$p")
+            pick_of_r "$p"; m=$REPLY
             local mark="  " st name opts=""
             [ "$i" -eq "$cur" ] && mark="${BOLD}${C_GREEN}▶${RESET} "
             if [[ -n "${is_missing[$p]}" ]]; then st="${C_YELLOW}to install${RESET}"; else st="${DIM}installed ${RESET}"; fi
@@ -384,7 +384,7 @@ show_package_overview() {
         msg=""
         local key; key=$(read_key)
         p=${list[$cur]}
-        m=$(pick_of "$p")
+        pick_of_r "$p"; m=$REPLY
         local idx=0
         for k in "${!modes[@]}"; do [ "${modes[$k]}" = "$m" ] && idx=$k; done
         case "$key" in
