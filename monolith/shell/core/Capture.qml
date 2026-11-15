@@ -83,8 +83,10 @@ Singleton {
     function cancel() { hide(); sel = Qt.rect(0, 0, 0, 0); }
 
     // ── finish ──
-    // action: save | copy | edit | pin | text | qr  (photo), or record (video)
-    function finish(action) {
+    // action: save | copy | edit | pin | text | qr  (photo), or record (video). instant: taken as
+    // the drawn area was let go (Settings → Screenshots): a save is copied too, whatever
+    // "Copy when saving" says, since that's what the option promises
+    function finish(action, instant) {
         if (!hasSel || !active || closing) return;
         const scr = Quickshell.screens.find(s => s.name === screenName);
         if (!scr) return;
@@ -109,7 +111,8 @@ Singleton {
             "magick \"$1\" -crop \"$geo\" +repage \"$2\" || exit 1; ";
         const args = [frozen(screenName), tmp, out];
         if (action === "save") {
-            run(crop + saveScript(), args, code => { if (code === 0) cap.saved(out, shotScreen); });
+            const copied = copyOnSave || instant === true;
+            run(crop + saveScript(copied), args, code => { if (code === 0) cap.saved(out, shotScreen, copied); });
         } else if (action === "copy") {
             run(crop + "wl-copy --type image/png < \"$2\"", args, code => {
                 if (code !== 0) return;
@@ -139,15 +142,15 @@ Singleton {
     readonly property bool previewOn: Store.get("capture.preview", true) !== false
     readonly property string editor: Store.get("capture.editor", "builtin")
     // $2: the cropped PNG, $3: where it goes (in the chosen format), copied too when that's on
-    function saveScript() {
+    function saveScript(copy) {
         return "mkdir -p \"$(dirname \"$3\")\" && " +
             (format === "png" ? "cp \"$2\" \"$3\"" : "magick \"$2\" -quality " + quality + " \"$3\"") +
-            (copyOnSave ? " && wl-copy --type image/png < \"$2\"" : "");
+            ((copy === undefined ? copyOnSave : copy) ? " && wl-copy --type image/png < \"$2\"" : "");
     }
     // a file was saved: the preview in the corner, or a notification
-    function saved(f, screen) {
+    function saved(f, screen, copied) {
         if (previewOn) showPreview(f, screen, true);
-        else Quickshell.execDetached(["notify-send", "-a", "Monolith", "-i", f, "Screenshot saved", (copyOnSave ? "Copied too. " : "") + "In " + f.replace(/\/[^\/]*$/, "").replace(Quickshell.env("HOME"), "~")]);
+        else Quickshell.execDetached(["notify-send", "-a", "Monolith", "-i", f, "Screenshot saved", ((copied === undefined ? copyOnSave : copied) ? "Copied too. " : "") + "In " + f.replace(/\/[^\/]*$/, "").replace(Quickshell.env("HOME"), "~")]);
     }
 
     // shell jobs that tell us when they're done

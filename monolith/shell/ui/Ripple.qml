@@ -12,15 +12,23 @@ Item {
     property bool hovered: false
     property bool pressed: false
 
+    // (both layers are made the first time they're needed, not with every button: a page of
+    // shortcuts had about 450 buttons, each with two shaders nobody had touched yet)
+    property bool touched: false
+    onHoveredChanged: if (hovered) touched = true
     // (continuous corners like the control's: the ink below is clipped to this same shape)
-    SmoothRect {
-        id: stateLayer
+    Loader {
+        id: stateLoader
         anchors.fill: parent
-        radius: ripple.radius
-        color: ripple.ink
-        opacity: ripple.pressed ? 0.12 : (ripple.hovered ? 0.08 : 0)
-        Behavior on opacity { NumberAnimation { duration: Theme.ms(150); easing.type: Easing.OutCubic } }
+        active: ripple.touched
+        sourceComponent: SmoothRect {
+            radius: ripple.radius
+            color: ripple.ink
+            opacity: ripple.pressed ? 0.12 : (ripple.hovered ? 0.08 : 0)
+            Behavior on opacity { NumberAnimation { duration: Theme.ms(150); easing.type: Easing.OutCubic } }
+        }
     }
+    readonly property var stateLayer: stateLoader.item
 
     property real cx: width / 2
     property real cy: height / 2
@@ -29,6 +37,7 @@ Item {
     readonly property real reach: Math.sqrt(Math.pow(Math.max(cx, width - cx), 2) + Math.pow(Math.max(cy, height - cy), 2)) + 6
 
     function press(x, y) {
+        touched = true;
         cx = x; cy = y;
         fade.stop(); grow.stop();
         spread = 0; alpha = 0.16;
@@ -48,16 +57,19 @@ Item {
         NumberAnimation { target: ripple; property: "alpha"; to: 0; duration: Theme.ms(300); easing.type: Easing.OutCubic }
     }
 
-    ShaderEffect {
+    Loader {
         anchors.fill: parent
-        visible: ripple.alpha > 0.001
-        property vector2d itemSize: Qt.vector2d(width, height)
-        property real shapeRadius: stateLayer.curved ? stateLayer.extent : ripple.radius
-        property real shapeExpo: stateLayer.curved ? stateLayer.expo : 2
-        property vector2d center: Qt.vector2d(ripple.cx, ripple.cy)
-        property real rippleRadius: ripple.spread
-        property color inkColor: ripple.ink
-        property real inkAlpha: ripple.alpha
-        fragmentShader: Qt.resolvedUrl("shaders/ripple.frag.qsb")
+        active: ripple.touched
+        sourceComponent: ShaderEffect {
+            visible: ripple.alpha > 0.001
+            property vector2d itemSize: Qt.vector2d(width, height)
+            property real shapeRadius: ripple.stateLayer && ripple.stateLayer.curved ? ripple.stateLayer.extent : ripple.radius
+            property real shapeExpo: ripple.stateLayer && ripple.stateLayer.curved ? ripple.stateLayer.expo : 2
+            property vector2d center: Qt.vector2d(ripple.cx, ripple.cy)
+            property real rippleRadius: ripple.spread
+            property color inkColor: ripple.ink
+            property real inkAlpha: ripple.alpha
+            fragmentShader: Qt.resolvedUrl("shaders/ripple.frag.qsb")
+        }
     }
 }

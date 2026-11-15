@@ -34,18 +34,40 @@ ColumnLayout {
         if (group === "other") return !groups.some(g => s.startsWith(g));
         return s.startsWith(group);
     }
-    readonly property var shown: {
+    // what each key's row shows, by its place in items: { show, head } (shown on this tab and for
+    // the search; a section heading above it). Rows are made once and only shown or hidden: making
+    // all 148 again on every tab switch, search letter and change was the lag
+    readonly property var view: {
         const out = [];
         let last = null;
         for (const it of items) {
-            if (!inGroup(it.section)) continue;
-            if (filter && (it.label + " " + it.title + " " + it.section).toLowerCase().indexOf(filter) < 0) continue;
-            // a tab of one purpose has its name as the page title already
-            if (it.section !== last && (group === "" || group === "other")) out.push({ head: it.section });
-            last = it.section;
-            out.push(it);
+            const show = inGroup(it.section) && (!filter || (it.label + " " + it.title + " " + it.section).toLowerCase().indexOf(filter) >= 0);
+            // (a tab of one purpose has its name as the page title already)
+            out.push({ show: show, head: show && it.section !== last && (group === "" || group === "other") });
+            if (show) last = it.section;
         }
         return out;
+    }
+    readonly property int shownCount: view.reduce((n, v) => n + (v.show ? 1 : 0), 0)
+    // Rows are made a few per frame, this tab's first, then the other tabs' in the background so
+    // switching finds them ready. (Loader's asynchronous doesn't spread the work here: all 148
+    // were made in one frame of 140 ms. Ten rows take about 10 ms.)
+    property var built: []              // by place in items: made yet
+    property int builtCount: 0
+    function buildSome() {
+        const b = built.slice();
+        let n = 0;
+        for (let pass = 0; pass < 2 && n < 10; pass++)
+            for (let i = 0; i < items.length && n < 10; i++)
+                if (!b[i] && (pass === 1 || (view[i] && view[i].show))) { b[i] = true; n++; }
+        built = b;
+        builtCount += n;
+    }
+    Timer {
+        interval: 16; repeat: true
+        running: sec.builtCount < sec.items.length
+        triggeredOnStart: true
+        onTriggered: sec.buildSome()
     }
 
     function load() { reader.running = true; }
@@ -230,34 +252,47 @@ ColumnLayout {
     Field { id: search; visible: sec.group === ""; Layout.fillWidth: true; placeholder: "Search keys or what they do"; onTextChanged: sec.filter = text.toLowerCase() }
 
     Repeater {
-        model: sec.shown
-        delegate: Loader {
-            required property var modelData
+        // (a count, not the list: a new list after every change remade every row)
+        model: sec.items.length
+        delegate: Column {
+            id: slotD
+            required property int index
+            readonly property var modelData: sec.items[index] || ({ key: "", label: "", title: "", action: "", section: "", mine: false })
+            readonly property var v: sec.view[index] || ({ show: false, head: false })
             Layout.fillWidth: true
-            sourceComponent: modelData.head !== undefined ? headC : rowC
-            Component { id: headC; SectionHead { text: modelData.head } }
-            Component {
-                id: rowC
-                SettingRow {
-                    icon: "keyboard"
-                    title: modelData.title
-                    desc: modelData.action.length > 70 ? modelData.action.slice(0, 70) + "…" : modelData.action
-                    RowLayout {
-                        spacing: 6
-                        Button {
-                            text: sec.recording === modelData.key ? "Press a key…" : modelData.label
-                            primary: sec.recording === modelData.key
-                            enabled: !modelData.mine && !sec.busy
-                            onClicked: sec.recording = sec.recording === modelData.key ? "" : modelData.key
+            visible: v.show
+            spacing: 8
+            Loader {
+                width: parent.width
+                active: slotD.v.head
+                // (its size, as a layout gives it: 32 high, 4 above)
+                sourceComponent: Component { Item { implicitHeight: 36; SectionHead { y: 4; width: parent.width; height: 32; text: slotD.modelData.section } } }
+            }
+            Loader {
+                width: parent.width
+                active: sec.built[slotD.index] === true
+                sourceComponent: Component {
+                    SettingRow {
+                        icon: "keyboard"
+                        title: slotD.modelData.title
+                        desc: slotD.modelData.action.length > 70 ? slotD.modelData.action.slice(0, 70) + "…" : slotD.modelData.action
+                        RowLayout {
+                            spacing: 6
+                            Button {
+                                text: sec.recording === slotD.modelData.key ? "Press a key…" : slotD.modelData.label
+                                primary: sec.recording === slotD.modelData.key
+                                enabled: !slotD.modelData.mine && !sec.busy
+                                onClicked: sec.recording = sec.recording === slotD.modelData.key ? "" : slotD.modelData.key
+                            }
+                            Button { icon: "delete"; enabled: !slotD.modelData.mine && !sec.busy; onClicked: sec.run(["remove", slotD.modelData.key]) }
                         }
-                        Button { icon: "delete"; enabled: !modelData.mine && !sec.busy; onClicked: sec.run(["remove", modelData.key]) }
                     }
                 }
             }
         }
     }
     Label {
-        visible: sec.items.length > 0 && sec.shown.length === 0
+        visible: sec.items.length > 0 && sec.shownCount === 0
         Layout.fillWidth: true; muted: true; wrapMode: Text.Wrap
         text: sec.filter ? "Nothing matches." : "No shortcuts here."
     }

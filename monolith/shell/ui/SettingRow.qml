@@ -66,7 +66,7 @@ SmoothRect {
     Column {
         id: texts
         anchors.left: b.right; anchors.leftMargin: 12
-        anchors.right: revert.visible ? revert.left : slot.left; anchors.rightMargin: 12
+        anchors.right: revertL.visible ? revertL.left : slot.left; anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
         spacing: 2
         Row {
@@ -77,7 +77,18 @@ SmoothRect {
         }
         Label { width: parent.width; text: row.desc; muted: true; font.pixelSize: Theme.sizeSmall; wrapMode: Text.Wrap; visible: text !== "" }
     }
-    // back to the default
+    // back to the default (only on rows that change a setting: none of the shortcut rows do)
+    Loader {
+        id: revertL
+        active: row.allKeys.length > 0
+        visible: active && item && item.visible
+        anchors.right: slot.left; anchors.rightMargin: 8
+        anchors.verticalCenter: parent.verticalCenter
+        width: 32; height: 32
+        sourceComponent: revertC
+    }
+    Component {
+    id: revertC
     Pressable {
         id: revert
         visible: opacity > 0.01
@@ -85,8 +96,6 @@ SmoothRect {
         scale: row.changed ? 1 : 0.5
         Behavior on opacity { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
-        anchors.right: slot.left; anchors.rightMargin: 8
-        anchors.verticalCenter: parent.verticalCenter
         width: 32; height: 32
         color: hovered ? Theme.control : "transparent"
         onClicked: { for (const k of row.allKeys) Store.unset(k); }
@@ -100,6 +109,7 @@ SmoothRect {
             border.width: 1; border.color: Theme.hairline
             Label { id: tip; anchors.centerIn: parent; text: "Back to default"; font.pixelSize: Theme.sizeSmall - 1 }
         }
+    }
     }
     Item {
         id: slot

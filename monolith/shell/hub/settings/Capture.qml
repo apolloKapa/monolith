@@ -15,6 +15,13 @@ ColumnLayout {
     readonly property string folder: path.replace(/\/[^\/]*$/, "")
     readonly property string pattern: path.replace(/^.*\//, "")
 
+    // (first on the page: the quickest way to take one, and easy to miss further down)
+    SettingRow {
+        key: "capture.onRelease"; def: false;
+        icon: "ads_click"; title: "Save and copy as soon as you let go"
+        desc: "Draw an area as usual: when you release the mouse it's saved and copied to the clipboard straight away, with no Enter or menu. Shift+Print opens it in the editor instead"
+        Toggle { checked: Capture.onRelease; onToggled: on => Store.set("capture.onRelease", on) }
+    }
     SettingRow {
         icon: "folder"; title: "Screenshot folder"; desc: "Where screenshots are saved (Monolith's and niri's own)"
         Field {
@@ -35,11 +42,6 @@ ColumnLayout {
         running: true
         command: ["sh", "-c", "tesseract --list-langs 2>/dev/null | tail -n +2"]
         stdout: StdioCollector { onStreamFinished: sec.langs = text.split("\n").filter(l => l && l !== "osd") }
-    }
-    SettingRow {
-        key: "capture.onRelease"; def: false;
-        icon: "ads_click"; title: "Take it when you let go"; desc: "A drawn area is saved and copied (or opened in the editor with Shift+Print) as soon as you release the mouse, without Enter"
-        Toggle { checked: Capture.onRelease; onToggled: on => Store.set("capture.onRelease", on) }
     }
     // ── after a shot ──
     SettingRow {
