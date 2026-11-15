@@ -35,7 +35,7 @@ PALETTE = STATE_DIR + "/shell-palette.json" if os.path.exists(STATE_DIR + "/shel
 HEADER = '// Monolith: the "%s" preset with the shell\'s colours, rewritten when they change.\n// Change it in Settings -> Appearance -> Fastfetchlings (%s), not here.\n'
 
 
-# the presets Monolith comes with (Classic, Minimal, Monolith, Side), copied into DIR the first
+# the presets Monolith comes with (Classic, Cyberpunk, Minimal, Monolith, Side), copied into DIR the first
 # time they're missing there. DIR/.seeded remembers which were copied, so one you delete stays
 # deleted. (The rewritten shell had lost them: a new install showed no presets at all.)
 BUNDLED = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "fastfetch")
