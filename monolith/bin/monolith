@@ -81,13 +81,33 @@ migrate() {
     return 0
 }
 
+# A notification daemon that D-Bus started while no shell had the notifications (mako ships a
+# D-Bus activation file: an app that notified in the moment between `stop` and `start`, or before
+# the shell was up at login, started it), and the new shell then couldn't register: no
+# notifications. Stopped when it came up after $1 (seconds since the epoch); the shell takes the
+# name back by itself once it's free. One started before that (on purpose) is left alone.
+reclaim_notifications() {
+    since=$1
+    sleep 4
+    now=$(date +%s)
+    for d in mako dunst swaync; do
+        for p in $(pgrep -x -u "$(id -u)" "$d"); do
+            up=$(ps -o etimes= -p "$p" | tr -d ' ')
+            [ -n "$up" ] && [ $((now - up)) -ge "$since" ] && kill "$p" 2>/dev/null
+        done
+    done
+}
+
 case "$1" in
     start)
+        t0=$(date +%s)
         start
+        [ "$2" = "--login" ] && (reclaim_notifications "$t0") >/dev/null 2>&1 &
         [ "$2" = "--login" ] && (sleep 2; python3 "$here/shell/scripts/startup.py" run) &
         ;;
     stop) stop ;;
     restart|reload)
+        t0=$(date +%s)
         stop
         # wait for it to be gone, or `start` sees it still running and does nothing
         for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
@@ -96,6 +116,7 @@ case "$1" in
         done
         pkill -9 -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null
         start
+        (reclaim_notifications "$t0") >/dev/null 2>&1 &
         ;;
     msg)
         name="$3"
