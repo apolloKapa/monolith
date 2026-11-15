@@ -72,13 +72,13 @@ PanelWindow {
         return false;
     }
     Item { id: fullArea; anchors.fill: parent }
-    // niri, Animations → Workspace switching → Fade: drawn in this window, under everything in it,
+    // Animations → Workspace switching → Fade (niri) or Glitch: drawn in this window, under everything in it,
     // so it's over the windows and under the bar (a window of its own was made after the bar,
     // once the setting had loaded, and niri put it over the bar)
     Loader {
         anchors.fill: parent
         z: -1000
-        active: !Niri.hyprland && (Store.get("animations.workspaceSwitch", {}) || {}).style === "fade"
+        active: { const st = (Store.get("animations.workspaceSwitch", {}) || {}).style; return st === "glitch" || (!Niri.hyprland && st === "fade"); }
         sourceComponent: WorkspaceFade { screenName: win.modelData.name }
     }
 
@@ -741,12 +741,10 @@ PanelWindow {
             onCanceled: { moving = false; floatCard.dragBy = Qt.point(0, 0); }
             onDoubleClicked: Store.unset("menus.moved." + HubState.page)
         }
-        PanelFx { anchors.fill: parent; radius: floatCard.radius; bar: false }
+        PanelFx { anchors.fill: parent; radius: floatCard.radius }
         // what's inside (openArea) is laid out at the size the menu is going to; this keeps it
         // within the card while the card grows to that size (it showed past the card's edges)
         Item { id: cardClip; anchors.fill: parent; clip: true; z: 1 }
-        // Cyberpunk's scan bar sweeps over what's inside too (the cards in a page hid it)
-        PanelFx { anchors.fill: parent; radius: floatCard.radius; barOnly: true; z: 2 }
         // pages let go once it has faded out
         onOpacityChanged: if (!win.shown && opacity < 0.01) win.wasOpen = false
     }

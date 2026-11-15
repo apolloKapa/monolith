@@ -35,7 +35,41 @@ Singleton {
     }
     function lum(c) { return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; }
 
-    function pickStyle(id) { Store.set("theme.style", id); Store.set("theme.palette", ""); }
+    function pickStyle(id) { followStyle(id); Store.set("theme.style", id); Store.set("theme.palette", ""); }
+
+    // ── switching workspaces (Animations → Workspace switching) ──
+    // the setting as it's kept, and handing it to the compositor: Hyprland gets Monolith's
+    // animations file (scripts/hypr_anims.py), niri its workspace-switch spring. Fade (niri) and
+    // Glitch switch at once there and Monolith draws them (island/WorkspaceFade.qml)
+    readonly property var wsDefault: ({ style: "slidevert", feel: "smooth", speed: "normal" })
+    readonly property var wsStiffness: ({ relaxed: 450, normal: 900, fast: 1500, fastest: 2500 })
+    readonly property var wsRatio: ({ smooth: 1.0, bouncy: 0.6 })
+    function workspaceSwitch() { return Object.assign({}, wsDefault, Store.get("animations.workspaceSwitch", {}) || {}); }
+    function applyWorkspaceSwitch(c) {
+        Store.set("animations.workspaceSwitch", c);
+        if (Niri.hyprland)
+            Quickshell.execDetached(["python3", Qt.resolvedUrl("../scripts/hypr_anims.py").toString().replace("file://", ""), "apply", JSON.stringify(c)]);
+        else if (c.style === "off" || c.style === "fade" || c.style === "glitch")
+            NiriConf.set("animations", "workspace-switch", "{ off; }");
+        else
+            NiriConf.set("animations", "workspace-switch", "{ spring damping-ratio=" + wsRatio[c.feel].toFixed(1)
+                + " stiffness=" + wsStiffness[c.speed] + " epsilon=0.0001; }");
+    }
+    // a style that glitches (Cyberpunk) switches workspaces with the glitch too: picking it sets
+    // Glitch (remembering what you had), leaving it puts that back if Glitch is still set
+    function followStyle(id) {
+        const next = styles.find(s => s.id === id);
+        if (!next || next.id === style.id) return;
+        const c = workspaceSwitch();
+        if (next.glitch === true && c.style !== "glitch") {
+            Store.set("animations.workspaceSwitchBefore", c.style);
+            c.style = "glitch";
+            applyWorkspaceSwitch(c);
+        } else if (next.glitch !== true && style.glitch === true && c.style === "glitch") {
+            c.style = Store.get("animations.workspaceSwitchBefore", "") || wsDefault.style;
+            applyWorkspaceSwitch(c);
+        }
+    }
     function pickPalette(name) { Store.set("theme.palette", name); }
 
     FileView {

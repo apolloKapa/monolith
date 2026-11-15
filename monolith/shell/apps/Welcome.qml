@@ -578,7 +578,7 @@ PanelWindow {
                             width: (styleFlow.width - 3 * 8) / 4; height: 72
                             color: on ? Theme.accentContainer : (hovered ? Theme.containerHigh : Theme.container)
                             border.width: on ? 2 : 0; border.color: Theme.accent
-                            onClicked: Store.set("theme.style", modelData.id)
+                            onClicked: { Look.followStyle(modelData.id); Store.set("theme.style", modelData.id); }
                             Column {
                                 x: 14; anchors.verticalCenter: parent.verticalCenter; width: parent.width - 28
                                 spacing: 3

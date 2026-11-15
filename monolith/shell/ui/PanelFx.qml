@@ -11,11 +11,7 @@ import "../core"
 Item {
     id: fx
     property real radius: 0
-    // bar: draw the scan bar here (false where a second PanelFx over the content draws it);
-    // barOnly: only the scan bar (that second one, so it sweeps over what's in the panel too)
-    property bool bar: true
-    property bool barOnly: false
-    visible: barOnly ? Theme.chamfer : (Theme.fxGrain || Theme.fxEdge || Theme.chamfer)
+    visible: Theme.fxGrain || Theme.fxEdge || Theme.chamfer
     // the motion: a step every 50 ms (so the layers below are redrawn 20 times a second instead
     // of every frame), only while the panel shows
     readonly property bool moving: Theme.chamfer && Theme.animOn && fx.visible
@@ -35,13 +31,13 @@ Item {
         id: scanSrc
         anchors.fill: parent
         visible: false
-        layer.enabled: Theme.chamfer && !fx.barOnly
+        layer.enabled: Theme.chamfer
         clip: true
         Image { x: 0; y: fx.drift % 3 - 3; width: parent.width; height: parent.height + 3; source: "scan.png"; fillMode: Image.Tile; smooth: false }
     }
     MultiEffect {
         anchors.fill: parent
-        visible: Theme.chamfer && !fx.barOnly
+        visible: Theme.chamfer
         source: scanSrc
         opacity: 0.075
         maskEnabled: true
@@ -51,7 +47,7 @@ Item {
         id: barSrc
         anchors.fill: parent
         visible: false
-        layer.enabled: fx.moving && fx.bar
+        layer.enabled: fx.moving
         clip: true
         Rectangle {
             width: parent.width; height: fx.barH
@@ -66,25 +62,25 @@ Item {
     }
     MultiEffect {
         anchors.fill: parent
-        visible: fx.bar && fx.moving && fx.sweep > 0 && fx.sweep - fx.barH < fx.height
+        visible: fx.moving && fx.sweep > 0 && fx.sweep - fx.barH < fx.height
         source: barSrc
         maskEnabled: true
         maskSource: grainMask
     }
     Rectangle {
-        visible: Theme.chamfer && !fx.barOnly && fx.width > 120
+        visible: Theme.chamfer && fx.width > 120
         x: fx.radius + 10; y: 0
         width: 38; height: 2
         color: Theme.c("yellow", Theme.accent)
     }
     Rectangle {
-        visible: Theme.chamfer && !fx.barOnly && fx.width > 120 && fx.height > 60
+        visible: Theme.chamfer && fx.width > 120 && fx.height > 60
         x: fx.width - fx.radius - 10 - width; y: fx.height - height
         width: 22; height: 2
         color: Theme.accent
     }
     Rectangle {
-        visible: Theme.chamfer && !fx.barOnly && fx.width > 120 && fx.height > 60
+        visible: Theme.chamfer && fx.width > 120 && fx.height > 60
         x: fx.width - 2; y: fx.height - fx.radius - 10 - height
         width: 2; height: 14
         color: Theme.accent
@@ -94,13 +90,13 @@ Item {
         id: grainSrc
         anchors.fill: parent
         visible: false
-        layer.enabled: Theme.fxGrain && !fx.barOnly
+        layer.enabled: Theme.fxGrain
         clip: true
         Image { x: 0; y: Theme.chamfer ? fx.drift % 128 - 128 : 0; width: parent.width; height: parent.height + (Theme.chamfer ? 128 : 0); source: "grain.png"; fillMode: Image.Tile; smooth: false }
     }
     MultiEffect {
         anchors.fill: parent
-        visible: Theme.fxGrain && !fx.barOnly
+        visible: Theme.fxGrain
         source: grainSrc
         opacity: Theme.dark ? 0.07 : 0.09
         maskEnabled: true
@@ -109,7 +105,7 @@ Item {
     SmoothRect { id: grainMask; anchors.fill: parent; radius: fx.radius; visible: false; layer.enabled: Theme.fxGrain || Theme.chamfer }
     // edge: a thin light along the top, brightest in the middle
     Rectangle {
-        visible: Theme.fxEdge && !fx.barOnly
+        visible: Theme.fxEdge
         x: fx.radius * 0.6; y: 0.5
         width: parent.width - 2 * x; height: 1
         gradient: Gradient {
@@ -120,7 +116,7 @@ Item {
         }
     }
     Rectangle {
-        visible: Theme.fxEdge && !fx.barOnly
+        visible: Theme.fxEdge
         x: fx.radius; y: 1
         width: parent.width - 2 * x; height: Math.min(28, parent.height / 3)
         gradient: Gradient {

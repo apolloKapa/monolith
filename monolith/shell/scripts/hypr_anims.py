@@ -3,12 +3,14 @@
 workspaces move, how it feels and how fast.
 
     hypr_anims.py read             prints the saved settings as JSON (or {})
-    hypr_anims.py apply '<json>'   {"style": "slidevert" | "slide" | "slidefadevert" | "slidefade" | "fade" | "off",
+    hypr_anims.py apply '<json>'   {"style": "slidevert" | "slide" | "slidefadevert" | "slidefade" | "fade" | "glitch" | "off",
                                     "feel": "smooth" | "bouncy", "speed": "relaxed" | "normal" | "fast" | "fastest"}
 
 Written to Monolith's folder, ~/.config/hypr/monolith/animations.lua (or .conf), loaded by its
 init after your own config, so it wins over a workspaces animation set there. Hyprland reloads
 it by itself. The settings are kept as JSON on its first line, so they read back exactly.
+Glitch switches at once here (the animation is off) and Monolith draws the glitch over the
+switch (island/WorkspaceFade.qml).
 
 A spring that starts from rest, like niri's: a curve that starts fast jumped most of the way in
 the first frame on a fast screen, which looked like the screen shaking.
@@ -33,7 +35,7 @@ DEFAULT = {"style": "slidevert", "feel": "smooth", "speed": "normal"}
 
 def clean(s):
     s = dict(DEFAULT, **(s or {}))
-    if s["style"] not in STYLES and s["style"] != "off":
+    if s["style"] not in STYLES and s["style"] not in ("off", "glitch"):
         s["style"] = DEFAULT["style"]
     if s["feel"] not in FEELS:
         s["feel"] = DEFAULT["feel"]
@@ -46,7 +48,7 @@ def lines(s, lua):
     c = "--" if lua else "#"
     out = [c + " monolith " + json.dumps(s, separators=(",", ":")),
            c + " Written by Monolith (Settings -> Animations -> Workspace switching). Changes here are replaced."]
-    if s["style"] == "off":
+    if s["style"] in ("off", "glitch"):
         if lua:
             out.append('hl.animation({ leaf = "workspaces", enabled = false })')
         else:

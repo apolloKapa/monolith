@@ -8,7 +8,8 @@ import "../../ui"
 // Animations → Workspace switching: how workspaces move when you switch (the style), how it feels
 // and how fast, with a little preview that plays it. Hyprland: Monolith's animations file
 // (scripts/hypr_anims.py: every style). niri: its workspace-switch animation (niri only slides
-// up and down), or off with Monolith's fade over it (wall/WorkspaceFade).
+// up and down), or off with Monolith's fade over it (island/WorkspaceFade). Glitch, on both:
+// the switch is instant and Monolith tears the wallpaper away over it with the Cyberpunk glitch.
 ColumnLayout {
     id: sec
     spacing: 8
@@ -19,8 +20,8 @@ ColumnLayout {
     readonly property var stiffness: ({ relaxed: 450, normal: 900, fast: 1500, fastest: 2500 })
     readonly property var ratio: ({ smooth: 1.0, bouncy: 0.6 })
     readonly property var styles: Niri.hyprland
-        ? [["slidevert", "Slide up and down"], ["slide", "Slide sideways"], ["slidefadevert", "Slide and fade"], ["fade", "Fade"], ["off", "Off"]]
-        : [["slidevert", "Slide up and down"], ["fade", "Fade"], ["off", "Off"]]
+        ? [["slidevert", "Slide up and down"], ["slide", "Slide sideways"], ["slidefadevert", "Slide and fade"], ["fade", "Fade"], ["glitch", "Glitch"], ["off", "Off"]]
+        : [["slidevert", "Slide up and down"], ["fade", "Fade"], ["glitch", "Glitch"], ["off", "Off"]]
 
     // Hyprland: what its file says (it may have been set before this page existed)
     Process {
@@ -29,7 +30,6 @@ ColumnLayout {
         command: ["python3", sec.script, "read"]
         stdout: StdioCollector { onStreamFinished: { try { const r = JSON.parse(text); if (r.style) sec.s = Object.assign({}, sec.dflt, r); } catch (e) {} } }
     }
-    Process { id: writer }
     function put(key, v) {
         const c = Object.assign({}, s); c[key] = v; s = c;
         Store.set("animations.workspaceSwitch", c);
@@ -38,24 +38,14 @@ ColumnLayout {
     // written a moment after the last change (the compositor reloads on every save)
     Timer {
         id: save; interval: 300
-        onTriggered: {
-            if (Niri.hyprland) {
-                writer.command = ["python3", sec.script, "apply", JSON.stringify(sec.s)];
-                writer.running = true;
-            } else if (sec.s.style === "off" || sec.s.style === "fade") {
-                // (Fade: niri switches at once and Monolith fades the new workspace in)
-                NiriConf.set("animations", "workspace-switch", "{ off; }");
-            } else {
-                NiriConf.set("animations", "workspace-switch", "{ spring damping-ratio=" + sec.ratio[sec.s.feel].toFixed(1)
-                    + " stiffness=" + sec.stiffness[sec.s.speed] + " epsilon=0.0001; }");
-            }
-        }
+        onTriggered: Look.applyWorkspaceSwitch(sec.s)
     }
 
     Label {
         Layout.fillWidth: true; wrapMode: Text.Wrap; muted: true
         text: "How workspaces move when you switch between them. The preview plays it."
             + (Niri.hyprland ? "" : " niri itself only slides workspaces up and down; Fade is drawn by Monolith (the new workspace fades in over your wallpaper). niri's other animations are in Animation speeds.")
+            + " Glitch: the switch is instant and your wallpaper glitches away over it, torn into bands (the Cyberpunk style picks it)."
     }
 
     // ── the preview: two little workspaces, switching back and forth with the same spring ──
@@ -74,15 +64,25 @@ ColumnLayout {
         property real target: 0
         readonly property bool vert: sec.s.style === "slidevert" || sec.s.style === "slidefadevert"
         readonly property bool fades: sec.s.style === "fade" || sec.s.style === "slidefadevert" || sec.s.style === "slidefade"
-        readonly property bool slides: sec.s.style !== "fade" && sec.s.style !== "off"
+        readonly property bool slides: sec.s.style !== "fade" && sec.s.style !== "off" && sec.s.style !== "glitch"
+        readonly property bool jumps: sec.s.style === "off" || sec.s.style === "glitch"
         // how far a workspace travels: all the way, or a fifth of it when it fades as it slides
         readonly property real dist: (vert ? height : width) * (fades ? 0.2 : 1)
-        Timer { interval: 1500; running: stage.visible; repeat: true; onTriggered: { stage.target = 1 - stage.target; stage.last = Date.now(); if (sec.s.style === "off") { stage.p = stage.target; stage.v = 0; } } }
+        Timer {
+            interval: 1500; running: stage.visible; repeat: true
+            onTriggered: {
+                // Glitch: a picture of the workspace going, taken before the switch, glitches away over the new one
+                if (sec.s.style === "glitch") { snap.scheduleUpdate(); flip.restart(); return; }
+                stage.target = 1 - stage.target; stage.last = Date.now();
+                if (sec.s.style === "off") { stage.p = stage.target; stage.v = 0; }
+            }
+        }
+        Timer { id: flip; interval: 60; onTriggered: { stage.target = 1 - stage.target; stage.p = stage.target; stage.v = 0; glitchFx.seed = Math.random() * 97; glitchFx.t = 0; glitchAnim.restart(); } }
         // (a timer, not a FrameAnimation: that one never ticked inside this page)
         property real last: 0
         Timer {
             interval: 8; repeat: true
-            running: stage.visible && sec.s.style !== "off" && (Math.abs(stage.p - stage.target) > 0.0005 || Math.abs(stage.v) > 0.0005)
+            running: stage.visible && !stage.jumps && (Math.abs(stage.p - stage.target) > 0.0005 || Math.abs(stage.v) > 0.0005)
             onTriggered: {
                 const now = Date.now();
                 const k = sec.stiffness[sec.s.speed], c = sec.ratio[sec.s.feel] * 2 * Math.sqrt(k);
@@ -124,8 +124,29 @@ ColumnLayout {
             Label { anchors.centerIn: parent; text: ws.num; strong: true; font.pixelSize: 54; color: Qt.alpha(Theme.text, 0.85) }
         }
         // (the second comes in from below / the right, the first goes out the other way)
-        Ws { num: "1"; off: -stage.p * stage.dist; fade: 1 - stage.p; tint: Theme.accent; visible: !(sec.s.style === "off" && stage.p > 0.5) }
-        Ws { num: "2"; off: (1 - stage.p) * stage.dist; fade: stage.p; tint: Theme.text; visible: !(sec.s.style === "off" && stage.p < 0.5) }
+        Item {
+            id: scene
+            anchors.fill: parent
+            Ws { num: "1"; off: -stage.p * stage.dist; fade: 1 - stage.p; tint: Theme.accent; visible: !(stage.jumps && stage.p > 0.5) }
+            Ws { num: "2"; off: (1 - stage.p) * stage.dist; fade: stage.p; tint: Theme.text; visible: !(stage.jumps && stage.p < 0.5) }
+        }
+        ShaderEffectSource { id: snap; anchors.fill: parent; sourceItem: scene; live: false; visible: false }
+        ShaderEffect {
+            id: glitchFx
+            anchors.fill: parent
+            visible: glitchAnim.running
+            property var source: snap
+            property vector2d itemSize: Qt.vector2d(width, height)
+            property real p: 0
+            property real mode: 0
+            property real t: 0
+            property real seed: 0
+            property color red: Theme.danger
+            property color cyan: Theme.accent
+            fragmentShader: Qt.resolvedUrl("../../ui/shaders/cyber.frag.qsb")
+            NumberAnimation on p { id: glitchAnim; running: false; from: 1; to: 0; duration: Math.max(1, Theme.fxMs(({ relaxed: 560, normal: 420, fast: 320, fastest: 240 })[sec.s.speed] || 420)); easing.type: Easing.InQuad }
+            FrameAnimation { running: glitchAnim.running; onTriggered: glitchFx.t += frameTime }
+        }
         Label {
             anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 8
             text: "Preview"; muted: true; font.pixelSize: Theme.sizeSmall - 2
@@ -156,7 +177,7 @@ ColumnLayout {
     SettingRow {
         Layout.fillWidth: true
         // (niri's fade is Monolith's own, a plain ease: no bounce to choose)
-        visible: sec.s.style !== "off" && !(sec.s.style === "fade" && !Niri.hyprland)
+        visible: sec.s.style !== "off" && sec.s.style !== "glitch" && !(sec.s.style === "fade" && !Niri.hyprland)
         icon: "waves"; title: "Feel"; desc: sec.s.feel === "bouncy" ? "Goes a little past and settles back" : "Eases in and stops, no bounce"
         Segmented {
             width: 220
