@@ -77,6 +77,7 @@ Item {
             color: Qt.alpha(Theme.control, 0.55)
             Icon { x: 8; anchors.verticalCenter: parent.verticalCenter; name: "search"; size: 15; color: Theme.subtext }
             TextInput {
+                Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                 x: 30; width: parent.width - 40; anchors.verticalCenter: parent.verticalCenter
                 text: nb.filter; onTextEdited: nb.filter = text
                 color: Theme.text; selectionColor: Theme.selected; clip: true
@@ -189,6 +190,7 @@ Item {
             Btn { icon: "delete"; tint: Theme.danger; onHit: { const id = nb.openId; nb.openId = ""; Notes.remove(id); } }
         }
         TextInput {
+            Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
             id: title
             y: bar.height + 8; width: parent.width
             readOnly: !nb.live
@@ -206,6 +208,7 @@ Item {
             clip: true
             interactive: nb.live
             TextEdit {
+                Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                 id: body
                 width: parent.width
                 readOnly: !nb.live

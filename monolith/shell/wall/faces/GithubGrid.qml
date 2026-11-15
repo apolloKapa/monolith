@@ -62,6 +62,7 @@ FaceBase {
                 color: Qt.alpha(Theme.control, 0.9)
                 border.width: 1.5; border.color: Theme.accent
                 TextInput {
+                    Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                     id: input
                     anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10
                     verticalAlignment: TextInput.AlignVCenter

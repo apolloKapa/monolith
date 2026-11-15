@@ -447,6 +447,7 @@ PanelWindow {
                         rotation: fieldTile.rotation
                     }
                     TextInput {
+                        Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                         id: query
                         anchors.left: fieldIcon.right
                         anchors.leftMargin: 12

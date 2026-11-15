@@ -215,6 +215,7 @@ FloatingWindow {
                                     Text { anchors.centerIn: parent; text: parent.parent.sh.n || ""; color: Qt.colorEqual(parent.parent.sh.c, "#ffffff") ? "#111111" : "white"; font.pixelSize: parent.width * 0.5; font.bold: true }
                                 }
                                 TextInput {
+                                    Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                                     id: ti
                                     visible: parent.sh.t === "text"
                                     text: parent.sh.text || ""

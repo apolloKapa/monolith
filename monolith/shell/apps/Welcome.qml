@@ -62,10 +62,10 @@ PanelWindow {
         played = true; step = 0;
         if (!Theme.animOn) { clock = introLen; return; }
         clock = 0; introRun.restart();
-        introSound.running = false;
-        if (vol > 0) introSound.running = true;
+        Sounds.stopFile(introFile);
+        playWel("intro");
     }
-    function skipIntro() { if (!intro) return; introRun.stop(); clock = introLen; introSound.running = false; }
+    function skipIntro() { if (!intro) return; introRun.stop(); clock = introLen; Sounds.stopFile(introFile); }
     // how far along [a, b] ms the clock is (0 … 1), and the curves the intro moves on
     function seg(a, b) { return Math.max(0, Math.min(1, (clock - a) / (b - a))); }
     function outCubic(x) { return 1 - Math.pow(1 - x, 3); }
@@ -93,16 +93,12 @@ PanelWindow {
     }
     readonly property real shineAt: intro ? seg(2900, 3600) : idleShine
 
-    // the sounds: played even when interface sounds are off (it's the first thing you see), at
-    // their volume when they're on
+    // the sounds: played even when sound effects are off (it's the first thing you see), at
+    // their volume when they're on. Through Sounds (Qt's own audio, or whatever player the system
+    // has): they used pw-play alone, and some installs never made a sound
     readonly property real vol: Sounds.on ? Sounds.volume : 0.6
+    readonly property string introFile: Sounds.base + "/welcome/intro.wav"
     function playWel(name) { if (vol > 0) Sounds.playFile(Sounds.base + "/welcome/" + name + ".wav", vol); }
-    // (a process of its own, so skipping the intro stops its sound too)
-    Process {
-        id: introSound
-        command: ["pw-play", "--media-role", "Notification", "--volume", String(wel.vol),
-            "-P", "{ \"application.name\": \"Monolith sounds\", \"media.role\": \"event\" }", Sounds.base + "/welcome/intro.wav"]
-    }
 
     // a soft glow round a rounded rectangle (drawn by a shader; none on a Qt without it)
     component Glow: Loader {

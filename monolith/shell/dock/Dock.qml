@@ -356,7 +356,7 @@ PanelWindow {
                             Niri.action(["focus-window", "--id", String(wins[(i + 1) % wins.length].id)]);
                         } else {
                             const e = DesktopEntries.byId(modelData.id);
-                            if (e) e.execute();
+                            if (e) { Sounds.play("launch"); e.execute(); }
                         }
                     }
                     Image {
@@ -580,7 +580,7 @@ PanelWindow {
                     color: "transparent"
                     onClicked: {
                         const it = menu.item;
-                        if (modelData[2] === "new") { const e = DesktopEntries.byId(it.id); if (e) e.execute(); }
+                        if (modelData[2] === "new") { const e = DesktopEntries.byId(it.id); if (e) { Sounds.play("launch"); e.execute(); } }
                         else if (modelData[2] === "pin") { if (it.pinned) dock.unpin(it); else dock.pin(it); }
                         else if (modelData[2] === "close") for (const w of menu.wins) Niri.action(["close-window", "--id", String(w.id)]);
                         menu.open = false;

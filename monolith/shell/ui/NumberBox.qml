@@ -95,6 +95,7 @@ Item {
         border.width: input.activeFocus ? 2 : 0
         border.color: Theme.accent
         TextInput {
+            Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
             id: input
             clip: true
             anchors.fill: parent

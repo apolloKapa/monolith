@@ -426,6 +426,7 @@ Page {
                                 border.color: net.trouble !== "" ? Theme.danger : (pw.activeFocus ? Theme.accent : Theme.outlineColor)
                                 Icon { id: key; x: 14; anchors.verticalCenter: parent.verticalCenter; name: "key"; size: 18; color: Theme.subtext }
                                 TextInput {
+                                    Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                                     id: pw
                                     anchors.left: key.right; anchors.leftMargin: 10
                                     anchors.right: eye.left; anchors.rightMargin: 4

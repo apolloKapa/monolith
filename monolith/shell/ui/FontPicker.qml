@@ -85,6 +85,7 @@ SmoothRect {
                 color: Theme.containerHigh
                 Icon { id: si; x: 12; anchors.verticalCenter: parent.verticalCenter; name: "search"; size: 18; color: Theme.subtext }
                 TextInput {
+                    Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                     id: search
                     anchors.left: si.right; anchors.leftMargin: 8; anchors.right: parent.right; anchors.rightMargin: 12
                     anchors.verticalCenter: parent.verticalCenter

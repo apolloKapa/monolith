@@ -130,7 +130,7 @@ Pressable {
         if (go) flying = true;
         if (throwId < 0) {
             // no copy (animations off, or it couldn't be made): as before, in its own window
-            if (go) { swipeX = dir * (width + 40); gone.restart(); } else swipeX = 0;
+            if (go) { swipeX = dir * (width + 40); Sounds.play("dismiss"); gone.restart(); } else swipeX = 0;
             return;
         }
         const id = throwId;
@@ -139,6 +139,7 @@ Pressable {
                 const fast = Math.abs(speed) * 1000;
                 const vx = dir * (Throw.mode === "fall" ? Math.max(380, Math.min(2600, fast)) : Math.max(1100, Math.min(3200, fast)));
                 Throw.letGo(id, vx, -520, Throw.mode);
+                Sounds.play("dismiss");
                 card.closed();
             } else {
                 // the real card goes back in place now, while it's still hidden (it would
@@ -197,7 +198,7 @@ Pressable {
                     id: closeBtn
                     Layout.preferredWidth: 24; Layout.preferredHeight: 24
                     color: "transparent"
-                    onClicked: { closeBtn.resetPress(); card.notif.dismiss(); card.closed(); }
+                    onClicked: { closeBtn.resetPress(); Sounds.play("dismiss"); card.notif.dismiss(); card.closed(); }
                     Icon { anchors.centerIn: parent; name: "close"; size: 16; color: Theme.subtext }
                 }
             }

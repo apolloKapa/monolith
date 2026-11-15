@@ -125,6 +125,7 @@ Page {
                     radius: Theme.corner(height)
                     color: Theme.containerHigh
                     TextInput {
+                        Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                         anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 14
                         clip: true
                         verticalAlignment: TextInput.AlignVCenter

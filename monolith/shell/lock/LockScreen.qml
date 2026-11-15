@@ -124,6 +124,7 @@ WlSessionLock {
 
         // a screen without the password box still takes the typing (the keyboard may be here)
         TextInput {
+            Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
             id: ghost
             // (invisible items can't have the keyboard: a see-through 1 px one instead)
             width: 1; height: 1; opacity: 0
@@ -200,6 +201,7 @@ WlSessionLock {
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 TextInput {
+                    Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                     id: pw
                     anchors.left: face.right; anchors.leftMargin: 14
                     anchors.right: go.left; anchors.rightMargin: 10

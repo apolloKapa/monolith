@@ -68,6 +68,7 @@ Scope {
                     radius: Theme.corner(height)
                     color: Theme.containerHigh
                     TextInput {
+                        Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
                         id: pw
                         clip: true
                         anchors.fill: parent

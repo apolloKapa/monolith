@@ -121,17 +121,22 @@ Singleton {
         _leave(popups.filter(p => p.urgency !== NotificationUrgency.Critical && (_until[p.id] || 0) <= now && !leaving[p.id]));
     }
     Timer { interval: 400; repeat: true; running: notifs.popups.length > 0; onTriggered: notifs._expire() }
-    // the sound: your own file (Settings → Notifications), or the system's
-    // system | pack | file (a file picked before there was a choice: file)
-    function soundStyle() { return Store.get("notifications.soundStyle", Store.get("notifications.soundFile", "") !== "" ? "file" : "system"); }
+    // the sound (Settings → Sound → Notification sound): one of Monolith's tones (sounds/notify),
+    // the sound pack's chime, the system's (the freedesktop theme) or your own file. tone | pack |
+    // system | file (a file picked before there was a choice: file). The system's or your file,
+    // when it isn't there, falls back to the tone (the sound theme isn't installed everywhere)
+    readonly property var tones: [["chime", "Chime"], ["glass", "Glass"], ["bubble", "Bubble"], ["marimba", "Marimba"], ["soft", "Soft"], ["digital", "Digital"]]
+    function soundStyle() { return Store.get("notifications.soundStyle", Store.get("notifications.soundFile", "") !== "" ? "file" : "tone"); }
     function playSound(urgent) {
-        // the sound pack's own chime (Settings → Sound → Sounds), else your file or the system's
         const style = soundStyle();
-        if (style === "pack") { Sounds.playAlways(urgent ? "error" : "notify"); return; }
+        const v = Math.max(0.05, Math.min(1, Number(Store.get("notifications.soundVolume", 0.8))));
+        const tone = Sounds.base + "/notify/" + (urgent ? "alert" : (Store.get("notifications.tone", "chime") || "chime")) + ".wav";
+        if (style === "pack") { Sounds.playFile(Sounds.dir + "/" + (urgent ? "error" : "notify") + ".wav", v); return; }
+        if (style === "tone") { Sounds.playFile(tone, v); return; }
         const own = style === "file" ? Store.get("notifications.soundFile", "") : "";
-        Quickshell.execDetached(["pw-play", own !== "" && !urgent ? own : (urgent
+        Sounds.playSystem(own !== "" && !urgent ? own : (urgent
             ? "/usr/share/sounds/freedesktop/stereo/dialog-warning.oga"
-            : "/usr/share/sounds/freedesktop/stereo/message.oga")]);
+            : "/usr/share/sounds/freedesktop/stereo/message.oga"), v, tone);
     }
     function showPopup(n, where) {
         const u = Object.assign({}, _until);
@@ -170,6 +175,7 @@ Singleton {
     // Clear: with animations on, the cards on screen are thrown all over first (core/Throw;
     // copies fly, so the real ones can go a moment later, once the copies are up)
     function clearAll() {
+        Sounds.play("dismiss");
         Throw.scattered = 0;
         if (Throw.on) Throw.scatter();
         if (Throw.scattered > 0) clearLater.restart(); else clearNow();

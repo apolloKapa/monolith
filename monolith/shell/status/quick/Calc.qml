@@ -90,6 +90,7 @@ GridLayout {
         radius: Theme.corner(96, 4)
         color: Theme.container
         TextInput {
+            Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
             id: input
             x: 14; y: 12; width: parent.width - 28
             text: c.expr

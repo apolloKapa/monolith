@@ -66,7 +66,7 @@ ColumnLayout {
                 anchors.right: tg.left; anchors.rightMargin: 6; anchors.verticalCenter: parent.verticalCenter
                 width: 32; height: 32
                 color: hovered ? Theme.control : "transparent"
-                onClicked: parent.modelData.execute()
+                onClicked: { Sounds.play("launch"); parent.modelData.execute(); }
                 Icon { anchors.centerIn: parent; name: "open_in_new"; size: 17; color: Theme.subtext }
             }
             Toggle { id: tg; anchors.right: parent.right; anchors.rightMargin: 10; anchors.verticalCenter: parent.verticalCenter; checked: parent.shown; onToggled: on => sec.setShown(parent.modelData.id, on) }

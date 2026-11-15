@@ -16,6 +16,7 @@ SmoothRect {
     border.color: input.activeFocus ? Theme.accent : Theme.outlineColor
     Behavior on border.color { ColorAnimation { duration: Theme.fastMs } }
     TextInput {
+        Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
         id: input
         anchors.fill: parent
         anchors.leftMargin: 14

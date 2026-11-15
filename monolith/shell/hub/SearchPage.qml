@@ -92,7 +92,7 @@ Page {
         const row = Math.max(0, Math.floor(p.y / (84 + favGrid.rowSpacing)));
         return Math.min(favs.length - 1, row * favColumns + col);
     }
-    function launch(entry) { entry.execute(); Store.set("launches." + entry.id.replace(/\./g, "_"), uses(entry.id) + 1); page.done(); }
+    function launch(entry) { Sounds.play("launch"); entry.execute(); Store.set("launches." + entry.id.replace(/\./g, "_"), uses(entry.id) + 1); page.done(); }
 
     // how often each app was opened from here, for the order
     // how often each app was opened (ranks them first), unless that's switched off
@@ -211,7 +211,7 @@ Page {
     function activate(i) {
         const it = results[i];
         if (!it || rowGone(i)) return;
-        if (it.kind === "app") { it.entry.execute(); Store.set("launches." + it.entry.id.replace(/\./g, "_"), uses(it.entry.id) + 1); }
+        if (it.kind === "app") { Sounds.play("launch"); it.entry.execute(); Store.set("launches." + it.entry.id.replace(/\./g, "_"), uses(it.entry.id) + 1); }
         else if (it.kind === "emoji") Quickshell.execDetached(["wl-copy", "--", it.glyph]);
         else if (it.kind === "file") Quickshell.execDetached(["xdg-open", it.path]);
         else if (it.kind === "calc") Quickshell.execDetached(["wl-copy", "--", it.value]);

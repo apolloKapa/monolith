@@ -35,6 +35,15 @@ EVENTS = {
     "unlock":     ([(0, 440, 440, 0.08, 1), (0.08, 660, 660, 0.08, 0.8), (0.16, 880, 880, 0.14, 0.8)], 0.34),
     "error":      ([(0, 330, 300, 0.12, 1), (0.13, 300, 260, 0.16, 1)], 0.32),
     "wallpaper":  ([(0, 523, 523, 0.1, 0.7), (0.06, 659, 659, 0.1, 0.7), (0.12, 784, 784, 0.18, 0.8)], 0.34),
+    # windows, apps, typing, notifications going, the charger (Settings -> Sound -> Sound effects)
+    "window-open":  ([(0, 500, 700, 0.06, 0.9), (0.04, 750, 1000, 0.09, 0.7)], 0.16),
+    "window-close": ([(0, 900, 650, 0.06, 0.8), (0.04, 600, 420, 0.09, 0.9)], 0.16),
+    "launch":       ([(0, 660, 660, 0.05, 0.8), (0.045, 880, 880, 0.05, 0.8), (0.09, 1320, 1400, 0.1, 0.9)], 0.22),
+    "type":         ([(0, 2600, 2200, 0.012, 1)], 0.025),
+    "erase":        ([(0, 1500, 1150, 0.016, 1)], 0.032),
+    "dismiss":      ([(0, 1100, 700, 0.07, 0.9)], 0.1),
+    "plug":         ([(0, 440, 440, 0.06, 0.9), (0.06, 880, 880, 0.1, 0.9)], 0.2),
+    "unplug":       ([(0, 880, 880, 0.06, 0.9), (0.06, 440, 440, 0.1, 0.9)], 0.2),
 }
 
 def env(i, m, attack, power):
@@ -137,3 +146,23 @@ for pack, (voice, ring, pitch, glide) in PACKS.items():
             w.setnchannels(1); w.setsampwidth(2); w.setframerate(RATE)
             w.writeframes(b"".join(struct.pack("<h", int(x * 32767)) for x in render(parts, length, voice, ring, pitch, glide, POST.get(pack), name)))
 print("wrote", len(EVENTS), "sounds for", ", ".join(PACKS), "to", os.path.normpath(OUT))
+
+# notification tones (Settings -> Sound -> Sound effects -> Notifications): sounds/notify/<tone>.wav,
+# each in a voice above; "alert" is the one for urgent notifications
+TONES = {
+    # tone: (voice, ring, notes, length)
+    "chime":   (soft, 1.0, [(0, 988, 988, 0.12, 1), (0.1, 1319, 1319, 0.22, 0.9)], 0.38),
+    "glass":   (glass, 2.0, [(0, 1175, 1175, 0.1, 0.9), (0.08, 1568, 1568, 0.12, 0.8), (0.16, 2349, 2349, 0.16, 0.6)], 0.42),
+    "bubble":  (pop, 1.0, [(0, 900, 500, 0.06, 1), (0.08, 1200, 650, 0.07, 0.9)], 0.2),
+    "marimba": (wood, 1.4, [(0, 1046, 1046, 0.08, 0.9), (0.07, 1318, 1318, 0.08, 0.9), (0.14, 1568, 1568, 0.14, 1)], 0.36),
+    "soft":    (soft, 1.5, [(0, 523, 523, 0.18, 1), (0.14, 784, 784, 0.26, 0.8)], 0.5),
+    "digital": (cyber, 1.2, [(0, 1320, 1320, 0.05, 1), (0.07, 1760, 1760, 0.05, 1), (0.14, 2640, 2600, 0.12, 0.9)], 0.34),
+    "alert":   (retro, 1.0, [(0, 1046, 1046, 0.07, 1), (0.11, 1046, 1046, 0.07, 1), (0.22, 1046, 1046, 0.12, 1)], 0.4),
+}
+d = os.path.join(OUT, "notify")
+os.makedirs(d, exist_ok=True)
+for name, (voice, ring, parts, length) in TONES.items():
+    with wave.open(os.path.join(d, name + ".wav"), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(RATE)
+        w.writeframes(b"".join(struct.pack("<h", int(x * 32767)) for x in render(parts, length, voice, ring, 1.0, 1.0, cyber_post if voice is cyber else None, name)))
+print("wrote", len(TONES), "notification tones to", os.path.normpath(d))

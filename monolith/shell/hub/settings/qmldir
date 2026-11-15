@@ -26,7 +26,7 @@ Profiles 1.0 Profiles.qml
 QuickAccess 1.0 QuickAccess.qml
 Search 1.0 Search.qml
 Software 1.0 Software.qml
-SoundSettings 1.0 SoundSettings.qml
+SoundEffects 1.0 SoundEffects.qml
 Status 1.0 Status.qml
 Styles 1.0 Styles.qml
 SysMon 1.0 SysMon.qml
