@@ -45,7 +45,7 @@ ColumnLayout {
         Layout.fillWidth: true; wrapMode: Text.Wrap; muted: true
         text: "How workspaces move when you switch between them. The preview plays it."
             + (Niri.hyprland ? "" : " niri itself only slides workspaces up and down; Fade is drawn by Monolith (the new workspace fades in over your wallpaper). niri's other animations are in Animation speeds.")
-            + " Glitch: the switch is instant and a neon line sweeps down the screen, wiping your wallpaper away over it with a torn edge (the Cyberpunk style picks it)."
+            + " Glitch: the workspaces slide as usual with a neon scan line sweeping over them the same way (the Cyberpunk style picks it)."
     }
 
     // ── the preview: two little workspaces, switching back and forth with the same spring ──
@@ -62,22 +62,22 @@ ColumnLayout {
         property real p: 0
         property real v: 0
         property real target: 0
-        readonly property bool vert: sec.s.style === "slidevert" || sec.s.style === "slidefadevert"
+        readonly property bool vert: sec.s.style === "slidevert" || sec.s.style === "slidefadevert" || sec.s.style === "glitch"
         readonly property bool fades: sec.s.style === "fade" || sec.s.style === "slidefadevert" || sec.s.style === "slidefade"
-        readonly property bool slides: sec.s.style !== "fade" && sec.s.style !== "off" && sec.s.style !== "glitch"
-        readonly property bool jumps: sec.s.style === "off" || sec.s.style === "glitch"
+        readonly property bool slides: sec.s.style !== "fade" && sec.s.style !== "off"
+        readonly property bool jumps: sec.s.style === "off"
         // how far a workspace travels: all the way, or a fifth of it when it fades as it slides
         readonly property real dist: (vert ? height : width) * (fades ? 0.2 : 1)
         Timer {
             interval: 1500; running: stage.visible; repeat: true
             onTriggered: {
                 // Glitch: a picture of the workspace going, taken before the switch, glitches away over the new one
-                if (sec.s.style === "glitch") { snap.scheduleUpdate(); flip.restart(); return; }
                 stage.target = 1 - stage.target; stage.last = Date.now();
+                // Glitch: the light over the slide, going its way
+                if (sec.s.style === "glitch") { glitchFx.dir = stage.target > 0.5 ? 1 : -1; glitchFx.seed = Math.random() * 97; glitchAnim.restart(); }
                 if (sec.s.style === "off") { stage.p = stage.target; stage.v = 0; }
             }
         }
-        Timer { id: flip; interval: 60; onTriggered: { stage.target = 1 - stage.target; stage.p = stage.target; stage.v = 0; glitchFx.seed = Math.random() * 97; glitchFx.dir = stage.target > 0.5 ? 1 : -1; glitchAnim.restart(); } }
         // (a timer, not a FrameAnimation: that one never ticked inside this page)
         property real last: 0
         Timer {
@@ -130,20 +130,18 @@ ColumnLayout {
             Ws { num: "1"; off: -stage.p * stage.dist; fade: 1 - stage.p; tint: Theme.accent; visible: !(stage.jumps && stage.p > 0.5) }
             Ws { num: "2"; off: (1 - stage.p) * stage.dist; fade: stage.p; tint: Theme.text; visible: !(stage.jumps && stage.p < 0.5) }
         }
-        ShaderEffectSource { id: snap; anchors.fill: parent; sourceItem: scene; live: false; visible: false }
         ShaderEffect {
             id: glitchFx
             anchors.fill: parent
             visible: glitchAnim.running
-            property var source: snap
             property vector2d itemSize: Qt.vector2d(width, height)
             property real p: 0
-            property real seed: 0
             property real dir: 1
-            property color red: Theme.danger
+            property real seed: 0
             property color cyan: Theme.accent
-            fragmentShader: Qt.resolvedUrl("../../ui/shaders/wsglitch.frag.qsb")
-            NumberAnimation on p { id: glitchAnim; running: false; from: 0; to: 1; duration: Math.max(1, Theme.fxMs(({ relaxed: 760, normal: 560, fast: 440, fastest: 340 })[sec.s.speed] || 560)); easing.type: Easing.InOutCubic }
+            property color red: Theme.danger
+            fragmentShader: Qt.resolvedUrl("../../ui/shaders/wsscan.frag.qsb")
+            NumberAnimation on p { id: glitchAnim; running: false; from: 0; to: 1; duration: Math.max(1, Theme.fxMs(({ relaxed: 640, normal: 470, fast: 370, fastest: 290 })[sec.s.speed] || 470)) }
         }
         Label {
             anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 8
@@ -175,7 +173,7 @@ ColumnLayout {
     SettingRow {
         Layout.fillWidth: true
         // (niri's fade is Monolith's own, a plain ease: no bounce to choose)
-        visible: sec.s.style !== "off" && sec.s.style !== "glitch" && !(sec.s.style === "fade" && !Niri.hyprland)
+        visible: sec.s.style !== "off" && !(sec.s.style === "fade" && !Niri.hyprland)
         icon: "waves"; title: "Feel"; desc: sec.s.feel === "bouncy" ? "Goes a little past and settles back" : "Eases in and stops, no bounce"
         Segmented {
             width: 220

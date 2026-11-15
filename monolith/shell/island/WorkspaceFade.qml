@@ -6,10 +6,12 @@ import "../core"
 // screen with the wallpaper as the switch happens, then fades that away: the new workspace's
 // windows fade in over the wallpaper. (The old workspace can't be pictured once niri has
 // switched, so it isn't a crossfade.) Drawn in the island's window, under the bar (Island.qml).
-// Glitch (niri and Hyprland, the Cyberpunk style's): the same cover, wiped away by a neon front
-// sweeping down the screen with a narrow torn band behind it (ui/shaders/wsglitch.frag): rows
-// slide sideways and split into red and cyan as they go. Calm on purpose: no flashing blocks,
-// nothing that blinks (the menus' glitch, at full screen, strobed).
+// Glitch (niri and Hyprland, the Cyberpunk style's): the compositor slides the workspaces as
+// usual, and this lays light over the slide, going the same way (ui/shaders/wsscan.frag): a neon
+// line split into red and cyan, a glow and scanlines behind it, a few streaks of data around it.
+// Nothing covers the windows: an earlier version covered them with the wallpaper and wiped that
+// away, but it could only start once the switch had happened, so the new workspace flashed
+// before the cover came, and the cut under it was a hard one.
 Item {
     id: fw
     required property string screenName
@@ -18,7 +20,8 @@ Item {
     readonly property var sw: Store.get("animations.workspaceSwitch", {}) || {}
     readonly property bool glitch: sw.style === "glitch"
     readonly property string speed: sw.speed || "normal"
-    readonly property int ms: glitch ? Theme.fxMs(({ relaxed: 760, normal: 560, fast: 440, fastest: 340 })[speed] || 560)
+    // (Glitch: about as long as the compositor's slide at that speed)
+    readonly property int ms: glitch ? Theme.fxMs(({ relaxed: 640, normal: 470, fast: 370, fastest: 290 })[speed] || 470)
                                      : Theme.ms(({ relaxed: 420, normal: 300, fast: 220, fastest: 150 })[speed] || 300)
 
     // the workspace shown on this screen: a new one is a switch (not the first one seen)
@@ -29,20 +32,21 @@ Item {
     onWsIdChanged: {
         const idx = shownWs ? Number(shownWs.idx) || 0 : 0;
         // up (a workspace above: a lower number) or down: the glitch's front goes that way
-        tear.dir = idx < lastIdx ? -1 : 1;
+        scan.dir = idx < lastIdx ? -1 : 1;
         if (lastId !== null && wsId !== null && wsId !== lastId) play();
         lastId = wsId;
         lastIdx = idx;
     }
     function play() {
-        if (!Theme.animOn || cover.status !== Image.Ready) return;
+        if (!Theme.animOn) return;
         if (glitch) {
             // (not over a fullscreen window: a game switching workspaces would flash)
             if (Niri.fullscreenOn(screenName)) return;
-            tear.seed = Math.random() * 97;
-            tearAway.restart();
+            scan.seed = Math.random() * 97;
+            sweep.restart();
             return;
         }
+        if (cover.status !== Image.Ready) return;
         fadeAway.stop();
         cover.opacity = 1;
         fadeAway.start();
@@ -60,19 +64,18 @@ Item {
         cache: true
         NumberAnimation { id: fadeAway; target: cover; property: "opacity"; from: 1; to: 0; duration: fw.ms; easing.type: Easing.OutCubic }
     }
-    // Glitch: the cover, wiped by the front (p from 0, whole, to 1, gone)
+    // Glitch: the light over the slide (p 0 … 1 through it)
     ShaderEffect {
-        id: tear
+        id: scan
         anchors.fill: parent
-        visible: tearAway.running
-        property var source: cover
+        visible: sweep.running
         property vector2d itemSize: Qt.vector2d(width, height)
         property real p: 0
-        property real seed: 0
         property real dir: 1
-        property color red: Theme.danger
+        property real seed: 0
         property color cyan: Theme.accent
-        fragmentShader: Qt.resolvedUrl("../ui/shaders/wsglitch.frag.qsb")
-        NumberAnimation on p { id: tearAway; running: false; from: 0; to: 1; duration: Math.max(1, fw.ms); easing.type: Easing.InOutCubic }
+        property color red: Theme.danger
+        fragmentShader: Qt.resolvedUrl("../ui/shaders/wsscan.frag.qsb")
+        NumberAnimation on p { id: sweep; running: false; from: 0; to: 1; duration: Math.max(1, fw.ms); easing.type: Easing.Linear }
     }
 }

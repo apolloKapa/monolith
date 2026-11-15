@@ -651,14 +651,21 @@ Item {
             readonly property real wantW: Number(opt("width", 46))
             readonly property real wantH: Math.min(Theme.islandH - 14, Number(opt("height", 16)))
             readonly property int wantN: Number(opt("bars", 9))
+            readonly property real gap: Number(opt("spacing", 2))
+            // wide enough for its bars (2 px each and the gaps): more bars than the width took
+            // spilled out over the modules beside it
+            readonly property real fitW: Math.max(wantW, wantN * 2 + Math.max(0, wantN - 1) * gap)
             property bool want: bar.visPreview || bar.player !== null || opt("always", false) === true
             onClicked: bar.open("media")
             Faces.CavaBars {
                 // (down a side bar: as wide as the bar allows, with fewer bars to match)
-                width: bar.vertical ? Math.min(vm.wantW, Theme.islandH - 26) : vm.wantW
+                width: bar.vertical ? Math.min(vm.wantW, Theme.islandH - 26) : vm.fitW
                 height: vm.wantH
-                count: bar.vertical ? Math.max(3, Math.round(vm.wantN * width / Math.max(1, vm.wantW))) : vm.wantN
-                spacing: Number(vm.opt("spacing", 2))
+                // (down a side bar the width can't grow: fewer bars, as many as fit)
+                count: bar.vertical ? Math.max(3, Math.min(Math.round(vm.wantN * width / Math.max(1, vm.wantW)),
+                                                           Math.floor((width + vm.gap) / (2 + vm.gap)))) : vm.wantN
+                spacing: vm.gap
+                clip: true
                 minLen: Number(vm.opt("rest", 2))
                 continuous: vm.opt("style", "bars") === "smooth"
                 mirror: vm.opt("anchor", "bottom") === "middle"

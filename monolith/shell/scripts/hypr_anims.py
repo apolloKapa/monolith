@@ -9,8 +9,7 @@ workspaces move, how it feels and how fast.
 Written to Monolith's folder, ~/.config/hypr/monolith/animations.lua (or .conf), loaded by its
 init after your own config, so it wins over a workspaces animation set there. Hyprland reloads
 it by itself. The settings are kept as JSON on its first line, so they read back exactly.
-Glitch switches at once here (the animation is off) and Monolith draws the glitch over the
-switch (island/WorkspaceFade.qml).
+Glitch is the vertical slide here, with Monolith's light drawn over it (island/WorkspaceFade.qml).
 
 A spring that starts from rest, like niri's: a curve that starts fast jumped most of the way in
 the first frame on a fast screen, which looked like the screen shaking.
@@ -24,7 +23,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hypr_files as hf  # noqa: E402
 
-STYLES = {"slidevert": "slidevert", "slide": "slide", "slidefadevert": "slidefadevert 20%",
+STYLES = {"slidevert": "slidevert", "glitch": "slidevert", "slide": "slide", "slidefadevert": "slidefadevert 20%",
           "slidefade": "slidefade 20%", "fade": "fade"}
 # how stiff the spring is (higher: faster); the same numbers as niri's stiffness
 SPEEDS = {"relaxed": 450, "normal": 900, "fast": 1500, "fastest": 2500}
@@ -35,7 +34,7 @@ DEFAULT = {"style": "slidevert", "feel": "smooth", "speed": "normal"}
 
 def clean(s):
     s = dict(DEFAULT, **(s or {}))
-    if s["style"] not in STYLES and s["style"] not in ("off", "glitch"):
+    if s["style"] not in STYLES and s["style"] != "off":
         s["style"] = DEFAULT["style"]
     if s["feel"] not in FEELS:
         s["feel"] = DEFAULT["feel"]
@@ -48,7 +47,7 @@ def lines(s, lua):
     c = "--" if lua else "#"
     out = [c + " monolith " + json.dumps(s, separators=(",", ":")),
            c + " Written by Monolith (Settings -> Animations -> Workspace switching). Changes here are replaced."]
-    if s["style"] in ("off", "glitch"):
+    if s["style"] == "off":
         if lua:
             out.append('hl.animation({ leaf = "workspaces", enabled = false })')
         else:
