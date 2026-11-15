@@ -206,7 +206,23 @@ def translate(path, monolith):
         lua = "hl.bind(%s, %s%s)" % (lua_str(" + ".join(mods + [k])), what, ", { locked = true }" if locked else "")
         conf = "%s = %s, %s, %s" % ("bindl" if locked else "bind", " ".join(mods), k, got[1])
         out.append((mods, k, locked, lua, conf, got, secs.get(raw, "")))
+    # Alt+Tab: niri has its own switcher (not in the keymap), Hyprland has none. Here it goes to
+    # the workspace's next window and raises it (Shift: back), unless the keymap uses those keys
+    for mods, lua_what, conf_what in ALT_TAB:
+        if (frozenset(mods), "tab") in seen:
+            continue
+        seen.add((frozenset(mods), "tab"))
+        out.append((mods, "TAB", False, "hl.bind(%s, %s)" % (lua_str(" + ".join(mods + ["TAB"])), lua_what),
+                    "\n".join("bind = %s, TAB, %s" % (" ".join(mods), c) for c in conf_what), (lua_what, conf_what[0]), "Alt+Tab"))
     return out
+
+
+ALT_TAB = [
+    (["ALT"], "function() hl.dispatch(hl.dsp.window.cycle_next()); hl.dispatch(hl.dsp.window.bring_to_top()) end",
+     ["cyclenext", "bringactivetotop"]),
+    (["ALT", "SHIFT"], "function() hl.dispatch(hl.dsp.window.cycle_next({ next = false })); hl.dispatch(hl.dsp.window.bring_to_top()) end",
+     ["cyclenext, prev", "bringactivetotop"]),
+]
 
 
 def scroll_delay(path, lua):
