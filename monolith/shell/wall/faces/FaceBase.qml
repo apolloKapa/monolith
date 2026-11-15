@@ -27,4 +27,7 @@ Item {
     readonly property color mainC: colorOpt("mainColor", Theme.text)
     readonly property color accentC: colorOpt("accentColor", Theme.accent)
     readonly property color subC: hasMain ? Qt.alpha(mainC, 0.72) : Theme.subtext
+    // the widget's own Font (the clocks' settings): that family, else the look's own `d`
+    readonly property string fontPick: String(opt("font", "") || "")
+    function fontOr(d) { return fontPick !== "" ? fontPick : d; }
 }

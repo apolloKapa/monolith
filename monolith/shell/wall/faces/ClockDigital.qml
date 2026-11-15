@@ -11,6 +11,7 @@ FaceBase {
         anchors.fill: parent
         anchors.margins: Math.min(parent.width, parent.height) * 0.06
         text: Qt.formatTime(f.now, "HHmm")
+        font.family: f.fontOr(Theme.fontFamily)
         font.pixelSize: height
         fontSizeMode: Text.Fit
         minimumPixelSize: 12

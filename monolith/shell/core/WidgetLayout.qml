@@ -16,7 +16,7 @@ Singleton {
             faces: [["digital", "Digital", "ClockDigital", [1.2, 5]], ["minimal", "Minimal", "ClockMinimal", [1.2, 5]], ["analog", "Analog", "ClockAnalog", [1, 1], [220, 220]],
                     ["material", "Material", "ClockMaterial", [0.7, 1.3], [230, 230]], ["materialAnalog", "Material analog", "ClockMaterialAnalog", [1, 1], [230, 230]],
                     ["lumen", "Lumen", "ClockLumen", [1, 1], [240, 240]], ["lockscreen", "Lock screen", "ClockLockscreen", [0.6, 4], [520, 260]],
-                    ["stretched", "Stretched", "ClockStretched", [0.3, 2.5], [300, 280]], ["stacked", "Stacked", "ClockStacked", [0.5, 1.2], [180, 260]], ["dot", "Dot", "ClockDot", [1, 2.6], [320, 180]]] },
+                    ["stretched", "Stretched", "ClockStretched", [0.3, 2.5], [300, 280]], ["stacked", "Stacked", "ClockStacked", [0.5, 1.2], [180, 260]], ["dot", "Dot", "ClockDot", [1, 2.6], [320, 180]], ["cyber", "Cyberpunk", "ClockCyber", [1.4, 4], [440, 190]]] },
         date: { name: "Date", icon: "today", size: [300, 100], lim: [100, 40, 900, 400], aspect: [1, 6],
             faces: [["full", "Full", "DateFull"], ["compact", "Compact", "DateCompact"], ["dot", "Dot", "DateDot", [1.2, 3.5], [320, 140]]] },
         weather: { name: "Weather", icon: "partly_cloudy_day", size: [250, 120], lim: [90, 70, 800, 500], aspect: [0.8, 4],
@@ -123,7 +123,7 @@ Singleton {
         "text/default": [60, 30, 2000, 800, 0.2, 20], "image/rect": [30, 30, 4000, 4000, 0.02, 50],
         "image/rounded": [30, 30, 4000, 4000, 0.02, 50], "image/round": [40, 40, 3000, 3000, 1, 1],
         "user/default": [220, 130, 500, 300, 1.2, 2.8],
-        "clock/dot": [140, 70, 1400, 900, 1, 2.6], "date/dot": [160, 70, 1200, 500, 1.2, 3.5], "weather/dot": [140, 100, 800, 500, 0.9, 2.2],
+        "clock/dot": [140, 70, 1400, 900, 1, 2.6], "clock/cyber": [180, 90, 1600, 700, 1.4, 4], "date/dot": [160, 70, 1200, 500, 1.2, 3.5], "weather/dot": [140, 100, 800, 500, 0.9, 2.2],
         "media/dot": [240, 100, 1000, 400, 1.8, 3.6], "cpu/dot": [100, 100, 600, 600, 1, 1], "ram/dot": [100, 100, 600, 600, 1, 1],
         "temp/dot": [100, 100, 600, 600, 1, 1], "disk/dot": [100, 100, 600, 600, 1, 1], "battery/dot": [100, 100, 600, 600, 1, 1],
         "wellbeing/card": [240, 160, 900, 600, 1.1, 2.6], "wellbeing/ring": [100, 100, 700, 700, 1, 1], "wellbeing/week": [240, 130, 1000, 560, 1.2, 3.2],
@@ -192,6 +192,11 @@ Singleton {
             o.push(["showBars", "Visualiser behind it", "toggle", true], ["continuous", "Smooth visualiser", "toggle", false]);
         if (t === "clock" && (id === "analog" || id === "materialAnalog" || id === "lumen"))
             o.push(["showSeconds", "Seconds hand", "toggle", true]);
+        // the clocks that are text: any font (empty: the look's own)
+        if (t === "clock" && ["digital", "minimal", "lockscreen", "stacked", "material", "lumen", "cyber"].indexOf(id) !== -1)
+            o.push(["font", "Font", "font", ""]);
+        if (t === "clock" && id === "cyber")
+            o.push(["frame", "The panel behind it", "toggle", true], ["glitch", "A glitch now and then", "toggle", true], ["hour12", "12-hour", "toggle", false]);
         if (t === "text") o.push(["textContent", "Text", "text", ""]);
         if (t === "image") o.unshift(["imagePath", "Picture", "file", ""]);   // first: what a picture widget is about
         if (t === "github") o.push(["store:widgets.github.user", "GitHub username", "text", ""]);

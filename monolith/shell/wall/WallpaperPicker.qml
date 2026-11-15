@@ -113,9 +113,11 @@ PanelWindow {
         y: cy - h / 2
         radius: win.bubble / 2 + (Theme.corner(80, 14) - win.bubble / 2) * win.grow
         color: Theme.frame
+        border.width: Theme.outlineW; border.color: Theme.outlineColor
         scale: 0.4 + 0.6 * Math.min(1, win.t / 0.2)
         opacity: Math.min(1, win.t * 4)
         CardShadow {}
+        PanelFx { anchors.fill: parent; radius: panel.radius; opacity: win.grow }
         MouseArea { anchors.fill: parent }   // clicks on the panel stay on it
 
         // the bubble's icon, until it opens up
@@ -195,10 +197,14 @@ PanelWindow {
                 id: card
                 property string path: ""
                 property bool current: false
-                radius: Theme.corner(height, 6)
+                // (Cyberpunk: square, the corner cut off the picture and a neon edge along the cut)
+                radius: Theme.chamfer ? 0 : Theme.corner(height, 6)
                 color: Theme.container
-                border.width: current ? 3 : 0
+                border.width: current && !Theme.chamfer ? 3 : 0
                 border.color: Theme.accent
+                layer.enabled: Theme.chamfer
+                layer.effect: CutCorner {}
+                CutEdge { color: card.current ? Theme.accent : Theme.outlineColor; lineWidth: card.current ? 3 : Math.max(1, Theme.outlineW) }
                 Icon { anchors.centerIn: parent; visible: Wall.isVideo(card.path); name: "movie"; size: 44; color: Theme.subtext }
                 // its small copy once Wall has made it (the full picture only if that failed)
                 readonly property string thumbState: Wall.picThumbState(card.path)
@@ -315,10 +321,13 @@ PanelWindow {
                 property bool current: false
                 property bool hot: false
                 readonly property bool gif: Wall.isAnimated(path)
-                radius: Theme.corner(height, 6)
+                radius: Theme.chamfer ? 0 : Theme.corner(height, 6)
                 color: Theme.container
-                border.width: current ? 3 : 0
+                border.width: current && !Theme.chamfer ? 3 : 0
                 border.color: Theme.accent
+                layer.enabled: Theme.chamfer
+                layer.effect: CutCorner {}
+                CutEdge { color: lc.current ? Theme.accent : (lc.hot ? Theme.c("yellow", Theme.accent) : Theme.outlineColor); lineWidth: lc.current ? 3 : Math.max(1, Theme.outlineW) }
                 scale: hot ? 1.03 : 1
                 Behavior on scale { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
                 Icon { anchors.centerIn: parent; name: "movie"; size: 40; color: Theme.faint; visible: still.status !== Image.Ready && !lc.gif }

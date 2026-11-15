@@ -10,6 +10,7 @@ FaceBase {
         anchors.fill: parent
         anchors.margins: Math.min(parent.width, parent.height) * 0.05
         text: Qt.formatTime(f.now, "HH:mm")
+        font.family: f.fontOr(Theme.fontFamily)
         font.pixelSize: height
         fontSizeMode: Text.Fit
         minimumPixelSize: 10

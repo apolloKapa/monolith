@@ -9,7 +9,7 @@ FaceBase {
     clip: true
     readonly property string hh: Qt.formatTime(f.now, "HH")
     readonly property string mm: Qt.formatTime(f.now, "mm")
-    readonly property string fam: "Google Sans Flex"
+    readonly property string fam: f.fontOr("Google Sans Flex")
     // the widest and tallest ink of any digit at 100 px, so every digit gets the same cell
     FontMetrics { id: ref; font.family: f.fam; font.pixelSize: 100; font.weight: Font.Black; font.variableAxes: f.axes }
     // as heavy and as round as the font goes

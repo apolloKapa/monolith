@@ -89,6 +89,8 @@ PanelWindow {
                     // (it can only round: square under a cut corner)
                     radius: Theme.chamfer ? 0 : parent.radius
                     color: "transparent"
+                    layer.enabled: Theme.chamfer
+                    layer.effect: CutCorner {}
                     Image { anchors.fill: parent; source: win.shownFile !== "" ? Wall.url(win.shownFile) : ""; sourceSize: Qt.size(640, 360); fillMode: Image.PreserveAspectFit; asynchronous: true; cache: false }
                 }
                 // it goes in a moment: a thin line running out

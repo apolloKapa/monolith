@@ -45,7 +45,7 @@ ColumnLayout {
         Layout.fillWidth: true; wrapMode: Text.Wrap; muted: true
         text: "How workspaces move when you switch between them. The preview plays it."
             + (Niri.hyprland ? "" : " niri itself only slides workspaces up and down; Fade is drawn by Monolith (the new workspace fades in over your wallpaper). niri's other animations are in Animation speeds.")
-            + " Glitch: the switch is instant and your wallpaper glitches away over it, torn into bands (the Cyberpunk style picks it)."
+            + " Glitch: the switch is instant and a neon line sweeps down the screen, wiping your wallpaper away over it with a torn edge (the Cyberpunk style picks it)."
     }
 
     // ── the preview: two little workspaces, switching back and forth with the same spring ──
@@ -77,7 +77,7 @@ ColumnLayout {
                 if (sec.s.style === "off") { stage.p = stage.target; stage.v = 0; }
             }
         }
-        Timer { id: flip; interval: 60; onTriggered: { stage.target = 1 - stage.target; stage.p = stage.target; stage.v = 0; glitchFx.seed = Math.random() * 97; glitchFx.t = 0; glitchAnim.restart(); } }
+        Timer { id: flip; interval: 60; onTriggered: { stage.target = 1 - stage.target; stage.p = stage.target; stage.v = 0; glitchFx.seed = Math.random() * 97; glitchAnim.restart(); } }
         // (a timer, not a FrameAnimation: that one never ticked inside this page)
         property real last: 0
         Timer {
@@ -138,14 +138,11 @@ ColumnLayout {
             property var source: snap
             property vector2d itemSize: Qt.vector2d(width, height)
             property real p: 0
-            property real mode: 0
-            property real t: 0
             property real seed: 0
             property color red: Theme.danger
             property color cyan: Theme.accent
-            fragmentShader: Qt.resolvedUrl("../../ui/shaders/cyber.frag.qsb")
-            NumberAnimation on p { id: glitchAnim; running: false; from: 1; to: 0; duration: Math.max(1, Theme.fxMs(({ relaxed: 560, normal: 420, fast: 320, fastest: 240 })[sec.s.speed] || 420)); easing.type: Easing.InQuad }
-            FrameAnimation { running: glitchAnim.running; onTriggered: glitchFx.t += frameTime }
+            fragmentShader: Qt.resolvedUrl("../../ui/shaders/wsglitch.frag.qsb")
+            NumberAnimation on p { id: glitchAnim; running: false; from: 0; to: 1; duration: Math.max(1, Theme.fxMs(({ relaxed: 760, normal: 560, fast: 440, fastest: 340 })[sec.s.speed] || 560)); easing.type: Easing.InOutCubic }
         }
         Label {
             anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 8

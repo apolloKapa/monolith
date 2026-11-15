@@ -16,6 +16,9 @@ PanelWindow {
     readonly property string mode: HubState.editWidgets
     readonly property bool shown: mode !== "" && (HubState.editScreen === "" ? modelData === Quickshell.screens[0] : HubState.editScreen === modelData.name)
     readonly property bool lockMode: mode === "lock"
+    // the font families for a Font option: one per family, no symbol fonts (as in Settings → Appearance)
+    readonly property var fontFamilies: shown ? Qt.fontFamilies().filter(n => !/ (Thin|Light|ExtraLight|Medium|SemiBold|Bold|ExtraBold|Black|Heavy|Obl|Italic|NL)\b/.test(n)
+        && !/Material Symbols|Noto Color|Emoji|Awesome|Symbol|Dingbat|D050000L|Math|Nerd Font Propo|Nerd Font Mono|^Iosevka N?F$/.test(n)) : []
     readonly property var list: shown ? WidgetLayout.on(mode, modelData.name) : []
     property string selected: ""
     property bool adding: false
@@ -827,6 +830,15 @@ PanelWindow {
                                     placeholder: "#rrggbb"
                                     onAccepted: v => { v = v.trim(); if (!v.startsWith("#")) v = "#" + v; if (/^#[0-9a-fA-F]{6}$/.test(v)) ed.setOption(wrap.modelData.id, oc.modelData[0], v); }
                                 }
+                            }
+                            // a font: every family by name (the same list as Settings → Appearance)
+                            FontPicker {
+                                visible: oc.modelData[2] === "font"
+                                width: parent.width
+                                families: oc.modelData[2] === "font" ? ed.fontFamilies : []
+                                value: String(oc.val || "")
+                                defaultName: "The look's own"
+                                onPicked: fam => ed.setOption(wrap.modelData.id, oc.modelData[0], fam)
                             }
                             Field {
                                 visible: oc.modelData[2] === "text"

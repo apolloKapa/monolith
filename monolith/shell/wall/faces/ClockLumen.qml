@@ -89,7 +89,7 @@ FaceBase {
             Text {
                 anchors.centerIn: parent
                 text: parent.hour
-                font.family: Theme.fontFamily; font.pixelSize: f.d * 0.054; font.weight: Font.Bold
+                font.family: f.fontOr(Theme.fontFamily); font.pixelSize: f.d * 0.054; font.weight: Font.Bold
                 color: parent.lit > 0.5 ? f.numC : parent.col
                 opacity: parent.lit
             }

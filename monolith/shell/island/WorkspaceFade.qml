@@ -6,10 +6,10 @@ import "../core"
 // screen with the wallpaper as the switch happens, then fades that away: the new workspace's
 // windows fade in over the wallpaper. (The old workspace can't be pictured once niri has
 // switched, so it isn't a crossfade.) Drawn in the island's window, under the bar (Island.qml).
-// Glitch (niri and Hyprland, the Cyberpunk style's): the same cover, torn away instead of faded:
-// it goes band by band, the bands jumping sideways and splitting into red and cyan, with blocks
-// of corrupted colour (shaders/cyber.frag's glitch, run backwards), and the new workspace's
-// windows show through the gaps.
+// Glitch (niri and Hyprland, the Cyberpunk style's): the same cover, wiped away by a neon front
+// sweeping down the screen with a narrow torn band behind it (ui/shaders/wsglitch.frag): rows
+// slide sideways and split into red and cyan as they go. Calm on purpose: no flashing blocks,
+// nothing that blinks (the menus' glitch, at full screen, strobed).
 Item {
     id: fw
     required property string screenName
@@ -18,7 +18,7 @@ Item {
     readonly property var sw: Store.get("animations.workspaceSwitch", {}) || {}
     readonly property bool glitch: sw.style === "glitch"
     readonly property string speed: sw.speed || "normal"
-    readonly property int ms: glitch ? Theme.fxMs(({ relaxed: 560, normal: 420, fast: 320, fastest: 240 })[speed] || 420)
+    readonly property int ms: glitch ? Theme.fxMs(({ relaxed: 760, normal: 560, fast: 440, fastest: 340 })[speed] || 560)
                                      : Theme.ms(({ relaxed: 420, normal: 300, fast: 220, fastest: 150 })[speed] || 300)
 
     // the workspace shown on this screen: a new one is a switch (not the first one seen)
@@ -35,7 +35,6 @@ Item {
             // (not over a fullscreen window: a game switching workspaces would flash)
             if (Niri.fullscreenOn(screenName)) return;
             tear.seed = Math.random() * 97;
-            tear.t = 0;
             tearAway.restart();
             return;
         }
@@ -56,7 +55,7 @@ Item {
         cache: true
         NumberAnimation { id: fadeAway; target: cover; property: "opacity"; from: 1; to: 0; duration: fw.ms; easing.type: Easing.OutCubic }
     }
-    // Glitch: the cover through the glitch, p from 1 (whole) to 0 (gone)
+    // Glitch: the cover, wiped by the front (p from 0, whole, to 1, gone)
     ShaderEffect {
         id: tear
         anchors.fill: parent
@@ -64,13 +63,10 @@ Item {
         property var source: cover
         property vector2d itemSize: Qt.vector2d(width, height)
         property real p: 0
-        property real mode: 0
-        property real t: 0
         property real seed: 0
         property color red: Theme.danger
         property color cyan: Theme.accent
-        fragmentShader: Qt.resolvedUrl("../ui/shaders/cyber.frag.qsb")
-        NumberAnimation on p { id: tearAway; running: false; from: 1; to: 0; duration: Math.max(1, fw.ms); easing.type: Easing.InQuad }
-        FrameAnimation { running: tearAway.running; onTriggered: tear.t += frameTime }
+        fragmentShader: Qt.resolvedUrl("../ui/shaders/wsglitch.frag.qsb")
+        NumberAnimation on p { id: tearAway; running: false; from: 0; to: 1; duration: Math.max(1, fw.ms); easing.type: Easing.InOutCubic }
     }
 }

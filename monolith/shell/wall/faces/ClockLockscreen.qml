@@ -15,9 +15,9 @@ FaceBase {
         anchors.centerIn: parent
         spacing: 8
         scale: Math.min(f.width / Math.max(1, implicitWidth), f.height / Math.max(1, implicitHeight))
-        Big { Layout.alignment: Qt.AlignHCenter; Layout.bottomMargin: -28; text: Qt.formatTime(f.now, "HH"); color: f.accentC; font.pixelSize: 150 }
-        Big { Layout.alignment: Qt.AlignHCenter; text: Qt.formatTime(f.now, "mm"); font.pixelSize: 150 }
-        Big { Layout.alignment: Qt.AlignHCenter; text: f.date; color: f.subC; font.pixelSize: 16; font.weight: Font.Medium; font.letterSpacing: 1.4 }
+        Big { font.family: f.fontOr(Theme.fontFamily); Layout.alignment: Qt.AlignHCenter; Layout.bottomMargin: -28; text: Qt.formatTime(f.now, "HH"); color: f.accentC; font.pixelSize: 150 }
+        Big { font.family: f.fontOr(Theme.fontFamily); Layout.alignment: Qt.AlignHCenter; text: Qt.formatTime(f.now, "mm"); font.pixelSize: 150 }
+        Big { font.family: f.fontOr(Theme.fontFamily); Layout.alignment: Qt.AlignHCenter; text: f.date; color: f.subC; font.pixelSize: 16; font.weight: Font.Medium; font.letterSpacing: 1.4 }
     }
     ColumnLayout {
         visible: !f.stacked
@@ -27,10 +27,10 @@ FaceBase {
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
             spacing: 4
-            Big { text: Qt.formatTime(f.now, "HH"); color: f.accentC; font.pixelSize: 120 }
-            Big { text: ":"; color: f.subC; font.pixelSize: 80; Layout.alignment: Qt.AlignVCenter }
-            Big { text: Qt.formatTime(f.now, "mm"); font.pixelSize: 120 }
+            Big { font.family: f.fontOr(Theme.fontFamily); text: Qt.formatTime(f.now, "HH"); color: f.accentC; font.pixelSize: 120 }
+            Big { font.family: f.fontOr(Theme.fontFamily); text: ":"; color: f.subC; font.pixelSize: 80; Layout.alignment: Qt.AlignVCenter }
+            Big { font.family: f.fontOr(Theme.fontFamily); text: Qt.formatTime(f.now, "mm"); font.pixelSize: 120 }
         }
-        Big { Layout.alignment: Qt.AlignHCenter; text: f.date; color: f.subC; font.pixelSize: 16; font.weight: Font.Medium; font.letterSpacing: 1.4 }
+        Big { font.family: f.fontOr(Theme.fontFamily); Layout.alignment: Qt.AlignHCenter; text: f.date; color: f.subC; font.pixelSize: 16; font.weight: Font.Medium; font.letterSpacing: 1.4 }
     }
 }

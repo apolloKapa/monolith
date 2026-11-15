@@ -28,11 +28,15 @@ PanelWindow {
 
     ClippingRectangle {
         anchors.fill: parent
-        radius: 10
+        radius: Theme.chamfer ? 0 : 10
         color: Theme.frame
         opacity: win.see
-        border.width: 2
+        border.width: Theme.chamfer ? 0 : 2
         border.color: hov.hovered ? Theme.accent : Qt.alpha(Theme.text, 0.25)
+        // (Cyberpunk: the corner cut off, the edge along the cut)
+        layer.enabled: Theme.chamfer
+        layer.effect: CutCorner {}
+        CutEdge { color: hov.hovered ? Theme.accent : Qt.alpha(Theme.text, 0.25); lineWidth: 2 }
         Image { anchors.fill: parent; anchors.margins: 2; source: Wall.url(win.pin.file); fillMode: Image.PreserveAspectFit; smooth: true; mipmap: true; asynchronous: true }
     }
     HoverHandler { id: hov }

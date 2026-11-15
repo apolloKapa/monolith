@@ -11,9 +11,14 @@ ColumnLayout {
         smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         Layout.fillWidth: true
         Layout.preferredHeight: width * 9 / 16 * 0.62
+        id: nowCard
         radius: Theme.corner(80, 6)
         color: Theme.container
         clip: true
+        // (Cyberpunk: the picture fills the card's corner, so the cut is taken off it too)
+        layer.enabled: Theme.chamfer
+        layer.effect: CutCorner {}
+        CutEdge { z: 20 }
         Image {
             anchors.fill: parent
             // a live one: its still (the picker's card)
