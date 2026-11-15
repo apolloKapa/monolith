@@ -273,6 +273,9 @@ draw_banner() {
     printf "\n%s\n\n" "$(grad_rule 80 ━)"
 }
 
+# the packages Monolith wants and which are still to install, as a list you scroll through (the
+# menu's own keys). It was fzf's, which the installer never installs: on a fresh system at a TTY
+# (where you'd run it) nothing showed, and the console can't draw fzf's rounded borders either
 show_package_overview() {
     local target_list=()
     mapfile -t target_list < <(target_packages "$PROJECT_ROOT" | awk '!seen[$0]++')
@@ -283,20 +286,43 @@ show_package_overview() {
         [[ -n "$p" ]] && is_missing["$p"]=1
     done <<< "$missing_raw"
 
-    local lines=()
+    # still to install first, then the rest
+    local lines=() done_lines=() n_missing=0
     for pkg in "${target_list[@]}"; do
         if [[ -n "${is_missing[$pkg]}" ]]; then
-            lines+=("${C_YELLOW}[ to install ]${RESET} $pkg")
+            lines+=("${C_YELLOW}to install ${RESET} $pkg"); n_missing=$((n_missing + 1))
         else
-            lines+=("${C_GREEN}[ installed  ]${RESET} $pkg")
+            done_lines+=("${C_GREEN}installed  ${RESET} $pkg")
         fi
     done
+    lines+=("${done_lines[@]}")
 
-    cleanup_terminal
-    printf "%s\n" "${lines[@]}" | fzf --ansi --layout=reverse --border=rounded --margin=1,2 --height=25 \
-        --prompt="packages > " --header="${#target_list[@]} packages (Esc to go back)" > /dev/null || true
-    stty -echo icanon 2>/dev/null || true
-    printf "\e[?25l\e[?7l"
+    local top=0 total=${#lines[@]} rows
+    while true; do
+        rows=$(stty size 2>/dev/null </dev/tty | cut -d' ' -f1)
+        [[ "$rows" =~ ^[0-9]+$ ]] || rows=24
+        local page=$(( rows - 5 )); (( page < 3 )) && page=3
+        (( top > total - page )) && top=$(( total - page ))
+        (( top < 0 )) && top=0
+        printf "\033[2J\033[H"
+        printf " %sPackages%s  %d in all: %s%d to install%s, %d installed\n\n" "$BOLD" "$RESET" "$total" \
+            "$C_YELLOW" "$n_missing" "$RESET" "$(( total - n_missing ))"
+        local i
+        for (( i = top; i < top + page && i < total; i++ )); do
+            printf "  %s\033[K\n" "${lines[$i]}"
+        done
+        printf "\n %s%d-%d of %d   ↑/↓ or j/k to scroll, Space/b a page, q or Esc to go back%s" "$DIM" \
+            "$(( top + 1 ))" "$(( i ))" "$total" "$RESET"
+        case "$(read_key)" in
+            UP|[kK]) top=$(( top - 1 )) ;;
+            DOWN|[jJ]) top=$(( top + 1 )) ;;
+            SPACE|[fF]) top=$(( top + page )) ;;
+            [bB]) top=$(( top - page )) ;;
+            [gG]) top=0 ;;
+            ESC|[qQ]|ENTER) break ;;
+        esac
+    done
+    printf "\033[2J\033[H"
 }
 
 on_off() { [ "$1" = true ] && printf "%s[ON]%s" "$C_GREEN" "$RESET" || printf "%s[OFF]%s" "$DIM" "$RESET"; }
