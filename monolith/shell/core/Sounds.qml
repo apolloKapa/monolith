@@ -6,8 +6,8 @@ import Quickshell.Services.UPower
 
 // Sound effects (Settings → Sound → Sound effects): short sounds for clicks, switches, menus,
 // typing in Monolith's fields, windows opening and closing, apps starting, workspaces, volume
-// steps, screenshots, locking, wallpapers, notifications going, the charger… Made by
-// tools/make_sounds.py in packs (sounds/<pack>/<event>.wav, each its own voice), or your own
+// steps, screenshots, locking, wallpapers, notifications going, the charger… Synthesised by
+// tools/make_sounds.py (modal synthesis, filtered strikes, a small room) in packs (sounds/<pack>/<event>.wav, each its own voice), or your own
 // folder with files of the same names. Off unless switched on; every event can be switched off on
 // its own (sounds.events).
 //
@@ -22,12 +22,12 @@ Singleton {
     readonly property string player: Qt.resolvedUrl("../scripts/play.sh").toString().replace(/^file:\/\//, "")
     // the packs that come with Monolith: [id, name, what it sounds like]
     readonly property var packs: [
-        ["soft", "Soft", "Rounded little blips"],
-        ["glass", "Glass", "Bell-like, ringing a little longer"],
-        ["pop", "Pop", "Quick bubbly drops"],
-        ["retro", "Retro", "8-bit square waves"],
-        ["wood", "Wood", "Short wooden knocks"],
-        ["cyber", "Cyberpunk", "Bit-crushed synth chirps that glitch like a bad signal"],
+        ["soft", "Soft", "Felt ticks and warm, round tones"],
+        ["glass", "Glass", "A struck wine glass, ringing on"],
+        ["pop", "Pop", "Bubbles that rise as they pop"],
+        ["retro", "Retro", "Chiptune on purpose: clean square waves, an echo"],
+        ["wood", "Wood", "Woodblock knocks and marimba notes, dry"],
+        ["cyber", "Cyberpunk", "Detuned synths through a falling filter, a ping-pong echo"],
         ["custom", "Your own folder", "Your own .wav files"]
     ]
     readonly property string chosen: Store.get("sounds.pack", "soft")
