@@ -1,5 +1,6 @@
 import QtQuick
 import "../core"
+import "../ui"
 
 // A hub page: shows while it's the current one, fading in as the card morphs to its size.
 // Pages are built when first opened (Island.qml) and then kept, so they open at once next
@@ -32,8 +33,45 @@ FocusScope {
     readonly property real travel: Math.min(48, width * 0.07)
 
     onCurrentChanged: move()
+    // Cyberpunk: switching menus, the old page is taken by the Blackwall and the new one glitches
+    // in (CyberFx); opening or closing the menu, the page stays whole and the card's own glitch
+    // or Blackwall takes it along (Island.qml)
+    property real cyP: 1
+    property bool cyGoing: false
+    CyberFx { target: pg; p: pg.cyP; going: pg.cyGoing }
+    SequentialAnimation {
+        id: cyIn
+        PropertyAction { target: pg; property: "cyGoing"; value: false }
+        PropertyAction { target: pg; property: "cyP"; value: 0 }
+        PropertyAction { target: pg; property: "opacity"; value: 1 }
+        NumberAnimation { target: pg; property: "cyP"; from: 0; to: 1; duration: Theme.fxInMs }
+    }
+    SequentialAnimation {
+        id: cyOut
+        PropertyAction { target: pg; property: "cyGoing"; value: true }
+        NumberAnimation { target: pg; property: "cyP"; from: 0; to: 1; duration: Math.round(Theme.fxOutMs * 0.6) }
+        PropertyAction { target: pg; property: "opacity"; value: 0 }
+        PropertyAction { target: pg; property: "cyGoing"; value: false }
+    }
+    SequentialAnimation {
+        id: cyHold
+        PauseAnimation { duration: Theme.fxOutMs }
+        PropertyAction { target: pg; property: "opacity"; value: 0 }
+    }
     function move() {
-        inAnim.stop(); outAnim.stop();
+        inAnim.stop(); outAnim.stop(); cyIn.stop(); cyOut.stop(); cyHold.stop();
+        if (Theme.cyber && !HubState.snap) {
+            scale = 1; shift = 0;
+            const swc = HubState.switching && HubState.open;
+            if (current) {
+                if (swc) cyIn.start();
+                else { cyGoing = false; cyP = 1; opacity = 1; }
+            } else {
+                if (swc) cyOut.start();
+                else { cyGoing = false; cyP = 1; cyHold.start(); }   // the card's Blackwall takes it
+            }
+            return;
+        }
         if (HubState.snap || !Theme.animOn) {
             opacity = current ? 1 : 0; scale = current ? 1 : Theme.popScale; shift = 0;
             return;

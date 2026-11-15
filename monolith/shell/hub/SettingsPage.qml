@@ -123,7 +123,7 @@ Page {
     // another tab of the same file (Keyboard shortcuts): no new page is loaded, so it comes in here
     readonly property string tabId: section === "welcome" ? "welcome" : tab[0]
     onTabIdChanged: if (loader.status === Loader.Ready && String(loader.source).endsWith("/" + file + ".qml")) {
-        flick.keepH = 0; flick.contentY = 0; aimPage(); loader.opacity = 0; pageIn.restart(); slideIn.restart();
+        flick.keepH = 0; flick.contentY = 0; aimPage(); loader.opacity = 0; enterPage();
     }
     // laid out: the sidebar's unfolding animates only after this
     property bool settled: false
@@ -131,6 +131,11 @@ Page {
     // shown since the hub opened (its section stays loaded until the hub closes)
     property bool seenOpen: false
     Connections { target: HubState; function onOpenChanged() { if (!HubState.open) page.seenOpen = false; } }
+    // a section coming in: it fades and slides in (Cyberpunk: it glitches in)
+    function enterPage() {
+        if (Theme.cyber) { pageIn.stop(); slideIn.stop(); loader.shiftY = 0; loader.opacity = 1; cyIn.restart(); }
+        else { pageIn.restart(); slideIn.restart(); }
+    }
     function aimPage() { pageDir = pageOrder.indexOf(tabId) >= pageOrder.indexOf(lastTab) ? 1 : -1; lastTab = tabId; }
 
     RowLayout {
@@ -445,7 +450,11 @@ Page {
                 // a search result: its row, once the page is laid out
                 // (comes in only for a different section: reopening Settings rebuilds the same one)
                 property url shown: ""
-                onLoaded: { if (source !== shown) { shown = source; pageIn.restart(); slideIn.restart(); } else opacity = 1; if (page.findRow !== "") seekLater.restart(); }
+                onLoaded: { if (source !== shown) { shown = source; page.enterPage(); } else opacity = 1; if (page.findRow !== "") seekLater.restart(); }
+                // (Cyberpunk: the section glitches in instead, CyberFx)
+                property real cyP: 1
+                CyberFx { target: loader; p: loader.cyP }
+                NumberAnimation { id: cyIn; target: loader; property: "cyP"; from: 0; to: 1; duration: Theme.fxInMs }
                 Timer { id: seekLater; interval: 80; onTriggered: page.seek() }
                 // the page fades in while its rows come up one after another (ui/SettingRow)
                 NumberAnimation { id: pageIn; target: loader; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }

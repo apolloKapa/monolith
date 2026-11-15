@@ -53,7 +53,7 @@ SmoothRect {
         PauseAnimation { id: enterWait }
         NumberAnimation { target: row; property: "enter"; to: 1; duration: Theme.ms(340); easing.type: Easing.OutCubic }
     }
-    Timer { interval: 1; running: true; onTriggered: { enterWait.duration = Theme.ms(Math.min(320, Math.max(0, row.y) * 0.4)); enterAnim.start(); } }
+    Timer { interval: 1; running: true; onTriggered: { if (Theme.cyber) { row.enter = 1; return; } enterWait.duration = Theme.ms(Math.min(320, Math.max(0, row.y) * 0.4)); enterAnim.start(); } }
 
     // the icon leans in when the pointer is on its row
     Bubble {
