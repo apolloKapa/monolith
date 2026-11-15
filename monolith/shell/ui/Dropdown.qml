@@ -57,7 +57,9 @@ Rectangle {
         height: dd.fit.h
         padding: 6
         modal: false
-        closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutside
+        // (a press outside the field closes it: "outside the list" counted the field too, so
+        // pressing the field to close it closed it on the press and the click opened it again)
+        closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutsideParent
         // fades in with a little zoom from the field, and out the same way
         transformOrigin: dd.fit.up ? QQC.Popup.Bottom : QQC.Popup.Top
         // (interruptible: opening while it's still closing, or closing mid-open, carries on from

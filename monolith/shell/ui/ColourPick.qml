@@ -53,7 +53,7 @@ Item {
     Pressable {
         anchors.fill: parent
         color: Theme.containerHigh
-        onClicked: { cp.load(); pop.open(); }
+        onClicked: { if (pop.visible) { pop.close(); return; } cp.load(); pop.open(); }
         Row {
             anchors.centerIn: parent
             spacing: 8
@@ -78,7 +78,9 @@ Item {
         width: 280
         padding: 14
         modal: false
-        closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutside
+        // (a press outside the field closes it: "outside the list" counted the field too, so
+        // pressing the field to close it closed it on the press and the click opened it again)
+        closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutsideParent
         background: SmoothRect {
             radius: Theme.corner(48, 6)
             color: Theme.frame

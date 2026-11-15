@@ -43,7 +43,9 @@ Rectangle {
         width: Math.max(fp.width, 360)
         height: fp.fit.h
         padding: 8
-        closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutside
+        // (a press outside the field closes it: "outside the list" counted the field too, so
+        // pressing the field to close it closed it on the press and the click opened it again)
+        closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutsideParent
         transformOrigin: fp.fit.up ? QQC.Popup.Bottom : QQC.Popup.Top
         // (interruptible: opening while it's still closing, or closing mid-open, carries on from
         // where it is instead of jumping to the start; closed it rests faded and zoomed out)
