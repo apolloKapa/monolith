@@ -98,10 +98,21 @@ reclaim_notifications() {
     done
 }
 
+# what you copy outlives the app you copied it from: on Wayland a copy lives in its app, so
+# closing it (a terminal command, a menu, any app) emptied the clipboard. KDE and GNOME keep a
+# copy themselves; niri and Hyprland don't, and cliphist only keeps the history. wl-clip-persist
+# keeps the current one (regular clipboard only: holding the selection too broke selecting text)
+keep_clipboard() {
+    command -v wl-clip-persist >/dev/null || return 0
+    pgrep -x wl-clip-persist >/dev/null && return 0
+    setsid -f wl-clip-persist --clipboard regular >/dev/null 2>&1 < /dev/null
+}
+
 case "$1" in
     start)
         t0=$(date +%s)
         start
+        keep_clipboard
         [ "$2" = "--login" ] && (reclaim_notifications "$t0") >/dev/null 2>&1 &
         [ "$2" = "--login" ] && (sleep 2; python3 "$here/shell/scripts/startup.py" run) &
         ;;

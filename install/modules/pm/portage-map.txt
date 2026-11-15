@@ -30,6 +30,7 @@ qt6-multimedia            dev-qt/qtmultimedia
 qt6-5compat               dev-qt/qt5compat
 ripgrep                   sys-apps/ripgrep
 cliphist                  app-misc/cliphist                   # (guru)
+wl-clip-persist           gui-apps/wl-clip-persist            # (guru) keeps the clipboard when the app you copied from closes
 socat                     net-misc/socat
 inotify-tools             sys-fs/inotify-tools
 pamixer                   media-sound/pamixer                 # (guru)
