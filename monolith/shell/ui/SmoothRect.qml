@@ -15,11 +15,14 @@ Item {
     property real smoothing: Theme.cornerSmooth
     readonly property real half: Math.max(0, Math.min(width, height) / 2)
     readonly property real r: Math.max(0, Math.min(radius, half))
+    // cut corners (Theme.chamfer, the Cyberpunk style): a superellipse with exponent 1 is a
+    // straight line across the corner; the shader cuts only the top-left and bottom-right ones
+    readonly property bool cut: Theme.chamfer && r >= 2
     // how far the curve reaches along each side (never past the middle: a capsule stays one)
-    readonly property real extent: Math.min(half, r * (1 + 0.85 * smoothing))
+    readonly property real extent: cut ? r : Math.min(half, r * (1 + 0.85 * smoothing))
     // the exponent that puts the curve's 45° point where a circle of radius r has it
-    readonly property real expo: r <= 0 || extent <= r + 0.01 ? 2 : -Math.LN2 / Math.log(1 - 0.292893 * r / extent)
-    readonly property bool curved: smoothing > 0.01 && r >= 4 && expo > 2.05
+    readonly property real expo: cut ? 1 : r <= 0 || extent <= r + 0.01 ? 2 : -Math.LN2 / Math.log(1 - 0.292893 * r / extent)
+    readonly property bool curved: cut || (smoothing > 0.01 && r >= 4 && expo > 2.05)
     // for a blur region behind it (regions only have round corners): a circle this big sits
     // just inside the continuous corner, so no blur shows past the edge
     readonly property real blurRadius: curved ? extent : r

@@ -92,11 +92,13 @@ PanelWindow {
                 // 0: up out of sight (down, at the bottom), 1: in place
                 property real drop: 0
                 Component.onCompleted: drop = 1
-                Behavior on drop { NumberAnimation { duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                Behavior on drop { NumberAnimation { duration: Theme.cyber ? Theme.fxInMs : 420; easing.type: Theme.cyber ? Easing.Linear : Easing.OutBack; easing.overshoot: 1.2 } }
                 // going: it slides off sideways, towards the screen's edge, and the others close up
                 property real away: leaving ? 1 : 0
-                Behavior on away { NumberAnimation { duration: Notifs.leaveMs; easing.type: Easing.InCubic } }
-                opacity: Math.min(1, drop * 1.6) * (1 - away)
+                Behavior on away { NumberAnimation { duration: Notifs.leaveMs; easing.type: Theme.cyber ? Easing.Linear : Easing.InCubic } }
+                // (Cyberpunk: no slide and no fade; it glitches in, and the Blackwall takes it)
+                opacity: Theme.cyber ? (leaving ? (away < 0.999 ? 1 : 0) : (drop > 0.001 ? 1 : 0)) : Math.min(1, drop * 1.6) * (1 - away)
+                CyberFx { target: slot; p: slot.leaving ? slot.away : slot.drop; going: slot.leaving }
                 Loader {
                     active: slot.modelData !== null
                     width: slot.width
@@ -106,8 +108,8 @@ PanelWindow {
                         popup: true
                         width: slot.width
                         height: implicitHeight
-                        y: (1 - slot.drop) * (win.fromBottom ? 1 : -1) * (height * 0.6 + 24)
-                        x: slot.away * (win.corner.endsWith("left") ? -1 : 1) * (width * 0.5)
+                        y: Theme.cyber ? 0 : (1 - slot.drop) * (win.fromBottom ? 1 : -1) * (height * 0.6 + 24)
+                        x: Theme.cyber ? 0 : slot.away * (win.corner.endsWith("left") ? -1 : 1) * (width * 0.5)
                         onClosed: Notifs.dismissPopup(slot.modelData, pc.flying)
                         onImplicitHeightChanged: slot.cardH = implicitHeight
                         Component.onCompleted: slot.cardH = implicitHeight

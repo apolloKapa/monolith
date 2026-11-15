@@ -4,6 +4,7 @@
 // quarter circles, so the curve eases out of the straight sides (no visible "kink" where the
 // arc starts). `expo` 2 is an ordinary circular corner; the extent and exponent come from
 // SmoothRect.qml, matched so the corner still looks as round as the theme's radius says.
+// Exponent 1 cuts the corners straight across instead (ui/SmoothRect, Theme.chamfer).
 // Fill and outline in one pass, antialiased. (Qt hands colours over premultiplied.)
 layout(location = 0) in vec2 qt_TexCoord0;
 layout(location = 0) out vec4 fragColor;
@@ -23,6 +24,9 @@ layout(std140, binding = 0) uniform buf {
 // corners of extent r
 float sdSmoothBox(vec2 p, vec2 b, float r, float n) {
     r = clamp(r, 0.0, min(b.x, b.y));
+    // cut corners (exponent 1, the Cyberpunk style): only the top-left and bottom-right are cut,
+    // the other two stay square, as on a HUD
+    if (n < 1.5 && (p.x < 0.0) != (p.y < 0.0)) r = 0.0;
     vec2 q = abs(p) - b + r;
     vec2 m = max(q, 0.0);
     float corner = 0.0;

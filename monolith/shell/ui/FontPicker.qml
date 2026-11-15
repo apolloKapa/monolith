@@ -37,6 +37,7 @@ Rectangle {
     property var fit: ({ y: height + 4, h: 380, up: false })
     function openList() { fit = PopFit.place(fp, 380, 4); pop.open(); }
 
+    CyberFx { target: pop.contentItem ? pop.contentItem.parent : null; p: pop.going ? 1 - pop.fx : pop.fx; going: pop.going }
     QQC.Popup {
         id: pop
         y: fp.fit.y
@@ -51,12 +52,19 @@ Rectangle {
         // where it is instead of jumping to the start; closed it rests faded and zoomed out)
         opacity: 0
         scale: Theme.popScale
+        // (Cyberpunk: fx runs the glitch in and the Blackwall out, CyberFx above; it doesn't fade)
+        property real fx: 1
+        property bool going: false
+        onAboutToShow: going = false
+        onAboutToHide: going = true
         enter: Transition {
-            NumberAnimation { property: "opacity"; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "fx"; from: Theme.cyber ? 0 : 1; to: 1; duration: Theme.cyber ? Theme.fxInMs : 0 }
+            NumberAnimation { property: "opacity"; to: 1; duration: Theme.cyber ? 0 : Theme.popInMs; easing.type: Easing.OutCubic }
             NumberAnimation { property: "scale"; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
         }
         exit: Transition {
-            NumberAnimation { property: "opacity"; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "fx"; from: 1; to: 0; duration: Theme.cyber ? Theme.fxOutMs : 0 }
+            NumberAnimation { property: "opacity"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.popOutMs; easing.type: Theme.cyber ? Easing.InExpo : Easing.OutCubic }
             NumberAnimation { property: "scale"; to: Theme.popScale; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
         }
         onClosed: HubState.releasePop(fp)

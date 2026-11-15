@@ -71,6 +71,7 @@ Item {
         }
     }
 
+    CyberFx { target: pop.contentItem ? pop.contentItem.parent : null; p: pop.going ? 1 - pop.fx : pop.fx; going: pop.going }
     QQC.Popup {
         id: pop
         y: cp.height + 6
@@ -83,6 +84,13 @@ Item {
         closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutsideParent
         onOpened: HubState.claimPop(cp, pop.contentItem.parent)
         onClosed: HubState.releasePop(cp)
+        // (Cyberpunk: it glitches in and the Blackwall takes it, CyberFx above; otherwise instant)
+        property real fx: 1
+        property bool going: false
+        onAboutToShow: going = false
+        onAboutToHide: going = true
+        enter: Transition { NumberAnimation { property: "fx"; from: Theme.cyber ? 0 : 1; to: 1; duration: Theme.cyber ? Theme.fxInMs : 0 } }
+        exit: Transition { NumberAnimation { property: "fx"; from: 1; to: 0; duration: Theme.cyber ? Theme.fxOutMs : 0 } }
         background: SmoothRect {
             radius: Theme.corner(48, 6)
             color: Theme.frame

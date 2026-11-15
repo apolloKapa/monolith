@@ -94,7 +94,8 @@ Singleton {
     readonly property var oldFx: Prefs.raw.theme && Prefs.raw.theme.effects ? Prefs.raw.theme.effects : ({})
     readonly property bool fxGrain: Store.get("theme.effects.grain", oldFx.grain === true) === true
     readonly property bool fxEdge: Store.get("theme.effects.edge", oldFx.edge === true) === true
-    readonly property bool fxUnfold: Store.get("theme.effects.unfold", oldFx.unfold === true) === true && animOn
+    // (not with Cyberpunk: its menus glitch in and go to the Blackwall instead)
+    readonly property bool fxUnfold: Store.get("theme.effects.unfold", oldFx.unfold === true) === true && animOn && !cyber
     readonly property color card: Qt.alpha(oled ? "#000000" : m("surface_container_low", mix(_base, _s0, 0.55)), see)  // the hub, the dock
     // (with a palette: mantle, surface0, surface1; surface2 is ink in some styles)
     // (liquid glass: the groups, rows and chips inside a pane are see-through too)
@@ -151,7 +152,15 @@ Singleton {
     function ms(n) { return Math.round(n * animScale); }
     // how everything appears and goes: a fade with a little zoom (from popScale up to full size in,
     // back down out), popInMs / popOutMs long, on the enter / exit curves
-    readonly property real popScale: animOn ? 0.94 : 1
+    readonly property real popScale: animOn && !cyber ? 0.94 : 1
+    // Cyberpunk (styles.js glitch): what appears glitches in, what goes is taken by the Blackwall
+    // (ui/CyberFx). Scaled by the animation speed, but never under 60 % of it: at 3x the effects
+    // were over before they could be seen
+    readonly property bool cyber: Look.style.glitch === true && animOn
+    readonly property int fxInMs: animOn ? Math.round(420 * Math.max(0.6, animScale)) : 0
+    readonly property int fxOutMs: animOn ? Math.round(560 * Math.max(0.6, animScale)) : 0
+    // corners cut straight across (Cyberpunk): ui/SmoothRect draws them
+    readonly property bool chamfer: Look.style.chamfer === true
     readonly property int popInMs: Math.round(320 * animScale)
     readonly property int popOutMs: Math.round(180 * animScale)
 

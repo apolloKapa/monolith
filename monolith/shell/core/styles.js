@@ -10,6 +10,8 @@
 //   font                its typeface (used when installed; your own font setting wins)
 //   oled                true black backgrounds
 //   liquid              liquid glass: clearer panes, a light rim and shine, widgets bend what's behind them
+//   chamfer             corners cut straight across instead of rounded (Cyberpunk)
+//   glitch              things glitch in and the Blackwall takes them out (ui/CyberFx, Cyberpunk)
 //   colors              its palette (base, mantle, crust, surface0–2, overlay0–2, text, subtext0–1, accents)
 // (The looks and palettes are the earlier Monolith's styles.)
 var list = [
@@ -475,5 +477,44 @@ var list = [
    "maroon": "#e57373"
   },
   "id": "shadow"
+ },
+ {
+  "name": "Cyberpunk",
+  "opaque": true,
+  "chamfer": true,
+  "glitch": true,
+  "radiusScale": 1.5,
+  "outline": [
+   1,
+   1
+  ],
+  "outlineRole": "accentSoft",
+  "font": "Rajdhani",
+  "desc": "Neon on black, cut corners; things glitch in and the Blackwall takes them out",
+  "colors": {
+   "base": "#0a0a0f",
+   "mantle": "#07070b",
+   "crust": "#030305",
+   "surface0": "#12121a",
+   "surface1": "#1b1b27",
+   "surface2": "#262636",
+   "overlay0": "#3a3a52",
+   "overlay1": "#55557a",
+   "overlay2": "#7a7aa0",
+   "text": "#e6fbff",
+   "subtext0": "#8aa4b0",
+   "subtext1": "#b6c9d2",
+   "blue": "#00f0ff",
+   "sapphire": "#00b8ff",
+   "teal": "#00f0ff",
+   "mauve": "#00f0ff",
+   "pink": "#ff2a6d",
+   "green": "#05ffa1",
+   "yellow": "#fcee0a",
+   "peach": "#fcee0a",
+   "red": "#ff003c",
+   "maroon": "#c4002e"
+  },
+  "id": "cyberpunk"
  }
 ];

@@ -72,7 +72,15 @@ PanelWindow {
             height: fh
             smooth: true
             // held: where the pointer has it; then the flight (px, px/s, gravity px/s²)
-            property string phase: "held"        // held | fall | slide | back
+            property string phase: "held"        // held | fall | slide | back | wall
+            // Cyberpunk: let go, it isn't thrown off; it drifts on a little the way it was thrown
+            // while the Blackwall takes it
+            property real burn: 0
+            CyberFx { target: card; p: card.burn; going: true }
+            NumberAnimation {
+                id: burnAnim; target: card; property: "burn"; from: 0; to: 1; duration: Theme.fxOutMs
+                onFinished: Throw.land(card.modelData.id)
+            }
             property real dx: 0
             property real px: modelData.x
             property real py: modelData.y
@@ -84,7 +92,7 @@ PanelWindow {
             x: phase === "held" || phase === "back" ? modelData.x + dx : px
             y: phase === "held" || phase === "back" ? modelData.y : py
             // fades as it goes sideways (held and sliding); falling it stays solid
-            opacity: dropFade * (phase === "fall" ? 1 : Math.max(0, 1 - Math.abs(phase === "slide" ? travelled : dx) / (width * 1.1)))
+            opacity: dropFade * (phase === "fall" || phase === "wall" ? 1 : Math.max(0, 1 - Math.abs(phase === "slide" ? travelled : dx) / (width * 1.1)))
             // the press ripple, carried on from where it was when grabbed: it spreads to the edges
             // and fades, as on the card (the photograph has none: it froze half-grown there)
             readonly property var inkAt: fink !== "" ? JSON.parse(fink) : null
@@ -136,6 +144,7 @@ PanelWindow {
                     card.vx = vx; card.vy = mode === "fall" ? vy : 0;
                     card.spin = mode === "fall" ? Math.max(-720, Math.min(720, vx * 0.35 + (Math.random() - 0.5) * 120)) : 0;
                     card.phase = mode;
+                    if (Theme.cyber) { card.phase = "wall"; card.vy = 0; card.rotation = 0; burnAnim.restart(); }
                 }
                 function onDrop(id) { if (id === card.modelData.id && card.phase === "held") { card.phase = "drop"; dropAnim.restart(); } }
                 function onSpringBack(id) {
@@ -150,8 +159,10 @@ PanelWindow {
                     // on screen (two frames drawn, so the two overlap for a moment instead of
                     // leaving a gap): the real card can hide now
                     if (++card.frames === 2) Throw.ready(card.modelData.id);
-                    if (card.phase !== "fall" && card.phase !== "slide") return;
                     const dt = Math.min(0.05, frameTime);
+                    // (taken by the Blackwall: a slow drift the way it was thrown, nothing else)
+                    if (card.phase === "wall") { card.px += card.vx * dt * 0.12; return; }
+                    if (card.phase !== "fall" && card.phase !== "slide") return;
                     const falls = card.phase === "fall";
                     if (falls) {
                         card.vy += card.g * dt;

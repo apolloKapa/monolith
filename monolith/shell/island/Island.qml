@@ -689,8 +689,9 @@ PanelWindow {
         // (opening, the card itself is there at once, with its blur, and only zooms the last bit;
         // its contents fade in. Faded in, there was always a moment of a half-there panel: over
         // the sharp backdrop, or brighter than the end with the blur behind it. Closing, it fades)
-        opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (win.shown ? 1 : win.cardFade)
-        scale: Theme.fxUnfold ? 1 : Theme.popScale + (1 - Theme.popScale) * win.cardZoom
+        // (Cyberpunk: whole until it's gone, CyberFx glitches it in and the Blackwall takes it)
+        opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (win.shown ? 1 : (Theme.cyber ? (win.cardZoom > 0.002 ? 1 : 0) : win.cardFade))
+        scale: Theme.fxUnfold || Theme.cyber ? 1 : Theme.popScale + (1 - Theme.popScale) * win.cardZoom
         transform: Scale {
             origin.x: floatCard.width / 2; origin.y: floatCard.height / 2
             yScale: Theme.fxUnfold ? Math.max(0.006, floatCard.unfold) : 1
@@ -708,6 +709,7 @@ PanelWindow {
         }
         transformOrigin: onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
         CardShadow {}
+        CyberFx { target: floatCard; p: win.shown ? win.cardZoom : 1 - win.cardZoom; going: !win.shown }
         // (takes the clicks that land on the card but on nothing in it; dragging there moves it)
         MouseArea {
             id: cardDrag
@@ -752,13 +754,13 @@ PanelWindow {
     property real cardZoom: 0
     ParallelAnimation {
         id: cardIn
-        NumberAnimation { target: win; property: "cardFade"; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
-        NumberAnimation { target: win; property: "cardZoom"; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+        NumberAnimation { target: win; property: "cardFade"; to: 1; duration: Theme.cyber ? Theme.fxInMs : Theme.popInMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: win; property: "cardZoom"; to: 1; duration: Theme.cyber ? Theme.fxInMs : Theme.popInMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
     }
     ParallelAnimation {
         id: cardOut
-        NumberAnimation { target: win; property: "cardFade"; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
-        NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
+        NumberAnimation { target: win; property: "cardFade"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.popOutMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.popOutMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
     }
     onShownChanged: {
         if (shown) { cardOut.stop(); if (HubState.snap) { cardFade = 0; cardZoom = 0; } cardIn.restart(); }
@@ -858,7 +860,9 @@ PanelWindow {
         // blurred and the look only ever settles towards the final one. Switched on part-way, it
         // jumped: on at 40 % the bright blur shone through the half-faded card (a flash); on at
         // the end, the card came in over the sharp backdrop and the blur then swept in)
-        readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04 : win.shown)
+        // (Cyberpunk: once the card has mostly glitched in; from the start, an empty blurred box
+        // showed before any of the card did)
+        readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04 : win.shown && (!Theme.cyber || win.cardZoom > 0.7))
         readonly property real part: Theme.fxUnfold ? Math.max(0.01, floatCard.unfold) : 1
         // the card zooms in and out from its own corner or side: the blur shrinks with it
         readonly property real k: floatCard.scale

@@ -50,6 +50,7 @@ Rectangle {
     // (options that change while it's open: fitted again)
     onListHChanged: if (menu.visible) fit = PopFit.place(dd, listH, 4)
 
+    CyberFx { target: menu.contentItem ? menu.contentItem.parent : null; p: menu.going ? 1 - menu.fx : menu.fx; going: menu.going }
     QQC.Popup {
         id: menu
         y: dd.fit.y
@@ -66,12 +67,19 @@ Rectangle {
         // where it is instead of jumping to the start; closed it rests faded and zoomed out)
         opacity: 0
         scale: Theme.popScale
+        // (Cyberpunk: fx runs the glitch in and the Blackwall out, CyberFx above; it doesn't fade)
+        property real fx: 1
+        property bool going: false
+        onAboutToShow: going = false
+        onAboutToHide: going = true
         enter: Transition {
-            NumberAnimation { property: "opacity"; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "fx"; from: Theme.cyber ? 0 : 1; to: 1; duration: Theme.cyber ? Theme.fxInMs : 0 }
+            NumberAnimation { property: "opacity"; to: 1; duration: Theme.cyber ? 0 : Theme.popInMs; easing.type: Easing.OutCubic }
             NumberAnimation { property: "scale"; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
         }
         exit: Transition {
-            NumberAnimation { property: "opacity"; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "fx"; from: 1; to: 0; duration: Theme.cyber ? Theme.fxOutMs : 0 }
+            NumberAnimation { property: "opacity"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.popOutMs; easing.type: Theme.cyber ? Easing.InExpo : Easing.OutCubic }
             NumberAnimation { property: "scale"; to: Theme.popScale; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
         }
         background: SmoothRect {

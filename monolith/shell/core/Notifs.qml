@@ -73,7 +73,8 @@ Singleton {
     function popupsOn(output, first) { return popups.filter(p => (screenOf(p) || first) === output); }
     // popups on their way out: they stay in the list a moment so they can slide away
     property var leaving: ({})         // notification id -> true
-    readonly property int leaveMs: 240
+    // (Cyberpunk: as long as the Blackwall takes, Theme.fxOutMs)
+    readonly property int leaveMs: Theme.cyber ? Theme.fxOutMs : 240
     function _leave(list) {
         if (!list.length) return;
         const l = Object.assign({}, leaving);

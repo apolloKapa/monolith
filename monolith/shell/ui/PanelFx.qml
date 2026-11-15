@@ -4,10 +4,46 @@ import "../core"
 
 // Theme → Effects on a panel (the open island, floating menus, the dock): film grain over it and a
 // light along its top edge. Fill the panel with it, and give it the panel's corner radius.
+// The Cyberpunk style adds faint scanlines and HUD corner marks (a yellow tick along the top past
+// the cut corner, a cyan bracket at the bottom right).
 Item {
     id: fx
     property real radius: 0
-    visible: Theme.fxGrain || Theme.fxEdge
+    visible: Theme.fxGrain || Theme.fxEdge || Theme.chamfer
+    // ── Cyberpunk ──
+    Item {
+        id: scanSrc
+        anchors.fill: parent
+        visible: false
+        layer.enabled: Theme.chamfer
+        Image { anchors.fill: parent; source: "scan.png"; fillMode: Image.Tile; smooth: false }
+    }
+    MultiEffect {
+        anchors.fill: parent
+        visible: Theme.chamfer
+        source: scanSrc
+        opacity: 0.035
+        maskEnabled: true
+        maskSource: grainMask
+    }
+    Rectangle {
+        visible: Theme.chamfer && fx.width > 120
+        x: fx.radius + 10; y: 0
+        width: 38; height: 2
+        color: Theme.c("yellow", Theme.accent)
+    }
+    Rectangle {
+        visible: Theme.chamfer && fx.width > 120 && fx.height > 60
+        x: fx.width - fx.radius - 10 - width; y: fx.height - height
+        width: 22; height: 2
+        color: Theme.accent
+    }
+    Rectangle {
+        visible: Theme.chamfer && fx.width > 120 && fx.height > 60
+        x: fx.width - 2; y: fx.height - fx.radius - 10 - height
+        width: 2; height: 14
+        color: Theme.accent
+    }
     // grain: a still noise tile, faint, kept inside the rounded shape
     Item {
         id: grainSrc
@@ -24,7 +60,7 @@ Item {
         maskEnabled: true
         maskSource: grainMask
     }
-    SmoothRect { id: grainMask; anchors.fill: parent; radius: fx.radius; visible: false; layer.enabled: Theme.fxGrain }
+    SmoothRect { id: grainMask; anchors.fill: parent; radius: fx.radius; visible: false; layer.enabled: Theme.fxGrain || Theme.chamfer }
     // edge: a thin light along the top, brightest in the middle
     Rectangle {
         visible: Theme.fxEdge
