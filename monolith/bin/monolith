@@ -29,17 +29,13 @@ ipc() { quickshell ipc -p "$qml" call "$@"; }
 running() { pgrep -f "quickshell -p $qml" >/dev/null; }
 # started by the compositor (so it gets the session's environment): niri, or Hyprland
 on_hyprland() { [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; }
-# Qt's renderer for the shell: Vulkan when there's a Vulkan driver. With OpenGL every window of
-# the shell (about a dozen on two screens) gets its own GL context and driver threads; on Vulkan
-# they share one device: about a quarter less memory (366 -> 273 MB on two screens) and a third
-# of the threads. A QSG_RHI_BACKEND already set (opengl, to go back) is left alone.
-renderer() {
-    [ -n "$QSG_RHI_BACKEND" ] && { echo "$QSG_RHI_BACKEND"; return; }
-    for d in /usr/share/vulkan/icd.d /etc/vulkan/icd.d; do
-        ls "$d"/*.json >/dev/null 2>&1 && { echo vulkan; return; }
-    done
-    echo opengl
-}
+# Qt's renderer for the shell: OpenGL. Qt gives every window its own GPU device on Vulkan, and
+# each one starts at about 80 MB of video memory and 33 MB of system RAM (GTT) before it draws
+# anything; the shell has about a dozen windows. Measured on two screens (2560x1440 + 1920x1080):
+# Vulkan 994 MB VRAM + 194 MB GTT + 188 MB of its own; OpenGL 455 MB VRAM + 20 MB GTT + 248 MB.
+# (2.9.28 went to Vulkan on the process's own memory alone, which missed the GTT.) A
+# QSG_RHI_BACKEND already set (vulkan, to try it) is left alone.
+renderer() { echo "${QSG_RHI_BACKEND:-opengl}"; }
 start() {
     running && return
     rhi=$(renderer)
