@@ -28,6 +28,11 @@ pm_supports_os() {
 # Arch name -> atoms ("" when there's nothing to install, "src:x" for a source build)
 portage_atoms() {
     local name="$1"
+    # LibreWolf picked as Binary (Packages overview): the overlay's prebuilt librewolf-bin; Gentoo
+    # has no binary of it, and building it is a whole Firefox (hours)
+    case "$name" in librewolf|librewolf-bin)
+        if declare -f pick_of >/dev/null && [ "$(pick_of librewolf)" = b ]; then printf 'www-client/librewolf-bin'; return; fi ;;
+    esac
     if [[ -v PORTAGE_MAP["$name"] ]]; then
         local v="${PORTAGE_MAP[$name]}"
         [ "$v" = "-" ] && v=""
@@ -136,6 +141,9 @@ portage_write_conf() {
             "dev-cpp/cpptrace unwind" \
             "dev-libs/libdbusmenu gtk3" \
             "media-libs/libvpx postproc" \
+            "# no manual: its doc flag pulls in GNOME's help viewer and with it webkit-gtk, a browser" \
+            "# engine that takes hours to build" \
+            "media-sound/easyeffects -doc" \
             ${librewolf_llvm:+"# LibreWolf on the same LLVM as the installed Rust (no old Rust bootstrap chain)"} \
             ${librewolf_llvm:+"$librewolf_llvm"} \
             | sudo tee "$f" >/dev/null
@@ -148,6 +156,8 @@ portage_write_conf() {
             # map lines only: a comment that mentions "(guru)" isn't a package
             grep -E '^[^#[:space:]]+[[:space:]]+[a-z0-9-]+/[^[:space:]]+.*\((guru|librewolf)\)' "$PORTAGE_MAP_FILE" \
                 | awk -v k="~$arch" '{print $2, k}' | sort -u
+            # (LibreWolf picked as Binary comes as the overlay's librewolf-bin)
+            echo "www-client/librewolf-bin ~$arch"
         } | sudo tee "$f" >/dev/null
     fi
     # autounmask writes into the last file of each folder: give it ours
@@ -182,14 +192,37 @@ pm_prepare_repos() {
 # prebuild (37 of Monolith's 92) or prebuilds at an older version is compiled anyway
 PORTAGE_BIN_ATOMS=()
 PORTAGE_SRC_ATOMS=()
+# Monolith's own binhost (.github/workflows/binhost.yml): what Gentoo's doesn't prebuild, for the
+# stable branch, any x86-64 CPU. With it and Gentoo's, a stable system never compiles
+MONOLITH_BINHOST="${MONOLITH_BINHOST:-https://github.com/apolloKapa/monolith/releases/download/binhost}"
+portage_binrepo() {
+    local f=/etc/portage/binrepos.conf/monolith.conf
+    [ -f "$f" ] && grep -qF "$MONOLITH_BINHOST" "$f" && return 0
+    # (a stage3's single binrepos.conf file becomes a folder first)
+    if [ -f /etc/portage/binrepos.conf ]; then
+        sudo mv /etc/portage/binrepos.conf /etc/portage/binrepos.conf.d-gentoo
+        sudo mkdir -p /etc/portage/binrepos.conf
+        sudo mv /etc/portage/binrepos.conf.d-gentoo /etc/portage/binrepos.conf/gentoo.conf
+    fi
+    sudo mkdir -p /etc/portage/binrepos.conf
+    printf '%s\n' "# Written by the Monolith installer: Monolith's binary packages (what Gentoo doesn't prebuild)" \
+        "[monolith]" "priority = 2" "sync-uri = $MONOLITH_BINHOST" \
+        "location = /var/cache/binhost/monolith" "verify-signature = false" | sudo tee "$f" >/dev/null
+}
 portage_emerge() {
     local masks=() d bin=()
     for d in package.use package.accept_keywords package.license; do
         masks+=("/etc/portage/$d/zz-monolith-autounmask")
     done
     if [ ${#PORTAGE_BIN_ATOMS[@]} -gt 0 ]; then
-        bin=(--getbinpkg=y)
-        [ ${#PORTAGE_SRC_ATOMS[@]} -gt 0 ] && bin+=("--usepkg-exclude=${PORTAGE_SRC_ATOMS[*]}")
+        portage_binrepo
+        if [ ${#PORTAGE_SRC_ATOMS[@]} -gt 0 ]; then
+            bin=(--getbinpkg=y "--usepkg-exclude=${PORTAGE_SRC_ATOMS[*]}")
+        else
+            # nothing picked to compile: binaries only, nothing compiles (what has no binary
+            # anywhere stops the install and is named, instead of being built)
+            bin=(--getbinpkgonly=y)
+        fi
     fi
     sudo env CONFIG_PROTECT_MASK="${masks[*]}" \
         emerge --ask=n --noreplace --keep-going --with-bdeps=y \
@@ -230,9 +263,13 @@ portage_binhost_index() {
 # the package names (of these) Gentoo prebuilds, one a line (any version); nothing when the index
 # can't be had (then nothing is marked)
 pm_binary_pkgs() {
-    local idx p a have
+    local idx p a have mine="${XDG_CACHE_HOME:-$HOME/.cache}/monolith/binhost-monolith-Packages"
     idx=$(portage_binhost_index) || return 0
-    have=$(sed -n 's/^CPV: //p' "$idx" | sed 's/-[0-9][^ ]*$//' | sort -u)
+    # and Monolith's own (refreshed daily)
+    if [ ! -s "$mine" ] || [ -z "$(find "$mine" -mmin -1440 2>/dev/null)" ]; then
+        curl -fsL --max-time 30 -o "$mine.part" "$MONOLITH_BINHOST/Packages" && mv "$mine.part" "$mine" || rm -f "$mine.part"
+    fi
+    have=$(cat "$idx" "$mine" 2>/dev/null | sed -n 's/^CPV: //p' | sed 's/-[0-9][^ ]*$//' | sort -u)
     for p in "$@"; do
         a="$(portage_atoms "$p")"
         case "$a" in "" | src:* | unknown:*) continue ;; esac

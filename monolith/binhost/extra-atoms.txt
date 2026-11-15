@@ -1,0 +1,24 @@
+# gentoo-install's compile-only packages (its CATALOG, flag src): Gentoo has no binary of them
+app-arch/unrar
+app-misc/brightnessctl
+app-misc/fastfetch
+app-misc/jq
+app-misc/liquidctl
+app-misc/openrgb
+app-shells/fzf
+dev-util/clinfo
+dev-util/github-cli
+gui-apps/xwayland-satellite
+gui-wm/niri
+media-fonts/jetbrains-mono
+media-sound/pamixer
+media-sound/pavucontrol
+sys-apps/bolt
+sys-apps/coolercontrol
+sys-apps/fd
+sys-apps/flatpak
+sys-apps/lact
+sys-apps/usbutils
+sys-auth/rtkit
+sys-fs/ntfs3g
+x11-terms/kitty

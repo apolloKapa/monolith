@@ -1,0 +1,14 @@
+# What the Monolith installer writes (install/modules/pm/portage.sh, portage_write_conf)
+media-video/pipewire sound-server pipewire-alsa
+sys-apps/util-linux caps
+gui-wm/niri screencast dbus
+gui-apps/quickshell pipewire mpris pam policykit upower notifications bluetooth networkmanager
+media-gfx/imagemagick jpeg png webp svg
+app-text/tessdata_fast l10n_en
+media-sound/cava pipewire
+app-misc/fastfetch imagemagick
+dev-qt/qtmultimedia ffmpeg
+dev-cpp/cpptrace unwind
+dev-libs/libdbusmenu gtk3
+media-libs/libvpx postproc
+media-sound/easyeffects -doc

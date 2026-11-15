@@ -1,0 +1,26 @@
+# gentoo-install's package.use/system (keep in step with it)
+# kernel install + early microcode via dracut, grub.cfg regenerated on kernel updates
+sys-kernel/installkernel dracut grub
+sys-kernel/linux-firmware initramfs redistributable compress-zstd
+# pipewire replaces pulseaudio + jack (pipewire-pulse / pipewire-alsa / pipewire-jack on Arch)
+media-video/pipewire sound-server pipewire-alsa jack-sdk bluetooth extra flatpak
+media-video/wireplumber
+# no opencl: Mesa's rusticl needs a Rust built on Mesa's LLVM, an older one than dev-lang/rust
+# uses, and that one can only be bootstrapped from rust-bin. For OpenCL use ROCm (dev-libs/rocm-opencl-runtime).
+media-libs/mesa vulkan wayland X vaapi -opencl
+net-misc/networkmanager wifi bluetooth concheck tools
+gui-wm/niri dbus screencast systemd
+gui-apps/xwayland-satellite systemd
+app-misc/brightnessctl systemd udev
+sys-apps/lact gui
+net-wireless/blueman network policykit pulseaudio
+x11-terms/kitty wayland X
+# xorg-drivers maps radeonsi to xf86-video-ati, which needs libdrm's radeon bits
+x11-libs/libdrm video_cards_radeon
+# liquidctl (Kraken) and CoolerControl's qtwebengine
+sys-apps/coolercontrold liquidctl
+sys-apps/i2c-tools python
+# no debug symbols in the kernel: faster build, smaller /boot
+sys-kernel/gentoo-kernel -debug
+sys-libs/zlib minizip
+sys-boot/grub fonts themes truetype mount
