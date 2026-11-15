@@ -81,6 +81,8 @@ Item {
         // (a press outside the field closes it: "outside the list" counted the field too, so
         // pressing the field to close it closed it on the press and the click opened it again)
         closePolicy: QQC.Popup.CloseOnEscape | QQC.Popup.CloseOnPressOutsideParent
+        onOpened: HubState.claimPop(cp, pop.contentItem.parent)
+        onClosed: HubState.releasePop(cp)
         background: SmoothRect {
             radius: Theme.corner(48, 6)
             color: Theme.frame

@@ -59,7 +59,8 @@ Rectangle {
             NumberAnimation { property: "opacity"; to: 0; duration: Theme.popOutMs; easing.type: Easing.OutCubic }
             NumberAnimation { property: "scale"; to: Theme.popScale; duration: Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
         }
-        onOpened: { fp.filter = ""; search.text = ""; search.forceActiveFocus(); list.positionViewAtIndex(Math.max(0, fp.shown.indexOf(fp.value)), ListView.Center); }
+        onClosed: HubState.releasePop(fp)
+        onOpened: { HubState.claimPop(fp, pop.contentItem.parent); fp.filter = ""; search.text = ""; search.forceActiveFocus(); list.positionViewAtIndex(Math.max(0, fp.shown.indexOf(fp.value)), ListView.Center); }
         background: SmoothRect {
             radius: Theme.corner(48, 6)
             color: Theme.frame

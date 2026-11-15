@@ -40,6 +40,15 @@ Singleton {
     readonly property bool peekWanted: peekModuleHover || peekCardHover
     onPeekWantedChanged: if (peekWanted) peekHide.stop(); else peekHide.restart()
     property Timer peekHide: Timer { interval: 280; onTriggered: hub.peekScreen = "" }
+    // an open drop-down list (ui/Dropdown, FontPicker, ColourPick), in its window's coordinates:
+    // Settings' window takes clicks only on its card, so the part of a list hanging past the
+    // card's edge couldn't be clicked; the window takes clicks there too while it's open
+    property var popArea: null
+    function claimPop(owner, item) {
+        const p = item.mapToItem(null, 0, 0);
+        popArea = { owner: owner, x: p.x, y: p.y, w: item.width, h: item.height };
+    }
+    function releasePop(owner) { if (popArea && popArea.owner === owner) popArea = null; }
     property string page: "search"
     property string screenName: ""
     readonly property var pages: ["search", "quick", "notifications", "media", "calendar", "sound", "network", "clipboard", "windows", "capture", "gaming", "tools", "wellbeing", "keys", "settings"]

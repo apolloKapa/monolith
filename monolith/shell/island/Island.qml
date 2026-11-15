@@ -58,6 +58,18 @@ PanelWindow {
             y: Math.floor(floatCard.y + (floatCard.height - floatCard.height * k) * blurBox.fy)
         }
         Region { item: win.dropped || drop.height > 1 ? dropBody : null }
+        // an open drop-down list in this window, also where it hangs past the card
+        Region {
+            readonly property var a: win.popHere ? HubState.popArea : null
+            x: a ? Math.floor(a.x) : 0; y: a ? Math.floor(a.y) : 0
+            width: a ? Math.ceil(a.w) + 1 : 0; height: a ? Math.ceil(a.h) + 1 : 0
+        }
+    }
+    readonly property bool popHere: {
+        const a = HubState.popArea;
+        if (!a) return false;
+        for (let p = a.owner; p; p = p.parent) if (p === floatCard || p === drop) return true;
+        return false;
     }
     Item { id: fullArea; anchors.fill: parent }
 
@@ -647,10 +659,16 @@ PanelWindow {
         // clear of the bar, wherever it is
         readonly property real leftRoom: 16 + (Theme.barSide === "left" ? Theme.sideRoom : 0)
         readonly property real rightRoom: 16 + (Theme.barSide === "right" ? Theme.sideRoom : 0)
-        x: onLeft ? leftRoom : (onRight ? win.width - width - rightRoom : Math.round((win.width - width) / 2))
+        readonly property real homeX: onLeft ? leftRoom : (onRight ? win.width - width - rightRoom : Math.round((win.width - width) / 2))
+        // moved by hand (drag an empty part of it): kept for each menu; a double-click on an empty
+        // part puts it back. Always kept on the screen
+        readonly property var moved: Store.get("menus.moved." + HubState.page, null)
+        property point dragBy: Qt.point(0, 0)
+        x: Math.round(Math.max(0, Math.min(win.width - width, homeX + (moved ? Number(moved.x) || 0 : 0) + dragBy.x)))
         readonly property real topRoom: win.bottom || win.side ? 16 : Theme.islandH + Theme.barMargin + 14
         readonly property real bottomRoom: win.bottom ? Theme.islandH + Theme.barMargin + 14 : 16
-        y: onTop ? topRoom : (onBottom ? win.height - height - bottomRoom : Math.max(topRoom, Math.min(win.height - height - bottomRoom, Math.round((win.height - height) / 2))))
+        readonly property real homeY: onTop ? topRoom : (onBottom ? win.height - height - bottomRoom : Math.max(topRoom, Math.min(win.height - height - bottomRoom, Math.round((win.height - height) / 2))))
+        y: Math.round(Math.max(0, Math.min(win.height - height, homeY + (moved ? Number(moved.y) || 0 : 0) + dragBy.y)))
         radius: Theme.islandRadius
         color: Theme.frame
         border.width: Theme.outlineW
@@ -681,7 +699,32 @@ PanelWindow {
         }
         transformOrigin: onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
         CardShadow {}
-        MouseArea { anchors.fill: parent }
+        // (takes the clicks that land on the card but on nothing in it; dragging there moves it)
+        MouseArea {
+            id: cardDrag
+            anchors.fill: parent
+            property point from: Qt.point(0, 0)
+            property bool moving: false
+            cursorShape: moving ? Qt.ClosedHandCursor : Qt.ArrowCursor
+            onPressed: m => { from = mapToItem(null, m.x, m.y); moving = false; }
+            onPositionChanged: m => {
+                if (!pressed) return;
+                const p = mapToItem(null, m.x, m.y);
+                const d = Qt.point(p.x - from.x, p.y - from.y);
+                if (!moving && Math.abs(d.x) + Math.abs(d.y) < 6) return;
+                moving = true;
+                floatCard.dragBy = d;
+            }
+            onReleased: {
+                if (!moving) return;
+                moving = false;
+                // kept as where it ended up (on the screen), from its usual place
+                Store.set("menus.moved." + HubState.page, { x: floatCard.x - floatCard.homeX, y: floatCard.y - floatCard.homeY });
+                floatCard.dragBy = Qt.point(0, 0);
+            }
+            onCanceled: { moving = false; floatCard.dragBy = Qt.point(0, 0); }
+            onDoubleClicked: Store.unset("menus.moved." + HubState.page)
+        }
         PanelFx { anchors.fill: parent; radius: floatCard.radius }
         // what's inside (openArea) is laid out at the size the menu is going to; this keeps it
         // within the card while the card grows to that size (it showed past the card's edges)

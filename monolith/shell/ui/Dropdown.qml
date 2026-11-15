@@ -80,7 +80,9 @@ Rectangle {
             border.width: Math.max(1, Theme.outlineW)
             border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
         }
+        onClosed: HubState.releasePop(dd)
         onOpened: {
+            HubState.claimPop(dd, menu.contentItem.parent);
             // the picked one in view
             // (worked out from the rows' heights too: not laid out yet on the first opening)
             const i = dd.opts.findIndex(o => String(o[0]) === dd.value);
