@@ -111,6 +111,17 @@ fi
 STEP_TOTAL=5
 [ "$OPT_SDDM" = true ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 [ "$WALLPAPERS" != none ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
+
+# the password once, up front: sudo forgets it after a few minutes, and a long build (Portage can
+# take hours) left the next package asking again, halfway through, maybe with no one there. Kept
+# fresh every minute until the installer ends
+if [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null; then
+    sudo -v || die "Monolith needs sudo to install its packages."
+    ( while kill -0 "$$" 2>/dev/null; do sudo -n true 2>/dev/null; sleep 60; done ) &
+    SUDO_KEEPALIVE=$!
+    trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null; cleanup_terminal' EXIT
+fi
+
 step "Packages"
 install_dependencies "$PROJECT_ROOT" "$INSTALL_STATE"
 
