@@ -798,32 +798,39 @@ PanelWindow {
             readonly property bool on: blurShape.barOn && solidBg.visible
             x: island.x; y: island.y
             width: on ? island.width : 0; height: on ? island.height : 0
-            radius: solidBg.radius
+            radius: Theme.chamfer ? 0 : solidBg.radius
+            CutBlur { bx: island.x; by: island.y; bw: island.width; bh: island.height; c: solidBg.r }
         }
         // Modular: only its pills (not the gaps between them)
         readonly property bool pillsOn: blurShape.barOn && !solidBg.visible && Theme.barStyle === "modular"
         readonly property real pillX: island.x + body.x + bar.x
         readonly property real pillY: island.y + body.y + bar.y
         Region {
+            id: pillRegL
             readonly property Item p: bar.leftPill
             readonly property bool on: blurShape.pillsOn && p.visible
             x: blurShape.pillX + p.x; y: blurShape.pillY + p.y
             width: on ? p.width : 0; height: on ? p.height : 0
-            radius: p.radius
+            radius: Theme.chamfer ? 0 : p.radius
+            CutBlur { bx: blurShape.pillX + pillRegL.p.x; by: blurShape.pillY + pillRegL.p.y; bw: pillRegL.p.width; bh: pillRegL.p.height; c: pillRegL.p.r }
         }
         Region {
+            id: pillRegM
             readonly property Item p: bar.midPill
             readonly property bool on: blurShape.pillsOn && p.visible
             x: blurShape.pillX + p.x; y: blurShape.pillY + p.y
             width: on ? p.width : 0; height: on ? p.height : 0
-            radius: p.radius
+            radius: Theme.chamfer ? 0 : p.radius
+            CutBlur { bx: blurShape.pillX + pillRegM.p.x; by: blurShape.pillY + pillRegM.p.y; bw: pillRegM.p.width; bh: pillRegM.p.height; c: pillRegM.p.r }
         }
         Region {
+            id: pillRegR
             readonly property Item p: bar.rightPill
             readonly property bool on: blurShape.pillsOn && p.visible
             x: blurShape.pillX + p.x; y: blurShape.pillY + p.y
             width: on ? p.width : 0; height: on ? p.height : 0
-            radius: p.radius
+            radius: Theme.chamfer ? 0 : p.radius
+            CutBlur { bx: blurShape.pillX + pillRegR.p.x; by: blurShape.pillY + pillRegR.p.y; bw: pillRegR.p.width; bh: pillRegR.p.height; c: pillRegR.p.r }
         }
         // the hanging shapes (Island, Fill, Frame): square against the edge, its ears too
         EdgeBlur {
@@ -839,8 +846,14 @@ PanelWindow {
             bx: drop.x + drop.e; by: drop.y; bw: drop.bodyW; bh: drop.height
             r: drop.rr; e: drop.e
         }
-        Region { item: blurBox.on ? blurBox : null; radius: floatCard.blurRadius * blurBox.k }
-        Region { item: toastCard.on && toastCard.opacity > 0.6 ? toastCard : null; radius: toastCard.blurRadius }
+        Region {
+            item: blurBox.on ? blurBox : null; radius: floatCard.blurRadius * blurBox.k
+            CutBlur { bx: blurBox.x; by: blurBox.y; bw: blurBox.width; bh: blurBox.height; c: floatCard.r * blurBox.k }
+        }
+        Region {
+            item: toastCard.on && toastCard.opacity > 0.6 ? toastCard : null; radius: toastCard.blurRadius
+            CutBlur { bx: toastCard.x; by: toastCard.y; bw: toastCard.width; bh: toastCard.height; c: toastCard.r }
+        }
     }
     // Where the floating card's blur is. The blur can't fade: it's there or it isn't. Kept on
     // until the card had faded out, it stayed behind as an empty blurred box after the menu

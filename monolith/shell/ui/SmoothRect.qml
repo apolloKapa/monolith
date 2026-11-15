@@ -25,7 +25,8 @@ Item {
     readonly property bool curved: cut || (smoothing > 0.01 && r >= 4 && expo > 2.05)
     // for a blur region behind it (regions only have round corners): a circle this big sits
     // just inside the continuous corner, so no blur shows past the edge
-    readonly property real blurRadius: curved ? extent : r
+    // (a cut one: square, with ui/CutBlur taking the cut corner out of the region)
+    readonly property real blurRadius: cut ? 0 : (curved ? extent : r)
     readonly property bool painted: color.a > 0.002 || (border.width > 0 && border.color.a > 0.002)
 
     Rectangle {

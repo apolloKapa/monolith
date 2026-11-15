@@ -600,5 +600,6 @@ PanelWindow {
         id: blurShape
         item: dock.shown ? capsule : null
         radius: capsule.blurRadius
+        CutBlur { on: Theme.chamfer && dock.shown; bx: capsule.x; by: capsule.y; bw: capsule.width; bh: capsule.height; c: capsule.r }
     }
 }

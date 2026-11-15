@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import "../core"
 
 // A blur region cut exactly like an IslandShape: a body (x, y, w × h, in the window) against
 // one screen edge, square where it meets the edge and rounded (r) on the inner corners, with
@@ -18,7 +19,10 @@ Region {
     property real e: 0
     readonly property bool vert: edge === "left" || edge === "right"
     readonly property int ee: on ? Math.round(Math.max(0, e)) : 0
-    readonly property int rr: Math.round(Math.max(0, r))
+    // (Cyberpunk: the inner corners square, and the one away from the edge's right end cut,
+    // as ui/IslandShape draws it)
+    readonly property int rr: Theme.chamfer ? 0 : Math.round(Math.max(0, r))
+    CutBlur { on: Theme.chamfer && g.on && g.edge === "top"; bx: g.x; by: g.y; bw: g.width; bh: g.height; c: g.r }
 
     x: Math.round(bx); y: Math.round(by)
     width: on ? Math.round(bw) : 0
