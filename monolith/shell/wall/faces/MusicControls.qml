@@ -14,13 +14,14 @@ FaceBase {
     Glass { anchors.fill: parent; ctx: f.ctx; radius: Theme.corner(80, 16) }
     Fit {
         dw: 380; dh: 160
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             id: art
             x: 14; y: 14; width: 92; height: 92; radius: Theme.corner(92, 8); color: Theme.control; clip: true
             Icon { anchors.centerIn: parent; name: "music_note"; size: 36; color: Theme.subtext; visible: cov.status !== Image.Ready }
             Image { id: cov; anchors.fill: parent; source: f.p ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; visible: false; asynchronous: true }
             MultiEffect { anchors.fill: parent; source: cov; visible: cov.status === Image.Ready; maskEnabled: true; maskSource: am }
-            Rectangle { id: am; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
+            SmoothRect { smoothing: 0; id: am; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
         }
         Column {
             anchors.left: art.right; anchors.leftMargin: 14; anchors.right: parent.right; anchors.rightMargin: 14
@@ -52,8 +53,8 @@ FaceBase {
         }
         Item {
             x: 14; y: 120; width: parent.width - 28; height: 30
-            Rectangle { y: 4; width: parent.width; height: 5; radius: 3; color: Qt.alpha(Theme.text, 0.15)
-                Rectangle { height: parent.height; radius: 3; color: Theme.accent; width: f.p && f.p.length > 0 ? parent.width * Math.min(1, pp.shown / f.p.length) : 0 } }
+            Rectangle { y: 4; width: parent.width; height: 5; radius: Theme.chamfer ? 0 : 3; color: Qt.alpha(Theme.text, 0.15)
+                Rectangle { height: parent.height; radius: Theme.chamfer ? 0 : 3; color: Theme.accent; width: f.p && f.p.length > 0 ? parent.width * Math.min(1, pp.shown / f.p.length) : 0 } }
             Text { y: 13; text: f.p ? f.mmss(pp.shown) : "0:00"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 11 }
             Text { y: 13; anchors.right: parent.right; text: f.p ? f.mmss(f.p.length) : "0:00"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 11 }
         }

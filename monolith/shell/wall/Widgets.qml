@@ -46,7 +46,7 @@ Item {
                 enabled: parent.modelData.type === "image"
                 onEntered: d => { d.accepted = d.hasUrls; }
                 onDropped: d => { const f = Pictures.fromDrop(d.urls); if (f !== "") { WidgetLayout.setOpt("desktop", parent.modelData.id, "imagePath", f); d.accept(); } }
-                Rectangle { anchors.fill: parent; visible: drop.containsDrag; radius: 12; color: Qt.alpha(Theme.accent, 0.18); border.width: 2; border.color: Theme.accent }
+                SmoothRect { smoothing: 0; anchors.fill: parent; visible: drop.containsDrag; radius: 12; color: Qt.alpha(Theme.accent, 0.18); border.width: 2; border.color: Theme.accent }
             }
             // right-click: this widget's menu (its style, the editor, remove)
             MouseArea {

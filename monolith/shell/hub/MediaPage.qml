@@ -94,10 +94,10 @@ Page {
             maskEnabled: true
             maskSource: bdMask
         }
-        Rectangle { id: bdMask; anchors.fill: parent; radius: Theme.corner(80, 14); visible: false; layer.enabled: true }
+        SmoothRect { smoothing: 0; id: bdMask; anchors.fill: parent; radius: Theme.corner(80, 14); visible: false; layer.enabled: true }
         Rectangle {
             anchors.fill: parent
-            radius: Theme.corner(80, 14)
+            radius: Theme.chamfer ? 0 : (Theme.corner(80, 14))
             gradient: Gradient {
                 GradientStop { position: 0; color: Qt.alpha(page.tone, 0.10) }
                 GradientStop { position: 0.55; color: "transparent" }
@@ -110,7 +110,8 @@ Page {
         visible: !page.player
         anchors.centerIn: parent
         spacing: 12
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             anchors.horizontalCenter: parent.horizontalCenter
             width: 96; height: 96; radius: Theme.corner(96, 12)
             color: Theme.container
@@ -292,7 +293,7 @@ Page {
                     anchors.verticalCenter: parent.verticalCenter
                     color: hovered ? Qt.alpha(Theme.text, 0.1) : "transparent"
                     Icon { anchors.centerIn: parent; name: parent.icon; filled: !parent.side; size: parent.side ? 20 : 28; color: parent.on ? page.tone : (parent.enabledInput ? Theme.text : Theme.faint) }
-                    Rectangle { visible: parent.side && parent.on; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 3; width: 4; height: 4; radius: 2; color: page.tone }
+                    Rectangle { visible: parent.side && parent.on; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 3; width: 4; height: 4; radius: Theme.chamfer ? 0 : 2; color: page.tone }
                 }
                 Ctl {
                     side: true; icon: "shuffle"
@@ -436,12 +437,12 @@ Page {
                             anchors.horizontalCenter: parent.horizontalCenter
                             width: 8
                             height: parent.height - 42
-                            radius: 4
+                            radius: Theme.chamfer ? 0 : 4
                             color: Qt.alpha(Theme.text, 0.12)
                             readonly property real mid: height / 2
                             // the fill, from the middle (0 dB) up or down
                             Rectangle {
-                                width: parent.width; radius: 4
+                                width: parent.width; radius: Theme.chamfer ? 0 : 4
                                 color: page.tone
                                 readonly property real off: Math.abs(bandItem.g) / 12 * track.mid
                                 y: bandItem.g >= 0 ? track.mid - off : track.mid

@@ -132,7 +132,8 @@ ColumnLayout {
 
         Repeater {
             model: arr.mons
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 id: mon
                 required property var modelData
                 readonly property var p: arr.pos[modelData.name] || [0, 0]

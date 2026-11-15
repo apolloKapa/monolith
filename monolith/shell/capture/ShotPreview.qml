@@ -93,7 +93,7 @@ PanelWindow {
                 }
                 // it goes in a moment: a thin line running out
                 Rectangle {
-                    anchors.bottom: parent.bottom; height: 3; color: Theme.accent; radius: 1.5
+                    anchors.bottom: parent.bottom; height: 3; color: Theme.accent; radius: Theme.chamfer ? 0 : 1.5
                     width: parent.width * (hov.hovered ? 1 : win.remain)
                 }
             }

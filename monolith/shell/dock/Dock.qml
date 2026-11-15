@@ -325,7 +325,8 @@ PanelWindow {
                         onCanceled: { moved = false; dock.endDrag(false); }
                     }
                     // editing: unpin
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0
                         visible: scale > 0.01
                         scale: dock.editing ? 1 : 0
                         Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack; easing.overshoot: 2 } }
@@ -376,7 +377,7 @@ PanelWindow {
                         spacing: 3
                         Repeater {
                             model: Math.min(3, app.wins.length)
-                            Rectangle { width: app.focused ? 10 : 5; height: 4; radius: 2; color: app.focused ? Theme.accent : Theme.subtext }
+                            Rectangle { width: app.focused ? 10 : 5; height: 4; radius: Theme.chamfer ? 0 : 2; color: app.focused ? Theme.accent : Theme.subtext }
                         }
                     }
                 }

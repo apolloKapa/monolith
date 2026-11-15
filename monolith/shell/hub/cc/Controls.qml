@@ -62,7 +62,8 @@ RowLayout {
         Rise {}
         radius: Theme.corner(56, 8)
         color: on ? Theme.accentContainer : Theme.containerHigh
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             id: tb
             x: 14; y: 14
             width: 40; height: 40
@@ -77,7 +78,7 @@ RowLayout {
         Rectangle {
             anchors.right: parent.right; anchors.rightMargin: 16
             y: 18
-            width: tile.on ? 22 : 8; height: 8; radius: 4
+            width: tile.on ? 22 : 8; height: 8; radius: Theme.chamfer ? 0 : 4
             color: tile.on ? Theme.accent : Theme.faint
             // (breathes while the system catches up)
             id: dot
@@ -298,7 +299,7 @@ RowLayout {
                         color: "#ffffff"
                     }
                 }
-                Rectangle { id: coverMask; anchors.fill: parent; radius: cover.radius; visible: false; layer.enabled: true; layer.smooth: true }
+                SmoothRect { smoothing: 0; id: coverMask; anchors.fill: parent; radius: cover.radius; visible: false; layer.enabled: true; layer.smooth: true }
             }
             Column {
                 x: 18
@@ -312,10 +313,10 @@ RowLayout {
                 // progress
                 Rectangle {
                     visible: !!cc.player && cc.player.lengthSupported
-                    width: parent.width; height: 4; radius: 2
+                    width: parent.width; height: 4; radius: Theme.chamfer ? 0 : 2
                     color: Theme.ringTrack
                     Rectangle {
-                        height: parent.height; radius: 2
+                        height: parent.height; radius: Theme.chamfer ? 0 : 2
                         color: Theme.accent
                         width: cc.player && cc.player.length > 0 ? parent.width * Math.min(1, cc.player.position / cc.player.length) : 0
                     }
@@ -445,7 +446,7 @@ RowLayout {
                             }
                         }
                     }
-                    Rectangle { id: fillMask; anchors.fill: parent; radius: pb.radius; visible: false; layer.enabled: true }
+                    SmoothRect { smoothing: 0; id: fillMask; anchors.fill: parent; radius: pb.radius; visible: false; layer.enabled: true }
 
                     Item {
                         id: face

@@ -17,7 +17,7 @@ FaceBase {
                 required property int index
                 width: f.width; height: f.rowH
                 Glass { anchors.fill: parent; ctx: f.ctx; radius: Theme.corner(54, 8); dy: index * (f.rowH + 8) }
-                Rectangle { id: nb; x: 8; width: 38; height: 38; radius: 19; anchors.verticalCenter: parent.verticalCenter; color: Theme.accentContainer
+                SmoothRect { smoothing: 0; id: nb; x: 8; width: 38; height: 38; radius: 19; anchors.verticalCenter: parent.verticalCenter; color: Theme.accentContainer
                     Icon { anchors.centerIn: parent; name: "notifications"; size: 19; filled: true; color: Theme.onAccentContainer } }
                 Column {
                     anchors.left: nb.right; anchors.leftMargin: 10; anchors.right: parent.right; anchors.rightMargin: 14

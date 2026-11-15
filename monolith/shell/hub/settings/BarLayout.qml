@@ -53,7 +53,7 @@ ColumnLayout {
                 onClicked: sp.picked(modelData[0])
                 Rectangle {
                     x: 8; y: 8; width: parent.width - 16; height: Theme.islandH
-                    radius: height / 2; color: Theme.frame; clip: true
+                    radius: Theme.chamfer ? 0 : (height / 2); color: Theme.frame; clip: true
                     IslandBar {
                         id: mod
                         anchors.centerIn: parent
@@ -217,7 +217,8 @@ ColumnLayout {
     }
 
     // a module chip: grab it and move it
-    component Chip: Rectangle {
+    component Chip: SmoothRect {
+        smoothing: 0
         id: chip
         // the editor (inline components can't see the file's ids from their handlers)
         property var ed: null
@@ -263,7 +264,8 @@ ColumnLayout {
     }
 
     // a zone of the bar: its chips in order
-    component BarZone: Rectangle {
+    component BarZone: SmoothRect {
+        smoothing: 0
         id: bz
         property var ed: null
         property string zone: ""
@@ -390,7 +392,8 @@ ColumnLayout {
         spacing: 8
         Repeater {
             model: [["", "None"], ["accent", "Accent"], ["primary", ""], ["secondary", ""], ["tertiary", ""], ["text", ""], ["white", ""]].filter(c => vcl.d !== "accent" || c[0] !== "")
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 required property var modelData
                 readonly property bool on: vcl.val === modelData[0]
                 width: 30; height: 30; radius: 15
@@ -400,7 +403,7 @@ ColumnLayout {
                 border.width: 1
                 border.color: Theme.hairline
                 // the picked one: a ring round it
-                Rectangle { anchors.fill: parent; anchors.margins: -4; radius: width / 2; color: "transparent"; border.width: 2; border.color: Theme.text; visible: parent.on }
+                Rectangle { anchors.fill: parent; anchors.margins: -4; radius: Theme.chamfer ? 0 : (width / 2); color: "transparent"; border.width: 2; border.color: Theme.text; visible: parent.on }
                 Icon { anchors.centerIn: parent; visible: parent.modelData[0] === ""; name: "format_color_reset"; size: 16; color: Theme.subtext }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Store.set("bar.vis." + vcl.k, parent.modelData[0]) }
             }
@@ -443,13 +446,14 @@ ColumnLayout {
                     spacing: 6
                     Icon { name: modelData[2]; size: 17; filled: parent.parent.on; color: parent.parent.on ? Theme.onAccentContainer : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
                     Label { text: modelData[1]; strong: parent.parent.on; color: parent.parent.on ? Theme.onAccentContainer : Theme.text; font.pixelSize: Theme.sizeSmall + 1; anchors.verticalCenter: parent.verticalCenter }
-                    Rectangle { visible: parent.parent.onBar; width: 6; height: 6; radius: 3; color: parent.parent.on ? Theme.onAccentContainer : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+                    Rectangle { visible: parent.parent.onBar; width: 6; height: 6; radius: Theme.chamfer ? 0 : 3; color: parent.parent.on ? Theme.onAccentContainer : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
                 }
             }
         }
     }
     // a module on a piece of bar, twice its real size
-    component ModPreview: Rectangle {
+    component ModPreview: SmoothRect {
+        smoothing: 0
         id: mp
         property string module: ""
         property string empty: "Nothing to show right now"

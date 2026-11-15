@@ -23,7 +23,8 @@ ColumnLayout {
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
         }
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 12
             width: wn.implicitWidth + 20; height: 28; radius: 14
             color: Qt.alpha(Theme.frame, 0.85)

@@ -452,12 +452,13 @@ ColumnLayout {
             y: pic ? (pic.y - Sketch.oy) * Sketch.z + rev * 0 : 0
             width: pic ? pic.w * Sketch.z + rev * 0 : 0
             height: pic ? pic.h * Sketch.z + rev * 0 : 0
-            Rectangle { anchors.fill: parent; anchors.margins: -1; color: "transparent"; border.width: 2; border.color: Theme.accent; radius: 2 }
+            Rectangle { anchors.fill: parent; anchors.margins: -1; color: "transparent"; border.width: 2; border.color: Theme.accent; radius: Theme.chamfer ? 0 : 2 }
             // eight handles: the corners (round: keep the shape; Shift stretches) and the sides
             // (bars: stretch it one way)
             Repeater {
                 model: [[0, 0], [0.5, 0], [1, 0], [0, 0.5], [1, 0.5], [0, 1], [0.5, 1], [1, 1]]
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     required property var modelData
                     readonly property bool side: modelData[0] === 0.5 || modelData[1] === 0.5
                     width: side ? (modelData[0] === 0.5 ? 22 : 8) : 14
@@ -484,7 +485,8 @@ ColumnLayout {
                 drop.accept(Qt.CopyAction);
             }
         }
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             anchors.fill: parent
             visible: drop.containsDrag
             color: Qt.alpha(Theme.accent, 0.12)
@@ -715,7 +717,8 @@ ColumnLayout {
         spacing: 6
         clip: true
         model: saved
-        delegate: Rectangle {
+        delegate: SmoothRect {
+            smoothing: 0
             id: th
             required property string filePath
             required property url fileUrl
@@ -754,7 +757,8 @@ ColumnLayout {
         spacing: 5
         Repeater {
             model: [Theme.accent, Theme.text, Theme.danger, "#ff8a3d", "#f2c230", "#3a9e3a", "#2fb5a8", "#2f6fdb", "#a855f7", "#ec4899", "#ffffff", "#000000"]
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 required property var modelData
                 readonly property bool on: Qt.colorEqual(d.ink, modelData)
                 width: 22; height: 22; radius: 11

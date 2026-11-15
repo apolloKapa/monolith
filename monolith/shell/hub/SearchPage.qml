@@ -396,7 +396,8 @@ Page {
         boundsBehavior: Flickable.StopAtBounds
         highlightMoveDuration: Theme.moveMs
         highlightMoveVelocity: -1
-        highlight: Rectangle {
+        highlight: SmoothRect {
+            smoothing: 0
             radius: Theme.corner(page.rowH)
             color: Theme.selected
         }

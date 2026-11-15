@@ -36,9 +36,11 @@ FaceBase {
             Item {
                 visible: f.showGoal
                 width: parent.width; height: 22
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     y: 0; width: parent.width; height: 7; radius: Theme.corner(7); color: Qt.alpha(Theme.text, 0.12)
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0
                         height: parent.height; radius: parent.radius
                         width: Math.max(7, parent.width * Math.min(1, wd.total / Math.max(1, wd.goal)))
                         color: wd.total > wd.goal ? Theme.danger : f.accentC
@@ -61,7 +63,7 @@ FaceBase {
                     Text { anchors.left: ai.right; anchors.leftMargin: 7; anchors.right: at.left; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter
                            text: parent.modelData.name; elide: Text.ElideRight; color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 12 }
                     Text { id: at; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; text: wd.fmtShort(parent.modelData.secs); color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
-                    Rectangle { anchors.bottom: parent.bottom; x: 23; width: (parent.width - 23) * parent.modelData.secs / Math.max(1, wd.total); height: 2; radius: 1; color: Qt.alpha(f.accentC, 0.6) }
+                    Rectangle { anchors.bottom: parent.bottom; x: 23; width: (parent.width - 23) * parent.modelData.secs / Math.max(1, wd.total); height: 2; radius: Theme.chamfer ? 0 : 1; color: Qt.alpha(f.accentC, 0.6) }
                 }
             }
             Text { visible: wd.top.length === 0; text: Wellbeing.tracking ? "Nothing yet today" : "Screen time is off (Wellbeing → gear)"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11 }

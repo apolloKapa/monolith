@@ -52,7 +52,7 @@ PanelWindow {
         color: "transparent"
         border.width: 2
         border.color: Theme.accent
-        radius: 2
+        radius: Theme.chamfer ? 0 : 2
     }
     Repeater {
         model: win.mine && !win.screenMode && Capture.hasSel ? 4 : 0
@@ -60,7 +60,7 @@ PanelWindow {
             required property int index
             readonly property bool r: index % 2 === 1
             readonly property bool b: index >= 2
-            width: 14; height: 14; radius: 7
+            width: 14; height: 14; radius: Theme.chamfer ? 0 : 7
             x: (r ? Capture.sel.x + Capture.sel.width : Capture.sel.x) - 7
             y: (b ? Capture.sel.y + Capture.sel.height : Capture.sel.y) - 7
             color: Theme.accent
@@ -68,7 +68,8 @@ PanelWindow {
             border.color: Theme.onAccent
         }
     }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0
         visible: win.mine && !win.screenMode && Capture.hasSel
         x: Math.min(Capture.sel.x, win.width - width - 8)
         y: Capture.sel.y > 34 ? Capture.sel.y - 30 : Capture.sel.y + Capture.sel.height + 8
@@ -233,7 +234,8 @@ PanelWindow {
             }
         }
         // the hint before anything is picked
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             visible: !Capture.hasSel
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.top

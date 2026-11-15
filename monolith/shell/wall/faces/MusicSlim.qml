@@ -159,8 +159,8 @@ FaceBase {
                     anchors.right: spk.left; anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
                     width: Math.max(60, f.width * 0.22); height: 6
-                    Rectangle { anchors.fill: parent; radius: 3; color: Qt.alpha(Theme.text, 0.15) }
-                    Rectangle { width: parent.width * f.volume; height: parent.height; radius: 3; color: f.accentC }
+                    Rectangle { anchors.fill: parent; radius: Theme.chamfer ? 0 : 3; color: Qt.alpha(Theme.text, 0.15) }
+                    Rectangle { width: parent.width * f.volume; height: parent.height; radius: Theme.chamfer ? 0 : 3; color: f.accentC }
                     MouseArea {
                         id: volDrag
                         anchors.fill: parent; anchors.margins: -8

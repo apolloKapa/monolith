@@ -197,7 +197,8 @@ GridLayout {
         }
     }
     // snapshots kept: when, a line of it, copy, remove
-    component SnapshotList: Rectangle {
+    component SnapshotList: SmoothRect {
+        smoothing: 0
         radius: Theme.corner(80, 4)
         color: Theme.container
         ListView {

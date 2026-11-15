@@ -30,7 +30,8 @@ Page {
         return amount * u[fromI][1] / u[toI][1];
     }
 
-    component Card: Rectangle {
+    component Card: SmoothRect {
+        smoothing: 0
         Rise {}
         Layout.fillWidth: true
         Layout.fillHeight: true

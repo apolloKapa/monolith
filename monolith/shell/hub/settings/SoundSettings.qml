@@ -48,6 +48,12 @@ ColumnLayout {
 
     // ── the pack: one card each; a click picks it and plays a little of it ──
     SectionHead { visible: Sounds.on; text: "Sound pack" }
+    SettingRow {
+        key: "sounds.followStyle"; def: true;
+        visible: Sounds.on && Sounds.stylePack !== ""
+        icon: "palette"; title: "Use the style's sounds"; desc: Look.style.name + " has its own sounds; they play instead of the pack you picked"
+        Toggle { checked: Sounds.followStyle; onToggled: on => { Store.set("sounds.followStyle", on); Qt.callLater(() => Sounds.demo(Sounds.pack)); } }
+    }
     Flow {
         visible: Sounds.on
         Layout.fillWidth: true
@@ -64,7 +70,7 @@ ColumnLayout {
                 color: cur ? Theme.accentContainer : (hovered ? Theme.mix(Theme.containerHigh, Theme.control, 0.55) : Theme.containerHigh)
                 border.width: cur ? 2 : Theme.outlineW
                 border.color: cur ? Theme.accent : Theme.outlineColor
-                onClicked: { Store.set("sounds.pack", modelData[0]); Sounds.demo(modelData[0]); }
+                onClicked: { Store.set("sounds.pack", modelData[0]); if (modelData[0] !== Sounds.stylePack) Store.set("sounds.followStyle", false); Sounds.demo(modelData[0]); }
                 Icon { id: pi; x: 14; anchors.verticalCenter: parent.verticalCenter; name: pc.cur ? "check_circle" : "graphic_eq"; filled: pc.cur; size: 24; color: pc.cur ? Theme.accent : Theme.subtext }
                 Column {
                     anchors.left: pi.right; anchors.leftMargin: 12; anchors.right: parent.right; anchors.rightMargin: 10

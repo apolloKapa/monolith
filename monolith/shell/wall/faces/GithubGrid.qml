@@ -23,7 +23,8 @@ FaceBase {
     readonly property string period: GitHub.year === 0 ? "the last year" : String(GitHub.year)
 
     // a small round button
-    component Btn: Rectangle {
+    component Btn: SmoothRect {
+        smoothing: 0
         id: b
         property string icon: ""
         property bool on: true
@@ -43,7 +44,8 @@ FaceBase {
         Row {
             x: 16; y: 12; height: 28; spacing: 8
             Icon { name: "commit"; size: 18; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 visible: !f.editing
                 anchors.verticalCenter: parent.verticalCenter
                 height: 28; width: un.implicitWidth + 16; radius: Theme.corner(28, 8)
@@ -52,7 +54,8 @@ FaceBase {
                 Text { id: un; anchors.centerIn: parent; text: GitHub.user !== "" ? GitHub.user : "Set your GitHub name"; color: GitHub.user !== "" ? Theme.text : Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 15 }
                 MouseArea { id: um; anchors.fill: parent; hoverEnabled: true; enabled: f.live; cursorShape: Qt.IBeamCursor; onClicked: { f.editing = true; input.text = GitHub.user; input.forceActiveFocus(); input.selectAll(); } }
             }
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 visible: f.editing
                 anchors.verticalCenter: parent.verticalCenter
                 height: 28; width: 200; radius: Theme.corner(28, 8)
@@ -91,7 +94,8 @@ FaceBase {
             readonly property real cell: Math.min((parent.width - 32 - 52 * 2) / 53, (parent.height - 50 - 40 - 6 * 2) / 7)
             Repeater {
                 model: f.cells
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     required property int index
                     readonly property var day: GitHub.days[index - f.pad]
                     width: grid.cell; height: grid.cell; radius: grid.cell * 0.25
@@ -116,7 +120,8 @@ FaceBase {
             }
         }
         // the day (hovered or picked) or the total, which opens the profile
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             x: 14; anchors.bottom: parent.bottom; anchors.bottomMargin: 10
             height: 26; width: info.implicitWidth + 16; radius: Theme.corner(26, 8)
             color: im.containsMouse ? Qt.alpha(Theme.control, 0.85) : "transparent"

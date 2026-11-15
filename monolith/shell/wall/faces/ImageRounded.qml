@@ -13,7 +13,7 @@ FaceBase {
         id: box
         anchors.centerIn: parent
         width: f.width; height: f.height
-        Rectangle { id: shape; anchors.fill: parent; radius: Theme.corner(80, 14); color: Theme.container; visible: img.status !== Image.Ready }
+        SmoothRect { smoothing: 0; id: shape; anchors.fill: parent; radius: Theme.corner(80, 14); color: Theme.container; visible: img.status !== Image.Ready }
         AnimatedImage {
             id: img
             anchors.fill: parent

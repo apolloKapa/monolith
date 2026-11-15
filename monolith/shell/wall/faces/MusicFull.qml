@@ -38,7 +38,7 @@ FaceBase {
             opacity: 0.2
         }
     }
-    Rectangle { id: bgMask; anchors.fill: parent; radius: f.r; visible: false; layer.enabled: true }
+    SmoothRect { smoothing: 0; id: bgMask; anchors.fill: parent; radius: f.r; visible: false; layer.enabled: true }
 
     Item {
         anchors.fill: parent
@@ -54,7 +54,7 @@ FaceBase {
             Icon { anchors.centerIn: parent; name: "music_note"; size: parent.width * 0.38; color: Theme.subtext; visible: cov.status !== Image.Ready }
             Image { id: cov; anchors.fill: parent; source: f.active ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; asynchronous: true; visible: false }
             MultiEffect { anchors.fill: parent; source: cov; visible: cov.status === Image.Ready; maskEnabled: true; maskSource: artMask }
-            Rectangle { id: artMask; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
+            SmoothRect { smoothing: 0; id: artMask; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
         }
         Item {
             anchors.left: f.showArt ? art.right : parent.left; anchors.leftMargin: f.showArt ? f.sp : 0

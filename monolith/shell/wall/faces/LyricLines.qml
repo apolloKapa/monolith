@@ -107,7 +107,8 @@ Item {
             font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: Math.max(11, Math.min(14, ll.size * 0.8))
         }
         // none found: pick a lyrics file for this song (remembered)
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             visible: ll.hasPlayer && Lyrics.state !== "loading" && ll.height > 70
             anchors.horizontalCenter: parent.horizontalCenter
             height: 28; width: pr.implicitWidth + 20; radius: Theme.corner(28, 8)

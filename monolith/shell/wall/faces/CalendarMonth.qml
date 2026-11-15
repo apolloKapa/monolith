@@ -27,7 +27,7 @@ FaceBase {
                     readonly property int day: index - f.first + 1
                     readonly property bool today: day === f.now.getDate()
                     width: g.cw; height: g.ch
-                    Rectangle { anchors.centerIn: parent; width: Math.min(parent.width, parent.height) - 2; height: width; radius: width / 2; color: Theme.accent; visible: parent.today }
+                    Rectangle { anchors.centerIn: parent; width: Math.min(parent.width, parent.height) - 2; height: width; radius: Theme.chamfer ? 0 : (width / 2); color: Theme.accent; visible: parent.today }
                     Text { anchors.centerIn: parent; visible: parent.day > 0; text: parent.day; color: parent.today ? Theme.onAccent : Theme.text; font.family: Theme.fontFamily; font.weight: parent.today ? Font.Black : Font.Medium; font.pixelSize: 13 }
                 }
             }

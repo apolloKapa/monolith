@@ -76,6 +76,12 @@ ShellRoot {
         command: ["sh", Qt.resolvedUrl("scripts/icon-font.sh").toString().replace("file://", "")]
         onExited: code => { if (code === 10) Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/monolith", "restart"]); }
     }
+    // the Cyberpunk style's icons (Material Symbols Sharp), fetched the same way once it's picked
+    Process {
+        running: Theme.chamfer && !Theme.sharpIcons && !iconFont.running
+        command: ["sh", Qt.resolvedUrl("scripts/icon-font.sh").toString().replace("file://", ""), "Sharp"]
+        onExited: code => { if (code === 10) Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/monolith", "restart"]); }
+    }
     // first launch: the welcome tour
     Connections {
         target: Store

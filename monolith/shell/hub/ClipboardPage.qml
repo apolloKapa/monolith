@@ -59,7 +59,7 @@ Page {
         model: page.shown
         boundsBehavior: Flickable.StopAtBounds
         highlightMoveDuration: Theme.moveMs
-        highlight: Rectangle { radius: Theme.corner(page.rowH); color: Theme.selected }
+        highlight: SmoothRect { smoothing: 0; radius: Theme.corner(page.rowH); color: Theme.selected }
         delegate: Pressable {
             id: row
             required property var modelData

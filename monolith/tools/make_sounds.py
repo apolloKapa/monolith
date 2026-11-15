@@ -7,6 +7,8 @@ into shell/sounds/<pack>/. Each pack plays the same events with its own voice:
   pop    quick bubbly drops in pitch
   retro  square waves, 8-bit arpeggios
   wood   short knocks: a damped low tone with a little noise on the hit
+  cyber  the Cyberpunk style's: bit-crushed FM chirps that stutter like a bad signal, a burst of
+         digital noise on the hit and a short echo
 
 Run again after changing a recipe."""
 import math, os, random, struct, wave
@@ -59,6 +61,45 @@ def wood(phase, f, i, m):
     noise = (random.random() * 2 - 1) * max(0, 1 - i / (0.006 * RATE))
     return e * (math.sin(phase * 0.5) + 0.4 * math.sin(phase * 1.5)) + 0.5 * noise
 
+def cyber(phase, f, i, m):
+    # FM: the modulator dies away faster than the note, so it starts as a buzz and ends as a tone,
+    # with a slightly detuned saw underneath
+    t = i / m
+    mod = math.sin(phase * 2.0) * 2.6 * (1 - t) ** 2
+    saw = ((phase * 1.006 / (2 * math.pi)) % 1.0) * 2 - 1
+    return env(i, m, 0.001, 2.0) * (math.sin(phase + mod) + 0.25 * saw)
+
+def cyber_post(buf, name):
+    rnd = random.Random(sum(map(ord, name)))
+    n = len(buf)
+    # a burst of digital noise on the hit, held in 4-sample steps
+    held = 0.0
+    for i in range(min(n, int(0.007 * RATE))):
+        if i % 4 == 0:
+            held = rnd.random() * 2 - 1
+        buf[i] += 0.5 * held * (1 - i / (0.007 * RATE))
+    # the bad signal: in 9 ms slices, now and then a slice drops out or repeats the one before
+    sl = int(0.009 * RATE)
+    out = buf[:]
+    for k in range(1, n // sl):
+        r = rnd.random()
+        a, b = k * sl, min(n, (k + 1) * sl)
+        if r < 0.12:
+            for i in range(a, b): out[i] = 0.0
+        elif r < 0.3:
+            for i in range(a, b): out[i] = buf[i - sl]
+    # sample-and-hold to 12 kHz and 6 bits: the crunch
+    held = 0.0
+    for i in range(n):
+        if i % 4 == 0:
+            held = round(out[i] * 32) / 32
+        out[i] = held
+    # a short digital echo
+    d = int(0.038 * RATE)
+    for i in range(d, n):
+        out[i] += 0.3 * out[i - d]
+    return out
+
 PACKS = {
     # name: (voice, how much longer notes ring, pitch factor, pitch glide on every note)
     "soft":  (soft, 1.0, 1.0, 1.0),
@@ -66,9 +107,11 @@ PACKS = {
     "pop":   (pop, 1.0, 0.8, 0.55),
     "retro": (retro, 1.0, 0.75, 1.0),
     "wood":  (wood, 1.3, 0.5, 0.9),
+    "cyber": (cyber, 1.35, 0.9, 1.0),
 }
+POST = {"cyber": cyber_post}
 
-def render(parts, length, voice, ring, pitch, glide):
+def render(parts, length, voice, ring, pitch, glide, post=None, name=""):
     n = int(RATE * length * ring)
     buf = [0.0] * n
     for start, f0, f1, dur, gain in parts:
@@ -81,6 +124,8 @@ def render(parts, length, voice, ring, pitch, glide):
             f = f0 + (f1 - f0) * (i / m)
             phase += 2 * math.pi * f / RATE
             buf[s0 + i] += gain * voice(phase, f, i, m)
+    if post:
+        buf = post(buf, name)
     peak = max(1e-9, max(abs(x) for x in buf))
     return [x / peak * 0.8 for x in buf]
 
@@ -90,5 +135,5 @@ for pack, (voice, ring, pitch, glide) in PACKS.items():
     for name, (parts, length) in EVENTS.items():
         with wave.open(os.path.join(d, name + ".wav"), "wb") as w:
             w.setnchannels(1); w.setsampwidth(2); w.setframerate(RATE)
-            w.writeframes(b"".join(struct.pack("<h", int(x * 32767)) for x in render(parts, length, voice, ring, pitch, glide)))
+            w.writeframes(b"".join(struct.pack("<h", int(x * 32767)) for x in render(parts, length, voice, ring, pitch, glide, POST.get(pack), name)))
 print("wrote", len(EVENTS), "sounds for", ", ".join(PACKS), "to", os.path.normpath(OUT))

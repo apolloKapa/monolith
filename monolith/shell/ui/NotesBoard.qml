@@ -28,7 +28,8 @@ Item {
     // what's typed is saved a moment after you stop
     Timer { id: save; interval: 500; onTriggered: if (nb.openId !== "") Notes.edit(nb.openId, title.text, body.text) }
 
-    component Btn: Rectangle {
+    component Btn: SmoothRect {
+        smoothing: 0
         id: b
         property string icon: ""
         property bool on: false
@@ -91,7 +92,8 @@ Item {
             clip: true
             spacing: 4
             model: Notes.trash
-            delegate: Rectangle {
+            delegate: SmoothRect {
+                smoothing: 0
                 id: trow
                 required property var modelData
                 width: ListView.view.width; height: 48
@@ -133,7 +135,8 @@ Item {
                 color: Theme.accent; font.family: Theme.fontFamily; font.pixelSize: nb.fontSize - 3; font.weight: Font.Bold
                 verticalAlignment: Text.AlignVCenter
             }
-            delegate: Rectangle {
+            delegate: SmoothRect {
+                smoothing: 0
                 id: row
                 required property var modelData
                 width: lv.width; height: 48

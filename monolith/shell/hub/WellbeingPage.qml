@@ -85,7 +85,8 @@ Page {
     readonly property bool hasHours: heat.some(r => r.some(v => v > 0))
 
     // ── shared pieces ──
-    component Box: Rectangle {
+    component Box: SmoothRect {
+        smoothing: 0
         radius: Theme.corner(80, 8)
         color: Theme.container
         border.width: Theme.outlineW; border.color: Theme.outlineColor
@@ -132,11 +133,11 @@ Page {
                         Icon { visible: al.canOpen; name: "chevron_right"; size: 18; color: Theme.subtext }
                     }
                     Rectangle {
-                        width: parent.width; height: 5; radius: 3
+                        width: parent.width; height: 5; radius: Theme.chamfer ? 0 : 3
                         color: Theme.control
                         Rectangle {
                             width: parent.width * Math.min(1, ar.modelData.s / Math.max(1, al.list.length ? al.list[0].s : 1))
-                            height: parent.height; radius: 3
+                            height: parent.height; radius: Theme.chamfer ? 0 : 3
                             color: ar.limit > 0 && ar.modelData.s >= ar.limit * 60 ? Theme.danger : Theme.accent
                             Behavior on width { NumberAnimation { duration: Theme.ms(500); easing.type: Easing.OutCubic } }
                         }
@@ -221,7 +222,7 @@ Page {
             Button { visible: !page.settingsOpen && !(page.mode === "week" ? page.thisWeek : page.isToday); text: "Today"; height: 34; onClicked: page.sel = new Date() }
             IconBtn { icon: "settings"; on: page.settingsOpen; onClicked: page.settingsOpen = !page.settingsOpen }
         }
-        Rectangle { visible: !Wellbeing.tracking && !page.settingsOpen; Layout.fillWidth: true; Layout.preferredHeight: 38; radius: 19; color: Qt.alpha(Theme.accent, 0.12)
+        SmoothRect { smoothing: 0; visible: !Wellbeing.tracking && !page.settingsOpen; Layout.fillWidth: true; Layout.preferredHeight: 38; radius: 19; color: Qt.alpha(Theme.accent, 0.12)
             Small { anchors.centerIn: parent; text: "Tracking is off, so nothing new is added. Turn it on with the gear" } }
 
         // ── a day ──
@@ -272,8 +273,8 @@ Page {
                             anchors.margins: 18; anchors.bottomMargin: 12
                             spacing: 4
                             Rectangle {
-                                width: parent.width; height: 6; radius: 3; color: Theme.control
-                                Rectangle { height: parent.height; radius: 3; width: parent.width * Math.min(1, page.dayTotal / Math.max(1, totalBox.cap * 60)); color: page.dayTotal >= totalBox.cap * 60 ? Theme.danger : Theme.accent }
+                                width: parent.width; height: 6; radius: Theme.chamfer ? 0 : 3; color: Theme.control
+                                Rectangle { height: parent.height; radius: Theme.chamfer ? 0 : 3; width: parent.width * Math.min(1, page.dayTotal / Math.max(1, totalBox.cap * 60)); color: page.dayTotal >= totalBox.cap * 60 ? Theme.danger : Theme.accent }
                             }
                             Small {
                                 font.pixelSize: Theme.sizeTiny + 1
@@ -350,7 +351,7 @@ Page {
                                     readonly property bool future: real && modelData.d > new Date()
                                     readonly property bool picked: real && page.sameDay(modelData.d, page.sel)
                                     width: mg.cell; height: Math.min(mg.cell, 22)
-                                    radius: 5
+                                    radius: Theme.chamfer ? 0 : 5
                                     color: !real ? "transparent" : future ? Qt.alpha(Theme.control, 0.3) : modelData.s === 0 ? Theme.control : Qt.alpha(Theme.accent, 0.25 + 0.75 * Math.min(1, modelData.s / page.monthMax))
                                     border.width: picked ? 2 : 0
                                     border.color: Theme.text
@@ -455,11 +456,12 @@ Page {
                                     Rectangle {
                                         required property int index
                                         readonly property real v: page.heat[hr.index][index]
-                                        width: hm.cellW; height: 24; radius: 4
+                                        width: hm.cellW; height: 24; radius: Theme.chamfer ? 0 : 4
                                         color: v <= 0 ? Theme.control : Qt.alpha(Theme.accent, 0.2 + 0.8 * Math.min(1, v / page.heatMax))
                                         HoverHandler { id: hh }
                                         // what's in it, on hover
-                                        Rectangle {
+                                        SmoothRect {
+                                            smoothing: 0
                                             visible: hh.hovered && parent.v > 0
                                             z: 10
                                             anchors.bottom: parent.top; anchors.bottomMargin: 4; anchors.horizontalCenter: parent.horizontalCenter
@@ -484,7 +486,7 @@ Page {
                             Small { text: "Less"; font.pixelSize: Theme.sizeTiny; anchors.verticalCenter: parent.verticalCenter }
                             Repeater {
                                 model: [0, 0.25, 0.5, 0.75, 1]
-                                Rectangle { required property real modelData; width: 14; height: 14; radius: 3; color: modelData === 0 ? Theme.control : Qt.alpha(Theme.accent, 0.2 + 0.8 * modelData) }
+                                Rectangle { required property real modelData; width: 14; height: 14; radius: Theme.chamfer ? 0 : 3; color: modelData === 0 ? Theme.control : Qt.alpha(Theme.accent, 0.2 + 0.8 * modelData) }
                             }
                             Small { text: "More"; font.pixelSize: Theme.sizeTiny; anchors.verticalCenter: parent.verticalCenter }
                         }

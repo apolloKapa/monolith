@@ -27,7 +27,7 @@ FaceBase {
         anchors.margins: f.pad
         Rectangle {
             id: ic
-            width: f.small ? 26 : 30; height: width; radius: Math.min(width / 2, Theme.corner(30, 8))
+            width: f.small ? 26 : 30; height: width; radius: Theme.chamfer ? 0 : (Math.min(width / 2, Theme.corner(30, 8)))
             color: Qt.alpha(f.topSunk ? "#000000" : Theme.control, f.topSunk ? 0.15 : 0.7)
             Icon { anchors.centerIn: parent; name: m.icon; size: parent.width * 0.58; color: f.topInk }
         }

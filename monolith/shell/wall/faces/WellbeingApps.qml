@@ -34,10 +34,11 @@ FaceBase {
                         height: parent.height
                         Text { text: parent.parent.modelData.name; width: parent.width - tt.width - 8; elide: Text.ElideRight; color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 12 }
                         Text { id: tt; anchors.right: parent.right; text: wd.fmtShort(parent.parent.modelData.secs); color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
-                        Rectangle {
+                        SmoothRect {
+                            smoothing: 0
                             anchors.bottom: parent.bottom; anchors.bottomMargin: 2
                             width: parent.width; height: 5; radius: Theme.corner(5); color: Qt.alpha(Theme.text, 0.1)
-                            Rectangle { height: parent.height; radius: parent.radius; width: Math.max(5, parent.width * parent.parent.parent.modelData.secs / Math.max(1, wd.top[0].secs))
+                            SmoothRect { smoothing: 0; height: parent.height; radius: parent.radius; width: Math.max(5, parent.width * parent.parent.parent.modelData.secs / Math.max(1, wd.top[0].secs))
                                         color: parent.parent.parent.index === 0 ? f.accentC : Qt.alpha(f.accentC, 0.55) }
                         }
                     }

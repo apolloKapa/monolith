@@ -103,7 +103,8 @@ PanelWindow {
         onAtChanged: home()
         Component.onCompleted: home()
         Connections { target: ed; function onWidthChanged() { pass.home(); } function onHeightChanged() { pass.home(); } }
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             id: passPill
             width: parent.width; height: 64; radius: Theme.corner(48, 8)
             color: Qt.alpha(Theme.frame, 0.85)
@@ -120,7 +121,8 @@ PanelWindow {
             spacing: 10
             Repeater {
                 model: ["bedtime", "restart_alt", "power_settings_new"]
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     required property string modelData
                     width: 44; height: 44; radius: 22
                     color: Qt.alpha(Theme.frame, 0.75)
@@ -356,7 +358,8 @@ PanelWindow {
                         color: Theme.accent
                     }
                 }
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     width: ml.implicitWidth + 12; height: 20; radius: 10
                     color: Theme.accent
                     x: ms.modelData.h ? (ms.len - width) / 2 : 6
@@ -458,7 +461,7 @@ PanelWindow {
                     enabled: wrap.modelData.type === "image"
                     onEntered: drag => { drag.accepted = drag.hasUrls; }
                     onDropped: drop => { const f = Pictures.fromDrop(drop.urls); if (f !== "") { ed.selected = wrap.modelData.id; ed.setOption(wrap.modelData.id, "imagePath", f); drop.accept(); } }
-                    Rectangle { anchors.fill: parent; anchors.margins: -6; radius: 10; visible: parent.containsDrag; color: Qt.alpha(Theme.accent, 0.18); border.width: 2; border.color: Theme.accent; z: 20 }
+                    SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: 10; visible: parent.containsDrag; color: Qt.alpha(Theme.accent, 0.18); border.width: 2; border.color: Theme.accent; z: 20 }
                 }
                 WidgetFace {
                     id: face
@@ -470,7 +473,8 @@ PanelWindow {
                     origin: Qt.point(wrap.x + (wrap.width - wrap.ww) / 2, wrap.y + (wrap.height - wrap.hh) / 2)
                 }
                 // the frame: a soft outline, solid accent when selected
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     anchors.fill: parent; anchors.margins: -6
                     radius: 10
                     color: wrap.sel ? Qt.alpha(Theme.accent, 0.08) : "transparent"
@@ -549,7 +553,8 @@ PanelWindow {
                 // twist: drag the round handle off its top-right corner around the middle, as far
                 // as you like. It catches on upright, a quarter, half and three quarters (Shift:
                 // every 15°; Ctrl: freely); double-click stands it upright again
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     id: twist
                     visible: wrap.sel
                     z: 13
@@ -596,7 +601,8 @@ PanelWindow {
                 }
             }
             // the angle, while it's being twisted (upright, over its middle)
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 visible: wrap.twisting
                 z: 30
                 anchors.centerIn: parent
@@ -803,7 +809,8 @@ PanelWindow {
                                 spacing: 6
                                 Repeater {
                                     model: oc.modelData[2] === "colour" ? WidgetLayout.colourChoices : []
-                                    Rectangle {
+                                    SmoothRect {
+                                        smoothing: 0
                                         required property var modelData
                                         readonly property bool on: String(oc.val || "") === modelData[0]
                                         width: 30; height: 30; radius: 15
@@ -848,7 +855,8 @@ PanelWindow {
                                     spacing: 6
                                     Repeater {
                                         model: oc.modelData[2] === "file" ? Pictures.recent.slice(0, 12) : []
-                                        Rectangle {
+                                        SmoothRect {
+                                            smoothing: 0
                                             required property string modelData
                                             readonly property bool on: String(oc.val || "") === modelData
                                             width: (parent.width - 3 * 6) / 4; height: width * 0.7
@@ -1068,7 +1076,7 @@ PanelWindow {
         item: ({ id: "ghost", type: ed.dragType || "clock", face: "", opts: {} })
         x: ed.dragPos.x; y: ed.dragPos.y
         width: ed.dragSize[0]; height: ed.dragSize[1]
-        Rectangle { anchors.fill: parent; anchors.margins: -6; radius: 10; color: "transparent"; border.width: 2; border.color: Theme.accent }
+        SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: 10; color: "transparent"; border.width: 2; border.color: Theme.accent }
     }
 
     // ── distances: while a widget moves, how far it is from each screen edge ──
@@ -1089,7 +1097,8 @@ PanelWindow {
                 width: parent.horizontal ? parent.width : 2; height: parent.horizontal ? 2 : parent.height
                 anchors.centerIn: parent
             }
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 visible: parent.len > 30
                 anchors.centerIn: parent
                 width: gl.implicitWidth + 12; height: 22; radius: 11

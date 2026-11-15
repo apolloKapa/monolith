@@ -27,7 +27,8 @@ SmoothRect {
     HoverHandler { id: hov }
     // found by the settings search: a soft accent glow that fades
     function glow() { glowAnim.restart(); }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0
         id: glowRect
         anchors.fill: parent
         radius: parent.radius
@@ -73,7 +74,7 @@ SmoothRect {
             spacing: 6
             Label { text: row.title; strong: true; width: Math.min(implicitWidth, texts.width - (row.changed ? 14 : 0)); elide: Text.ElideRight }
             // changed from the default
-            Rectangle { visible: scale > 0.01; scale: row.changed ? 1 : 0; Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack; easing.overshoot: 2.5 } } width: 7; height: 7; radius: 3.5; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+            Rectangle { visible: scale > 0.01; scale: row.changed ? 1 : 0; Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack; easing.overshoot: 2.5 } } width: 7; height: 7; radius: Theme.chamfer ? 0 : 3.5; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
         }
         Label { width: parent.width; text: row.desc; muted: true; font.pixelSize: Theme.sizeSmall; wrapMode: Text.Wrap; visible: text !== "" }
     }
@@ -100,7 +101,8 @@ SmoothRect {
         color: hovered ? Theme.control : "transparent"
         onClicked: { for (const k of row.allKeys) Store.unset(k); }
         Icon { anchors.centerIn: parent; name: "settings_backup_restore"; size: 19; color: revert.hovered ? Theme.accent : Theme.subtext }
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             visible: revert.hovered
             anchors.bottom: parent.top; anchors.bottomMargin: 6
             anchors.horizontalCenter: parent.horizontalCenter

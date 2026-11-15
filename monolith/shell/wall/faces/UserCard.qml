@@ -29,7 +29,8 @@ FaceBase {
                     spacing: 6
                     Repeater {
                         model: [["person", Quickshell.env("USER") || "You", Theme.text, "settings"], ["lock", "Lock", Theme.accent, "lock"]]
-                        Rectangle {
+                        SmoothRect {
+                            smoothing: 0
                             id: qb
                             required property var modelData
                             Layout.fillWidth: true; Layout.preferredHeight: 32
@@ -61,7 +62,8 @@ FaceBase {
                 Repeater {
                     // [command, icon, share of the row, colour]
                     model: [["suspend", "bedtime", 1, "#89b4fa"], ["reboot", "restart_alt", 2, "#fab387"], ["poweroff", "power_settings_new", 3, "#f38ba8"]]
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0
                         id: act
                         required property var modelData
                         property bool auto: false        // clicked: filling by itself
@@ -76,8 +78,8 @@ FaceBase {
                         property real level: 0
                         property bool done: false
                         // held, it fills up sideways from the left (a whole second: full = it happens)
-                        Rectangle { width: act.width * act.level; height: act.height; radius: act.radius; color: act.modelData[3]; visible: act.level > 0.001 }
-                        Rectangle { id: flash; anchors.fill: parent; radius: act.radius; color: "#ffffff"; opacity: 0 }
+                        SmoothRect { smoothing: 0; width: act.width * act.level; height: act.height; radius: act.radius; color: act.modelData[3]; visible: act.level > 0.001 }
+                        SmoothRect { smoothing: 0; id: flash; anchors.fill: parent; radius: act.radius; color: "#ffffff"; opacity: 0 }
                         Icon { anchors.centerIn: parent; name: act.modelData[1]; size: 16; color: ma.containsMouse ? Theme.text : Theme.subtext }
                         // the icon turns dark where it's filled
                         Item {

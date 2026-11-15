@@ -9,15 +9,15 @@ FaceBase {
     id: f
     readonly property var p: f.player
     readonly property real r: Theme.corner(80, 14)
-    Rectangle { anchors.fill: parent; radius: f.r; color: Theme.control }
+    SmoothRect { smoothing: 0; anchors.fill: parent; radius: f.r; color: Theme.control }
     Icon { anchors.centerIn: parent; name: "music_note"; size: Math.min(f.width, f.height) * 0.3; color: Theme.subtext; visible: cov.status !== Image.Ready }
     Image { id: cov; anchors.fill: parent; source: f.p ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; visible: false; asynchronous: true }
     MultiEffect { anchors.fill: parent; source: cov; visible: cov.status === Image.Ready; maskEnabled: true; maskSource: cm }
-    Rectangle { id: cm; anchors.fill: parent; radius: f.r; visible: false; layer.enabled: true }
+    SmoothRect { smoothing: 0; id: cm; anchors.fill: parent; radius: f.r; visible: false; layer.enabled: true }
     Rectangle {
         anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
         height: parent.height * 0.36
-        radius: f.r
+        radius: Theme.chamfer ? 0 : f.r
         gradient: Gradient { GradientStop { position: 0; color: "transparent" } GradientStop { position: 1; color: Qt.rgba(0, 0, 0, 0.75) } }
         Column {
             x: 12; anchors.bottom: parent.bottom; anchors.bottomMargin: 10; width: parent.width - 24

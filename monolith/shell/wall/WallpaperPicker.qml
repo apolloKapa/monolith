@@ -376,7 +376,8 @@ PanelWindow {
                     text: lc.path.replace(/^.*\//, "").replace(/\.[^.]+$/, "")
                     color: "#ffffff"; strong: true; font.pixelSize: Theme.sizeSmall
                 }
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     anchors.left: parent.left; anchors.top: parent.top; anchors.margins: 10
                     width: badge.implicitWidth + 18; height: 22; radius: 11
                     color: Qt.rgba(0, 0, 0, 0.55)
@@ -385,7 +386,7 @@ PanelWindow {
                         anchors.centerIn: parent
                         spacing: 5
                         Rectangle {
-                            width: 7; height: 7; radius: 3.5; color: "#ff5a6e"; anchors.verticalCenter: parent.verticalCenter
+                            width: 7; height: 7; radius: Theme.chamfer ? 0 : 3.5; color: "#ff5a6e"; anchors.verticalCenter: parent.verticalCenter
                             SequentialAnimation on opacity { running: lc.hot || lc.current; loops: Animation.Infinite; NumberAnimation { to: 0.25; duration: 600 } NumberAnimation { to: 1; duration: 600 } }
                         }
                         Label { text: lc.gif ? "GIF" : "LIVE"; color: "#ffffff"; strong: true; font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter }

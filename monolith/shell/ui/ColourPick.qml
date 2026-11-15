@@ -65,7 +65,7 @@ Item {
                     anchors.fill: parent; columns: 4; clip: true
                     Repeater { model: 16; Rectangle { required property int index; width: 5.5; height: 5.5; color: (index + Math.floor(index / 4)) % 2 ? "#bbbbbb" : "#ffffff" } }
                 }
-                Rectangle { anchors.fill: parent; radius: 6; color: cp.shown; border.width: 1; border.color: Qt.alpha(Theme.text, 0.3) }
+                SmoothRect { smoothing: 0; anchors.fill: parent; radius: 6; color: cp.shown; border.width: 1; border.color: Qt.alpha(Theme.text, 0.3) }
             }
             Label { text: cp.value.toUpperCase(); font.family: "monospace"; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
         }
@@ -103,14 +103,15 @@ Item {
             Item {
                 width: parent.width; height: 160
                 Rectangle {
-                    anchors.fill: parent; radius: 8
+                    anchors.fill: parent; radius: Theme.chamfer ? 0 : 8
                     gradient: Gradient { orientation: Gradient.Horizontal; GradientStop { position: 0; color: "white" } GradientStop { position: 1; color: Qt.hsva(cp.hh, 1, 1, 1) } }
                 }
                 Rectangle {
-                    anchors.fill: parent; radius: 8
+                    anchors.fill: parent; radius: Theme.chamfer ? 0 : 8
                     gradient: Gradient { GradientStop { position: 0; color: "transparent" } GradientStop { position: 1; color: "black" } }
                 }
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     x: cp.ss * parent.width - 8; y: (1 - cp.vv) * parent.height - 8
                     width: 16; height: 16; radius: 8
                     color: "transparent"; border.width: 2; border.color: cp.vv > 0.5 ? "black" : "white"
@@ -126,7 +127,7 @@ Item {
             Item {
                 width: parent.width; height: 16
                 Rectangle {
-                    anchors.fill: parent; radius: 8
+                    anchors.fill: parent; radius: Theme.chamfer ? 0 : 8
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
                         GradientStop { position: 0.0; color: "#ff0000" } GradientStop { position: 0.17; color: "#ffff00" }
@@ -135,7 +136,7 @@ Item {
                         GradientStop { position: 1.0; color: "#ff0000" }
                     }
                 }
-                Rectangle { x: cp.hh * parent.width - 4; y: -2; width: 8; height: 20; radius: 4; color: "white"; border.width: 1; border.color: "black" }
+                Rectangle { x: cp.hh * parent.width - 4; y: -2; width: 8; height: 20; radius: Theme.chamfer ? 0 : 4; color: "white"; border.width: 1; border.color: "black" }
                 MouseArea {
                     anchors.fill: parent
                     function at(m) { cp.hh = Math.max(0, Math.min(0.999, m.x / width)); if (cp.ss < 0.02) cp.ss = 1; if (cp.vv < 0.02) cp.vv = 1; cp.emit(); }
@@ -166,7 +167,8 @@ Item {
                 width: parent.width; spacing: 6
                 Repeater {
                     model: [String(Theme.accent), String(Theme.text), String(Theme.subtext), "#ffffff", "#000000", "#ff5c5c", "#ffb84d", "#ffe066", "#5cd65c", "#4dd2ff", "#5c7cff", "#c45cff"]
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0
                         required property string modelData
                         width: 22; height: 22; radius: 11
                         color: modelData

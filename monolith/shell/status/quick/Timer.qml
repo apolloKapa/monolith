@@ -150,7 +150,8 @@ GridLayout {
                 clip: true
                 spacing: 2
                 model: Tasks.laps
-                delegate: Rectangle {
+                delegate: SmoothRect {
+                    smoothing: 0
                     required property var modelData
                     required property int index
                     width: ListView.view.width; height: 34

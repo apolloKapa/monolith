@@ -274,6 +274,8 @@ Singleton {
     readonly property int sizeTitle: 16
     readonly property int sizeHeadline: 24
     readonly property int sizeDisplay: 44
-    // Google's Material Symbols (ligatures: Icon { name: "wifi" })
-    readonly property string iconFont: "Material Symbols Rounded"
+    // Google's Material Symbols (ligatures: Icon { name: "wifi" }); the Cyberpunk style draws
+    // them from the Sharp set (square ends and corners) when it's installed
+    readonly property bool sharpIcons: Qt.fontFamilies().indexOf("Material Symbols Sharp") !== -1
+    readonly property string iconFont: chamfer && sharpIcons ? "Material Symbols Sharp" : "Material Symbols Rounded"
 }

@@ -277,7 +277,8 @@ Item {
 
             // the open workspace's highlight: its two ends follow the open pill on springs; the one
             // on the side it's heading leads, the other trails, so it stretches over and settles
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 id: hi
                 readonly property Item at: wsBox.activeIndex >= 0 ? reps.itemAt(wsBox.activeIndex) : null
                 visible: !!at && bar.wsHighlight
@@ -418,7 +419,8 @@ Item {
                     HubState.peekScreen = bar.screenName;
                 }
             }
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 visible: bar.mopt("media.art", true) === true || bar.vertical
                 width: 22; height: 22; radius: bar.mopt("media.round", true) === true ? 11 : 5
                 color: Theme.control
@@ -479,7 +481,7 @@ Item {
             }
             Rectangle {
                 visible: live.mode === "rec"
-                width: 9; height: 9; radius: 4.5; color: Theme.danger
+                width: 9; height: 9; radius: Theme.chamfer ? 0 : 4.5; color: Theme.danger
                 SequentialAnimation on opacity { running: live.mode === "rec"; loops: Animation.Infinite; NumberAnimation { to: 0.3; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
             }
             Icon { visible: live.mode !== "rec"; name: live.mode === "timer" ? "timer" : "upgrade"; size: 16; color: Theme.accent }

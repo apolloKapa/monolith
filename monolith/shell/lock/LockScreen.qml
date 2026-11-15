@@ -137,7 +137,8 @@ WlSessionLock {
             Component.onCompleted: if (!who.visible) forceActiveFocus()
         }
         // there: what's been typed (as dots) or what went wrong, and where the box is
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             visible: !who.visible
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom; anchors.bottomMargin: parent.height * 0.06
@@ -305,7 +306,7 @@ WlSessionLock {
                                 }
                             }
                         }
-                        Rectangle { id: lbMask; anchors.fill: parent; radius: lb.radius; visible: false; layer.enabled: true }
+                        SmoothRect { smoothing: 0; id: lbMask; anchors.fill: parent; radius: lb.radius; visible: false; layer.enabled: true }
                     }
                 }
             }

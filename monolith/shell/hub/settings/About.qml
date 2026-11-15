@@ -54,7 +54,8 @@ ColumnLayout {
             RowLayout {
                 width: parent.width
                 spacing: 14
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     width: 52; height: 52; radius: Theme.corner(52)
                     color: Updates.newer ? Theme.accent : Theme.control
                     Icon {
@@ -126,7 +127,7 @@ ColumnLayout {
                                 required property string modelData
                                 width: changes.width
                                 spacing: 8
-                                Rectangle { width: 6; height: 6; radius: 3; color: Theme.accent; y: 7 }
+                                Rectangle { width: 6; height: 6; radius: Theme.chamfer ? 0 : 3; color: Theme.accent; y: 7 }
                                 Text { width: parent.width - 14; text: modelData; wrapMode: Text.Wrap; color: upd.ink; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall }
                             }
                         }

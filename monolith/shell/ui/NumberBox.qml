@@ -40,7 +40,7 @@ Item {
         anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
         height: 10
-        radius: 5
+        radius: Theme.chamfer ? 0 : 5
         color: Theme.control
         // the fill: up to the handle's middle, so the handle always caps it (sized on its own, its
         // rounded end used to poke out past the handle)
@@ -48,7 +48,7 @@ Item {
             width: Math.max(0, handle.x + handle.width / 2)
             visible: width > 0.5
             height: parent.height
-            radius: Math.min(parent.radius, width / 2)
+            radius: Theme.chamfer ? 0 : (Math.min(parent.radius, width / 2))
             color: Theme.accent
         }
         // the handle: a pill that stands up from the track
@@ -58,7 +58,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: 6
             height: nb.dragging || area.containsMouse ? 30 : 26
-            radius: 3
+            radius: Theme.chamfer ? 0 : 3
             color: Theme.accent
             border.width: 2
             border.color: Theme.card

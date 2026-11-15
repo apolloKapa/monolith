@@ -25,7 +25,8 @@ Item {
         color: Theme.control
         clip: true
 
-        Rectangle {
+        SmoothRect {
+            smoothing: 0
             height: parent.height
             width: Math.max(parent.height, parent.width * s.shown)
             radius: track.radius

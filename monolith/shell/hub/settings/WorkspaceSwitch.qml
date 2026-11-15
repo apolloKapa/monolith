@@ -109,12 +109,14 @@ ColumnLayout {
             color: "transparent"
             opacity: stage.fades ? fade : 1
             // a window or two on it
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 x: 14; y: 14; width: parent.width * 0.55 - 20; height: parent.height - 28
                 radius: 6; color: Qt.alpha(ws.tint, 0.22); border.width: 1; border.color: Qt.alpha(ws.tint, 0.5)
-                Row { x: 8; y: 7; spacing: 3; Repeater { model: ["#ff6159", "#ffbd2e", "#28c941"]; Rectangle { required property string modelData; width: 5; height: 5; radius: 2.5; color: modelData; opacity: 0.8 } } }
+                Row { x: 8; y: 7; spacing: 3; Repeater { model: ["#ff6159", "#ffbd2e", "#28c941"]; Rectangle { required property string modelData; width: 5; height: 5; radius: Theme.chamfer ? 0 : 2.5; color: modelData; opacity: 0.8 } } }
             }
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 x: parent.width * 0.55 + 2; y: 14; width: parent.width * 0.45 - 16; height: parent.height - 28
                 radius: 6; color: Qt.alpha(ws.tint, 0.12); border.width: 1; border.color: Qt.alpha(ws.tint, 0.3)
             }

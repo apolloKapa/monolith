@@ -19,9 +19,15 @@ Singleton {
         ["pop", "Pop", "Quick bubbly drops"],
         ["retro", "Retro", "8-bit square waves"],
         ["wood", "Wood", "Short wooden knocks"],
+        ["cyber", "Cyberpunk", "Bit-crushed synth chirps that glitch like a bad signal"],
         ["custom", "Your own folder", "Your own .wav files"]
     ]
-    readonly property string pack: Store.get("sounds.pack", "soft")
+    readonly property string chosen: Store.get("sounds.pack", "soft")
+    // a style with its own sounds (styles.js `sounds`: Cyberpunk's cyber pack) plays them instead
+    // of the pack you picked, unless you switch that off (sounds.followStyle)
+    readonly property string stylePack: Look.style.sounds || ""
+    readonly property bool followStyle: Store.get("sounds.followStyle", true) !== false
+    readonly property string pack: followStyle && stylePack !== "" ? stylePack : chosen
     readonly property string customDir: (Store.get("sounds.customDir", "") || "").replace(/^~/, Quickshell.env("HOME"))
     readonly property string dir: pack === "custom" && customDir !== "" ? customDir : base + "/" + (pack === "custom" ? "soft" : pack)
     // the kinds, each with its sounds: [id, name, sounds…]

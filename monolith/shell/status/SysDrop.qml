@@ -74,7 +74,8 @@ PanelWindow {
                     Layout.fillWidth: true
                     columns: 2
                     rowSpacing: 8; columnSpacing: 8
-                    component Tile: Rectangle {
+                    component Tile: SmoothRect {
+                        smoothing: 0
                         id: tile
                         property string icon: ""
                         property string name: ""

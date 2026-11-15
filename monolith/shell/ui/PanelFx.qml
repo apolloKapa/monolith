@@ -5,18 +5,28 @@ import "../core"
 // Theme → Effects on a panel (the open island, floating menus, the dock): film grain over it and a
 // light along its top edge. Fill the panel with it, and give it the panel's corner radius.
 // The Cyberpunk style adds faint scanlines and HUD corner marks (a yellow tick along the top past
-// the cut corner, a cyan bracket at the bottom right).
+// the cut corner, a cyan bracket at the bottom right), and its static (the scanlines and the
+// grain) crawls slowly down the panel.
 Item {
     id: fx
     property real radius: 0
     visible: Theme.fxGrain || Theme.fxEdge || Theme.chamfer
+    // the crawl: a pixel every 80 ms (in steps, so the layers below are redrawn 12 times a second
+    // instead of every frame), only while the panel shows
+    property int drift: 0
+    Timer {
+        interval: 80; repeat: true
+        running: Theme.chamfer && Theme.animOn && fx.visible
+        onTriggered: fx.drift = (fx.drift + 1) % 384   // a whole number of scanline (3) and grain (128) tiles
+    }
     // ── Cyberpunk ──
     Item {
         id: scanSrc
         anchors.fill: parent
         visible: false
         layer.enabled: Theme.chamfer
-        Image { anchors.fill: parent; source: "scan.png"; fillMode: Image.Tile; smooth: false }
+        clip: true
+        Image { x: 0; y: fx.drift % 3 - 3; width: parent.width; height: parent.height + 3; source: "scan.png"; fillMode: Image.Tile; smooth: false }
     }
     MultiEffect {
         anchors.fill: parent
@@ -50,7 +60,8 @@ Item {
         anchors.fill: parent
         visible: false
         layer.enabled: Theme.fxGrain
-        Image { anchors.fill: parent; source: "grain.png"; fillMode: Image.Tile; smooth: false }
+        clip: true
+        Image { x: 0; y: Theme.chamfer ? fx.drift % 128 - 128 : 0; width: parent.width; height: parent.height + (Theme.chamfer ? 128 : 0); source: "grain.png"; fillMode: Image.Tile; smooth: false }
     }
     MultiEffect {
         anchors.fill: parent

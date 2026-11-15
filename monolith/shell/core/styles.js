@@ -12,6 +12,7 @@
 //   liquid              liquid glass: clearer panes, a light rim and shine, widgets bend what's behind them
 //   chamfer             corners cut straight across instead of rounded (Cyberpunk)
 //   glitch              things glitch in and the Blackwall takes them out (ui/CyberFx, Cyberpunk)
+//   sounds              its own interface sound pack (sounds/<pack>), played instead of yours
 //   colors              its palette (base, mantle, crust, surface0–2, overlay0–2, text, subtext0–1, accents)
 // (The looks and palettes are the earlier Monolith's styles.)
 var list = [
@@ -483,6 +484,7 @@ var list = [
   "opaque": true,
   "chamfer": true,
   "glitch": true,
+  "sounds": "cyber",
   "radiusScale": 1.5,
   "outline": [
    1,

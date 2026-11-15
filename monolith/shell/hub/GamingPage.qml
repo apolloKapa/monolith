@@ -39,7 +39,8 @@ Page {
             radius: Theme.corner(92, 10)
             color: GameMode.active ? Theme.accentContainer : Theme.containerHigh
             onClicked: GameMode.toggle()
-            Rectangle {
+            SmoothRect {
+                smoothing: 0
                 id: pad
                 x: 14; width: 64; height: 64
                 anchors.verticalCenter: parent.verticalCenter
@@ -97,8 +98,8 @@ Page {
                                 Label { width: parent.width / 2; horizontalAlignment: Text.AlignRight; text: modelData[2]; muted: true; font.pixelSize: Theme.sizeSmall }
                             }
                             Rectangle {
-                                width: parent.width; height: 10; radius: 5; color: Theme.ringTrack
-                                Rectangle { height: parent.height; radius: 5; width: Math.max(10, parent.width * modelData[1]); color: Theme.accent; Behavior on width { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutCubic } } }
+                                width: parent.width; height: 10; radius: Theme.chamfer ? 0 : 5; color: Theme.ringTrack
+                                Rectangle { height: parent.height; radius: Theme.chamfer ? 0 : 5; width: Math.max(10, parent.width * modelData[1]); color: Theme.accent; Behavior on width { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutCubic } } }
                             }
                         }
                     }

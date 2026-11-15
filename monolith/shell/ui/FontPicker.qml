@@ -106,7 +106,8 @@ SmoothRect {
                 currentIndex: 0
                 boundsBehavior: Flickable.StopAtBounds
                 SmoothWheel {}
-                delegate: Rectangle {
+                delegate: SmoothRect {
+                    smoothing: 0
                     required property string modelData
                     required property int index
                     readonly property bool on: modelData === fp.value

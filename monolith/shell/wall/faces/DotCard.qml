@@ -1,5 +1,6 @@
 import QtQuick
 import "../../core"
+import "../../ui"
 
 // The card under every Dot look: a rounded square in flat black or off-white (or glass, or
 // nothing), with a hairline edge; it hands its looks the ink, the dim ink and the red accent.
@@ -24,7 +25,8 @@ Item {
     }
 
     Glass { visible: dc.bg === "blur"; anchors.fill: parent; ctx: dc.ctx; radius: dc.radius; defaultMode: "blur"; tintColor: dc.light ? "#ececea" : Theme.m("surface_container", Theme.container) }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0
         readonly property real k: Math.max(0, Math.min(1, Number(dc.opt("bgOpacity", 1))))
         visible: dc.bg === "normal"
         anchors.fill: parent

@@ -369,7 +369,7 @@ PanelWindow {
                             model: wel.steps.length
                             Rectangle {
                                 required property int index
-                                width: index === wel.step ? 28 : 9; height: 9; radius: 4.5
+                                width: index === wel.step ? 28 : 9; height: 9; radius: Theme.chamfer ? 0 : 4.5
                                 color: index <= wel.step ? Theme.accent : Qt.alpha(Theme.text, 0.2)
                                 Behavior on width { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
                                 MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor; onClicked: wel.step = parent.index }
@@ -473,7 +473,7 @@ PanelWindow {
                     NumberAnimation { from: 1; to: 0; duration: 2600; easing.type: Easing.InOutSine }
                 }
                 // its shadow on the ground
-                Rectangle { anchors.horizontalCenter: parent.horizontalCenter; y: 182; width: 96 - 16 * mark.bob; height: 10; radius: 5; color: "black"; opacity: 0.25 - 0.08 * mark.bob }
+                Rectangle { anchors.horizontalCenter: parent.horizontalCenter; y: 182; width: 96 - 16 * mark.bob; height: 10; radius: Theme.chamfer ? 0 : 5; color: "black"; opacity: 0.25 - 0.08 * mark.bob }
                 Item {
                     id: slab
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -698,7 +698,7 @@ PanelWindow {
                                     height: 26; width: Math.max(26, kt.implicitWidth + 14); radius: Theme.square ? 0 : 7
                                     color: Theme.control
                                     border.width: 1; border.color: Qt.alpha(Theme.text, 0.15)
-                                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 3; radius: parent.radius; color: Qt.alpha("black", 0.25) }
+                                    SmoothRect { smoothing: 0; anchors.bottom: parent.bottom; width: parent.width; height: 3; radius: parent.radius; color: Qt.alpha("black", 0.25) }
                                     Text { id: kt; anchors.centerIn: parent; anchors.verticalCenterOffset: -1; text: parent.modelData; color: Theme.text; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.Bold }
                                 }
                             }
@@ -712,7 +712,8 @@ PanelWindow {
                 Repeater {
                     model: [["right_click", "Right-click the desktop: wallpaper, widgets, theme"], ["dashboard_customize", "Widgets: right-click → Edit widgets"],
                             ["touch_app", "Hold a dock app to edit the dock"], ["view_carousel", "Every bar module opens its menu"]]
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0
                         required property var modelData
                         height: 34; width: tr.implicitWidth + 24; radius: 17
                         color: Qt.alpha(Theme.accent, 0.12)
@@ -744,7 +745,8 @@ PanelWindow {
                 anchors.centerIn: parent
                 width: parent.width
                 spacing: 18
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0
                     id: check
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: 96; height: 96; radius: 48
