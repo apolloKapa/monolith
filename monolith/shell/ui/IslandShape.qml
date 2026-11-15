@@ -35,7 +35,7 @@ Item {
         x: -80; y: 0
         width: s.width + 160; height: s.height + 80
         clip: true
-        visible: s.shadow && Theme.shadowOn && s.height > 1
+        visible: s.shadow && Theme.shadowOn && s.height > 1 && !Theme.chamfer
         transform: Scale { origin.y: s.height / 2; yScale: s.flipped ? -1 : 1 }
         // (loaded by URL: an older Qt doesn't have it, see RectShadow.qml)
         Loader {

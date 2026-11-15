@@ -45,7 +45,8 @@ ShellRoot {
     Variants { model: Quickshell.screens; Osd {} }
     Lazy { id: capL; when: Capture.active || Capture.freezing; linger: 300 }
     Variants { model: capL.on ? Quickshell.screens : []; CaptureOverlay {} }
-    Lazy { id: prevL; when: Capture.previewFile !== ""; linger: 600 }
+    // (kept until the Blackwall has taken it, with the Cyberpunk style)
+    Lazy { id: prevL; when: Capture.previewFile !== ""; linger: Math.max(600, Theme.fxOutMs + 150) }
     Variants { model: prevL.on ? Quickshell.screens : []; ShotPreview {} }
     Variants { model: Capture.pins.map(p => p.id); Pin {} }
     Variants { model: Capture.countdown > 0 ? Quickshell.screens : []; Countdown {} }

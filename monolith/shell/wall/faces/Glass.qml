@@ -66,8 +66,9 @@ Item {
             maskSource: mask
         }
     }
-    Rectangle { id: mask; anchors.fill: parent; radius: g.r; visible: false; layer.enabled: true }
-    Rectangle {
+    // (SmoothRects: the Cyberpunk style cuts the corner, the blur's mask too)
+    SmoothRect { id: mask; anchors.fill: parent; radius: g.r; color: "white"; visible: false; layer.enabled: true }
+    SmoothRect {
         anchors.fill: parent
         visible: g.mode !== "clear"
         radius: g.r
@@ -77,6 +78,8 @@ Item {
         border.width: Theme.outlineW
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Qt.alpha(Theme.text, 0.06)
     }
+    // Cyberpunk: scanlines and the HUD marks
+    PanelFx { anchors.fill: parent; radius: g.r; visible: Theme.chamfer && g.mode !== "clear" }
     // liquid glass: the card is a pane of glass, under the tint
     LiquidPane { anchors.fill: parent; z: -1; radius: g.r; visible: Theme.liquid && g.mode === "blur" }
 }

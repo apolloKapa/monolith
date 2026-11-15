@@ -10,6 +10,9 @@ Item {
     id: cs
     anchors.fill: parent
     z: -1
+    // (none in the Cyberpunk style: a soft shadow's round corners showed past the cut corner, and
+    // its outlines already set the panels apart)
+    opacity: Theme.chamfer ? 0 : 1
     // Liquid glass: the card is a pane of glass (under the card's own faint fill and content)
     LiquidPane { parent: cs.parent; anchors.fill: parent; radius: cs.radius; z: -0.5; visible: Theme.liquid && cs.visible }
     // how far the shadow falls down (the bar's pills keep it centred: they float on the screen)

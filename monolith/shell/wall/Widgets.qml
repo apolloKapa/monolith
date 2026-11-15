@@ -22,7 +22,17 @@ Item {
     Repeater {
         model: desk.list
         WidgetFace {
+            id: wf
             required property var modelData
+            required property int index
+            // Cyberpunk: each glitches in as it appears, one after another
+            property real cyP: 0
+            SequentialAnimation {
+                running: Theme.cyber
+                PauseAnimation { duration: Theme.ms(70) * wf.index }
+                NumberAnimation { target: wf; property: "cyP"; from: 0; to: 1; duration: Theme.fxInMs }
+            }
+            CyberFx { target: wf; p: wf.cyP }
             item: WidgetLayout.fitted(modelData, desk.height)
             width: implicitWidth
             height: implicitHeight

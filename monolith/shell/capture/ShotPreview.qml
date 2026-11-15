@@ -20,7 +20,7 @@ PanelWindow {
     readonly property bool onRight: corner.indexOf("right") !== -1
     readonly property bool onTop: corner.indexOf("top") !== -1
 
-    visible: shown || card.opacity > 0.01
+    visible: shown || card.opacity > 0.01 || card.cyP > 0.002
     WlrLayershell.namespace: "monolith-shot-preview"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
@@ -50,7 +50,8 @@ PanelWindow {
     property string shownFile: ""
     onFileChanged: if (file !== "") shownFile = file
 
-    Rectangle {
+    // (a SmoothRect: the Cyberpunk style cuts its corner)
+    SmoothRect {
         id: card
         width: parent.width
         height: col.implicitHeight + 20
@@ -59,9 +60,17 @@ PanelWindow {
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
         CardShadow {}
-        opacity: win.shown ? 1 : 0
-        transform: Translate { x: win.shown ? 0 : (win.onRight ? 60 : -60) }
-        Behavior on opacity { NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        PanelFx { anchors.fill: parent; radius: card.radius; visible: Theme.chamfer || Theme.fxGrain || Theme.fxEdge }
+        // (Cyberpunk: it doesn't slide or fade; it glitches in and the Blackwall takes it, cyP)
+        opacity: Theme.cyber ? (cyP > 0.002 ? 1 : 0) : (win.shown ? 1 : 0)
+        transform: Translate { x: win.shown || Theme.cyber ? 0 : (win.onRight ? 60 : -60) }
+        Behavior on opacity { enabled: !Theme.cyber; NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        // (from 0, then following `shown`: this window is made the moment a shot is taken, and a
+        // value that starts at 1 has nothing to animate from)
+        property real cyP: 0
+        Component.onCompleted: cyP = Qt.binding(() => win.shown ? 1 : 0)
+        Behavior on cyP { NumberAnimation { duration: win.shown ? Theme.fxInMs : Theme.fxOutMs } }
+        CyberFx { target: card; p: win.shown ? card.cyP : 1 - card.cyP; going: !win.shown }
 
         ColumnLayout {
             id: col
@@ -77,7 +86,8 @@ PanelWindow {
                 onClicked: { Capture.edit(win.shownFile, Capture.previewSaved ? win.shownFile : ""); Capture.closePreview(); }
                 ClippingRectangle {
                     anchors.fill: parent
-                    radius: parent.radius
+                    // (it can only round: square under a cut corner)
+                    radius: Theme.chamfer ? 0 : parent.radius
                     color: "transparent"
                     Image { anchors.fill: parent; source: win.shownFile !== "" ? Wall.url(win.shownFile) : ""; sourceSize: Qt.size(640, 360); fillMode: Image.PreserveAspectFit; asynchronous: true; cache: false }
                 }
