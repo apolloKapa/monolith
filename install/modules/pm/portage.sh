@@ -192,55 +192,14 @@ pm_prepare_repos() {
 # prebuild (37 of Monolith's 92) or prebuilds at an older version is compiled anyway
 PORTAGE_BIN_ATOMS=()
 PORTAGE_SRC_ATOMS=()
-# Monolith's own binhost (.github/workflows/binhost.yml): what Gentoo's doesn't prebuild, for the
-# stable branch, any x86-64 CPU. With it and Gentoo's, a stable system never compiles
-MONOLITH_BINHOST="${MONOLITH_BINHOST:-https://github.com/apolloKapa/monolith/releases/download/binhost}"
-# Monolith's signing key in Portage's keyring, trusted like Gentoo's (getuto signs Gentoo's keys
-# with a local key; this one gets the same): a system that takes only signed binaries
-# (FEATURES=binpkg-request-signature, as gentoo-install sets it) takes Monolith's too
-portage_trust_key() {
-    local key="$PROJECT_ROOT/monolith/binhost/monolith-binhost.asc" fpr G=/etc/portage/gnupg
-    [ -f "$key" ] || return 0
-    fpr=$(cat "$PROJECT_ROOT/monolith/binhost/monolith-binhost.fpr" 2>/dev/null)
-    [ -n "$fpr" ] || return 0
-    [ -f "$G/mykeyid" ] || sudo getuto >/dev/null 2>&1 || return 0
-    sudo gpg --homedir "$G" --batch --list-keys "$fpr" >/dev/null 2>&1 \
-        && sudo gpg --homedir "$G" --batch --list-keys --with-colons "$fpr" | grep -q '^pub:f' && return 0
-    sudo gpg --homedir "$G" --batch --quiet --import "$key" 2>/dev/null
-    sudo gpg --homedir "$G" --batch --quiet --pinentry-mode loopback --passphrase-file "$G/pass" \
-        --default-key "$(sudo cat "$G/mykeyid")" --quick-lsign-key "$fpr" >/dev/null 2>&1
-    sudo gpg --homedir "$G" --batch --check-trustdb >/dev/null 2>&1 || true
-}
-
-portage_binrepo() {
-    local f=/etc/portage/binrepos.conf/monolith.conf
-    portage_trust_key
-    [ -f "$f" ] && grep -qF "$MONOLITH_BINHOST" "$f" && return 0
-    # (a stage3's single binrepos.conf file becomes a folder first)
-    if [ -f /etc/portage/binrepos.conf ]; then
-        sudo mv /etc/portage/binrepos.conf /etc/portage/binrepos.conf.d-gentoo
-        sudo mkdir -p /etc/portage/binrepos.conf
-        sudo mv /etc/portage/binrepos.conf.d-gentoo /etc/portage/binrepos.conf/gentoo.conf
-    fi
-    sudo mkdir -p /etc/portage/binrepos.conf
-    printf '%s\n' "# Written by the Monolith installer: Monolith's binary packages (what Gentoo doesn't prebuild)" \
-        "[monolith]" "priority = 2" "sync-uri = $MONOLITH_BINHOST" \
-        "location = /var/cache/binhost/monolith" "verify-signature = false" | sudo tee "$f" >/dev/null
-}
 portage_emerge() {
     local masks=() d bin=()
     for d in package.use package.accept_keywords package.license; do
         masks+=("/etc/portage/$d/zz-monolith-autounmask")
     done
     if [ ${#PORTAGE_BIN_ATOMS[@]} -gt 0 ]; then
-        portage_binrepo
-        if [ ${#PORTAGE_SRC_ATOMS[@]} -gt 0 ]; then
-            bin=(--getbinpkg=y "--usepkg-exclude=${PORTAGE_SRC_ATOMS[*]}")
-        else
-            # nothing picked to compile: binaries only, nothing compiles (what has no binary
-            # anywhere stops the install and is named, instead of being built)
-            bin=(--getbinpkgonly=y)
-        fi
+        bin=(--getbinpkg=y)
+        [ ${#PORTAGE_SRC_ATOMS[@]} -gt 0 ] && bin+=("--usepkg-exclude=${PORTAGE_SRC_ATOMS[*]}")
     fi
     sudo env CONFIG_PROTECT_MASK="${masks[*]}" \
         emerge --ask=n --noreplace --keep-going --with-bdeps=y \
@@ -281,13 +240,9 @@ portage_binhost_index() {
 # the package names (of these) Gentoo prebuilds, one a line (any version); nothing when the index
 # can't be had (then nothing is marked)
 pm_binary_pkgs() {
-    local idx p a have mine="${XDG_CACHE_HOME:-$HOME/.cache}/monolith/binhost-monolith-Packages"
+    local idx p a have
     idx=$(portage_binhost_index) || return 0
-    # and Monolith's own (refreshed daily)
-    if [ ! -s "$mine" ] || [ -z "$(find "$mine" -mmin -1440 2>/dev/null)" ]; then
-        curl -fsL --max-time 30 -o "$mine.part" "$MONOLITH_BINHOST/Packages" && mv "$mine.part" "$mine" || rm -f "$mine.part"
-    fi
-    have=$(cat "$idx" "$mine" 2>/dev/null | sed -n 's/^CPV: //p' | sed 's/-[0-9][^ ]*$//' | sort -u)
+    have=$(sed -n 's/^CPV: //p' "$idx" | sed 's/-[0-9][^ ]*$//' | sort -u)
     for p in "$@"; do
         a="$(portage_atoms "$p")"
         case "$a" in "" | src:* | unknown:*) continue ;; esac
