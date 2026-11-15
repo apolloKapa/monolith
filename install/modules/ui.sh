@@ -314,7 +314,10 @@ show_package_overview() {
 
     local total=${#list[@]} cur=0 top=0 rows msg="" i j k
     set_pick() {   # set_pick name mode
-        if [ "$2" = x ] && pkg_needed "$1"; then msg="$1: Monolith needs it, it can't be off"; return; fi
+        if pkg_needed "$1"; then
+            msg="$1 is important: the shell needs it to start, so it's always installed$([ "$PM_NAME" = portage ] && echo ", as a binary")"
+            return
+        fi
         if [ "$2" = b ] && no_bin "$1"; then msg="Gentoo doesn't prebuild $1: it's compiled"; PKG_PICK["$1"]=c; return; fi
         PKG_PICK["$1"]="$2"
     }
@@ -347,10 +350,19 @@ show_package_overview() {
             local mark="  " st name opts=""
             [ "$i" -eq "$cur" ] && mark="${BOLD}${C_GREEN}▶${RESET} "
             if [[ -n "${is_missing[$p]}" ]]; then st="${C_YELLOW}to install${RESET}"; else st="${DIM}installed ${RESET}"; fi
-            name="$p"; pkg_needed "$p" && name="$name*"; no_bin "$p" && name="$name°"
+            name="$p"; no_bin "$p" && name="$name°"
             # (one Gentoo doesn't prebuild, saved as Binary before: it's compiled)
             no_bin "$p" && [ "$m" = b ] && m=c
-            for k in "${!modes[@]}"; do
+            if pkg_needed "$p"; then
+                # important: fixed (binary on Gentoo; one Gentoo doesn't prebuild compiles on binaries)
+                if [ "$PM_NAME" = portage ]; then
+                    no_bin "$p" && opts=" ${BOLD}${C_GREEN}[Compile]${RESET} ${DIM}on binaries${RESET}" || opts=" ${BOLD}"$'\e[36m'"[Binary]${RESET}"
+                else
+                    opts=" ${BOLD}${C_GREEN}[Install]${RESET}"
+                fi
+                opts+="  ${C_YELLOW}important${RESET}"
+            fi
+            pkg_needed "$p" || for k in "${!modes[@]}"; do
                 if [ "${modes[$k]}" = b ] && no_bin "$p"; then
                     opts+=" ${DIM} ------ ${RESET}"
                 elif [ "${modes[$k]}" = "$m" ]; then
@@ -365,7 +377,7 @@ show_package_overview() {
                 printf "%s%s  %-28.28s%s\033[K\n" "$mark" "$st" "$name" "$opts"
             fi
         done
-        printf "\n %s%d/%d   ↑/↓ package   ←/→ how it's installed   %s this one, %s all   (* needed)   q / Esc / Enter: back%s" \
+        printf "\n %s%d/%d   ↑/↓ package   ←/→ how it's installed   %s this one, %s all   important: always installed   q / Esc / Enter: back%s" \
             "$DIM" "$(( cur + 1 ))" "$total" "$([ "$PM_NAME" = portage ] && echo "c/b/x" || echo "c/x")" \
             "$([ "$PM_NAME" = portage ] && echo "C/B/X" || echo "C/X")" "$RESET"
         [ -n "$msg" ] && printf "\n %s%s%s" "$C_YELLOW" "$msg" "$RESET"
@@ -393,7 +405,7 @@ show_package_overview() {
                 [ "$want" = b ] && [ "$PM_NAME" != portage ] && continue
                 local skipped=0
                 for p in "${list[@]}"; do
-                    { [ "$want" = x ] && pkg_needed "$p"; } && continue
+                    pkg_needed "$p" && continue
                     if [ "$want" = b ] && no_bin "$p"; then PKG_PICK["$p"]=c; skipped=$((skipped + 1)); continue; fi
                     PKG_PICK["$p"]="$want"
                 done
