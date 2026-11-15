@@ -1,7 +1,8 @@
 #version 440
 
 // The Glitch workspace switch (island/WorkspaceFade.qml), over a picture of the wallpaper that
-// covers the screen as the switch happens. A front sweeps down it (p 0 → 1): above the front the
+// covers the screen as the switch happens. A front sweeps down it (p 0 → 1), or up it when the
+// switch goes up (dir -1: to a workspace above): above the front the
 // cover is gone and the new workspace shows; just above the front, in a narrow torn band, rows of
 // the cover slide sideways and split into red and cyan, fewer of them the further from the front;
 // a thin neon line runs along the front with a soft glow under it; below it the cover is whole.
@@ -16,6 +17,7 @@ layout(std140, binding = 0) uniform buf {
     vec2 itemSize;
     float p;        // how far the front has gone (0 … 1)
     float seed;     // a fresh tear each switch
+    float dir;      // 1: the front goes down, -1: up
     vec4 red;
     vec4 cyan;
 };
@@ -33,7 +35,8 @@ void main() {
     vec2 px = uv * itemSize;
     float band = 0.16;                                    // the torn band's height (of the screen)
     float front = mix(-0.02, 1.0 + band, p);              // where the front is (it starts just above the top)
-    float d = front - uv.y;                               // > 0: above the front
+    float y = dir < 0.0 ? 1.0 - uv.y : uv.y;              // along the way the front goes
+    float d = front - y;                                  // > 0: behind the front (already wiped)
     vec4 col = vec4(0.0);
 
     if (d <= 0.0) {

@@ -716,14 +716,28 @@ PanelWindow {
         transformOrigin: onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
         CardShadow {}
         CyberFx { target: floatCard; p: win.shown ? win.cardZoom : 1 - win.cardZoom; going: !win.shown }
-        // (takes the clicks that land on the card but on nothing in it; dragging there moves it)
+        // (takes the clicks that land on the card but on nothing in it)
+        MouseArea { anchors.fill: parent }
+        PanelFx { anchors.fill: parent; radius: floatCard.radius }
+        // what's inside (openArea) is laid out at the size the menu is going to; this keeps it
+        // within the card while the card grows to that size (it showed past the card's edges)
+        Item { id: cardClip; anchors.fill: parent; clip: true; z: 1 }
+        // moving the card: Super (Meta) + drag anywhere on it, over what's in it too. Without
+        // Super the press goes on to what's under it (a plain drag on the card moved it, and
+        // dragging in a menu, a slider's knob just off its track, carried the whole menu off).
+        // Super + double-click puts it back in its usual place.
         MouseArea {
             id: cardDrag
             anchors.fill: parent
+            z: 50
             property point from: Qt.point(0, 0)
             property bool moving: false
-            cursorShape: moving ? Qt.ClosedHandCursor : Qt.ArrowCursor
-            onPressed: m => { from = mapToItem(null, m.x, m.y); moving = false; }
+            // (a cursor only while moving: one all the time hid the menu's own, the hand over buttons)
+            cursorShape: moving ? Qt.ClosedHandCursor : undefined
+            onPressed: m => {
+                if (!(m.modifiers & Qt.MetaModifier)) { m.accepted = false; return; }
+                from = mapToItem(null, m.x, m.y); moving = false;
+            }
             onPositionChanged: m => {
                 if (!pressed) return;
                 const p = mapToItem(null, m.x, m.y);
@@ -740,12 +754,8 @@ PanelWindow {
                 floatCard.dragBy = Qt.point(0, 0);
             }
             onCanceled: { moving = false; floatCard.dragBy = Qt.point(0, 0); }
-            onDoubleClicked: Store.unset("menus.moved." + HubState.page)
+            onDoubleClicked: m => { if (m.modifiers & Qt.MetaModifier) Store.unset("menus.moved." + HubState.page); }
         }
-        PanelFx { anchors.fill: parent; radius: floatCard.radius }
-        // what's inside (openArea) is laid out at the size the menu is going to; this keeps it
-        // within the card while the card grows to that size (it showed past the card's edges)
-        Item { id: cardClip; anchors.fill: parent; clip: true; z: 1 }
         // pages let go once it has faded out
         onOpacityChanged: if (!win.shown && opacity < 0.01) win.wasOpen = false
     }

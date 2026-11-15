@@ -25,9 +25,14 @@ Item {
     readonly property var shownWs: Niri.workspacesOn(screenName).find(w => w.is_active)
     readonly property var wsId: shownWs ? shownWs.id : null
     property var lastId: null
+    property int lastIdx: 0
     onWsIdChanged: {
+        const idx = shownWs ? Number(shownWs.idx) || 0 : 0;
+        // up (a workspace above: a lower number) or down: the glitch's front goes that way
+        tear.dir = idx < lastIdx ? -1 : 1;
         if (lastId !== null && wsId !== null && wsId !== lastId) play();
         lastId = wsId;
+        lastIdx = idx;
     }
     function play() {
         if (!Theme.animOn || cover.status !== Image.Ready) return;
@@ -64,6 +69,7 @@ Item {
         property vector2d itemSize: Qt.vector2d(width, height)
         property real p: 0
         property real seed: 0
+        property real dir: 1
         property color red: Theme.danger
         property color cyan: Theme.accent
         fragmentShader: Qt.resolvedUrl("../ui/shaders/wsglitch.frag.qsb")

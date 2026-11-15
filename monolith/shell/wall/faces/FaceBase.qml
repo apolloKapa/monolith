@@ -28,6 +28,33 @@ Item {
     readonly property color accentC: colorOpt("accentColor", Theme.accent)
     readonly property color subC: hasMain ? Qt.alpha(mainC, 0.72) : Theme.subtext
     // the widget's own Font (the clocks' settings): that family, else the look's own `d`
+    // the clocks' Colouring: one colour (Main colour), a gradient (its way and two colours) or a
+    // colour for each digit. A gradient is laid over the digits drawn white (layer.effect:
+    // GradientTint, gradVec its way); each digit's colour goes into the text (inked())
+    readonly property string colorMode: String(opt("colorMode", "solid") || "solid")
+    readonly property bool gradientOn: colorMode === "gradient"
+    readonly property bool digitsOn: colorMode === "digits"
+    readonly property color gradFrom: colorOpt("gradFrom", Theme.accent)
+    readonly property color gradTo: colorOpt("gradTo", Theme.text)
+    readonly property var gradWays: ({ down: [0, 1], up: [0, -1], right: [1, 0], left: [-1, 0],
+        downRight: [1, 1], upRight: [1, -1], downLeft: [-1, 1], upLeft: [-1, -1] })
+    readonly property vector2d gradVec: { const v = gradWays[String(opt("gradDir", "down"))] || [0, 1]; return Qt.vector2d(v[0], v[1]); }
+    // what a digit's text is drawn in: white under a gradient, else `d`
+    function inkColor(d) { return gradientOn ? "#ffffff" : d; }
+    function digitColor(i, d) { return colorOpt("digit" + (i + 1), d); }
+    // the time's text with each digit in its colour (rich text: textFormat textFormatFor()),
+    // counting digits from `first` (the minutes of "mm" are digits 2 and 3); the rest in `d`
+    function inked(s, d, first) {
+        if (!digitsOn) return s;
+        let out = "", i = first || 0;
+        const hex = c => { const q = Qt.color(c); const h = v => ("0" + Math.round(v * 255).toString(16)).slice(-2); return "#" + h(q.r) + h(q.g) + h(q.b); };
+        for (const ch of String(s)) {
+            if (ch >= "0" && ch <= "9") { out += '<font color="' + hex(digitColor(i, d)) + '">' + ch + "</font>"; i++; }
+            else out += '<font color="' + hex(d) + '">' + (ch === "<" ? "&lt;" : ch) + "</font>";
+        }
+        return out;
+    }
+    readonly property int textFormatFor: digitsOn ? Text.StyledText : Text.PlainText
     readonly property string fontPick: String(opt("font", "") || "")
     function fontOr(d) { return fontPick !== "" ? fontPick : d; }
 }

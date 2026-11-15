@@ -7,6 +7,9 @@ import "../../ui"
 FaceBase {
     id: f
     clip: true
+    // Colouring → Gradient: laid over the digits (drawn white)
+    layer.enabled: f.gradientOn
+    layer.effect: GradientTint { from: f.gradFrom; to: f.gradTo; dir: f.gradVec }
     readonly property string hh: Qt.formatTime(f.now, "HH")
     readonly property string mm: Qt.formatTime(f.now, "mm")
     readonly property string fam: f.fontOr("Google Sans Flex")
@@ -43,7 +46,8 @@ FaceBase {
                         y: cell.height - baselineOffset + f.px * modelData[0]
                         text: cell.digit
                         font.family: f.fam; font.pixelSize: f.px; font.weight: Font.Black; font.variableAxes: f.axes
-                        color: modelData[1] < 0 ? ((cell.row + cell.col) % 2 === 0 ? f.mainC : f.accentC) : Qt.rgba(0, 0, 0, modelData[1])
+                        readonly property color own: (cell.row + cell.col) % 2 === 0 ? f.mainC : f.accentC
+                        color: modelData[1] < 0 ? f.inkColor(f.digitsOn ? f.digitColor(cell.index, own) : own) : Qt.rgba(0, 0, 0, modelData[1])
                     }
                 }
             }

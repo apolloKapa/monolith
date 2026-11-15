@@ -161,7 +161,8 @@ Singleton {
     // Background opacity, or no card ("normal" is the old name of Opacity, at 100 % a solid card)
     readonly property var backgroundOptions: [["background", "Background", "dropdown", "blur", [["blur", "Blur", "The wallpaper behind it, frosted"], ["normal", "Opacity", "A card as see-through as Background opacity"], ["clear", "Clear", "No card, only what's on it"]]],
         ["bgOpacity", "Background opacity (with Opacity)", "slider", 1, [0, 1, 0.05]]]
-    function optionsFor(t, f) {
+    // (`item`, the widget: some options show only with others set, the gradient's with Gradient)
+    function optionsFor(t, f, item) {
         const id = faceId(t, f);
         const o = [["opacity", "Opacity", "slider", 1, [0.15, 1, 0.05]],
                    ["rotation", "Angle (or twist it by its corner)", "slider", 0, [0, 359, 1]],
@@ -195,6 +196,19 @@ Singleton {
         // the clocks that are text: any font (empty: the look's own)
         if (t === "clock" && ["digital", "minimal", "lockscreen", "stacked", "material", "lumen", "cyber"].indexOf(id) !== -1)
             o.push(["font", "Font", "font", ""]);
+        // the digits' colouring: one colour (Main colour above), a gradient any way across them, or
+        // a colour for each digit
+        if (t === "clock" && ["digital", "minimal", "lockscreen", "stacked", "material", "cyber"].indexOf(id) !== -1) {
+            const mode = item ? String(opt(item, "colorMode", "solid")) : "solid";
+            o.push(["colorMode", "Colouring", "dropdown", "solid", [["solid", "One colour", "Main colour above"], ["gradient", "A gradient", "From one colour to another, any way across"], ["digits", "A colour for each digit", "Pick every digit's own"]]]);
+            if (mode === "gradient")
+                o.push(["gradDir", "The gradient goes", "dropdown", "down", [["down", "Top to bottom"], ["up", "Bottom to top"], ["right", "Left to right"], ["left", "Right to left"],
+                            ["downRight", "Top left to bottom right"], ["upLeft", "Bottom right to top left"], ["upRight", "Bottom left to top right"], ["downLeft", "Top right to bottom left"]]],
+                       ["gradFrom", "Gradient from", "colour", ""], ["gradTo", "Gradient to", "colour", ""]);
+            if (mode === "digits")
+                o.push(["digit1", "First digit (hours)", "colour", ""], ["digit2", "Second digit (hours)", "colour", ""],
+                       ["digit3", "Third digit (minutes)", "colour", ""], ["digit4", "Fourth digit (minutes)", "colour", ""]);
+        }
         if (t === "clock" && id === "cyber")
             o.push(["frame", "The panel behind it", "toggle", true], ["glitch", "A glitch now and then", "toggle", true], ["hour12", "12-hour", "toggle", false]);
         if (t === "text") o.push(["textContent", "Text", "text", ""]);

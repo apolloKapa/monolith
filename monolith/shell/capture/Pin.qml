@@ -42,11 +42,14 @@ PanelWindow {
     HoverHandler { id: hov }
     MouseArea {
         anchors.fill: parent
-        cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+        cursorShape: moving ? Qt.ClosedHandCursor : Qt.ArrowCursor
         property point grab
-        onPressed: mouse => grab = Qt.point(mouse.x, mouse.y)
+        // moved with Super (Meta) + drag, like Monolith's menus
+        property bool moving: false
+        onPressed: mouse => { grab = Qt.point(mouse.x, mouse.y); moving = (mouse.modifiers & Qt.MetaModifier) !== 0; }
+        onReleased: moving = false
         onPositionChanged: mouse => {
-            if (!pressed) return;
+            if (!pressed || !moving) return;
             win.px = Math.max(0, Math.min(win.screen.width - 40, win.px + mouse.x - grab.x));
             win.py = Math.max(0, Math.min(win.screen.height - 40, win.py + mouse.y - grab.y));
         }

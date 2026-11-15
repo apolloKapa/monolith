@@ -757,7 +757,7 @@ PanelWindow {
                     width: optFlick.width
                     spacing: 10
                     Repeater {
-                        model: WidgetLayout.optionsFor(wrap.modelData.type, wrap.modelData.face)
+                        model: WidgetLayout.optionsFor(wrap.modelData.type, wrap.modelData.face, wrap.modelData)
                         Column {
                             id: oc
                             required property var modelData

@@ -119,7 +119,14 @@ FaceBase {
             }
             Digits { x: timeBox.shift - timeBox.split; color: Qt.alpha(f.hot, 0.55) }
             Digits { x: timeBox.shift + timeBox.split; color: Qt.alpha(f.edge, 0.55) }
-            Digits { id: main; x: timeBox.shift; color: f.neon }
+            Digits {
+                id: main; x: timeBox.shift
+                text: f.inked(timeBox.t, f.neon, 0); textFormat: f.textFormatFor
+                color: f.inkColor(f.neon)
+                // Colouring → Gradient: laid over the digits (drawn white)
+                layer.enabled: f.gradientOn
+                layer.effect: GradientTint { from: f.gradFrom; to: f.gradTo; dir: f.gradVec }
+            }
             // the seconds, small, on the time's baseline
             Text {
                 x: main.x + main.implicitWidth + timeBox.px * 0.06

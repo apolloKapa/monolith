@@ -77,7 +77,7 @@ ColumnLayout {
                 if (sec.s.style === "off") { stage.p = stage.target; stage.v = 0; }
             }
         }
-        Timer { id: flip; interval: 60; onTriggered: { stage.target = 1 - stage.target; stage.p = stage.target; stage.v = 0; glitchFx.seed = Math.random() * 97; glitchAnim.restart(); } }
+        Timer { id: flip; interval: 60; onTriggered: { stage.target = 1 - stage.target; stage.p = stage.target; stage.v = 0; glitchFx.seed = Math.random() * 97; glitchFx.dir = stage.target > 0.5 ? 1 : -1; glitchAnim.restart(); } }
         // (a timer, not a FrameAnimation: that one never ticked inside this page)
         property real last: 0
         Timer {
@@ -139,6 +139,7 @@ ColumnLayout {
             property vector2d itemSize: Qt.vector2d(width, height)
             property real p: 0
             property real seed: 0
+            property real dir: 1
             property color red: Theme.danger
             property color cyan: Theme.accent
             fragmentShader: Qt.resolvedUrl("../../ui/shaders/wsglitch.frag.qsb")
