@@ -165,7 +165,8 @@ Pressable {
         width: parent.width - 24
         spacing: 12
 
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.alignment: Qt.AlignTop
             Layout.preferredWidth: 40
             Layout.preferredHeight: 40

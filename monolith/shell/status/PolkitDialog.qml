@@ -61,7 +61,8 @@ Scope {
                     }
                 }
                 Label { width: parent.width; text: win.flow ? win.flow.message : ""; wrapMode: Text.Wrap; Balance {} }
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     width: parent.width
                     height: 52
                     radius: Theme.corner(height)

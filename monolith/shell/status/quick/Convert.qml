@@ -153,7 +153,8 @@ GridLayout {
         Layout.preferredWidth: 2
         spacing: 6
         Label { text: "Every unit"; strong: true; font.pixelSize: Theme.sizeTitle }
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Theme.corner(80, 4)
@@ -171,7 +172,8 @@ GridLayout {
                 Label { id: ccl; anchors.centerIn: parent; text: "Clear"; font.pixelSize: Theme.sizeSmall }
             }
         }
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Theme.corner(80, 4)

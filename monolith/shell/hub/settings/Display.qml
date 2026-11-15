@@ -61,7 +61,8 @@ ColumnLayout {
             Button { text: "Apply"; primary: true; enabledInput: arr.dirty; opacity: arr.dirty ? 1 : 0.5; onClicked: arr.apply() }
         }
     }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: arr
         Layout.fillWidth: true
         Layout.preferredHeight: 240
@@ -184,7 +185,8 @@ ColumnLayout {
 
     Repeater {
         model: sec.outputs
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             id: card
             visible: modelData.name === sec.shownName
             required property var modelData

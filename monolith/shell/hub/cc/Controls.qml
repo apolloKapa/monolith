@@ -192,7 +192,8 @@ RowLayout {
             }
         }
 
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.fillWidth: true
             Layout.preferredHeight: levels.implicitHeight + 28
             Rise {}
@@ -239,7 +240,8 @@ RowLayout {
         Layout.fillHeight: true
         spacing: 10
 
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Theme.corner(56, 8)
@@ -247,7 +249,8 @@ RowLayout {
             border.width: Theme.outlineW
             border.color: Theme.outlineColor
             // the cover as a rounded picture, the words and buttons under it
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 id: cover
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: 18

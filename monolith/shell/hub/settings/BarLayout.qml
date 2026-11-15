@@ -304,7 +304,8 @@ ColumnLayout {
             spacing: 10
             Label { width: parent.width; wrapMode: Text.Wrap; text: "Drag the modules where you want them on the bar. Drag one off the bar to take it away, or from below onto the bar to add it."; muted: true }
             // the bar, as three zones
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 width: parent.width
                 height: zrow.height + 16
                 radius: Theme.corner(80, 8)
@@ -325,7 +326,8 @@ ColumnLayout {
                 }
             }
             // what isn't on the bar
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 width: parent.width
                 height: tflow.implicitHeight + 40
                 radius: Theme.corner(80, 6)
@@ -347,7 +349,8 @@ ColumnLayout {
             }
         }
         // the chip being carried
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             visible: sec.dragging
             z: 100
             x: sec.dragPos.x - width / 2
@@ -455,7 +458,8 @@ ColumnLayout {
         radius: Theme.corner(80, 6)
         color: Theme.container
         border.width: Theme.outlineW; border.color: Theme.outlineColor
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             anchors.centerIn: parent
             visible: mpBar.contentLen > 2
             width: (mpBar.implicitWidth + 16) * 2
@@ -508,7 +512,8 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 8
         // the clock: one big live preview, and a toggle for each of its parts
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.fillWidth: true
             Layout.preferredHeight: Math.max(110, clockBox.height + 40)
             radius: Theme.corner(80, 10)
@@ -516,7 +521,8 @@ ColumnLayout {
             border.width: Theme.outlineW; border.color: Theme.outlineColor
             // the clock module on a piece of bar, twice its real size
             readonly property real k: 2
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 id: clockBox
                 anchors.centerIn: parent
                 width: (clockPrev.implicitWidth + 16) * parent.k
@@ -619,14 +625,16 @@ ColumnLayout {
                                                         : "It shows while music plays. The preview is a still curve, twice its real size."
             Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6
         }
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.fillWidth: true
             Layout.preferredHeight: Theme.islandH * 2 + 40
             radius: Theme.corner(80, 6)
             color: Theme.container
             border.width: Theme.outlineW; border.color: Theme.outlineColor
             readonly property real k: 2
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 anchors.centerIn: parent
                 width: (visPrev.implicitWidth + 16) * parent.k
                 height: Theme.islandH * parent.k

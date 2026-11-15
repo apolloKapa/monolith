@@ -2,7 +2,8 @@ import QtQuick
 import "../core"
 
 // A round leading icon: tonal, or filled with the accent when `on`.
-Rectangle {
+SmoothRect {
+    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
     id: b
     property string icon: ""
     property bool on: false

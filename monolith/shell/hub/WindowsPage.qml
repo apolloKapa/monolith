@@ -77,7 +77,8 @@ Page {
 
             Repeater {
                 model: page.groups
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     id: grp
                     required property var modelData
                     Layout.fillWidth: true
@@ -87,7 +88,8 @@ Page {
                     Row {
                         x: 14; y: 12
                         spacing: 8
-                        Rectangle {
+                        SmoothRect {
+                            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                             width: 22; height: 22
                             radius: Theme.corner(22)
                             color: grp.modelData.ws.is_active ? Theme.accent : Theme.control

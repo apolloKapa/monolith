@@ -3,7 +3,8 @@ import QtQuick.Layouts
 import "../core"
 
 // A page's tabs: [[value, label, icon], …] on a tonal bar, the picked one on a gliding pill.
-Rectangle {
+SmoothRect {
+    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
     id: seg
     property var opts: []
     property string value: ""
@@ -12,7 +13,8 @@ Rectangle {
     Layout.preferredHeight: 44
     radius: Theme.corner(height)
     color: Theme.container
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         y: 4
         x: 4 + seg.opts.findIndex(o => o[0] === seg.value) * ((seg.width - 8) / seg.opts.length)
         width: (seg.width - 8) / seg.opts.length

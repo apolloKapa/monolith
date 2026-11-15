@@ -60,7 +60,8 @@ ColumnLayout {
         }
     }
     // pictures need a fastfetch built with them
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         visible: !sec.pictures
         Layout.fillWidth: true
         implicitHeight: warnCol.implicitHeight + 28
@@ -89,7 +90,8 @@ ColumnLayout {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     Layout.fillWidth: true
                     implicitHeight: cmd.implicitHeight + 16
                     radius: Theme.corner(40)
@@ -108,7 +110,8 @@ ColumnLayout {
     Label { visible: sec.list.length === 0; text: sec.loaded ? "No presets yet: New makes one" : "Loading the previews…"; muted: true; Layout.leftMargin: 6 }
     Repeater {
         model: sec.list
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             required property var modelData
             Layout.fillWidth: true
             implicitHeight: head.height + pv.height + 30
@@ -153,7 +156,8 @@ ColumnLayout {
                 Button { text: "Back to text"; icon: "text_fields"; onClicked: sec.run(["text", modelData.name]) }
             }
             // the preview: fastfetch's output, coloured, on a terminal-like tile
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 id: pv
                 x: 14; y: (picRow.visible ? picRow.y + picRow.height : head.y + head.height) + 8
                 width: parent.width - 28

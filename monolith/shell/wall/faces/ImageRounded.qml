@@ -36,7 +36,8 @@ FaceBase {
             anchors.fill: parent
             visible: false
             layer.enabled: true
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 width: img.paintedWidth > 0 ? Math.round(img.paintedWidth) : parent.width
                 height: img.paintedHeight > 0 ? Math.round(img.paintedHeight) : parent.height
                 x: Math.round((parent.width - width) / 2); y: Math.round((parent.height - height) / 2)

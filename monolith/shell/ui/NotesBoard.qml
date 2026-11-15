@@ -67,7 +67,8 @@ Item {
             Btn { visible: !nb.showTrash; icon: "add"; tint: Theme.accent; onHit: nb.open(Notes.create()) }
         }
         // the filter (with a few notes)
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             id: filterBox
             visible: !nb.showTrash && nb.live && Notes.list.length > 4
             y: head.height + 6; width: parent.width; height: visible ? 30 : 0

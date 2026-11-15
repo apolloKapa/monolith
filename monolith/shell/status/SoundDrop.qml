@@ -97,7 +97,8 @@ PanelWindow {
                 spacing: 10
 
                 // ── the device you hear: name, live bars, mute, the big volume bar ──
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     id: hero
                     Layout.fillWidth: true
                     Layout.preferredHeight: 150
@@ -220,7 +221,8 @@ PanelWindow {
                 }
 
                 // ── the microphone ──
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     visible: !!dd.source
                     Layout.fillWidth: true
                     Layout.preferredHeight: 100
@@ -249,7 +251,8 @@ PanelWindow {
                 Label { visible: dd.streams.length > 0; Layout.leftMargin: 6; Layout.topMargin: 2; text: "Apps"; muted: true; font.pixelSize: Theme.sizeSmall; strong: true }
                 Repeater {
                     model: dd.streams
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                         id: app
                         required property var modelData
                         readonly property bool quiet: modelData.audio.muted

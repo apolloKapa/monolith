@@ -79,7 +79,8 @@ FaceBase {
                     spacing: 2
                     Item {
                         width: 9; height: 24
-                        Rectangle {
+                        SmoothRect {
+                            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                             anchors.bottom: parent.bottom; width: parent.width
                             height: Math.max(2, parent.height * parent.parent.modelData.secs / wd.weekMax)
                             radius: Theme.corner(9)

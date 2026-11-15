@@ -172,7 +172,8 @@ Page {
                         anchors.horizontalCenter: col.horizontalCenter; anchors.bottom: col.top; anchors.bottomMargin: 4
                         text: Wellbeing.fmtShort(bi.v); font.pixelSize: Theme.sizeTiny + 1; strong: true
                     }
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                         id: col
                         anchors.bottom: lab.top; anchors.bottomMargin: 6
                         anchors.horizontalCenter: parent.horizontalCenter

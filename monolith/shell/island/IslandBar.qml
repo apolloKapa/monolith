@@ -336,7 +336,8 @@ Item {
                     // (a count, not the list itself: a new list on every switch rebuilt every pill,
                     // and a pill made just now has nothing to animate from, so nothing moved)
                     model: wsBox.list.length
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                         id: pill
                         required property int index
                         readonly property var modelData: wsBox.list[index] || ({ idx: 0, is_active: false, busy: false, id: -1 })

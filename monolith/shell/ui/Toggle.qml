@@ -8,8 +8,9 @@ Item {
     signal toggled(bool on)
     implicitWidth: 52
     implicitHeight: 32
-    Rectangle {
+    SmoothRect {
         anchors.fill: parent
+        smoothing: 0   // (a plain capsule in other styles; the Cyberpunk style cuts one corner)
         radius: height / 2
         color: t.checked ? Theme.accent : Theme.control
         border.width: t.checked ? 0 : 2
@@ -19,7 +20,7 @@ Item {
     Rectangle {
         property real d: t.checked ? 24 : 16
         width: d; height: d
-        radius: d / 2
+        radius: Theme.chamfer ? 2 : d / 2
         anchors.verticalCenter: parent.verticalCenter
         x: t.checked ? t.width - d - 4 : 8
         color: t.checked ? Theme.onAccent : Theme.subtext

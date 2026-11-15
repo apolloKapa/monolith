@@ -32,7 +32,8 @@ Column {
         fill: Theme.barFloats ? "transparent" : (Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
         shadow: !Theme.barFloats && Theme.barOpacity > 0.3
         // Solid: its own rounded floating bar
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             anchors.fill: parent
             visible: Theme.barStyle === "solid"
             radius: Theme.barRound(height)
@@ -69,7 +70,8 @@ Column {
         border.width: Theme.outlineW; border.color: Theme.outlineColor
 
         // ── the monitor: a bezel round your screen, small, on a stand ──
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             id: monitor
             readonly property real bezel: 7
             // up to monitorH tall (a tall screen is drawn narrower), never wider than the card

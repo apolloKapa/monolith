@@ -99,7 +99,8 @@ ColumnLayout {
     }
     Repeater {
         model: favSec.favIds
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             required property var modelData
             required property int index
             readonly property var entry: DesktopEntries.byId(modelData) || DesktopEntries.byId(modelData + ".desktop")

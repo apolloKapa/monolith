@@ -138,7 +138,8 @@ Page {
         spacing: 12
 
         // ── the sections ──
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.preferredWidth: 264
             Layout.fillHeight: true
             radius: Theme.corner(56, 6)
@@ -260,7 +261,8 @@ Page {
                                 color: sec.cur && !sec.many ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
                                 onClicked: HubState.settingsSection = sec.modelData.tabs[0][0]
                                 // its icon on a little tile that lights up when it's the open one
-                                Rectangle {
+                                SmoothRect {
+                                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                                     id: tile
                                     x: 7; anchors.verticalCenter: parent.verticalCenter
                                     width: 30; height: 30
@@ -303,7 +305,8 @@ Page {
                                     Behavior on head { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
                                     Behavior on tail { NumberAnimation { duration: Theme.ms(520); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                                     visible: sec.cur
-                                    Rectangle {
+                                    SmoothRect {
+                                        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                                         x: 30; y: glide.tail
                                         width: pages.width; height: 34
                                         radius: Theme.corner(height)
@@ -361,7 +364,8 @@ Page {
             // the icon pops and the words slide in each time another page opens
             property real pop: 1
             NumberAnimation { id: popAnim; target: banner; property: "pop"; from: 0; to: 1; duration: Theme.ms(420); easing.type: Easing.OutCubic }
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 id: mark
                 x: 4; anchors.verticalCenter: parent.verticalCenter
                 width: 52; height: 52
@@ -388,7 +392,8 @@ Page {
         }
         // on Hyprland: these pages change niri's settings (its config file), which apply when you
         // log into niri; Hyprland takes its own from hyprland.conf
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             readonly property var niriPages: ({ Input: "Keyboard and mouse", Capture: "Where screenshots are saved" })
             visible: Niri.hyprland && niriPages[page.file] !== undefined
             Layout.fillWidth: true

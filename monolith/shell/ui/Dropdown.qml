@@ -5,7 +5,8 @@ import "popfit.js" as PopFit
 
 // A drop-down choice: shows the picked option; click it for the list. Options are
 // [value, label] pairs (a label can be followed by a description as a third item).
-Rectangle {
+SmoothRect {
+    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
     id: dd
     property var opts: []
     property string value: ""

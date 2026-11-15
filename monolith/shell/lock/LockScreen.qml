@@ -176,7 +176,8 @@ WlSessionLock {
             transformOrigin: placed ? Item.Center : Item.Bottom
             readonly property string avatar: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face"))
 
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 id: field
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: 420

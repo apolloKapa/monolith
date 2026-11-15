@@ -231,7 +231,8 @@ ColumnLayout {
 
     Repeater {
         model: !Niri.hyprland && !sec.has("animations|off") ? sec.kinds : []
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             id: card
             required property var modelData
             readonly property string name: modelData[0]

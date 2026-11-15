@@ -236,7 +236,8 @@ PanelWindow {
             x: island.e; y: win.bottom ? 0 : Theme.islandH
             width: island.bodyW; height: Math.max(0, island.height - Theme.islandH)
             clip: true
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 y: win.bottom ? 0 : -radius
                 width: parent.width; height: parent.height + radius
                 radius: Theme.islandRadius
@@ -350,12 +351,13 @@ PanelWindow {
                     anchors.centerIn: parent
                     width: parent.width * (0.4 + 0.6 * Math.min(1, openArea.unfold * 3))
                     height: Math.max(2, 3 / Math.max(0.05, openArea.unfold))
-                    radius: height / 2
+                    radius: Theme.chamfer ? 0 : height / 2
                     color: Theme.accent
                     opacity: 1 - openArea.unfold
                 }
 
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     id: field
                     width: parent.width
                     height: win.fieldH
@@ -416,7 +418,8 @@ PanelWindow {
                             NumberAnimation { target: menuTitle; property: "shift"; to: -HubState.dir * 10; duration: Theme.ms(160); easing.type: Easing.OutCubic }
                         }
                     }
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                         id: fieldTile
                         readonly property bool on: !win.usesQuery && !win.tabbed
                         x: 8
@@ -509,7 +512,7 @@ PanelWindow {
                         x: tabs.tabX(tabs.cur)
                         width: tabs.wideW
                         height: parent.height
-                        radius: height / 2
+                        radius: Theme.chamfer ? 0 : height / 2
                         color: Theme.accentContainer
                         Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                     }
@@ -524,7 +527,7 @@ PanelWindow {
                             height: tabs.height
                             clip: true
                             color: "transparent"
-                            radius: height / 2
+                            radius: Theme.chamfer ? 0 : height / 2
                             Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                             onClicked: { HubState.go(modelData); query.forceActiveFocus(); }
                             Row {
@@ -705,7 +708,7 @@ PanelWindow {
             anchors.centerIn: parent
             width: parent.width * (0.5 + 0.5 * Math.min(1, floatCard.unfold * 3))
             height: Math.max(2, 3 / Math.max(0.02, floatCard.unfold))
-            radius: height / 2
+            radius: Theme.chamfer ? 0 : height / 2
             color: Theme.accent
             opacity: 1 - floatCard.unfold
         }

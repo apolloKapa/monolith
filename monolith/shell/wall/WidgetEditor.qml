@@ -509,7 +509,7 @@ PanelWindow {
                         z: 12
                         width: corner ? 18 : (horiz ? 34 : 10)
                         height: corner ? 18 : (horiz ? 10 : 34)
-                        radius: Math.min(width, height) / 2
+                        radius: Theme.chamfer ? 0 : Math.min(width, height) / 2
                         x: (modelData[0] ? -6 : (modelData[2] ? wbody.width + 6 : wbody.width / 2)) - width / 2
                         y: (modelData[1] ? -6 : (modelData[3] ? wbody.height + 6 : wbody.height / 2)) - height / 2
                         color: Theme.accent
@@ -651,7 +651,8 @@ PanelWindow {
             readonly property int glideMs: Theme.ms(280)
 
             // its own little bar: the name, the look, its settings, remove
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 id: wbar
                 opacity: wrap.sel ? 1 : 0
                 scale: wrap.sel ? 1 : Theme.popScale
@@ -712,7 +713,8 @@ PanelWindow {
                 }
             }
             // its settings: under (or over) its little bar
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 opacity: wrap.optsShown ? 1 : 0
                 scale: wrap.optsShown ? 1 : Theme.popScale
                 visible: opacity > 0.01
@@ -875,7 +877,8 @@ PanelWindow {
     }
 
     // ── the toolbar ──
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: bar
         z: 100
         anchors.horizontalCenter: parent.horizontalCenter
@@ -953,7 +956,8 @@ PanelWindow {
     property string dragType: ""                 // a card being dragged out
     property point dragPos: Qt.point(0, 0)        // the ghost's top-left, in the window
     readonly property var dragSize: dragType !== "" ? WidgetLayout.size({ type: dragType, face: "" }) : [0, 0]
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: addStrip
         opacity: ed.adding ? 1 : 0
         scale: ed.adding ? 1 : Theme.popScale
@@ -1101,7 +1105,8 @@ PanelWindow {
 
     // ── presets: ready-made arrangements, replacing this screen's widgets ──
     property bool presetsOpen: false
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         opacity: ed.presetsOpen ? 1 : 0
         scale: ed.presetsOpen ? 1 : Theme.popScale
         visible: opacity > 0.01

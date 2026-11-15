@@ -35,7 +35,8 @@ Page {
         spacing: 12
 
         // the time card
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Rise {}
             Layout.preferredWidth: 300
             Layout.fillHeight: true
@@ -77,7 +78,8 @@ Page {
         }
 
         // the month
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Rise {}
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -106,7 +108,8 @@ Page {
                     }
                     Repeater {
                         model: page.cells
-                        Rectangle {
+                        SmoothRect {
+                            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                             required property var modelData
                             readonly property bool today: page.sameDay(modelData, clock.date)
                             readonly property bool inMonth: modelData.getMonth() === page.shownMonth.getMonth()
@@ -128,7 +131,8 @@ Page {
     }
 
     // the weather: now, then the next hours, then the next days
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         Rise {}
         visible: !!Weather.loc
         y: topRow.height + 10
@@ -162,7 +166,8 @@ Page {
                 readonly property int fits: Math.max(1, Math.min(8, Math.floor((width + spacing) / (54 + spacing))))
                 Repeater {
                     model: Weather.hours.filter((h, i) => i % 3 === 0).slice(0, hoursRow.fits)
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                         required property var modelData
                         width: 54
                         height: 112

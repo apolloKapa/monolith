@@ -94,7 +94,8 @@ PanelWindow {
             CardShadow { visible: win.shadowed }
         }
         // Solid: one floating rounded bar
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             visible: Theme.barStyle === "solid"
             anchors.fill: parent
             radius: Theme.barRound(width)

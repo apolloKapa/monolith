@@ -51,7 +51,8 @@ ColumnLayout {
         readonly property real pad: Theme.inset(radius, 14)
         Label { x: tc.pad; y: 10; width: parent.width - 2 * tc.pad - 20; text: tc.title; strong: true; color: tc.on ? Theme.onAccentContainer : Theme.text }
         Icon { visible: tc.on; x: parent.width - tc.pad - 16; y: 9; name: "check_circle"; size: 18; filled: true; color: Theme.accent }
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             x: 10; y: 36
             width: parent.width - 20; height: 50
             radius: Theme.corner(50, 2)
@@ -146,7 +147,8 @@ ColumnLayout {
         }
     }
     // what it looks like
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         Layout.fillWidth: true
         implicitHeight: pcol.implicitHeight + 28
         radius: Theme.corner(80, 6)

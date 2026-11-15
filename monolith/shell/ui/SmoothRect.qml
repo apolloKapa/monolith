@@ -14,7 +14,8 @@ Item {
     readonly property SmoothBorder border: SmoothBorder {}
     property real smoothing: Theme.cornerSmooth
     readonly property real half: Math.max(0, Math.min(width, height) / 2)
-    readonly property real r: Math.max(0, Math.min(radius, half))
+    // (cut: any rounding becomes a cut of the theme's size for this shape; none stays square)
+    readonly property real r: Theme.chamfer ? (radius > 0.5 ? Math.min(half, Theme.cut(Math.min(width, height))) : 0) : Math.max(0, Math.min(radius, half))
     // cut corners (Theme.chamfer, the Cyberpunk style): a superellipse with exponent 1 is a
     // straight line across the corner; the shader cuts only the bottom-right one
     readonly property bool cut: Theme.chamfer && r >= 2

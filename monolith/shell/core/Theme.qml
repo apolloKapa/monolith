@@ -159,8 +159,11 @@ Singleton {
     readonly property bool cyber: Look.style.glitch === true && animOn
     readonly property int fxInMs: animOn ? Math.round(420 * Math.max(0.6, animScale)) : 0
     readonly property int fxOutMs: animOn ? Math.round(560 * Math.max(0.6, animScale)) : 0
-    // corners cut straight across (Cyberpunk): ui/SmoothRect draws them
+    // corners cut straight across (Cyberpunk): ui/SmoothRect draws them. How big a cut is, for a
+    // shape whose shorter side is s: about a quarter of it, 4 to 18 px (a pill's round end would
+    // have cut half the end away)
     readonly property bool chamfer: Look.style.chamfer === true
+    function cut(s) { return Math.round(Math.max(4, Math.min(18, s * 0.24))); }
     readonly property int popInMs: Math.round(320 * animScale)
     readonly property int popOutMs: Math.round(180 * animScale)
 

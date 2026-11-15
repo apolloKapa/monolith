@@ -304,7 +304,8 @@ Page {
             }
             Repeater {
                 model: page.tab === "wifi" && page.wifiOn ? nets : null
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     id: net
                     required property string ssid
                     required property int strength
@@ -414,7 +415,8 @@ Page {
                             visible: net.asking
                             width: parent.width
                             height: 44
-                            Rectangle {
+                            SmoothRect {
+                                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                                 anchors.left: parent.left
                                 anchors.right: go.left; anchors.rightMargin: 8
                                 height: parent.height

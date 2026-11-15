@@ -210,7 +210,7 @@ PanelWindow {
             model: 3
             Rectangle {
                 required property int index
-                width: wel.width * (0.5 + 0.15 * index); height: width; radius: width / 2
+                width: wel.width * (0.5 + 0.15 * index); height: width; radius: Theme.chamfer ? 0 : width / 2
                 color: index === 1 ? wel.tertiary : Theme.accent
                 opacity: 0.07
                 property real a: index * 2.1
@@ -233,7 +233,7 @@ PanelWindow {
                     property real p: 0
                     NumberAnimation on p { from: 0; to: 1; duration: 16000 + 12000 * wel.rnd(index, 5); loops: Animation.Infinite; running: wel.visible }
                     readonly property real q: (p + r0) % 1
-                    width: 2 + 3 * wel.rnd(index, 6); height: width; radius: width / 2
+                    width: 2 + 3 * wel.rnd(index, 6); height: width; radius: Theme.chamfer ? 0 : width / 2
                     color: index % 3 === 0 ? wel.tertiary : wel.glint
                     x: wel.width * wel.rnd(index, 7) + 40 * Math.sin((q * 3 + r0) * Math.PI * 2)
                     y: wel.height * (1.05 - 1.1 * q)
@@ -670,7 +670,8 @@ PanelWindow {
                 columnSpacing: 10; rowSpacing: 8
                 Repeater {
                     model: wel.shortcuts
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                         required property var modelData
                         Layout.fillWidth: true
                         Layout.preferredHeight: 50

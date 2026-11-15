@@ -168,7 +168,8 @@ PanelWindow {
                             Item {
                                 x: 10; width: 18; height: 18
                                 anchors.verticalCenter: parent.verticalCenter
-                                Rectangle {
+                                SmoothRect {
+                                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                                     visible: row.check
                                     anchors.fill: parent
                                     radius: Theme.corner(18, -6)

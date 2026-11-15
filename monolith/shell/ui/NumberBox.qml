@@ -90,7 +90,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         width: Math.max(72, input.contentWidth + 22)
         height: 32
-        radius: height / 2
+        radius: Theme.chamfer ? 0 : height / 2
         color: input.activeFocus ? Theme.containerHigh : Theme.container
         border.width: input.activeFocus ? 2 : 0
         border.color: Theme.accent

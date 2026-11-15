@@ -76,7 +76,8 @@ Page {
             required property var modelData
             width: GridView.view.cellWidth
             height: 52
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 anchors.fill: parent
                 anchors.margins: 3
                 radius: Theme.corner(height)
@@ -88,7 +89,8 @@ Page {
                     spacing: 4
                     Repeater {
                         model: modelData.keys.split("+")
-                        Rectangle {
+                        SmoothRect {
+                            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                             required property string modelData
                             height: 28
                             width: Math.max(28, kl.implicitWidth + 16)

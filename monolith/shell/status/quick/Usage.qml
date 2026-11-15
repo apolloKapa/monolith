@@ -127,7 +127,8 @@ GridLayout {
                 Label { text: u.graphs[u.graph][1] + " · now " + u.fmtG(u.gv.length ? u.gv[u.gv.length - 1] : 0) + " · avg " + u.fmtG(u.avg) + " · peak " + u.fmtG(u.peak); muted: true; font.pixelSize: Theme.sizeSmall; Layout.fillWidth: true; elide: Text.ElideRight }
                 Segmented { width: 220; height: 30; opts: [["cpu", "CPU"], ["mem", "RAM"], ["gpu", "GPU"], ["temp", "Temp"]]; value: u.graph; onPicked: v => u.graph = v }
             }
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 Layout.fillWidth: true
                 Layout.preferredHeight: u.wide ? 160 : 72
                 radius: Theme.corner(72, 4)

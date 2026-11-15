@@ -88,7 +88,8 @@ ColumnLayout {
     }
     // ── which tools the capture menu has ──
     SettingRow { key: "capture.tools"; icon: "handyman"; title: "Tools in the capture menu"; desc: "Save is always there; the ones switched off lose their key too" }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         Layout.fillWidth: true
         implicitHeight: toolFlow.implicitHeight + 20
         radius: Theme.corner(56, 2)
@@ -124,7 +125,8 @@ ColumnLayout {
         Button { text: "Unpin all"; onClicked: Capture.pins = [] }
     }
     SettingRow { icon: "translate"; title: "Text languages"; desc: "What reading text looks for (more is slower). Others come with tesseract's language packs" }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         Layout.fillWidth: true
         implicitHeight: langFlow.implicitHeight + 20
         radius: Theme.corner(56, 2)

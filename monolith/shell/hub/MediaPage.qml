@@ -240,16 +240,16 @@ Page {
                 Rectangle {
                     id: track
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width; height: seek.big ? 8 : 5; radius: height / 2
+                    width: parent.width; height: seek.big ? 8 : 5; radius: Theme.chamfer ? 0 : height / 2
                     color: Qt.alpha(Theme.text, 0.14)
                     Behavior on height { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
-                    Rectangle { width: Math.max(height, parent.width * seek.frac); height: parent.height; radius: height / 2; color: page.tone }
+                    Rectangle { width: Math.max(height, parent.width * seek.frac); height: parent.height; radius: Theme.chamfer ? 0 : height / 2; color: page.tone }
                 }
                 Rectangle {
                     visible: seek.can
                     x: parent.width * seek.frac - width / 2
                     anchors.verticalCenter: parent.verticalCenter
-                    width: seek.big ? 16 : 0; height: width; radius: width / 2
+                    width: seek.big ? 16 : 0; height: width; radius: Theme.chamfer ? 0 : width / 2
                     color: page.tone
                     border.width: 3; border.color: Theme.frame
                     Behavior on width { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
@@ -326,7 +326,8 @@ Page {
     }
 
     // ── the tabs ──
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: tabs
         visible: !!page.player
         x: 8; y: page.topH + 18
@@ -334,7 +335,8 @@ Page {
         radius: Theme.corner(40)
         color: Qt.alpha(Theme.text, 0.06)
         readonly property var opts: [["eq", "Equaliser", "equalizer"], ["audio", "Audio", "tune"], ["lyrics", "Lyrics", "lyrics"]]
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             y: 4
             x: 4 + tabs.opts.findIndex(o => o[0] === page.view) * ((tabs.width - 8) / 3)
             width: (tabs.width - 8) / 3; height: tabs.height - 8
@@ -454,7 +456,7 @@ Page {
                         Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             y: track.mid - bandItem.g / 12 * track.mid - height / 2
-                            width: bandArea.containsMouse || bandArea.pressed ? 24 : 20; height: width; radius: width / 2
+                            width: bandArea.containsMouse || bandArea.pressed ? 24 : 20; height: width; radius: Theme.chamfer ? 0 : width / 2
                             color: Theme.frame
                             border.width: 3; border.color: page.tone
                             Behavior on y { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }

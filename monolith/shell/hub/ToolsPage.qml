@@ -117,7 +117,8 @@ Page {
                         Chip { required property string modelData; text: modelData; on: page.kind === modelData; onClicked: { page.kind = modelData; page.fromI = 0; page.toI = 1; } }
                     }
                 }
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     Layout.fillWidth: true
                     Layout.preferredHeight: 44
                     radius: Theme.corner(height)

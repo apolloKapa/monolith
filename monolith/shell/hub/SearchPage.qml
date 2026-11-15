@@ -331,7 +331,8 @@ Page {
             color: Theme.ringTrack
         }
         // the favourite being carried
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             visible: page.favDrag >= 0
             z: 50
             width: 64; height: 64
@@ -423,7 +424,8 @@ Page {
             readonly property string title: isApp ? modelData.entry.name : modelData.name
             readonly property string sub: isApp ? (modelData.entry.comment || modelData.entry.genericName || "") : modelData.sub
 
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 id: iconBox
                 x: 8
                 anchors.verticalCenter: parent.verticalCenter
@@ -478,7 +480,8 @@ Page {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: page.menuEntry = null
     }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: appMenu
         z: 91
         visible: page.menuEntry !== null

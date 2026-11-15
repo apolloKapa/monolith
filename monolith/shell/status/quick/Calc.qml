@@ -83,7 +83,8 @@ GridLayout {
             Label { id: sl; anchors.centerIn: parent; text: "Scientific"; font.pixelSize: Theme.sizeSmall; color: c.sci ? Theme.onAccentContainer : Theme.text }
         }
     }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         Layout.fillWidth: true
         Layout.preferredHeight: 96
         radius: Theme.corner(96, 4)
@@ -191,7 +192,8 @@ GridLayout {
                 Label { id: hcl; anchors.centerIn: parent; text: "Clear"; font.pixelSize: Theme.sizeSmall }
             }
         }
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Theme.corner(80, 4)

@@ -57,7 +57,8 @@ ColumnLayout {
             Button { enabledInput: devices.videoInputs.length > 0; text: sec.looking ? "Stop" : "Show"; primary: !sec.looking; onClicked: sec.looking = !sec.looking }
         }
     }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         visible: sec.looking
         Layout.fillWidth: true
         Layout.preferredHeight: width * 9 / 16 * 0.7

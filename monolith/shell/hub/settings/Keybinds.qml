@@ -201,7 +201,8 @@ ColumnLayout {
     Label { visible: sec.note !== "" && sec.error === ""; Layout.fillWidth: true; wrapMode: Text.Wrap; text: sec.note; color: Theme.accent }
     Label { visible: sec.recording !== ""; Layout.fillWidth: true; strong: true; color: Theme.accent; text: "Press the new key… (Esc cancels)" }
     // the key is taken: replace the other shortcut, or keep it and pick another key
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         visible: sec.clash !== null
         Layout.fillWidth: true
         implicitHeight: clashCol.implicitHeight + 24

@@ -17,7 +17,8 @@ Item {
     property bool dragging: false
     property real dragValue: 0
 
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: track
         anchors.fill: parent
         radius: Theme.corner(height)

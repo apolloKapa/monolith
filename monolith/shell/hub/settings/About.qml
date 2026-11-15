@@ -38,7 +38,8 @@ ColumnLayout {
         }
     }
     // ── updates ──
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: upd
         Layout.fillWidth: true
         implicitHeight: ucol.implicitHeight + 36
@@ -102,7 +103,8 @@ ColumnLayout {
                 }
             }
             // what changed, newest first
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 visible: Updates.newer && Updates.log.length > 0
                 width: parent.width
                 height: Math.min(changes.implicitHeight + 20, 220)

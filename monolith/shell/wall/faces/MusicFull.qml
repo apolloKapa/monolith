@@ -43,7 +43,8 @@ FaceBase {
     Item {
         anchors.fill: parent
         anchors.margins: f.m
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             id: art
             visible: f.showArt
             anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter

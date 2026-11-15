@@ -171,7 +171,8 @@ PanelWindow {
         }
     }
 
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: bar
         visible: win.main
         // the menu fades in with a little zoom as the overlay comes up

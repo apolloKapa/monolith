@@ -59,7 +59,8 @@ ColumnLayout {
     }
 
     // ── the preview: two little workspaces, switching back and forth with the same spring ──
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: stage
         Layout.fillWidth: true
         Layout.preferredHeight: 150

@@ -39,7 +39,8 @@ ColumnLayout {
     }
     Repeater {
         model: sec.listedApps
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             required property var modelData
             readonly property bool shown: sec.hiddenIds.indexOf(modelData.id) === -1
             Layout.fillWidth: true

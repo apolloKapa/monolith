@@ -468,7 +468,8 @@ PanelWindow {
     }
 
     // the app picker: every app that isn't pinned, with a search
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: picker
         // open (wanted), fading and zooming in from the dock, and out again
         property bool wanted: false
@@ -530,7 +531,8 @@ PanelWindow {
 
     // the right-click menu, above the app
     MouseArea { anchors.fill: parent; visible: menu.open; onClicked: menu.open = false }
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: menu
         // open: fades and grows in from the dock, and out again (visible stays while it fades)
         property bool open: false

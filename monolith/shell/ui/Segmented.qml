@@ -14,7 +14,8 @@ SmoothRect {
     border.width: Theme.outlineW
     border.color: Theme.outlineColor
     readonly property real cellW: (width - 8) / Math.max(1, opts.length)
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         y: 4
         x: 4 + Math.max(0, seg.opts.findIndex(o => String(o[0]) === seg.value)) * seg.cellW
         visible: seg.opts.some(o => String(o[0]) === seg.value)

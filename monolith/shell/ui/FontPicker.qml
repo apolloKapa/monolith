@@ -5,7 +5,8 @@ import "popfit.js" as PopFit
 
 // A font drop-down: shows the font in use (written in it); click it for every font, each
 // written in itself, with a search. Rows are a fixed height, so hovering never moves anything.
-Rectangle {
+SmoothRect {
+    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
     id: fp
     property var families: []
     property string value: ""            // "" = the default
@@ -77,7 +78,8 @@ Rectangle {
         }
         contentItem: Column {
             spacing: 6
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 width: parent.width; height: 38
                 radius: Theme.corner(38)
                 color: Theme.containerHigh

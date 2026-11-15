@@ -3,7 +3,8 @@ import QtQuick.Layouts
 import "../core"
 
 // How things stand, on top of a tab: a big icon, a line or two, and the switch.
-Rectangle {
+SmoothRect {
+    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
     id: hero
     property string icon: ""
     property string title: ""

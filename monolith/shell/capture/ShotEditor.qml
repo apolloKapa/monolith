@@ -87,7 +87,8 @@ FloatingWindow {
             spacing: 10
 
             // ── the toolbar ──
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 Layout.fillWidth: true
                 Layout.preferredHeight: tools.implicitHeight + 16
                 radius: Theme.corner(56, 6)
@@ -140,14 +141,15 @@ FloatingWindow {
                             width: 36; height: 40
                             color: win.size === index ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
                             onClicked: win.size = index
-                            Rectangle { anchors.centerIn: parent; width: [5, 9, 15][parent.index]; height: width; radius: width / 2; color: Theme.text }
+                            Rectangle { anchors.centerIn: parent; width: [5, 9, 15][parent.index]; height: width; radius: Theme.chamfer ? 0 : width / 2; color: Theme.text }
                         }
                     }
                 }
             }
 
             // ── the picture ──
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 id: stage
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -206,7 +208,7 @@ FloatingWindow {
                                 x: sh.x; y: sh.y
                                 Rectangle {
                                     visible: parent.sh.t === "step"
-                                    width: parent.sh.s * 5; height: width; radius: width / 2
+                                    width: parent.sh.s * 5; height: width; radius: Theme.chamfer ? 0 : width / 2
                                     x: -width / 2; y: -height / 2
                                     color: parent.sh.c
                                     border.width: Math.max(2, width / 14); border.color: "white"

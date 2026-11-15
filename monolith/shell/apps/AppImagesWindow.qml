@@ -45,7 +45,8 @@ FloatingWindow {
             }
 
             // ── the drop zone ──
-            Rectangle {
+            SmoothRect {
+                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 id: zone
                 Layout.fillWidth: true
                 Layout.preferredHeight: 170
@@ -104,7 +105,8 @@ FloatingWindow {
             // ── what's being set up ──
             Repeater {
                 model: AppImages.jobs
-                Rectangle {
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     required property var modelData
                     Layout.fillWidth: true
                     Layout.preferredHeight: 50
@@ -148,7 +150,8 @@ FloatingWindow {
                     Label { visible: AppImages.items.length === 0; text: "None yet. Drop one above."; muted: true; topPadding: 10 }
                     Repeater {
                         model: AppImages.items
-                        Rectangle {
+                        SmoothRect {
+                            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                             id: row
                             required property var modelData
                             width: list.width

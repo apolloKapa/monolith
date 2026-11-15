@@ -384,7 +384,8 @@ ColumnLayout {
     }
 
     // ── the pad ──
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: pad
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -437,7 +438,7 @@ ColumnLayout {
         // the eraser's ring under the pointer
         Rectangle {
             visible: d.tool === "eraser" && ma.containsMouse
-            width: Math.max(12, d.size * 2 * Sketch.z + 8); height: width; radius: width / 2
+            width: Math.max(12, d.size * 2 * Sketch.z + 8); height: width; radius: Theme.chamfer ? 0 : width / 2
             x: ma.mouseX - width / 2; y: ma.mouseY - height / 2
             color: "transparent"; border.width: 1.5; border.color: Theme.text
         }

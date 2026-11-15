@@ -53,7 +53,8 @@ Page {
         }
 
         // ── the device in use ──
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             id: now
             visible: page.tab !== "apps" && page.inUse !== null
             readonly property var node: page.inUse
@@ -171,7 +172,8 @@ Page {
                 // the apps: a name, what's playing, its own volume
                 Repeater {
                     model: page.tab === "apps" ? page.streams : []
-                    Rectangle {
+                    SmoothRect {
+                        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                         id: app
                         required property var modelData
                         readonly property bool quiet: modelData.audio.muted

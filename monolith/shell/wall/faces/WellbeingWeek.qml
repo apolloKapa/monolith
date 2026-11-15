@@ -36,7 +36,8 @@ FaceBase {
                         Item {
                             required property var modelData
                             width: 26; height: chart.height
-                            Rectangle {
+                            SmoothRect {
+                                smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                                 anchors.bottom: lbl.top; anchors.bottomMargin: 4
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 width: 18

@@ -183,7 +183,8 @@ GridLayout {
     // timers started (click: again) and stopwatch runs (copy with their laps)
     component HistoryList: ColumnLayout {
         spacing: 6
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             Layout.fillWidth: true
             Layout.fillHeight: true
             radius: Theme.corner(80, 4)

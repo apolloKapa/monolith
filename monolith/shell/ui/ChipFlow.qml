@@ -4,7 +4,8 @@ import "../core"
 
 // A longer choice (themes, layouts…): chips that wrap, the picked one filled. Options are
 // strings, or [value, label] pairs.
-Rectangle {
+SmoothRect {
+    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
     id: cf
     property var opts: []
     property string value: ""

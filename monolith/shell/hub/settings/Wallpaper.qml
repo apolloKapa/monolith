@@ -7,7 +7,8 @@ import "../../ui"
 ColumnLayout {
     spacing: 8
     // the wallpaper now, at the screen's shape
-    Rectangle {
+    SmoothRect {
+        smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         Layout.fillWidth: true
         Layout.preferredHeight: width * 9 / 16 * 0.62
         radius: Theme.corner(80, 6)

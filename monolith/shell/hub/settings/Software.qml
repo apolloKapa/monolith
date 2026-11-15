@@ -41,7 +41,8 @@ ColumnLayout {
     }
     Repeater {
         model: sec.shownApps
-        Rectangle {
+        SmoothRect {
+            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
             required property var modelData
             Layout.fillWidth: true
             implicitHeight: 52
