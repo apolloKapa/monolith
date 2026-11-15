@@ -42,3 +42,4 @@ CutBlur 1.0 CutBlur.qml
 CutCorner 1.0 CutCorner.qml
 CutEdge 1.0 CutEdge.qml
 GradientTint 1.0 GradientTint.qml
+MaterialPane 1.0 MaterialPane.qml

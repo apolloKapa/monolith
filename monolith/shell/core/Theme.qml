@@ -84,6 +84,14 @@ Singleton {
     // Liquid glass: panes are glass (ui/LiquidPane, shaders/glass.frag) with only a whisper of
     // fill over them; the compositor blur behind them is on unless you turned it off
     readonly property bool liquid: Look.style.liquid === true
+    // a material for the panels (ui/MaterialPane, shaders/material.frag): concrete, paper or steel,
+    // the style's own (styles.js `material`) unless Settings → Appearance picks one (or none)
+    readonly property string material: {
+        const v = Store.get("theme.material", "") || "";
+        if (v === "none" || liquid) return "";
+        return ["concrete", "paper", "steel"].indexOf(v) !== -1 ? v : (Look.style.material || "");
+    }
+    readonly property real materialStrength: Math.max(0, Math.min(1.5, Number(Store.get("theme.materialStrength", 1))))
     readonly property real see: (liquid ? 0.08 : (Look.style.opaque === false ? 0.74 : 1)) * panelOpacity
     // blur behind the shell's panels (the compositor does it; strength in niri's config)
     // blur behind panels: a toggle for every style but Liquid glass (which is glass already);

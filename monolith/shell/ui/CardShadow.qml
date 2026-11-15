@@ -15,6 +15,9 @@ Item {
     opacity: Theme.chamfer ? 0 : 1
     // Liquid glass: the card is a pane of glass (under the card's own faint fill and content)
     LiquidPane { parent: cs.parent; anchors.fill: parent; radius: cs.radius; z: -0.5; visible: Theme.liquid && cs.visible }
+    // a material (concrete, paper, steel): the card's own colour, textured, over its flat fill
+    // and under what's in it (made here, at the start of the card, so it comes before its content)
+    MaterialPane { parent: cs.parent; anchors.fill: parent; radius: cs.radius; color: cs.color; visible: Theme.material !== "" && cs.visible && cs.color.a > 0.01 }
     // how far the shadow falls down (the bar's pills keep it centred: they float on the screen)
     property real offsetY: Theme.shadowY
     property real radius: parent && parent.radius !== undefined ? parent.radius : 0

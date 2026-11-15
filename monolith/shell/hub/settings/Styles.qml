@@ -106,6 +106,28 @@ ColumnLayout {
         }
     }
 
+    // what the panels are made of (ui/MaterialPane): the style's own, none, or any of them
+    SettingRow {
+        key: "theme.material"; def: ""
+        icon: "texture"; title: "Material"
+        desc: Theme.liquid ? "Liquid glass is a material of its own"
+            : "What the bar, menus and dock are made of" + (Look.style.material ? " (" + Look.style.name + "'s own: " + ({ concrete: "concrete", paper: "paper", steel: "brushed steel" })[Look.style.material] + ")" : "")
+        Dropdown {
+            width: 220; height: 36
+            enabled: !Theme.liquid
+            opacity: enabled ? 1 : 0.4
+            opts: [["", "The style's own"], ["none", "None (flat)"], ["concrete", "Concrete"], ["paper", "Paper"], ["steel", "Brushed steel"]]
+            value: Store.get("theme.material", "") || ""
+            onPicked: v => v === "" ? Store.unset("theme.material") : Store.set("theme.material", v)
+        }
+    }
+    SettingRow {
+        key: "theme.materialStrength"; def: 1
+        visible: Theme.material !== ""
+        icon: "grain"; title: "Texture"; desc: "How much of the material shows"
+        NumberBox { from: 0.2; to: 1.5; step: 0.1; decimals: 1; factor: 100; unit: "%"; value: Theme.materialStrength; onMoved: v => Store.set("theme.materialStrength", v) }
+    }
+
     // ── colours ──
     function lum(hex) { const c = Qt.color(hex || "#000"); return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; }
     // the search above the themes: by name or description, any order of words ("light twi")

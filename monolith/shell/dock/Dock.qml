@@ -232,6 +232,8 @@ PanelWindow {
         // edge, so the pane is told where that strip is on the screen
         readonly property point glassOrigin: Qt.point(dock.side === "right" ? dock.screen.width - dock.width : 0, dock.side === "bottom" ? dock.screen.height - dock.height : 0)
         LiquidPane { anchors.fill: parent; z: -1; radius: capsule.radius; visible: Theme.liquid && capsule.opacityBg > 0.02 }
+        // a material: the capsule's colour, textured (over its fill, under the icons)
+        MaterialPane { anchors.fill: parent; radius: capsule.radius; color: capsule.color; visible: Theme.material !== "" && capsule.opacityBg > 0.02 }
         // the outline: optional, and never on an invisible dock
         border.width: Store.get("dock.border", true) !== false && opacityBg > 0.02 ? Math.max(1, Theme.outlineW) : 0
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline

@@ -12,6 +12,7 @@
 //   liquid              liquid glass: clearer panes, a light rim and shine, widgets bend what's behind them
 //   chamfer             corners cut straight across instead of rounded (Cyberpunk)
 //   glitch              things glitch in and the Blackwall takes them out (ui/CyberFx, Cyberpunk)
+//   material            what its panels are made of (ui/MaterialPane): concrete, paper or steel
 //   sounds              its own interface sound pack (sounds/<pack>), played instead of yours
 //   colors              its palette (base, mantle, crust, surface0–2, overlay0–2, text, subtext0–1, accents)
 // (The looks and palettes are the earlier Monolith's styles.)
@@ -247,6 +248,7 @@ var list = [
    "red": "#a8322e",
    "maroon": "#7a2420"
   },
+  "material": "paper",
   "id": "paper"
  },
  {
@@ -518,5 +520,82 @@ var list = [
    "maroon": "#c4002e"
   },
   "id": "cyberpunk"
+ },
+ {
+  "name": "Concrete",
+  "id": "concrete",
+  "opaque": true,
+  "square": true,
+  "outline": [
+   3,
+   2
+  ],
+  "outlineRole": "ink",
+  "hardShadow": 6,
+  "font": "Space Grotesk",
+  "material": "concrete",
+  "desc": "Raw cast concrete, heavy ink lines, hard shadows: brutalist",
+  "colors": {
+   "base": "#aeada8",
+   "mantle": "#a3a29d",
+   "crust": "#141413",
+   "surface0": "#bab9b4",
+   "surface1": "#c6c5c0",
+   "surface2": "#1a1a19",
+   "overlay0": "#73726e",
+   "overlay1": "#53524f",
+   "overlay2": "#3b3a38",
+   "text": "#121211",
+   "subtext0": "#363533",
+   "subtext1": "#252423",
+   "blue": "#e8501f",
+   "sapphire": "#e8501f",
+   "teal": "#2d6a6a",
+   "mauve": "#e8501f",
+   "pink": "#d9452e",
+   "green": "#3f7d3a",
+   "yellow": "#e0b420",
+   "peach": "#e8501f",
+   "red": "#c42b1c",
+   "maroon": "#9e2416"
+  }
+ },
+ {
+  "name": "Industrial",
+  "id": "industrial",
+  "opaque": true,
+  "radiusScale": 0.8,
+  "outline": [
+   1,
+   1
+  ],
+  "outlineRole": "rule",
+  "font": "JetBrains Mono",
+  "material": "steel",
+  "desc": "Brushed gunmetal, amber accents",
+  "colors": {
+   "base": "#2e3136",
+   "mantle": "#26292d",
+   "crust": "#141619",
+   "surface0": "#3a3e44",
+   "surface1": "#464b52",
+   "surface2": "#565c64",
+   "overlay0": "#6b727b",
+   "overlay1": "#858c95",
+   "overlay2": "#a0a7b0",
+   "text": "#e9ecef",
+   "subtext0": "#a9b0b8",
+   "subtext1": "#c6ccd2",
+   "blue": "#ffb020",
+   "sapphire": "#4ea3d9",
+   "teal": "#4fb3a8",
+   "mauve": "#ffb020",
+   "pink": "#e0607a",
+   "green": "#6cc070",
+   "yellow": "#ffd24a",
+   "peach": "#ffb020",
+   "red": "#e5484d",
+   "maroon": "#b8373b"
+  }
  }
 ];

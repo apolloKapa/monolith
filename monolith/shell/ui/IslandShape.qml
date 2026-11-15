@@ -85,6 +85,15 @@ Item {
         }
     }
 
+    // a material: the body is made of it (square where it meets the screen edge), over the flat fill
+    MaterialPane {
+        x: s.e; y: 0
+        width: s.bodyW; height: s.height
+        color: s.fill
+        visible: Theme.material !== "" && s.fill.a > 0.01 && s.height > 4
+        topLeft: s.flipped ? s.rr : 0; topRight: s.flipped ? s.rr : 0
+        bottomRight: s.flipped ? 0 : s.rr; bottomLeft: s.flipped ? 0 : s.rr
+    }
     // Liquid glass: the body is a pane of glass (square where it meets the screen edge); the ears
     // keep the faint fill
     LiquidPane {
