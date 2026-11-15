@@ -38,7 +38,9 @@ jobs:
       - name: The stage3
         run: |
           base=https://distfiles.gentoo.org/releases/amd64/autobuilds
-          path=$(curl -fsL "$base/latest-stage3-amd64-desktop-systemd.txt" | grep -v '^#' | awk '{print $1; exit}')
+          # (the list is PGP-signed text: the path is the line with the .tar.xz)
+          path=$(curl -fsL "$base/latest-stage3-amd64-desktop-systemd.txt" | grep -o '^[^ ]*\.tar\.xz' | head -1)
+          [ -n "$path" ] || { echo "no stage3 in the list"; exit 1; }
           echo "stage3: $path"
           curl -fsL -o /tmp/stage3.tar.xz "$base/$path"
           sudo mkdir -p "$ROOT"
