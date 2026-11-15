@@ -36,7 +36,7 @@ PanelWindow {
     // would be outside that for a moment, the dock would think it had been left and hide again)
     // stretched to the edge, so moving from the edge to the dock never leaves it; hidden: the strip
     mask: Region {
-        item: menu.open || dock.editing ? fullArea : (dock.shown ? reach : hotZone)
+        item: menu.open || dock.editing ? fullArea : (dock.shown ? reach : (dock.overFullscreen ? null : hotZone))
         // the edge strip stays in while shown (resting on the edge away from the dock keeps it)
         Region { item: dock.shown && !menu.open && !dock.editing ? hotZone : null }
     }
@@ -136,7 +136,11 @@ PanelWindow {
         }
         return false;
     }
-    readonly property bool shown: enabled && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || (showWhen === "dodge" && !covered) || hovering || leaveDelay.running || menu.open)
+    // a fullscreen window on this screen, or a game's borderless window as big as it: the dock
+    // stays away (it sat over fullscreen on Hyprland, and its edge strip brought it up whenever
+    // the pointer reached the bottom in a game); the strip is off too, so the game keeps the mouse
+    readonly property bool overFullscreen: Niri.fullscreenOn(modelData.name)
+    readonly property bool shown: enabled && (editing || menu.open || !overFullscreen) && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || (showWhen === "dodge" && !covered) || hovering || leaveDelay.running || menu.open)
 
     // the shown dock's place, from its edge to its far side
     Item {
