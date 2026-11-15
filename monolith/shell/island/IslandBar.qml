@@ -80,7 +80,9 @@ Item {
     // each workspace style: how long along the bar and how thick across, how round, and how it's
     // filled, edged and numbered when it's open, has windows, or is empty
     function wsLook(st, active, busy) {
-        const A = Theme.accent, faint = Theme.control, mid = Theme.subtext;
+        // (empty ones: a see-through tint of the text, not Theme.control, which on some palettes
+        // is the bar's own colour, so empty workspaces vanished into it)
+        const A = Theme.accent, faint = Qt.alpha(Theme.text, 0.22), mid = Theme.subtext;
         switch (st) {
         case "dots":        return { along: active ? 11 : 9, across: active ? 11 : 9, r: 1, fill: active ? A : (busy ? mid : faint), edge: 0, num: false };
         case "numbers":     return { along: 22, across: 22, r: 1, fill: active ? A : "transparent", edge: 0, num: true };
@@ -352,7 +354,7 @@ Item {
                         radius: look.r >= 1 ? Theme.corner(Math.min(width, height)) : Math.min(Math.min(width, height) / 2, Theme.radius * look.r)
                         color: active && bar.wsHighlight ? (idleLook.fill === "transparent" ? "transparent" : Qt.alpha(idleLook.fill, 0)) : look.fill
                         border.width: active && bar.wsHighlight ? 0 : look.edge
-                        border.color: busy ? Theme.subtext : Theme.control
+                        border.color: busy ? Theme.subtext : Qt.alpha(Theme.text, 0.3)
                         Behavior on width { enabled: bar.wsAnim !== "none"; NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                         Behavior on height { enabled: bar.wsAnim !== "none"; NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                         Behavior on color { enabled: bar.wsAnim !== "none"; ColorAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
