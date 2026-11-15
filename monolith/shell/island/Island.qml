@@ -72,6 +72,15 @@ PanelWindow {
         return false;
     }
     Item { id: fullArea; anchors.fill: parent }
+    // niri, Animations → Workspace switching → Fade: drawn in this window, under everything in it,
+    // so it's over the windows and under the bar (a window of its own was made after the bar,
+    // once the setting had loaded, and niri put it over the bar)
+    Loader {
+        anchors.fill: parent
+        z: -1000
+        active: !Niri.hyprland && (Store.get("animations.workspaceSwitch", {}) || {}).style === "fade"
+        sourceComponent: WorkspaceFade { screenName: win.modelData.name }
+    }
 
     // auto-hide (Settings → Status line): the collapsed island slides up, and comes back when
     // the pointer touches the top edge

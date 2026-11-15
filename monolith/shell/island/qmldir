@@ -3,3 +3,4 @@ IslandBar 1.0 IslandBar.qml
 Reserve 1.0 Reserve.qml
 Frame 1.0 Frame.qml
 SideBar 1.0 SideBar.qml
+WorkspaceFade 1.0 WorkspaceFade.qml

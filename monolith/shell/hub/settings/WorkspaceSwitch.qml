@@ -8,7 +8,7 @@ import "../../ui"
 // Animations → Workspace switching: how workspaces move when you switch (the style), how it feels
 // and how fast, with a little preview that plays it. Hyprland: Monolith's animations file
 // (scripts/hypr_anims.py: every style). niri: its workspace-switch animation (niri only slides
-// up and down, so the style is that or off).
+// up and down), or off with Monolith's fade over it (wall/WorkspaceFade).
 ColumnLayout {
     id: sec
     spacing: 8
@@ -20,7 +20,7 @@ ColumnLayout {
     readonly property var ratio: ({ smooth: 1.0, bouncy: 0.6 })
     readonly property var styles: Niri.hyprland
         ? [["slidevert", "Slide up and down"], ["slide", "Slide sideways"], ["slidefadevert", "Slide and fade"], ["fade", "Fade"], ["off", "Off"]]
-        : [["slidevert", "Slide up and down"], ["off", "Off"]]
+        : [["slidevert", "Slide up and down"], ["fade", "Fade"], ["off", "Off"]]
 
     // Hyprland: what its file says (it may have been set before this page existed)
     Process {
@@ -42,7 +42,8 @@ ColumnLayout {
             if (Niri.hyprland) {
                 writer.command = ["python3", sec.script, "apply", JSON.stringify(sec.s)];
                 writer.running = true;
-            } else if (sec.s.style === "off") {
+            } else if (sec.s.style === "off" || sec.s.style === "fade") {
+                // (Fade: niri switches at once and Monolith fades the new workspace in)
                 NiriConf.set("animations", "workspace-switch", "{ off; }");
             } else {
                 NiriConf.set("animations", "workspace-switch", "{ spring damping-ratio=" + sec.ratio[sec.s.feel].toFixed(1)
@@ -54,7 +55,7 @@ ColumnLayout {
     Label {
         Layout.fillWidth: true; wrapMode: Text.Wrap; muted: true
         text: "How workspaces move when you switch between them. The preview plays it."
-            + (Niri.hyprland ? "" : " niri only slides workspaces up and down; its other animations are in Animation speeds.")
+            + (Niri.hyprland ? "" : " niri itself only slides workspaces up and down; Fade is drawn by Monolith (the new workspace fades in over your wallpaper). niri's other animations are in Animation speeds.")
     }
 
     // ── the preview: two little workspaces, switching back and forth with the same spring ──
@@ -151,7 +152,8 @@ ColumnLayout {
     }
     SettingRow {
         Layout.fillWidth: true
-        visible: sec.s.style !== "off"
+        // (niri's fade is Monolith's own, a plain ease: no bounce to choose)
+        visible: sec.s.style !== "off" && !(sec.s.style === "fade" && !Niri.hyprland)
         icon: "waves"; title: "Feel"; desc: sec.s.feel === "bouncy" ? "Goes a little past and settles back" : "Eases in and stops, no bounce"
         Segmented {
             width: 220
