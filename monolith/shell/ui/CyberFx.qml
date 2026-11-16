@@ -1,8 +1,10 @@
 import QtQuick
 import "../core"
 
-// The Cyberpunk style's motion (Theme.cyber, shaders/cyber.frag): something appearing glitches
-// in, something going is taken by the Blackwall. Put one next to what moves and give it that
+// A style's own motion (Theme.fxKind): Cyberpunk's (shaders/cyber.frag: something appearing
+// glitches in, something going is taken by the Blackwall), and each other heavy style's
+// (shaders/fx_<kind>.frag, the same inputs: Doodle draws things in and rubs them out, Terminal
+// types them in and switches them off like a CRT, and so on; see Theme.fxKind). Put one next to what moves and give it that
 // item (`target`), how far along it is (`p`, 0 … 1: coming in, it's how much is there; going,
 // how much the Blackwall has taken) and which way (`going`). The target is drawn through the
 // effect only while it runs; before and after it's drawn as it is.
@@ -31,9 +33,11 @@ Item {
             property real mode: fx.going ? 1 : 0
             property real t: fx.t
             property real seed: fx.seed
-            property color red: Theme.danger
-            property color cyan: Theme.accent
-            fragmentShader: Qt.resolvedUrl("shaders/cyber.frag.qsb")
+            // two colours for the effect: Cyberpunk's red and cyan; the pencil's ink and the accent
+            // (Doodle), the phosphor and the text (Terminal); the ink and the accent elsewhere
+            property color red: Theme.fxKind === "cyber" ? Theme.danger : (Theme.fxKind === "terminal" ? Theme.accent : Theme.text)
+            property color cyan: Theme.fxKind === "terminal" ? Theme.text : Theme.accent
+            fragmentShader: Qt.resolvedUrl(Theme.fxKind === "cyber" ? "shaders/cyber.frag.qsb" : "shaders/fx_" + Theme.fxKind + ".frag.qsb")
         }
     }
 }

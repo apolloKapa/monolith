@@ -171,9 +171,16 @@ Singleton {
     // Cyberpunk (styles.js glitch): what appears glitches in, what goes is taken by the Blackwall
     // (ui/CyberFx). Scaled by the animation speed, but never under 60 % of it: at 3x the effects
     // were over before they could be seen
-    readonly property bool cyber: Look.style.glitch === true && animOn
-    readonly property int fxInMs: animOn ? Math.round(420 * Math.max(0.6, animScale)) : 0
-    readonly property int fxOutMs: animOn ? Math.round(560 * Math.max(0.6, animScale)) : 0
+    // A style's own way of drawing things in and taking them out (styles.js `fx`; ui/CyberFx and
+    // ui/shaders/fx_<kind>.frag): cyber (glitch in, the Blackwall), doodle (drawn in, rubbed
+    // out), terminal (typed in, a CRT switching off), paper (unfolds, folds away), concrete
+    // (slams down, crumbles), industrial (a shutter rolls up, rolls down), liquid (a ripple),
+    // fjord (clears out of frost, frosts over). `cyber` reads "a style effect is on": where it
+    // is, menus skip the usual fade and zoom and the effect draws them, on its own timing
+    readonly property string fxKind: animOn ? (Look.style.fx || (Look.style.glitch === true ? "cyber" : "")) : ""
+    readonly property bool cyber: fxKind !== ""
+    readonly property int fxInMs: animOn ? Math.round(Number(Look.style.fxIn || 420) * Math.max(0.6, animScale)) : 0
+    readonly property int fxOutMs: animOn ? Math.round(Number(Look.style.fxOut || 560) * Math.max(0.6, animScale)) : 0
     // any other glitch's length, scaled the same way (never under 60 %)
     function fxMs(n) { return animOn ? Math.round(n * Math.max(0.6, animScale)) : 0; }
     // corners cut straight across (Cyberpunk): ui/SmoothRect draws them. How big a cut is, for a

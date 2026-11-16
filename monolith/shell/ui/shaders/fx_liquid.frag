@@ -1,0 +1,47 @@
+// Liquid glass (ui/CyberFx): a ripple. Coming in, it spreads out from the middle inside a ring of
+// water that bends what is under it and catches the light; going, the ring draws back in.
+#version 440
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+layout(std140, binding = 0) uniform buf {
+    mat4 qt_Matrix;
+    float qt_Opacity;
+    vec2 itemSize;
+    float p;        // how far along (0 … 1)
+    float mode;     // 0: coming in (whole at 1), 1: going (gone at 1)
+    float t;        // seconds since it started
+    float seed;     // a fresh pattern each time
+    vec4 red;       // the effect's first colour (ui/CyberFx: the ink, mostly)
+    vec4 cyan;      // its second (the accent, mostly)
+};
+layout(binding = 1) uniform sampler2D source;
+float h21(vec2 v) { return fract(sin(dot(v, vec2(127.1, 311.7)) + seed * 74.7) * 43758.5453); }
+float vnoise(vec2 q) {
+    vec2 i = floor(q), f = fract(q);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(h21(i), h21(i + vec2(1, 0)), u.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), u.x), u.y);
+}
+vec4 tex(vec2 uv) {
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) return vec4(0.0);
+    return texture(source, uv);
+}
+// (premultiplied colour in and out, as Qt hands it over)
+void main() {
+    vec2 uv = qt_TexCoord0;
+    vec2 px = uv * itemSize;
+    vec2 v = px - itemSize * 0.5;
+    float d = length(v);
+    float maxR = length(itemSize) * 0.5 + 24.0;
+    float e = mode < 0.5 ? 1.0 - pow(1.0 - p, 3.0) : 1.0 - p * p;
+    float r = e * maxR;
+    float band = 42.0;
+    float x = (d - r) / band;                          // across the ring: -1 … 1
+    float ring = (1.0 - smoothstep(0.0, 1.0, abs(x))) * (mode < 0.5 ? 1.0 - p : p);
+    vec2 dir = d > 0.5 ? v / d : vec2(0.0);
+    vec2 bend = dir * sin(x * 3.14159) * 14.0 * ring;
+    vec4 c = tex((px - bend) / itemSize);
+    c *= 1.0 - smoothstep(r - 8.0, r + 2.0, d);
+    c.rgb += vec3(0.18) * ring * c.a * (1.0 - abs(x));
+    if (mode > 0.5) c *= 1.0 - smoothstep(0.9, 1.0, p);
+    fragColor = c * qt_Opacity;
+}

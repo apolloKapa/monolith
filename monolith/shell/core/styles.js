@@ -12,6 +12,7 @@
 //   liquid              liquid glass: clearer panes, a light rim and shine, widgets bend what's behind them
 //   chamfer             corners cut straight across instead of rounded (Cyberpunk)
 //   glitch              things glitch in and the Blackwall takes them out (ui/CyberFx, Cyberpunk)
+//   fx, fxIn, fxOut     its own way of drawing things in and out (Theme.fxKind), and how long each takes
 //   material            what its panels are made of (ui/MaterialPane): concrete, paper or steel
 //   sounds              its own interface sound pack (sounds/<pack>), played instead of yours
 //   colors              its palette (base, mantle, crust, surface0–2, overlay0–2, text, subtext0–1, accents)
@@ -31,6 +32,9 @@ var list = [
  {
   "name": "Liquid glass",
   "opaque": false,
+  "fx": "liquid",
+  "fxIn": 560,
+  "fxOut": 440,
   "id": "liquid",
   "liquid": true,
   "desc": "Clear glass that bends the light at its edges, your wallpaper's colours",
@@ -71,6 +75,9 @@ var list = [
    "red": "#f27c7c",
    "maroon": "#d46a6a"
   },
+  "fx": "terminal",
+  "fxIn": 560,
+  "fxOut": 400,
   "id": "terminal"
  },
  {
@@ -109,6 +116,9 @@ var list = [
    "maroon": "#7a2420"
   },
   "material": "paper",
+  "fx": "paper",
+  "fxIn": 560,
+  "fxOut": 440,
   "id": "paper"
  },
  {
@@ -146,6 +156,9 @@ var list = [
    "red": "#bf616a",
    "maroon": "#a5545c"
   },
+  "fx": "fjord",
+  "fxIn": 620,
+  "fxOut": 500,
   "id": "fjord"
  },
  {
@@ -184,6 +197,9 @@ var list = [
    "red": "#e03c3c",
    "maroon": "#b52d2d"
   },
+  "fx": "doodle",
+  "fxIn": 620,
+  "fxOut": 460,
   "id": "doodle"
  },
  {
@@ -227,6 +243,9 @@ var list = [
  },
  {
   "name": "Concrete",
+  "fx": "concrete",
+  "fxIn": 540,
+  "fxOut": 560,
   "id": "concrete",
   "opaque": true,
   "square": true,
@@ -266,6 +285,9 @@ var list = [
  },
  {
   "name": "Industrial",
+  "fx": "industrial",
+  "fxIn": 560,
+  "fxOut": 500,
   "id": "industrial",
   "opaque": true,
   "radiusScale": 0.8,
