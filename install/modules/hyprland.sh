@@ -66,6 +66,9 @@ _hypr_write() {
 -- Monolith starting at login, and its environment. Rewritten on every update.
 -- Qt apps (and the shell) take their icons and colours from qt6ct
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+-- no switching a screen into HDR when a fullscreen app asks for it (Hyprland's own default, with
+-- its experimental-HDR warning). Want it? hl.config({ render = { cm_auto_hdr = 1 } }) in my-keys
+hl.config({ render = { cm_auto_hdr = 0 } })
 hl.on("hyprland.start", function()
   hl.exec_cmd("$m start --login")
 end)
@@ -74,6 +77,8 @@ EOF
         hypr_files write start <<EOF
 # Monolith starting at login, and its environment. Rewritten on every update.
 env = QT_QPA_PLATFORMTHEME,qt6ct
+# no switching a screen into HDR when a fullscreen app asks for it (set it to 1 in my-keys to have it)
+render:cm_auto_hdr = 0
 exec-once = $m start --login
 EOF
     fi
