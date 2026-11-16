@@ -1,20 +1,9 @@
 # Monolith
+MONOLITH IS IN BETA AT THE MOMENT!
 
 **really good desktop :3**
 
 My Linux desktop (Arch or Gentoo): [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri config, keybinds and helper scripts.
-
----
-
-## Preview
-
-**Quick**: volume, toggles and power, one of the hub's pages
-
-![Quick](docs/media/quick.jpg)
-
-**Settings**, also in the hub
-
-![Settings](docs/media/settings.jpg)
 
 ---
 
