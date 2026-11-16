@@ -89,15 +89,17 @@ void main() {
     float rise = 1.0 - s;                          // 1 at the edge, 0 on the flat
     float tilt = min(rise / max(sqrt(1.0 - rise * rise), 0.12), 4.5);
 
-    // the pointer: the glass swells under it, bending the light around that spot
+    // the pointer: the glass swells a little under it, bending the light around that spot. A
+    // fixed small reach: it was 45 % of the pane's shorter side, so on a big menu (280 px and
+    // more, the light 1.6 times that) the whole pane warped and lit up wherever the pointer was
     vec2 toPtr = (pointer - halfSize) - p;
-    float reach = max(36.0, min(paneSize.x, paneSize.y) * 0.45);
+    float reach = clamp(min(paneSize.x, paneSize.y) * 0.3, 24.0, 64.0);
     float bump = swell * exp(-dot(toPtr, toPtr) / (2.0 * reach * reach));
-    vec3 n = normalize(vec3(out2 * tilt - toPtr / reach * bump * 0.6, 1.0));
+    vec3 n = normalize(vec3(out2 * tilt - toPtr / reach * bump * 0.3, 1.0));
 
     // light through the surface: where it lands on the backdrop, `depth` below
     vec3 ray = refract(vec3(0.0, 0.0, -1.0), n, 1.0 / max(index, 1.0001));
-    vec2 bend = ray.xy / max(-ray.z, 0.25) * depth * (1.0 + 0.5 * bump);
+    vec2 bend = ray.xy / max(-ray.z, 0.25) * depth * (1.0 + 0.2 * bump);
 
     // the flat middle magnifies slightly (less on big panes, where it would swim)
     vec2 rel = p / max(halfSize, vec2(1.0));
@@ -121,9 +123,9 @@ void main() {
     // lighting
     // near the pointer the light comes from it: edges close to it turn towards it, the rest keep
     // the light from the top left (it used to swing every edge, however far)
-    float near = swell * exp(-dot(toPtr, toPtr) / (2.0 * (reach * 1.6) * (reach * 1.6)));
+    float near = swell * exp(-dot(toPtr, toPtr) / (2.0 * (reach * 2.0) * (reach * 2.0)));
     vec2 ptrDir = length(toPtr) > 1.0 ? toPtr / length(toPtr) : normalize(LIGHT);
-    vec2 toLight = normalize(mix(normalize(LIGHT), ptrDir, 0.75 * near));
+    vec2 toLight = normalize(mix(normalize(LIGHT), ptrDir, 0.4 * near));
     float facing = dot(out2, toLight);              // 1: this edge faces the light
     float lit = pow(max(facing, 0.0), 1.4);
     float back = pow(max(-facing, 0.0), 2.0);
@@ -139,15 +141,15 @@ void main() {
     // softer glow inside it, and a broad sheen over the lit bezel
     float hair = exp(-inset / 1.0);
     float glow = exp(-inset / 4.5);
-    float rimLight = (hair * (0.22 + 0.8 * lit + 0.35 * back) + glow * 0.12 * (0.3 + lit)) * shine * (1.0 + 0.6 * near);
+    float rimLight = (hair * (0.22 + 0.8 * lit + 0.35 * back) + glow * 0.12 * (0.3 + lit)) * shine * (1.0 + 0.3 * near);
     float sheen = exp(-inset / (bz * 0.5)) * lit * lit * 0.18 * shine;
     // a thin rainbow in the curve
     float band = (inset - bz * 0.45) / (bz * 0.2 + 1.0);
     vec3 rainbow = (0.5 + 0.5 * cos(6.2831853 * (dot(out2, vec2(0.6, 0.4)) + inset / (bz * 1.7) + vec3(0.0, 0.33, 0.67))) - 0.5)
                    * exp(-band * band) * (0.035 + 0.07 * lit) * shine;
-    // the swell catches a soft highlight, brightest right under the pointer (kept soft: at
-    // twice this it read as a bright spotlight following the cursor)
-    float spot = bump * bump * 0.06 + near * 0.02;
+    // the swell catches a faint highlight right under the pointer (kept faint: brighter, it read
+    // as a spotlight following the cursor)
+    float spot = bump * bump * 0.03 + near * 0.008;
 
     col = mix(col, tint.rgb, tintMix);
     col += vec3(rimLight + sheen + spot) + rainbow;

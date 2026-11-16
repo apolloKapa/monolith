@@ -125,12 +125,12 @@ Singleton {
     // the sound pack's chime, the system's (the freedesktop theme) or your own file. tone | pack |
     // system | file (a file picked before there was a choice: file). The system's or your file,
     // when it isn't there, falls back to the tone (the sound theme isn't installed everywhere)
-    readonly property var tones: [["chime", "Chime"], ["glass", "Glass"], ["bubble", "Bubble"], ["marimba", "Marimba"], ["soft", "Soft"], ["digital", "Digital"]]
+    readonly property var tones: [["chime", "Chime"], ["glass", "Glass"], ["bubble", "Bubble"], ["marimba", "Marimba"], ["soft", "Soft"]]
     function soundStyle() { return Store.get("notifications.soundStyle", Store.get("notifications.soundFile", "") !== "" ? "file" : "tone"); }
     function playSound(urgent) {
         const style = soundStyle();
         const v = Math.max(0.05, Math.min(1, Number(Store.get("notifications.soundVolume", 0.8))));
-        const tone = Sounds.base + "/notify/" + (urgent ? "alert" : (Store.get("notifications.tone", "chime") || "chime")) + ".wav";
+        const tone = Sounds.base + "/notify/" + (urgent ? "alert" : (tones.some(t => t[0] === Store.get("notifications.tone", "chime")) ? Store.get("notifications.tone", "chime") : "chime")) + ".wav";
         if (style === "pack") { Sounds.playFile(Sounds.dir + "/" + (urgent ? "error" : "notify") + ".wav", v); return; }
         if (style === "tone") { Sounds.playFile(tone, v); return; }
         const own = style === "file" ? Store.get("notifications.soundFile", "") : "";

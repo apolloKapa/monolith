@@ -25,13 +25,12 @@ Singleton {
         ["soft", "Soft", "Felt ticks and warm, round tones"],
         ["glass", "Glass", "A struck wine glass, ringing on"],
         ["pop", "Pop", "Bubbles that rise as they pop"],
-        ["retro", "Retro", "Chiptune on purpose: clean square waves, an echo"],
         ["wood", "Wood", "Woodblock knocks and marimba notes, dry"],
-        ["cyber", "Cyberpunk", "Detuned synths through a falling filter, a ping-pong echo"],
         ["custom", "Your own folder", "Your own .wav files"]
     ]
-    readonly property string chosen: Store.get("sounds.pack", "soft")
-    // a style with its own sounds (styles.js `sounds`: Cyberpunk's cyber pack) plays them instead
+    // (a pack that's gone, Retro or Cyberpunk, removed in 2.9.66: Soft)
+    readonly property string chosen: packs.some(p => p[0] === Store.get("sounds.pack", "soft")) ? Store.get("sounds.pack", "soft") : "soft"
+    // a style with its own sounds (styles.js `sounds`, none now) plays them instead
     // of the pack you picked, unless you switch that off (sounds.followStyle)
     readonly property string stylePack: Look.style.sounds || ""
     readonly property bool followStyle: Store.get("sounds.followStyle", true) !== false

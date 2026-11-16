@@ -19,8 +19,6 @@ air) on its own instrument, built from a few real techniques instead of bare wav
   glass  wine-glass partials (1 : 2.32 : 4.25 : 6.63) that ring on, a bright tink on the strike
   pop    bubbles: the pitch rises as each one closes, like a real one
   wood   a woodblock knock (1 : 2.57 : 4.2, gone in 50 ms) and marimba bars (1 : 4 : 10)
-  retro  chiptune on purpose: clean band-limited pulse waves, a little vibrato and an echo
-  cyber  two detuned saws through a falling resonant filter, a light bit-crush, ping-pong echo
 """
 import math
 import os
@@ -182,43 +180,6 @@ def sine_glide(f0, f1, dur, harm=None):
                 if f * h < NYQ * 0.9:
                     v += a * math.sin(ph * h)
         out[i] = v
-    return out
-
-
-def polyblep(t, dt):
-    if t < dt:
-        t /= dt
-        return t + t - t * t - 1
-    if t > 1 - dt:
-        t = (t - 1) / dt
-        return t * t + t + t + 1
-    return 0.0
-
-
-def saw(f0, f1, dur):
-    n = int(dur * RATE)
-    out = [0.0] * n
-    t = random.Random(int(f0)).random()
-    for i in range(n):
-        f = f0 * (f1 / f0) ** (i / max(1, n))
-        dt = f / RATE
-        out[i] = (2 * t - 1) - polyblep(t, dt)
-        t += dt
-        if t >= 1:
-            t -= 1
-    return out
-
-
-def square_bl(f, dur, vib=0.0, duty_harm=1.0):
-    """a band-limited square: its odd harmonics up to near Nyquist (no aliasing fizz)"""
-    n = int(dur * RATE)
-    out = [0.0] * n
-    hs = [h for h in range(1, 40, 2) if f * h < NYQ * 0.8]
-    ph = 0.0
-    for i in range(n):
-        fi = f * (1 + vib * math.sin(TAU * 6 * i / RATE)) if vib else f
-        ph += TAU * fi / RATE
-        out[i] = sum(math.sin(ph * h) / h for h in hs) * (4 / math.pi) * 0.5
     return out
 
 
@@ -384,91 +345,7 @@ class Wood:
         return [v * 0.35 for v in hann_env(x)]
 
 
-class Retro:
-    """chiptune on purpose: band-limited square waves (no aliasing), a little vibrato, an echo"""
-    wet, size = 0.05, 0.4
-    echo = 0.11
-
-    def __init__(self, rng):
-        self.rng = rng
-
-    def gate(self, x, rel=0.02):
-        n = len(x)
-        r = int(rel * RATE)
-        for i in range(n):
-            if i < 48:
-                x[i] *= i / 48
-            if i > n - r:
-                x[i] *= (n - i) / r
-        return x
-
-    def tap(self, f, g):
-        x = noise(int(0.018 * RATE), self.rng)
-        # (sample-held noise: the NES noise channel)
-        held = 0.0
-        for i in range(len(x)):
-            if i % 6 == 0:
-                held = x[i]
-            x[i] = held * (1 - i / len(x)) * 0.5
-        return biquad(x, "lp", 9000)
-
-    def tone(self, f, g, long=False):
-        return self.gate(square_bl(f, 0.22 if long else 0.1, vib=0.004 if long else 0))
-
-    def slide(self, f0, f1, dur, g):
-        out = []
-        steps = 6
-        for k in range(steps):
-            f = f0 * (f1 / f0) ** (k / (steps - 1))
-            mix_into(out, self.gate(square_bl(f, dur / steps), 0.004), k * dur / steps, 0.8)
-        return out
-
-    def air(self, up, dur, g):
-        return self.slide(300 if up else 900, 900 if up else 300, dur * 0.6, g)
-
-
-class Cyber:
-    """two saws a little apart, through a resonant low-pass that falls; a light bit-crush and a
-    ping-pong echo (in the stereo stage)"""
-    wet, size = 0.12, 0.7
-    echo = 0.075
-
-    def __init__(self, rng):
-        self.rng = rng
-
-    def synth(self, f0, f1, dur, cut0, cut1, q=4.0, tau=None):
-        a = saw(f0 * 1.004, f1 * 1.004, dur)
-        b = saw(f0 * 0.996, f1 * 0.996, dur)
-        x = [(p + q2) * 0.5 for p, q2 in zip(a, b)]
-        x = sweep_filter(x, "lp", cut0, cut1, q)
-        x = env_exp(x, tau or dur * 0.4, 0.002)
-        # a light crush: 7 bits, every other sample held
-        for i in range(len(x)):
-            x[i] = round(x[i] * 64) / 64 if i % 2 == 0 else x[i - 1]
-        return x
-
-    def tap(self, f, g):
-        x = self.synth(f * 0.5, f * 0.5, 0.05, 9000, 1500, 6.0, 0.012)
-        return mix_into(x, strike(0.002, 8000, 0.7, self.rng, 0.3, "hp"))
-
-    def tone(self, f, g, long=False):
-        return self.synth(f * 0.5, f * 0.5, 0.36 if long else 0.18, 7000, 900, 5.0)
-
-    def slide(self, f0, f1, dur, g):
-        return self.synth(f0 * 0.5, f1 * 0.5, dur, 3000 if f1 > f0 else 6000, 6000 if f1 > f0 else 1500, 6.0, dur)
-
-    def air(self, up, dur, g):
-        x = noise(int(dur * RATE), self.rng)
-        x = sweep_filter(x, "bp", 800 if up else 5000, 5000 if up else 800, 4.0)
-        held = 0.0
-        for i in range(len(x)):
-            if i % 3 == 0:
-                held = x[i]
-            x[i] = held
-        return [v * 0.4 for v in hann_env(x)]
-
-
-PACKS = {"soft": Soft, "glass": Glass, "pop": Pop, "wood": Wood, "retro": Retro, "cyber": Cyber}
+PACKS = {"soft": Soft, "glass": Glass, "pop": Pop, "wood": Wood}
 
 
 # ── the score: what each event plays ────────────────────────────────────────────────────────────
@@ -509,7 +386,6 @@ TONES = {
     "bubble":  ("pop", [("tone", 0, "G5", 1, False), ("tone", 0.09, "D6", 1, False), ("tone", 0.16, "G6", 0.9, True)]),
     "marimba": ("wood", [("tone", 0, "C6", 0.9, False), ("tone", 0.08, "E6", 0.9, False), ("tone", 0.16, "G6", 1, True)]),
     "soft":    ("soft", [("tone", 0, "C5", 1, True), ("tone", 0.16, "G5", 0.8, True)]),
-    "digital": ("cyber", [("tone", 0, "E6", 1, False), ("tone", 0.08, "B6", 1, False), ("tone", 0.16, "E7", 0.9, True)]),
     "alert":   ("soft", [("tone", 0, "A5", 1, False), ("tone", 0.12, "A5", 1, False), ("tone", 0.24, "E6", 1, True)]),
 }
 
@@ -545,14 +421,9 @@ def stereo(inst, mono, rng, short=False):
     echo = getattr(inst, "echo", 0)
     if echo:
         e = int(echo * RATE)
-        pingpong = isinstance(inst, Cyber)
         for i in range(e, len(L)):
-            if pingpong:
-                L[i] += 0.32 * R[i - e]
-                R[i] += 0.32 * L[i - e]
-            else:
-                L[i] += 0.28 * L[i - e]
-                R[i] += 0.28 * R[i - e]
+            L[i] += 0.28 * L[i - e]
+            R[i] += 0.28 * R[i - e]
     # trim the silent end, fade the last 8 ms, peak at -1.5 dBFS
     peak = max(1e-9, max(max(abs(v) for v in L), max(abs(v) for v in R)))
     end = len(L)

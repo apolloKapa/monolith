@@ -12,7 +12,8 @@ Singleton {
     readonly property var styles: S.list
     // (the old Blur style was Orbit with see-through, blurred panels: it's that now, and blur is a
     // toggle for every style, Theme.blur)
-    readonly property string styleId: { const v = Store.get("theme.style", "material"); return v === "blur" ? "orbit" : v; }
+    // (a style that's gone, removed in 2.9.66 or older: Material, the default)
+    readonly property string styleId: { const v = Store.get("theme.style", "material"); return styles.some(s => s.id === v) ? v : "material"; }
     readonly property var style: styles.find(s => s.id === styleId) || styles[0]
     // "wallpaper", "style" (the style's own palette) or a theme's name; empty = the style's default
     readonly property string paletteName: Store.get("theme.palette", "") || (style.colors && !style.matugen ? "style" : "wallpaper")
