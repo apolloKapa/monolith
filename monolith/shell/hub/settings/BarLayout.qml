@@ -22,12 +22,15 @@ ColumnLayout {
     })
     readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["updates", "live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
     readonly property var zones: Store.get("bar.modules", null) || defaults
-    readonly property var zoneKeys: [["left", "Left"], ["center", "Centre"], ["right", "Right"]]
-    readonly property var used: [].concat(zones.left || [], zones.center || [], zones.right || [])
+    // every zone: in the bar (left, between, middle, between, right), outside it, and free
+    readonly property var allZones: ["outLeft", "left", "leftMid", "center", "midRight", "right", "outRight", "free"]
+    readonly property var used: allZones.reduce((a, k) => a.concat(zones[k] || []), [])
     readonly property var unused: Object.keys(names).filter(k => used.indexOf(k) === -1)
 
     function save(z) { Store.set("bar.modules", z); }
-    function copy() { return { left: (zones.left || []).slice(), center: (zones.center || []).slice(), right: (zones.right || []).slice() }; }
+    function copy() { const c = {}; for (const k of allZones) c[k] = (zones[k] || []).slice(); return c; }
+    // where each free module sits along the bar (0 … 1)
+    readonly property var freeAt: Store.get("bar.freeAt", null) || ({})
 
     // the bar as it is now, live
     BarPreview { Layout.fillWidth: true; Layout.bottomMargin: 6 }
@@ -177,11 +180,12 @@ ColumnLayout {
     // ── drag and drop: the bar's three zones, and the modules that aren't on it ──
     property bool dragging: false
     property string dragKey: ""
-    property string dragFrom: ""        // left | center | right | tray
+    property string dragFrom: ""        // a zone (allZones), or tray: not on the bar
     property int dragIndex: -1
     property point dragPos: Qt.point(0, 0)
     property string overZone: ""        // the zone under the pointer while dragging
-    readonly property var zoneItems: [zoneL, zoneC, zoneR]
+    readonly property var zoneItems: [zoneOL, zoneOR, zoneL, zoneLM, zoneC, zoneMR, zoneR, zoneF]
+    property point dragWin: Qt.point(0, 0)      // the pointer in the window (for scrolling while dragging)
     readonly property Item editorItem: editor
 
     function zoneAt(p) {
@@ -203,17 +207,44 @@ ColumnLayout {
         }
         return n;
     }
+    // along the free track: 0 at its left end, 1 at its right
+    function freeFrac(p) { const q = editor.mapToItem(zoneF.track, p.x, p.y); return Math.max(0, Math.min(1, q.x / Math.max(1, zoneF.track.width))); }
     function dropAt(p) {
         const z = zoneAt(p);
         const c = copy();
         if (dragFrom !== "tray") c[dragFrom].splice(dragIndex, 1);
-        if (z) {
+        if (z && z.zone === "free") {
+            c.free.push(dragKey);
+            const f = Object.assign({}, freeAt);
+            f[dragKey] = Math.round(freeFrac(p) * 1000) / 1000;
+            Store.set("bar.freeAt", f);
+        } else if (z) {
             let i = indexIn(z, p);
             if (z.zone === dragFrom && dragIndex < i) i--;
             c[z.zone].splice(Math.max(0, Math.min(i, c[z.zone].length)), 0, dragKey);
         }
         // dropped off the bar: a module from the bar is removed
         if (z || dragFrom !== "tray") save(c);
+    }
+    // near the top or bottom of the page while dragging: it scrolls, so every zone can be reached
+    // (the editor is long; holding a module, the page couldn't be scrolled)
+    function flickOf() { for (let it = editor.parent; it; it = it.parent) if (it.contentY !== undefined && it.flicking !== undefined) return it; return null; }
+    Timer {
+        interval: 16; repeat: true; running: sec.dragging
+        onTriggered: {
+            const f = sec.flickOf();
+            if (!f) return;
+            const q = f.mapFromItem(null, sec.dragWin.x, sec.dragWin.y);
+            const edge = 90;
+            const v = q.y < edge ? -(edge - q.y) / edge * 18 : (q.y > f.height - edge ? (q.y - (f.height - edge)) / edge * 18 : 0);
+            if (v === 0) return;
+            const to = Math.max(0, Math.min(f.contentHeight - f.height, f.contentY + v));
+            if (to === f.contentY) return;
+            f.contentY = to;
+            sec.dragPos = editor.mapFromItem(null, sec.dragWin.x, sec.dragWin.y);
+            const z = sec.zoneAt(sec.dragPos);
+            sec.overZone = z ? z.zone : "";
+        }
     }
 
     // a module chip: grab it and move it
@@ -253,6 +284,7 @@ ColumnLayout {
                     chip.ed.dragKey = chip.key; chip.ed.dragFrom = chip.zone; chip.ed.dragIndex = chip.pos; chip.ed.dragging = true;
                 }
                 if (chip.ed.dragging) {
+                    chip.ed.dragWin = mapToItem(null, mouse.x, mouse.y);
                     chip.ed.dragPos = mapToItem(chip.ed.editorItem, mouse.x, mouse.y);
                     const z = chip.ed.zoneAt(chip.ed.dragPos);
                     chip.ed.overZone = z ? z.zone : "";
@@ -296,6 +328,58 @@ ColumnLayout {
         Label { visible: bz.list.length === 0; anchors.centerIn: parent; anchors.verticalCenterOffset: 8; text: "Drop modules here"; muted: true; font.pixelSize: Theme.sizeSmall }
     }
 
+    // free placement: a strip standing for the bar's length; each module sits where it was
+    // dropped (drag it along to move it), and the bar shows it at that point
+    component FreeTrack: SmoothRect {
+        smoothing: 0
+        id: ft
+        property var ed: null
+        readonly property string zone: "free"
+        property alias track: trk
+        property alias rep: frep
+        property alias flow: trk
+        readonly property var list: ft.ed.zones.free || []
+        readonly property bool over: ft.ed.overZone === "free"
+        height: 92
+        radius: Theme.corner(64, 4)
+        color: over ? Qt.alpha(Theme.accent, 0.14) : Theme.container
+        border.width: over ? 2 : 1
+        border.color: over ? Theme.accent : Theme.ringTrack
+        Behavior on color { ColorAnimation { duration: Theme.ms(120); easing.type: Easing.OutCubic } }
+        Label { x: 12; y: 6; text: "Anywhere along the bar: drop a module where you want it, drag it along to move it"; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
+        Item {
+            id: trk
+            x: 16; y: 30
+            width: parent.width - 32; height: 52
+            // the bar's line, its quarters and middle marked
+            Rectangle { anchors.verticalCenter: parent.verticalCenter; width: parent.width; height: 2; radius: 1; color: Theme.ringTrack }
+            Repeater {
+                model: [0, 0.25, 0.5, 0.75, 1]
+                Rectangle { required property real modelData; x: Math.round(trk.width * modelData) - 1; anchors.verticalCenter: parent.verticalCenter; width: 2; height: modelData === 0.5 ? 16 : 10; radius: 1; color: Theme.ringTrack }
+            }
+            // where it would land
+            Rectangle {
+                visible: ft.over
+                x: Math.round(ft.ed.freeFrac(ft.ed.dragPos) * trk.width) - 1
+                width: 2; height: parent.height; radius: 1
+                color: Theme.accent
+            }
+            Repeater {
+                id: frep
+                model: ft.list
+                Chip {
+                    required property string modelData
+                    required property int index
+                    ed: ft.ed; key: modelData; zone: "free"; pos: index
+                    readonly property real at: Number(ft.ed.freeAt[modelData] !== undefined ? ft.ed.freeAt[modelData] : 0.5)
+                    x: Math.round(Math.max(0, Math.min(trk.width - width, trk.width * at - width / 2)))
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
+        Label { visible: ft.list.length === 0 && !ft.over; anchors.horizontalCenter: parent.horizontalCenter; y: 34; text: "Drop modules here"; muted: true; font.pixelSize: Theme.sizeSmall }
+    }
+
     Item {
         id: editor
         Layout.fillWidth: true
@@ -305,7 +389,15 @@ ColumnLayout {
             width: parent.width
             spacing: 10
             Label { width: parent.width; wrapMode: Text.Wrap; text: "Drag the modules where you want them on the bar. Drag one off the bar to take it away, or from below onto the bar to add it."; muted: true }
-            // the bar, as three zones
+            // outside the bar: beside it on the same line, each side on a see-through pill
+            Row {
+                width: parent.width
+                spacing: 8
+                readonly property real zh: Math.max(64, zoneOL.need, zoneOR.need)
+                BarZone { id: zoneOL; ed: sec; width: (parent.width - 8) / 2; height: parent.zh; zone: "outLeft"; label: "Outside the bar, left (on a see-through pill; at the bar's end when there's no room beside it)" }
+                BarZone { id: zoneOR; ed: sec; width: (parent.width - 8) / 2; height: parent.zh; zone: "outRight"; label: "Outside the bar, right" }
+            }
+            // the bar: left, between, middle, between, right
             SmoothRect {
                 smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                 width: parent.width
@@ -318,15 +410,20 @@ ColumnLayout {
                     id: zrow
                     x: 8; y: 8
                     width: parent.width - 16
-                    spacing: 8
-                    readonly property real zw: (width - 16) / 3
-                    // (the same height, so the three line up as one bar)
-                    readonly property real zh: Math.max(64, zoneL.need, zoneC.need, zoneR.need)
-                    BarZone { id: zoneL; ed: sec; width: zrow.zw; height: zrow.zh; zone: "left"; label: "Left" }
-                    BarZone { id: zoneC; ed: sec; width: zrow.zw; height: zrow.zh; zone: "center"; label: "Middle" }
-                    BarZone { id: zoneR; ed: sec; width: zrow.zw; height: zrow.zh; zone: "right"; label: "Right" }
+                    spacing: 6
+                    // (the in-between zones narrower: they usually hold one or two)
+                    readonly property real unit: (width - 4 * spacing) / 4.4
+                    // (the same height, so they line up as one bar)
+                    readonly property real zh: Math.max(64, zoneL.need, zoneLM.need, zoneC.need, zoneMR.need, zoneR.need)
+                    BarZone { id: zoneL; ed: sec; width: zrow.unit; height: zrow.zh; zone: "left"; label: "Left" }
+                    BarZone { id: zoneLM; ed: sec; width: zrow.unit * 0.7; height: zrow.zh; zone: "leftMid"; label: "Between" }
+                    BarZone { id: zoneC; ed: sec; width: zrow.unit; height: zrow.zh; zone: "center"; label: "Middle" }
+                    BarZone { id: zoneMR; ed: sec; width: zrow.unit * 0.7; height: zrow.zh; zone: "midRight"; label: "Between" }
+                    BarZone { id: zoneR; ed: sec; width: zrow.unit; height: zrow.zh; zone: "right"; label: "Right" }
                 }
             }
+            // anywhere along the bar: dropped at a point, the module sits there
+            FreeTrack { id: zoneF; ed: sec; width: parent.width }
             // what isn't on the bar
             SmoothRect {
                 smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)

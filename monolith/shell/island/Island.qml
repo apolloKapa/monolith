@@ -42,11 +42,16 @@ PanelWindow {
         item: win.shown ? fullArea : (!(win.barHere || win.toastGrows) ? null : (win.tucked ? (win.covered ? null : sensor) : island))
         // a notification out of a full-width bar, or under a floating one
         Region { item: !win.shown && drop.height > 1 ? dropBody : null }
+        // the modules outside the bar
+        Region { item: outLeft.visible ? outLeft : null }
+        Region { item: outRight.visible ? outRight : null }
         Region { item: !win.shown && toastCard.visible ? toastCard : null }
     }
     Region {
         id: pinnedMask
         item: island
+        Region { item: outLeft.visible ? outLeft : null }
+        Region { item: outRight.visible ? outRight : null }
         // (the card as it is now, zoom included: taken from the card itself, the region was read
         // once while it was still zooming in from 94 % and the card's edge then let clicks through)
         Region {
@@ -211,6 +216,62 @@ PanelWindow {
     // pages stay loaded while the island shrinks back after being open (not for a toast)
     property bool wasOpen: false
 
+    // ── modules outside the bar (Settings → Bar: Outside left / right): on the bar's line, just
+    // beside it, each side on a see-through pill of its own. They come and go with the bar and
+    // follow it (tucked away, it takes them along) ──
+    readonly property real outGap: Math.max(8, Number(Store.get("bar.sectionGap", 14)))
+    // room for them beside the bar: from the bar's set length, not from what's in it (which
+    // changes as outside modules join it or leave it: that would go round in circles). No room
+    // (a bar across the screen, or too long for them beside it): they join the bar's ends
+    readonly property real outRoom: (width - Theme.barWidth(width, 0)) / 2 - Theme.islandEar - outGap - 4
+    readonly property bool outFits: (!Theme.fullBar || barShort) && outLeftBar.implicitWidth <= outRoom && outRightBar.implicitWidth <= outRoom
+    SmoothRect {
+        id: outLeft
+        readonly property var keys: bar.stored.outLeft || []
+        readonly property bool on: bar.outside && keys.length > 0 && outLeftBar.contentLen > 0
+        visible: on && opacity > 0.01
+        opacity: island.opacity
+        height: Theme.islandH
+        width: outLeftBar.width
+        x: Math.round(Math.max(4, Math.min(win.width - width - 4, island.x - win.outGap - width)))
+        y: island.y + (win.bottom ? island.height - Theme.islandH : 0)
+        radius: Theme.barRound(height)
+        color: Qt.alpha(Theme.frame, Theme.frame.a * 0.55)
+        border.width: Math.max(1, Theme.outlineW)
+        border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
+        CardShadow { visible: Theme.barOpacity > 0.3 }
+        IslandBar {
+            id: outLeftBar
+            only: outLeft.keys
+            screenName: win.modelData.name
+            trayWindow: win
+            width: implicitWidth
+        }
+    }
+    SmoothRect {
+        id: outRight
+        readonly property var keys: bar.stored.outRight || []
+        readonly property bool on: bar.outside && keys.length > 0 && outRightBar.contentLen > 0
+        visible: on && opacity > 0.01
+        opacity: island.opacity
+        height: Theme.islandH
+        width: outRightBar.width
+        x: Math.round(Math.max(4, Math.min(win.width - width - 4, island.x + island.width + win.outGap)))
+        y: island.y + (win.bottom ? island.height - Theme.islandH : 0)
+        radius: Theme.barRound(height)
+        color: Qt.alpha(Theme.frame, Theme.frame.a * 0.55)
+        border.width: Math.max(1, Theme.outlineW)
+        border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
+        CardShadow { visible: Theme.barOpacity > 0.3 }
+        IslandBar {
+            id: outRightBar
+            only: outRight.keys
+            screenName: win.modelData.name
+            trayWindow: win
+            width: implicitWidth
+        }
+    }
+
     // ── the island ──
     IslandShape {
         id: island
@@ -289,6 +350,9 @@ PanelWindow {
                 id: bar
                 screenName: win.modelData.name
                 trayWindow: win
+                // (a bar that reaches the screen's sides has no room beside it: its outside
+                // modules join its ends)
+                outside: win.outFits
                 y: win.bottom ? body.height - Theme.islandH : 0
                 x: Theme.fullBar ? 0 : Math.round((body.width - width) / 2)
                 width: Theme.fullBar ? body.width : (Theme.barSpread ? Math.max(needWidth, win.restW) : implicitWidth)

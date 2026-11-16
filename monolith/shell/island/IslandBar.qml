@@ -10,8 +10,12 @@ import "../core"
 import "../ui"
 import "../wall/faces" as Faces
 
-// The island's bar: three zones (left, centre, right), each a list of modules you arrange in
-// Settings → Bar. Every module opens its page in the island.
+// The island's bar: its zones, each a list of modules you arrange in Settings → Bar: left,
+// centre and right; between left and centre (leftMid) and between centre and right (midRight),
+// each sitting in the middle of its gap; free modules, each at its own point along the bar
+// ("bar.freeAt": 0 … 1); and outside the bar (outLeft, outRight), on pills of their own beside
+// it, drawn by Island.qml (here they join the ends when there's no room outside: `outside`).
+// Every module opens its page in the island.
 Item {
     id: bar
     property string screenName: ""
@@ -21,13 +25,17 @@ Item {
     readonly property real gap: Number(Store.get("bar.sectionGap", 14))
     // a zone's length along the bar
     function len(z) { return vertical ? z.height : z.width; }
-    readonly property real fitLength: len(leftZone) + len(midZone) + len(rightZone) + (len(midZone) > 0 ? 2 * gap : gap) + 2 * Theme.islandPad
+    // a zone and the gap after it, or nothing when it's empty
+    function part(z) { return len(z) > 0 ? len(z) + gap : 0; }
+    // the free modules: room for them all, wherever they sit
+    readonly property real freeLen: { let n = 0; for (let i = 0; i < freeRep.count; i++) { const it = freeRep.itemAt(i); if (it && it.visible) n += (vertical ? it.height : it.width) + gap; } return n; }
+    readonly property real fitLength: part(leftZone) + part(leftMidZone) + part(midZone) + part(midRightZone) + len(rightZone) + freeLen + 2 * Theme.islandPad
     implicitWidth: vertical ? Theme.islandH : fitLength
     // spread out, the middle stays in the middle: the shortest it can be without the sides running into it
-    readonly property real spreadWidth: len(midZone) > 0 ? len(midZone) + 2 * Math.max(len(leftZone), len(rightZone)) + 2 * gap + 2 * Theme.islandPad : fitLength
+    readonly property real spreadWidth: Math.max(fitLength, len(midZone) + 2 * Math.max(part(leftZone) + part(leftMidZone), part(rightZone) + part(midRightZone)) + 2 * Theme.islandPad)
     // the length the bar needs (its width, or its height when it's vertical)
     // how long the modules alone are (0: none of them has anything to show)
-    readonly property real contentLen: len(leftZone) + len(midZone) + len(rightZone)
+    readonly property real contentLen: len(leftZone) + len(leftMidZone) + len(midZone) + len(midRightZone) + len(rightZone) + freeLen
     readonly property real needWidth: Theme.barSpread ? spreadWidth : fitLength
     implicitHeight: vertical ? fitLength : Theme.islandH
     function open(p) { HubState.toggle(p, bar.screenName); }
@@ -52,7 +60,18 @@ Item {
     property bool wsSample: false
     readonly property var sampleWorkspaces: [{ id: -1, idx: 1, is_active: false, busy: true }, { id: -2, idx: 2, is_active: true, busy: true },
                                              { id: -3, idx: 3, is_active: false, busy: true }, { id: -4, idx: 4, is_active: false, busy: false }]
-    readonly property var zones: only ? { left: only, center: [], right: [] } : (Store.get("bar.modules", null) || defaults)
+    // whether the outside modules are drawn outside (Island.qml); not: they join the bar's ends
+    property bool outside: false
+    readonly property var stored: Store.get("bar.modules", null) || defaults
+    readonly property var zones: only ? { left: only, leftMid: [], center: [], midRight: [], right: [], free: [] } : ({
+        left: outside ? (stored.left || []) : (stored.outLeft || []).concat(stored.left || []),
+        leftMid: stored.leftMid || [],
+        center: stored.center || [],
+        midRight: stored.midRight || [],
+        right: outside ? (stored.right || []) : (stored.right || []).concat(stored.outRight || []),
+        free: stored.free || []
+    })
+    readonly property var freeAt: Store.get("bar.freeAt", null) || ({})
     readonly property string clockStyle: clockStyleAs || Store.get("bar.clockStyle", "stacked")      // stacked | simple | full | seconds (the old presets)
     // the clock's parts (Settings → Bar → Clock), each a toggle; unset, they follow the old preset
     function clockOpt(k, d) { const v = Store.get("bar.clock." + k, null); return v === null || v === undefined ? d : v; }
@@ -157,11 +176,11 @@ Item {
     // Modular: each section on a floating pill of its own
     component ZonePill: SmoothRect {
         property Item zone
-        visible: Theme.barStyle === "modular" && !bar.only && bar.len(zone) > 0
-        x: bar.vertical ? 0 : zone.x - 8
-        y: bar.vertical ? zone.y - 8 : 0
-        width: bar.vertical ? bar.width : zone.width + 16
-        height: bar.vertical ? zone.height + 16 : bar.height
+        visible: Theme.barStyle === "modular" && !bar.only && !!zone && bar.len(zone) > 0
+        x: bar.vertical || !zone ? 0 : zone.x - 8
+        y: bar.vertical && zone ? zone.y - 8 : 0
+        width: bar.vertical ? bar.width : (zone ? zone.width + 16 : 0)
+        height: bar.vertical ? (zone ? zone.height + 16 : 0) : bar.height
         radius: Theme.barRound(Math.min(width, height))
         color: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
         border.width: Theme.outlineW
@@ -172,6 +191,17 @@ Item {
     ZonePill { id: leftPillR; zone: leftZone }
     ZonePill { id: midPillR; zone: midZone }
     ZonePill { id: rightPillR; zone: rightZone }
+    ZonePill { zone: leftMidZone }
+    ZonePill { zone: midRightZone }
+    // (free modules: one each)
+    Repeater {
+        model: freeRep.count
+        ZonePill {
+            required property int index
+            zone: freeRep.itemAt(index)
+            visible: Theme.barStyle === "modular" && !bar.only && !!zone && zone.visible
+        }
+    }
     // (the island's blur is cut to these in Modular)
     readonly property Item leftPill: leftPillR
     readonly property Item midPill: midPillR
@@ -180,12 +210,41 @@ Item {
     readonly property real barLen: vertical ? height : width
     // where a zone starts along the bar, and across it (centred)
     readonly property real leftAt: Theme.islandPad
-    readonly property real midAt: Theme.barSpread ? Math.round((barLen - len(midZone)) / 2) : leftAt + len(leftZone) + gap
-    readonly property real rightAt: Theme.barSpread ? barLen - len(rightZone) - Theme.islandPad : midAt + len(midZone) + (len(midZone) > 0 ? gap : 0)
+    // (spread: in the middle, unless a side has grown into it, a long tray on a bar the screen
+    // caps: then it moves aside, between the two, instead of the sides drawing over it)
+    readonly property real midAt: Theme.barSpread
+        ? Math.round(Math.max(leftAt + part(leftZone) + part(leftMidZone),
+                              Math.min((barLen - len(midZone)) / 2, barLen - Theme.islandPad - part(rightZone) - part(midRightZone) - len(midZone))))
+        : leftAt + part(leftZone) + part(leftMidZone)
+    readonly property real rightAt: Theme.barSpread ? barLen - len(rightZone) - Theme.islandPad : midAt + part(midZone) + part(midRightZone)
+    // the in-between zones: in the middle of their gap (kept clear of what's either side)
+    readonly property real leftMidAt: Theme.barSpread
+        ? Math.round(Math.max(leftAt + part(leftZone), Math.min((leftAt + len(leftZone) + midAt - len(leftMidZone)) / 2, midAt - part(leftMidZone))))
+        : leftAt + part(leftZone)
+    readonly property real midRightAt: Theme.barSpread
+        ? Math.round(Math.max(midAt + part(midZone), Math.min((midAt + len(midZone) + rightAt - len(midRightZone)) / 2, rightAt - part(midRightZone))))
+        : midAt + part(midZone)
     Zone { id: leftZone; x: bar.vertical ? Math.round((bar.width - width) / 2) : bar.leftAt; y: bar.vertical ? bar.leftAt : Math.round((bar.height - height) / 2); keys: bar.zones.left || [] }
     // a full-width bar spreads them: left edge, middle, right edge
     Zone { id: midZone; x: bar.vertical ? Math.round((bar.width - width) / 2) : bar.midAt; y: bar.vertical ? bar.midAt : Math.round((bar.height - height) / 2); keys: bar.zones.center || [] }
     Zone { id: rightZone; x: bar.vertical ? Math.round((bar.width - width) / 2) : bar.rightAt; y: bar.vertical ? bar.rightAt : Math.round((bar.height - height) / 2); keys: bar.zones.right || [] }
+    Zone { id: leftMidZone; x: bar.vertical ? Math.round((bar.width - width) / 2) : bar.leftMidAt; y: bar.vertical ? bar.leftMidAt : Math.round((bar.height - height) / 2); keys: bar.zones.leftMid || [] }
+    Zone { id: midRightZone; x: bar.vertical ? Math.round((bar.width - width) / 2) : bar.midRightAt; y: bar.vertical ? bar.midRightAt : Math.round((bar.height - height) / 2); keys: bar.zones.midRight || [] }
+    // free modules: each centred on its own point along the bar, kept inside it
+    Repeater {
+        id: freeRep
+        model: bar.zones.free || []
+        Loader {
+            required property string modelData
+            sourceComponent: bar.mods[modelData] || null
+            visible: !!item && item.want !== false
+            readonly property real at: Math.max(0, Math.min(1, Number(bar.freeAt[modelData] !== undefined ? bar.freeAt[modelData] : 0.5)))
+            readonly property real along: bar.vertical ? height : width
+            readonly property real pos: Math.round(Math.max(Theme.islandPad, Math.min(bar.barLen - Theme.islandPad - along, bar.barLen * at - along / 2)))
+            x: bar.vertical ? Math.round((bar.width - width) / 2) : pos
+            y: bar.vertical ? pos : Math.round((bar.height - height) / 2)
+        }
+    }
 
     readonly property var mods: ({
         cc: ccC, search: searchC, clock: clockC, weather: weatherC, workspaces: wsC, media: mediaC, title: titleC,
