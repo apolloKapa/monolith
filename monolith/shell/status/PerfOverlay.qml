@@ -11,7 +11,9 @@ PanelWindow {
     id: ov
     required property var modelData
     screen: modelData
-    visible: GameMode.overlay && (Niri.focusedOutput === "" ? modelData === Quickshell.screens[0] : Niri.focusedOutput === modelData.name)
+    // turned on (or focus coming to this screen): it fades in; off: it fades out, then goes
+    readonly property bool want: GameMode.overlay && (Niri.focusedOutput === "" ? modelData === Quickshell.screens[0] : Niri.focusedOutput === modelData.name)
+    visible: want || pill.opacity > 0.01
     WlrLayershell.namespace: "monolith-perf"
     WlrLayershell.layer: WlrLayer.Overlay
     exclusionMode: ExclusionMode.Ignore
@@ -28,6 +30,8 @@ PanelWindow {
         height: 34
         radius: 17
         color: Qt.alpha(Theme.frame, 0.82)
+        opacity: ov.want ? 1 : 0
+        Behavior on opacity { Anim { kind: ov.want ? "enter" : "exit" } }
         Row {
             id: row
             anchors.centerIn: parent

@@ -667,8 +667,8 @@ PanelWindow {
                 scale: wrap.sel ? 1 : Theme.popScale
                 visible: opacity > 0.01
                 transformOrigin: wrap.dock === "up" ? Item.Bottom : wrap.dock === "down" ? Item.Top : wrap.dock === "right" ? Item.Left : Item.Right
-                Behavior on opacity { NumberAnimation { duration: wrap.sel ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-                Behavior on scale { NumberAnimation { duration: wrap.sel ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: wrap.sel ? Theme.enterCurve : Theme.exitCurve } }
+                Behavior on opacity { Anim { kind: wrap.sel ? "enter" : "exit" } }
+                Behavior on scale { Anim { kind: wrap.sel ? "enter" : "exit" } }
                 z: 21
                 x: wrap.barX
                 y: wrap.barY
@@ -729,8 +729,8 @@ PanelWindow {
                 visible: opacity > 0.01
                 // (see dock above: with its little bar, glides when the place changes)
                 transformOrigin: wrap.dock === "up" ? Item.Bottom : wrap.dock === "down" ? Item.Top : wrap.dock === "right" ? Item.TopLeft : Item.TopRight
-                Behavior on opacity { NumberAnimation { duration: wrap.optsShown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-                Behavior on scale { NumberAnimation { duration: wrap.optsShown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: wrap.optsShown ? Theme.enterCurve : Theme.exitCurve } }
+                Behavior on opacity { Anim { kind: wrap.optsShown ? "enter" : "exit" } }
+                Behavior on scale { Anim { kind: wrap.optsShown ? "enter" : "exit" } }
                 z: 20
                 x: wrap.panelX
                 y: wrap.panelY
@@ -983,8 +983,8 @@ PanelWindow {
         scale: ed.adding ? 1 : Theme.popScale
         visible: opacity > 0.01
         transformOrigin: Item.Bottom
-        Behavior on opacity { NumberAnimation { duration: ed.adding ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: ed.adding ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: ed.adding ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { Anim { kind: ed.adding ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: ed.adding ? "enter" : "exit" } }
         z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom; anchors.bottomMargin: 28
@@ -1132,8 +1132,8 @@ PanelWindow {
         scale: ed.presetsOpen ? 1 : Theme.popScale
         visible: opacity > 0.01
         transformOrigin: Item.Bottom
-        Behavior on opacity { NumberAnimation { duration: ed.presetsOpen ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: ed.presetsOpen ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: ed.presetsOpen ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { Anim { kind: ed.presetsOpen ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: ed.presetsOpen ? "enter" : "exit" } }
         z: 100
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom; anchors.bottomMargin: 28

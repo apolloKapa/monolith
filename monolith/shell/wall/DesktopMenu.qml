@@ -73,8 +73,8 @@ PanelWindow {
         scale: dm.shown ? 1 : Theme.popScale
         opacity: dm.shown ? 1 : 0
         transformOrigin: Item.TopLeft
-        Behavior on opacity { NumberAnimation { duration: dm.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: dm.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dm.shown ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { Anim { kind: dm.shown ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: dm.shown ? "enter" : "exit" } }
 
         Column {
             id: col

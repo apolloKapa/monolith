@@ -49,8 +49,8 @@ Item {
         opacity: nb.openId === "" ? 1 : 0
         scale: nb.openId === "" ? 1 : Theme.popScale
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: nb.openId === "" ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: nb.openId === "" ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: nb.openId === "" ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { Anim { kind: nb.openId === "" ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: nb.openId === "" ? "enter" : "exit" } }
         Row {
             id: head
             width: parent.width; height: 28
@@ -176,8 +176,8 @@ Item {
         opacity: nb.openId !== "" ? 1 : 0
         scale: nb.openId !== "" ? 1 : Theme.popScale
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: nb.openId !== "" ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: nb.openId !== "" ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: nb.openId !== "" ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { Anim { kind: nb.openId !== "" ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: nb.openId !== "" ? "enter" : "exit" } }
         Row {
             id: bar
             width: parent.width; height: 28

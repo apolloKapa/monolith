@@ -223,8 +223,8 @@ PanelWindow {
         Behavior on cyP { NumberAnimation { duration: dock.shown ? Theme.fxInMs : Theme.fxOutMs } }
         CyberFx { target: capsule; p: dock.shown ? capsule.cyP : 1 - capsule.cyP; going: !dock.shown }
         transformOrigin: dock.side === "top" ? Item.Top : (dock.side === "left" ? Item.Left : (dock.side === "right" ? Item.Right : Item.Bottom))
-        Behavior on opacity { enabled: !Theme.cyber; NumberAnimation { duration: dock.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: dock.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { enabled: !Theme.cyber; Anim { kind: dock.shown ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: dock.shown ? "enter" : "exit" } }
         // its own roundness (−1: the theme's)
         radius: Number(Store.get("dock.radius", -1)) >= 0 ? Math.min(Number(Store.get("dock.radius", -1)), Math.min(width, height) / 2) : Theme.corner(Math.min(width, height), 8)
         color: Qt.alpha(Theme.card, opacityBg)
@@ -286,9 +286,9 @@ PanelWindow {
                         running: dock.editing && dock.dragIndex !== app.index && Theme.animOn
                         loops: Animation.Infinite
                         PauseAnimation { duration: (app.index * 53) % 140 }
-                        NumberAnimation { to: 2.4; duration: 130; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: -2.4; duration: 260; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: 0; duration: 130; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 2.4; duration: Theme.ms(130); easing.type: Easing.InOutSine }
+                        NumberAnimation { to: -2.4; duration: Theme.ms(260); easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 0; duration: Theme.ms(130); easing.type: Easing.InOutSine }
                         onRunningChanged: if (!running) app.rotation = 0
                     }
                     // hold for a moment: the dock editor
@@ -478,7 +478,7 @@ PanelWindow {
         property bool wanted: false
         visible: wanted || t > 0.01
         property real t: wanted ? 1 : 0
-        Behavior on t { NumberAnimation { duration: picker.wanted ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on t { Anim { kind: picker.wanted ? "enter" : "exit" } }
         opacity: t
         scale: Theme.popScale + (1 - Theme.popScale) * t
         transformOrigin: dock.side === "top" ? Item.Top : (dock.side === "left" ? Item.Left : (dock.side === "right" ? Item.Right : Item.Bottom))
@@ -543,8 +543,8 @@ PanelWindow {
         opacity: open ? 1 : 0
         scale: open ? 1 : Theme.popScale
         transformOrigin: dock.side === "top" ? Item.Top : (dock.side === "left" ? Item.Left : (dock.side === "right" ? Item.Right : Item.Bottom))
-        Behavior on opacity { NumberAnimation { duration: menu.open ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: menu.open ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: menu.open ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { Anim { kind: menu.open ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: menu.open ? "enter" : "exit" } }
         property var item: null
         property var wins: []
         function openFor(it, ws, cx, cy) {

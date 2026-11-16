@@ -118,8 +118,8 @@ PanelWindow {
         border.color: Theme.hairline
         opacity: hold.running ? 1 : 0
         scale: hold.running ? 1 : Theme.popScale
-        Behavior on opacity { NumberAnimation { duration: hold.running ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: hold.running ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: hold.running ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { Anim { kind: hold.running ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: hold.running ? "enter" : "exit" } }
 
         Bubble {
             id: ob

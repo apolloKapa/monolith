@@ -328,11 +328,11 @@ PanelWindow {
                 height: (win.shown ? goalH : parent.height) - y - (win.docked && !Theme.fullBar && win.bottom ? Theme.islandH + 2 : win.pad)
                 opacity: win.shown ? 1 : 0
                 visible: opacity > 0.01
-                Behavior on opacity { enabled: !HubState.snap; NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+                Behavior on opacity { enabled: !HubState.snap; Anim { kind: win.shown ? "enter" : "exit" } }
                 // and a little zoom, from the bar's side
                 scale: win.shown || Theme.fxUnfold ? 1 : Theme.popScale
                 transformOrigin: win.bottom && win.docked ? Item.Bottom : Item.Top
-                Behavior on scale { enabled: !HubState.snap; NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
+                Behavior on scale { enabled: !HubState.snap; Anim { kind: win.shown ? "enter" : "exit" } }
                 // Unfold (Theme → Effects): the menu opens out of a thin bright line through its
                 // middle and folds back into it
                 // (a floating menu unfolds whole, card and all: see floatCard; here it's the
@@ -625,7 +625,7 @@ PanelWindow {
         y: win.bottom ? island.y - height + (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
                       : island.y + Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
         Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
-        Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : 220; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.sizeCurve : Theme.exitCurve } }
+        Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : Theme.ms(220); easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.sizeCurve : Theme.exitCurve } }
         onHeightChanged: if (!win.shown && height <= 1) win.wasOpen = false
         MouseArea { anchors.fill: parent }
         Item { id: dropBody; x: drop.e; width: drop.bodyW; height: drop.height; clip: true }

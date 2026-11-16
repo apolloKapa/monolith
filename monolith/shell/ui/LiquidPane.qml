@@ -66,11 +66,11 @@ Item {
     // the glass itself. Where it is stays put once it leaves (so the light fades out there) and
     // glides after the pointer instead of jumping with each mouse event
     property real swell: hover.hovered && pointerX >= 0 && pointerY >= 0 && pointerX <= width && pointerY <= height ? 1 : 0
-    Behavior on swell { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
+    Behavior on swell { NumberAnimation { duration: Theme.ms(420); easing.type: Easing.OutCubic } }
     property real pointerX: width / 2
     property real pointerY: height / 2
-    Behavior on pointerX { enabled: lp.swell > 0.02; NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
-    Behavior on pointerY { enabled: lp.swell > 0.02; NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+    Behavior on pointerX { enabled: lp.swell > 0.02; NumberAnimation { duration: Theme.ms(90); easing.type: Easing.OutCubic } }
+    Behavior on pointerY { enabled: lp.swell > 0.02; NumberAnimation { duration: Theme.ms(90); easing.type: Easing.OutCubic } }
     // Where the pointer is: heard by the card the glass is in (its parent), not by the glass. The
     // glass sits under the card's buttons, tiles and sliders, and each of those took the hover:
     // the light faded out over every button and back in over the gaps, and stood still meanwhile.

@@ -69,10 +69,10 @@ FaceBase {
     Component.onCompleted: step()
     ParallelAnimation {
         id: morph
-        NumberAnimation { id: headAnim; target: f; property: "head"; duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { id: headAnim; target: f; property: "head"; duration: Theme.ms(250); easing.type: Easing.OutCubic }
         SequentialAnimation {
-            PauseAnimation { duration: 100 }
-            NumberAnimation { id: tailAnim; target: f; property: "tail"; duration: 250; easing.type: Easing.OutCubic }
+            PauseAnimation { duration: Theme.ms(100) }
+            NumberAnimation { id: tailAnim; target: f; property: "tail"; duration: Theme.ms(250); easing.type: Easing.OutCubic }
         }
     }
     Shape {

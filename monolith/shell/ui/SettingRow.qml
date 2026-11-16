@@ -39,9 +39,9 @@ SmoothRect {
         z: 5
         SequentialAnimation {
             id: glowAnim
-            NumberAnimation { target: glowRect; property: "opacity"; to: 1; duration: 180 }
-            PauseAnimation { duration: 900 }
-            NumberAnimation { target: glowRect; property: "opacity"; to: 0; duration: 700; easing.type: Easing.InOutCubic }
+            NumberAnimation { target: glowRect; property: "opacity"; to: 1; duration: Theme.fastMs }
+            PauseAnimation { duration: Theme.ms(900) }
+            NumberAnimation { target: glowRect; property: "opacity"; to: 0; duration: Theme.ms(700); easing.type: Easing.InOutCubic }
         }
     }
 

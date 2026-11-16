@@ -46,7 +46,7 @@ Pressable {
     readonly property bool held: swipe.active && !flying
     transform: Translate { x: card.swipeX }
     opacity: handed ? 0 : Math.max(0, 1 - Math.abs(swipeX) / (width * 1.1))
-    Behavior on swipeX { enabled: !swipe.active && !card.resetting; NumberAnimation { duration: card.flying ? 180 : 260; easing.type: card.flying ? Easing.InCubic : Easing.OutBack } }
+    Behavior on swipeX { enabled: !swipe.active && !card.resetting; NumberAnimation { duration: card.flying ? Theme.popOutMs : Theme.shortMs; easing.type: card.flying ? Easing.InCubic : Easing.OutBack } }
 
     // the swipe starts: photograph the card where it is, the copy takes over from there
     function startCopy() {

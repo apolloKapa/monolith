@@ -1,5 +1,6 @@
 import QtQuick
 import "../../core"
+import "../../ui"
 
 // Clock, Dot: the hours and minutes in big round dots on a flat card, the day and date small
 // under them, and a red dot that pulses with the seconds.
@@ -35,6 +36,6 @@ FaceBase {
         color: card.accent
         x: f.width - f.pad * 0.55 - width; y: f.pad * 0.55
         opacity: f.now.getSeconds() % 2 === 0 ? 1 : 0.15
-        Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+        Behavior on opacity { Anim {} }
     }
 }

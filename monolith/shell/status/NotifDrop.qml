@@ -52,8 +52,8 @@ PanelWindow {
         opacity: dd.shown ? 1 : 0
         scale: dd.shown ? 1 : Theme.popScale
         transformOrigin: Theme.dropOrigin
-        Behavior on opacity { NumberAnimation { duration: dd.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: dd.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dd.shown ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { Anim { kind: dd.shown ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: dd.shown ? "enter" : "exit" } }
         CardShadow {}
         MouseArea { anchors.fill: parent }
 

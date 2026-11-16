@@ -145,6 +145,13 @@ Singleton {
                                          : Math.max(0, Math.min(1, Number(Store.get("theme.cornerSmoothing", 0.6))))
 
     // ── motion (Material: emphasized decelerate in, emphasized accelerate out) ──
+    // ── Motion: every animation's length and curve come from here (ready-made: ui/Anim,
+    // ui/ColorAnim). Lengths: fastMs 160 (hover, press, colour) · shortMs 260 (switches, small
+    // moves) · popInMs 320 / popOutMs 180 (things appearing / going) · moveMs 380 (panels
+    // travelling) · enterMs 500 (big arrivals); anything else through ms(n). The master switch and
+    // speed are theme.animations and theme.animSpeed (Theme → Effects). Curves: enter is fast out
+    // with a long settle, like niri's ease-out-expo window-open; exit gathers then goes (shorter,
+    // so closing never feels slower than opening); standard for moves between resting states.
     readonly property var enterCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
     readonly property var exitCurve: [0.3, 0.0, 0.8, 0.15, 1.0, 1.0]
     readonly property var standardCurve: [0.2, 0.0, 0.0, 1.0, 1.0, 1.0]

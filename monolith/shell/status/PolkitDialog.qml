@@ -12,23 +12,21 @@ Scope {
 
     PanelWindow {
         id: win
-        visible: agent.isActive && !!agent.flow
+        // asked: shown; answered or cancelled: it fades back out the way it came, then goes
+        readonly property bool want: agent.isActive && !!agent.flow
+        visible: want || card.opacity > 0.01
         WlrLayershell.namespace: "monolith-polkit"
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+        WlrLayershell.keyboardFocus: want ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         exclusionMode: ExclusionMode.Ignore
         anchors { top: true; bottom: true; left: true; right: true }
-        color: Qt.alpha("#000000", 0.35)
+        color: Qt.alpha("#000000", 0.35 * card.opacity)
         readonly property var flow: agent.flow
-        Binding { target: HubState; property: "authOpen"; value: win.visible }
+        Binding { target: HubState; property: "authOpen"; value: win.want }
 
-        // the card grows in as the window shows
-        onVisibleChanged: if (visible) { appear.restart(); pw.text = ""; pw.forceActiveFocus(); }
-        ParallelAnimation {
-            id: appear
-            NumberAnimation { target: card; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
-            NumberAnimation { target: card; property: "scale"; from: Theme.popScale; to: 1; duration: Theme.popInMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
-        }
+        // the card grows in as it's asked and shrinks back out the same way (interrupted halfway,
+        // it turns round from where it is)
+        onWantChanged: if (want) { pw.text = ""; Qt.callLater(() => pw.forceActiveFocus()); }
         SmoothRect {
             id: card
             anchors.centerIn: parent
@@ -38,6 +36,10 @@ Scope {
             color: Theme.card
             border.width: 1
             border.color: Theme.hairline
+            opacity: win.want ? 1 : 0
+            scale: win.want ? 1 : Theme.popScale
+            Behavior on opacity { Anim { kind: win.want ? "enter" : "exit" } }
+            Behavior on scale { Anim { kind: win.want ? "enter" : "exit" } }
             property real shake: 0
             transform: Translate { x: Math.sin(card.shake * Math.PI * 6) * 12 * (1 - card.shake) }
             NumberAnimation { id: shakeAnim; target: card; property: "shake"; from: 0; to: 1; duration: Theme.ms(480); easing.type: Easing.OutCubic }

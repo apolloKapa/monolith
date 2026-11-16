@@ -45,8 +45,8 @@ PanelWindow {
         opacity: pk.shown ? 1 : 0
         scale: pk.shown ? 1 : Theme.popScale
         transformOrigin: Theme.dropOrigin
-        Behavior on opacity { NumberAnimation { duration: pk.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: pk.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.BezierSpline; easing.bezierCurve: pk.shown ? Theme.enterCurve : Theme.exitCurve } }
+        Behavior on opacity { Anim { kind: pk.shown ? "enter" : "exit" } }
+        Behavior on scale { Anim { kind: pk.shown ? "enter" : "exit" } }
         CardShadow {}
         HoverHandler { onHoveredChanged: HubState.peekCardHover = hovered }
 

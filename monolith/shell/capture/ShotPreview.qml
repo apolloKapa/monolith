@@ -64,7 +64,7 @@ PanelWindow {
         // (Cyberpunk: it doesn't slide or fade; it glitches in and the Blackwall takes it, cyP)
         opacity: Theme.cyber ? (cyP > 0.002 ? 1 : 0) : (win.shown ? 1 : 0)
         transform: Translate { x: win.shown || Theme.cyber ? 0 : (win.onRight ? 60 : -60) }
-        Behavior on opacity { enabled: !Theme.cyber; NumberAnimation { duration: win.shown ? Theme.popInMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
+        Behavior on opacity { enabled: !Theme.cyber; Anim { kind: win.shown ? "enter" : "exit" } }
         // (from 0, then following `shown`: this window is made the moment a shot is taken, and a
         // value that starts at 1 has nothing to animate from)
         property real cyP: 0

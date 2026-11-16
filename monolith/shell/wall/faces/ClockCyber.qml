@@ -33,10 +33,10 @@ FaceBase {
     }
     SequentialAnimation {
         id: joltAnim
-        NumberAnimation { target: f; property: "jolt"; to: 1; duration: 60; easing.type: Easing.OutQuad }
-        PauseAnimation { duration: 70 }
-        NumberAnimation { target: f; property: "jolt"; to: 0.4; duration: 40 }
-        NumberAnimation { target: f; property: "jolt"; to: 0; duration: 110; easing.type: Easing.OutCubic }
+        NumberAnimation { target: f; property: "jolt"; to: 1; duration: Theme.fxMs(60); easing.type: Easing.OutQuad }
+        PauseAnimation { duration: Theme.fxMs(70) }
+        NumberAnimation { target: f; property: "jolt"; to: 0.4; duration: Theme.fxMs(40) }
+        NumberAnimation { target: f; property: "jolt"; to: 0; duration: Theme.fxMs(110); easing.type: Easing.OutCubic }
     }
 
     // ── the panel ──

@@ -31,7 +31,7 @@ FaceBase {
                 required property int index
                 width: f.width * 0.74 / f.count * 0.65; height: width; radius: width / 2
                 color: index < f.lit ? (f.over || index === f.lit - 1 ? card.accent : card.ink) : card.off
-                Behavior on color { ColorAnimation { duration: 300 } }
+                Behavior on color { ColorAnim { duration: Theme.ms(300) } }
             }
         }
     }

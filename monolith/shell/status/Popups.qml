@@ -70,7 +70,7 @@ PanelWindow {
         anchors.bottom: win.fromBottom ? parent.bottom : undefined
         spacing: 8
         // the others glide to their new places when one comes or goes
-        move: Transition { NumberAnimation { properties: "y"; duration: 260; easing.type: Easing.OutCubic } }
+        move: Transition { Anim { properties: "y" } }
         // "+N more" where the stack ends at the bottom: above them all
         Pressable {
             visible: win.fromBottom && win.hidden > 0
@@ -92,7 +92,7 @@ PanelWindow {
                 // 0: up out of sight (down, at the bottom), 1: in place
                 property real drop: 0
                 Component.onCompleted: drop = 1
-                Behavior on drop { NumberAnimation { duration: Theme.cyber ? Theme.fxInMs : 420; easing.type: Theme.cyber ? Easing.Linear : Easing.OutBack; easing.overshoot: 1.2 } }
+                Behavior on drop { NumberAnimation { duration: Theme.cyber ? Theme.fxInMs : Theme.ms(420); easing.type: Theme.cyber ? Easing.Linear : Easing.OutBack; easing.overshoot: 1.2 } }
                 // going: it slides off sideways, towards the screen's edge, and the others close up
                 property real away: leaving ? 1 : 0
                 Behavior on away { NumberAnimation { duration: Notifs.leaveMs; easing.type: Theme.cyber ? Easing.Linear : Easing.InCubic } }

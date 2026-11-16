@@ -28,7 +28,7 @@ FaceBase {
             x: f.width / 2 + Math.cos(a) * rr - width / 2
             y: f.height / 2 + Math.sin(a) * rr - height / 2
             color: index < f.lit ? (index === f.lit - 1 ? card.accent : card.ink) : card.off
-            Behavior on color { ColorAnimation { duration: 300 } }
+            Behavior on color { ColorAnim { duration: Theme.ms(300) } }
         }
     }
     DotText {
