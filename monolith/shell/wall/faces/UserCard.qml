@@ -42,7 +42,7 @@ FaceBase {
                                 width: parent.width - 20
                                 spacing: 8
                                 Icon { name: qb.modelData[0]; size: 15; filled: true; color: qb.modelData[2]; anchors.verticalCenter: parent.verticalCenter }
-                                Text { width: parent.width - 23; elide: Text.ElideRight; text: qb.modelData[1]; color: qb.modelData[2]; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
+                                Text { renderType: Text.CurveRendering; width: parent.width - 23; elide: Text.ElideRight; text: qb.modelData[1]; color: qb.modelData[2]; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter }
                             }
                             MouseArea {
                                 id: qma

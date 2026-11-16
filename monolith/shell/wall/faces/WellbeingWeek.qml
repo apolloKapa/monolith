@@ -17,12 +17,12 @@ FaceBase {
                 id: head
                 width: parent.width; spacing: 6
                 Icon { name: "bar_chart"; size: 16; color: f.accentC; anchors.verticalCenter: parent.verticalCenter }
-                Text { text: "This week"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
+                Text { renderType: Text.CurveRendering; text: "This week"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
             }
             Column {
                 anchors.right: parent.right; anchors.top: parent.top
-                Text { anchors.right: parent.right; text: wd.fmtShort(wd.weekTotal); color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 18; font.weight: Font.Black }
-                Text { visible: f.opt("showAverage", true) !== false; anchors.right: parent.right; text: wd.fmtShort(Math.round(wd.weekTotal / wd.weekDays)) + " a day"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 10 }
+                Text { renderType: Text.CurveRendering; anchors.right: parent.right; text: wd.fmtShort(wd.weekTotal); color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 18; font.weight: Font.Black }
+                Text { renderType: Text.CurveRendering; visible: f.opt("showAverage", true) !== false; anchors.right: parent.right; text: wd.fmtShort(Math.round(wd.weekTotal / wd.weekDays)) + " a day"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 10 }
             }
             Item {
                 id: chart
@@ -46,13 +46,13 @@ FaceBase {
                                 color: parent.modelData.today ? f.accentC : Qt.alpha(f.mainC, parent.modelData.future ? 0.07 : (wd.goal > 0 && parent.modelData.secs > wd.goal ? 0.5 : 0.28))
                                 Behavior on height { NumberAnimation { duration: Theme.ms(600); easing.type: Easing.OutQuint } }
                             }
-                            Text {
+                            Text { renderType: Text.CurveRendering;
                                 visible: f.opt("showTimes", false) === true && parent.modelData.secs > 0
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 y: chart.barsH - Math.max(3, chart.barsH * parent.modelData.secs / wd.weekMax) - 18
                                 text: wd.fmtShort(parent.modelData.secs).replace(" ", ""); color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 8
                             }
-                            Text { id: lbl; anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; text: parent.modelData.label
+                            Text { renderType: Text.CurveRendering; id: lbl; anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; text: parent.modelData.label
                                    color: parent.modelData.today ? f.mainC : f.subC; font.family: Theme.fontFamily; font.pixelSize: 10; font.weight: parent.modelData.today ? Font.Black : Font.Normal }
                         }
                     }

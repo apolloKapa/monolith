@@ -22,7 +22,7 @@ FaceBase {
         Item {
             width: f.wide ? (f.width - 2 * f.m) / 2 : f.width - 2 * f.m
             height: f.wide ? f.height - 2 * f.m : (f.height - 2 * f.m) / 2
-            Text { anchors.centerIn: parent; text: wt.temp; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: Math.min(parent.width, parent.height) * 0.5 }
+            Text { renderType: Text.CurveRendering; anchors.centerIn: parent; text: wt.temp; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: Math.min(parent.width, parent.height) * 0.5 }
         }
     }
 }

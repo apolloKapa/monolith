@@ -62,6 +62,19 @@ Item {
                                              { id: -3, idx: 3, is_active: false, busy: true }, { id: -4, idx: 4, is_active: false, busy: false }]
     // whether the outside modules are drawn outside (Island.qml); not: they join the bar's ends
     property bool outside: false
+    // the longest the bar can be (the screen's room; 0: no limit). When the modules don't fit even
+    // then, the visualiser gives up length (down to a few bars) instead of being drawn over
+    property real maxLen: 0
+    property real visCap: 100000
+    property real visNow: 0                 // the visualiser's length as drawn
+    function settleVis() {
+        if (maxLen <= 0 || visNow <= 0) { visCap = 100000; return; }
+        const over = fitLength - maxLen;
+        if (over > 0.5) visCap = Math.max(24, visNow - over);
+        else if (over < -0.5 && visCap < 100000) visCap = visCap - over > 4000 ? 100000 : visCap - over;
+    }
+    onFitLengthChanged: Qt.callLater(settleVis)
+    onMaxLenChanged: Qt.callLater(settleVis)
     readonly property var stored: Store.get("bar.modules", null) || defaults
     readonly property var zones: only ? { left: only, leftMid: [], center: [], midRight: [], right: [], free: [] } : ({
         left: outside ? (stored.left || []) : (stored.outLeft || []).concat(stored.left || []),
@@ -718,11 +731,14 @@ Item {
             onClicked: bar.open("media")
             Faces.CavaBars {
                 // (down a side bar: as wide as the bar allows, with fewer bars to match)
-                width: bar.vertical ? Math.min(vm.wantW, Theme.islandH - 26) : vm.fitW
+                width: bar.vertical ? Math.min(vm.wantW, Theme.islandH - 26) : Math.min(vm.fitW, bar.visCap)
                 height: vm.wantH
-                // (down a side bar the width can't grow: fewer bars, as many as fit)
-                count: bar.vertical ? Math.max(3, Math.min(Math.round(vm.wantN * width / Math.max(1, vm.wantW)),
-                                                           Math.floor((width + vm.gap) / (2 + vm.gap)))) : vm.wantN
+                // (down a side bar, or squeezed on a full one, the width can't grow: fewer bars, as
+                // many as fit)
+                count: bar.vertical || width < vm.fitW ? Math.max(3, Math.min(vm.wantN, Math.floor((width + vm.gap) / (2 + vm.gap)))) : vm.wantN
+                onWidthChanged: if (!bar.vertical) bar.visNow = width
+                Component.onCompleted: if (!bar.vertical) bar.visNow = width
+                Component.onDestruction: if (!bar.vertical) bar.visNow = 0
                 spacing: vm.gap
                 clip: true
                 minLen: Number(vm.opt("rest", 2))

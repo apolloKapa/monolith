@@ -5,6 +5,7 @@ import "../../ui"
 // Liquid filling a rounded card: up to `value` (0..1) from the bottom, or from the left when
 // `horizontal`, with a wave along its edge that moves for a moment when the value changes.
 Canvas {
+    antialiasing: true
     id: wf
     property real value: 0
     property bool horizontal: false

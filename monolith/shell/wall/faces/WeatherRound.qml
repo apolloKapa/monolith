@@ -31,13 +31,13 @@ FaceBase {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.bottom; anchors.verticalCenterOffset: -f.pw / 2
             rotation: -45
-            Text {
+            Text { renderType: Text.CurveRendering;
                 id: num
                 anchors.centerIn: parent
                 text: wt.ready ? Math.round(Weather.current.temp) : "--"
                 color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: tbox.height * 0.58
             }
-            Text {
+            Text { renderType: Text.CurveRendering;
                 anchors.left: num.right; anchors.leftMargin: 1
                 anchors.top: num.top; anchors.topMargin: tbox.height * 0.04
                 text: "°"; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: tbox.height * 0.3

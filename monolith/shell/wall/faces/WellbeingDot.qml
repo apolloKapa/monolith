@@ -35,7 +35,7 @@ FaceBase {
             }
         }
     }
-    Text {
+    Text { renderType: Text.CurveRendering;
         text: "SCREEN TIME"
         color: card.dim
         font.family: Theme.fontFamily; font.pixelSize: Math.max(9, f.height * 0.075); font.weight: Font.DemiBold; font.letterSpacing: 1.5

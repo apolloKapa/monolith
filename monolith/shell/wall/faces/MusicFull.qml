@@ -38,7 +38,7 @@ FaceBase {
             opacity: 0.2
         }
     }
-    SmoothRect { smoothing: 0; id: bgMask; anchors.fill: parent; radius: f.r; visible: false; layer.enabled: true }
+    SmoothRect { smoothing: 0; id: bgMask; anchors.fill: parent; radius: f.r; visible: false; antialiasing: true; layer.enabled: true; layer.smooth: true }
 
     Item {
         anchors.fill: parent
@@ -54,7 +54,7 @@ FaceBase {
             Icon { anchors.centerIn: parent; name: "music_note"; size: parent.width * 0.38; color: Theme.subtext; visible: cov.status !== Image.Ready }
             Image { id: cov; anchors.fill: parent; source: f.active ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; asynchronous: true; visible: false }
             MultiEffect { anchors.fill: parent; source: cov; visible: cov.status === Image.Ready; maskEnabled: true; maskSource: artMask }
-            SmoothRect { smoothing: 0; id: artMask; anchors.fill: parent; radius: parent.radius; visible: false; layer.enabled: true }
+            SmoothRect { smoothing: 0; id: artMask; anchors.fill: parent; radius: parent.radius; visible: false; antialiasing: true; layer.enabled: true; layer.smooth: true }
         }
         Item {
             anchors.left: f.showArt ? art.right : parent.left; anchors.leftMargin: f.showArt ? f.sp : 0
@@ -68,7 +68,7 @@ FaceBase {
                 font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: f.titleSize
                 active: f.live && f.active
             }
-            Text {
+            Text { renderType: Text.CurveRendering;
                 id: artist
                 anchors.top: ttl.bottom; anchors.topMargin: Math.max(1, f.sp * 0.2)
                 width: parent.width; elide: Text.ElideRight
@@ -83,7 +83,7 @@ FaceBase {
                 anchors.top: artist.visible ? artist.bottom : ttl.bottom
                 anchors.bottom: ctl.top
                 spacing: Math.max(4, f.sp * 0.4)
-                Text { text: f.active ? f.mmss(pp.shown) : "--:--"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(7, f.subSize * 0.85) }
+                Text { renderType: Text.CurveRendering; text: f.active ? f.mmss(pp.shown) : "--:--"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(7, f.subSize * 0.85) }
                 WavySeek {
                     Layout.fillWidth: true
                     Layout.preferredHeight: Math.max(14, Math.round(f.subSize * 1.2))
@@ -93,7 +93,7 @@ FaceBase {
                     playing: f.active && f.p.isPlaying
                     onMoved: v => { if (f.p && f.p.canSeek) { f.p.position = v; pp.sync(); } }
                 }
-                Text { text: f.active ? f.mmss(f.p.length) : "--:--"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(7, f.subSize * 0.85) }
+                Text { renderType: Text.CurveRendering; text: f.active ? f.mmss(f.p.length) : "--:--"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(7, f.subSize * 0.85) }
             }
             Row {
                 id: ctl

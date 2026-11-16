@@ -51,7 +51,7 @@ FaceBase {
                 height: 28; width: un.implicitWidth + 16; radius: Theme.corner(28, 8)
                 color: um.containsMouse ? Qt.alpha(Theme.control, 0.85) : "transparent"
                 Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
-                Text { id: un; anchors.centerIn: parent; text: GitHub.user !== "" ? GitHub.user : "Set your GitHub name"; color: GitHub.user !== "" ? Theme.text : Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 15 }
+                Text { renderType: Text.CurveRendering; id: un; anchors.centerIn: parent; text: GitHub.user !== "" ? GitHub.user : "Set your GitHub name"; color: GitHub.user !== "" ? Theme.text : Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 15 }
                 MouseArea { id: um; anchors.fill: parent; hoverEnabled: true; enabled: f.live; cursorShape: Qt.IBeamCursor; onClicked: { f.editing = true; input.text = GitHub.user; input.forceActiveFocus(); input.selectAll(); } }
             }
             SmoothRect {
@@ -72,7 +72,7 @@ FaceBase {
                     onAccepted: { GitHub.setUser(text); f.editing = false; }
                     Keys.onEscapePressed: f.editing = false
                     onActiveFocusChanged: if (!activeFocus) f.editing = false
-                    Text { visible: input.text === ""; text: "username, then Enter"; color: Theme.subtext; font: input.font; anchors.verticalCenter: parent.verticalCenter }
+                    Text { renderType: Text.CurveRendering; visible: input.text === ""; text: "username, then Enter"; color: Theme.subtext; font: input.font; anchors.verticalCenter: parent.verticalCenter }
                 }
             }
         }
@@ -81,7 +81,7 @@ FaceBase {
             anchors.right: parent.right; anchors.rightMargin: 14; y: 12
             spacing: 4
             Btn { icon: "chevron_left"; on: GitHub.year !== 2008; onHit: GitHub.stepYear(-1) }
-            Text { width: 74; horizontalAlignment: Text.AlignHCenter; anchors.verticalCenter: parent.verticalCenter; text: GitHub.year === 0 ? "Last year" : GitHub.year; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12 }
+            Text { renderType: Text.CurveRendering; width: 74; horizontalAlignment: Text.AlignHCenter; anchors.verticalCenter: parent.verticalCenter; text: GitHub.year === 0 ? "Last year" : GitHub.year; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12 }
             Btn { icon: "chevron_right"; on: GitHub.year !== 0; onHit: GitHub.stepYear(1) }
             Item { width: 4; height: 1 }
             Btn { icon: "refresh"; on: GitHub.user !== ""; onHit: GitHub.fetch() }
@@ -127,7 +127,7 @@ FaceBase {
             height: 26; width: info.implicitWidth + 16; radius: Theme.corner(26, 8)
             color: im.containsMouse ? Qt.alpha(Theme.control, 0.85) : "transparent"
             Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
-            Text {
+            Text { renderType: Text.CurveRendering;
                 id: info
                 anchors.centerIn: parent
                 text: f.shown ? f.shown.count + (f.shown.count === 1 ? " contribution" : " contributions") + " on " + Qt.formatDate(new Date(f.shown.date), "dddd, d MMM yyyy")
@@ -137,7 +137,7 @@ FaceBase {
             MouseArea { id: im; anchors.fill: parent; hoverEnabled: true; enabled: f.live && GitHub.user !== ""; cursorShape: Qt.PointingHandCursor
                 onClicked: f.picked ? (f.picked = null) : Quickshell.execDetached(["xdg-open", "https://github.com/" + GitHub.user]) }
         }
-        Text {
+        Text { renderType: Text.CurveRendering;
             anchors.centerIn: parent
             visible: f.live && GitHub.state !== "ok"
             text: GitHub.user === "" ? "Click “Set your GitHub name” above" : (GitHub.state === "error" ? "Couldn't load " + GitHub.user + "'s contributions" : "Loading…")

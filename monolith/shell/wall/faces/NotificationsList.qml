@@ -22,8 +22,8 @@ FaceBase {
                 Column {
                     anchors.left: nb.right; anchors.leftMargin: 10; anchors.right: parent.right; anchors.rightMargin: 14
                     anchors.verticalCenter: parent.verticalCenter
-                    Text { width: parent.width; elide: Text.ElideRight; text: modelData.appName || "Notification"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 11 }
-                    Text { width: parent.width; elide: Text.ElideRight; text: modelData.summary || ""; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 14 }
+                    Text { renderType: Text.CurveRendering; width: parent.width; elide: Text.ElideRight; text: modelData.appName || "Notification"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 11 }
+                    Text { renderType: Text.CurveRendering; width: parent.width; elide: Text.ElideRight; text: modelData.summary || ""; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 14 }
                 }
             }
         }

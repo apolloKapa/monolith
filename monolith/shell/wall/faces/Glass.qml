@@ -67,7 +67,7 @@ Item {
         }
     }
     // (SmoothRects: the Cyberpunk style cuts the corner, the blur's mask too)
-    SmoothRect { id: mask; anchors.fill: parent; radius: g.r; color: "white"; visible: false; layer.enabled: true }
+    SmoothRect { id: mask; anchors.fill: parent; radius: g.r; color: "white"; visible: false; antialiasing: true; layer.enabled: true; layer.smooth: true }
     SmoothRect {
         anchors.fill: parent
         visible: g.mode !== "clear"

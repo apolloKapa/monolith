@@ -21,6 +21,6 @@ Item {
         running: mq.active && mq.over && mq.visible
         onRunningChanged: if (!running) mq.off = 0
     }
-    Text { id: a; x: mq.over ? -mq.off : 0; elide: mq.over ? Text.ElideNone : Text.ElideRight; width: mq.over ? implicitWidth : mq.width }
-    Text { visible: mq.over; x: a.x + a.implicitWidth + mq.gap; text: a.text; font: a.font; color: a.color }
+    Text { renderType: Text.CurveRendering; id: a; x: mq.over ? -mq.off : 0; elide: mq.over ? Text.ElideNone : Text.ElideRight; width: mq.over ? implicitWidth : mq.width }
+    Text { renderType: Text.CurveRendering; visible: mq.over; x: a.x + a.implicitWidth + mq.gap; text: a.text; font: a.font; color: a.color }
 }

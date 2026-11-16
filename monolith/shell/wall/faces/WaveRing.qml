@@ -5,6 +5,7 @@ import "../../ui"
 // A round gauge: a track and an arc up to `value` (0..1) from the top, clockwise. With `wavy`
 // both ripple gently (twelve waves round, a third of the line's width deep), standing still.
 Canvas {
+    antialiasing: true
     id: wr
     property real value: 0
     property real thickness: 8          // at a 130 px ring; scales with the ring

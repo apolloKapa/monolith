@@ -18,8 +18,8 @@ FaceBase {
         anchors.centerIn: parent
         spacing: 2
         Icon { visible: f.d >= 72; anchors.horizontalCenter: parent.horizontalCenter; name: b.icon; filled: true; size: f.d * 0.16; color: b.color }
-        Text { anchors.horizontalCenter: parent.horizontalCenter; text: b.present ? Math.round(b.level * 100) + "%" : "--"; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: f.d * (f.d < 110 ? 0.2 : 0.22) }
-        Text { visible: f.d >= 96 && b.charging; anchors.horizontalCenter: parent.horizontalCenter; text: "Charging"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: f.d * 0.095 }
+        Text { renderType: Text.CurveRendering; anchors.horizontalCenter: parent.horizontalCenter; text: b.present ? Math.round(b.level * 100) + "%" : "--"; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: f.d * (f.d < 110 ? 0.2 : 0.22) }
+        Text { renderType: Text.CurveRendering; visible: f.d >= 96 && b.charging; anchors.horizontalCenter: parent.horizontalCenter; text: "Charging"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: f.d * 0.095 }
     }
     }
 }

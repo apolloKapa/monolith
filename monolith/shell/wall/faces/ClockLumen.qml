@@ -40,6 +40,7 @@ FaceBase {
 
     // the dial: a circle with a soft lobe towards each hour, bigger where it's lit
     Canvas {
+        antialiasing: true
         id: dialC
         anchors.fill: parent
         property var g: f.glow
@@ -65,8 +66,16 @@ FaceBase {
                 if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
             ctx.closePath();
-            ctx.fillStyle = c;
+            // shaded like a raised disc lit from the top left, a hairline of light round its rim
+            const gr = ctx.createRadialGradient(cx - f.d * 0.16, cy - f.d * 0.2, 0, cx, cy, base + amp);
+            gr.addColorStop(0, Qt.lighter(c, 1.16));
+            gr.addColorStop(0.6, c);
+            gr.addColorStop(1, Qt.darker(c, 1.1));
+            ctx.fillStyle = gr;
             ctx.fill();
+            ctx.lineWidth = Math.max(1, f.d * 0.0035);
+            ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.12);
+            ctx.stroke();
         }
     }
     Repeater {
@@ -82,28 +91,40 @@ FaceBase {
             readonly property color col: isec >= ih && isec >= im ? f.secC : (im >= ih ? f.minC : f.hourC)
             readonly property real dist: f.d * (0.382 + 0.028 * lit)
             width: f.d * 0.11; height: width
-            visible: lit > 0.001
             x: f.width / 2 + dist * Math.sin(ang * Math.PI / 180) - width / 2
             y: f.height / 2 - dist * Math.cos(ang * Math.PI / 180) - height / 2
-            Rectangle { anchors.centerIn: parent; width: parent.width * 0.92; height: width; radius: width / 2; color: parent.col; opacity: parent.lit * 0.24 }
-            Text {
+            Rectangle { anchors.centerIn: parent; width: f.d * (parent.hour % 3 === 0 ? 0.016 : 0.011); height: width; radius: width / 2; color: f.numC; opacity: (1 - parent.lit) * 0.3; antialiasing: true }
+            Rectangle { anchors.centerIn: parent; width: parent.width * 0.92; height: width; radius: width / 2; color: parent.col; opacity: parent.lit * 0.24; visible: parent.lit > 0.001 }
+            Text { renderType: Text.CurveRendering;
                 anchors.centerIn: parent
                 text: parent.hour
                 font.family: f.fontOr(Theme.fontFamily); font.pixelSize: f.d * 0.054; font.weight: Font.Bold
                 color: parent.lit > 0.5 ? f.numC : parent.col
                 opacity: parent.lit
+                visible: parent.lit > 0.001
             }
         }
     }
+    // hands: the hour broad, the minute slimmer, the second a fine line with a short tail; all
+    // meet under a cap in the middle
     component Hand: Item {
         property real angle
         property real len
+        property real w: f.d * 0.05
+        property real tail: 0
         property color col
         anchors.centerIn: parent
         rotation: angle
-        Rectangle { width: f.d * 0.054; height: parent.len; radius: width / 2; color: parent.col; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.top; anchors.bottomMargin: -width / 2 }
+        Rectangle { width: parent.w; height: parent.len + parent.tail; radius: width / 2; color: parent.col; antialiasing: true
+                    anchors.horizontalCenter: parent.horizontalCenter; y: -parent.len }
     }
-    Hand { angle: f.hourA; len: f.d * 0.22; col: f.hourC }
-    Hand { angle: f.minA; len: f.d * 0.32; col: f.minC }
-    Hand { visible: f.secs; angle: f.secA; len: f.d * 0.38; col: f.secC }
+    Hand { angle: f.hourA; len: f.d * 0.22; w: f.d * 0.06; col: f.hourC }
+    Hand { angle: f.minA; len: f.d * 0.32; w: f.d * 0.042; col: f.minC }
+    Hand { visible: f.secs; angle: f.secA; len: f.d * 0.37; w: Math.max(2, f.d * 0.014); tail: f.d * 0.07; col: f.secC }
+    Rectangle {
+        anchors.centerIn: parent
+        width: f.d * 0.085; height: width; radius: width / 2; antialiasing: true
+        color: f.secs ? f.secC : f.minC
+        Rectangle { anchors.centerIn: parent; width: parent.width * 0.4; height: width; radius: width / 2; color: Qt.darker(f.dial, 1.1); antialiasing: true }
+    }
 }

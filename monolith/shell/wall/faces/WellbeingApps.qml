@@ -18,9 +18,9 @@ FaceBase {
                 Row {
                     spacing: 6; anchors.verticalCenter: parent.verticalCenter
                     Icon { name: "apps"; size: 16; color: f.accentC; anchors.verticalCenter: parent.verticalCenter }
-                    Text { text: "Today's apps"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
+                    Text { renderType: Text.CurveRendering; text: "Today's apps"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
                 }
-                Text { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; text: wd.fmtShort(wd.total); color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 15; font.weight: Font.Black }
+                Text { renderType: Text.CurveRendering; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; text: wd.fmtShort(wd.total); color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 15; font.weight: Font.Black }
             }
             Repeater {
                 model: wd.top
@@ -32,8 +32,8 @@ FaceBase {
                     Item {
                         anchors.left: ic.visible ? ic.right : parent.left; anchors.leftMargin: ic.visible ? 10 : 0; anchors.right: parent.right
                         height: parent.height
-                        Text { text: parent.parent.modelData.name; width: parent.width - tt.width - 8; elide: Text.ElideRight; color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 12 }
-                        Text { id: tt; anchors.right: parent.right; text: wd.fmtShort(parent.parent.modelData.secs); color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
+                        Text { renderType: Text.CurveRendering; text: parent.parent.modelData.name; width: parent.width - tt.width - 8; elide: Text.ElideRight; color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 12 }
+                        Text { renderType: Text.CurveRendering; id: tt; anchors.right: parent.right; text: wd.fmtShort(parent.parent.modelData.secs); color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
                         SmoothRect {
                             smoothing: 0
                             anchors.bottom: parent.bottom; anchors.bottomMargin: 2
@@ -44,7 +44,7 @@ FaceBase {
                     }
                 }
             }
-            Text { visible: wd.top.length === 0; text: Wellbeing.tracking ? "Nothing yet today" : "Screen time is off (Wellbeing → gear)"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11 }
+            Text { renderType: Text.CurveRendering; visible: wd.top.length === 0; text: Wellbeing.tracking ? "Nothing yet today" : "Screen time is off (Wellbeing → gear)"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11 }
         }
     }
     WellOpen { face: f }

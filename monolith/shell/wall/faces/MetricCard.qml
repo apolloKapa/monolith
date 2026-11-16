@@ -31,12 +31,12 @@ FaceBase {
             color: Qt.alpha(f.topSunk ? "#000000" : Theme.control, f.topSunk ? 0.15 : 0.7)
             Icon { anchors.centerIn: parent; name: m.icon; size: parent.width * 0.58; color: f.topInk }
         }
-        Text { anchors.right: parent.right; anchors.verticalCenter: ic.verticalCenter; text: m.text; color: f.topInk; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: f.small ? 18 : 24 }
+        Text { renderType: Text.CurveRendering; anchors.right: parent.right; anchors.verticalCenter: ic.verticalCenter; text: m.text; color: f.topInk; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: f.small ? 18 : 24 }
         Column {
             id: names
             anchors.left: parent.left; anchors.bottom: parent.bottom
-            Text { id: nameT; text: m.title; color: Qt.alpha(f.nameInk, 0.9); font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: f.small ? 11 : 13 }
-            Text { id: detailT; visible: !f.small && m.detail !== ""; text: m.detail; color: Qt.alpha(f.detailInk, 0.75); font.family: Theme.fontFamily; font.pixelSize: 11 }
+            Text { renderType: Text.CurveRendering; id: nameT; text: m.title; color: Qt.alpha(f.nameInk, 0.9); font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: f.small ? 11 : 13 }
+            Text { renderType: Text.CurveRendering; id: detailT; visible: !f.small && m.detail !== ""; text: m.detail; color: Qt.alpha(f.detailInk, 0.75); font.family: Theme.fontFamily; font.pixelSize: 11 }
         }
     }
 }

@@ -21,7 +21,7 @@ FaceBase {
         return l.slice(Math.max(0, i), Math.max(0, i) + count);
     }
     Glass { anchors.fill: parent; ctx: f.ctx; radius: Theme.corner(80, 16) }
-    Text {
+    Text { renderType: Text.CurveRendering;
         anchors.centerIn: parent
         visible: !wt.ready
         text: (Weather.noPlace ? "No location: set your city in Settings → General" : "Getting the weather…")
@@ -37,8 +37,8 @@ FaceBase {
             spacing: 0
             Icon { Layout.alignment: Qt.AlignTop | Qt.AlignLeft; name: wt.icon; filled: true; size: Math.max(28, Math.min(78, f.inner * 0.36)); color: wt.color }
             Item { Layout.fillHeight: true }
-            Text { text: wt.temp; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: Math.max(24, Math.min(64, f.inner * 0.3)) }
-            Text {
+            Text { renderType: Text.CurveRendering; text: wt.temp; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: Math.max(24, Math.min(64, f.inner * 0.3)) }
+            Text { renderType: Text.CurveRendering;
                 text: wt.ready && Weather.current.feels !== undefined ? "Feels like " + Math.round(Weather.current.feels) + "°" : ""
                 color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Medium; font.pixelSize: Math.max(10, Math.min(14, f.inner * 0.085))
             }
@@ -46,8 +46,8 @@ FaceBase {
         ColumnLayout {
             Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1.3
             spacing: 2
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight; text: Weather.city || "Weather"; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(13, Math.min(20, f.inner * 0.105)) }
-            Text { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight; text: wt.words; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Medium; font.pixelSize: Math.max(11, Math.min(16, f.inner * 0.085)) }
+            Text { renderType: Text.CurveRendering; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight; text: Weather.city || "Weather"; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(13, Math.min(20, f.inner * 0.105)) }
+            Text { renderType: Text.CurveRendering; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight; text: wt.words; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Medium; font.pixelSize: Math.max(11, Math.min(16, f.inner * 0.085)) }
             Item { Layout.fillHeight: true }
             RowLayout {
                 Layout.alignment: Qt.AlignBottom | Qt.AlignRight
@@ -57,9 +57,9 @@ FaceBase {
                     ColumnLayout {
                         required property var modelData
                         spacing: 4
-                        Text { Layout.alignment: Qt.AlignHCenter; text: Math.round(modelData.temp) + "°"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Medium; font.pixelSize: Math.max(11, Math.min(18, f.inner * 0.085)) }
+                        Text { renderType: Text.CurveRendering; Layout.alignment: Qt.AlignHCenter; text: Math.round(modelData.temp) + "°"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Medium; font.pixelSize: Math.max(11, Math.min(18, f.inner * 0.085)) }
                         Icon { Layout.alignment: Qt.AlignHCenter; name: Weather.icon(modelData.code, parseInt(modelData.time) >= 6 && parseInt(modelData.time) < 20); filled: true; size: Math.max(20, Math.min(32, f.inner * 0.15)); color: wt.tone(modelData.code) }
-                        Text { Layout.alignment: Qt.AlignHCenter; text: modelData.time; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Math.max(9, Math.min(13, f.inner * 0.065)) }
+                        Text { renderType: Text.CurveRendering; Layout.alignment: Qt.AlignHCenter; text: modelData.time; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Math.max(9, Math.min(13, f.inner * 0.065)) }
                     }
                 }
             }

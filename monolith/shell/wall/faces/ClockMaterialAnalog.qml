@@ -15,6 +15,7 @@ FaceBase {
     readonly property color minC: f.hasAccent ? f.accentC : Theme.m("primary", Theme.accent)
     readonly property color secC: f.hasAccent ? f.accentC : Theme.m("tertiary", Theme.accent)
     Canvas {
+        antialiasing: true
         anchors.centerIn: parent
         width: f.d; height: f.d
         property color fill: f.dial

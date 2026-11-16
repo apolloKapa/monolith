@@ -40,7 +40,7 @@ FaceBase {
                 width: f.cw; height: f.chh
                 Repeater {
                     model: [[0.045, 0.14], [0.022, 0.26], [0, -1]]
-                    Text {
+                    Text { renderType: Text.CurveRendering;
                         required property var modelData
                         x: cell.tx
                         y: cell.height - baselineOffset + f.px * modelData[0]

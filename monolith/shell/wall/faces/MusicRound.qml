@@ -92,7 +92,7 @@ FaceBase {
                 opacity: f.active && cov.status === Image.Ready ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: Theme.ms(600); easing.type: Easing.OutCubic } }
             }
-            Rectangle { id: m; anchors.fill: parent; radius: width / 2; visible: false; layer.enabled: true }
+            Rectangle { id: m; anchors.fill: parent; radius: width / 2; visible: false; antialiasing: true; layer.enabled: true; layer.smooth: true }
             // nothing playing: a plain dark record with a note
             Rectangle {
                 anchors.fill: parent; radius: width / 2

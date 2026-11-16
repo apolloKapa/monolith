@@ -4,7 +4,7 @@ import "../../core"
 import "../../ui"
 
 // Text straight on the wallpaper: bold, with a soft drop shadow so it reads on any picture.
-Text {
+Text { renderType: Text.CurveRendering;
     property real shadowY: 2
     property real shadowStrength: 0.55
     font.family: Theme.fontFamily

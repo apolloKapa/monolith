@@ -19,17 +19,17 @@ FaceBase {
             Row {
                 width: parent.width; spacing: 6
                 Icon { name: "self_improvement"; size: 16; color: f.accentC; anchors.verticalCenter: parent.verticalCenter }
-                Text { text: "Screen time today"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
+                Text { renderType: Text.CurveRendering; text: "Screen time today"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold; anchors.verticalCenter: parent.verticalCenter }
             }
             Row {
                 spacing: 10
-                Text { text: wd.fmt(wd.total); color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 34; font.weight: Font.Black }
+                Text { renderType: Text.CurveRendering; text: wd.fmt(wd.total); color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 34; font.weight: Font.Black }
                 Row {
                     visible: f.showDiff && wd.diffText() !== ""
                     spacing: 3
                     anchors.bottom: parent.bottom; anchors.bottomMargin: 6
                     Icon { name: wd.diff > 0 ? "trending_up" : "trending_down"; size: 13; color: f.subC; anchors.verticalCenter: parent.verticalCenter }
-                    Text { text: wd.diffText(); color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter }
+                    Text { renderType: Text.CurveRendering; text: wd.diffText(); color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter }
                 }
             }
             // the goal: a bar to it (red past it)
@@ -47,7 +47,7 @@ FaceBase {
                         Behavior on width { NumberAnimation { duration: Theme.ms(600); easing.type: Easing.OutQuint } }
                     }
                 }
-                Text {
+                Text { renderType: Text.CurveRendering;
                     y: 10
                     text: wd.total > wd.goal ? "Over your " + wd.fmtShort(wd.goal) + " goal by " + wd.fmtShort(wd.total - wd.goal) : wd.fmtShort(wd.goal - wd.total) + " left of your " + wd.fmtShort(wd.goal) + " goal"
                     color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 10
@@ -60,13 +60,13 @@ FaceBase {
                     required property var modelData
                     width: parent.width; height: 22
                     Image { id: ai; width: 16; height: 16; sourceSize: Qt.size(32, 32); source: parent.modelData.icon; anchors.verticalCenter: parent.verticalCenter; asynchronous: true }
-                    Text { anchors.left: ai.right; anchors.leftMargin: 7; anchors.right: at.left; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter
+                    Text { renderType: Text.CurveRendering; anchors.left: ai.right; anchors.leftMargin: 7; anchors.right: at.left; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter
                            text: parent.modelData.name; elide: Text.ElideRight; color: f.mainC; font.family: Theme.fontFamily; font.pixelSize: 12 }
-                    Text { id: at; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; text: wd.fmtShort(parent.modelData.secs); color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
+                    Text { renderType: Text.CurveRendering; id: at; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter; text: wd.fmtShort(parent.modelData.secs); color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.DemiBold }
                     Rectangle { anchors.bottom: parent.bottom; x: 23; width: (parent.width - 23) * parent.modelData.secs / Math.max(1, wd.total); height: 2; radius: Theme.chamfer ? 0 : 1; color: Qt.alpha(f.accentC, 0.6) }
                 }
             }
-            Text { visible: wd.top.length === 0; text: Wellbeing.tracking ? "Nothing yet today" : "Screen time is off (Wellbeing → gear)"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11 }
+            Text { renderType: Text.CurveRendering; visible: wd.top.length === 0; text: Wellbeing.tracking ? "Nothing yet today" : "Screen time is off (Wellbeing → gear)"; color: f.subC; font.family: Theme.fontFamily; font.pixelSize: 11 }
         }
         // this week: a strip of little bars in the top corner, today in the accent
         Row {
@@ -89,7 +89,7 @@ FaceBase {
                             color: parent.parent.modelData.today ? f.accentC : Qt.alpha(f.mainC, parent.parent.modelData.future ? 0.08 : 0.3)
                         }
                     }
-                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: parent.modelData.label[0]; color: parent.modelData.today ? f.mainC : f.subC; font.family: Theme.fontFamily; font.pixelSize: 8; font.weight: Font.Bold }
+                    Text { renderType: Text.CurveRendering; anchors.horizontalCenter: parent.horizontalCenter; text: parent.modelData.label[0]; color: parent.modelData.today ? f.mainC : f.subC; font.family: Theme.fontFamily; font.pixelSize: 8; font.weight: Font.Bold }
                 }
             }
         }

@@ -39,7 +39,7 @@ FaceBase {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: -f.side * 0.04
     }
-    Text {
+    Text { renderType: Text.CurveRendering;
         text: f.name
         color: card.dim
         font.family: Theme.fontFamily; font.pixelSize: Math.max(9, f.side * 0.07); font.weight: Font.DemiBold; font.letterSpacing: 1.5

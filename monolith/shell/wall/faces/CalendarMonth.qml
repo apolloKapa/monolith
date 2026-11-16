@@ -10,8 +10,8 @@ FaceBase {
     Glass { anchors.fill: parent; ctx: f.ctx; radius: Theme.corner(80, 16) }
     Fit {
         dw: 270; dh: 250
-        Text { x: 18; y: 14; text: Qt.formatDate(f.now, "MMMM"); color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 18 }
-        Text { anchors.right: parent.right; anchors.rightMargin: 18; y: 17; text: Qt.formatDate(f.now, "yyyy"); color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 14 }
+        Text { renderType: Text.CurveRendering; x: 18; y: 14; text: Qt.formatDate(f.now, "MMMM"); color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 18 }
+        Text { renderType: Text.CurveRendering; anchors.right: parent.right; anchors.rightMargin: 18; y: 17; text: Qt.formatDate(f.now, "yyyy"); color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 14 }
         Grid {
             id: g
             x: 14; y: 46
@@ -19,7 +19,7 @@ FaceBase {
             columns: 7
             readonly property real cw: width / 7
             readonly property real ch: (parent.height - y - 12) / 7
-            Repeater { model: ["M", "T", "W", "T", "F", "S", "S"]; Text { required property string modelData; width: g.cw; height: g.ch; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; text: modelData; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 11 } }
+            Repeater { model: ["M", "T", "W", "T", "F", "S", "S"]; Text { renderType: Text.CurveRendering; required property string modelData; width: g.cw; height: g.ch; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; text: modelData; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 11 } }
             Repeater {
                 model: f.first + f.days
                 Item {
@@ -28,7 +28,7 @@ FaceBase {
                     readonly property bool today: day === f.now.getDate()
                     width: g.cw; height: g.ch
                     Rectangle { anchors.centerIn: parent; width: Math.min(parent.width, parent.height) - 2; height: width; radius: Theme.chamfer ? 0 : (width / 2); color: Theme.accent; visible: parent.today }
-                    Text { anchors.centerIn: parent; visible: parent.day > 0; text: parent.day; color: parent.today ? Theme.onAccent : Theme.text; font.family: Theme.fontFamily; font.weight: parent.today ? Font.Black : Font.Medium; font.pixelSize: 13 }
+                    Text { renderType: Text.CurveRendering; anchors.centerIn: parent; visible: parent.day > 0; text: parent.day; color: parent.today ? Theme.onAccent : Theme.text; font.family: Theme.fontFamily; font.weight: parent.today ? Font.Black : Font.Medium; font.pixelSize: 13 }
                 }
             }
         }

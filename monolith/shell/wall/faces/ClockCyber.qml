@@ -77,7 +77,7 @@ FaceBase {
             Rectangle {
                 width: lbl.implicitWidth + f.u * 0.1; height: f.u * 0.15
                 color: f.neon
-                Text {
+                Text { renderType: Text.CurveRendering;
                     id: lbl
                     anchors.centerIn: parent
                     text: "LOCAL TIME"
@@ -85,7 +85,7 @@ FaceBase {
                     font.family: f.fam; font.pixelSize: f.u * 0.1; font.weight: Font.Bold; font.letterSpacing: f.u * 0.01
                 }
             }
-            Text {
+            Text { renderType: Text.CurveRendering;
                 anchors.verticalCenter: parent.verticalCenter
                 text: f.h12 ? Qt.formatTime(f.now, "AP") : "SYNC OK"
                 color: Qt.alpha(f.edge, 0.9)
@@ -109,7 +109,7 @@ FaceBase {
             TextMetrics { id: small; font.family: f.fam; font.weight: Font.Bold; font.pixelSize: 100; text: "88" }
             readonly property real px: Math.max(10, Math.min(height / Math.max(1, big.tightBoundingRect.height) * 92,
                 width / Math.max(1, big.advanceWidth + small.advanceWidth * 0.4 + 6) * 96))
-            component Digits: Text {
+            component Digits: Text { renderType: Text.CurveRendering;
                 height: timeBox.height
                 font.pixelSize: timeBox.px
                 font.weight: Font.Bold
@@ -128,7 +128,7 @@ FaceBase {
                 layer.effect: GradientTint { from: f.gradFrom; to: f.gradTo; dir: f.gradVec }
             }
             // the seconds, small, on the time's baseline
-            Text {
+            Text { renderType: Text.CurveRendering;
                 x: main.x + main.implicitWidth + timeBox.px * 0.06
                 anchors.baseline: main.baseline
                 text: timeBox.s
@@ -142,17 +142,17 @@ FaceBase {
             id: dateRow
             anchors.bottom: segs.top; anchors.bottomMargin: f.u * 0.04
             spacing: f.u * 0.04
-            Text {
+            Text { renderType: Text.CurveRendering;
                 text: Qt.formatDate(f.now, "ddd").toUpperCase()
                 color: f.hot
                 font.family: f.fam; font.pixelSize: f.u * 0.11; font.weight: Font.Bold; font.letterSpacing: f.u * 0.015
             }
-            Text {
+            Text { renderType: Text.CurveRendering;
                 text: "//"
                 color: Qt.alpha(f.edge, 0.5)
                 font.family: f.fam; font.pixelSize: f.u * 0.11; font.weight: Font.Bold
             }
-            Text {
+            Text { renderType: Text.CurveRendering;
                 text: Qt.formatDate(f.now, "dd.MM.yyyy")
                 color: Qt.alpha(f.edge, 0.95)
                 font.family: f.fam; font.pixelSize: f.u * 0.11; font.weight: Font.DemiBold; font.letterSpacing: f.u * 0.015

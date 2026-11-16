@@ -16,8 +16,8 @@ FaceBase {
         x: f.pad; y: f.pad
         width: f.width - 2 * f.pad - ctl.width - f.pad * 0.5
         spacing: 2
-        Text { width: parent.width; elide: Text.ElideRight; text: f.player ? (f.player.trackTitle || "Unknown") : "Nothing playing"; color: card.ink; font.family: Theme.fontFamily; font.pixelSize: Math.max(12, f.height * 0.13); font.weight: Font.Bold }
-        Text { width: parent.width; elide: Text.ElideRight; text: f.player ? (f.player.trackArtist || "").toUpperCase() : ""; color: card.dim; font.family: Theme.fontFamily; font.pixelSize: Math.max(9, f.height * 0.075); font.letterSpacing: 1 }
+        Text { renderType: Text.CurveRendering; width: parent.width; elide: Text.ElideRight; text: f.player ? (f.player.trackTitle || "Unknown") : "Nothing playing"; color: card.ink; font.family: Theme.fontFamily; font.pixelSize: Math.max(12, f.height * 0.13); font.weight: Font.Bold }
+        Text { renderType: Text.CurveRendering; width: parent.width; elide: Text.ElideRight; text: f.player ? (f.player.trackArtist || "").toUpperCase() : ""; color: card.dim; font.family: Theme.fontFamily; font.pixelSize: Math.max(9, f.height * 0.075); font.letterSpacing: 1 }
     }
     // how far in: dots, lit up to the playhead
     Row {

@@ -17,8 +17,8 @@ FaceBase {
                 Item {
                     required property var modelData
                     width: parent.width; height: 30
-                    Text { text: parent.modelData[0]; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12 }
-                    Text { anchors.right: parent.right; text: parent.modelData[2]; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 12 }
+                    Text { renderType: Text.CurveRendering; text: parent.modelData[0]; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12 }
+                    Text { renderType: Text.CurveRendering; anchors.right: parent.right; text: parent.modelData[2]; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 12 }
                     SmoothRect { smoothing: 0; y: 18; width: parent.width; height: 9; radius: Theme.corner(9); color: Qt.alpha(Theme.text, 0.12)
                         SmoothRect { smoothing: 0; height: parent.height; radius: Theme.corner(9); color: Theme.accent; width: Math.max(9, parent.width * parent.parent.modelData[1]); Behavior on width { NumberAnimation { duration: Theme.ms(600); easing.type: Easing.OutQuint } } } }
                 }

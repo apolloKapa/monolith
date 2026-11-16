@@ -22,8 +22,8 @@ FaceBase {
         ColumnLayout {
             Layout.fillWidth: true; Layout.alignment: Qt.AlignVCenter
             spacing: 2
-            Text { Layout.fillWidth: true; elide: Text.ElideRight; text: b.present ? Math.round(fill.level * 100) + "%" : "No battery found"; color: parent.parent.ink; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: Math.max(14, Math.min(24, f.height * 0.26)) }
-            Text { Layout.fillWidth: true; elide: Text.ElideRight; text: b.time; color: parent.parent.ink === f.dark ? Qt.alpha(f.dark, 0.85) : (b.charging ? "#7bd88f" : Theme.subtext); font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(9, Math.min(12, f.height * 0.13)) }
+            Text { renderType: Text.CurveRendering; Layout.fillWidth: true; elide: Text.ElideRight; text: b.present ? Math.round(fill.level * 100) + "%" : "No battery found"; color: parent.parent.ink; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: Math.max(14, Math.min(24, f.height * 0.26)) }
+            Text { renderType: Text.CurveRendering; Layout.fillWidth: true; elide: Text.ElideRight; text: b.time; color: parent.parent.ink === f.dark ? Qt.alpha(f.dark, 0.85) : (b.charging ? "#7bd88f" : Theme.subtext); font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(9, Math.min(12, f.height * 0.13)) }
         }
     }
     Content { anchors.fill: parent }

@@ -51,6 +51,9 @@ Item {
         readonly property string shadow: { const v = String(w.opt("shadow", "") || ""); return v !== "" ? v : Theme.widgetShadow; }
         readonly property bool shadowed: shadow !== "off" && Theme.shadowOn
         layer.enabled: shadowed
+        // (sampled smoothly: a widget can be turned to any angle, and nearest-pixel sampling made
+        // its turned edges and text jagged)
+        layer.smooth: true
         layer.effect: MultiEffect {
             shadowEnabled: true
             shadowColor: body.shadow === "glow" ? Qt.alpha(Theme.accent, 0.85) : Qt.alpha(Theme.shadowBase, body.shadow === "strong" ? 0.8 : 0.5)

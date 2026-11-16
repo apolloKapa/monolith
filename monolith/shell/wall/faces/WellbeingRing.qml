@@ -29,8 +29,8 @@ FaceBase {
                 source: wd.top.length ? wd.top[0].icon : ""
             }
             Icon { visible: !(f.opt("showTopApp", true) !== false && wd.top.length > 0) && f.d >= 90; anchors.horizontalCenter: parent.horizontalCenter; name: "self_improvement"; size: f.d * 0.15; color: f.subC }
-            Text { anchors.horizontalCenter: parent.horizontalCenter; text: wd.fmtShort(wd.total); color: f.mainC; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: f.d * 0.18 }
-            Text { visible: f.d >= 100; anchors.horizontalCenter: parent.horizontalCenter
+            Text { renderType: Text.CurveRendering; anchors.horizontalCenter: parent.horizontalCenter; text: wd.fmtShort(wd.total); color: f.mainC; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: f.d * 0.18 }
+            Text { renderType: Text.CurveRendering; visible: f.d >= 100; anchors.horizontalCenter: parent.horizontalCenter
                    text: f.over ? "over by " + wd.fmtShort(wd.total - f.full) : "of " + wd.fmtShort(f.full)
                    color: f.over ? Theme.danger : f.subC; font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: f.d * 0.075 }
         }

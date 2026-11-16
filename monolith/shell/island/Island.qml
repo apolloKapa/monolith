@@ -353,6 +353,7 @@ PanelWindow {
                 // (a bar that reaches the screen's sides has no room beside it: its outside
                 // modules join its ends)
                 outside: win.outFits
+                maxLen: Math.max(100, win.width - 2 * Theme.barMargin)
                 y: win.bottom ? body.height - Theme.islandH : 0
                 x: Theme.fullBar ? 0 : Math.round((body.width - width) / 2)
                 width: Theme.fullBar ? body.width : (Theme.barSpread ? Math.max(needWidth, win.restW) : implicitWidth)

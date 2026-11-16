@@ -18,6 +18,7 @@ Item {
     NumberAnimation on phase { from: 0; to: Math.PI * 2; duration: 2200; loops: Animation.Infinite; running: ws.live && ws.playing && ws.visible }
     implicitHeight: 16
     Canvas {
+        antialiasing: true
         id: cv
         anchors.fill: parent
         property real p: ws.phase

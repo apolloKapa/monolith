@@ -4,6 +4,7 @@ import QtQuick
 // signs), for the Dot looks. `cell` is one dot's box in pixels; set it from the room there is
 // (fitCell() gives the biggest that fits), or leave it. Unknown characters are left blank.
 Canvas {
+    antialiasing: true
     id: dt
     property string text: ""
     property real cell: 8

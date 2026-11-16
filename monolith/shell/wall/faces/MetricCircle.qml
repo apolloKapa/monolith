@@ -19,8 +19,8 @@ FaceBase {
         anchors.centerIn: parent
         spacing: 2
         Icon { visible: f.d >= 72; anchors.horizontalCenter: parent.horizontalCenter; name: m.icon; size: f.d * 0.16; color: Theme.subtext }
-        Text { anchors.horizontalCenter: parent.horizontalCenter; text: m.text; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: f.d * (f.d < 110 ? 0.2 : 0.22) }
-        Text { visible: f.d >= 96; anchors.horizontalCenter: parent.horizontalCenter; text: m.title; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: f.d * 0.095 }
+        Text { renderType: Text.CurveRendering; anchors.horizontalCenter: parent.horizontalCenter; text: m.text; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: f.d * (f.d < 110 ? 0.2 : 0.22) }
+        Text { renderType: Text.CurveRendering; visible: f.d >= 96; anchors.horizontalCenter: parent.horizontalCenter; text: m.title; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: f.d * 0.095 }
     }
     }
 }

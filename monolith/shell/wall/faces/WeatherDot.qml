@@ -24,7 +24,7 @@ FaceBase {
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: f.height * 0.04
     }
-    Text {
+    Text { renderType: Text.CurveRendering;
         text: wt.words
         color: card.dim
         font.family: Theme.fontFamily; font.pixelSize: Math.max(10, f.height * 0.09); font.weight: Font.DemiBold

@@ -62,7 +62,7 @@ Item {
                 readonly property bool near: ll.browsing || Math.abs(dist) <= ll.lines
                 width: col.width
                 height: Math.max(ll.lineH, t.implicitHeight)
-                Text {
+                Text { renderType: Text.CurveRendering;
                     id: t
                     width: Math.min(parent.width - 2 * ll.side, implicitWidth)
                     x: ll.hAlign === Text.AlignHCenter ? Math.round((parent.width - width) / 2) : (ll.hAlign === Text.AlignRight ? parent.width - ll.side - width : ll.side)
@@ -73,7 +73,8 @@ Item {
                     text: row.modelData.text !== "" ? row.modelData.text : "♪"
                     font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: ll.size
                     color: row.dist === 0 ? ll.activeInk : ll.ink
-                    opacity: !row.near ? 0 : (row.dist === 0 ? 1 : ll.inactiveOpacity)
+                    // (fading with distance: the lines next to the sung one, then fainter beyond)
+                    opacity: !row.near ? 0 : (row.dist === 0 ? 1 : (Math.abs(row.dist) === 1 || ll.browsing ? ll.inactiveOpacity : ll.inactiveOpacity * 0.55))
                     scale: row.dist === 0 ? 1 : (Math.abs(row.dist) === 1 ? 0.88 : 0.8)
                     transformOrigin: ll.hAlign === Text.AlignHCenter ? Item.Center : (ll.hAlign === Text.AlignRight ? Item.Right : Item.Left)
                     visible: opacity > 0
@@ -97,7 +98,7 @@ Item {
         spacing: 8
         // nothing playing: nothing at all (cleaner on the desktop)
         visible: ll.hasPlayer && !ll.have && (ll.sayMissing || Lyrics.state === "loading")
-        Text {
+        Text { renderType: Text.CurveRendering;
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
@@ -116,7 +117,7 @@ Item {
             Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
             Row { id: pr; anchors.centerIn: parent; spacing: 6
                 Icon { name: "folder_open"; size: 15; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
-                Text { text: "Pick a lyrics file"; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter } }
+                Text { renderType: Text.CurveRendering; text: "Pick a lyrics file"; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 12; anchors.verticalCenter: parent.verticalCenter } }
             MouseArea { id: pm; anchors.fill: parent; hoverEnabled: true; enabled: ll.live; cursorShape: Qt.PointingHandCursor; onClicked: Lyrics.pickFile() }
         }
     }

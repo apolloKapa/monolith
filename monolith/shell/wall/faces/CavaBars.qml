@@ -75,6 +75,7 @@ Item {
         }
     }
     Canvas {
+        antialiasing: true
         id: smooth
         anchors.fill: parent
         visible: cb.continuous

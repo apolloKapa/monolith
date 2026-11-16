@@ -61,7 +61,7 @@ FaceBase {
             width: parent.width
             height: Math.max(16, f.timeSize * 1.4)
             spacing: Math.max(6, f.pad * 0.6)
-            Text {
+            Text { renderType: Text.CurveRendering;
                 id: played
                 anchors.verticalCenter: parent.verticalCenter
                 text: f.active ? f.mmss(pp.shown) : "-:--"
@@ -78,7 +78,7 @@ FaceBase {
                 playing: f.active && f.p.isPlaying
                 onMoved: v => { if (f.p && f.p.canSeek) { f.p.position = v; pp.sync(); } }
             }
-            Text {
+            Text { renderType: Text.CurveRendering;
                 id: left
                 anchors.verticalCenter: parent.verticalCenter
                 text: f.active && f.p.length > 0 ? "-" + f.mmss(f.p.length - pp.shown) : "-:--"

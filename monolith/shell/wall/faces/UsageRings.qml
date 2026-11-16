@@ -20,8 +20,8 @@ FaceBase {
                 WaveRing { anchors.fill: parent; value: m.value; color: m.color; thickness: 9; live: f.live }
                 Column {
                     anchors.centerIn: parent
-                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: m.text; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: rc.d * 0.22 }
-                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: m.title === "Temperature" ? "Temp" : m.title; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: rc.d * 0.11 }
+                    Text { renderType: Text.CurveRendering; anchors.horizontalCenter: parent.horizontalCenter; text: m.text; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: rc.d * 0.22 }
+                    Text { renderType: Text.CurveRendering; anchors.horizontalCenter: parent.horizontalCenter; text: m.title === "Temperature" ? "Temp" : m.title; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.DemiBold; font.pixelSize: rc.d * 0.11 }
                 }
             }
         }
