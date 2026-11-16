@@ -211,19 +211,22 @@ PanelWindow {
         height: appsRow.height + 16
         // slides in from its edge
         // (Cyberpunk: it doesn't slide; it glitches in and the Blackwall takes it, cyP)
-        readonly property bool home: dock.shown || Theme.cyber
+        // (the dock always slides in and out of its edge; only Cyberpunk glitches it instead: the
+        // other styles' effects (Theme.fxKind) are for menus and cards, not the dock)
+        readonly property bool glitchy: Theme.fxKind === "cyber"
+        readonly property bool home: dock.shown || glitchy
         x: dock.side === "left" ? (home ? dock.margin : -width - 8) : (dock.side === "right" ? (home ? parent.width - width - dock.margin : parent.width + 8) : Math.round((parent.width - width) / 2))
         y: dock.side === "bottom" ? (home ? parent.height - height - dock.margin : parent.height + 8) : (dock.vertical ? Math.round((parent.height - height) / 2) : (home ? dock.margin : -height - 8))
         Behavior on x { enabled: dock.vertical; NumberAnimation { duration: dock.shown ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         Behavior on y { enabled: !dock.vertical; NumberAnimation { duration: dock.shown ? Theme.enterMs : Theme.exitMs; easing.type: Easing.BezierSpline; easing.bezierCurve: dock.shown ? Theme.enterCurve : Theme.exitCurve } }
         // and fades in with a little zoom as it slides in, out the same way
-        opacity: Theme.cyber ? (cyP > 0.002 ? 1 : 0) : (dock.shown ? 1 : 0)
-        scale: dock.shown ? 1 : Theme.popScale
+        opacity: glitchy ? (cyP > 0.002 ? 1 : 0) : (dock.shown ? 1 : 0)
+        scale: dock.shown || glitchy || !Theme.animOn ? 1 : 0.94
         property real cyP: dock.shown ? 1 : 0
         Behavior on cyP { NumberAnimation { duration: dock.shown ? Theme.fxInMs : Theme.fxOutMs } }
-        CyberFx { target: capsule; p: dock.shown ? capsule.cyP : 1 - capsule.cyP; going: !dock.shown }
+        CyberFx { target: capsule; allowed: capsule.glitchy; p: dock.shown ? capsule.cyP : 1 - capsule.cyP; going: !dock.shown }
         transformOrigin: dock.side === "top" ? Item.Top : (dock.side === "left" ? Item.Left : (dock.side === "right" ? Item.Right : Item.Bottom))
-        Behavior on opacity { enabled: !Theme.cyber; Anim { kind: dock.shown ? "enter" : "exit" } }
+        Behavior on opacity { enabled: !capsule.glitchy; Anim { kind: dock.shown ? "enter" : "exit" } }
         Behavior on scale { Anim { kind: dock.shown ? "enter" : "exit" } }
         // its own roundness (−1: the theme's)
         radius: Number(Store.get("dock.radius", -1)) >= 0 ? Math.min(Number(Store.get("dock.radius", -1)), Math.min(width, height) / 2) : Theme.corner(Math.min(width, height), 8)
@@ -607,9 +610,9 @@ PanelWindow {
         // is blurred. Switched between it and nothing on every show and hide, the compositor set
         // its blur up again each time, and Hyprland flashed the dock's surface black; the blur
         // also vanished at once while the dock was still sliding out)
-        // (a style with its own effect (Theme.cyber) doesn't slide the dock away: it stays put
-        // and only its picture goes, so there the blur goes with it, once it's fully gone)
-        item: Theme.cyber ? (capsule.opacity > 0.01 ? capsule : null) : capsule
+        // (Cyberpunk doesn't slide the dock away: it stays put and only its picture goes, so there
+        // the blur goes with it, once it's fully gone)
+        item: capsule.glitchy ? (capsule.opacity > 0.01 ? capsule : null) : capsule
         radius: capsule.blurRadius
         CutBlur { on: Theme.chamfer && dock.shown; bx: capsule.x; by: capsule.y; bw: capsule.width; bh: capsule.height; c: capsule.r }
     }
