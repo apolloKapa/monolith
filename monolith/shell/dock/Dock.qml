@@ -603,11 +603,13 @@ PanelWindow {
     BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
     Region {
         id: blurShape
-        // (always the capsule: hidden, it has slid off the edge and the region with it, so nothing
+        // (the capsule, shown or hidden: hidden, it has slid off the edge and the region with it, so nothing
         // is blurred. Switched between it and nothing on every show and hide, the compositor set
         // its blur up again each time, and Hyprland flashed the dock's surface black; the blur
         // also vanished at once while the dock was still sliding out)
-        item: capsule
+        // (a style with its own effect (Theme.cyber) doesn't slide the dock away: it stays put
+        // and only its picture goes, so there the blur goes with it, once it's fully gone)
+        item: Theme.cyber ? (capsule.opacity > 0.01 ? capsule : null) : capsule
         radius: capsule.blurRadius
         CutBlur { on: Theme.chamfer && dock.shown; bx: capsule.x; by: capsule.y; bw: capsule.width; bh: capsule.height; c: capsule.r }
     }
