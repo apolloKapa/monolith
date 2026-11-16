@@ -87,7 +87,9 @@ Singleton {
         if (p === "wallpaper") { showWall(screen); return; }
         const next = p && pages.indexOf(p) !== -1 ? p : page;
         if (!open && next !== page) { snap = true; Qt.callLater(() => { hub.snap = false; }); }
-        if (open && next !== page) { aim(next); switched(); }
+        // (another menu over an open one: it's opened too, so it sounds like it; the hub's own
+        // open/close sound only plays when the hub itself opens or closes)
+        if (open && next !== page) { aim(next); switched(); Sounds.play("open"); }
         if (p && pages.indexOf(p) !== -1) page = p;
         screenName = target(screen);
         wallOpen = false;

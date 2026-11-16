@@ -155,7 +155,29 @@ PanelWindow {
     // where menus open (Settings → Menus): out of the island (top), or as a floating card in
     // the middle of the screen or on the right; then the island stays a bar
     // (each menu can have its own place, Settings → Menus & launcher)
-    readonly property string place: Store.get("menus.positions." + HubState.page, "") || Store.get("menus.position", "top")
+    readonly property string place: Store.get("menus.positions." + cardPage, "") || Store.get("menus.position", "top")
+    // the page the floating card is placed for: HubState.page, followed here so that the card's
+    // spot before a switch can be read first, and the card glides from there to the new menu's
+    // spot (each menu keeps its own: its position, or where it was dragged) instead of jumping
+    // (set here only, not bound: bound, it would move before the old spot could be read)
+    property string cardPage: ""
+    Component.onCompleted: cardPage = HubState.page
+    Connections {
+        target: HubState
+        function onPageChanged() {
+            const glide = win.shown && !win.docked && !HubState.snap && win.cardZoom > 0.5 && Theme.animOn;
+            // (from where it is now, mid-glide included, so a quick second switch turns smoothly)
+            const cx = floatCard.x, cy = floatCard.y;
+            cardGlide.stop();
+            win.cardPage = HubState.page;
+            if (!glide) { floatCard.glideWait = false; floatCard.glideX = 0; floatCard.glideY = 0; return; }
+            floatCard.glideX = floatCard.glideX + (cx - floatCard.x);
+            floatCard.glideY = floatCard.glideY + (cy - floatCard.y);
+            // (held where it was until the new menu's first frame is drawn: building it stalls that
+            // frame, and an animation started before it lost its first third and looked like a jump)
+            floatCard.glideWait = true;
+        }
+    }
     // a floating bar (Solid, Modular) has nothing to grow out of: its menus open just under it
     // (nor does a bar down the side: its menus open beside it)
     readonly property bool docked: place === "top" && !Theme.barFloats && !side
@@ -677,13 +699,30 @@ PanelWindow {
         readonly property real homeX: onLeft ? leftRoom : (onRight ? win.width - width - rightRoom : Math.round((win.width - width) / 2))
         // moved by hand (drag an empty part of it): kept for each menu; a double-click on an empty
         // part puts it back. Always kept on the screen
-        readonly property var moved: Store.get("menus.moved." + HubState.page, null)
+        readonly property var moved: Store.get("menus.moved." + win.cardPage, null)
         property point dragBy: Qt.point(0, 0)
-        x: Math.round(Math.max(0, Math.min(win.width - width, homeX + (moved ? Number(moved.x) || 0 : 0) + dragBy.x)))
+        // (a switch's glide: the way still to go from the last menu's spot, down to 0)
+        property real glideX: 0
+        property real glideY: 0
+        property bool glideWait: false
+        Connections {
+            target: floatCard.Window.window
+            enabled: floatCard.glideWait
+            function onFrameSwapped() { floatCard.glideWait = false; cardGlide.restart(); }
+        }
+        // (a travel across the screen: the standard curve, which eases in, rather than the size's,
+        // which goes almost all the way in its first frames and read as a jump over that distance)
+        ParallelAnimation {
+            id: cardGlide
+            Anim { target: floatCard; property: "glideX"; to: 0; duration: Theme.springMs }
+            Anim { target: floatCard; property: "glideY"; to: 0; duration: Theme.springMs }
+        }
+        // (the glide kept on the screen too: as the card grows on the way it would cross the edge)
+        x: Math.round(Math.max(0, Math.min(win.width - width, Math.max(0, Math.min(win.width - width, homeX + (moved ? Number(moved.x) || 0 : 0) + dragBy.x)) + glideX)))
         readonly property real topRoom: win.bottom || win.side ? 16 : Theme.islandH + Theme.barMargin + 14
         readonly property real bottomRoom: win.bottom ? Theme.islandH + Theme.barMargin + 14 : 16
         readonly property real homeY: onTop ? topRoom : (onBottom ? win.height - height - bottomRoom : Math.max(topRoom, Math.min(win.height - height - bottomRoom, Math.round((win.height - height) / 2))))
-        y: Math.round(Math.max(0, Math.min(win.height - height, homeY + (moved ? Number(moved.y) || 0 : 0) + dragBy.y)))
+        y: Math.round(Math.max(0, Math.min(win.height - height, Math.max(0, Math.min(win.height - height, homeY + (moved ? Number(moved.y) || 0 : 0) + dragBy.y)) + glideY)))
         radius: Theme.islandRadius
         color: Theme.frame
         border.width: Theme.outlineW
@@ -750,7 +789,7 @@ PanelWindow {
                 if (!moving) return;
                 moving = false;
                 // kept as where it ended up (on the screen), from its usual place
-                Store.set("menus.moved." + HubState.page, { x: floatCard.x - floatCard.homeX, y: floatCard.y - floatCard.homeY });
+                Store.set("menus.moved." + HubState.page, { x: floatCard.x - floatCard.glideX - floatCard.homeX, y: floatCard.y - floatCard.glideY - floatCard.homeY });
                 floatCard.dragBy = Qt.point(0, 0);
             }
             onCanceled: { moving = false; floatCard.dragBy = Qt.point(0, 0); }
