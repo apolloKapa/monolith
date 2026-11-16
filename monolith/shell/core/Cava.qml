@@ -51,22 +51,32 @@ Singleton {
         for (let i = 1; i <= 5; i++) out.push(i + " = " + n("eq" + i, 0, 4));
         return out;
     }
-    onLinesChanged: if (users > 0) restart()
+    // (restarted only when its own config really changes: `lines` is rebuilt on every settings
+    // change, and each restart cut all sound for a moment, see `run`)
+    property string written: ""
+    onLinesChanged: {
+        const t = lines.join("\n");
+        if (t === written) return;
+        if (users > 0) restart();
+    }
     function restart() { run.running = false; write.running = false; write.running = true; }
 
     readonly property string conf: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/monolith-cava.conf"
     Process {
         id: write
         command: ["sh", "-c", "f=\"$1\"; shift; printf '%s\\n' \"$@\" > \"$f\"", "sh", cv.conf].concat(cv.lines)
-        onExited: run.running = cv.users > 0
+        onExited: { cv.written = cv.lines.join("\n"); run.running = cv.users > 0; }
     }
     onUsersChanged: {
         if (users > 0 && !run.running && !write.running) write.running = true;
         else if (users === 0) run.running = false;
     }
+    // cava asks PipeWire for small buffers (512 samples): the whole audio graph switched to them
+    // as it started and back as it stopped, and on USB interfaces every switch is a short dropout
+    // of all sound. Asking for the graph's usual size keeps it from switching
     Process {
         id: run
-        command: ["cava", "-p", cv.conf]
+        command: ["env", "PIPEWIRE_LATENCY=2048/48000", "cava", "-p", cv.conf]
         stdout: SplitParser {
             onRead: line => {
                 const v = line.split(";").filter(x => x !== "").map(x => Number(x) / 1000);
