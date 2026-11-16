@@ -602,18 +602,25 @@ PanelWindow {
         }
     }
 
-    // blur behind it (Theme → Effects), shaped like it
-    BackgroundEffect.blurRegion: Theme.blur ? blurShape : null
+    // blur behind it (Theme → Effects), shaped like it: only the part of the dock that's inside
+    // its window, and nothing once none of it is. A blur region lying outside the surface (the
+    // dock hidden past the edge, or the first frames of it sliding in) came out empty, and
+    // Hyprland then blurred the whole 620 px surface: the bottom of the screen flickered as the
+    // dock came in, and stayed blurred when the region was kept on the hidden dock
+    Item {
+        id: blurPart
+        readonly property real x0: Math.max(0, capsule.x)
+        readonly property real y0: Math.max(0, capsule.y)
+        x: x0; y: y0
+        width: Math.max(0, Math.min(dock.width, capsule.x + capsule.width) - x0)
+        height: Math.max(0, Math.min(dock.height, capsule.y + capsule.height) - y0)
+        readonly property bool some: width > 2 && height > 2 && (capsule.glitchy ? capsule.opacity > 0.01 : dock.shown || capsule.opacity > 0.01)
+    }
+    BackgroundEffect.blurRegion: Theme.blur && blurPart.some ? blurShape : null
     Region {
         id: blurShape
-        // (the capsule, shown or hidden: hidden, it has slid off the edge and the region with it, so nothing
-        // is blurred. Switched between it and nothing on every show and hide, the compositor set
-        // its blur up again each time, and Hyprland flashed the dock's surface black; the blur
-        // also vanished at once while the dock was still sliding out)
-        // (Cyberpunk doesn't slide the dock away: it stays put and only its picture goes, so there
-        // the blur goes with it, once it's fully gone)
-        item: capsule.glitchy ? (capsule.opacity > 0.01 ? capsule : null) : capsule
+        item: blurPart.some ? blurPart : null
         radius: capsule.blurRadius
-        CutBlur { on: Theme.chamfer && dock.shown; bx: capsule.x; by: capsule.y; bw: capsule.width; bh: capsule.height; c: capsule.r }
+        CutBlur { on: Theme.chamfer && blurPart.some; bx: blurPart.x; by: blurPart.y; bw: blurPart.width; bh: blurPart.height; c: capsule.r }
     }
 }
