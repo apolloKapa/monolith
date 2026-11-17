@@ -193,7 +193,10 @@ PanelWindow {
     // a new notification drops out of the island (on the screen you're using) while it's closed
     // (on the screen it came up on: it stays there when you switch windows to another screen)
     readonly property var myToasts: Notifs.popupsOn(modelData.name, Quickshell.screens.length ? Quickshell.screens[0].name : "").filter(p => !Notifs.leaving[p.id])
-    readonly property bool toastOn: !side && !shown && myToasts.length > 0 && Store.get("notifications.style", "island") !== "corner"
+    // (also with a floating menu open: it used to wait until the menu closed, so a notification
+    // that came meanwhile went unseen. A menu growing out of the bar has the island itself, so
+    // there it still waits)
+    readonly property bool toastOn: !side && (!shown || !docked) && myToasts.length > 0 && Store.get("notifications.style", "island") !== "corner"
     // the newest, unless one is held under the pointer: that one stays until it's let go (a new
     // notification took its place mid-swipe, and the swiped copy froze where it was held)
     property var heldToast: null
@@ -203,7 +206,8 @@ PanelWindow {
     // gets a card just under it. (Growing a full or floating bar made the whole bar come down.)
     // Kept while it goes away, so it leaves from where it came.
     // (an island spread wide is a full bar too: growing it brought the whole top down)
-    readonly property string toastWhere: Theme.barFloats ? "card" : (Theme.fullBar || restW > 760 ? "drop" : "island")
+    // (with a floating menu open: its own card, over the menu, which moves out of its way)
+    readonly property string toastWhere: shown || Theme.barFloats ? "card" : (Theme.fullBar || restW > 760 ? "drop" : "island")
     property string toastHost: toastWhere
     onToastOnChanged: if (toastOn) toastHost = toastWhere
     onToastWhereChanged: if (toastOn) toastHost = toastWhere
@@ -736,6 +740,8 @@ PanelWindow {
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
         clip: true
+        // (over a floating menu that's open)
+        z: 5
         opacity: on ? 1 : 0
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: toastCard.on ? Theme.fastMs : Theme.popOutMs; easing.type: Easing.OutCubic } }
@@ -792,7 +798,14 @@ PanelWindow {
         readonly property real topRoom: win.bottom || win.side ? 16 : Theme.islandH + Theme.barMargin + 14
         readonly property real bottomRoom: win.bottom ? Theme.islandH + Theme.barMargin + 14 : 16
         readonly property real homeY: onTop ? topRoom : (onBottom ? win.height - height - bottomRoom : Math.max(topRoom, Math.min(win.height - height - bottomRoom, Math.round((win.height - height) / 2))))
-        y: Math.round(Math.max(0, Math.min(win.height - height, Math.max(0, Math.min(win.height - height, homeY + (moved ? Number(moved.y) || 0 : 0) + dragBy.y)) + glideY)))
+        // where it'd be, and how far a notification's card pushes it (down under a top bar, up over
+        // a bottom one) while it shows over the menu, so the notification can be read
+        readonly property real baseY: Math.max(0, Math.min(win.height - height, homeY + (moved ? Number(moved.y) || 0 : 0) + dragBy.y)) + glideY
+        readonly property real toastPushWant: !(toastCard.on && win.shown) ? 0
+            : (win.bottom ? Math.min(0, toastCard.y - 12 - (baseY + height)) : Math.max(0, toastCard.y + toastCard.height + 12 - baseY))
+        property real toastPush: toastPushWant
+        Behavior on toastPush { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
+        y: Math.round(Math.max(0, Math.min(win.height - height, baseY + toastPush)))
         radius: Theme.islandRadius
         color: Theme.frame
         border.width: Theme.outlineW
@@ -870,7 +883,7 @@ PanelWindow {
                 if (!moving) return;
                 moving = false;
                 // kept as where it ended up (on the screen), from its usual place
-                Store.set("menus.moved." + HubState.page, { x: floatCard.x - floatCard.glideX - floatCard.homeX, y: floatCard.y - floatCard.glideY - floatCard.homeY });
+                Store.set("menus.moved." + HubState.page, { x: floatCard.x - floatCard.glideX - floatCard.homeX, y: floatCard.y - floatCard.toastPush - floatCard.glideY - floatCard.homeY });
                 floatCard.dragBy = Qt.point(0, 0);
             }
             onCanceled: { moving = false; floatCard.dragBy = Qt.point(0, 0); }

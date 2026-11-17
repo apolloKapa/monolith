@@ -227,6 +227,9 @@ PanelWindow {
                     sourceSize: Qt.size(Math.min(960, Math.ceil(card.width * card.dpr)), Math.min(600, Math.ceil(card.height * card.dpr)))
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
+                    // (not kept in Qt's picture cache: with it, every card's picture stayed in
+                    // memory after the picker closed, a hundred MB and more)
+                    cache: false
                     opacity: status === Image.Ready ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: Theme.ms(240); easing.type: Easing.OutCubic } }
                 }

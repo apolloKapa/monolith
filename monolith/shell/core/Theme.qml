@@ -89,7 +89,7 @@ Singleton {
     readonly property string material: {
         const v = Store.get("theme.material", "") || "";
         if (v === "none" || liquid) return "";
-        return ["concrete", "paper", "steel"].indexOf(v) !== -1 ? v : (Look.style.material || "");
+        return ["concrete", "paper", "steel", "lacquer"].indexOf(v) !== -1 ? v : (Look.style.material || "");
     }
     readonly property real materialStrength: Math.max(0, Math.min(1.5, Number(Store.get("theme.materialStrength", 1))))
     readonly property real see: (liquid ? 0.08 : (Look.style.opaque === false ? 0.74 : 1)) * panelOpacity

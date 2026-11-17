@@ -21,12 +21,19 @@ Item {
     property int drift: 0      // scanlines and grain: a pixel a step
     property real sweep: 0     // the scan bar's leading edge: 6 px a step, then a short pause above the panel
     readonly property real barH: Math.min(160, fx.height * 0.45)
+    // (from the clock, not counted steps: it always carries on, and every panel sweeps on the same
+    // beat, a pass every 4.5 s whatever its height, then a short breath and again. Counted at 6 px
+    // a step, a tall panel took 8 s a pass and a long pause, and it looked as if it ran once)
+    readonly property real period: 4500
+    readonly property real gap: 900
     Timer {
         interval: 50; repeat: true
         running: fx.moving
         onTriggered: {
-            fx.drift = (fx.drift + 1) % 384;   // a whole number of scanline (3) and grain (128) tiles
-            fx.sweep = fx.sweep > fx.height + fx.barH + 300 ? 0 : fx.sweep + 6;
+            const now = Date.now();
+            fx.drift = Math.floor(now / 50) % 384;   // a whole number of scanline (3) and grain (128) tiles
+            const t = (now % (fx.period + fx.gap)) / fx.period;
+            fx.sweep = t <= 1 ? 1 + t * (fx.height + fx.barH) : 0;
         }
     }
     // scanlines, grain and the scan bar: one shader (shaders/panelfx.frag), no offscreen layers

@@ -46,9 +46,12 @@ ColumnLayout {
         radius: Theme.corner(138, 6)
         color: on ? Theme.accentContainer : Theme.containerHigh
         onClicked: Look.pickStyle(st.id)
+        // (in from the corners as far as their roundness needs: with round corners the preview and
+        // the words ran into the curve)
+        readonly property real pad: Theme.inset(radius, 10)
         Rectangle {
-            x: 10; y: 10
-            width: parent.width - 20; height: 74
+            x: sc.pad; y: Math.min(sc.pad, 14)
+            width: parent.width - 2 * sc.pad; height: 74
             radius: sc.rad + 4
             color: sc.bg
             opacity: sc.st.opaque === false ? 0.8 : 1
@@ -77,9 +80,9 @@ ColumnLayout {
                 }
             }
         }
-        Label { x: 12; y: 92; width: parent.width - 40; text: sc.st.name; strong: true; color: sc.on ? Theme.onAccentContainer : Theme.text }
-        Label { x: 12; y: 110; width: parent.width - 24; text: sc.st.desc || ""; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
-        Icon { visible: sc.on; x: parent.width - 28; y: 92; name: "check_circle"; filled: true; size: 18; color: Theme.accent }
+        Label { x: sc.pad; y: 92; width: parent.width - 2 * sc.pad - 24; text: sc.st.name; strong: true; color: sc.on ? Theme.onAccentContainer : Theme.text }
+        Label { x: sc.pad; y: 110; width: parent.width - 2 * sc.pad; elide: Text.ElideRight; text: sc.st.desc || ""; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
+        Icon { visible: sc.on; x: parent.width - sc.pad - 18; y: 92; name: "check_circle"; filled: true; size: 18; color: Theme.accent }
     }
 
     Label { text: "Style"; strong: true; font.pixelSize: Theme.sizeTitle; Layout.leftMargin: 4 }
@@ -116,7 +119,7 @@ ColumnLayout {
             width: 220; height: 36
             enabled: !Theme.liquid
             opacity: enabled ? 1 : 0.4
-            opts: [["", "The style's own"], ["none", "None (flat)"], ["concrete", "Concrete"], ["paper", "Paper"], ["steel", "Brushed steel"]]
+            opts: [["", "The style's own"], ["none", "None (flat)"], ["concrete", "Concrete"], ["paper", "Paper"], ["steel", "Brushed steel"], ["lacquer", "Black lacquer"]]
             value: Store.get("theme.material", "") || ""
             onPicked: v => v === "" ? Store.unset("theme.material") : Store.set("theme.material", v)
         }
@@ -167,9 +170,12 @@ ColumnLayout {
         border.width: on ? 3 : 1
         border.color: on ? Theme.accent : Qt.alpha(k.text || Theme.text, 0.15)
         onClicked: Look.pickPalette(th.name)
+        // (in from the corners as far as their roundness needs: a round card's name and dots ran
+        // into its curved ends)
+        readonly property real pad: Theme.inset(radius, 12)
         Column {
-            x: 12; y: 10
-            width: parent.width - 24
+            x: tc.pad; y: 10
+            width: parent.width - 2 * tc.pad
             spacing: 6
             Row {
                 width: parent.width

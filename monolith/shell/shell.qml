@@ -21,9 +21,13 @@ ShellRoot {
         property bool when: false
         property int linger: 800
         readonly property bool on: when || after.running
-        Timer { id: after; interval: parent.linger }
+        Timer { id: after; interval: parent.linger; onTriggered: tidy.restart() }
         onWhenChanged: if (!when) after.restart()
     }
+    // once something big has gone (a window above, a menu): a garbage collection a moment later,
+    // so what it held (its objects, the pictures they kept) is let go instead of waiting
+    Timer { id: tidy; interval: 1500; onTriggered: gc() }
+    Connections { target: HubState; function onOpenChanged() { if (!HubState.open) tidy.restart(); } }
     Variants { model: Quickshell.screens; Background {} }
     Variants { model: Quickshell.screens; Reserve {} }
     Variants { model: Quickshell.screens; Frame {} }

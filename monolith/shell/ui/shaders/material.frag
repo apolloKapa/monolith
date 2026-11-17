@@ -10,6 +10,9 @@
 //                     edges a touch warmer, as paper gets
 //   kind 2 steel      brushed metal: long streaks along x, finer ones on top, and a broad sheen
 //                     running across it, lighter towards the top
+//   kind 3 lacquer    black lacquer (Luxe): deep and even, warmer towards the middle, a soft gloss
+//                     along the top like light on a polished surface, the finest grain, and on big
+//                     panels a gold hairline set in from the edge
 // (Premultiplied colour out, like Qt wants it.)
 layout(location = 0) in vec2 qt_TexCoord0;
 layout(location = 0) out vec4 fragColor;
@@ -124,9 +127,36 @@ vec3 steel(vec2 px) {
     return c + vec3(0.09) * sheen * (1.0 - uv.y * 0.6) + vec3(0.03) * (1.0 - uv.y);
 }
 
+// the panel's edge, inset: distance (px) from the rounded outline, inside positive
+float inside(vec2 px, float inset) {
+    vec2 c = px - itemSize * 0.5;
+    float r = max(0.0, (c.x < 0.0 ? (c.y < 0.0 ? radii.x : radii.w) : (c.y < 0.0 ? radii.y : radii.z)) - inset);
+    vec2 q = abs(c) - (itemSize * 0.5 - inset) + r;
+    return -(length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r);
+}
+
+vec3 lacquer(vec2 px) {
+    vec2 uv = px / itemSize;
+    // deep and even, a little warmer and lifted in the middle
+    float lift = 1.0 + 0.10 * exp(-pow((uv.x - 0.5) * 1.6, 2.0) - pow((uv.y - 0.45) * 1.4, 2.0));
+    vec3 c = base.rgb * lift;
+    // the gloss: a soft band of light along the top, fading down, slightly to one side
+    float gloss = exp(-pow(uv.y * 5.0, 2.0)) * (0.6 + 0.4 * exp(-pow((uv.x - 0.35) * 2.2, 2.0)));
+    c += vec3(1.0, 0.96, 0.88) * 0.055 * gloss;
+    // the finest grain, so it isn't flat plastic
+    c += (vnoise(px / 1.3) - 0.5) * 0.012;
+    // a gold hairline set in from the edge, on panels big enough to carry it
+    if (itemSize.x > 260.0 && itemSize.y > 160.0) {
+        float d = inside(px, 7.0);
+        float line = 1.0 - smoothstep(0.0, 0.9, abs(d));
+        c = mix(c, vec3(0.79, 0.66, 0.43), 0.45 * line);
+    }
+    return c;
+}
+
 void main() {
     vec2 px = qt_TexCoord0 * itemSize;
-    vec3 c = kind < 0.5 ? concrete(px) : (kind < 1.5 ? paper(px) : steel(px));
+    vec3 c = kind < 0.5 ? concrete(px) : (kind < 1.5 ? paper(px) : (kind < 2.5 ? steel(px) : lacquer(px)));
     c = mix(base.rgb, c, strength);
     float a = shape(px) * base.a;
     fragColor = vec4(clamp(c, 0.0, 1.0) * a, a) * qt_Opacity;

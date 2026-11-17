@@ -17,7 +17,8 @@
 //   sounds              its own interface sound pack (sounds/<pack>), played instead of yours
 //   colors              its palette (base, mantle, crust, surface0–2, overlay0–2, text, subtext0–1, accents)
 // A style changes the whole shell, not only its colours (Cyberpunk, Liquid glass and the materials);
-// the light ones were removed in 2.9.66, keeping Material (the default), Fjord, Doodle and Terminal.
+// the light ones were removed in 2.9.66, keeping Material (the default), Fjord, Doodle and Terminal;
+// Luxe came back in 0.5.1 as a whole look of its own (black lacquer, gold light).
 var list = [
  {
   "name": "Material",
@@ -322,6 +323,47 @@ var list = [
    "peach": "#ffb020",
    "red": "#e5484d",
    "maroon": "#b8373b"
+  }
+ },
+ {
+  "name": "Luxe",
+  "fx": "luxe",
+  "fxIn": 640,
+  "fxOut": 520,
+  "id": "luxe",
+  "opaque": true,
+  "radiusScale": 0.55,
+  "outline": [
+   1,
+   1
+  ],
+  "outlineRole": "accentSoft",
+  "font": "Playfair Display",
+  "material": "lacquer",
+  "desc": "Black lacquer, ivory type, gold detail; menus arrive in a sweep of gold light",
+  "colors": {
+   "base": "#0e0d0c",
+   "mantle": "#090807",
+   "crust": "#050404",
+   "surface0": "#191715",
+   "surface1": "#24211d",
+   "surface2": "#3a342c",
+   "overlay0": "#5b5246",
+   "overlay1": "#7a6f60",
+   "overlay2": "#9b8e7c",
+   "text": "#efe6d4",
+   "subtext0": "#b3a892",
+   "subtext1": "#d0c5ae",
+   "blue": "#c9a96e",
+   "sapphire": "#c9a96e",
+   "teal": "#a8b89a",
+   "mauve": "#c9a96e",
+   "pink": "#c98a7a",
+   "green": "#a8b89a",
+   "yellow": "#d9c08a",
+   "peach": "#d4a373",
+   "red": "#b5483f",
+   "maroon": "#8e2f2a"
   }
  }
 ];

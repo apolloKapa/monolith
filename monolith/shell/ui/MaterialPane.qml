@@ -19,7 +19,7 @@ ShaderEffect {
     property vector4d radii: Qt.vector4d(topLeft >= 0 ? topLeft : r, topRight >= 0 ? topRight : r,
                                           bottomRight >= 0 ? bottomRight : r, bottomLeft >= 0 ? bottomLeft : r)
     property color base: color
-    property real kind: ({ concrete: 0, paper: 1, steel: 2 })[Theme.material] || 0
+    property real kind: ({ concrete: 0, paper: 1, steel: 2, lacquer: 3 })[Theme.material] || 0
     // (a pattern of its own: from its size, so a panel keeps its look while it stays that size)
     property real seed: (Math.round(width) * 7 + Math.round(height) * 13) % 97
     property real strength: Theme.materialStrength
