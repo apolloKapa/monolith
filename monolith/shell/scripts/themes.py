@@ -3,13 +3,21 @@
 
     themes.py icons     JSON: each icon pack with a few of its icons (files) to show
     themes.py cursors   JSON: each cursor theme with a few of its pointers, drawn to PNG files
+    themes.py add icons|cursors FOLDER
+                        a theme from anywhere (a download, unpacked) made one of the choices: the
+                        folder, or the themes inside it, copied into ~/.local/share/icons (an
+                        icon pack without an index.theme gets one). JSON: {"added": [names]} or
+                        {"error": "why not"}
 
 Cursor themes are Xcursor files; their pictures are unpacked here (no extra libraries) into
 ~/.cache/monolith/cursor-previews. The lists are cached until a theme folder changes.
 """
 import json
 import os
+import re
+import shutil
 import struct
+import subprocess
 import sys
 import zlib
 
@@ -187,11 +195,181 @@ def build_cursors():
     return out
 
 
+# ── adding a theme from a folder ──
+
+
+def is_cursor_theme(d):
+    return os.path.isdir(os.path.join(d, "cursors"))
+
+
+def icon_dirs(d):
+    """the folders of an icon pack that hold icons (relative), for an index.theme"""
+    out = []
+    for root, _dirs, files in os.walk(d):
+        rel = os.path.relpath(root, d)
+        if rel == "." or rel.split("/")[0] == "cursors":
+            continue
+        if any(f.endswith((".svg", ".png", ".xpm")) for f in files):
+            out.append(rel)
+    return sorted(out)
+
+
+KINDS = {"apps", "places", "devices", "mimetypes", "mimes", "actions", "status", "categories", "emblems",
+         "emotes", "panel", "animations", "intl", "stock", "legacy", "preferences"}
+
+
+def is_icon_theme(d):
+    if os.path.isfile(os.path.join(d, "index.theme")):
+        try:
+            text = open(os.path.join(d, "index.theme"), encoding="utf-8", errors="replace").read()
+        except OSError:
+            return False
+        # (a cursor theme's index.theme only says Inherits=: that isn't an icon pack)
+        return "Directories=" in text
+    # (no index.theme: icons in size folders straight inside it, 48x48/…, scalable/…, or kind
+    # folders with sizes, apps/48/…; not just any folder that has pictures somewhere below)
+    for rel in icon_dirs(d):
+        parts = rel.split("/")
+        if re.match(r"(\d+(x\d+)?(@\d+x?)?|scalable|symbolic)$", parts[0], re.I):
+            return True
+        if len(parts) > 1 and parts[0].lower() in KINDS and re.match(r"(\d+(x\d+)?(@\d+x?)?|scalable|symbolic)$", parts[1], re.I):
+            return True
+    return False
+
+
+def find(d, test, depth=3):
+    """d itself if it's a theme, else the themes inside it (an unpacked download often has the
+    theme one or two folders down, or several variants side by side)"""
+    d = os.path.realpath(d)
+    if os.path.basename(d) == "cursors" and test is is_cursor_theme:
+        d = os.path.dirname(d)
+    if test(d):
+        return [d]
+    if depth == 0:
+        return []
+    out = []
+    try:
+        kids = sorted(os.listdir(d))
+    except OSError:
+        return []
+    for k in kids:
+        p = os.path.join(d, k)
+        if os.path.isdir(p) and not os.path.islink(p) and not k.startswith("."):
+            out += find(p, test, depth - 1)
+    return out
+
+
+def size_of(rel):
+    first = rel.split("/")[0]
+    m = re.match(r"(\d+)(?:x\d+)?(?:@(\d+)x?)?$", first)
+    if m:
+        return int(m.group(1)), int(m.group(2) or 1), "Fixed"
+    if first.lower() == "scalable" or "symbolic" in first.lower():
+        return 128, 1, "Scalable"
+    # (packs laid out by kind first: apps/48 …)
+    for part in rel.split("/"):
+        if part.isdigit():
+            return int(part), 1, "Fixed"
+    return 48, 1, "Threshold"
+
+
+def write_index(d, name, kind):
+    path = os.path.join(d, "index.theme")
+    if kind == "cursors":
+        if not os.path.exists(path):
+            open(path, "w").write("[Icon Theme]\nName=%s\nComment=Added in Monolith\n" % name)
+        return
+    if os.path.exists(path):
+        return
+    dirs = icon_dirs(d)
+    lines = ["[Icon Theme]", "Name=" + name, "Comment=Added in Monolith", "Inherits=hicolor", "Directories=" + ",".join(dirs), ""]
+    for rel in dirs:
+        size, scale, typ = size_of(rel)
+        ctx = rel.split("/")[-1].capitalize()
+        lines += ["[%s]" % rel, "Size=%d" % size, "Scale=%d" % scale, "Type=" + typ, "Context=" + ctx]
+        if typ == "Scalable":
+            lines += ["MinSize=8", "MaxSize=512"]
+        lines.append("")
+    open(path, "w").write("\n".join(lines))
+
+
+def files_of(d):
+    out = set()
+    for root, dirs, files in os.walk(d):
+        for f in files + [x for x in dirs if os.path.islink(os.path.join(root, x))]:
+            out.add(os.path.relpath(os.path.join(root, f), d))
+    return out
+
+
+def add(kind, folder):
+    if not os.path.isdir(folder):
+        return {"error": "That isn't a folder"}
+    test = is_cursor_theme if kind == "cursors" else is_icon_theme
+    found = find(folder, test)
+    if not found:
+        what = "cursor theme (a folder with a \"cursors\" folder in it)" if kind == "cursors" else "icon pack (folders of icons by size, or an index.theme)"
+        return {"error": "There's no %s in that folder" % what}
+    if len(found) > 24:
+        return {"error": "That folder has %d themes in it: pick one of them, or a smaller folder" % len(found)}
+    dest_root = DATA + "/icons"
+    os.makedirs(dest_root, exist_ok=True)
+    taken = {n for n, _d in themes()}
+    added = []
+    for src in found:
+        name = re.sub(r"[^A-Za-z0-9._ +-]", "_", os.path.basename(src)).strip() or "Theme"
+        dest = os.path.join(dest_root, name)
+        # (one that's a choice already, where themes live: nothing to copy)
+        if os.path.dirname(os.path.realpath(src)) in {os.path.realpath(r) for r in ROOTS} and os.path.realpath(src) != os.path.realpath(dest):
+            added.append(os.path.basename(src))
+            continue
+        if os.path.realpath(src) == os.path.realpath(dest):
+            # (picked straight from ~/.local/share/icons: it's there already, just made usable)
+            write_index(dest, name, kind)
+            added.append(name)
+            continue
+        # added before (the same files under the same name): nothing to do
+        if os.path.isdir(dest) and files_of(dest) - {"index.theme", "icon-theme.cache"} == files_of(src) - {"index.theme", "icon-theme.cache"}:
+            added.append(name)
+            continue
+        # a theme of that name already: this one gets its own (both stay choices)
+        base, n = name, 2
+        while name in taken or os.path.exists(dest):
+            name = "%s %d" % (base, n)
+            dest = os.path.join(dest_root, name)
+            n += 1
+        try:
+            # (symlinks kept as they are: cursor themes are mostly links between their pointers)
+            shutil.copytree(src, dest, symlinks=True)
+        except (OSError, shutil.Error) as e:
+            shutil.rmtree(dest, ignore_errors=True)
+            return {"error": "Couldn't copy %s: %s" % (os.path.basename(src), e), "added": added}
+        write_index(dest, name, kind)
+        if name != base:
+            # (the menu shows the index.theme's name: say which one this is)
+            idx = os.path.join(dest, "index.theme")
+            try:
+                text = open(idx, encoding="utf-8", errors="replace").read()
+                text = re.sub(r"^Name=(.*)$", lambda m: "Name=%s (%s)" % (m.group(1), name), text, count=1, flags=re.M)
+                open(idx, "w").write(text)
+            except OSError:
+                pass
+        taken.add(name)
+        added.append(name)
+    # (GTK's icon cache for the pack, when the tool's there: apps find icons faster)
+    if kind == "icons" and shutil.which("gtk-update-icon-cache"):
+        for name in added:
+            subprocess.run(["gtk-update-icon-cache", "-q", "-f", "-t", os.path.join(dest_root, name)],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"added": added}
+
+
 if __name__ == "__main__":
     what = sys.argv[1] if len(sys.argv) > 1 else ""
     if what == "icons":
         print(json.dumps(cached("icon", build_icons)))
     elif what == "cursors":
         print(json.dumps(cached("cursor", build_cursors)))
+    elif what == "add" and len(sys.argv) == 4 and sys.argv[2] in ("icons", "cursors"):
+        print(json.dumps(add(sys.argv[2], sys.argv[3])))
     else:
         sys.exit(__doc__)

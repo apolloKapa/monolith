@@ -18,11 +18,13 @@ ColumnLayout {
     // the packs and cursor themes with their previews (scripts/themes.py; cached after the first time)
     readonly property string script: Qt.resolvedUrl("../../scripts/themes.py").toString().replace("file://", "")
     Process {
+        id: iconList
         running: true
         command: ["python3", sec.script, "icons"]
         stdout: StdioCollector { onStreamFinished: { try { sec.iconThemes = JSON.parse(text); } catch (e) {} } }
     }
     Process {
+        id: cursorList
         running: true
         command: ["python3", sec.script, "cursors"]
         stdout: StdioCollector { onStreamFinished: { try { sec.cursorThemes = JSON.parse(text); } catch (e) {} } }
@@ -31,6 +33,40 @@ ColumnLayout {
         running: true
         command: ["gsettings", "get", "org.gnome.desktop.interface", "icon-theme"]
         stdout: StdioCollector { onStreamFinished: sec.iconTheme = text.trim().replace(/'/g, "") }
+    }
+
+    // ── + : a theme from a folder (a download, unpacked), copied in and made one of the choices
+    // (scripts/themes.py add). Several themes in the folder: all of them ──
+    property string adding: ""
+    function addTheme(kind) {
+        if (adding !== "") return;
+        adding = kind;
+        addProc.command = ["sh", "-c",
+            "command -v zenity >/dev/null || { echo '{\"error\": \"The folder picker needs zenity: install it, or run the Monolith installer again\"}'; exit 0; }; " +
+            "d=\"$(zenity --file-selection --directory --title=\"$1\" --filename=\"$HOME/Downloads/\" 2>/dev/null)\" || exit 0; " +
+            "python3 \"$2\" add \"$3\" \"$d\"",
+            "_", kind === "icons" ? "Pick an icon pack's folder" : "Pick a cursor theme's folder", sec.script, kind];
+        addProc.running = true;
+    }
+    Process {
+        id: addProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const kind = sec.adding;
+                sec.adding = "";
+                let r = null;
+                try { r = JSON.parse(text); } catch (e) { return; }   // (the picker was closed)
+                const what = kind === "icons" ? "icon pack" : "cursor theme";
+                if (r.error) { Quickshell.execDetached(["notify-send", "-a", "Monolith", "-i", "dialog-warning", "Couldn't add that " + what, r.error]); return; }
+                const n = (r.added || []).length;
+                if (!n) return;
+                Quickshell.execDetached(["notify-send", "-a", "Monolith", "-i", kind === "icons" ? "preferences-desktop-icons" : "input-mouse",
+                    n === 1 ? "Added " + r.added[0] : "Added " + n + " " + what + "s",
+                    (n === 1 ? "It's" : "They're") + " in Settings → Appearance now: pick " + (n === 1 ? "it" : "one") + " to use it"]);
+                if (kind === "icons") iconList.running = true; else cursorList.running = true;
+            }
+        }
+        onExited: if (sec.adding !== "" && !running) Qt.callLater(() => sec.adding = "")
     }
 
     // a theme as a card: its name, and its samples on a tile
@@ -167,7 +203,10 @@ ColumnLayout {
     }
 
     // ── icons ──
-    SettingRow { icon: "interests"; title: "Icons"; desc: "The icon pack apps and the shell use" + (sec.iconTheme ? " (now " + sec.iconTheme + ")" : "") + ". The shell restarts for a moment to load a new one" }
+    SettingRow {
+        icon: "interests"; title: "Icons"; desc: "The icon pack apps and the shell use" + (sec.iconTheme ? " (now " + sec.iconTheme + ")" : "") + ". The shell restarts for a moment to load a new one. + adds one from a folder"
+        Button { icon: "add"; width: 40; enabled: sec.adding === ""; opacity: enabled ? 1 : 0.5; onClicked: sec.addTheme("icons") }
+    }
     GridLayout {
         Layout.fillWidth: true
         columns: 2
@@ -189,12 +228,17 @@ ColumnLayout {
 
     // ── cursors: the pointers on a light tile, so dark and light themes both show ──
     SettingRow {
-        icon: "arrow_selector_tool"; title: "Cursor"; desc: "Theme and size, for " + (Niri.hyprland ? "Hyprland" : "niri") + " and apps" + (sec.cursorTheme ? " (now " + sec.cursorTheme + ")" : "")
-        // applied once you stop dragging
-        NumberBox {
-            from: 8; to: 128; slideTo: 96; step: 2; unit: "px"; value: sec.cursorSize
-            onMoved: v => { sec.cursorSize = v; cursorLater.restart(); }
-            Timer { id: cursorLater; interval: 500; onTriggered: sec.setCursor(sec.cursorTheme || "default", sec.cursorSize) }
+        icon: "arrow_selector_tool"; title: "Cursor"; desc: "Theme and size, for " + (Niri.hyprland ? "Hyprland" : "niri") + " and apps" + (sec.cursorTheme ? " (now " + sec.cursorTheme + ")" : "") + ". + adds one from a folder"
+        Row {
+            spacing: 8
+            // applied once you stop dragging
+            NumberBox {
+                anchors.verticalCenter: parent.verticalCenter
+                from: 8; to: 128; slideTo: 96; step: 2; unit: "px"; value: sec.cursorSize
+                onMoved: v => { sec.cursorSize = v; cursorLater.restart(); }
+                Timer { id: cursorLater; interval: 500; onTriggered: sec.setCursor(sec.cursorTheme || "default", sec.cursorSize) }
+            }
+            Button { anchors.verticalCenter: parent.verticalCenter; icon: "add"; width: 40; enabled: sec.adding === ""; opacity: enabled ? 1 : 0.5; onClicked: sec.addTheme("cursors") }
         }
     }
     GridLayout {
