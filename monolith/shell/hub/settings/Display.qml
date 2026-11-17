@@ -104,23 +104,38 @@ ColumnLayout {
             const w = me.w, h = me.h, share = 200;
             const cands = [];
             const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+            // [x, y, lined up?]: lined up = its top, bottom or middle level with the other's
+            // (side by side), or its left, right or middle (stacked); otherwise anywhere along
             for (const o of others) {
                 const [ox, oy] = pos[o.name];
-                for (const cy of [oy, oy + o.h - h, oy + (o.h - h) / 2, clamp(y, oy - h + share, oy + o.h - share)]) {
-                    cands.push([ox - w, cy]); cands.push([ox + o.w, cy]);
-                }
-                for (const cx of [ox, ox + o.w - w, ox + (o.w - w) / 2, clamp(x, ox - w + share, ox + o.w - share)]) {
-                    cands.push([cx, oy - h]); cands.push([cx, oy + o.h]);
-                }
+                for (const cy of [oy, oy + o.h - h, oy + (o.h - h) / 2]) { cands.push([ox - w, cy, true]); cands.push([ox + o.w, cy, true]); }
+                const fy = clamp(y, oy - h + share, oy + o.h - share);
+                cands.push([ox - w, fy, false]); cands.push([ox + o.w, fy, false]);
+                for (const cx of [ox, ox + o.w - w, ox + (o.w - w) / 2]) { cands.push([cx, oy - h, true]); cands.push([cx, oy + o.h, true]); }
+                const fx = clamp(x, ox - w + share, ox + o.w - share);
+                cands.push([fx, oy - h, false]); cands.push([fx, oy + o.h, false]);
             }
             const overlaps = (cx, cy) => others.some(o => { const [ox, oy] = pos[o.name]; return cx < ox + o.w - 0.5 && cx + w > ox + 0.5 && cy < oy + o.h - 0.5 && cy + h > oy + 0.5; });
-            let best = [x, y], bd = 1e18;
-            for (const [cx, cy] of cands) {
-                if (overlaps(cx, cy)) continue;
-                const d = (cx - x) * (cx - x) + (cy - y) * (cy - y);
-                if (d < bd) { bd = d; best = [Math.round(cx), Math.round(cy)]; }
+            const ok = cands.filter(c => !overlaps(c[0], c[1]));
+            let best = null, bd = 1e18;
+            for (const c of ok) {
+                const d = (c[0] - x) * (c[0] - x) + (c[1] - y) * (c[1] - y);
+                if (d < bd) { bd = d; best = c; }
             }
-            return best;
+            if (!best) return [x, y];
+            // close to lined up (within about 8 % of the screen): lined up. It used to stay a
+            // little off wherever it was let go, the screens' tops a few pixels apart
+            if (!best[2]) {
+                const reach = Math.max(60, 0.08 * Math.max(w, h));
+                let snap = null, sd = 1e18;
+                for (const c of ok) {
+                    if (!c[2]) continue;
+                    const d = Math.hypot(c[0] - best[0], c[1] - best[1]);
+                    if (d < reach && d < sd) { sd = d; snap = c; }
+                }
+                if (snap) best = snap;
+            }
+            return [Math.round(best[0]), Math.round(best[1])];
         }
         function moved(name, x, y) {
             const p = Object.assign({}, pos);

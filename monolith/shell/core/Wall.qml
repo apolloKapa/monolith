@@ -97,6 +97,32 @@ Singleton {
     property var liveFailed: ({})
     property var liveQueue: []
     function liveKey(p, w, h) { return p + "|" + w + "x" + h; }
+    // the cache of screen-sized copies only keeps what can still be played: copies of videos that
+    // are still in your wallpapers, at the sizes of the screens you have now (it kept every size
+    // ever seen and every video ever removed: hundreds of MB). Looked over a minute after the
+    // shell starts and whenever the wallpapers change; never a copy that's being made.
+    function pruneLive() {
+        if (liveProc.running) { pruneLater.restart(); return; }
+        // (the wallpapers not read yet, or no screens: it would have thrown everything away)
+        if (images.length === 0 || Quickshell.screens.length === 0) return;
+        const keep = [];
+        for (const p of live) {
+            if (!isVideo(p)) continue;
+            for (const s of Quickshell.screens) keep.push(Qt.md5(p) + "-" + Math.round(s.width) + "x" + Math.round(s.height) + ".mp4");
+        }
+        pruneProc.command = ["sh", "-c",
+            "cd \"$1\" 2>/dev/null || exit 0; shift; for f in *.mp4; do [ -e \"$f\" ] || continue; " +
+            "case \"$f\" in *.part.mp4) continue;; esac; k=0; for w in \"$@\"; do [ \"$f\" = \"$w\" ] && { k=1; break; }; done; " +
+            "[ $k = 1 ] || rm -f -- \"$f\"; done", "_", liveCacheDir].concat(keep);
+        pruneProc.running = true;
+        // (what was dropped can't be played from the cache any more)
+        const c = {};
+        for (const k in liveCopies) { const v = liveCopies[k]; if (!v || !v.startsWith(liveCacheDir) || keep.indexOf(v.slice(liveCacheDir.length + 1)) !== -1) c[k] = v; }
+        liveCopies = c;
+    }
+    Process { id: pruneProc }
+    Timer { id: pruneLater; interval: 60000; running: true; onTriggered: wall.pruneLive() }
+    onLiveChanged: if (!pruneLater.running) pruneLater.restart()
     function liveCopyPath(p, w, h) { return liveCacheDir + "/" + Qt.md5(p) + "-" + w + "x" + h + ".mp4"; }
     // what a screen w×h should play for video p: its copy, or the original until that's ready
     // (only reads: a binding can use it. requestLive asks for the copy, from a handler)

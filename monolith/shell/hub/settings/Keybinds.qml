@@ -191,6 +191,23 @@ ColumnLayout {
         window: sec.Window.window
         enabled: sec.recording !== ""
     }
+    // Hyprland doesn't hold its shortcuts back for the shell's own panels (the inhibitor above is
+    // for windows there), so pressing a key it used ran that instead, and you never got asked
+    // about the clash. While picking, it's put in an empty keymap of its own ("submap": just
+    // Super+Escape to leave it), then back to the usual one: on a key, on Esc, when this page
+    // goes, and after 30 seconds whatever happens
+    readonly property bool hyprHold: Niri.hyprland && recording !== ""
+    onHyprHoldChanged: {
+        if (hyprHold) {
+            Quickshell.execDetached(["hyprctl", "eval", 'hl.define_submap("monolith-keys", function() hl.bind("SUPER + Escape", hl.dsp.submap("reset")) end); hl.dispatch(hl.dsp.submap("monolith-keys"))']);
+            hyprRelease.restart();
+        } else hyprBack();
+    }
+    function hyprBack() { hyprRelease.stop(); if (Niri.hyprland) Quickshell.execDetached(["hyprctl", "eval", 'hl.dispatch(hl.dsp.submap("reset"))']); }
+    Timer { id: hyprRelease; interval: 30000; onTriggered: { sec.recording = ""; sec.hyprBack(); } }
+    Component.onDestruction: if (hyprHold) hyprBack()
+    // (the menu closed while waiting for a key: stop waiting, the shortcuts come back)
+    Connections { target: HubState; function onOpenChanged() { if (!HubState.open) sec.recording = ""; } }
 
     Label {
         Layout.fillWidth: true; wrapMode: Text.Wrap; muted: true
