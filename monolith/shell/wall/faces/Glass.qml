@@ -79,7 +79,7 @@ Item {
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Qt.alpha(Theme.text, 0.06)
     }
     // Cyberpunk: scanlines and the HUD marks
-    PanelFx { anchors.fill: parent; radius: g.r; visible: Theme.chamfer && g.mode !== "clear" }
+    PanelFx { anchors.fill: parent; radius: g.r; animate: false; visible: Theme.chamfer && g.mode !== "clear" }
     // liquid glass: the card is a pane of glass, under the tint
     LiquidPane { anchors.fill: parent; z: -1; radius: g.r; visible: Theme.liquid && g.mode === "blur" }
 }

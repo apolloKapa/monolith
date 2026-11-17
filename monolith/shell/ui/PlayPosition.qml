@@ -15,7 +15,11 @@ Item {
     onPlayerChanged: sync()
     Connections { target: pp.player; ignoreUnknownSignals: true; function onPostTrackChanged() { pp.sync(); } function onIsPlayingChanged() { pp.sync(); } function onPositionChanged() { if (Math.abs(pp.player.position - pp.shown) > 1.5) { pp.pos = pp.player.position; pp.at = Date.now(); } } }
     Timer { interval: 1000; repeat: true; running: pp.active && !!pp.player; triggeredOnStart: true; onTriggered: pp.sync() }
-    FrameAnimation {
+    // 15 times a second: a progress bar moves a pixel every half second or so, and the time once
+    // a second. (Every frame, it kept the widget's whole window redrawing at the screen's refresh
+    // rate while music played)
+    Timer {
+        interval: 66; repeat: true
         running: pp.active && !!pp.player && pp.player.isPlaying
         onTriggered: pp.shown = Math.min(pp.len > 0 ? pp.len : 1e9, pp.pos + (Date.now() - pp.at) / 1000)
     }

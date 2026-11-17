@@ -260,7 +260,7 @@ PanelWindow {
                 if (v !== Number(Store.get("dock.margin", 12))) Store.set("dock.margin", v);
             }
         }
-        PanelFx { anchors.fill: parent; radius: capsule.radius; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge || Theme.chamfer) }
+        PanelFx { anchors.fill: parent; radius: capsule.radius; animate: false; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge || Theme.chamfer) }
         Grid {
             id: appsRow
             anchors.centerIn: parent

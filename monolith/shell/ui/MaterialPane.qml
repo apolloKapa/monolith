@@ -26,6 +26,6 @@ ShaderEffect {
     fragmentShader: Qt.resolvedUrl("shaders/material.frag.qsb")
     // drawn once and kept (it only changes with its size or colour): the noise is costly, and
     // without this it was worked out again on every frame of every animation on screen
-    layer.enabled: visible
+    layer.enabled: visible && width * height > 120000   // (panels; a tile draws it straight: a cached copy each was mostly memory)
     layer.smooth: true
 }

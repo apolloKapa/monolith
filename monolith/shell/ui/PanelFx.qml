@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import "../core"
 
 // Theme → Effects on a panel (the open island, floating menus, the dock): film grain over it and a
@@ -12,9 +11,13 @@ Item {
     id: fx
     property real radius: 0
     visible: Theme.fxGrain || Theme.fxEdge || Theme.chamfer
-    // the motion: a step every 50 ms (so the layers below are redrawn 20 times a second instead
-    // of every frame), only while the panel shows
-    readonly property bool moving: Theme.chamfer && Theme.animOn && fx.visible
+    // the motion: a step every 50 ms, only on panels that come and go (menus), and only while
+    // shown. `animate: false` on the ones that are always there (the bar, the dock, the desktop's
+    // widgets): their scanlines stay still. (They used to crawl too: the bar and every widget
+    // redrawn 20 times a second, all day)
+    property bool animate: true
+    readonly property bool moving: animate && Theme.chamfer && Theme.animOn && fx.visible && fx.opacity > 0.01
+                                   && !!fx.Window.window && fx.Window.window.visible
     property int drift: 0      // scanlines and grain: a pixel a step
     property real sweep: 0     // the scan bar's leading edge: 6 px a step, then a short pause above the panel
     readonly property real barH: Math.min(160, fx.height * 0.45)
@@ -26,46 +29,20 @@ Item {
             fx.sweep = fx.sweep > fx.height + fx.barH + 300 ? 0 : fx.sweep + 6;
         }
     }
-    // ── Cyberpunk ──
-    Item {
-        id: scanSrc
+    // scanlines, grain and the scan bar: one shader (shaders/panelfx.frag), no offscreen layers
+    ShaderEffect {
         anchors.fill: parent
-        visible: false
-        layer.enabled: Theme.chamfer
-        clip: true
-        Image { x: 0; y: fx.drift % 3 - 3; width: parent.width; height: parent.height + 3; source: "scan.png"; fillMode: Image.Tile; smooth: false }
-    }
-    MultiEffect {
-        anchors.fill: parent
-        visible: Theme.chamfer
-        source: scanSrc
-        opacity: 0.075
-        maskEnabled: true
-        maskSource: grainMask
-    }
-    Item {
-        id: barSrc
-        anchors.fill: parent
-        visible: false
-        layer.enabled: fx.moving
-        clip: true
-        Rectangle {
-            width: parent.width; height: fx.barH
-            y: fx.sweep - height
-            gradient: Gradient {
-                GradientStop { position: 0; color: "transparent" }
-                GradientStop { position: 0.8; color: Qt.alpha(Theme.accent, 0.07) }
-                GradientStop { position: 0.97; color: Qt.alpha(Theme.accent, 0.16) }
-                GradientStop { position: 1; color: Qt.alpha(Theme.accent, 0.35) }
-            }
-        }
-    }
-    MultiEffect {
-        anchors.fill: parent
-        visible: fx.moving && fx.sweep > 0 && fx.sweep - fx.barH < fx.height
-        source: barSrc
-        maskEnabled: true
-        maskSource: grainMask
+        visible: Theme.chamfer || Theme.fxGrain
+        property vector2d itemSize: Qt.vector2d(width, height)
+        property real radius: Theme.square ? 0 : fx.radius
+        property real cut: Theme.chamfer && fx.radius > 0.5 ? Math.min(Math.min(width, height) / 2, Theme.cut(Math.min(width, height))) : 0
+        property real scan: Theme.chamfer ? 0.075 : 0
+        property real grain: Theme.fxGrain ? (Theme.dark ? 0.07 : 0.09) : 0
+        property real drift: fx.drift
+        property real sweep: fx.moving && fx.sweep > 0 && fx.sweep - fx.barH < fx.height ? fx.sweep : 0
+        property real barH: fx.barH
+        property color accent: Theme.accent
+        fragmentShader: Qt.resolvedUrl("shaders/panelfx.frag.qsb")
     }
     Rectangle {
         visible: Theme.chamfer && fx.width > 120
@@ -85,24 +62,6 @@ Item {
         width: 2; height: 14
         color: Theme.accent
     }
-    // grain: a still noise tile, faint, kept inside the rounded shape
-    Item {
-        id: grainSrc
-        anchors.fill: parent
-        visible: false
-        layer.enabled: Theme.fxGrain
-        clip: true
-        Image { x: 0; y: Theme.chamfer ? fx.drift % 128 - 128 : 0; width: parent.width; height: parent.height + (Theme.chamfer ? 128 : 0); source: "grain.png"; fillMode: Image.Tile; smooth: false }
-    }
-    MultiEffect {
-        anchors.fill: parent
-        visible: Theme.fxGrain
-        source: grainSrc
-        opacity: Theme.dark ? 0.07 : 0.09
-        maskEnabled: true
-        maskSource: grainMask
-    }
-    SmoothRect { id: grainMask; anchors.fill: parent; radius: fx.radius; visible: false; layer.enabled: Theme.fxGrain || Theme.chamfer }
     // edge: a thin light along the top, brightest in the middle
     Rectangle {
         visible: Theme.fxEdge

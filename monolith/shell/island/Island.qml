@@ -310,7 +310,7 @@ PanelWindow {
             border.width: Theme.outlineW
             border.color: Theme.outlineColor
             CardShadow { visible: win.barSolid || win.toastOn || Theme.barOpacity > 0.3 }
-            PanelFx { anchors.fill: parent; radius: solidBg.radius; visible: Theme.chamfer }
+            PanelFx { anchors.fill: parent; radius: solidBg.radius; visible: Theme.chamfer; animate: false }
         }
         // Frame: a notification dropping out gets a background below the bar only (the frame
         // already paints the bar's strip; painting it again would show darker in see-through styles)

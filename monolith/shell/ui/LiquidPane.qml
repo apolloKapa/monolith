@@ -58,9 +58,51 @@ Item {
         const o = Qt.point(Math.round(c[0]), Math.round(c[1]));
         if (o.x !== origin.x || o.y !== origin.y) origin = o;
     }
-    FrameAnimation { running: lp.visible && lp.live; onTriggered: lp.place() }
-    Component.onCompleted: place()
-    onVisibleChanged: if (visible) place()
+    // Following it: it used to work out where it was on every frame, always. A running frame
+    // animation keeps its window drawing every frame, so with Liquid glass the bar, the dock and
+    // the desktop's widgets redrew at the screen's refresh rate all day for nothing. Now it
+    // listens to what can move it (its own size, and every item it's inside: place, size, scale,
+    // opacity and their slide transforms) and follows every frame only for a moment after one of
+    // them changes; a look twice a second catches anything else (it only redraws if it moved).
+    property bool tracking: false
+    function poke() {
+        if (!lp.visible || !lp.live) return;
+        lp.place();
+        lp.tracking = true;
+        trackFor.restart();
+    }
+    Timer { id: trackFor; interval: 900; onTriggered: lp.tracking = false }
+    FrameAnimation { running: lp.visible && lp.live && lp.tracking; onTriggered: lp.place() }
+    Timer { interval: 500; repeat: true; running: lp.visible && lp.live; onTriggered: lp.place() }
+    readonly property var sigs: ["xChanged", "yChanged", "widthChanged", "heightChanged", "scaleChanged", "rotationChanged", "opacityChanged", "visibleChanged", "glassOriginChanged"]
+    readonly property var trSigs: ["xChanged", "yChanged", "xScaleChanged", "yScaleChanged", "angleChanged"]
+    property var watched: []
+    function unwatch() {
+        for (const o of watched) for (const sg of sigs.concat(trSigs)) { try { if (o[sg]) o[sg].disconnect(lp.poke); } catch (e) {} }
+        watched = [];
+    }
+    function watch() {
+        unwatch();
+        const w = [];
+        for (let it = lp.parent; it; it = it.parent) {
+            for (const sg of sigs) if (it[sg]) { it[sg].connect(lp.poke); }
+            w.push(it);
+            const tl = it.transform;
+            if (tl) for (let i = 0; i < tl.length; i++) {
+                const tr = tl[i];
+                if (!tr) continue;
+                for (const sg of trSigs) if (tr[sg]) tr[sg].connect(lp.poke);
+                w.push(tr);
+            }
+        }
+        watched = w;
+    }
+    Component.onCompleted: { watch(); poke(); }
+    Component.onDestruction: unwatch()
+    onParentChanged: watch()
+    onWidthChanged: poke()
+    onHeightChanged: poke()
+    onVisibleChanged: if (visible) poke()
 
     // the pointer: the glass swells and catches the light under it, only while the pointer is over
     // the glass itself. Where it is stays put once it leaves (so the light fades out there) and
