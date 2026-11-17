@@ -30,6 +30,19 @@ SmoothRect {
     scale: ma.pressed && enabledInput ? 1 - Math.min(0.08, 6 / Math.max(40, width)) : 1
     Behavior on scale { NumberAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
 
+    // a style's material (concrete, paper, steel) on the bigger ones (tiles, cards), softer than
+    // on the panels; inside the outline. Small buttons stay plain: they'd only be noise, and each
+    // one costs a texture
+    MaterialPane {
+        anchors.fill: parent
+        anchors.margins: root.border.width
+        radius: Math.max(0, root.radius - root.border.width)
+        color: root.color
+        strength: Theme.materialStrength * 0.7
+        // (a pattern of its own: tiles of one size side by side otherwise all looked the same)
+        seed: Math.floor(Math.random() * 97)
+        visible: Theme.material !== "" && root.width * root.height > 9000 && root.color.a > 0.5 && root.visible
+    }
     // (the ripple, for a copy of this that carries it on: ui/NotificationCard's swipe)
     readonly property alias rippleItem: ink
     Ripple {

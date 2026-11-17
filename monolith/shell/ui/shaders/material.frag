@@ -3,9 +3,9 @@
 // A panel's material (ui/MaterialPane.qml; a style's `material`): the surface itself, in place of
 // a flat fill, drawn from noise (no pictures). Each panel gets its own pattern (`seed`), and the
 // texture keeps to the panel's shape (rounded corners, `radii`), softened by a pixel.
-//   kind 0 concrete   cast cement: big soft tonal patches (the pour), fine sand, scattered pores
-//                     (little dark pits with a lit rim), and on big panels the formwork's marks:
-//                     faint horizontal joints and the round tie holes along them
+//   kind 0 concrete   cast cement: the pour's cloudy patches and stains, the board form's faint
+//                     grain, sand, specks of aggregate, a few small air holes, and shading like a
+//                     slab (see concrete() below)
 //   kind 1 paper      fibres running mostly one way, a fine tooth, a few darker flecks, and the
 //                     edges a touch warmer, as paper gets
 //   kind 2 steel      brushed metal: long streaks along x, finer ones on top, and a broad sheen
@@ -50,29 +50,55 @@ float shape(vec2 px) {
     return clamp(0.5 - d, 0.0, 1.0);
 }
 
+// cast concrete, built up the way it looks up close:
+//   the pour     big soft cloudy patches, the noise bent by itself so they swirl instead of
+//                tiling; a few darker damp-looking stains
+//   board form   the faintest horizontal grain of the planks it was cast against, wavering
+//   sand         two scales of fine grain, so it reads matte, not flat
+//   aggregate    specks of stone in the mix, a few lighter and a few darker, all sizes
+//   pits         small air holes, irregular, a soft shadow at the top inside and a lit lip
+//                below (light from above), rare and never in a pattern
+//   shading      a touch lighter at the top, a soft shade into the edges, like a slab
 vec3 concrete(vec2 px) {
-    float pour = fbm(px / 90.0);                  // the big, soft tonal patches
-    float sand = vnoise(px / 1.6) * 0.6 + vnoise(px / 3.5) * 0.4;
-    float tone = 0.86 + 0.22 * pour + 0.08 * (sand - 0.5);
+    // the pour: warped fbm
+    vec2 w = vec2(fbm(px / 160.0 + 3.1), fbm(px / 160.0 + 8.7));
+    float pour = fbm(px / 120.0 + w * 1.6);
+    float stain = smoothstep(0.58, 0.78, fbm(px / 260.0 + 21.0));
+    // board form: wavering horizontal grain
+    float grain = vnoise(vec2(px.x / 90.0, px.y / 2.2 + fbm(px / 70.0) * 3.0));
+    // sand: fine and finer
+    float sand = vnoise(px / 1.1) * 0.55 + vnoise(px / 2.7) * 0.45;
+    float tone = 0.9 + 0.26 * (pour - 0.5) - 0.09 * stain + 0.03 * (grain - 0.5) + 0.08 * (sand - 0.5);
     vec3 c = base.rgb * tone;
-    // pores: a few pits on a 9 px grid, dark with a lit lower rim
-    vec2 cell = floor(px / 9.0);
-    if (h21(cell + 3.7) > 0.93) {
-        vec2 ctr = (cell + 0.25 + 0.5 * vec2(h21(cell + 1.1), h21(cell + 2.3))) * 9.0;
-        float rad = 0.8 + 1.6 * h21(cell + 5.9);
-        float d = length(px - ctr);
-        c *= 1.0 - 0.45 * smoothstep(rad, rad * 0.4, d);
-        c += base.rgb * 0.12 * smoothstep(rad + 0.8, rad, d) * step(ctr.y, px.y) * step(rad * 0.6, d);
+    // aggregate: one speck at most per 5 px cell, about one in twelve cells
+    vec2 cell = floor(px / 5.0);
+    float pick = h21(cell + 7.3);
+    if (pick > 0.92) {
+        vec2 ctr = (cell + 0.2 + 0.6 * vec2(h21(cell + 1.7), h21(cell + 4.1))) * 5.0;
+        float rad = 0.5 + 1.3 * h21(cell + 6.6);
+        float m = smoothstep(rad + 0.6, rad - 0.3, length(px - ctr));
+        c *= 1.0 + (pick > 0.965 ? 0.13 : -0.15) * m;
     }
-    // formwork: on panels bigger than a board, joints every 120 px and tie holes along them
-    if (itemSize.y > 180.0 && itemSize.x > 240.0) {
-        float row = mod(px.y + 40.0, 120.0);
-        c *= 1.0 - 0.06 * smoothstep(1.5, 0.0, abs(row - 1.0));
-        vec2 tie = vec2(mod(px.x + 60.0, 160.0) - 80.0, row - 60.0);
-        float t = length(tie);
-        c *= 1.0 - 0.28 * smoothstep(5.0, 3.5, t);
-        c += base.rgb * 0.06 * smoothstep(6.5, 5.0, t) * step(3.5, t) * step(0.0, tie.y);
+    // pits: one at most per 22 px cell, rare, an uneven blob
+    vec2 pc = floor(px / 22.0);
+    if (h21(pc + 2.9) > 0.86) {
+        vec2 ctr = (pc + 0.2 + 0.6 * vec2(h21(pc + 1.3), h21(pc + 5.5))) * 22.0;
+        vec2 d = px - ctr;
+        float ang = atan(d.y, d.x);
+        float rad = (0.9 + 2.1 * h21(pc + 8.2)) * (0.8 + 0.35 * sin(ang * 3.0 + h21(pc) * 6.3));
+        float r = length(d);
+        float inside = smoothstep(rad + 0.5, rad - 0.5, r);
+        // the shadow falls in from the top edge, the bottom lip catches the light
+        float upper = clamp(-d.y / max(rad, 0.1) * 0.5 + 0.5, 0.0, 1.0);
+        c *= 1.0 - inside * (0.22 + 0.3 * upper);
+        float lip = smoothstep(rad + 1.4, rad + 0.3, r) * (1.0 - inside) * step(0.0, d.y);
+        c *= 1.0 + 0.1 * lip;
     }
+    // shading: lighter at the top, a soft shade into every edge
+    vec2 uv = px / itemSize;
+    vec2 e = min(px, itemSize - px);
+    float edge = smoothstep(0.0, 18.0, min(e.x, e.y));
+    c *= (1.03 - 0.06 * uv.y) * (0.94 + 0.06 * edge);
     return c;
 }
 

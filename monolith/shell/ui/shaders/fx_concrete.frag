@@ -43,20 +43,37 @@ void main() {
         c = c * (1.0 - dust * 0.6) + vec4(vec3(0.62), 1.0) * dust * 0.6;
         fragColor = c * qt_Opacity;
     } else {
-        // blocks, laid like bricks
-        vec2 bs = vec2(48.0, 30.0);
-        float row = floor(px.y / bs.y);
-        vec2 cell = vec2(floor((px.x + mod(row, 2.0) * bs.x * 0.5) / bs.x), row);
-        float lower = cell.y * bs.y / max(itemSize.y, 1.0);
-        float ts = (1.0 - lower) * 0.3 + h21(cell) * 0.25;               // when it breaks off
-        float go = max(0.0, p - ts);
-        float drop = go * go * 900.0;
-        vec2 inCell = vec2(mod(px.x + mod(row, 2.0) * bs.x * 0.5, bs.x), mod(px.y, bs.y));
-        float border = min(min(inCell.x, bs.x - inCell.x), min(inCell.y, bs.y - inCell.y));
-        vec4 c = tex((px - vec2(0.0, drop)) / itemSize);
-        float crack = (1.0 - smoothstep(0.6, 1.8, border)) * smoothstep(ts - 0.22, ts, p);
-        c.rgb *= 1.0 - 0.55 * crack;
-        c *= 1.0 - smoothstep(ts + 0.18, ts + 0.36, p);
+        // blocks, laid like bricks; each one, its time come, cracks free and falls (tipping a
+        // little sideways), the lower ones first. A pixel shows whichever block is over it now:
+        // its own, or one falling past from a row above.
+        vec2 bs = vec2(56.0, 34.0);
+        float row0 = floor(px.y / bs.y);
+        vec4 c = vec4(0.0);
+        for (int k = 0; k < 12; k++) {
+            float r = row0 - float(k);
+            if (r < 0.0) break;
+            float off = mod(r, 2.0) * bs.x * 0.5;
+            float cx = floor((px.x + off) / bs.x);
+            vec2 cell = vec2(cx, r);
+            float lower = (r + 1.0) * bs.y / max(itemSize.y, 1.0);
+            float ts = (1.0 - clamp(lower, 0.0, 1.0)) * 0.42 + h21(cell) * 0.16;   // when it breaks off
+            float go = max(0.0, p - ts);
+            float drop = go * go * 2600.0;
+            float dx = (h21(cell + 3.3) - 0.5) * go * 90.0;
+            vec2 src = vec2(px.x - dx, px.y - drop);
+            // still inside this block (its own row and column, at the source)?
+            if (floor(src.y / bs.y) != r || floor((src.x + off) / bs.x) != cx) continue;
+            vec4 b = tex(src / itemSize);
+            vec2 inCell = vec2(mod(src.x + off, bs.x), mod(src.y, bs.y));
+            float border = min(min(inCell.x, bs.x - inCell.x), min(inCell.y, bs.y - inCell.y));
+            // a crack round it only just before it goes, then its broken edge shaded as it falls
+            float crack = (1.0 - smoothstep(0.5, 1.6, border)) * smoothstep(ts - 0.08, ts, p);
+            b.rgb *= 1.0 - 0.5 * crack;
+            // a falling block darkens a little (out of the light) and fades out on its way down
+            b.rgb *= 1.0 - 0.18 * smoothstep(0.0, 0.2, go);
+            b *= 1.0 - smoothstep(0.16, 0.32, go);
+            if (b.a > 0.002) { c = b; break; }
+        }
         fragColor = c * qt_Opacity;
     }
 }

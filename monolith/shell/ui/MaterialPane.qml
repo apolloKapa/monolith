@@ -24,4 +24,8 @@ ShaderEffect {
     property real seed: (Math.round(width) * 7 + Math.round(height) * 13) % 97
     property real strength: Theme.materialStrength
     fragmentShader: Qt.resolvedUrl("shaders/material.frag.qsb")
+    // drawn once and kept (it only changes with its size or colour): the noise is costly, and
+    // without this it was worked out again on every frame of every animation on screen
+    layer.enabled: visible
+    layer.smooth: true
 }
