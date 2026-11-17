@@ -56,8 +56,11 @@ notify-send -a Monolith -i dialog-error "Couldn\'t $a" "Neither systemd nor elog
         shotsReady = true;
         fire.restart();
     }
-    // long enough to see the animation; short with animations off
-    Timer { id: fire; interval: Theme.animOn ? 1500 : 350; onTriggered: pw.act() }
+    // long enough to see the animation (short with animations off); then the screens fade to black
+    // and the action runs as they get there
+    property bool closing: false
+    Timer { id: fire; interval: Theme.animOn ? 1700 : 350; onTriggered: { pw.closing = true; actT.restart(); } }
+    Timer { id: actT; interval: Theme.animOn ? 450 : 0; onTriggered: pw.act() }
     function act() {
         const a = going;
         if (a === "logout") Niri.action(["quit", "--skip-confirmation"]);
@@ -66,6 +69,6 @@ notify-send -a Monolith -i dialog-error "Couldn\'t $a" "Neither systemd nor elog
         clear.interval = a === "suspend" ? 2500 : 12000;
         clear.restart();
     }
-    Timer { id: clear; onTriggered: { pw.going = ""; pw.shotsReady = false; cleanup.running = true; } }
+    Timer { id: clear; onTriggered: { pw.going = ""; pw.shotsReady = false; pw.closing = false; cleanup.running = true; } }
     Process { id: cleanup; command: ["sh", "-c", "rm -rf \"$1\"", "_", pw.shotDir] }
 }
