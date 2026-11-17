@@ -12,8 +12,13 @@
                                      colours already (the qt target), so it's left alone.
 
 kitty: ~/.config/kitty/colors.conf (kitty.conf includes it), reloaded in open windows.
-gtk:   a marked block in ~/.config/gtk-3.0/gtk.css and gtk-4.0/gtk.css (GTK 3 and libadwaita
-       colour names), the rest of those files is yours.
+gtk:   GTK 3 (Thunar, …): a theme of our own, adw-gtk3 in the shell's colours, in
+       ~/.local/share/themes/Monolith-a and Monolith-b. Each change goes into the one not in use and
+       the GTK theme is switched to it: GTK 3 apps re-read their theme when its name changes (they
+       never re-read gtk.css), so open windows, and Thunar's daemon, recolour at once. (Plain
+       Adwaita ignores most colour names: that's why Thunar stayed grey.)
+       GTK 4 / libadwaita: a marked block in ~/.config/gtk-4.0/gtk.css (colour names and the CSS
+       variables libadwaita 1.6+ reads); the rest of that file is yours. Apps read it as they start.
 qt:    a qt6ct/qt5ct colour scheme, picked in their config (apps need QT_QPA_PLATFORMTHEME=qt6ct).
 The palette is the shell's own (~/.local/state/monolith/shell-palette.json: the wallpaper's or a
 colour theme's), else the wallpaper's (next-palette.json); the mode the shell's.
@@ -106,22 +111,110 @@ def kitty(c, mode):
     subprocess.run(["pkill", "-USR1", "-x", "kitty"], stderr=subprocess.DEVNULL)
 
 
-def gtk_block(c):
-    pairs = {
+def gtk_colours(c):
+    """libadwaita's (and adw-gtk3's) colour names, and GTK 3's own, in the shell's colours"""
+    dark = luminance(c["surface"]) < 0.2
+    shade = "rgba(0,0,0,0.36)" if dark else "rgba(0,0,0,0.07)"
+    border = c.get("outline_variant", c["surface_container_highest"])
+    return {
         "accent_color": c["primary"], "accent_bg_color": c["primary"], "accent_fg_color": c["on_primary"],
         "window_bg_color": c["surface"], "window_fg_color": c["on_surface"],
         "view_bg_color": c["surface_container_low"], "view_fg_color": c["on_surface"],
         "headerbar_bg_color": c["surface_container"], "headerbar_fg_color": c["on_surface"],
+        "headerbar_border_color": border, "headerbar_backdrop_color": c["surface"],
+        "headerbar_shade_color": shade, "headerbar_darker_shade_color": shade,
         "sidebar_bg_color": c["surface_container_low"], "sidebar_fg_color": c["on_surface"],
-        "card_bg_color": c["surface_container"], "card_fg_color": c["on_surface"],
-        "popover_bg_color": c["surface_container_high"], "popover_fg_color": c["on_surface"],
+        "sidebar_backdrop_color": c["surface_container_lowest"], "sidebar_border_color": border, "sidebar_shade_color": shade,
+        "secondary_sidebar_bg_color": c["surface_container"], "secondary_sidebar_fg_color": c["on_surface"],
+        "card_bg_color": c["surface_container"], "card_fg_color": c["on_surface"], "card_shade_color": shade,
+        "popover_bg_color": c["surface_container_high"], "popover_fg_color": c["on_surface"], "popover_shade_color": shade,
         "dialog_bg_color": c["surface_container_high"], "dialog_fg_color": c["on_surface"],
+        "thumbnail_bg_color": c["surface_container_high"], "thumbnail_fg_color": c["on_surface"],
+        "panel_bg_color": c["surface_container"], "panel_fg_color": c["on_surface"],
         "destructive_color": c["error"], "destructive_bg_color": c["error"], "destructive_fg_color": c["on_error"],
-        # GTK 3 themes (Adwaita) read these
+        "error_color": c["error"], "error_bg_color": c["error"], "error_fg_color": c["on_error"],
+        "shade_color": shade, "scrollbar_outline_color": c["surface_container_lowest"],
+        # GTK 3's own names (adw-gtk3 and Adwaita read these too)
         "theme_bg_color": c["surface"], "theme_fg_color": c["on_surface"], "theme_base_color": c["surface_container_low"],
         "theme_text_color": c["on_surface"], "theme_selected_bg_color": c["primary"], "theme_selected_fg_color": c["on_primary"],
+        "theme_unfocused_bg_color": c["surface"], "theme_unfocused_fg_color": c["on_surface"],
+        "theme_unfocused_base_color": c["surface_container_low"], "theme_unfocused_text_color": c["on_surface"],
+        "theme_unfocused_selected_bg_color": c["primary"], "theme_unfocused_selected_fg_color": c["on_primary"],
+        "insensitive_bg_color": c["surface_container"], "insensitive_fg_color": c.get("on_surface_variant", c["on_surface"]),
+        "insensitive_base_color": c["surface_container_low"], "borders": border, "unfocused_borders": border,
+        "content_view_bg": c["surface_container_low"], "text_view_bg": c["surface_container_low"],
     }
-    return START + "\n" + "\n".join("@define-color %s %s;" % kv for kv in pairs.items()) + "\n" + END
+
+
+def gtk_block(c):
+    pairs = gtk_colours(c)
+    lines = ["@define-color %s %s;" % kv for kv in pairs.items()]
+    # (libadwaita 1.6+ styles from CSS variables, made from the names above inside its own sheet:
+    # set them too, so it doesn't matter which one an app's libadwaita reads)
+    lines.append(":root { " + " ".join("--%s: %s;" % (k.replace("_", "-"), v) for k, v in pairs.items()
+                                      if not k.startswith(("theme_", "insensitive_", "borders", "unfocused_", "content_", "text_view"))) + " }")
+    return START + "\n" + "\n".join(lines) + "\n" + END
+
+
+THEMES = HOME + "/.local/share/themes"
+SLOTS = ("Monolith-a", "Monolith-b")
+
+
+def theme_dir(name):
+    for d in (HOME + "/.local/share/themes", HOME + "/.themes", "/usr/local/share/themes", "/usr/share/themes"):
+        if os.path.isdir(d + "/" + name):
+            return d + "/" + name
+    return None
+
+
+def gtk_theme_now():
+    try:
+        return subprocess.run(["gsettings", "get", "org.gnome.desktop.interface", "gtk-theme"],
+                              capture_output=True, text=True).stdout.strip().strip("'")
+    except OSError:
+        return ""
+
+
+def set_gtk_theme(name):
+    subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", name], stderr=subprocess.DEVNULL)
+    for v in ("gtk-3.0", "gtk-4.0"):
+        ini_set(CONF + "/" + v + "/settings.ini", "Settings", "gtk-theme-name", name)
+
+
+def gtk3_theme(c, mode):
+    """adw-gtk3 in the shell's colours, as a theme of our own; switched to (see the top)"""
+    dark = mode != "light"
+    base = theme_dir("adw-gtk3-dark" if dark else "adw-gtk3")
+    defs = "\n".join("@define-color %s %s;" % kv for kv in gtk_colours(c).items())
+    files = {}
+    for v in ("gtk-3.0", "gtk-4.0"):
+        if base and os.path.exists(base + "/" + v + "/gtk.css"):
+            imp = '@import url("file://%s/%s/gtk.css");' % (base, v)
+        elif v == "gtk-3.0":
+            # (no adw-gtk3: GTK's built-in Adwaita, which takes fewer of the colours)
+            imp = '@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained%s.css");' % ("-dark" if dark else "")
+        else:
+            continue
+        files[v] = "/* Monolith: adw-gtk3 in the shell's colours (Settings -> App colours). Rewritten on every change. */\n" + imp + "\n" + defs + "\n"
+    now = gtk_theme_now()
+    # same colours as the theme in use: nothing to do (switching would only make apps redraw)
+    if now in SLOTS:
+        try:
+            if all(open("%s/%s/%s/gtk.css" % (THEMES, now, v)).read() == t for v, t in files.items()):
+                return
+        except OSError:
+            pass
+    slot = SLOTS[1] if now == SLOTS[0] else SLOTS[0]
+    d = THEMES + "/" + slot
+    for v, text in files.items():
+        os.makedirs(d + "/" + v, exist_ok=True)
+        # (adw-gtk3's pictures: checkboxes, radio buttons… found next to the theme's gtk.css)
+        if base and os.path.isdir(base + "/" + v + "/assets") and not os.path.exists(d + "/" + v + "/assets"):
+            os.symlink(base + "/" + v + "/assets", d + "/" + v + "/assets")
+        open(d + "/" + v + "/gtk.css", "w").write(text)
+    open(d + "/index.theme", "w").write("[Desktop Entry]\nType=X-GNOME-Metatheme\nName=%s\nComment=Monolith: the shell's colours\n"
+                                        "Encoding=UTF-8\n\n[X-GNOME-Metatheme]\nGtkTheme=%s\n" % (slot, slot))
+    set_gtk_theme(slot)
 
 
 def set_block(path, block):
@@ -135,9 +228,17 @@ def set_block(path, block):
     open(path, "w").write(text)
 
 
-def gtk(c, on=True):
-    for v in ("gtk-3.0", "gtk-4.0"):
-        set_block(CONF + "/" + v + "/gtk.css", gtk_block(c) if on else "")
+def gtk(c, mode, on=True):
+    # GTK 3: the theme (the block that used to go in its gtk.css comes out: user CSS outranks the
+    # theme, so it held the old colours over every new theme)
+    set_block(CONF + "/gtk-3.0/gtk.css", "")
+    set_block(CONF + "/gtk-4.0/gtk.css", gtk_block(c) if on else "")
+    if on:
+        gtk3_theme(c, mode)
+    elif gtk_theme_now() in SLOTS:
+        # back to plain adw-gtk3 (or Adwaita) in the mode
+        base = "adw-gtk3" if theme_dir("adw-gtk3") else "Adwaita"
+        set_gtk_theme(base + ("-dark" if mode != "light" else ""))
 
 
 def qt(c, on=True):
@@ -204,19 +305,14 @@ def follow(mode, palette_qt):
     subprocess.run(gs + ["color-scheme", "prefer-dark" if dark else "prefer-light"], stderr=subprocess.DEVNULL)
     # GTK 3 only changes with its theme: adw-gtk3 / Adwaita in the right variant (a theme of
     # your own, anything else, is left as it is)
-    try:
-        cur = subprocess.run(["gsettings", "get", "org.gnome.desktop.interface", "gtk-theme"],
-                             capture_output=True, text=True).stdout.strip().strip("'")
-    except OSError:
-        cur = ""
-    base = {"adw-gtk3": "adw-gtk3", "adw-gtk3-dark": "adw-gtk3", "Adwaita": "Adwaita", "Adwaita-dark": "Adwaita", "": "adw-gtk3"}.get(cur)
+    cur = gtk_theme_now()
+    # (our own theme, Monolith-a/-b: App colours rewrites it in the new mode itself. Plain Adwaita
+    # becomes adw-gtk3 when that's there: the same look, and it takes the colours)
+    base = {"adw-gtk3": "adw-gtk3", "adw-gtk3-dark": "adw-gtk3", "Adwaita": "adw-gtk3", "Adwaita-dark": "adw-gtk3", "": "adw-gtk3"}.get(cur)
     if base:
         if base == "adw-gtk3" and not any(os.path.isdir(d + "/adw-gtk3") for d in ("/usr/share/themes", HOME + "/.themes", HOME + "/.local/share/themes")):
             base = "Adwaita"
-        theme = base + ("-dark" if dark else "")
-        subprocess.run(gs + ["gtk-theme", theme], stderr=subprocess.DEVNULL)
-        for v in ("gtk-3.0", "gtk-4.0"):
-            ini_set(CONF + "/" + v + "/settings.ini", "Settings", "gtk-theme-name", theme)
+        set_gtk_theme(base + ("-dark" if dark else ""))
     for v in ("gtk-3.0", "gtk-4.0"):
         ini_set(CONF + "/" + v + "/settings.ini", "Settings", "gtk-application-prefer-dark-theme", "1" if dark else "0")
     # Qt: a plain palette in the mode (unless the shell's own colours are already there)
@@ -242,11 +338,11 @@ def main():
     c, mode = palette()
     if cmd == "apply":
         for t in targets:
-            {"kitty": lambda: kitty(c, mode), "gtk": lambda: gtk(c), "qt": lambda: qt(c)}.get(t, lambda: None)()
+            {"kitty": lambda: kitty(c, mode), "gtk": lambda: gtk(c, mode), "qt": lambda: qt(c)}.get(t, lambda: None)()
     elif cmd == "off":
         for t in targets:
             if t == "gtk":
-                gtk(c, False)
+                gtk(c, mode, False)
             elif t == "qt":
                 qt(c, False)
             elif t == "kitty":
