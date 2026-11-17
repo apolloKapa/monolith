@@ -116,6 +116,8 @@ def gtk_colours(c):
     dark = luminance(c["surface"]) < 0.2
     shade = "rgba(0,0,0,0.36)" if dark else "rgba(0,0,0,0.07)"
     border = c.get("outline_variant", c["surface_container_highest"])
+    sel = mix(c["surface_container_low"], c["primary"], 0.32)
+    sel_off = mix(c["surface_container_low"], c["primary"], 0.2)
     return {
         "accent_color": c["primary"], "accent_bg_color": c["primary"], "accent_fg_color": c["on_primary"],
         "window_bg_color": c["surface"], "window_fg_color": c["on_surface"],
@@ -136,10 +138,13 @@ def gtk_colours(c):
         "shade_color": shade, "scrollbar_outline_color": c["surface_container_lowest"],
         # GTK 3's own names (adw-gtk3 and Adwaita read these too)
         "theme_bg_color": c["surface"], "theme_fg_color": c["on_surface"], "theme_base_color": c["surface_container_low"],
-        "theme_text_color": c["on_surface"], "theme_selected_bg_color": c["primary"], "theme_selected_fg_color": c["on_primary"],
+        # (the selection apps paint themselves with this, keeping their own text colour: Thunar's
+        # icons, with white names on it. The full accent made a white box with white text on a
+        # light accent, so it's the accent tinted into the view instead, like libadwaita's own)
+        "theme_text_color": c["on_surface"], "theme_selected_bg_color": sel, "theme_selected_fg_color": c["on_surface"],
         "theme_unfocused_bg_color": c["surface"], "theme_unfocused_fg_color": c["on_surface"],
         "theme_unfocused_base_color": c["surface_container_low"], "theme_unfocused_text_color": c["on_surface"],
-        "theme_unfocused_selected_bg_color": c["primary"], "theme_unfocused_selected_fg_color": c["on_primary"],
+        "theme_unfocused_selected_bg_color": sel_off, "theme_unfocused_selected_fg_color": c["on_surface"],
         "insensitive_bg_color": c["surface_container"], "insensitive_fg_color": c.get("on_surface_variant", c["on_surface"]),
         "insensitive_base_color": c["surface_container_low"], "borders": border, "unfocused_borders": border,
         "content_view_bg": c["surface_container_low"], "text_view_bg": c["surface_container_low"],
