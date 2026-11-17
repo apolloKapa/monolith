@@ -22,10 +22,17 @@ Singleton {
     // out of the way, since a normal window like this one always opens underneath them
     property bool picking: false
     function choose(title, done) {
+        pick(["--title=" + (title || "Choose a picture"), "--filename=" + pics.dir + "/",
+              "--file-filter=Pictures | *.png *.jpg *.jpeg *.webp *.gif *.PNG *.JPG *.JPEG *.WEBP *.GIF"], done);
+    }
+    // any file chooser (zenity's own options: --directory, --multiple, --file-filter=…), with the
+    // shell out of its way the same way; `done(text)` gets what zenity printed (nothing: cancelled).
+    // Icon and cursor themes, fonts…: launched straight, it opened underneath Settings, unseen
+    function pick(zenityArgs, done) {
         if (picking) return;
         picking = true;
         const p = chooserC.createObject(pics, { command: ["sh", "-c",
-            "command -v zenity >/dev/null || { notify-send -a Monolith \"Cannot open the file picker\" \"It needs zenity: install it, or run the Monolith installer again\"; exit 1; }; zenity --file-selection --title=\"$1\" --filename=\"$2/\" --file-filter='Pictures | *.png *.jpg *.jpeg *.webp *.gif *.PNG *.JPG *.JPEG *.WEBP *.GIF' 2>/dev/null", "_", title || "Choose a picture", pics.dir] });
+            "command -v zenity >/dev/null || { notify-send -a Monolith \"Cannot open the file picker\" \"It needs zenity: install it, or run the Monolith installer again\"; exit 1; }; zenity --file-selection \"$@\" 2>/dev/null", "_"].concat(zenityArgs) });
         const out = outC.createObject(p);
         p.stdout = out;
         let file = "";

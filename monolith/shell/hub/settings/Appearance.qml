@@ -39,14 +39,16 @@ ColumnLayout {
     // (scripts/themes.py add). Several themes in the folder: all of them ──
     property string adding: ""
     function addTheme(kind) {
-        if (adding !== "") return;
-        adding = kind;
-        addProc.command = ["sh", "-c",
-            "command -v zenity >/dev/null || { echo '{\"error\": \"The folder picker needs zenity: install it, or run the Monolith installer again\"}'; exit 0; }; " +
-            "d=\"$(zenity --file-selection --directory --title=\"$1\" --filename=\"$HOME/Downloads/\" 2>/dev/null)\" || exit 0; " +
-            "python3 \"$2\" add \"$3\" \"$d\"",
-            "_", kind === "icons" ? "Pick an icon pack's folder" : "Pick a cursor theme's folder", sec.script, kind];
-        addProc.running = true;
+        if (adding !== "" || Pictures.picking) return;
+        const home = Quickshell.env("HOME") || "";
+        // (Pictures.pick: Settings steps aside while the chooser is open, or it's underneath)
+        Pictures.pick(["--directory", "--title=" + (kind === "icons" ? "Pick an icon pack's folder" : "Pick a cursor theme's folder"), "--filename=" + home + "/Downloads/"], d => {
+            d = String(d || "").trim();
+            if (d === "") return;
+            sec.adding = kind;
+            addProc.command = ["python3", sec.script, "add", kind, d];
+            addProc.running = true;
+        });
     }
     Process {
         id: addProc
@@ -164,7 +166,44 @@ ColumnLayout {
     }
     // ── font: every family by name; the preview shows the one under the pointer (or the
     // one in use) ──
+    // ── + fonts: font files (from a download…) copied into ~/.local/share/fonts/monolith-added
+    // (so every app has them; fc-cache told), and loaded here at once so they're in the list now ──
+    property int fontRev: 0
+    property var fontLoaders: []
+    function addFonts() {
+        if (Pictures.picking) return;
+        const home = Quickshell.env("HOME") || "";
+        Pictures.pick(["--multiple", "--separator=\n", "--title=Pick font files (.ttf, .otf)", "--filename=" + home + "/Downloads/",
+                       "--file-filter=Fonts | *.ttf *.otf *.ttc *.TTF *.OTF *.TTC"], txt => {
+            const files = String(txt || "").split("\n").map(f => f.trim()).filter(f => f !== "");
+            if (!files.length) return;
+            fontProc.command = ["sh", "-c",
+                "d=\"${XDG_DATA_HOME:-$HOME/.local/share}/fonts/monolith-added\"; mkdir -p \"$d\"; " +
+                "for f in \"$@\"; do b=$(basename \"$f\"); cp -f -- \"$f\" \"$d/$b\" && echo \"$d/$b\"; done; " +
+                "command -v fc-cache >/dev/null && fc-cache -f \"$d\" >/dev/null 2>&1", "_"].concat(files);
+            fontProc.running = true;
+        });
+    }
+    Process {
+        id: fontProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const paths = text.split("\n").filter(l => l !== "");
+                const before = Qt.fontFamilies().length;
+                for (const p of paths) {
+                    const l = Qt.createQmlObject('import QtQuick; FontLoader {}', Pictures, "AddedFont");   // (kept for the session, not just while this page is open)
+                    l.statusChanged.connect(() => { if (l.status === FontLoader.Ready) sec.fontRev++; });
+                    l.source = "file://" + p;
+                    sec.fontLoaders = sec.fontLoaders.concat([l]);
+                }
+                Quickshell.execDetached(["notify-send", "-a", "Monolith", "-i", "preferences-desktop-font",
+                    paths.length === 1 ? "Added a font" : "Added " + paths.length + " fonts",
+                    paths.length ? "Pick it in Settings → Appearance → Font" : "Nothing could be copied"]);
+            }
+        }
+    }
     readonly property var families: {
+        const _ = sec.fontRev;
         // one entry per family (no "… Bold", "… NL" variants) and no symbol fonts
         const all = Qt.fontFamilies().filter(n => !/ (Thin|Light|ExtraLight|Medium|SemiBold|Bold|ExtraBold|Black|Heavy|Obl|Italic|NL)\b/.test(n)
             && !/Material Symbols|Noto Color|Emoji|Awesome|Symbol|Dingbat|D050000L|Math|Nerd Font Propo|Nerd Font Mono|^Iosevka N?F$/.test(n));
@@ -173,13 +212,18 @@ ColumnLayout {
     SettingRow {
         icon: "font_download"; title: "Font"
         key: "theme.font"; def: ""
-        desc: "Used everywhere in the shell" + (Store.get("theme.font", "") === "" ? " (the style's own, " + Theme.fontFamily + ")" : "")
+        desc: "Used everywhere in the shell" + (Store.get("theme.font", "") === "" ? " (the style's own, " + Theme.fontFamily + ")" : "") + ". + adds fonts from files"
+        Row {
+        spacing: 8
         FontPicker {
+            anchors.verticalCenter: parent.verticalCenter
             width: 300
             families: sec.families
             value: Store.get("theme.font", "")
             defaultName: "Default (" + (Theme.styleFont || Theme.defaultFont) + ")"
             onPicked: f => f === "" ? Store.unset("theme.font") : Store.set("theme.font", f)
+        }
+        Button { anchors.verticalCenter: parent.verticalCenter; icon: "add"; width: 40; onClicked: sec.addFonts() }
         }
     }
     // what it looks like
@@ -205,7 +249,7 @@ ColumnLayout {
     // ── icons ──
     SettingRow {
         icon: "interests"; title: "Icons"; desc: "The icon pack apps and the shell use" + (sec.iconTheme ? " (now " + sec.iconTheme + ")" : "") + ". The shell restarts for a moment to load a new one. + adds one from a folder"
-        Button { icon: "add"; width: 40; enabled: sec.adding === ""; opacity: enabled ? 1 : 0.5; onClicked: sec.addTheme("icons") }
+        Button { icon: "add"; width: 40; onClicked: sec.addTheme("icons") }
     }
     GridLayout {
         Layout.fillWidth: true
@@ -238,7 +282,7 @@ ColumnLayout {
                 onMoved: v => { sec.cursorSize = v; cursorLater.restart(); }
                 Timer { id: cursorLater; interval: 500; onTriggered: sec.setCursor(sec.cursorTheme || "default", sec.cursorSize) }
             }
-            Button { anchors.verticalCenter: parent.verticalCenter; icon: "add"; width: 40; enabled: sec.adding === ""; opacity: enabled ? 1 : 0.5; onClicked: sec.addTheme("cursors") }
+            Button { anchors.verticalCenter: parent.verticalCenter; icon: "add"; width: 40; onClicked: sec.addTheme("cursors") }
         }
     }
     GridLayout {

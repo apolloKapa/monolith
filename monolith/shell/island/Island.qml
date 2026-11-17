@@ -524,12 +524,61 @@ PanelWindow {
                         radius: Theme.corner(height, -2)
                         color: on ? Theme.accent : "transparent"
                         Behavior on color { ColorAnimation { duration: Theme.shortMs } }
-                        SequentialAnimation {
-                            id: tilePop
-                            NumberAnimation { target: fieldTile; property: "scale"; from: 0.6; to: 1; duration: Theme.ms(380); easing.type: Easing.OutBack }
+                        // The menu's icon coming in, each style its own way, from one progress
+                        // (tp: 0 … 1). At 1 everything is at rest (upright, full size, in place), and
+                        // it's put at 1 whatever happens: two animations (a pop and a turn) could be
+                        // left half done, and the tile stayed tilted
+                        readonly property string kind: Theme.animOn ? (Theme.fxKind || "pop") : "none"
+                        property real tp: 1
+                        readonly property real e: Math.max(0, Math.min(1, tp))
+                        function backOut(t) { const c1 = 1.7, c3 = c1 + 1, u = t - 1; return 1 + c3 * u * u * u + c1 * u * u; }
+                        function damp(t, f) { return Math.sin(t * Math.PI * f) * (1 - t) * (1 - t); }
+                        readonly property real tScale: e >= 1 ? 1
+                            : kind === "pop" ? 0.6 + 0.4 * backOut(e)
+                            : kind === "liquid" ? 1 + 0.22 * damp(e, 5) * -1 + (e < 0.15 ? -0.4 * (1 - e / 0.15) : 0)
+                            : kind === "fjord" ? 0.86 + 0.14 * e
+                            : kind === "luxe" ? 0.82 + 0.18 * (1 - Math.pow(1 - e, 3))
+                            : kind === "concrete" ? 1 + (e > 0.55 && e < 0.8 ? 0.06 * Math.sin((e - 0.55) / 0.25 * Math.PI) : 0)
+                            : 1
+                        readonly property real tRot: e >= 1 ? 0
+                            : kind === "doodle" ? 14 * damp(e, 4)
+                            : kind === "industrial" ? -90 * (1 - backOut(e))
+                            : 0
+                        readonly property real tOp: e >= 1 ? 1
+                            : kind === "cyber" ? (e < 0.7 ? (Math.floor(e * 18) % 3 === 0 ? 0.2 : 1) : 1)
+                            : kind === "terminal" ? (e < 0.75 ? (Math.floor(e * 8) % 2 === 0 ? 0 : 1) : 1)
+                            : kind === "fjord" ? e
+                            : kind === "luxe" ? Math.min(1, e * 1.6)
+                            : kind === "paper" ? Math.min(1, e * 3)
+                            : kind === "pop" || kind === "liquid" ? Math.min(1, e * 4)
+                            : 1
+                        readonly property real tDx: e >= 1 ? 0 : kind === "cyber" && e < 0.7 ? ((Math.floor(e * 23) % 5) - 2) * 2 : 0
+                        readonly property real tDy: e >= 1 ? 0 : kind === "concrete" ? (e < 0.55 ? -16 * (1 - Math.pow(e / 0.55, 2)) : 0) : 0
+                        readonly property real tSx: e >= 1 ? 1 : kind === "paper" ? Math.max(0.02, 1 - Math.pow(1 - e, 3)) : 1
+                        readonly property real tGlow: e >= 1 ? 0 : kind === "luxe" ? Math.sin(e * Math.PI) * 0.6 : 0
+                        scale: tScale
+                        rotation: tRot
+                        opacity: tOp
+                        transform: [
+                            Scale { origin.x: 16; origin.y: 16; xScale: fieldTile.tSx },
+                            Translate { x: fieldTile.tDx; y: fieldTile.tDy }
+                        ]
+                        // (Luxe: a soft gold glow round it as it rises)
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width + 10; height: width
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: 2
+                            border.color: Qt.alpha(Theme.accent, fieldTile.tGlow)
+                            visible: fieldTile.tGlow > 0.01
                         }
-                        NumberAnimation { id: tileTurn; target: fieldTile; property: "rotation"; from: -20; to: 0; duration: Theme.ms(380); easing.type: Easing.OutCubic }
-                        Connections { target: HubState; function onPageChanged() { tilePop.restart(); tileTurn.restart(); } }
+                        readonly property int tMs: kind === "none" ? 0 : Theme.ms(({ pop: 420, liquid: 620, cyber: 420, doodle: 560, terminal: 460, paper: 420, fjord: 600, concrete: 520, industrial: 480, luxe: 640 })[kind] || 420)
+                        NumberAnimation { id: tileAnim; target: fieldTile; property: "tp"; from: 0; to: 1; duration: Math.max(1, fieldTile.tMs); easing.type: fieldTile.kind === "pop" || fieldTile.kind === "liquid" || fieldTile.kind === "industrial" ? Easing.OutCubic : Easing.Linear }
+                        Timer { id: tileSafe; interval: fieldTile.tMs + 250; onTriggered: { tileAnim.stop(); fieldTile.tp = 1; } }
+                        function play() { if (kind === "none") { tp = 1; return; } tileAnim.restart(); tileSafe.restart(); }
+                        Connections { target: HubState; function onPageChanged() { fieldTile.play(); } }
+                        onVisibleChanged: if (!visible) { tileAnim.stop(); tp = 1; }
                     }
                     Icon {
                         id: fieldIcon
@@ -541,6 +590,11 @@ PanelWindow {
                         color: fieldTile.on ? Theme.onAccent : Theme.accent
                         scale: fieldTile.scale
                         rotation: fieldTile.rotation
+                        opacity: fieldTile.opacity
+                        transform: [
+                            Scale { origin.x: 10; origin.y: 10; xScale: fieldTile.tSx },
+                            Translate { x: fieldTile.tDx; y: fieldTile.tDy }
+                        ]
                     }
                     TextInput {
                         Keys.onPressed: e => Sounds.key(e)   // (a sound for each key; never takes it)
@@ -917,7 +971,7 @@ PanelWindow {
         else { cardIn.stop(); cardOut.restart(); }
     }
     Connections { target: win; function onShownChanged() { if (win.shown) win.opened(); } }
-    function opened() { tilePop.restart(); tileTurn.restart(); wasOpen = true; query.text = HubState.preset; HubState.preset = ""; query.forceActiveFocus(); }
+    function opened() { fieldTile.play(); wasOpen = true; query.text = HubState.preset; HubState.preset = ""; query.forceActiveFocus(); }
     Connections {
         target: HubState
         function onPresetRequested() { if (win.shown && HubState.preset !== "") { query.text = HubState.preset; HubState.preset = ""; } }
