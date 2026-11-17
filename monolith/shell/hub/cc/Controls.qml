@@ -294,7 +294,9 @@ RowLayout {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: parent.width - 32; height: parent.height * 0.3
                         count: 24; spacing: 3; minLen: 3
-                        live: !!cc.player && cc.player.isPlaying
+                        // (only while the control center is open on this tab: it stays built when
+                        // closed, and kept cava running behind it)
+                        live: HubState.open && HubState.page === "quick" && HubState.ccTab === "controls" && !!cc.player && cc.player.isPlaying
                         visible: live
                         color: "#ffffff"
                     }

@@ -18,7 +18,7 @@ Singleton {
     // every setting with its default; the widget editor lists them (WidgetLayout.cavaOptions)
     readonly property var defaults: ({
         bars: 36, framerate: 60, autosens: true, overshoot: 20, sensitivity: 100,
-        lowerCutoff: 50, higherCutoff: 10000, sleepTimer: 0,
+        lowerCutoff: 50, higherCutoff: 10000, sleepTimer: 3,
         method: "pipewire", source: "auto", sampleRate: 44100, sampleBits: 16, inputChannels: 2, autoconnect: 2, remix: true,
         channels: "stereo", monoOption: "average", reverse: false,
         monstercat: 0, waves: false, noiseReduction: 77,
@@ -28,6 +28,8 @@ Singleton {
     function n(k, lo, hi) { const v = Number(get(k)); return isNaN(v) ? defaults[k] : Math.max(lo, Math.min(hi, v)); }
     function b(k) { return get(k) === true || get(k) === "true" || get(k) === 1 ? 1 : 0; }
     readonly property int count: n("bars", 4, 256)
+    // how many frames a second it sends (CavaBars: past about 50, a bar's own smoothing only costs)
+    readonly property int rate: { const _ = Store.revision; return n("framerate", 1, 360); }
 
     // the config, as lines (rebuilt whenever a setting changes)
     readonly property var lines: {
@@ -78,7 +80,12 @@ Singleton {
         id: run
         command: ["env", "PIPEWIRE_LATENCY=2048/48000", "cava", "-p", cv.conf]
         stdout: SplitParser {
+            // (the same line again, silence mostly: nothing changes, so nothing is redrawn. cava
+            // also goes to sleep by itself after a few seconds of silence: sleepTimer)
+            property string last: ""
             onRead: line => {
+                if (line === last) return;
+                last = line;
                 const v = line.split(";").filter(x => x !== "").map(x => Number(x) / 1000);
                 if (v.length) cv.bars = v;
             }

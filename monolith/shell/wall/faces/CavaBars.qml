@@ -70,7 +70,9 @@ Item {
                 radius: Math.min(width / 2, height / 2) * cb.roundness
                 color: cb.colourAt(index)
                 opacity: (cb.dynamic ? 0.3 + 0.7 * v : 1) * (cb.fade ? 0.35 + 0.65 * Math.min(1, edge * 1.6) : 1)
-                Behavior on height { enabled: cb.smoothMs > 0; NumberAnimation { duration: cb.smoothMs } }
+                // (smoothing between cava's frames; at 50+ frames a second they come faster than it
+                // could show, and restarting one animation per bar on every frame was most of the cost)
+                Behavior on height { enabled: cb.smoothMs > 0 && Cava.rate < 50; NumberAnimation { duration: cb.smoothMs } }
             }
         }
     }
