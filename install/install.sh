@@ -45,7 +45,7 @@ gitx() {
 
 if [ ! -d "$PROJECT_ROOT/monolith/shell" ]; then
     if ! command -v git &>/dev/null; then
-        if command -v pacman &>/dev/null; then sudo pacman -Sy --noconfirm --needed git
+        if command -v pacman &>/dev/null; then sudo pacman -Syu --noconfirm --needed git
         else sudo emerge --ask=n --noreplace dev-vcs/git; fi
     fi
     if [ -d "$CACHE_REPO/.git" ]; then

@@ -8,8 +8,29 @@ pm_prepare_repos() {
     return 0
 }
 
+# The package lists are refreshed and the system brought up to date once per run, before anything
+# is installed: installing from stale lists asked the mirrors for versions they no longer had
+# ("failed retrieving file ... error: 404", seen on CachyOS's mirrors), and refreshing the lists
+# without upgrading (-Sy then -S) is the partial upgrade Arch warns can break the system.
+PM_SYNCED=false
+pm_sync() {
+    [ "$PM_SYNCED" = true ] && return 0
+    echo -e "\n\e[36m[ INFO ]\e[0m $(t "installer.deps.syncing")"
+    sudo pacman -Syu --noconfirm && PM_SYNCED=true
+}
+
+# a repo package; a download failing (a mirror behind or ahead of the lists) gets the lists
+# fetched again from scratch and one more try, upgrading in the same step
+pm_pacman_install() {
+    pm_sync || true
+    sudo pacman -S --noconfirm --needed "$@" && return 0
+    echo -e "\e[33m[ WARN ]\e[0m pacman couldn't get everything: fetching the package lists again and retrying"
+    sudo pacman -Syyu --noconfirm --needed "$@"
+}
+
 pm_bootstrap_install() {
-    sudo pacman -Sy --noconfirm --needed "$@"
+    sudo pacman -Syu --noconfirm --needed "$@" && PM_SYNCED=true && return 0
+    sudo pacman -Syyu --noconfirm --needed "$@" && PM_SYNCED=true
 }
 
 pm_bootstrap_helper() {
@@ -25,7 +46,7 @@ pm_bootstrap_helper() {
 
 pm_full_upgrade() {
     echo -e "\n\e[36m[ INFO ]\e[0m $(t "installer.deps.syncing")"
-    sudo pacman -Syyu --noconfirm
+    sudo pacman -Syyu --noconfirm && PM_SYNCED=true
 }
 
 pm_missing_pkgs() {
@@ -45,19 +66,21 @@ pm_install_pkg() {
     local pkg="$1"
     local safe_jobs="$2"
 
+    # (the lists up to date first: an AUR package's dependencies come from the repos too)
+    pm_sync || true
     if pacman -Si "$pkg" &>/dev/null; then
-        sudo pacman -S --noconfirm --needed "$pkg"
+        pm_pacman_install "$pkg"
     elif command -v yay &>/dev/null; then
         env CARGO_BUILD_JOBS="$safe_jobs" MAKEFLAGS="-j$safe_jobs" yay -S --noconfirm --needed "$pkg"
     elif command -v paru &>/dev/null; then
         env CARGO_BUILD_JOBS="$safe_jobs" MAKEFLAGS="-j$safe_jobs" paru -S --noconfirm --needed "$pkg"
     else
-        sudo pacman -S --noconfirm --needed "$pkg"
+        pm_pacman_install "$pkg"
     fi
 }
 
 pm_upgrade_quickshell() {
-    if sudo pacman -Syu --noconfirm --needed --ask=4 quickshell && quickshell_is_current; then
+    if sudo pacman -Syu --noconfirm --needed --ask=4 quickshell && PM_SYNCED=true && quickshell_is_current; then
         return 0
     fi
 
