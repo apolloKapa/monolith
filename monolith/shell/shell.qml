@@ -54,6 +54,8 @@ ShellRoot {
     Variants { model: GameMode.overlay ? Quickshell.screens : []; PerfOverlay {} }
     Lazy { id: dimL; when: Idle.dimming }
     Variants { model: dimL.on ? Quickshell.screens : []; Dim {} }
+    // shutting down, restarting, logging out, sleeping: the screens blur and say so
+    Variants { model: Power.going !== "" ? Quickshell.screens : []; Goodbye {} }
     Lazy { id: wallL; when: HubState.wallOpen; linger: 1200 }
     Variants { model: wallL.on ? Quickshell.screens : []; WallpaperPicker {} }
     Lazy { id: menuL; when: HubState.deskMenu.screen !== ""; linger: 400 }

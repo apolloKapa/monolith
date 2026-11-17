@@ -351,7 +351,7 @@ RowLayout {
             Repeater {
                 model: [
                     ["lock", "Lock", () => { HubState.close(); LockState.lock(); }, false],
-                    ["bedtime", "Sleep", () => { HubState.close(); Power.suspend(); }, false],
+                    ["bedtime", "Sleep", () => { HubState.close(); Power.sleep(); }, false],
                     ["logout", "Log out", () => Power.logout(), true],
                     ["restart_alt", "Restart", () => Power.reboot(), true],
                     ["power_settings_new", "Off", () => Power.poweroff(), true]
