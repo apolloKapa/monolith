@@ -5,14 +5,19 @@ import Quickshell
 // Notifications being swiped away. As soon as a swipe starts, the card hands itself over to
 // status/Thrown.qml (one full-screen click-through layer per screen): a copy that follows the
 // pointer there, so nothing cuts it off at the edge of the card's own little window. Let go:
-//   fall (Settings → Notifications → "Thrown away": Fall): it falls down its screen like a ball,
-//        as fast sideways as it was flicked, tossed up a little, spinning, bouncing off the sides
-//   slide: it slides off the way it was flicked, fading
+//   theme (Settings → Notifications → "Thrown away": Theme, the default): it goes the way the
+//        style makes things go (its CyberFx: Cyberpunk's Blackwall, Doodle's eraser…); a style
+//        without its own effect slides it off
+//   fall: it falls down its screen like a ball, as fast sideways as it was flicked, tossed up a
+//        little, spinning, bouncing off the sides. Always, whatever the style
+//   slide: it slides off the way it was flicked, fading. Always, whatever the style
 //   not far or fast enough: it springs back, and the real card takes over again (home)
 // The real card hides only once the copy is on screen (ready): no gap.
 Singleton {
     id: th
-    readonly property string mode: Store.get("notifications.throw", "slide") === "fall" ? "fall" : "slide"
+    // what's picked (slide | fall | theme), and what that comes to with this style
+    readonly property string picked: Store.get("notifications.throw", "theme")
+    readonly property string mode: picked === "fall" ? "fall" : picked === "slide" ? "slide" : (Theme.cyber ? "theme" : "slide")
     readonly property bool on: Theme.animOn
     // live copies: { id, screen, url, x, y, w, h } (screen coordinates)
     property var flying: []

@@ -73,8 +73,8 @@ PanelWindow {
             smooth: true
             // held: where the pointer has it; then the flight (px, px/s, gravity px/s²)
             property string phase: "held"        // held | fall | slide | back | wall
-            // Cyberpunk: let go, it isn't thrown off; it drifts on a little the way it was thrown
-            // while the Blackwall takes it
+            // "Thrown away: Theme" with a style that has its own effect: let go, it isn't thrown off;
+            // it drifts on a little the way it was thrown while the style's effect takes it
             property real burn: 0
             CyberFx { target: card; p: card.burn; going: true }
             NumberAnimation {
@@ -144,7 +144,8 @@ PanelWindow {
                     card.vx = vx; card.vy = mode === "fall" ? vy : 0;
                     card.spin = mode === "fall" ? Math.max(-720, Math.min(720, vx * 0.35 + (Math.random() - 0.5) * 120)) : 0;
                     card.phase = mode;
-                    if (Theme.cyber) { card.phase = "wall"; card.vy = 0; card.rotation = 0; burnAnim.restart(); }
+                    // Theme: the style's own way out (only then: Fall and Slide off stay what they are)
+                    if (mode === "theme") { card.phase = "wall"; card.vy = 0; card.rotation = 0; burnAnim.restart(); }
                 }
                 function onDrop(id) { if (id === card.modelData.id && card.phase === "held") { card.phase = "drop"; dropAnim.restart(); } }
                 function onSpringBack(id) {

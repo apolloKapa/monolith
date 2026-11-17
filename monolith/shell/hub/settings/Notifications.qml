@@ -41,13 +41,16 @@ ColumnLayout {
         Toggle { checked: Store.get("notifications.fullscreenSound", false) === true; onToggled: on => Store.set("notifications.fullscreenSound", on) }
     }
     SettingRow {
-        key: "notifications.throw"; def: "slide";
-        icon: Store.get("notifications.throw", "slide") === "fall" ? "sports_baseball" : "swipe_right"
+        key: "notifications.throw"; def: "theme";
+        readonly property string pick: Store.get("notifications.throw", "theme")
+        icon: pick === "fall" ? "sports_baseball" : pick === "slide" ? "swipe_right" : "auto_awesome"
         title: "Thrown away"
-        desc: Store.get("notifications.throw", "slide") === "fall"
+        desc: pick === "fall"
             ? "Swipe one away and it falls down the screen like a thrown ball: as fast as you flicked it, spinning, bouncing off the sides"
-            : "Swipe one away and it slides off to the side"
-        Segmented { width: 220; opts: [["slide", "Slide off"], ["fall", "Fall"]]; value: Store.get("notifications.throw", "slide"); onPicked: v => Store.set("notifications.throw", v) }
+            : pick === "slide" ? "Swipe one away and it slides off to the side"
+            : Theme.cyber ? "Swipe one away and it goes the way your style makes things go"
+            : "Swipe one away and it goes the way your style makes things go (this one has no effect of its own, so it slides off)"
+        Segmented { width: 300; opts: [["theme", "Theme"], ["slide", "Slide off"], ["fall", "Fall"]]; value: Store.get("notifications.throw", "theme"); onPicked: v => Store.set("notifications.throw", v) }
     }
     SettingRow {
         icon: "science"; title: "Try it"; desc: "Send a test notification"
