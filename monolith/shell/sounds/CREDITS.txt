@@ -1,0 +1,4 @@
+Monolith's sound packs (glass, pop, soft, wood) and notification tones are recordings from
+Kenney's "Interface Sounds" and "UI Audio" packs (https://kenney.nl), released under
+Creative Commons Zero (CC0, public domain). Picked, trimmed and levelled by
+tools/make_sounds_recorded.py. Thank you, Kenney.

@@ -6,8 +6,9 @@ import Quickshell.Services.UPower
 
 // Sound effects (Settings → Sound → Sound effects): short sounds for clicks, switches, menus,
 // typing in Monolith's fields, windows opening and closing, apps starting, workspaces, volume
-// steps, screenshots, locking, wallpapers, notifications going, the charger… Synthesised by
-// tools/make_sounds.py (modal synthesis, filtered strikes, a small room) in packs (sounds/<pack>/<event>.wav, each its own voice), or your own
+// steps, screenshots, locking, wallpapers, notifications going, the charger… Real recordings
+// (Kenney's Interface Sounds and UI Audio, CC0: sounds/CREDITS.txt), picked and levelled per pack
+// by tools/make_sounds_recorded.py (sounds/<pack>/<event>.wav, each its own character), or your own
 // folder with files of the same names. Off unless switched on; every event can be switched off on
 // its own (sounds.events).
 //
@@ -22,10 +23,10 @@ Singleton {
     readonly property string player: Qt.resolvedUrl("../scripts/play.sh").toString().replace(/^file:\/\//, "")
     // the packs that come with Monolith: [id, name, what it sounds like]
     readonly property var packs: [
-        ["soft", "Soft", "Felt ticks and warm, round tones"],
-        ["glass", "Glass", "A struck wine glass, ringing on"],
-        ["pop", "Pop", "Bubbles that rise as they pop"],
-        ["wood", "Wood", "Woodblock knocks and marimba notes, dry"],
+        ["soft", "Soft", "Quiet real switches and mouse clicks"],
+        ["glass", "Glass", "Glass taps, ticks and plucks"],
+        ["pop", "Pop", "Drops and quick plucks"],
+        ["wood", "Wood", "Dull knocks, thumps and low switches"],
         ["custom", "Your own folder", "Your own .wav files"]
     ]
     // (a pack that's gone, Retro or Cyberpunk, removed in 2.9.66: Soft)
