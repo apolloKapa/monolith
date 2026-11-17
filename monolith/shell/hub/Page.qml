@@ -29,7 +29,12 @@ FocusScope {
     scale: Theme.popScale
     transformOrigin: Item.Top
     property real shift: 0
-    transform: Translate { x: pg.shift }
+    property real lift: 0
+    property real tilt: 0
+    transform: [
+        Translate { x: pg.shift; y: pg.lift },
+        Rotation { origin.x: pg.width / 2; origin.y: 0; angle: pg.tilt }
+    ]
     readonly property real travel: Math.min(48, width * 0.07)
 
     onCurrentChanged: move()
@@ -58,8 +63,91 @@ FocusScope {
         PauseAnimation { duration: Theme.fxOutMs }
         PropertyAction { target: pg; property: "opacity"; value: 0 }
     }
+    // ── one open menu turning into another: each style its own way, by moving and fading only (no
+    // shader, nothing drawn off screen). The style's own effect used to run here on the whole page,
+    // while the card around it was changing size: half a second of a heavy effect on a page whose
+    // size moved under it, which was what made switching look broken. The old page goes quickly,
+    // the new one comes just after, so the two never sit on top of each other ──
+    // [in ms, out ms, wait before in, in-from {x (× the way it moves), y, rot (× the way), sc},
+    //  out-to {x, y, rot, sc}, in easing, out easing, flicker]
+    readonly property var switchLooks: ({
+        pop:        [300, 120, 70, { x: 24 }, { x: -12 }, Easing.OutCubic, Easing.OutCubic, false],
+        liquid:     [360, 140, 60, { sc: 0.965 }, { sc: 1.02 }, Easing.OutCubic, Easing.OutCubic, false],
+        cyber:      [220, 110, 40, { x: 10 }, { x: -8 }, Easing.OutQuad, Easing.InQuad, true],
+        doodle:     [340, 120, 60, { y: 12, rot: -1.6 }, { y: -6, rot: 1 }, Easing.OutBack, Easing.InQuad, false],
+        terminal:   [200, 60, 30, { y: 4 }, {}, Easing.OutQuad, Easing.Linear, true],
+        paper:      [380, 180, 40, { x: 60 }, { x: -40 }, Easing.OutQuart, Easing.InQuad, false],
+        fjord:      [420, 200, 80, { sc: 1.025 }, {}, Easing.OutSine, Easing.OutSine, false],
+        concrete:   [400, 140, 60, { y: -20 }, { y: 14 }, Easing.OutBounce, Easing.InQuad, false],
+        industrial: [320, 130, 50, { y: -26 }, { y: -14 }, Easing.OutBack, Easing.InQuad, false],
+        luxe:       [460, 220, 90, { y: 10 }, {}, Easing.OutQuint, Easing.OutCubic, false]
+    })
+    function switchMove() {
+        const look = switchLooks[Theme.fxKind] || switchLooks.pop;
+        const d = HubState.dir;
+        cyGoing = false; cyP = 1;
+        if (current) {
+            const f = look[3];
+            // (caught on its way out: from where it is)
+            if (opacity < 0.05) { shift = (f.x || 0) * d; lift = f.y || 0; tilt = (f.rot || 0) * d; scale = f.sc || 1; opacity = 0; }
+            swWait.duration = Theme.ms(look[2]);
+            for (const a of [swX, swY, swR, swS]) { a.duration = Theme.ms(look[0]); a.easing.type = look[5]; }
+            swX.to = 0; swY.to = 0; swR.to = 0; swS.to = 1;
+            swOp.to = 1; swOp.duration = Theme.ms(Math.round(look[0] * 0.7));
+            (look[7] ? swFlickIn : swFade).start();
+            swMotion.start();
+        } else {
+            const t = look[4];
+            for (const a of [swX, swY, swR, swS]) { a.duration = Theme.ms(look[1]); a.easing.type = look[6]; }
+            swX.to = shift + (t.x || 0) * d; swY.to = lift + (t.y || 0); swR.to = (t.rot || 0) * d; swS.to = t.sc || scale;
+            swWait.duration = 0;
+            swOp.to = 0; swOp.duration = Theme.ms(look[1]);
+            (look[7] ? swFlickOut : swFade).start();
+            swMotion.start();
+        }
+    }
+    ParallelAnimation {
+        id: swMotion
+        NumberAnimation { id: swX; target: pg; property: "shift" }
+        NumberAnimation { id: swY; target: pg; property: "lift" }
+        NumberAnimation { id: swR; target: pg; property: "tilt" }
+        NumberAnimation { id: swS; target: pg; property: "scale" }
+    }
+    SequentialAnimation {
+        id: swFade
+        PauseAnimation { id: swWait }
+        NumberAnimation { id: swOp; target: pg; property: "opacity"; easing.type: Easing.OutCubic }
+    }
+    // (Cyberpunk and Terminal: a flicker, steps of the signal coming and going, not a fade)
+    SequentialAnimation {
+        id: swFlickIn
+        PauseAnimation { duration: swWait.duration }
+        PropertyAction { target: pg; property: "opacity"; value: 0.7 }
+        PauseAnimation { duration: Theme.ms(40) }
+        PropertyAction { target: pg; property: "opacity"; value: 0.1 }
+        PauseAnimation { duration: Theme.ms(40) }
+        PropertyAction { target: pg; property: "opacity"; value: 0.9 }
+        PauseAnimation { duration: Theme.ms(50) }
+        PropertyAction { target: pg; property: "opacity"; value: 0.4 }
+        PauseAnimation { duration: Theme.ms(30) }
+        PropertyAction { target: pg; property: "opacity"; value: 1 }
+    }
+    SequentialAnimation {
+        id: swFlickOut
+        PropertyAction { target: pg; property: "opacity"; value: 0.3 }
+        PauseAnimation { duration: Theme.ms(35) }
+        PropertyAction { target: pg; property: "opacity"; value: 0.8 }
+        PauseAnimation { duration: Theme.ms(30) }
+        PropertyAction { target: pg; property: "opacity"; value: 0 }
+    }
+    function stopSwitch() { swMotion.stop(); swFade.stop(); swFlickIn.stop(); swFlickOut.stop(); }
+
     function move() {
-        inAnim.stop(); outAnim.stop(); cyIn.stop(); cyOut.stop(); cyHold.stop();
+        inAnim.stop(); outAnim.stop(); cyIn.stop(); cyOut.stop(); cyHold.stop(); stopSwitch();
+        // switching between open menus: its own transition, whatever the style (above)
+        if (HubState.switching && HubState.open && !HubState.snap && Theme.animOn) { switchMove(); return; }
+        // anything else (opening, closing): back to rest first
+        lift = 0; tilt = 0;
         if (Theme.cyber && !HubState.snap) {
             scale = 1; shift = 0;
             const swc = HubState.switching && HubState.open;
