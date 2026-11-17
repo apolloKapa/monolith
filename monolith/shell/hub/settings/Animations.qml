@@ -195,12 +195,27 @@ ColumnLayout {
         desc: { const v = Theme.fxSpeed; const what = Look.style.name + "'s own effect (how its menus appear and go)"; return v === 1 ? what + ". 1 × is normal" : what + " takes " + (Math.round(100 / v) / 100) + " × as long" + (v > 1 ? " (faster)" : " (slower)"); }
         NumberBox { from: 0.25; to: 3; step: 0.05; decimals: 2; unit: "×"; value: Theme.fxSpeed; onMoved: v => Store.set("theme.fxSpeed", v) }
     }
+    // how menus open, and close the same way back (Theme.menuAnim); a style with its own effect
+    // (Style effect speed above) draws its menus its way instead
+    readonly property var menuAnimInfo: ({
+        zoom: ["zoom_out_map", "Zoom", "A menu fades in while growing a little, and shrinks away"],
+        pop: ["bubble_chart", "Pop", "A menu springs up from smaller, overshooting a touch, and shrinks back down"],
+        slide: ["north", "Slide up", "A menu rises into place, and sinks away"],
+        drop: ["south", "Drop down", "A menu comes down into place, and lifts away"],
+        fade: ["gradient", "Fade", "A menu just fades in, and out"],
+        unfold: ["unfold_more", "Unfold", "A menu opens out of a thin bright line through its middle, and folds back into it"]
+    })
     SettingRow {
-        key: "theme.effects.unfold"; def: false;
-        visible: Theme.animOn
-        icon: Theme.fxUnfold ? "unfold_more" : "zoom_out_map"; title: "How menus open"
-        desc: Theme.fxUnfold ? "Unfold: a menu opens out of a thin bright line through its middle, and folds back into it" : "Zoom: a menu fades in while growing a little, and shrinks away"
-        Segmented { width: 220; opts: [["zoom", "Zoom"], ["unfold", "Unfold"]]; value: Theme.fxUnfold ? "unfold" : "zoom"; onPicked: v => Store.set("theme.effects.unfold", v === "unfold") }
+        keys: ["theme.menuAnim", "theme.effects.unfold"]
+        visible: Theme.animOn && !Theme.cyber
+        icon: (sec.menuAnimInfo[Theme.menuAnim] || sec.menuAnimInfo.zoom)[0]; title: "How menus open"
+        desc: (sec.menuAnimInfo[Theme.menuAnim] || sec.menuAnimInfo.zoom)[2]
+        Dropdown {
+            width: 220
+            opts: Theme.menuAnims.map(k => [k, sec.menuAnimInfo[k][1]])
+            value: Theme.menuAnim
+            onPicked: v => { Store.set("theme.menuAnim", v); Store.unset("theme.effects.unfold"); }
+        }
     }
 
     // ── niri ──

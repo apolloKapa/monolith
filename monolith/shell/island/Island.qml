@@ -289,7 +289,9 @@ PanelWindow {
         // opens out of the bar itself (a floating menu has nothing to do with the bar)
         opacity: win.barHere || win.toastOn || (win.shown && win.docked) ? 1 : 0
         ear: Theme.fullBar && !win.grown ? 0 : Theme.islandEar
-        onHeightChanged: if (!win.shown && height <= Theme.islandH + 1) win.wasOpen = false
+        // (a menu grown out of the bar is closed once the island is back to its size; a floating
+        // one when its card has gone: the island settled first and cut the card's way out short)
+        onHeightChanged: if (!win.shown && win.docked && height <= Theme.islandH + 1) win.wasOpen = false
         x: Math.round((win.width - width) / 2)
         flipped: win.bottom
         y: win.bottom ? win.height - height - (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
@@ -413,7 +415,10 @@ PanelWindow {
                 y: win.docked && !Theme.fullBar && !win.bottom ? Theme.islandH + 2 : win.pad
                 width: (win.shown ? goalW : parent.width) - 2 * win.pad
                 height: (win.shown ? goalH : parent.height) - y - (win.docked && !Theme.fullBar && win.bottom ? Theme.islandH + 2 : win.pad)
-                opacity: win.shown ? 1 : 0
+                // (closing a floating menu, what's in it stays and goes with the card: the card
+                // fades and moves away whole. On its own it had gone before the card moved, which
+                // read as no animation at all)
+                opacity: win.shown || (!win.docked && Theme.animOn) ? 1 : 0
                 visible: opacity > 0.01
                 Behavior on opacity { enabled: !HubState.snap; Anim { kind: win.shown ? "enter" : "exit" } }
                 // and a little zoom, from the bar's side
@@ -713,7 +718,7 @@ PanelWindow {
                       : island.y + Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
         Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
         Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : Theme.ms(220); easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.sizeCurve : Theme.exitCurve } }
-        onHeightChanged: if (!win.shown && height <= 1) win.wasOpen = false
+        onHeightChanged: if (!win.shown && win.docked && height <= 1) win.wasOpen = false
         MouseArea { anchors.fill: parent }
         Item { id: dropBody; x: drop.e; width: drop.bodyW; height: drop.height; clip: true }
     }
@@ -801,12 +806,23 @@ PanelWindow {
         // the sharp backdrop, or brighter than the end with the blur behind it. Closing, it fades)
         // (Cyberpunk: whole until it's gone, CyberFx glitches it in and the Blackwall takes it)
         opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (win.shown ? 1 : (Theme.cyber ? (win.cardZoom > 0.002 ? 1 : 0) : win.cardFade))
-        scale: Theme.fxUnfold || Theme.cyber ? 1 : Theme.popScale + (1 - Theme.popScale) * win.cardZoom
-        transform: Scale {
-            origin.x: floatCard.width / 2; origin.y: floatCard.height / 2
-            yScale: Theme.fxUnfold ? Math.max(0.006, floatCard.unfold) : 1
-            xScale: Theme.fxUnfold ? 0.96 + 0.04 * floatCard.unfold : 1
-        }
+        // How menus open (Theme.menuAnim), driven by cardZoom (0 … 1), and back the same way
+        readonly property string anim: Theme.animOn && !Theme.cyber ? Theme.menuAnim : "none"
+        // (pop: overshoots a little and settles)
+        function backOut(t) { const c1 = 1.5, c3 = c1 + 1, u = t - 1; return 1 + c3 * u * u * u + c1 * u * u; }
+        scale: anim === "zoom" ? Theme.popScale + (1 - Theme.popScale) * win.cardZoom
+             : anim === "pop" ? 0.84 + 0.16 * backOut(win.cardZoom)
+             : 1
+        transform: [
+            Scale {
+                origin.x: floatCard.width / 2; origin.y: floatCard.height / 2
+                yScale: Theme.fxUnfold ? Math.max(0.006, floatCard.unfold) : 1
+                xScale: Theme.fxUnfold ? 0.96 + 0.04 * floatCard.unfold : 1
+            },
+            Translate {
+                y: floatCard.anim === "slide" ? (1 - win.cardZoom) * 40 : (floatCard.anim === "drop" ? -(1 - win.cardZoom) * 40 : 0)
+            }
+        ]
         Rectangle {
             z: 100
             visible: Theme.fxUnfold && floatCard.unfold < 0.98 && floatCard.unfold > 0.001
@@ -879,8 +895,9 @@ PanelWindow {
     }
     ParallelAnimation {
         id: cardOut
-        NumberAnimation { target: win; property: "cardFade"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.popOutMs; easing.type: Easing.OutCubic }
-        NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.popOutMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
+        // (closing: the fade holds back so the way out is seen; it ends with the motion)
+        NumberAnimation { target: win; property: "cardFade"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.menuOutMs; easing.type: Theme.cyber ? Easing.OutCubic : Easing.InQuad }
+        NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.menuOutMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
     }
     onShownChanged: {
         if (shown) { cardOut.stop(); if (HubState.snap) { cardFade = 0; cardZoom = 0; } cardIn.restart(); }

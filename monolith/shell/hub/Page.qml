@@ -87,8 +87,13 @@ FocusScope {
             inSlide.duration = sw ? Theme.ms(460) : Theme.popInMs;
             inAnim.start();
         } else {
-            outFade.duration = sw ? Theme.ms(130) : Theme.popOutMs;
-            outZoom.to = sw ? scale : Theme.popScale;
+            // switching to another menu: out to the side, quickly. The menu closing: it holds
+            // still and goes with its card (the card fades and moves away whole, Theme.menuAnim);
+            // it used to fade out on its own in a blink, before the card had moved at all
+            const closing = !sw && !HubState.open;
+            outWait.duration = closing ? Theme.menuOutMs : 0;
+            outFade.duration = sw ? Theme.ms(130) : (closing ? 0 : Theme.popOutMs);
+            outZoom.to = sw || closing ? scale : Theme.popScale;
             outZoom.duration = Theme.popOutMs;
             outSlide.to = sw ? -HubState.dir * travel * 0.5 : shift;
             outSlide.duration = sw ? Theme.ms(200) : Theme.popOutMs;
@@ -106,7 +111,10 @@ FocusScope {
     }
     ParallelAnimation {
         id: outAnim
-        NumberAnimation { id: outFade; target: pg; property: "opacity"; to: 0; easing.type: Easing.OutCubic }
+        SequentialAnimation {
+            PauseAnimation { id: outWait }
+            NumberAnimation { id: outFade; target: pg; property: "opacity"; to: 0; easing.type: Easing.OutCubic }
+        }
         NumberAnimation { id: outZoom; target: pg; property: "scale"; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
         NumberAnimation { id: outSlide; target: pg; property: "shift"; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
     }

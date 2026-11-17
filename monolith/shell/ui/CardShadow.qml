@@ -17,7 +17,9 @@ Item {
     LiquidPane { parent: cs.parent; anchors.fill: parent; radius: cs.radius; z: -0.5; visible: Theme.liquid && cs.visible }
     // a material (concrete, paper, steel): the card's own colour, textured, over its flat fill
     // and under what's in it (made here, at the start of the card, so it comes before its content)
-    MaterialPane { parent: cs.parent; anchors.fill: parent; radius: cs.radius; color: cs.color; visible: Theme.material !== "" && cs.visible && cs.color.a > 0.01 }
+    // (z: under the card's content whenever it was attached: made inside this, it could land after
+    // the content and covered all of it, the welcome card showed only concrete or paper)
+    MaterialPane { parent: cs.parent; anchors.fill: parent; z: -0.5; radius: cs.radius; color: cs.color; visible: Theme.material !== "" && cs.visible && cs.color.a > 0.01 }
     // how far the shadow falls down (the bar's pills keep it centred: they float on the screen)
     property real offsetY: Theme.shadowY
     property real radius: parent && parent.radius !== undefined ? parent.radius : 0

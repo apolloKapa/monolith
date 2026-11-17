@@ -103,7 +103,17 @@ Singleton {
     readonly property bool fxGrain: Store.get("theme.effects.grain", oldFx.grain === true) === true
     readonly property bool fxEdge: Store.get("theme.effects.edge", oldFx.edge === true) === true
     // (not with Cyberpunk: its menus glitch in and go to the Blackwall instead)
-    readonly property bool fxUnfold: Store.get("theme.effects.unfold", oldFx.unfold === true) === true && animOn && !cyber
+    // how menus open, and close the same way back (Animations → How menus open): zoom (a fade with
+    // a little zoom), pop (springs up from smaller), slide (rises into place), drop (comes down
+    // into place), fade (just fades), unfold (out of a thin bright line). The old Unfold switch
+    // still counts until one is picked. (A style with its own effect draws menus its way instead)
+    readonly property var menuAnims: ["zoom", "pop", "slide", "drop", "fade", "unfold"]
+    readonly property string menuAnim: {
+        const v = String(Store.get("theme.menuAnim", ""));
+        if (menuAnims.indexOf(v) !== -1) return v;
+        return Store.get("theme.effects.unfold", oldFx.unfold === true) === true ? "unfold" : "zoom";
+    }
+    readonly property bool fxUnfold: menuAnim === "unfold" && animOn && !cyber
     readonly property color card: Qt.alpha(oled ? "#000000" : m("surface_container_low", mix(_base, _s0, 0.55)), see)  // the hub, the dock
     // (with a palette: mantle, surface0, surface1; surface2 is ink in some styles)
     // (liquid glass: the groups, rows and chips inside a pane are see-through too)
@@ -195,6 +205,9 @@ Singleton {
     function cut(s) { return Math.round(Math.max(4, Math.min(18, s * 0.24))); }
     readonly property int popInMs: Math.round(320 * animScale)
     readonly property int popOutMs: Math.round(180 * animScale)
+    // a menu closing: most of the time it took to open, so its way out is seen (180 ms, and
+    // faded before it had moved, read as no animation at all)
+    readonly property int menuOutMs: Math.round(260 * animScale)
 
     // ── the island (status line + hub in one shape hanging from the top edge) ──
     readonly property color frame: Qt.alpha(oled ? "#000000" : m("surface", mix(_base, _s0, 0.35)), see)   // the island's fill

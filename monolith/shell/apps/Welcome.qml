@@ -275,7 +275,8 @@ PanelWindow {
     // ── the card ──
     // In the intro it unfolds out of the slab: it grows from the slab's size to its own, with
     // what's on it (laid out at its full size all along, so nothing reflows) cut to it
-    Rectangle {
+    // (a SmoothRect: the style's corners, Cyberpunk's cut one too; a Rectangle was always round)
+    SmoothRect {
         id: card
         readonly property real unfold: wel.outExpo(wel.seg(wel.hit, 2050))
         readonly property real fullR: Math.max(Theme.islandRadius, Theme.square ? 0 : 28)
