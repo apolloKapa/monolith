@@ -276,6 +276,11 @@ Singleton {
     // menus growing and shrinking to fit: a quick start that settles, no overshoot (a spring's
     // overshoot made a menu look as if it rescaled every time its content changed)
     readonly property var sizeCurve: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+    // a shape growing out of the bar (a menu, out of the bar): quick out of the start, a little
+    // past where it's going and back, like something with a bit of spring in it
+    readonly property var springyCurve: [0.38, 1.21, 0.22, 1.0, 1.0, 1.0]
+    readonly property int growMs: Math.round(560 * animScale)
+    readonly property int shrinkMs: Math.round(300 * animScale)
     // the soft shadow under floating shapes (drawn by the shell, no compositor blur)
     // (styles with a hard shadow: a solid offset copy in the ink colour)
     // (Theme → Effects → Shadows: on/off, strength, softness, distance, direction, colour)

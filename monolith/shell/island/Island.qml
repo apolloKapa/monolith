@@ -138,7 +138,7 @@ PanelWindow {
     // both sides); a floating card keeps clear of a side bar and the screen's edges
     readonly property real maxOpenW: docked ? width - 2 * Theme.islandEar - 16 : width - floatCard.leftRoom - floatCard.rightRoom - 2 * pad
     readonly property real openW: Math.min(maxOpenW, grownLike ? Math.max(bar.needWidth, (pageInfo[HubState.page] || pageInfo.search).w) : (pageInfo[HubState.page] || pageInfo.search).w)
-    readonly property bool grownLike: place === "top" && !Theme.barFloats && !side && !Theme.fullBar
+    readonly property bool grownLike: fromBar && !Theme.barFloats && !side && !Theme.fullBar
     // as tall as the page wants, but never past the screen: a floating card keeps clear of the bar
     // and the screen's edges (on a short screen, 720 px, it ran off the bottom)
     readonly property real maxOpenH: docked ? height - 40 : height - floatCard.topRoom - floatCard.bottomRoom + Theme.islandH - pad
@@ -160,7 +160,24 @@ PanelWindow {
     // where menus open (Settings → Menus): out of the island (top), or as a floating card in
     // the middle of the screen or on the right; then the island stays a bar
     // (each menu can have its own place, Settings → Menus & launcher)
-    readonly property string place: Store.get("menus.positions." + cardPage, "") || Store.get("menus.position", "top")
+    // Two settings (Settings → Menus & launcher): out of the bar (menus.barPlace: off, or at the
+    // bar's start, middle or end), else a floating place (menus.position). Each menu can have its own
+    // (menus.positions.<menu>: "bar-start" | "bar-center" | "bar-end", or a floating place).
+    // (before there were two, "top" meant out of the bar, in the middle: it still does)
+    readonly property string barPlaceDefault: {
+        const b = String(Store.get("menus.barPlace", ""));
+        if (["off", "start", "center", "end"].indexOf(b) !== -1) return b;
+        return String(Store.get("menus.position", "top")) === "top" ? "center" : "off";
+    }
+    readonly property string floatDefault: { const p = String(Store.get("menus.position", "center")); return p === "top" ? "center" : p; }
+    readonly property string place: {
+        const own = String(Store.get("menus.positions." + cardPage, "") || "");
+        if (own !== "") return own === "top" ? "bar-center" : own;
+        return barPlaceDefault !== "off" ? "bar-" + barPlaceDefault : floatDefault;
+    }
+    readonly property bool fromBar: place.startsWith("bar-")
+    readonly property string barAlign: fromBar ? place.slice(4) : "center"
+    readonly property real barFrac: barAlign === "start" ? 0 : (barAlign === "end" ? 1 : 0.5)
     // the page the floating card is placed for: HubState.page, followed here so that the card's
     // spot before a switch can be read first, and the card glides from there to the new menu's
     // spot (each menu keeps its own: its position, or where it was dragged) instead of jumping
@@ -183,12 +200,13 @@ PanelWindow {
             floatCard.glideWait = true;
         }
     }
-    // a floating bar (Solid, Modular) has nothing to grow out of: its menus open just under it
-    // (nor does a bar down the side: its menus open beside it)
-    readonly property bool docked: place === "top" && !Theme.barFloats && !side
-    // the island grows into the menu; a full-width bar stays put and the menu drops out of it
-    readonly property bool grown: shown && docked && !Theme.fullBar
-    readonly property bool dropped: shown && docked && Theme.fullBar
+    // out of the bar: the island grows into the menu; a full-width bar (Full, Frame) or a floating
+    // one (Solid, Modular) stays put and the menu drops out of it, joined to it by curved shoulders.
+    // (a bar down the side: its menus open beside it, as a card at that edge)
+    readonly property bool docked: fromBar && !side
+    readonly property bool dropMode: Theme.fullBar || Theme.barFloats
+    readonly property bool grown: shown && docked && !dropMode
+    readonly property bool dropped: shown && docked && dropMode
 
     // a new notification drops out of the island (on the screen you're using) while it's closed
     // (on the screen it came up on: it stays there when you switch windows to another screen)
@@ -281,6 +299,12 @@ PanelWindow {
         id: island
         bodyW: win.grown ? win.openW : (win.toastGrows ? Math.max(win.restW, 520) : win.restW)
         height: win.grown ? win.openH : (win.toastGrows ? Theme.islandH + toastArea.implicitHeight + win.pad : Theme.islandH)
+        // grown, it hangs where the menu is set to come out (the bar's start, middle or end)
+        // (how far along: 0 the start, 0.5 the middle, 1 the end. Animating this one number, not
+        // x, keeps it in step with its width as both change: an x worked out from a width still on
+        // its way lagged behind it, and the island slid in from the side)
+        property real along: win.grown ? win.barFrac : 0.5
+        Behavior on along { NumberAnimation { duration: win.grown ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
         r: win.grown || win.toastGrows ? Theme.islandRadius : (Theme.fullBar ? (win.barShort ? Theme.islandRadius / 2 : 0) : Theme.barRound(height))
         // a floating bar draws its own rounded background (Solid) or none at all (Modular: its
         // sections have pills), so the hanging shape stays empty
@@ -296,12 +320,14 @@ PanelWindow {
         // (a menu grown out of the bar is closed once the island is back to its size; a floating
         // one when its card has gone: the island settled first and cut the card's way out short)
         onHeightChanged: if (!win.shown && win.docked && height <= Theme.islandH + 1) win.wasOpen = false
-        x: Math.round((win.width - width) / 2)
+        x: Math.round(Math.max(0, Math.min(win.width - width, 8 + (win.width - 16 - width) * along)))
         flipped: win.bottom
         y: win.bottom ? win.height - height - (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
                       : (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
-        Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
-        Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
+        // growing into a menu: with a bit of spring (a little past, and back); going back to a bar:
+        // smoothly and quicker. Its place along the bar moves the same way
+        Behavior on bodyW { NumberAnimation { duration: win.grown ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
+        Behavior on height { NumberAnimation { duration: win.grown ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
         Behavior on r { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
         Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
 
@@ -409,16 +435,16 @@ PanelWindow {
             Item {
                 id: openArea
                 // in the island, or in the floating card
-                parent: !win.docked ? cardClip : (Theme.fullBar ? dropBody : body)
+                parent: !win.docked ? cardClip : (win.dropMode ? dropBody : body)
                 // laid out at the size the menu is going to (not the size it has while it grows or
                 // shrinks there), so the page doesn't reflow and seem to rescale on every change;
                 // kept in the middle while the card around it catches up
                 readonly property real goalW: !win.docked ? Math.round(win.openW + 2 * win.pad) : win.openW
-                readonly property real goalH: !win.docked ? Math.round(win.openH - Theme.islandH + win.pad) : (Theme.fullBar ? win.openH - Theme.islandH : win.openH)
+                readonly property real goalH: !win.docked ? Math.round(win.openH - Theme.islandH + win.pad) : (win.dropMode ? win.openH - Theme.islandH : win.openH)
                 x: Math.round((parent.width - width) / 2)
-                y: win.docked && !Theme.fullBar && !win.bottom ? Theme.islandH + 2 : win.pad
+                y: win.docked && !win.dropMode && !win.bottom ? Theme.islandH + 2 : win.pad
                 width: (win.shown ? goalW : parent.width) - 2 * win.pad
-                height: (win.shown ? goalH : parent.height) - y - (win.docked && !Theme.fullBar && win.bottom ? Theme.islandH + 2 : win.pad)
+                height: (win.shown ? goalH : parent.height) - y - (win.docked && !win.dropMode && win.bottom ? Theme.islandH + 2 : win.pad)
                 // (closing a floating menu, what's in it stays and goes with the card: the card
                 // fades and moves away whole. On its own it had gone before the card moved, which
                 // read as no animation at all)
@@ -763,19 +789,33 @@ PanelWindow {
     // ── the menu dropping out of a full-width bar: a shape hanging from the bar's bottom edge ──
     IslandShape {
         id: drop
-        visible: (Theme.fullBar || toasting) && height > 1
+        visible: (win.dropMode || toasting) && height > 1
         // (a notification drops out of it too, when the bar is full width)
         readonly property bool toasting: !win.dropped && win.toastOn && win.toastHost === "drop"
         bodyW: win.dropped ? win.openW : (toasting ? win.toastW : 160)
         height: win.dropped ? win.openH - Theme.islandH : (toasting ? toastArea.implicitHeight + win.pad * 1.5 : 0)
         r: Theme.islandRadius
-        x: Math.round((win.width - width) / 2)
+        // where along the bar it hangs: its start or end (in from the bar's ends by their
+        // roundness, so the shoulder meets the bar's straight edge), or the middle
+        readonly property real barL: island.x + island.e
+        readonly property real barR: island.x + island.e + island.bodyW
+        readonly property real inset: Math.max(10, Theme.islandRadius * 0.6)
+        // how far along (0 start, 0.5 middle, 1 end), animated as one number so its place keeps in
+        // step with its width (see the island's). Going back in it stays where it is; a
+        // notification hangs from the middle
+        property real along: win.dropped || !toasting ? win.barFrac : 0.5
+        Behavior on along { enabled: drop.height > 1; NumberAnimation { duration: win.dropped ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springyCurve : Theme.sizeCurve } }
+        readonly property real midX: (win.width - bodyW) / 2
+        readonly property real wantBodyX: along <= 0.5 ? barL + inset + (midX - barL - inset) * along * 2
+                                                       : midX + (barR - inset - bodyW - midX) * (along - 0.5) * 2
+        x: Math.round(Math.max(0, Math.min(win.width - width, wantBodyX - e)))
         flipped: win.bottom
         // hanging from the bar's edge, wherever the bar sits (a margin round an island bar)
         y: win.bottom ? island.y - height + (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
                       : island.y + Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
-        Behavior on bodyW { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
-        Behavior on height { NumberAnimation { duration: win.dropped ? Theme.springMs : Theme.ms(220); easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.sizeCurve : Theme.exitCurve } }
+        // growing out of the bar with a bit of spring; going back in smoothly and quicker
+        Behavior on bodyW { NumberAnimation { duration: win.dropped ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springyCurve : Theme.sizeCurve } }
+        Behavior on height { NumberAnimation { duration: win.dropped ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springyCurve : Theme.exitCurve } }
         onHeightChanged: if (!win.shown && win.docked && height <= 1) win.wasOpen = false
         MouseArea { anchors.fill: parent }
         Item { id: dropBody; x: drop.e; width: drop.bodyW; height: drop.height; clip: true }
@@ -818,7 +858,7 @@ PanelWindow {
         // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
         // "top" means by the bar: next to it at the bottom when the bar is there
         // (by a bar down the side: beside it, in the middle of that edge)
-        readonly property string spot: win.side && win.place.startsWith("top") ? Theme.barSide : (win.bottom && win.place.startsWith("top") ? "bottom" + win.place.slice(3) : win.place)
+        readonly property string spot: win.side && (win.fromBar || win.place.startsWith("top")) ? Theme.barSide : (win.bottom && win.place.startsWith("top") ? "bottom" + win.place.slice(3) : win.place)
         readonly property bool onLeft: spot.indexOf("left") !== -1
         readonly property bool onRight: spot.indexOf("right") !== -1
         readonly property bool onTop: spot.startsWith("top")
