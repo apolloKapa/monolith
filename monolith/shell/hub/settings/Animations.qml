@@ -186,6 +186,15 @@ ColumnLayout {
         desc: { const v = Number(Store.get("theme.animSpeed", 1)); return v === 1 ? "1 × is normal. Higher is faster, lower is slower" : (v > 1 ? "Animations take " + (Math.round(100 / v) / 100) + " × as long as normal (faster)" : "Animations take " + (Math.round(100 / v) / 100) + " × as long as normal (slower)"); }
         NumberBox { from: 0.25; to: 3; step: 0.05; decimals: 2; unit: "×"; value: Number(Store.get("theme.animSpeed", 1)); onMoved: v => Store.set("theme.animSpeed", v) }
     }
+    // the style's own effect (Cyberpunk's glitch, Doodle drawing menus in, Concrete crumbling…):
+    // its speed on its own, on top of the speed above
+    SettingRow {
+        key: "theme.fxSpeed"; def: 1;
+        visible: Theme.animOn && Theme.cyber
+        icon: "auto_awesome"; title: "Style effect speed"
+        desc: { const v = Theme.fxSpeed; const what = Look.style.name + "'s own effect (how its menus appear and go)"; return v === 1 ? what + ". 1 × is normal" : what + " takes " + (Math.round(100 / v) / 100) + " × as long" + (v > 1 ? " (faster)" : " (slower)"); }
+        NumberBox { from: 0.25; to: 3; step: 0.05; decimals: 2; unit: "×"; value: Theme.fxSpeed; onMoved: v => Store.set("theme.fxSpeed", v) }
+    }
     SettingRow {
         key: "theme.effects.unfold"; def: false;
         visible: Theme.animOn

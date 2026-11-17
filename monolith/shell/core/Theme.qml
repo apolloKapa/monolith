@@ -181,10 +181,13 @@ Singleton {
     // is, menus skip the usual fade and zoom and the effect draws them, on its own timing
     readonly property string fxKind: animOn ? (Look.style.fx || (Look.style.glitch === true ? "cyber" : "")) : ""
     readonly property bool cyber: fxKind !== ""
-    readonly property int fxInMs: animOn ? Math.round(Number(Look.style.fxIn || 420) * Math.max(0.6, animScale)) : 0
-    readonly property int fxOutMs: animOn ? Math.round(Number(Look.style.fxOut || 560) * Math.max(0.6, animScale)) : 0
-    // any other glitch's length, scaled the same way (never under 60 %)
-    function fxMs(n) { return animOn ? Math.round(n * Math.max(0.6, animScale)) : 0; }
+    // and on top of that, the style effect's own speed (Animations → Style effect speed: 0.25 to
+    // 3 ×, higher is faster)
+    readonly property real fxSpeed: Math.max(0.25, Math.min(3, Number(Store.get("theme.fxSpeed", 1)) || 1))
+    readonly property int fxInMs: animOn ? Math.round(Number(Look.style.fxIn || 420) * Math.max(0.6, animScale) / fxSpeed) : 0
+    readonly property int fxOutMs: animOn ? Math.round(Number(Look.style.fxOut || 560) * Math.max(0.6, animScale) / fxSpeed) : 0
+    // any other glitch's length, scaled the same way (never under 60 % of the animation speed)
+    function fxMs(n) { return animOn ? Math.round(n * Math.max(0.6, animScale) / fxSpeed) : 0; }
     // corners cut straight across (Cyberpunk): ui/SmoothRect draws them. How big a cut is, for a
     // shape whose shorter side is s: about a quarter of it, 4 to 18 px (a pill's round end would
     // have cut half the end away)
