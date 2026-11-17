@@ -100,4 +100,27 @@ Singleton {
     FileView { id: palFile; path: ac.paletteFile; printErrors: false }
     Component.onCompleted: writeLater.restart()
     onTargetsChanged: apply()
+
+    // GTK colours on: the GTK theme has to stay ours (Monolith-a/-b, scripts/app_colours.py). If
+    // anything else switches it (nwg-look, a GTK settings app, a session's startup script, niri's or
+    // Hyprland's), the colours are put back a moment later. Same on either compositor: it's
+    // GSettings, watched from here.
+    readonly property bool gtkOn: targets.indexOf("gtk") !== -1
+    Process {
+        id: gtkWatch
+        running: ac.gtkOn
+        command: ["gsettings", "monitor", "org.gnome.desktop.interface", "gtk-theme"]
+        stdout: SplitParser {
+            onRead: line => {
+                const m = /'([^']*)'/.exec(line);
+                const name = m ? m[1] : "";
+                if (ac.gtkOn && name !== "Monolith-a" && name !== "Monolith-b") reclaim.restart();
+            }
+        }
+        // (gsettings gone or the monitor ended: try again in a while, not in a tight loop)
+        onExited: if (ac.gtkOn) gtkWatchAgain.restart()
+    }
+    Timer { id: gtkWatchAgain; interval: 30000; onTriggered: if (ac.gtkOn) gtkWatch.running = true }
+    // (a little later: whatever changed it may change it twice, and Settings → off needs to win)
+    Timer { id: reclaim; interval: 1500; onTriggered: if (ac.gtkOn) ac.apply() }
 }
