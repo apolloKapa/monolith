@@ -259,14 +259,17 @@ Singleton {
     readonly property bool barPills: Store.get("bar.pills", false) === true     // each module on its own pill
     // no rounding anywhere: a square style, or Roundness (Appearance) at 0 px
     readonly property bool square: Look.style.square === true || radiusSetting <= 0
-    readonly property real islandEar: square ? 0 : 20   // the concave curve joining the screen edge
+    // (the island's extras grow with Roundness, so a low setting makes everything squarer together:
+    // fixed amounts on top left the bar and the open island far rounder than the menus at 2 px.
+    // At the default 12 px and above they're what they always were)
+    readonly property real islandEar: square ? 0 : Math.max(4, Math.min(20, radius * 5 / 3))   // the concave curve joining the screen edge
     readonly property real islandPad: 12        // inside, around the content
     readonly property real islandGap: 8         // between the island and the screen edge when open
-    readonly property real islandRadius: square ? 0 : Math.max(14, radius + 12)  // its lower corners when open
+    readonly property real islandRadius: square ? 0 : radius + Math.min(12, radius)  // its lower corners when open
     // the bar's corners (the island at rest, Solid, Modular's pills): they follow Appearance →
     // Corner rounding like everything else (a pill at the default and above, squarer below it,
     // square in square styles)
-    function barRound(h) { return square ? 0 : Math.min(h / 2, radius + 8); }
+    function barRound(h) { return square ? 0 : Math.min(h / 2, radius + Math.min(8, radius * 2 / 3)); }
     // the Frame draws the bar's background itself (one shape, so see-through styles don't double up)
     readonly property bool frameBand: barStyle === "frame" && Store.get("status.autohide", false) !== true
     // the island's "spring": a curve that overshoots a little and settles. (Not Qt's
