@@ -96,10 +96,10 @@ PanelWindow {
             visible: osd.vertical
             anchors.horizontalCenter: parent.horizontalCenter
             y: 64; width: 10; height: parent.height - 64 - 40
-            Rectangle { anchors.fill: parent; radius: Theme.chamfer ? 0 : 5; color: Theme.control }
+            Rectangle { anchors.fill: parent; radius: (Theme.chamfer || Theme.square) ? 0 : 5; color: Theme.control }
             Rectangle {
                 anchors.bottom: parent.bottom
-                width: parent.width; radius: Theme.chamfer ? 0 : 5
+                width: parent.width; radius: (Theme.chamfer || Theme.square) ? 0 : 5
                 height: osd.hasLevel ? parent.height * osd.level : parent.height
                 color: osd.dim ? Theme.faint : Theme.accent
                 Behavior on height { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
@@ -147,11 +147,11 @@ PanelWindow {
             anchors.right: pct.left; anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             height: 8
-            Rectangle { anchors.fill: parent; radius: Theme.chamfer ? 0 : 4; color: Theme.control }
+            Rectangle { anchors.fill: parent; radius: (Theme.chamfer || Theme.square) ? 0 : 4; color: Theme.control }
             Rectangle {
                 width: parent.width * osd.level
                 height: parent.height
-                radius: Theme.chamfer ? 0 : 4
+                radius: (Theme.chamfer || Theme.square) ? 0 : 4
                 color: osd.dim ? Theme.faint : Theme.accent
                 Behavior on width { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
             }

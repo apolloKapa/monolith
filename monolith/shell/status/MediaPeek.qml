@@ -72,10 +72,10 @@ PanelWindow {
         // progress
         Rectangle {
             x: art.x + art.width + 14; y: 66
-            width: card.width - x - 14; height: 4; radius: Theme.chamfer ? 0 : 2
+            width: card.width - x - 14; height: 4; radius: (Theme.chamfer || Theme.square) ? 0 : 2
             color: Theme.ringTrack
             visible: !!pk.player && pk.player.length > 0
-            Rectangle { height: parent.height; radius: Theme.chamfer ? 0 : 2; color: Theme.accent; width: pk.player && pk.player.length > 0 ? parent.width * Math.min(1, pp.shown / pk.player.length) : 0 }
+            Rectangle { height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 2; color: Theme.accent; width: pk.player && pk.player.length > 0 ? parent.width * Math.min(1, pp.shown / pk.player.length) : 0 }
         }
         Row {
             x: art.x + art.width + 10; anchors.bottom: parent.bottom; anchors.bottomMargin: 12

@@ -112,13 +112,13 @@ ColumnLayout {
             SmoothRect {
                 smoothing: 0
                 x: 14; y: 14; width: parent.width * 0.55 - 20; height: parent.height - 28
-                radius: 6; color: Qt.alpha(ws.tint, 0.22); border.width: 1; border.color: Qt.alpha(ws.tint, 0.5)
-                Row { x: 8; y: 7; spacing: 3; Repeater { model: ["#ff6159", "#ffbd2e", "#28c941"]; Rectangle { required property string modelData; width: 5; height: 5; radius: Theme.chamfer ? 0 : 2.5; color: modelData; opacity: 0.8 } } }
+                radius: Theme.rnd(6); color: Qt.alpha(ws.tint, 0.22); border.width: 1; border.color: Qt.alpha(ws.tint, 0.5)
+                Row { x: 8; y: 7; spacing: 3; Repeater { model: ["#ff6159", "#ffbd2e", "#28c941"]; Rectangle { required property string modelData; width: 5; height: 5; radius: (Theme.chamfer || Theme.square) ? 0 : 2.5; color: modelData; opacity: 0.8 } } }
             }
             SmoothRect {
                 smoothing: 0
                 x: parent.width * 0.55 + 2; y: 14; width: parent.width * 0.45 - 16; height: parent.height - 28
-                radius: 6; color: Qt.alpha(ws.tint, 0.12); border.width: 1; border.color: Qt.alpha(ws.tint, 0.3)
+                radius: Theme.rnd(6); color: Qt.alpha(ws.tint, 0.12); border.width: 1; border.color: Qt.alpha(ws.tint, 0.3)
             }
             // which workspace it is
             Label { anchors.centerIn: parent; text: ws.num; strong: true; font.pixelSize: 54; color: Qt.alpha(Theme.text, 0.85) }

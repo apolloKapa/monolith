@@ -387,7 +387,7 @@ Item {
                 y: bar.vertical ? a : (wsBox.height - thick) / 2 - hop
                 width: bar.vertical ? thick : Math.max(1, b - a)
                 height: bar.vertical ? Math.max(1, b - a) : thick
-                radius: at ? at.radius : 0
+                radius: Theme.rnd(at ? at.radius : 0)
                 color: Theme.accent
                 scale: at ? at.scale : 1
                 // numbered styles: the open one's number, on the highlight
@@ -494,7 +494,7 @@ Item {
             SmoothRect {
                 smoothing: 0
                 visible: bar.mopt("media.art", true) === true || bar.vertical
-                width: 22; height: 22; radius: bar.mopt("media.round", true) === true ? 11 : 5
+                width: 22; height: 22; radius: Theme.rnd(bar.mopt("media.round", true) === true ? 11 : 5)
                 color: Theme.control
                 clip: true
                 Image {
@@ -553,7 +553,7 @@ Item {
             }
             Rectangle {
                 visible: live.mode === "rec"
-                width: 9; height: 9; radius: Theme.chamfer ? 0 : 4.5; color: Theme.danger
+                width: 9; height: 9; radius: (Theme.chamfer || Theme.square) ? 0 : 4.5; color: Theme.danger
                 SequentialAnimation on opacity { running: live.mode === "rec"; loops: Animation.Infinite; NumberAnimation { to: 0.3; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
             }
             Icon { visible: live.mode !== "rec"; name: live.mode === "timer" ? "timer" : "upgrade"; size: 16; color: Theme.accent }

@@ -186,7 +186,7 @@ PanelWindow {
                 readonly property bool fav: Wall.isFav(path)
                 anchors.left: parent.left; anchors.top: parent.top; anchors.margins: 12
                 width: 30; height: 30
-                radius: 15
+                radius: Theme.rnd(15)
                 visible: fav || hot
                 color: hovered ? Theme.containerHigh : Qt.alpha(Theme.frame, 0.8)
                 onClicked: Wall.toggleFav(path)
@@ -198,7 +198,7 @@ PanelWindow {
                 property string path: ""
                 property bool current: false
                 // (Cyberpunk: square, the corner cut off the picture and a neon edge along the cut)
-                radius: Theme.chamfer ? 0 : Theme.corner(height, 6)
+                radius: (Theme.chamfer || Theme.square) ? 0 : Theme.corner(height, 6)
                 color: Theme.container
                 border.width: current && !Theme.chamfer ? 3 : 0
                 border.color: Theme.accent
@@ -321,7 +321,7 @@ PanelWindow {
                 property bool current: false
                 property bool hot: false
                 readonly property bool gif: Wall.isAnimated(path)
-                radius: Theme.chamfer ? 0 : Theme.corner(height, 6)
+                radius: (Theme.chamfer || Theme.square) ? 0 : Theme.corner(height, 6)
                 color: Theme.container
                 border.width: current && !Theme.chamfer ? 3 : 0
                 border.color: Theme.accent
@@ -388,14 +388,14 @@ PanelWindow {
                 SmoothRect {
                     smoothing: 0
                     anchors.left: parent.left; anchors.top: parent.top; anchors.margins: 10
-                    width: badge.implicitWidth + 18; height: 22; radius: 11
+                    width: badge.implicitWidth + 18; height: 22; radius: Theme.rnd(11)
                     color: Qt.rgba(0, 0, 0, 0.55)
                     Row {
                         id: badge
                         anchors.centerIn: parent
                         spacing: 5
                         Rectangle {
-                            width: 7; height: 7; radius: Theme.chamfer ? 0 : 3.5; color: "#ff5a6e"; anchors.verticalCenter: parent.verticalCenter
+                            width: 7; height: 7; radius: (Theme.chamfer || Theme.square) ? 0 : 3.5; color: "#ff5a6e"; anchors.verticalCenter: parent.verticalCenter
                             SequentialAnimation on opacity { running: lc.hot || lc.current; loops: Animation.Infinite; NumberAnimation { to: 0.25; duration: 600 } NumberAnimation { to: 1; duration: 600 } }
                         }
                         Label { text: lc.gif ? "GIF" : "LIVE"; color: "#ffffff"; strong: true; font.pixelSize: 10; anchors.verticalCenter: parent.verticalCenter }

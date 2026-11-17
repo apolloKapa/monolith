@@ -68,9 +68,9 @@ Page {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 6
-                            radius: Theme.chamfer ? 0 : 3
+                            radius: (Theme.chamfer || Theme.square) ? 0 : 3
                             color: Theme.control
-                            Rectangle { width: parent.width * modelData.v; height: parent.height; radius: Theme.chamfer ? 0 : 3; color: Theme.accent }
+                            Rectangle { width: parent.width * modelData.v; height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 3; color: Theme.accent }
                         }
                     }
                 }

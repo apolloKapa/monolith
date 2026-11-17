@@ -24,13 +24,13 @@ Flow {
             x: bits.part === "all" ? bits.u * 0.5 : (bits.width - width) / 2
             anchors.verticalCenter: parent.verticalCenter
             spacing: bits.u * 0.25
-            Rectangle { width: bits.u * 0.55; height: width; radius: width / 2; color: Theme.accent }
-            Rectangle { width: bits.u * 1.6; height: bits.u * 0.32; radius: height / 2; color: Qt.alpha(bits.ink, 0.75); anchors.verticalCenter: parent.verticalCenter }
+            Rectangle { width: bits.u * 0.55; height: width; radius: Theme.rnd(width / 2); color: Theme.accent }
+            Rectangle { width: bits.u * 1.6; height: bits.u * 0.32; radius: Theme.rnd(height / 2); color: Qt.alpha(bits.ink, 0.75); anchors.verticalCenter: parent.verticalCenter }
         }
         Rectangle {
             visible: bits.part === "all" || bits.part === "middle"
             anchors.centerIn: parent
-            width: bits.u * 1.8; height: bits.u * 0.32; radius: height / 2
+            width: bits.u * 1.8; height: bits.u * 0.32; radius: Theme.rnd(height / 2)
             color: Qt.alpha(bits.ink, 0.5)
         }
         Row {
@@ -38,7 +38,7 @@ Flow {
             x: bits.part === "all" ? bits.width - width - bits.u * 0.5 : (bits.width - width) / 2
             anchors.verticalCenter: parent.verticalCenter
             spacing: bits.u * 0.22
-            Repeater { model: 3; Rectangle { width: bits.u * 0.3; height: width; radius: width / 2; color: Qt.alpha(bits.ink, 0.7) } }
+            Repeater { model: 3; Rectangle { width: bits.u * 0.3; height: width; radius: Theme.rnd(width / 2); color: Qt.alpha(bits.ink, 0.7) } }
         }
     }
 
@@ -80,7 +80,7 @@ Flow {
                     x: sc.st === "frame" ? 9 : 8
                     y: sc.st === "island" ? 18 : 22
                     width: parent.width - 2 * x; height: parent.height - y - (sc.st === "frame" ? 9 : 7)
-                    radius: 4
+                    radius: Theme.rnd(4)
                     color: Qt.alpha(Theme.m("surface_container_lowest", "#101014"), 0.85)
                     border.width: 1; border.color: Qt.alpha(Theme.text, 0.1)
                     Row { x: 5; y: 4; spacing: 2
@@ -110,7 +110,7 @@ Flow {
                 // solid: one floating bar
                 Rectangle {
                     visible: sc.st === "solid"
-                    x: 5; y: 5; width: parent.width - 10; height: 13; radius: 6.5; color: mini.barC
+                    x: 5; y: 5; width: parent.width - 10; height: 13; radius: Theme.rnd(6.5); color: mini.barC
                     border.width: 1; border.color: Qt.alpha(Theme.text, 0.08)
                     Bits { anchors.fill: parent; anchors.margins: 1 }
                 }
@@ -119,7 +119,7 @@ Flow {
                     model: sc.st === "modular" ? [["left", 5, 38], ["middle", (mini.width - 30) / 2, 30], ["right", mini.width - 35, 30]] : []
                     Rectangle {
                         required property var modelData
-                        x: modelData[1]; y: 5; width: modelData[2]; height: 13; radius: 6.5; color: mini.barC
+                        x: modelData[1]; y: 5; width: modelData[2]; height: 13; radius: Theme.rnd(6.5); color: mini.barC
                         border.width: 1; border.color: Qt.alpha(Theme.text, 0.08)
                         Bits { anchors.fill: parent; anchors.margins: 1; part: parent.modelData[0] }
                     }
@@ -129,7 +129,7 @@ Flow {
             Rectangle {
                 visible: sc.on
                 anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 4
-                width: 22; height: 22; radius: 11
+                width: 22; height: 22; radius: Theme.rnd(11)
                 color: Theme.accent
                 border.width: 2; border.color: Theme.accentContainer
                 Icon { anchors.centerIn: parent; name: "check"; size: 14; color: Theme.onAccent }

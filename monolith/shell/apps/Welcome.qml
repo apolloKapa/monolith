@@ -206,7 +206,7 @@ PanelWindow {
             model: 3
             Rectangle {
                 required property int index
-                width: wel.width * (0.5 + 0.15 * index); height: width; radius: Theme.chamfer ? 0 : width / 2
+                width: wel.width * (0.5 + 0.15 * index); height: width; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
                 color: index === 1 ? wel.tertiary : Theme.accent
                 opacity: 0.07
                 property real a: index * 2.1
@@ -229,7 +229,7 @@ PanelWindow {
                     property real p: 0
                     NumberAnimation on p { from: 0; to: 1; duration: 16000 + 12000 * wel.rnd(index, 5); loops: Animation.Infinite; running: wel.visible }
                     readonly property real q: (p + r0) % 1
-                    width: 2 + 3 * wel.rnd(index, 6); height: width; radius: Theme.chamfer ? 0 : width / 2
+                    width: 2 + 3 * wel.rnd(index, 6); height: width; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
                     color: index % 3 === 0 ? wel.tertiary : wel.glint
                     x: wel.width * wel.rnd(index, 7) + 40 * Math.sin((q * 3 + r0) * Math.PI * 2)
                     y: wel.height * (1.05 - 1.1 * q)
@@ -365,7 +365,7 @@ PanelWindow {
                             model: wel.steps.length
                             Rectangle {
                                 required property int index
-                                width: index === wel.step ? 28 : 9; height: 9; radius: Theme.chamfer ? 0 : 4.5
+                                width: index === wel.step ? 28 : 9; height: 9; radius: (Theme.chamfer || Theme.square) ? 0 : 4.5
                                 color: index <= wel.step ? Theme.accent : Qt.alpha(Theme.text, 0.2)
                                 Behavior on width { NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
                                 MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor; onClicked: wel.step = parent.index }
@@ -469,7 +469,7 @@ PanelWindow {
                     NumberAnimation { from: 1; to: 0; duration: 2600; easing.type: Easing.InOutSine }
                 }
                 // its shadow on the ground
-                Rectangle { anchors.horizontalCenter: parent.horizontalCenter; y: 182; width: 96 - 16 * mark.bob; height: 10; radius: Theme.chamfer ? 0 : 5; color: "black"; opacity: 0.25 - 0.08 * mark.bob }
+                Rectangle { anchors.horizontalCenter: parent.horizontalCenter; y: 182; width: 96 - 16 * mark.bob; height: 10; radius: (Theme.chamfer || Theme.square) ? 0 : 5; color: "black"; opacity: 0.25 - 0.08 * mark.bob }
                 Item {
                     id: slab
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -711,7 +711,7 @@ PanelWindow {
                     SmoothRect {
                         smoothing: 0
                         required property var modelData
-                        height: 34; width: tr.implicitWidth + 24; radius: 17
+                        height: 34; width: tr.implicitWidth + 24; radius: Theme.rnd(17)
                         color: Qt.alpha(Theme.accent, 0.12)
                         Row { id: tr; anchors.centerIn: parent; spacing: 8
                             Icon { name: parent.parent.modelData[0]; size: 16; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
@@ -745,7 +745,7 @@ PanelWindow {
                     smoothing: 0
                     id: check
                     anchors.horizontalCenter: parent.horizontalCenter
-                    width: 96; height: 96; radius: 48
+                    width: 96; height: 96; radius: Theme.rnd(48)
                     color: Theme.accent
                     // in (0-0.26 s), then a quick zoom in (0.78-0.94 s) and out (0.94-1.24 s)
                     scale: 0.6 + 0.4 * wel.outCubic(fin.sg(0, 0.2))

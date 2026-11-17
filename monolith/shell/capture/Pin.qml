@@ -28,7 +28,7 @@ PanelWindow {
 
     ClippingRectangle {
         anchors.fill: parent
-        radius: Theme.chamfer ? 0 : 10
+        radius: (Theme.chamfer || Theme.square) ? 0 : 10
         color: Theme.frame
         opacity: win.see
         border.width: Theme.chamfer ? 0 : 2
@@ -62,7 +62,7 @@ PanelWindow {
         spacing: 4
         component Act: Pressable {
             property string icon: ""
-            width: 30; height: 30; radius: 15
+            width: 30; height: 30; radius: Theme.rnd(15)
             color: hovered ? Theme.containerHigh : Qt.alpha(Theme.frame, 0.85)
             Icon { anchors.centerIn: parent; name: parent.icon; size: 17 }
         }

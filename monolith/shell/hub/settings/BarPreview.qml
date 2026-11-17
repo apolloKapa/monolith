@@ -113,7 +113,7 @@ Column {
                         y: screenBox.barTop + 8
                         width: screenBox.width * modelData[1]
                         height: screenBox.height - y - screenBox.barBottomRoom - (screenBox.dockOn && !Theme.barBottom ? 26 : 10)
-                        radius: Math.max(4, 12 * screenBox.k)
+                        radius: Theme.rnd(Math.max(4, 12 * screenBox.k))
                         color: Qt.alpha(Theme.m("surface_container_lowest", "#101014"), 0.9)
                         border.width: 1; border.color: Qt.alpha(Theme.text, 0.12)
                         Row {
@@ -131,7 +131,7 @@ Column {
                     visible: screenBox.dockOn && !Theme.barBottom
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom; anchors.bottomMargin: 4 + Number(Store.get("dock.margin", 12)) * screenBox.k
-                    width: dockRow.width + 8; height: 14; radius: 7
+                    width: dockRow.width + 8; height: 14; radius: Theme.rnd(7)
                     color: Qt.alpha(Theme.card, Math.max(0.35, Number(Store.get("dock.opacity", 1))))
                     border.width: 1; border.color: Qt.alpha(Theme.text, 0.1)
                     Row { id: dockRow; anchors.centerIn: parent; spacing: 3
@@ -157,7 +157,7 @@ Column {
                 Rectangle {
                     visible: Store.get("status.autohide", false) === true
                     anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 8
-                    height: 22; width: ah.implicitWidth + 16; radius: 11
+                    height: 22; width: ah.implicitWidth + 16; radius: Theme.rnd(11)
                     color: Qt.alpha(Theme.frame, 0.85)
                     Label { id: ah; anchors.centerIn: parent; text: "Hides until the pointer reaches the edge"; font.pixelSize: Theme.sizeSmall - 1 }
                 }
@@ -180,7 +180,7 @@ Column {
             anchors.top: monitor.bottom
             Rectangle { anchors.horizontalCenter: parent.horizontalCenter; width: 34; height: 14; color: "#15151b"
                 gradient: Gradient { GradientStop { position: 0; color: "#08080c" } GradientStop { position: 1; color: "#1c1c24" } } }
-            Rectangle { anchors.horizontalCenter: parent.horizontalCenter; width: 96; height: 5; radius: 2.5; color: "#1c1c24" }
+            Rectangle { anchors.horizontalCenter: parent.horizontalCenter; width: 96; height: 5; radius: Theme.rnd(2.5); color: "#1c1c24" }
         }
 
         // ── the bar, close up ──
@@ -237,7 +237,7 @@ Column {
             // "close up", in a chip on the left
             Rectangle {
                 anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 5
-                width: cuLab.implicitWidth + 12; height: 16; radius: 8
+                width: cuLab.implicitWidth + 12; height: 16; radius: Theme.rnd(8)
                 color: Qt.alpha(Theme.frame, 0.8)
                 Label { id: cuLab; anchors.centerIn: parent; text: "Real size"; font.pixelSize: Theme.sizeSmall - 2; muted: true }
             }

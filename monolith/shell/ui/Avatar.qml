@@ -13,7 +13,7 @@ Item {
     readonly property string path: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face"))
     implicitWidth: size
     implicitHeight: size
-    Rectangle { anchors.fill: parent; radius: Theme.chamfer ? 0 : width / 2; color: av.fallback; visible: img.status !== Image.Ready }
+    Rectangle { anchors.fill: parent; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2; color: av.fallback; visible: img.status !== Image.Ready }
     Image {
         id: img
         anchors.fill: parent
@@ -39,7 +39,7 @@ Item {
         visible: false
         layer.enabled: true
         layer.smooth: true
-        Rectangle { anchors.fill: parent; radius: Theme.chamfer ? 0 : width / 2; antialiasing: true }
+        Rectangle { anchors.fill: parent; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2; antialiasing: true }
     }
     Icon { anchors.centerIn: parent; visible: img.status !== Image.Ready; name: "person"; size: av.size * 0.55; filled: true; color: av.iconColor }
 }

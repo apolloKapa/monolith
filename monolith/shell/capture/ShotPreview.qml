@@ -87,7 +87,7 @@ PanelWindow {
                 ClippingRectangle {
                     anchors.fill: parent
                     // (it can only round: square under a cut corner)
-                    radius: Theme.chamfer ? 0 : parent.radius
+                    radius: (Theme.chamfer || Theme.square) ? 0 : parent.radius
                     color: "transparent"
                     layer.enabled: Theme.chamfer
                     layer.effect: CutCorner {}
@@ -95,7 +95,7 @@ PanelWindow {
                 }
                 // it goes in a moment: a thin line running out
                 Rectangle {
-                    anchors.bottom: parent.bottom; height: 3; color: Theme.accent; radius: Theme.chamfer ? 0 : 1.5
+                    anchors.bottom: parent.bottom; height: 3; color: Theme.accent; radius: (Theme.chamfer || Theme.square) ? 0 : 1.5
                     width: parent.width * (hov.hovered ? 1 : win.remain)
                 }
             }

@@ -74,7 +74,7 @@ SmoothRect {
             spacing: 6
             Label { text: row.title; strong: true; width: Math.min(implicitWidth, texts.width - (row.changed ? 14 : 0)); elide: Text.ElideRight }
             // changed from the default
-            Rectangle { visible: scale > 0.01; scale: row.changed ? 1 : 0; Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack; easing.overshoot: 2.5 } } width: 7; height: 7; radius: Theme.chamfer ? 0 : 3.5; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+            Rectangle { visible: scale > 0.01; scale: row.changed ? 1 : 0; Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack; easing.overshoot: 2.5 } } width: 7; height: 7; radius: (Theme.chamfer || Theme.square) ? 0 : 3.5; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
         }
         Label { width: parent.width; text: row.desc; muted: true; font.pixelSize: Theme.sizeSmall; wrapMode: Text.Wrap; visible: text !== "" }
     }
@@ -106,7 +106,7 @@ SmoothRect {
             visible: revert.hovered
             anchors.bottom: parent.top; anchors.bottomMargin: 6
             anchors.horizontalCenter: parent.horizontalCenter
-            width: tip.implicitWidth + 16; height: 26; radius: 13
+            width: tip.implicitWidth + 16; height: 26; radius: Theme.rnd(13)
             color: Theme.frame
             border.width: 1; border.color: Theme.hairline
             Label { id: tip; anchors.centerIn: parent; text: "Back to default"; font.pixelSize: Theme.sizeSmall - 1 }

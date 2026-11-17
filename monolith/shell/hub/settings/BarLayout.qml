@@ -56,7 +56,7 @@ ColumnLayout {
                 onClicked: sp.picked(modelData[0])
                 Rectangle {
                     x: 8; y: 8; width: parent.width - 16; height: Theme.islandH
-                    radius: Theme.chamfer ? 0 : (height / 2); color: Theme.frame; clip: true
+                    radius: (Theme.chamfer || Theme.square) ? 0 : (height / 2); color: Theme.frame; clip: true
                     IslandBar {
                         id: mod
                         anchors.centerIn: parent
@@ -352,7 +352,7 @@ ColumnLayout {
             x: 16; y: 30
             width: parent.width - 32; height: 52
             // the bar's line, its quarters and middle marked
-            Rectangle { anchors.verticalCenter: parent.verticalCenter; width: parent.width; height: 2; radius: 1; color: Theme.ringTrack }
+            Rectangle { anchors.verticalCenter: parent.verticalCenter; width: parent.width; height: 2; radius: Theme.rnd(1); color: Theme.ringTrack }
             Repeater {
                 model: [0, 0.25, 0.5, 0.75, 1]
                 Rectangle { required property real modelData; x: Math.round(trk.width * modelData) - 1; anchors.verticalCenter: parent.verticalCenter; width: 2; height: modelData === 0.5 ? 16 : 10; radius: 1; color: Theme.ringTrack }
@@ -361,7 +361,7 @@ ColumnLayout {
             Rectangle {
                 visible: ft.over
                 x: Math.round(ft.ed.freeFrac(ft.ed.dragPos) * trk.width) - 1
-                width: 2; height: parent.height; radius: 1
+                width: 2; height: parent.height; radius: Theme.rnd(1)
                 color: Theme.accent
             }
             Repeater {
@@ -493,14 +493,14 @@ ColumnLayout {
                 smoothing: 0
                 required property var modelData
                 readonly property bool on: vcl.val === modelData[0]
-                width: 30; height: 30; radius: 15
+                width: 30; height: 30; radius: Theme.rnd(15)
                 readonly property var m: ({ "": Theme.containerHigh, accent: Theme.accent, text: Theme.text, white: "#ffffff",
                     primary: Theme.m("primary", Theme.accent), secondary: Theme.m("secondary", Theme.subtext), tertiary: Theme.m("tertiary", Theme.accent) })
                 color: m[modelData[0]]
                 border.width: 1
                 border.color: Theme.hairline
                 // the picked one: a ring round it
-                Rectangle { anchors.fill: parent; anchors.margins: -4; radius: Theme.chamfer ? 0 : (width / 2); color: "transparent"; border.width: 2; border.color: Theme.text; visible: parent.on }
+                Rectangle { anchors.fill: parent; anchors.margins: -4; radius: (Theme.chamfer || Theme.square) ? 0 : (width / 2); color: "transparent"; border.width: 2; border.color: Theme.text; visible: parent.on }
                 Icon { anchors.centerIn: parent; visible: parent.modelData[0] === ""; name: "format_color_reset"; size: 16; color: Theme.subtext }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Store.set("bar.vis." + vcl.k, parent.modelData[0]) }
             }
@@ -543,7 +543,7 @@ ColumnLayout {
                     spacing: 6
                     Icon { name: modelData[2]; size: 17; filled: parent.parent.on; color: parent.parent.on ? Theme.onAccentContainer : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
                     Label { text: modelData[1]; strong: parent.parent.on; color: parent.parent.on ? Theme.onAccentContainer : Theme.text; font.pixelSize: Theme.sizeSmall + 1; anchors.verticalCenter: parent.verticalCenter }
-                    Rectangle { visible: parent.parent.onBar; width: 6; height: 6; radius: Theme.chamfer ? 0 : 3; color: parent.parent.on ? Theme.onAccentContainer : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
+                    Rectangle { visible: parent.parent.onBar; width: 6; height: 6; radius: (Theme.chamfer || Theme.square) ? 0 : 3; color: parent.parent.on ? Theme.onAccentContainer : Theme.accent; anchors.verticalCenter: parent.verticalCenter }
                 }
             }
         }

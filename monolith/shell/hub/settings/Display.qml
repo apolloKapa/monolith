@@ -145,7 +145,7 @@ ColumnLayout {
                 Component.onCompleted: place()
                 width: modelData.w * arr.box.s
                 height: modelData.h * arr.box.s
-                radius: 8
+                radius: Theme.rnd(8)
                 color: dragging ? Theme.accentContainer : Theme.containerHigh
                 border.width: 2
                 border.color: dragging ? Theme.accent : Theme.ringTrack

@@ -128,12 +128,14 @@ Singleton {
 
     // ── shape ──
     // the base radius is the setting; nested shapes take it minus the gap (concentric)
-    readonly property real radius: Look.style.square ? 0 : Math.max(0, radiusSetting * (Look.style.radiusScale || 1))
+    readonly property real radius: square ? 0 : Math.max(0, radiusSetting * (Look.style.radiusScale || 1))
     // the style's outlines: on panels, cards and controls
     readonly property real outlineW: Look.style.outline ? Look.style.outline[0] : 0
     readonly property color outlineColor: ({ accent: accent, accentSoft: Qt.alpha(accent, 0.5), ink: text, text: text,
                                              rule: Qt.alpha(text, 0.22) })[Look.style.outlineRole || "rule"] || Qt.alpha(text, 0.22)
-    function corner(height, extra) { return Math.max(0, Math.min(height / 2, radius + (extra || 0))); }
+    function corner(height, extra) { return square ? 0 : Math.max(0, Math.min(height / 2, radius + (extra || 0))); }
+    // a fixed rounding (a pill's ends, a dot, a badge) that still goes square with everything else
+    function rnd(r) { return square ? 0 : r; }
     // room inside a shape with corners of radius r: at least `base`, more once the corners get
     // round enough to cut into what sits near them (a corner of radius r comes about 0.29 r in
     // at the diagonal). At the usual roundness this is just `base`; turned up, padding grows
@@ -141,7 +143,7 @@ Singleton {
     function inset(r, base) { return Math.max(base, Math.round(r * 0.3 + base * 0.4)); }
     // continuous corners (Appearance → Corner rounding): corners are superellipse arcs that ease
     // out of the straight sides instead of quarter circles (ui/SmoothRect); 0: plain round corners
-    readonly property real cornerSmooth: Look.style.square || Store.get("theme.continuousCorners", true) === false ? 0
+    readonly property real cornerSmooth: square || Store.get("theme.continuousCorners", true) === false ? 0
                                          : Math.max(0, Math.min(1, Number(Store.get("theme.cornerSmoothing", 0.6))))
 
     // ── motion (Material: emphasized decelerate in, emphasized accelerate out) ──
@@ -239,7 +241,8 @@ Singleton {
     }
     readonly property real barOpacity: Number(Store.get("bar.opacity", 1))      // the bar's own background (0: only its modules)
     readonly property bool barPills: Store.get("bar.pills", false) === true     // each module on its own pill
-    readonly property bool square: Look.style.square === true                   // square styles: no rounding anywhere
+    // no rounding anywhere: a square style, or Roundness (Appearance) at 0 px
+    readonly property bool square: Look.style.square === true || radiusSetting <= 0
     readonly property real islandEar: square ? 0 : 20   // the concave curve joining the screen edge
     readonly property real islandPad: 12        // inside, around the content
     readonly property real islandGap: 8         // between the island and the screen edge when open

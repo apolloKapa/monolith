@@ -97,7 +97,7 @@ Page {
         SmoothRect { smoothing: 0; id: bdMask; anchors.fill: parent; radius: Theme.corner(80, 14); visible: false; layer.enabled: true }
         Rectangle {
             anchors.fill: parent
-            radius: Theme.chamfer ? 0 : (Theme.corner(80, 14))
+            radius: (Theme.chamfer || Theme.square) ? 0 : (Theme.corner(80, 14))
             gradient: Gradient {
                 GradientStop { position: 0; color: Qt.alpha(page.tone, 0.10) }
                 GradientStop { position: 0.55; color: "transparent" }
@@ -241,16 +241,16 @@ Page {
                 Rectangle {
                     id: track
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width; height: seek.big ? 8 : 5; radius: Theme.chamfer ? 0 : height / 2
+                    width: parent.width; height: seek.big ? 8 : 5; radius: (Theme.chamfer || Theme.square) ? 0 : height / 2
                     color: Qt.alpha(Theme.text, 0.14)
                     Behavior on height { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
-                    Rectangle { width: Math.max(height, parent.width * seek.frac); height: parent.height; radius: Theme.chamfer ? 0 : height / 2; color: page.tone }
+                    Rectangle { width: Math.max(height, parent.width * seek.frac); height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : height / 2; color: page.tone }
                 }
                 Rectangle {
                     visible: seek.can
                     x: parent.width * seek.frac - width / 2
                     anchors.verticalCenter: parent.verticalCenter
-                    width: seek.big ? 16 : 0; height: width; radius: Theme.chamfer ? 0 : width / 2
+                    width: seek.big ? 16 : 0; height: width; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
                     color: page.tone
                     border.width: 3; border.color: Theme.frame
                     Behavior on width { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
@@ -293,7 +293,7 @@ Page {
                     anchors.verticalCenter: parent.verticalCenter
                     color: hovered ? Qt.alpha(Theme.text, 0.1) : "transparent"
                     Icon { anchors.centerIn: parent; name: parent.icon; filled: !parent.side; size: parent.side ? 20 : 28; color: parent.on ? page.tone : (parent.enabledInput ? Theme.text : Theme.faint) }
-                    Rectangle { visible: parent.side && parent.on; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 3; width: 4; height: 4; radius: Theme.chamfer ? 0 : 2; color: page.tone }
+                    Rectangle { visible: parent.side && parent.on; anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 3; width: 4; height: 4; radius: (Theme.chamfer || Theme.square) ? 0 : 2; color: page.tone }
                 }
                 Ctl {
                     side: true; icon: "shuffle"
@@ -437,12 +437,12 @@ Page {
                             anchors.horizontalCenter: parent.horizontalCenter
                             width: 8
                             height: parent.height - 42
-                            radius: Theme.chamfer ? 0 : 4
+                            radius: (Theme.chamfer || Theme.square) ? 0 : 4
                             color: Qt.alpha(Theme.text, 0.12)
                             readonly property real mid: height / 2
                             // the fill, from the middle (0 dB) up or down
                             Rectangle {
-                                width: parent.width; radius: Theme.chamfer ? 0 : 4
+                                width: parent.width; radius: (Theme.chamfer || Theme.square) ? 0 : 4
                                 color: page.tone
                                 readonly property real off: Math.abs(bandItem.g) / 12 * track.mid
                                 y: bandItem.g >= 0 ? track.mid - off : track.mid
@@ -457,7 +457,7 @@ Page {
                         Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             y: track.mid - bandItem.g / 12 * track.mid - height / 2
-                            width: bandArea.containsMouse || bandArea.pressed ? 24 : 20; height: width; radius: Theme.chamfer ? 0 : width / 2
+                            width: bandArea.containsMouse || bandArea.pressed ? 24 : 20; height: width; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
                             color: Theme.frame
                             border.width: 3; border.color: page.tone
                             Behavior on y { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }

@@ -343,7 +343,7 @@ PanelWindow {
 
             HoverHandler { id: barHover }
             // Theme → Effects (grain, edge light) while it's a menu
-            PanelFx { anchors.fill: parent; radius: island.rr; visible: win.grown && (Theme.fxGrain || Theme.fxEdge) }
+            PanelFx { anchors.fill: parent; radius: Theme.rnd(island.rr); visible: win.grown && (Theme.fxGrain || Theme.fxEdge) }
 
             // the bar row, centred at the top
             IslandBar {
@@ -438,7 +438,7 @@ PanelWindow {
                     anchors.centerIn: parent
                     width: parent.width * (0.4 + 0.6 * Math.min(1, openArea.unfold * 3))
                     height: Math.max(2, 3 / Math.max(0.05, openArea.unfold))
-                    radius: Theme.chamfer ? 0 : height / 2
+                    radius: (Theme.chamfer || Theme.square) ? 0 : height / 2
                     color: Theme.accent
                     opacity: 1 - openArea.unfold
                 }
@@ -600,7 +600,7 @@ PanelWindow {
                         x: tabs.tabX(tabs.cur)
                         width: tabs.wideW
                         height: parent.height
-                        radius: Theme.chamfer ? 0 : height / 2
+                        radius: (Theme.chamfer || Theme.square) ? 0 : height / 2
                         color: Theme.accentContainer
                         Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                     }
@@ -615,7 +615,7 @@ PanelWindow {
                             height: tabs.height
                             clip: true
                             color: "transparent"
-                            radius: Theme.chamfer ? 0 : height / 2
+                            radius: (Theme.chamfer || Theme.square) ? 0 : height / 2
                             Behavior on x { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                             onClicked: { HubState.go(modelData); query.forceActiveFocus(); }
                             Row {
@@ -813,7 +813,7 @@ PanelWindow {
             anchors.centerIn: parent
             width: parent.width * (0.5 + 0.5 * Math.min(1, floatCard.unfold * 3))
             height: Math.max(2, 3 / Math.max(0.02, floatCard.unfold))
-            radius: Theme.chamfer ? 0 : height / 2
+            radius: (Theme.chamfer || Theme.square) ? 0 : height / 2
             color: Theme.accent
             opacity: 1 - floatCard.unfold
         }
@@ -916,7 +916,7 @@ PanelWindow {
             readonly property bool on: blurShape.barOn && solidBg.visible
             x: island.x; y: island.y
             width: on ? island.width : 0; height: on ? island.height : 0
-            radius: Theme.chamfer ? 0 : solidBg.radius
+            radius: (Theme.chamfer || Theme.square) ? 0 : solidBg.radius
             CutBlur { bx: island.x; by: island.y; bw: island.width; bh: island.height; c: solidBg.r }
         }
         // Modular: only its pills (not the gaps between them)
@@ -929,7 +929,7 @@ PanelWindow {
             readonly property bool on: blurShape.pillsOn && p.visible
             x: blurShape.pillX + p.x; y: blurShape.pillY + p.y
             width: on ? p.width : 0; height: on ? p.height : 0
-            radius: Theme.chamfer ? 0 : p.radius
+            radius: (Theme.chamfer || Theme.square) ? 0 : p.radius
             CutBlur { bx: blurShape.pillX + pillRegL.p.x; by: blurShape.pillY + pillRegL.p.y; bw: pillRegL.p.width; bh: pillRegL.p.height; c: pillRegL.p.r }
         }
         Region {
@@ -938,7 +938,7 @@ PanelWindow {
             readonly property bool on: blurShape.pillsOn && p.visible
             x: blurShape.pillX + p.x; y: blurShape.pillY + p.y
             width: on ? p.width : 0; height: on ? p.height : 0
-            radius: Theme.chamfer ? 0 : p.radius
+            radius: (Theme.chamfer || Theme.square) ? 0 : p.radius
             CutBlur { bx: blurShape.pillX + pillRegM.p.x; by: blurShape.pillY + pillRegM.p.y; bw: pillRegM.p.width; bh: pillRegM.p.height; c: pillRegM.p.r }
         }
         Region {
@@ -947,7 +947,7 @@ PanelWindow {
             readonly property bool on: blurShape.pillsOn && p.visible
             x: blurShape.pillX + p.x; y: blurShape.pillY + p.y
             width: on ? p.width : 0; height: on ? p.height : 0
-            radius: Theme.chamfer ? 0 : p.radius
+            radius: (Theme.chamfer || Theme.square) ? 0 : p.radius
             CutBlur { bx: blurShape.pillX + pillRegR.p.x; by: blurShape.pillY + pillRegR.p.y; bw: pillRegR.p.width; bh: pillRegR.p.height; c: pillRegR.p.r }
         }
         // the hanging shapes (Island, Fill, Frame): square against the edge, its ears too

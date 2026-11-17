@@ -11,7 +11,7 @@ Item {
     SmoothRect {
         anchors.fill: parent
         smoothing: 0   // (a plain capsule in other styles; the Cyberpunk style cuts one corner)
-        radius: height / 2
+        radius: Theme.rnd(height / 2)
         color: t.checked ? Theme.accent : Theme.control
         border.width: t.checked ? 0 : 2
         border.color: Theme.faint
@@ -20,7 +20,7 @@ Item {
     Rectangle {
         property real d: t.checked ? 24 : 16
         width: d; height: d
-        radius: Theme.chamfer ? 2 : d / 2
+        radius: Theme.square ? 0 : (Theme.chamfer ? 2 : d / 2)
         anchors.verticalCenter: parent.verticalCenter
         x: t.checked ? t.width - d - 4 : 8
         color: t.checked ? Theme.onAccent : Theme.subtext

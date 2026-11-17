@@ -28,7 +28,7 @@ PanelWindow {
         id: pill
         width: row.implicitWidth + 24
         height: 34
-        radius: 17
+        radius: Theme.rnd(17)
         color: Qt.alpha(Theme.frame, 0.82)
         opacity: ov.want ? 1 : 0
         Behavior on opacity { Anim { kind: ov.want ? "enter" : "exit" } }

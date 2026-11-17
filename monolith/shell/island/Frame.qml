@@ -85,7 +85,7 @@ Scope {
             visible: Theme.outlineW > 0
             x: hole.x - Theme.outlineW / 2; y: hole.y - Theme.outlineW / 2
             width: hole.width + Theme.outlineW; height: hole.height + Theme.outlineW
-            radius: fr.r + Theme.outlineW / 2
+            radius: Theme.rnd(fr.r + Theme.outlineW / 2)
             color: "transparent"
             border.width: Theme.outlineW
             border.color: Theme.outlineColor

@@ -127,7 +127,7 @@ ColumnLayout {
                                 required property string modelData
                                 width: changes.width
                                 spacing: 8
-                                Rectangle { width: 6; height: 6; radius: Theme.chamfer ? 0 : 3; color: Theme.accent; y: 7 }
+                                Rectangle { width: 6; height: 6; radius: (Theme.chamfer || Theme.square) ? 0 : 3; color: Theme.accent; y: 7 }
                                 Text { width: parent.width - 14; text: modelData; wrapMode: Text.Wrap; color: upd.ink; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall }
                             }
                         }

@@ -90,10 +90,10 @@ ColumnLayout {
                             Label { width: parent.width / 2; horizontalAlignment: Text.AlignRight; text: mon.gb(modelData.used) + " of " + mon.gb(modelData.size); muted: true; font.pixelSize: Theme.sizeSmall }
                         }
                         Rectangle {
-                            width: parent.width; height: 8; radius: Theme.chamfer ? 0 : 4
+                            width: parent.width; height: 8; radius: (Theme.chamfer || Theme.square) ? 0 : 4
                             color: Theme.ringTrack
                             Rectangle {
-                                height: parent.height; radius: Theme.chamfer ? 0 : 4
+                                height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 4
                                 width: Math.max(8, parent.width * modelData.used / Math.max(1, modelData.size))
                                 color: modelData.used / modelData.size > 0.9 ? Theme.danger : Theme.accent
                             }
@@ -138,7 +138,7 @@ ColumnLayout {
                             width: 8
                             height: modelData < 0 ? 54 : Math.max(4, Math.min(54, modelData / 2))
                             anchors.bottom: parent.bottom
-                            radius: Theme.chamfer ? 0 : 3
+                            radius: (Theme.chamfer || Theme.square) ? 0 : 3
                             color: modelData < 0 ? Theme.danger : Theme.accent
                             opacity: 0.85
                         }

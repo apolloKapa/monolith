@@ -127,7 +127,7 @@ PanelWindow {
                 SmoothRect {
                     smoothing: 0
                     required property string modelData
-                    width: 44; height: 44; radius: 22
+                    width: 44; height: 44; radius: Theme.rnd(22)
                     color: Qt.alpha(Theme.frame, 0.75)
                     border.width: 1; border.color: Qt.alpha(Theme.text, 0.2)
                     Icon { anchors.centerIn: parent; name: parent.modelData; size: 20; color: Theme.subtext }
@@ -363,7 +363,7 @@ PanelWindow {
                 }
                 SmoothRect {
                     smoothing: 0
-                    width: ml.implicitWidth + 12; height: 20; radius: 10
+                    width: ml.implicitWidth + 12; height: 20; radius: Theme.rnd(10)
                     color: Theme.accent
                     x: ms.modelData.h ? (ms.len - width) / 2 : 6
                     y: ms.modelData.h ? -height - 6 : (ms.len - height) / 2
@@ -464,7 +464,7 @@ PanelWindow {
                     enabled: wrap.modelData.type === "image"
                     onEntered: drag => { drag.accepted = drag.hasUrls; }
                     onDropped: drop => { const f = Pictures.fromDrop(drop.urls); if (f !== "") { ed.selected = wrap.modelData.id; ed.setOption(wrap.modelData.id, "imagePath", f); drop.accept(); } }
-                    SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: 10; visible: parent.containsDrag; color: Qt.alpha(Theme.accent, 0.18); border.width: 2; border.color: Theme.accent; z: 20 }
+                    SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: Theme.rnd(10); visible: parent.containsDrag; color: Qt.alpha(Theme.accent, 0.18); border.width: 2; border.color: Theme.accent; z: 20 }
                 }
                 WidgetFace {
                     id: face
@@ -479,7 +479,7 @@ PanelWindow {
                 SmoothRect {
                     smoothing: 0
                     anchors.fill: parent; anchors.margins: -6
-                    radius: 10
+                    radius: Theme.rnd(10)
                     color: wrap.sel ? Qt.alpha(Theme.accent, 0.08) : "transparent"
                     border.width: 2
                     border.color: wrap.sel ? Theme.accent : Qt.alpha("#ffffff", 0.35)
@@ -516,7 +516,7 @@ PanelWindow {
                         z: 12
                         width: corner ? 18 : (horiz ? 34 : 10)
                         height: corner ? 18 : (horiz ? 10 : 34)
-                        radius: Theme.chamfer ? 0 : Math.min(width, height) / 2
+                        radius: (Theme.chamfer || Theme.square) ? 0 : Math.min(width, height) / 2
                         x: (modelData[0] ? -6 : (modelData[2] ? wbody.width + 6 : wbody.width / 2)) - width / 2
                         y: (modelData[1] ? -6 : (modelData[3] ? wbody.height + 6 : wbody.height / 2)) - height / 2
                         color: Theme.accent
@@ -561,7 +561,7 @@ PanelWindow {
                     id: twist
                     visible: wrap.sel
                     z: 13
-                    width: 26; height: 26; radius: 13
+                    width: 26; height: 26; radius: Theme.rnd(13)
                     x: wbody.width + 14 - width / 2
                     y: -14 - height / 2
                     color: twistMa.pressed || twistMa.containsMouse ? Theme.accent : Theme.frame
@@ -609,7 +609,7 @@ PanelWindow {
                 visible: wrap.twisting
                 z: 30
                 anchors.centerIn: parent
-                width: angL.implicitWidth + 20; height: 30; radius: 15
+                width: angL.implicitWidth + 20; height: 30; radius: Theme.rnd(15)
                 color: Theme.accent
                 Label { id: angL; anchors.centerIn: parent; text: Math.round(wrap.liveAng) + "°"; strong: true; color: Theme.onAccent }
             }
@@ -816,7 +816,7 @@ PanelWindow {
                                         smoothing: 0
                                         required property var modelData
                                         readonly property bool on: String(oc.val || "") === modelData[0]
-                                        width: 30; height: 30; radius: 15
+                                        width: 30; height: 30; radius: Theme.rnd(15)
                                         color: ed.swatch(modelData[0])
                                         border.width: on ? 3 : 1
                                         border.color: on ? Theme.accent : Theme.hairline
@@ -872,7 +872,7 @@ PanelWindow {
                                             required property string modelData
                                             readonly property bool on: String(oc.val || "") === modelData
                                             width: (parent.width - 3 * 6) / 4; height: width * 0.7
-                                            radius: 8
+                                            radius: Theme.rnd(8)
                                             color: Theme.container
                                             border.width: on ? 3 : 0; border.color: Theme.accent
                                             clip: true
@@ -1088,7 +1088,7 @@ PanelWindow {
         item: ({ id: "ghost", type: ed.dragType || "clock", face: "", opts: {} })
         x: ed.dragPos.x; y: ed.dragPos.y
         width: ed.dragSize[0]; height: ed.dragSize[1]
-        SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: 10; color: "transparent"; border.width: 2; border.color: Theme.accent }
+        SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: Theme.rnd(10); color: "transparent"; border.width: 2; border.color: Theme.accent }
     }
 
     // ── distances: while a widget moves, how far it is from each screen edge ──
@@ -1113,7 +1113,7 @@ PanelWindow {
                 smoothing: 0
                 visible: parent.len > 30
                 anchors.centerIn: parent
-                width: gl.implicitWidth + 12; height: 22; radius: 11
+                width: gl.implicitWidth + 12; height: 22; radius: Theme.rnd(11)
                 color: Theme.accent
                 Text { id: gl; anchors.centerIn: parent; text: Math.round(parent.parent.len) + " px"; color: Theme.onAccent; font.family: Theme.fontFamily; font.pixelSize: 11; font.weight: Font.Bold }
             }

@@ -438,7 +438,7 @@ ColumnLayout {
         // the eraser's ring under the pointer
         Rectangle {
             visible: d.tool === "eraser" && ma.containsMouse
-            width: Math.max(12, d.size * 2 * Sketch.z + 8); height: width; radius: Theme.chamfer ? 0 : width / 2
+            width: Math.max(12, d.size * 2 * Sketch.z + 8); height: width; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
             x: ma.mouseX - width / 2; y: ma.mouseY - height / 2
             color: "transparent"; border.width: 1.5; border.color: Theme.text
         }
@@ -452,7 +452,7 @@ ColumnLayout {
             y: pic ? (pic.y - Sketch.oy) * Sketch.z + rev * 0 : 0
             width: pic ? pic.w * Sketch.z + rev * 0 : 0
             height: pic ? pic.h * Sketch.z + rev * 0 : 0
-            Rectangle { anchors.fill: parent; anchors.margins: -1; color: "transparent"; border.width: 2; border.color: Theme.accent; radius: Theme.chamfer ? 0 : 2 }
+            Rectangle { anchors.fill: parent; anchors.margins: -1; color: "transparent"; border.width: 2; border.color: Theme.accent; radius: (Theme.chamfer || Theme.square) ? 0 : 2 }
             // eight handles: the corners (round: keep the shape; Shift stretches) and the sides
             // (bars: stretch it one way)
             Repeater {
@@ -463,7 +463,7 @@ ColumnLayout {
                     readonly property bool side: modelData[0] === 0.5 || modelData[1] === 0.5
                     width: side ? (modelData[0] === 0.5 ? 22 : 8) : 14
                     height: side ? (modelData[1] === 0.5 ? 22 : 8) : 14
-                    radius: side ? 4 : 7
+                    radius: Theme.rnd(side ? 4 : 7)
                     x: pickBox.width * modelData[0] - width / 2
                     y: pickBox.height * modelData[1] - height / 2
                     color: Theme.accent; border.width: 2; border.color: Theme.frame
@@ -761,7 +761,7 @@ ColumnLayout {
                 smoothing: 0
                 required property var modelData
                 readonly property bool on: Qt.colorEqual(d.ink, modelData)
-                width: 22; height: 22; radius: 11
+                width: 22; height: 22; radius: Theme.rnd(11)
                 Layout.preferredWidth: 22; Layout.preferredHeight: 22
                 color: modelData
                 border.width: on ? 3 : 1

@@ -67,7 +67,7 @@ RowLayout {
             id: tb
             x: 14; y: 14
             width: 40; height: 40
-            radius: tile.on ? 13 : 20
+            radius: Theme.rnd(tile.on ? 13 : 20)
             color: tile.on ? Theme.accent : Theme.control
             scale: tile.pressed ? 0.9 : (tile.hovered ? 1.08 : 1)
             Behavior on scale { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutBack } }
@@ -78,7 +78,7 @@ RowLayout {
         Rectangle {
             anchors.right: parent.right; anchors.rightMargin: 16
             y: 18
-            width: tile.on ? 22 : 8; height: 8; radius: Theme.chamfer ? 0 : 4
+            width: tile.on ? 22 : 8; height: 8; radius: (Theme.chamfer || Theme.square) ? 0 : 4
             color: tile.on ? Theme.accent : Theme.faint
             // (breathes while the system catches up)
             id: dot
@@ -313,10 +313,10 @@ RowLayout {
                 // progress
                 Rectangle {
                     visible: !!cc.player && cc.player.lengthSupported
-                    width: parent.width; height: 4; radius: Theme.chamfer ? 0 : 2
+                    width: parent.width; height: 4; radius: (Theme.chamfer || Theme.square) ? 0 : 2
                     color: Theme.ringTrack
                     Rectangle {
-                        height: parent.height; radius: Theme.chamfer ? 0 : 2
+                        height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 2
                         color: Theme.accent
                         width: cc.player && cc.player.length > 0 ? parent.width * Math.min(1, cc.player.position / cc.player.length) : 0
                     }

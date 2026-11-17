@@ -100,7 +100,7 @@ PanelWindow {
                 id: rip
                 visible: !!card.inkAt
                 anchors.fill: parent
-                radius: card.inkAt ? card.inkAt.radius : 0
+                radius: Theme.rnd(card.inkAt ? card.inkAt.radius : 0)
                 ink: card.inkAt ? card.inkAt.color : "white"
                 cx: card.inkAt ? card.inkAt.cx : 0
                 cy: card.inkAt ? card.inkAt.cy : 0

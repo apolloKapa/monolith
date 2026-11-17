@@ -52,7 +52,7 @@ PanelWindow {
         color: "transparent"
         border.width: 2
         border.color: Theme.accent
-        radius: Theme.chamfer ? 0 : 2
+        radius: (Theme.chamfer || Theme.square) ? 0 : 2
     }
     Repeater {
         model: win.mine && !win.screenMode && Capture.hasSel ? 4 : 0
@@ -60,7 +60,7 @@ PanelWindow {
             required property int index
             readonly property bool r: index % 2 === 1
             readonly property bool b: index >= 2
-            width: 14; height: 14; radius: Theme.chamfer ? 0 : 7
+            width: 14; height: 14; radius: (Theme.chamfer || Theme.square) ? 0 : 7
             x: (r ? Capture.sel.x + Capture.sel.width : Capture.sel.x) - 7
             y: (b ? Capture.sel.y + Capture.sel.height : Capture.sel.y) - 7
             color: Theme.accent
@@ -74,7 +74,7 @@ PanelWindow {
         x: Math.min(Capture.sel.x, win.width - width - 8)
         y: Capture.sel.y > 34 ? Capture.sel.y - 30 : Capture.sel.y + Capture.sel.height + 8
         width: sizeLabel.implicitWidth + 16; height: 24
-        radius: 12
+        radius: Theme.rnd(12)
         color: Theme.frame
         Label { id: sizeLabel; anchors.centerIn: parent; text: Math.round(Capture.sel.width) + " × " + Math.round(Capture.sel.height); font.pixelSize: Theme.sizeSmall; strong: true }
     }
@@ -240,7 +240,7 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.top
             anchors.bottomMargin: 10
-            width: hint.implicitWidth + 24; height: 30; radius: 15
+            width: hint.implicitWidth + 24; height: 30; radius: Theme.rnd(15)
             color: Theme.frame
             Label { id: hint; anchors.centerIn: parent; text: win.screenMode ? "Click a screen" : "Drag to pick an area   ·   F for the whole screen   ·   Esc to cancel"; font.pixelSize: Theme.sizeSmall }
         }

@@ -24,7 +24,7 @@ Item {
         spacing: 8
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
-            width: 68; height: 68; radius: Theme.chamfer ? 0 : 34
+            width: 68; height: 68; radius: (Theme.chamfer || Theme.square) ? 0 : 34
             color: Theme.container
             Icon {
                 anchors.centerIn: parent; name: em.icon; size: 32; color: Theme.subtext

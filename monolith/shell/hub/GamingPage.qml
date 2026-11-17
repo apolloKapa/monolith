@@ -44,7 +44,7 @@ Page {
                 id: pad
                 x: 14; width: 64; height: 64
                 anchors.verticalCenter: parent.verticalCenter
-                radius: GameMode.active ? 20 : 32
+                radius: Theme.rnd(GameMode.active ? 20 : 32)
                 color: GameMode.active ? Theme.accent : Theme.control
                 Behavior on radius { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springCurve } }
                 Icon { anchors.centerIn: parent; name: "sports_esports"; size: 34; filled: GameMode.active; color: GameMode.active ? Theme.onAccent : Theme.text }
@@ -98,8 +98,8 @@ Page {
                                 Label { width: parent.width / 2; horizontalAlignment: Text.AlignRight; text: modelData[2]; muted: true; font.pixelSize: Theme.sizeSmall }
                             }
                             Rectangle {
-                                width: parent.width; height: 10; radius: Theme.chamfer ? 0 : 5; color: Theme.ringTrack
-                                Rectangle { height: parent.height; radius: Theme.chamfer ? 0 : 5; width: Math.max(10, parent.width * modelData[1]); color: Theme.accent; Behavior on width { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutCubic } } }
+                                width: parent.width; height: 10; radius: (Theme.chamfer || Theme.square) ? 0 : 5; color: Theme.ringTrack
+                                Rectangle { height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 5; width: Math.max(10, parent.width * modelData[1]); color: Theme.accent; Behavior on width { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutCubic } } }
                             }
                         }
                     }

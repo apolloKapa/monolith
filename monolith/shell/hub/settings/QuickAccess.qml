@@ -28,7 +28,7 @@ ColumnLayout {
                     required property var modelData
                     readonly property bool on: sec.edges.indexOf(modelData[0]) !== -1
                     width: el.implicitWidth + 28; height: 34
-                    radius: 17
+                    radius: Theme.rnd(17)
                     color: on ? Theme.accent : (hovered ? Theme.control : Theme.containerHigh)
                     onClicked: {
                         const l = on ? sec.edges.filter(x => x !== modelData[0]) : sec.edges.concat([modelData[0]]);

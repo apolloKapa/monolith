@@ -21,7 +21,7 @@ PanelWindow {
     Rectangle {
         id: dot
         anchors.fill: parent
-        radius: Theme.chamfer ? 0 : width / 2
+        radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
         color: Qt.alpha(Theme.frame, 0.85)
         border.width: 3; border.color: Theme.accent
         Label { anchors.centerIn: parent; text: Capture.countdown; strong: true; font.pixelSize: 64 }

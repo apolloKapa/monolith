@@ -36,7 +36,7 @@ SmoothRect {
     MaterialPane {
         anchors.fill: parent
         anchors.margins: root.border.width
-        radius: Math.max(0, root.radius - root.border.width)
+        radius: Theme.rnd(Math.max(0, root.radius - root.border.width))
         color: root.color
         strength: Theme.materialStrength * 0.7
         // (a pattern of its own: tiles of one size side by side otherwise all looked the same)

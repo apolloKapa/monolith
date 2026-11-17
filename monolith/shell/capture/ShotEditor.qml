@@ -126,7 +126,7 @@ FloatingWindow {
                         Pressable {
                             required property string modelData
                             width: 28; height: 28; y: 6
-                            radius: 14
+                            radius: Theme.rnd(14)
                             color: modelData
                             border.width: Qt.colorEqual(win.colour, modelData) ? 3 : 1
                             border.color: Qt.colorEqual(win.colour, modelData) ? Theme.accent : Qt.alpha(Theme.text, 0.3)
@@ -141,7 +141,7 @@ FloatingWindow {
                             width: 36; height: 40
                             color: win.size === index ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
                             onClicked: win.size = index
-                            Rectangle { anchors.centerIn: parent; width: [5, 9, 15][parent.index]; height: width; radius: Theme.chamfer ? 0 : width / 2; color: Theme.text }
+                            Rectangle { anchors.centerIn: parent; width: [5, 9, 15][parent.index]; height: width; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2; color: Theme.text }
                         }
                     }
                 }
@@ -208,7 +208,7 @@ FloatingWindow {
                                 x: sh.x; y: sh.y
                                 Rectangle {
                                     visible: parent.sh.t === "step"
-                                    width: parent.sh.s * 5; height: width; radius: Theme.chamfer ? 0 : width / 2
+                                    width: parent.sh.s * 5; height: width; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
                                     x: -width / 2; y: -height / 2
                                     color: parent.sh.c
                                     border.width: Math.max(2, width / 14); border.color: "white"

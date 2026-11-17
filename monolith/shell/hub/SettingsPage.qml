@@ -297,7 +297,7 @@ Page {
                                 // (not while the page is first built: the open section unfolded from
                                 // nothing and pushed everything below it down as Settings came in)
                                 Behavior on height { enabled: page.settled; NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
-                                Rectangle { x: 21; y: 2; width: 2; height: pages.implicitHeight - 4; radius: Theme.chamfer ? 0 : 1; color: Theme.hairline }
+                                Rectangle { x: 21; y: 2; width: 2; height: pages.implicitHeight - 4; radius: (Theme.chamfer || Theme.square) ? 0 : 1; color: Theme.hairline }
                                 // the open page's highlight and its mark on the line: one of each per
                                 // section, gliding to the page you pick (the mark stretches on its way:
                                 // its head gets there first, its tail catches up)
@@ -320,7 +320,7 @@ Page {
                                     Rectangle {
                                         x: 20
                                         y: Math.min(glide.head, glide.tail) + 8
-                                        width: 4; radius: Theme.chamfer ? 0 : 2
+                                        width: 4; radius: (Theme.chamfer || Theme.square) ? 0 : 2
                                         height: 18 + Math.abs(glide.head - glide.tail)
                                         color: Theme.accent
                                     }

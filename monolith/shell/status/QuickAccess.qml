@@ -295,7 +295,7 @@ PanelWindow {
             Rectangle {
                 visible: !qa.expanded
                 color: Theme.ringTrack
-                radius: Theme.chamfer ? 0 : 2
+                radius: (Theme.chamfer || Theme.square) ? 0 : 2
                 width: qa.vertical ? 4 : 36
                 height: qa.vertical ? 36 : 4
                 x: qa.edge === "left" ? parent.width - 9 : (qa.edge === "right" ? 5 : (parent.width - width) / 2)

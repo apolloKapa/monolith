@@ -98,7 +98,7 @@ PanelWindow {
                 Rectangle {
                     anchors.centerIn: parent
                     width: parent.width * 1.6; height: width
-                    radius: width / 2
+                    radius: Theme.rnd(width / 2)
                     color: Theme.accent
                     opacity: 0.0
                     layer.enabled: true
@@ -113,7 +113,7 @@ PanelWindow {
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 10
-                    radius: Theme.chamfer ? 0 : width / 2
+                    radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
                     color: Qt.alpha(Theme.frame, 0.78)
                     border.width: 1
                     border.color: Qt.alpha(Theme.text, 0.1)

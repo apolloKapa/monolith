@@ -182,11 +182,11 @@ PanelWindow {
                                     smoothing: 0
                                     visible: row.radio
                                     anchors.centerIn: parent
-                                    width: 16; height: 16; radius: 8
+                                    width: 16; height: 16; radius: Theme.rnd(8)
                                     color: "transparent"
                                     border.width: 1.5
                                     border.color: row.on ? Theme.accent : Theme.subtext
-                                    Rectangle { visible: row.on; anchors.centerIn: parent; width: 8; height: 8; radius: Theme.chamfer ? 0 : 4; color: Theme.accent }
+                                    Rectangle { visible: row.on; anchors.centerIn: parent; width: 8; height: 8; radius: (Theme.chamfer || Theme.square) ? 0 : 4; color: Theme.accent }
                                 }
                                 Image {
                                     visible: !row.check && !row.radio && status === Image.Ready

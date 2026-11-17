@@ -122,14 +122,14 @@ ColumnLayout {
             id: groove
             x: track.pad; anchors.verticalCenter: parent.verticalCenter
             width: parent.width - 2 * track.pad; height: 6
-            radius: 3
+            radius: Theme.rnd(3)
             color: Theme.control
         }
         // the trail: the part of the groove the pill has covered
         SmoothRect {
             x: track.pad; anchors.verticalCenter: parent.verticalCenter
             width: Math.max(0, pill.x + pill.width / 2 - track.pad); height: 6
-            radius: 3
+            radius: Theme.rnd(3)
             color: Qt.alpha(Theme.accent, 0.35)
             visible: Theme.animOn
         }

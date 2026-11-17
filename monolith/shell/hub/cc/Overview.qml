@@ -86,7 +86,7 @@ GridLayout {
                         readonly property int day: index - cal.first + 1
                         readonly property bool today: day === cal.now.getDate()
                         width: parent.cw; height: 24
-                        SmoothRect { smoothing: 0; anchors.centerIn: parent; width: 24; height: 24; radius: 12; visible: parent.today; color: Theme.accent }
+                        SmoothRect { smoothing: 0; anchors.centerIn: parent; width: 24; height: 24; radius: Theme.rnd(12); visible: parent.today; color: Theme.accent }
                         Label { anchors.centerIn: parent; visible: parent.day > 0; text: parent.day; color: parent.today ? Theme.onAccent : Theme.text; strong: parent.today; font.pixelSize: Theme.sizeSmall }
                     }
                 }
