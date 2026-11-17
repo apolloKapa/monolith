@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Effects
 import QtMultimedia
 import QtQuick.Layouts
@@ -196,7 +197,7 @@ PanelWindow {
             component Card: ClippingRectangle {
                 id: card
                 property string path: ""
-                readonly property real dpr: card.Window.window && card.Window.window.screen ? (card.Window.window.screen.devicePixelRatio || 1) : 1
+                readonly property real dpr: card.Screen.devicePixelRatio || 1
                 property bool current: false
                 // (Cyberpunk: square, the corner cut off the picture and a neon edge along the cut)
                 radius: (Theme.chamfer || Theme.square) ? 0 : Theme.corner(height, 6)

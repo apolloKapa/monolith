@@ -84,7 +84,7 @@ FaceBase {
         Behavior on scale { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
         Item {
             anchors.fill: parent
-            NumberAnimation on rotation { from: 0; to: 360; duration: 24000; loops: Animation.Infinite; running: f.live; paused: !f.playing }
+            NumberAnimation on rotation { from: 0; to: 360; duration: 24000; loops: Animation.Infinite; running: f.live; paused: running && !f.playing }
             Rectangle { anchors.fill: parent; radius: width / 2; color: Theme.control }
             Image { id: cov; anchors.fill: parent; source: f.active ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; asynchronous: true; visible: false }
             MultiEffect {

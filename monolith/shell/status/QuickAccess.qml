@@ -245,8 +245,9 @@ PanelWindow {
 
             Grid {
                 anchors.centerIn: parent
+                // (columns only: rows follow. With both set, switching edges left them out of step for
+                // a moment, and the grid complained it had more items than room)
                 columns: qa.vertical ? 1 : qa.tools.length + 3
-                rows: qa.vertical ? qa.tools.length + 3 : 1
                 spacing: 6
                 Repeater {
                     model: qa.tools
