@@ -43,13 +43,27 @@ FaceBase {
         antialiasing: true
         id: dialC
         anchors.fill: parent
+        // what it was last painted with: the glow follows the sweeping second hand, so it changes
+        // every frame. Painting this canvas (in software) every frame, up to 165 times a second,
+        // was most of the shell's CPU with the clock on screen; now it repaints at most 30 times
+        // a second, and only when a lobe has visibly changed. (The hands still move every frame)
         property var g: f.glow
-        onGChanged: requestPaint()
+        property var painted: []
+        property bool dirty: false
+        function changed() {
+            const a = g, b = painted;
+            if (!b || b.length !== a.length) return true;
+            for (let i = 0; i < a.length; i++) if (Math.abs(a[i] - b[i]) > 0.012) return true;
+            return false;
+        }
+        onGChanged: { if (!f.secs) requestPaint(); else if (changed()) dirty = true; }
+        Timer { interval: 33; repeat: true; running: dialC.dirty && f.live && f.visible; onTriggered: { dialC.dirty = false; dialC.requestPaint(); } }
         onWidthChanged: requestPaint()
         onHeightChanged: requestPaint()
         property color c: f.dial
         onCChanged: requestPaint()
         onPaint: {
+            painted = g.slice();
             const ctx = getContext("2d");
             ctx.reset();
             const cx = width / 2, cy = height / 2, base = f.d * 0.435, amp = f.d * 0.042;

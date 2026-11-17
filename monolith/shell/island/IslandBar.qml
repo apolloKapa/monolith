@@ -525,7 +525,7 @@ Item {
             readonly property string iconMode: String(bar.mopt("title.icon", "generic"))       // generic | app | none
             readonly property var entry: Niri.focusedAppId !== "" ? DesktopEntries.heuristicLookup(Niri.focusedAppId) : null
             Icon { visible: titleMod.iconMode === "generic" || bar.vertical; name: "select_window"; size: 16; color: Theme.subtext }
-            Image { visible: titleMod.iconMode === "app" && !bar.vertical; width: 16; height: 16; sourceSize: Qt.size(32, 32); source: Quickshell.iconPath(titleMod.entry ? titleMod.entry.icon : Niri.focusedAppId, "application-x-executable") }
+            Image { visible: titleMod.iconMode === "app" && !bar.vertical; width: 16; height: 16; sourceSize: Qt.size(32, 32); source: (titleMod.entry ? titleMod.entry.icon : Niri.focusedAppId) ? Quickshell.iconPath(titleMod.entry ? titleMod.entry.icon : Niri.focusedAppId, "application-x-executable") : "" }
             Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering;
                 readonly property string what: String(bar.mopt("title.text", "title"))     // title | app | both
                 readonly property string app: titleMod.entry ? titleMod.entry.name : Niri.focusedAppId

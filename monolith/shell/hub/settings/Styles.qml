@@ -39,7 +39,7 @@ ColumnLayout {
         readonly property color bg: st.oled ? "#000000" : (pc ? pc.base : Theme.m("surface", "#16161c"))
         readonly property color panel: st.oled ? "#141414" : (pc ? pc.surface0 : Theme.m("surface_container_high", "#26262e"))
         readonly property color acc: pc ? pc.mauve : Theme.m("primary", "#b6c4ff")
-        readonly property color ink: pc ? pc.text : Theme.m("on_surface", "#e6e6ee")
+        readonly property color sink: pc ? pc.text : Theme.m("on_surface", "#e6e6ee")
         readonly property real rad: st.square ? 0 : Math.min(14, 6 * (st.radiusScale || 1))
         Layout.fillWidth: true
         Layout.preferredHeight: 138
@@ -53,7 +53,7 @@ ColumnLayout {
             color: sc.bg
             opacity: sc.st.opaque === false ? 0.8 : 1
             border.width: sc.st.outline ? sc.st.outline[0] : 0
-            border.color: sc.st.outlineRole === "accent" || sc.st.outlineRole === "accentSoft" ? sc.acc : (sc.st.outlineRole === "ink" || sc.st.outlineRole === "text" ? sc.ink : Qt.alpha(sc.ink, 0.25))
+            border.color: sc.st.outlineRole === "accent" || sc.st.outlineRole === "accentSoft" ? sc.acc : (sc.st.outlineRole === "ink" || sc.st.outlineRole === "text" ? sc.sink : Qt.alpha(sc.sink, 0.25))
             // a hard shadow, for the styles that have one
             Rectangle {
                 visible: (sc.st.hardShadow || 0) > 0
@@ -61,7 +61,7 @@ ColumnLayout {
                 x: sc.st.hardShadow || 0; y: sc.st.hardShadow || 0
                 width: parent.width; height: parent.height
                 radius: parent.radius
-                color: sc.ink
+                color: sc.sink
             }
             Row {
                 anchors.centerIn: parent

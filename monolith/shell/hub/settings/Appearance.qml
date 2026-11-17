@@ -172,7 +172,7 @@ ColumnLayout {
     }
     SettingRow {
         icon: "font_download"; title: "Font"
-        key: "theme.font"
+        key: "theme.font"; def: ""
         desc: "Used everywhere in the shell" + (Store.get("theme.font", "") === "" ? " (the style's own, " + Theme.fontFamily + ")" : "")
         FontPicker {
             width: 300

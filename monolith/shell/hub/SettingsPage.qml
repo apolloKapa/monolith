@@ -402,7 +402,10 @@ Page {
             readonly property var niriPages: ({ Input: "Keyboard and mouse", Capture: "Where screenshots are saved" })
             visible: Niri.hyprland && niriPages[page.file] !== undefined
             Layout.fillWidth: true
-            Layout.preferredHeight: visible ? hyNote.implicitHeight + 20 : 0
+            // (the note's height, taken a moment after it wraps: bound straight to it, its height
+            // set the row's, the row's width the note's wrapping, and round again: a binding loop)
+            property real noteH: 0
+            Layout.preferredHeight: visible ? noteH + 20 : 0
             radius: Theme.corner(56, 6)
             color: Qt.alpha(Theme.accent, 0.12)
             border.width: 1; border.color: Qt.alpha(Theme.accent, 0.35)
@@ -411,6 +414,8 @@ Page {
                 id: hyNote
                 anchors.left: hyIcon.right; anchors.leftMargin: 10; anchors.right: parent.right; anchors.rightMargin: 12; y: 10
                 wrapMode: Text.WordWrap; font.pixelSize: Theme.sizeSmall
+                onImplicitHeightChanged: Qt.callLater(() => { if (hyNote.parent) hyNote.parent.noteH = hyNote.implicitHeight; })
+                Component.onCompleted: parent.noteH = implicitHeight
                 text: (parent.niriPages[page.file] || "") + ": these settings are niri's, so they apply when you log into niri. On Hyprland, set them in ~/.config/hypr/hyprland.conf."
                       + (page.file === "Input" ? " Mouse scroll speed and Menu scroll speed work on Hyprland too." : "")
             }

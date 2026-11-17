@@ -10,7 +10,7 @@ FaceBase {
     id: f
     property var hovered: null
     property var picked: null
-    property bool editing: false
+    property bool naming: false   // typing a name (not FaceBase.editing: the widget editor)
     property bool held: false
     readonly property bool want: f.live && f.visible
     onWantChanged: { if (want && !held) { GitHub.hold(); held = true; } else if (!want && held) { GitHub.release(); held = false; } }
@@ -46,17 +46,17 @@ FaceBase {
             Icon { name: "commit"; size: 18; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter }
             SmoothRect {
                 smoothing: 0
-                visible: !f.editing
+                visible: !f.naming
                 anchors.verticalCenter: parent.verticalCenter
                 height: 28; width: un.implicitWidth + 16; radius: Theme.corner(28, 8)
                 color: um.containsMouse ? Qt.alpha(Theme.control, 0.85) : "transparent"
                 Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
                 Text { renderType: Text.CurveRendering; id: un; anchors.centerIn: parent; text: GitHub.user !== "" ? GitHub.user : "Set your GitHub name"; color: GitHub.user !== "" ? Theme.text : Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: 15 }
-                MouseArea { id: um; anchors.fill: parent; hoverEnabled: true; enabled: f.live; cursorShape: Qt.IBeamCursor; onClicked: { f.editing = true; input.text = GitHub.user; input.forceActiveFocus(); input.selectAll(); } }
+                MouseArea { id: um; anchors.fill: parent; hoverEnabled: true; enabled: f.live; cursorShape: Qt.IBeamCursor; onClicked: { f.naming = true; input.text = GitHub.user; input.forceActiveFocus(); input.selectAll(); } }
             }
             SmoothRect {
                 smoothing: 0
-                visible: f.editing
+                visible: f.naming
                 anchors.verticalCenter: parent.verticalCenter
                 height: 28; width: 200; radius: Theme.corner(28, 8)
                 color: Qt.alpha(Theme.control, 0.9)
@@ -69,9 +69,9 @@ FaceBase {
                     color: Theme.text; selectionColor: Theme.selected
                     font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: 13
                     clip: true
-                    onAccepted: { GitHub.setUser(text); f.editing = false; }
-                    Keys.onEscapePressed: f.editing = false
-                    onActiveFocusChanged: if (!activeFocus) f.editing = false
+                    onAccepted: { GitHub.setUser(text); f.naming = false; }
+                    Keys.onEscapePressed: f.naming = false
+                    onActiveFocusChanged: if (!activeFocus) f.naming = false
                     Text { renderType: Text.CurveRendering; visible: input.text === ""; text: "username, then Enter"; color: Theme.subtext; font: input.font; anchors.verticalCenter: parent.verticalCenter }
                 }
             }

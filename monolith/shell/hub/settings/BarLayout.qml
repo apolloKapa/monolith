@@ -692,7 +692,7 @@ ColumnLayout {
             onPicked: v => Store.set("bar.workspaces", v)
         }
         SettingRow {
-            key: "bar.ws.anim"
+            key: "bar.ws.anim"; def: "worm"
             icon: "animation"; title: "Switching animation"
             desc: ({ worm: "Stretches over to the next one, the front end first", slide: "Glides over in one piece", bouncy: "Slides over and wobbles into place",
                      hop: "Jumps over in a little arc", fade: "Fades out where it was and in where it's going", grow: "No highlight: the pills themselves grow and change colour",
@@ -707,7 +707,7 @@ ColumnLayout {
         ModToggle { k: "ws.hideEmpty"; d: false; icon: "filter_alt"; title: "Hide empty workspaces"; desc: "Only the ones with windows, and the one you're on" }
         ModToggle { k: "ws.scroll"; d: true; icon: "mouse"; title: "Scroll to switch"; desc: "The wheel over the workspaces goes to the next or previous one" }
         SettingRow {
-            key: "bar.ws.gap"
+            key: "bar.ws.gap"; def: -1
             icon: "space_bar"; title: "Space between them"; desc: Number(Store.get("bar.ws.gap", -1)) < 0 ? "Automatic (by style)" : Store.get("bar.ws.gap", -1) + " px"
             RowLayout {
                 spacing: 8
@@ -754,7 +754,7 @@ ColumnLayout {
             }
         }
         SettingRow {
-            key: "bar.vis.style";
+            key: "bar.vis.style"; def: "bars";
             icon: "graphic_eq"; title: "Look"; desc: "Separate bars, or one smooth filled shape"
             Segmented { width: 220; opts: [["bars", "Bars"], ["smooth", "Smooth"]]; value: String(Store.get("bar.vis.style", "bars")); onPicked: v => Store.set("bar.vis.style", v) }
         }
@@ -780,7 +780,7 @@ ColumnLayout {
             NumberBox { from: 0; to: 12; unit: "px"; value: Number(Store.get("bar.vis.spacing", 2)); onMoved: v => Store.set("bar.vis.spacing", v) }
         }
         SettingRow {
-            key: "bar.vis.anchor";
+            key: "bar.vis.anchor"; def: "bottom";
             icon: "vertical_align_center"; title: "Grows from"
             Segmented { width: 300; opts: [["bottom", "Bottom"], ["middle", "Middle"], ["top", "Top"]]; value: String(Store.get("bar.vis.anchor", "bottom")); onPicked: v => Store.set("bar.vis.anchor", v) }
         }
@@ -844,7 +844,7 @@ ColumnLayout {
         spacing: 8
         ModPreview { module: "stats" }
         SettingRow {
-            key: "bar.stats";
+            key: "bar.stats"; def: ["cpu", "temp"];
             icon: "memory"; title: "System stats"; desc: "Which ones show"
             Row {
                 spacing: 4
