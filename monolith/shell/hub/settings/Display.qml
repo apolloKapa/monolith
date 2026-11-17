@@ -54,11 +54,13 @@ ColumnLayout {
     // ── arrangement: the screens that are on, drawn where they sit; drag one to move it ──
     SettingRow {
         icon: "drag_pan"; title: "Arrangement"
-        desc: arr.dirty ? "Moved. Apply to keep it (niri moves the screens at once)" : "Drag a screen; it settles against the others (no gaps, no overlaps)"
+        desc: arr.dirty ? "Moved. Apply to keep it (" + (Niri.hyprland ? "Hyprland" : "niri") + " moves the screens at once)" : "Drag a screen: it snaps against the others, lined up with their edges or middles (no gaps, no overlaps)"
+        // (only once something has moved: a faded Apply all the time looked broken)
         Row {
             spacing: 6
-            Button { visible: arr.dirty; text: "Reset"; onClicked: arr.reset() }
-            Button { text: "Apply"; primary: true; enabledInput: arr.dirty; opacity: arr.dirty ? 1 : 0.5; onClicked: arr.apply() }
+            visible: arr.dirty
+            Button { text: "Reset"; onClicked: arr.reset() }
+            Button { text: "Apply"; primary: true; onClicked: arr.apply() }
         }
     }
     SmoothRect {
@@ -74,6 +76,9 @@ ColumnLayout {
         readonly property var mons: sec.outputs.filter(o => o.logical).map(o => ({ name: o.name, w: o.logical.width, h: o.logical.height, model: (o.make + " " + o.model).trim() }))
         property var pos: ({})          // name -> [x, y]
         property bool dirty: false
+        // where the screen being dragged will land (preview pixels), shown as an outline: null
+        // when nothing is being dragged
+        property var ghost: null
         function reset() {
             const p = {};
             for (const o of sec.outputs) if (o.logical) p[o.name] = [o.logical.x, o.logical.y];
@@ -159,13 +164,47 @@ ColumnLayout {
                     Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: mon.modelData.w + " × " + mon.modelData.h; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
                     Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: mon.modelData.model; muted: true; font.pixelSize: Theme.sizeSmall - 2; visible: parent.parent.height > 70 }
                 }
+                // dragging: it follows the pointer, and snaps onto the nearest spot it can go
+                // (against another screen, lined up with its edge or middle) once that's within
+                // reach; the outline shows where it lands. Let go: it settles there
                 DragHandler {
                     id: drag
-                    target: mon
-                    // the drag sets x/y itself; on release the screen settles and follows the layout again
-                    onActiveChanged: if (!active) { arr.moved(mon.modelData.name, mon.x / arr.box.s + arr.box.x0, mon.y / arr.box.s + arr.box.y0); mon.place(); }
+                    target: null
+                    property point start: Qt.point(0, 0)
+                    readonly property real reach: 26      // preview pixels
+                    onActiveChanged: {
+                        if (active) { start = Qt.point(mon.x, mon.y); mon.x = start.x; mon.y = start.y; return; }
+                        arr.ghost = null;
+                        arr.moved(mon.modelData.name, mon.x / arr.box.s + arr.box.x0, mon.y / arr.box.s + arr.box.y0);
+                        mon.place();
+                    }
+                    onTranslationChanged: {
+                        if (!active) return;
+                        const b = arr.box;
+                        const rx = start.x + translation.x, ry = start.y + translation.y;
+                        const sn = arr.settle(mon.modelData.name, rx / b.s + b.x0, ry / b.s + b.y0);
+                        const sx = (sn[0] - b.x0) * b.s, sy = (sn[1] - b.y0) * b.s;
+                        const near = Math.hypot(sx - rx, sy - ry) < reach;
+                        mon.x = near ? sx : rx;
+                        mon.y = near ? sy : ry;
+                        arr.ghost = { x: sx, y: sy, w: mon.width, h: mon.height, on: near };
+                    }
                 }
             }
+        }
+        // where the dragged screen lands
+        SmoothRect {
+            smoothing: 0
+            visible: !!arr.ghost
+            z: 0.5
+            x: arr.ghost ? arr.ghost.x : 0
+            y: arr.ghost ? arr.ghost.y : 0
+            width: arr.ghost ? arr.ghost.w : 0
+            height: arr.ghost ? arr.ghost.h : 0
+            radius: Theme.rnd(8)
+            color: Qt.alpha(Theme.accent, arr.ghost && arr.ghost.on ? 0.16 : 0.08)
+            border.width: 2
+            border.color: Qt.alpha(Theme.accent, arr.ghost && arr.ghost.on ? 0.9 : 0.45)
         }
         Label { visible: arr.mons.length === 0; anchors.centerIn: parent; text: "No screens found"; muted: true }
     }

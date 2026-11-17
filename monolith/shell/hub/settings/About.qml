@@ -138,8 +138,14 @@ ColumnLayout {
     }
     SettingRow {
         key: "updates.check"; def: true;
-        icon: "autorenew"; title: "Check automatically"; desc: "Every few hours, in the background"
+        icon: "autorenew"; title: "Check automatically"; desc: "In the background, every " + Updates.everyMin + (Updates.everyMin === 1 ? " minute" : " minutes")
         Toggle { checked: Store.get("updates.check", true) !== false; onToggled: on => Store.set("updates.check", on) }
+    }
+    SettingRow {
+        key: "updates.interval"; def: 60;
+        visible: Store.get("updates.check", true) !== false
+        icon: "schedule"; title: "Check every"; desc: "How often Monolith looks for a new version"
+        NumberBox { from: 1; to: 60; step: 1; unit: "min"; value: Updates.everyMin; onMoved: v => Store.set("updates.interval", v) }
     }
     SettingRow {
         icon: "waving_hand"; title: "Welcome tour"; desc: "The first-launch setup again"

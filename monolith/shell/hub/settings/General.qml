@@ -89,7 +89,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "weather.interval"; def: 20;
-        icon: "update"; title: "Weather refresh"; desc: "How often it looks again"
-        NumberBox { from: 5; to: 720; slideTo: 120; step: 5; unit: "min"; value: Number(Store.get("weather.interval", 20)); onMoved: v => Store.set("weather.interval", v) }
+        icon: "update"; title: "Weather refresh"; desc: "How often it looks again: every " + Weather.everyMin + (Weather.everyMin === 1 ? " minute" : " minutes")
+        NumberBox { from: 1; to: 60; step: 1; unit: "min"; value: Weather.everyMin; onMoved: v => Store.set("weather.interval", v) }
     }
 }

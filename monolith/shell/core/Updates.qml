@@ -72,12 +72,14 @@ Singleton {
         stdout: StdioCollector { onStreamFinished: if (text.trim() === "update") up.update() }
     }
 
+    // how often (Settings → Updates & about → Check every: 1 to 60 minutes). The first look is a
+    // minute after the shell starts; after that, every so often
+    readonly property int everyMin: Math.max(1, Math.min(60, Math.round(Number(Store.get("updates.interval", 60)) || 60)))
     Timer {
-        interval: 6 * 3600 * 1000; repeat: true; running: Store.get("updates.check", true) !== false
-        triggeredOnStart: true
-        onTriggered: startDelay.restart()
+        interval: up.everyMin * 60 * 1000; repeat: true; running: Store.get("updates.check", true) !== false
+        onTriggered: up.check()
     }
-    Timer { id: startDelay; interval: 60000; onTriggered: up.check() }
+    Timer { id: startDelay; interval: 60000; running: Store.get("updates.check", true) !== false; onTriggered: up.check() }
 
     IpcHandler {
         target: "updates"

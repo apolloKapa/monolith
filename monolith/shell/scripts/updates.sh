@@ -41,6 +41,11 @@ case "$1" in
         if [ -z "$remote" ] && [ "$MONOLITH_BRANCH" != main ]; then MONOLITH_BRANCH=main; remote=$(branch_head main); fi
         [ -z "$remote" ] && exit 2                                   # offline, or GitHub unreachable
         [ -n "$have" ] && [ "$(printf %s "$remote" | cut -c1-${#have})" = "$have" ] && exit 0   # up to date
+        # the same newest version as the last look: what it said then (checking every minute, the
+        # list of changes, from GitHub's API, would run out of its 60 requests an hour)
+        cache="${XDG_CACHE_HOME:-$HOME/.cache}/monolith/update-check"
+        if [ -f "$cache" ] && [ "$(head -n 1 "$cache")" = "$have $remote" ]; then tail -n +2 "$cache"; exit 0; fi
+        out="$(
         # what changed: GitHub's list of commits between yours and the newest
         ver=$(curl -fsSL --max-time 15 "https://raw.githubusercontent.com/$REPO_SLUG/$remote/monolith/version.txt" 2>/dev/null | head -1)
         echo "@${ver:-new} $(printf %s "$remote" | cut -c1-7)"
@@ -51,6 +56,13 @@ try:
     d=json.load(sys.stdin)
     for c in d.get("commits", []): print(c["commit"]["message"].split("\n")[0][:200])
 except Exception: pass' 2>/dev/null
+        fi
+        )"
+        printf '%s\n' "$out"
+        # (kept only when complete: the version and the list of changes; a refused or failed one is
+        # asked again next time)
+        if [ "$(printf '%s\n' "$out" | wc -l)" -gt 1 ] && ! printf '%s' "$out" | head -n 1 | grep -q '^@new '; then
+            mkdir -p "$(dirname "$cache")" && printf '%s\n%s\n' "$have $remote" "$out" > "$cache"
         fi
         ;;
     update)

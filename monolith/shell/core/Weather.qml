@@ -72,7 +72,9 @@ Singleton {
             }
         }
     }
-    Timer { interval: Number(Store.get("weather.interval", 20)) * 60 * 1000; running: true; repeat: true; triggeredOnStart: true; onTriggered: w.refresh() }
+    // how often it looks again (Settings → General → Weather refresh: 1 to 60 minutes)
+    readonly property int everyMin: Math.max(1, Math.min(60, Math.round(Number(Store.get("weather.interval", 20)) || 20)))
+    Timer { interval: w.everyMin * 60 * 1000; running: true; repeat: true; triggeredOnStart: true; onTriggered: w.refresh() }
     onLocChanged: { if (loc) noPlace = false; refresh(); }
 
     // No place set (a new install): found from the connection, like Settings → General's

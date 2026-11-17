@@ -118,7 +118,7 @@ WlSessionLock {
                 x: Math.max(0, Math.min(modelData.x * surface.width, surface.width - width))
                 y: Math.max(0, Math.min(modelData.y * surface.height, surface.height - height))
                 opacity: surface.enter
-                scale: Theme.popScale + (1 - Theme.popScale) * surface.enter
+                scale: surface.enter > 0.999 ? 1 : Theme.popScale + (1 - Theme.popScale) * surface.enter   // (exactly 1 once in: 0.99999… resampled the clock and blurred it)
             }
         }
 
@@ -174,7 +174,7 @@ WlSessionLock {
             spacing: 14
             // fades in with a little zoom (and out when unlocking)
             opacity: surface.enter
-            scale: Theme.popScale + (1 - Theme.popScale) * surface.enter
+            scale: surface.enter > 0.999 ? 1 : Theme.popScale + (1 - Theme.popScale) * surface.enter   // (exactly 1 once in: 0.99999… resampled the clock and blurred it)
             transformOrigin: placed ? Item.Center : Item.Bottom
             readonly property string avatar: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face"))
 

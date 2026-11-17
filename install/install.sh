@@ -171,6 +171,7 @@ step "Settings"
 init_settings "$PROJECT_ROOT" "$(get_wallpaper_dir)"
 # another shell (Serpantinum) on this PC: leave it and its app colours alone
 share_with_other_shell
+quiet_other_shells
 
 step "Services"
 setup_services
