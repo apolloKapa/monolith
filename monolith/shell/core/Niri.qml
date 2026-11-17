@@ -52,6 +52,22 @@ Singleton {
             : Object.keys(windows).filter(k => windows[k].workspace_id === ws.id);   // (Hyprland: none is noted)
         return ids.some(k => { const w = windows[k]; return !!w && (w.is_fullscreen === true || covers(w)); });
     }
+    // is the box (x, y, w, h, in the screen's own coordinates) hidden behind a window on the
+    // workspace showing on this screen? (a desktop widget there then stops animating: unseen, it
+    // kept the whole desktop layer redrawing at the screen's refresh rate, wallpaper and all)
+    function hides(output, x, y, w, h) {
+        if (fullscreenOn(output)) return true;
+        const ws = workspaces.find(z => z.output === output && z.is_active);
+        if (!ws) return false;
+        for (const k in windows) {
+            const win = windows[k];
+            if (!win || win.workspace_id !== ws.id || !win.layout) continue;
+            const pos = win.layout.tile_pos_in_workspace_view, size = win.layout.tile_size;
+            if (!pos || !size) continue;
+            if (pos[0] <= x + 1 && pos[1] <= y + 1 && pos[0] + size[0] >= x + w - 1 && pos[1] + size[1] >= y + h - 1) return true;
+        }
+        return false;
+    }
     // the screen with the focused workspace
     readonly property string focusedOutput: { const w = workspaces.find(w => w.is_focused); return w ? (w.output || "") : ""; }
     readonly property string layoutName: layouts.length > layoutIndex ? layouts[layoutIndex] : ""

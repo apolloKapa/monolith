@@ -196,6 +196,7 @@ PanelWindow {
             component Card: ClippingRectangle {
                 id: card
                 property string path: ""
+                readonly property real dpr: card.Window.window && card.Window.window.screen ? (card.Window.window.screen.devicePixelRatio || 1) : 1
                 property bool current: false
                 // (Cyberpunk: square, the corner cut off the picture and a neon edge along the cut)
                 radius: (Theme.chamfer || Theme.square) ? 0 : Theme.corner(height, 6)
@@ -221,7 +222,9 @@ PanelWindow {
                     source: Wall.isVideo(card.path) || card.path === "" ? ""
                           : card.thumbState === "ok" ? "file://" + Wall.picThumb(card.path)
                           : card.thumbState === "fail" ? Wall.url(card.path) : ""
-                    sourceSize: Qt.size(960, 600)
+                    // (decoded at the size it's shown, not the copy's 960 × 600: a grid of fifths
+                    // decoded five times the pixels it showed, while scrolling)
+                    sourceSize: Qt.size(Math.min(960, Math.ceil(card.width * card.dpr)), Math.min(600, Math.ceil(card.height * card.dpr)))
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     opacity: status === Image.Ready ? 1 : 0
@@ -239,6 +242,9 @@ PanelWindow {
                 height: parent.height - y - 34
                 model: win.picList
                 pathItemCount: Math.min(9, win.picList.length)
+                // (the cards just scrolled past stay built: each one made again, its picture
+                // decoded again, as it came back in was the stutter while flicking through)
+                cacheItemCount: 10
                 preferredHighlightBegin: 0.5
                 preferredHighlightEnd: 0.5
                 highlightRangeMode: PathView.StrictlyEnforceRange
@@ -447,6 +453,8 @@ PanelWindow {
                     clip: true
                     cellWidth: width / 3
                     cellHeight: cellWidth * 0.6
+                    cacheBuffer: Math.max(0, height)
+                    reuseItems: true
                     model: win.liveList
                     boundsBehavior: Flickable.StopAtBounds
                     delegate: Item {
@@ -486,6 +494,10 @@ PanelWindow {
                 clip: true
                 cellWidth: width / 5
                 cellHeight: cellWidth * 0.64
+                // (rows a screen ahead are built before they scroll in, and rows that leave are
+                // reused, not made again)
+                cacheBuffer: Math.max(0, height)
+                reuseItems: true
                 model: win.picList
                 boundsBehavior: Flickable.StopAtBounds
                 delegate: Item {
@@ -530,6 +542,10 @@ PanelWindow {
                 clip: true
                 cellWidth: width / 4
                 cellHeight: cellWidth * 0.62
+                // (rows a screen ahead are built before they scroll in, and rows that leave are
+                // reused, not made again)
+                cacheBuffer: Math.max(0, height)
+                reuseItems: true
                 model: win.favList
                 boundsBehavior: Flickable.StopAtBounds
                 delegate: Item {

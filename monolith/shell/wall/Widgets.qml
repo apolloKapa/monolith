@@ -39,6 +39,10 @@ Item {
             backdrop: desk.backdrop
             x: Math.max(0, Math.min(modelData.x * desk.width, desk.width - width))
             y: Math.max(0, Math.min(modelData.y * desk.height, desk.height - height))
+            // hidden behind a window (or a fullscreen app): it holds still (its clock, the music
+            // disc, the visualiser all stop), so the desktop isn't redrawn for nothing; it comes
+            // alive again the moment it shows
+            live: !Niri.hides(desk.screenName, x, y, width, height)
             // drop a picture (from the file manager) on a picture widget: it shows that one
             DropArea {
                 id: drop

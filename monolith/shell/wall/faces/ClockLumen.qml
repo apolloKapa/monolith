@@ -34,7 +34,9 @@ FaceBase {
     property var glow: new Array(12).fill(0)
     // the sweeping second hand moves every frame (a 40 ms timer stepped visibly on fast screens);
     // without it, once a second is plenty
-    FrameAnimation { running: f.secs && f.live && f.visible; onTriggered: f.tick() }
+    // (30 times a second: a hand turning 6° a second moves a fifth of a degree a step, smooth to
+    // the eye; every frame, at 165 Hz, kept the whole desktop redrawing that often)
+    Timer { interval: 33; repeat: true; running: f.secs && f.live && f.visible; onTriggered: f.tick() }
     Timer { interval: 1000; running: !f.secs && f.live && f.visible; repeat: true; triggeredOnStart: true; onTriggered: f.tick() }
     Component.onCompleted: tick()
 
