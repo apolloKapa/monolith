@@ -1122,7 +1122,21 @@ PanelWindow {
         // the end, the card came in over the sharp backdrop and the blur then swept in)
         // (Cyberpunk: once the card has mostly glitched in; from the start, an empty blurred box
         // showed before any of the card did)
-        readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04 : win.shown && (!Theme.cyber || win.cardZoom > 0.7))
+        // Each style's effect gets its own moments: [on, coming in, once it's this far; off, going,
+        // once it's back below this]. Frost (Fjord) and the shutter (Industrial) cover the whole
+        // card from their first frame, and Doodle draws its outline first, so the blur can be
+        // there from the start; the ones that bring the card in a piece at a time (the glitch,
+        // Luxe's light, the ripple, the fold, the typing, the slam) wait until most of it is
+        // there. Going, it stays until the card is mostly gone, instead of leaving the moment the
+        // menu starts closing: that showed the sharp backdrop through the card all the way out.
+        // (Before, every effect waited for 70 % coming in and dropped at once going, so Fjord's
+        // frost came in over a sharp backdrop, then the blur popped in under it)
+        readonly property var moments: ({ "": [0, 0.45], cyber: [0.7, 0.75], fjord: [0, 0.25], industrial: [0, 0.3], doodle: [0.15, 0.5],
+                                          liquid: [0.45, 0.55], paper: [0.5, 0.55], terminal: [0.55, 0.7], concrete: [0.55, 0.6], luxe: [0.5, 0.55] })
+        readonly property var when: moments[Theme.fxKind] || moments.cyber
+        readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04
+            : win.shown ? (win.cardZoom >= when[0] || !Theme.cyber)
+            : (Theme.cyber ? win.cardZoom > when[1] : win.cardFade > when[1]))
         readonly property real part: Theme.fxUnfold ? Math.max(0.01, floatCard.unfold) : 1
         // the card zooms in and out from its own corner or side: the blur shrinks with it
         readonly property real k: floatCard.scale
