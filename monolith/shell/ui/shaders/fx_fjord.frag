@@ -86,12 +86,17 @@ void main() {
     // was a fuzzy rim)
     // (loose content keeps the blurred shape: cut to the sharp one, each letter came out as a
     // sharp pale copy of itself)
-    float sheet = (loose > 0.5 ? smoothstep(0.0, 0.08, soft.a) : smoothstep(0.0, 0.06, c.a)) * clamp(base > 0.0 ? base : 1.0, 0.0, 1.0);
+    // (a panel: inside its own rounded outline only. Anything not quite see-through counted as
+    // panel before, and the panel's shadow reaches into its corners: the frost filled them in
+    // square)
+    float sheet = (loose > 0.5 ? smoothstep(0.0, 0.08, soft.a) : smoothstep(0.0, 0.06, c.a) * inShape(px)) * clamp(base > 0.0 ? base : 1.0, 0.0, 1.0);
     // (on a see-through panel, less of the pale ice: with nothing blurred behind it (over a
     // fullscreen game) a pale sheet that see-through just looked milky)
     float iceK = 0.6 * pow(clamp(base > 0.0 ? base : 1.0, 0.0, 1.0), 3.0);
     vec4 frost = vec4(mix(under, ice, iceK) * sheet, sheet) * 0.92;
     vec4 o = mix(frost, c, clear);
+    // (outside the outline, the panel's shadow stays as it is)
+    if (loose < 0.5) o = mix(c, o, inShape(px));
     o.rgb += vec3(0.22) * edge * c.a;                 // a soft shine at the thawing edge
     if (mode > 0.5) o *= 1.0 - smoothstep(0.72, 1.0, p);
     // (in quickly: the blur behind the menu comes on once it's whole, at 8 %, and before that it

@@ -47,18 +47,45 @@ Singleton {
         }
     }
     function restore() {
+        // (each one cleared and put back in ONE command, in that order: as two commands they
+        // could run the other way round, and the binding ended up cleared for good)
         for (const b of held) {
             const k = keysFor(b.mods, b.key);
-            // (cleared first, so putting one back never doubles one that's already there: after a
-            // config reload, say)
-            if (hm.lua) evalLua("hl.unbind(" + JSON.stringify(k.join(" + ")) + ")");
-            else keyword("unbind", k.slice(0, -1).join(" ") + "," + b.key);
-            if (hm.lua)
-                evalLua("hl.bind(" + JSON.stringify(k.join(" + ")) + ", " + (b.what === "resize" ? "hl.dsp.window.resize()" : "hl.dsp.window.drag()") + ", { mouse = true })");
-            else keyword("bindm", k.slice(0, -1).join(" ") + "," + b.key + "," + (b.what === "resize" ? "resizewindow" : "movewindow"));
+            if (hm.lua) {
+                const keys = JSON.stringify(k.join(" + "));
+                evalLua("hl.unbind(" + keys + "); hl.bind(" + keys + ", " + (b.what === "resize" ? "hl.dsp.window.resize()" : "hl.dsp.window.drag()") + ", { mouse = true })");
+            } else {
+                const mods = k.slice(0, -1).join(" ");
+                Quickshell.execDetached(["sh", "-c", "hyprctl keyword unbind \"$1,$2\"; hyprctl keyword bindm \"$1,$2,$3\"", "sh", mods, b.key, b.what === "resize" ? "resizewindow" : "movewindow"]);
+            }
         }
+        // (looked at again in a moment: see `check`)
+        expect = held;
         held = [];
         Store.set("hypr.mouseHeld", []);
+        checkLater.restart();
+    }
+    // A moment after putting them back, look that they're really there, and put back any that
+    // aren't: opening and closing a menu at once could run the "off" after the "back on".
+    property var expect: []
+    property int tries: 0
+    Timer { id: checkLater; interval: 700; onTriggered: if (!hm.wanted && hm.held.length === 0 && hm.expect.length > 0) check.running = true }
+    Process {
+        id: check
+        command: ["hyprctl", "binds", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (hm.wanted || hm.held.length > 0) return;
+                let have = [];
+                try { have = JSON.parse(text).filter(b => b.mouse).map(b => (Number(b.modmask) || 0) + "|" + b.key); } catch (e) { return; }
+                const missing = hm.expect.filter(b => have.indexOf(b.mods + "|" + b.key) < 0);
+                if (!missing.length) { hm.expect = []; hm.tries = 0; return; }
+                // (a few times at most: one that Hyprland won't take isn't tried for ever)
+                if (++hm.tries > 3) { hm.expect = []; hm.tries = 0; return; }
+                hm.held = missing;
+                hm.restore();
+            }
+        }
     }
 
     Process {
