@@ -14,8 +14,17 @@ layout(std140, binding = 0) uniform buf {
     float seed;     // a fresh pattern each time
     vec4 red;       // the effect's first colour (ui/CyberFx: the ink, mostly)
     vec4 cyan;      // its second (the accent, mostly)
+    vec4 panel;     // the panel's own colour (what the style paints it), solid
+    float radius;   // its corner radius in px (0: square, or loose content)
 };
 layout(binding = 1) uniform sampler2D source;
+// inside the panel's own shape (its round corners): 1 inside, 0 outside, a pixel of softening
+float inShape(vec2 px) {
+    float r = min(radius, min(itemSize.x, itemSize.y) * 0.5);
+    vec2 q = abs(px - itemSize * 0.5) - itemSize * 0.5 + r;
+    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+    return clamp(0.5 - d, 0.0, 1.0);
+}
 float h21(vec2 v) { return fract(sin(dot(v, vec2(127.1, 311.7)) + seed * 74.7) * 43758.5453); }
 float vnoise(vec2 q) {
     vec2 i = floor(q), f = fract(q);
@@ -31,7 +40,9 @@ vec3 shutter(vec2 px) {
     float slat = mod(px.y, 18.0) / 18.0;
     float shade = 0.36 + 0.16 * sin(slat * 3.14159) - 0.08 * step(0.9, slat);
     float grain = (vnoise(vec2(px.x / 90.0, px.y / 1.5)) - 0.5) * 0.05;
-    return vec3(shade + grain) * vec3(0.98, 1.0, 1.04);
+    // (pressed steel in the panel's own colour, lifted a little towards the ink)
+    vec3 steel = mix(panel.rgb, red.rgb, 0.22);
+    return steel * ((shade + grain) / 0.44);
 }
 void main() {
     vec2 uv = qt_TexCoord0;
@@ -46,7 +57,7 @@ void main() {
         float bar = B - px.y;
         if (bar < 10.0) {
             float stripe = step(0.5, fract((px.x + px.y) / 16.0));
-            s = mix(vec3(0.08), cyan.rgb, stripe);
+            s = mix(panel.rgb * 0.45, cyan.rgb, stripe);
         }
         float a = shape * (mode < 0.5 ? smoothstep(0.0, 0.1, p) : 1.0);
         c = vec4(s * a, a);

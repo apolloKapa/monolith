@@ -45,6 +45,10 @@ Item {
             // how solid the panels are (Fjord's frost lies over them as one even sheet that solid)
             property real base: Theme.see
             property real loose: fx.content ? 1 : 0
+            // the panel's colour (solid) and its corner radius, so what an effect draws itself
+            // (Doodle's pencil, Concrete's dust, Industrial's shutter, Fjord's ice) matches it
+            property color panel: Qt.rgba(Theme.card.r, Theme.card.g, Theme.card.b, 1)
+            property real radius: fx.content || !fx.target ? 0 : (fx.target.blurRadius !== undefined ? fx.target.blurRadius : (fx.target.radius !== undefined ? fx.target.radius : 0))
             fragmentShader: Qt.resolvedUrl(Theme.fxKind === "cyber" ? "shaders/cyber.frag.qsb" : "shaders/fx_" + Theme.fxKind + ".frag.qsb")
         }
     }

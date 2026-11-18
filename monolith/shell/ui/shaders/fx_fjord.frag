@@ -13,10 +13,19 @@ layout(std140, binding = 0) uniform buf {
     float seed;     // a fresh pattern each time
     vec4 red;       // the effect's first colour (ui/CyberFx: the ink, mostly)
     vec4 cyan;      // its second (the accent, mostly)
+    vec4 panel;     // the panel's own colour (what the style paints it), solid
+    float radius;   // its corner radius in px (0: square, or loose content)
     float base;     // how solid the panels are (Theme.see: below 1 when they're see-through)
     float loose;    // 1: loose content (a menu's page), 0: a panel
 };
 layout(binding = 1) uniform sampler2D source;
+// inside the panel's own shape (its round corners): 1 inside, 0 outside, a pixel of softening
+float inShape(vec2 px) {
+    float r = min(radius, min(itemSize.x, itemSize.y) * 0.5);
+    vec2 q = abs(px - itemSize * 0.5) - itemSize * 0.5 + r;
+    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+    return clamp(0.5 - d, 0.0, 1.0);
+}
 float h21(vec2 v) { return fract(sin(dot(v, vec2(127.1, 311.7)) + seed * 74.7) * 43758.5453); }
 float vnoise(vec2 q) {
     vec2 i = floor(q), f = fract(q);
@@ -56,7 +65,9 @@ void main() {
         soft += texture(source, clamp(uv + vec2(cos(a), sin(a)) * r / itemSize, 0.5 / itemSize, 1.0 - 0.5 / itemSize));
     }
     soft /= 12.0;
-    vec3 ice = mix(vec3(0.86, 0.92, 0.97), cyan.rgb, 0.15);
+    // (ice made from the panel's own colour, lightened and touched with the accent: a fixed pale
+    // blue-white ignored the palette)
+    vec3 ice = mix(mix(panel.rgb, vec3(1.0), 0.62), cyan.rgb, 0.15);
     // one even sheet of ice over the whole panel, as solid as the panel is, what's under it only
     // tinting it. (Ice laid on as thick as each pixel was solid made it far brighter over the
     // icons and words than over a see-through panel's background: each icon came out as a white

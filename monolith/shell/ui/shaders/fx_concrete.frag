@@ -14,8 +14,17 @@ layout(std140, binding = 0) uniform buf {
     float seed;     // a fresh pattern each time
     vec4 red;       // the effect's first colour (ui/CyberFx: the ink, mostly)
     vec4 cyan;      // its second (the accent, mostly)
+    vec4 panel;     // the panel's own colour (what the style paints it), solid
+    float radius;   // its corner radius in px (0: square, or loose content)
 };
 layout(binding = 1) uniform sampler2D source;
+// inside the panel's own shape (its round corners): 1 inside, 0 outside, a pixel of softening
+float inShape(vec2 px) {
+    float r = min(radius, min(itemSize.x, itemSize.y) * 0.5);
+    vec2 q = abs(px - itemSize * 0.5) - itemSize * 0.5 + r;
+    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+    return clamp(0.5 - d, 0.0, 1.0);
+}
 float h21(vec2 v) { return fract(sin(dot(v, vec2(127.1, 311.7)) + seed * 74.7) * 43758.5453); }
 float vnoise(vec2 q) {
     vec2 i = floor(q), f = fract(q);
@@ -40,7 +49,10 @@ void main() {
         // dust puffing out along the bottom after it lands
         float foot = itemSize.y - px.y;
         float dust = p > 0.5 ? (1.0 - after) * smoothstep(34.0, 0.0, foot) * smoothstep(0.45, 0.8, vnoise(px * 0.09 + vec2(after * 6.0, -after * 3.0))) : 0.0;
-        c = c * (1.0 - dust * 0.6) + vec4(vec3(0.62), 1.0) * dust * 0.6;
+        // (the dust: the panel's colour lightened towards the ink, kept inside its shape)
+        dust *= inShape(px);
+        vec3 dustC = mix(panel.rgb, red.rgb, 0.45);
+        c = c * (1.0 - dust * 0.6) + vec4(dustC, 1.0) * dust * 0.6;
         fragColor = c * qt_Opacity;
     } else {
         // blocks, laid like bricks; each one, its time come, cracks free and falls (tipping a
