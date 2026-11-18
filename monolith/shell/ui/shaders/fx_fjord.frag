@@ -53,22 +53,23 @@ void main() {
     // pixel: a soft, slightly grainy blur. (It was four copies shifted 3 px left, right, up and
     // down and averaged, and on icons and text that read as each one drawn twice, not frosted)
     vec4 soft = vec4(0.0);
-    // (turned by a smooth noise, not a fresh random each pixel: that made a fine dotted grid
-    // over flat parts)
-    float turn = vnoise(px / 2.5) * 12.566371;
+    // A page (loose content): two dozen points spread evenly, no turning, so its words and shapes
+    // go smoothly soft. A whole panel: more points over a wide reach, turned by a fine, even
+    // dither (interleaved gradient noise) so the few points don't show as copies. (Turned at
+    // random per pixel with 16 points, words broke up into speckles and edges went ragged.)
+    float cnt = loose > 0.5 ? 24.0 : 32.0;
+    float reach = loose > 0.5 ? 7.0 : 26.0;
+    float turn = loose > 0.5 ? 0.0 : fract(52.9829189 * fract(dot(px, vec2(0.06711056, 0.00583715)))) * 6.2831853;
     float got = 0.0;
-    // (out to about 28 px: at 6 px the panel's own rim, a plain band round its inside, still
-    // showed through as a stripe along the edges)
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 32; i++) {
         float fi = float(i);
-        // (loose content, a page: a narrower reach, it only softens what's there)
-        float r = 1.5 + (loose > 0.5 ? 7.0 : 26.0) * sqrt((fi + 0.5) / 16.0);
+        if (fi >= cnt) break;
+        float r = 1.0 + reach * sqrt((fi + 0.5) / cnt);
         float a = turn + fi * 2.3999632;
         vec2 q = uv + vec2(cos(a), sin(a)) * r / itemSize;
-        // (a point off the panel is left out and the rest averaged: counted as empty, the frost
-        // faded out round the edges; pulled back onto the edge, the panel's outline was counted
-        // over and over, and a light band ran round it)
-        // (and the outline itself: a point on it lightened everything within reach of the edge)
+        // (a point off the panel, or on its outline, is left out and the rest averaged: counted
+        // as empty the frost faded out round the edges; pulled onto the edge, the outline was
+        // counted over and over and a light band ran round it)
         vec2 m = (loose > 0.5 ? 0.0 : 2.0) / itemSize;
         if (q.x < m.x || q.x > 1.0 - m.x || q.y < m.y || q.y > 1.0 - m.y) continue;
         soft += texture(source, q);
