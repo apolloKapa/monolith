@@ -356,7 +356,28 @@ Item {
             // (only the ones with windows, and the open one, when empty ones are hidden)
             readonly property var list: { const l = bar.wsSample ? bar.sampleWorkspaces : Niri.workspacesOn(bar.screenName);
                                           return bar.mopt("ws.hideEmpty", false) === true ? l.filter(w => w.is_active || (w.busy !== undefined ? w.busy : Niri.workspaceHasWindows(w.id))) : l; }
-            readonly property int activeIndex: list.findIndex(w => w.is_active)
+            // the pills' model, kept in step with the list by id: a pill stays when the others
+            // change and only a workspace that came or went is added or taken away. (A count for a
+            // model rebuilt every pill whenever it changed, which on Hyprland is every switch to or
+            // from an empty workspace: each one popped in again, all at once, for over a second)
+            readonly property var byId: { const m = {}; for (const w of list) m[w.id] = w; return m; }
+            property int activeIndex: -1
+            property int rev: 0
+            ListModel { id: wsModel }
+            function syncWs() {
+                const want = list.map(w => w.id);
+                for (let i = wsModel.count - 1; i >= 0; i--) if (want.indexOf(wsModel.get(i).wid) < 0) wsModel.remove(i);
+                for (let i = 0; i < want.length; i++) {
+                    if (i < wsModel.count && wsModel.get(i).wid === want[i]) continue;
+                    let at = -1;
+                    for (let j = i + 1; j < wsModel.count; j++) if (wsModel.get(j).wid === want[i]) { at = j; break; }
+                    if (at >= 0) wsModel.move(at, i, 1); else wsModel.insert(i, { wid: want[i] });
+                }
+                activeIndex = list.findIndex(w => w.is_active);
+                rev++;
+            }
+            onListChanged: syncWs()
+            Component.onCompleted: syncWs()
             // the wheel over it: the next / previous workspace
             WheelHandler {
                 enabled: !bar.wsSample && !bar.only && bar.mopt("ws.scroll", true) === true
@@ -368,12 +389,12 @@ Item {
                 }
             }
 
-            // the open workspace's highlight: its two ends follow the open pill on springs; the one
+            // the open workspace's highlight: its two ends follow the open pill, timed; the one
             // on the side it's heading leads, the other trails, so it stretches over and settles
             SmoothRect {
                 smoothing: 0
                 id: hi
-                readonly property Item at: wsBox.activeIndex >= 0 ? reps.itemAt(wsBox.activeIndex) : null
+                readonly property Item at: wsBox.rev >= 0 && wsBox.activeIndex >= 0 ? reps.itemAt(wsBox.activeIndex) : null
                 visible: !!at && bar.wsHighlight
                 // (over the other pills, so they don't show through it as it slides past them)
                 z: 1
@@ -392,13 +413,17 @@ Item {
                     fromA = a;
                     if (bar.wsAnim === "fade" && ready) fadeIn.restart();
                 }
-                // each animation's two springs (the end it's heading to, the other one), how much
-                // they give: worm stretches (the leading end quick, the other slow), the rest move
-                // in one piece; bouncy overshoots and wobbles back
-                readonly property var spr: ({ worm: [13, 7, 0.55], slide: [10, 10, 0.6], bouncy: [9, 9, 0.16], hop: [8, 8, 0.75] })[bar.wsAnim] || [10, 10, 0.6]
+                // how long each end takes (the end it's heading to, the other one): worm stretches
+                // (the leading end quick, the other slow), the rest move in one piece; bouncy goes a
+                // little past and back. Timed, so they follow Animations → Speed and are done when
+                // they say: springs here ignored the speed and took the best part of a second to
+                // settle, and the bar (a window the size of the screen) redrew all that time
+                readonly property int lead: Theme.ms(({ worm: 240, slide: 320, bouncy: 460, hop: 340 })[bar.wsAnim] || 320)
+                readonly property int trail: Theme.ms(({ worm: 420, slide: 320, bouncy: 460, hop: 340 })[bar.wsAnim] || 320)
+                readonly property int curve: bar.wsAnim === "bouncy" ? Easing.OutBack : (bar.wsAnim === "hop" ? Easing.InOutCubic : Easing.OutCubic)
                 readonly property bool moves: hi.ready && ["worm", "slide", "bouncy", "hop"].indexOf(bar.wsAnim) >= 0
-                Behavior on a { enabled: hi.moves; SpringAnimation { spring: hi.dir > 0 ? hi.spr[1] : hi.spr[0]; damping: hi.spr[2]; epsilon: 0.2 } }
-                Behavior on b { enabled: hi.moves; SpringAnimation { spring: hi.dir > 0 ? hi.spr[0] : hi.spr[1]; damping: hi.spr[2]; epsilon: 0.2 } }
+                Behavior on a { enabled: hi.moves; NumberAnimation { duration: hi.dir > 0 ? hi.trail : hi.lead; easing.type: hi.curve; easing.overshoot: 1.6 } }
+                Behavior on b { enabled: hi.moves; NumberAnimation { duration: hi.dir > 0 ? hi.lead : hi.trail; easing.type: hi.curve; easing.overshoot: 1.6 } }
                 // hop: up and over in an arc, highest halfway
                 readonly property real hop: bar.wsAnim !== "hop" || Math.abs(toA - fromA) < 1 ? 0
                     : Math.sin(Math.PI * Math.max(0, Math.min(1, (a - fromA) / (toA - fromA)))) * Math.min(9, Math.abs(toA - fromA) * 0.25)
@@ -427,14 +452,15 @@ Item {
                 spacing: Number(bar.mopt("ws.gap", -1)) >= 0 ? Number(bar.mopt("ws.gap", -1)) : (["numbers", "numberPills", "bubbles"].indexOf(bar.wsStyle) !== -1 ? 3 : 5)
                 Repeater {
                     id: reps
-                    // (a count, not the list itself: a new list on every switch rebuilt every pill,
+                    // (by id, not the list itself: a new list on every switch rebuilt every pill,
                     // and a pill made just now has nothing to animate from, so nothing moved)
-                    model: wsBox.list.length
+                    model: wsModel
                     SmoothRect {
                         smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                         id: pill
                         required property int index
-                        readonly property var modelData: wsBox.list[index] || ({ idx: 0, is_active: false, busy: false, id: -1 })
+                        required property var wid
+                        readonly property var modelData: wsBox.byId[wid] || ({ idx: 0, is_active: false, busy: false, id: -1 })
                         readonly property bool active: modelData.is_active === true
                         readonly property bool busy: modelData.busy !== undefined ? modelData.busy : Niri.workspaceHasWindows(modelData.id)
                         readonly property var look: bar.wsLook(bar.wsStyle, active, busy)
@@ -460,7 +486,8 @@ Item {
                         Component.onCompleted: born = true
                         scale: (born ? 1 : 0.2) * (mouse.containsMouse && !bar.wsSample ? 1.18 : 1) * press
                         opacity: born ? 1 : 0
-                        Behavior on scale { enabled: Theme.animOn; SpringAnimation { spring: 5; damping: 0.32; epsilon: 0.005 } }
+                        // (a short bounce, timed: a spring here wobbled on for over a second)
+                        Behavior on scale { enabled: Theme.animOn; NumberAnimation { duration: Theme.ms(280); easing.type: Easing.OutBack; easing.overshoot: 2.2 } }
                         Behavior on opacity { enabled: Theme.animOn; NumberAnimation { duration: Theme.ms(180) } }
                         SequentialAnimation {
                             id: tap
