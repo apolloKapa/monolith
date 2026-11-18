@@ -54,6 +54,7 @@ Item {
     // a module's own setting (Settings → Bar → Layout & modules → Module settings): "bar.<k>"
     function mopt(k, d) { const v = Store.get("bar." + k, d); return v === undefined || v === null || v === "" ? d : v; }
     property string clockStyleAs: ""
+    property string clockThemeAs: ""
     property string wsStyleAs: ""
     // previews show made-up workspaces (four, the second one open, the first and third with
     // windows), so every style has something to show whatever your screen has
@@ -94,6 +95,10 @@ Item {
     readonly property bool clockWeekday: clockOpt("weekday", true) === true
     readonly property bool clockStackTime: clockOpt("stackTime", false) === true      // hours over minutes
     readonly property bool clock12: clockOpt("hour12", false) === true
+    // how the time is drawn (Settings → Bar → Clock → Theme): digital (plain text), pill, segment,
+    // flip, analog, words, binary
+    readonly property string clockTheme: { const t = clockThemeAs || String(clockOpt("theme", "digital"));
+        return ["digital", "pill", "segment", "flip", "analog", "words", "binary"].indexOf(t) >= 0 ? t : "digital"; }
     // the time's lines: one ("14:05:09"), or stacked (always on a vertical bar)
     readonly property bool timeStacked: vertical || clockStackTime
     function timeText(d) {
@@ -289,7 +294,17 @@ Item {
         Mod {
             onClicked: bar.open("calendar")
             readonly property bool stackedDate: bar.clockDate && bar.clockDateLayout === "stacked" && !bar.vertical
+            BarClock {
+                visible: bar.clockTheme !== "digital"
+                theme: bar.clockTheme
+                now: clock.date
+                seconds: bar.clockSeconds
+                h12: bar.clock12
+                vertical: bar.vertical
+                room: Theme.islandH - 14
+            }
             Text {
+                visible: bar.clockTheme === "digital"
                 text: bar.timeText(clock.date)
                 horizontalAlignment: Text.AlignHCenter
                 // (stacked, the lines sit close; next to a stacked date the time is a bit bigger)

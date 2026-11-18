@@ -39,6 +39,8 @@ ColumnLayout {
     component StylePick: Flow {
         id: sp
         property string module: "clock"
+        // what the cards differ in: the module's style, or (the clock) its theme
+        property string kind: "style"
         property var opts: []
         property string value: ""
         signal picked(string v)
@@ -64,7 +66,8 @@ ColumnLayout {
                         // (this screen's workspaces: with no screen it had none, and the cards were blank)
                         screenName: Niri.focusedOutput || (Quickshell.screens.length ? Quickshell.screens[0].name : "")
                         only: [sp.module]
-                        clockStyleAs: sp.module === "clock" ? card.modelData[0] : ""
+                        clockStyleAs: sp.module === "clock" && sp.kind === "style" ? card.modelData[0] : ""
+                        clockThemeAs: sp.module === "clock" && sp.kind === "theme" ? card.modelData[0] : ""
                         wsStyleAs: sp.module === "workspaces" ? card.modelData[0] : ""
                         wsSample: sp.module === "workspaces"
                     }
@@ -645,17 +648,29 @@ ColumnLayout {
                 text: "Twice its real size"; muted: true; font.pixelSize: Theme.sizeSmall - 2
             }
         }
+        Label { text: "Theme"; Layout.leftMargin: 6; Layout.topMargin: 4; strong: true }
+        StylePick {
+            module: "clock"
+            kind: "theme"
+            opts: [["digital", "Digital"], ["pill", "Pill"], ["segment", "Segment"], ["flip", "Flip"],
+                   ["analog", "Analog"], ["words", "Words"], ["binary", "Binary"]]
+            value: clockPrev.clockTheme
+            onPicked: v => Store.set("bar.clock.theme", v)
+        }
         SettingRow {
+            visible: clockPrev.clockTheme !== "words"
             key: "bar.clock.seconds";
             icon: "timer"; title: "Seconds"; desc: "Hours, minutes and seconds"
             Toggle { checked: clockPrev.clockSeconds; onToggled: on => Store.set("bar.clock.seconds", on) }
         }
         SettingRow {
+            visible: clockPrev.clockTheme === "digital"
             key: "bar.clock.stackTime";
             icon: "view_agenda"; title: "Hours over minutes"; desc: "The time stacked in lines instead of one row"
             Toggle { checked: clockPrev.clockStackTime; onToggled: on => Store.set("bar.clock.stackTime", on) }
         }
         SettingRow {
+            visible: ["words", "analog"].indexOf(clockPrev.clockTheme) < 0
             key: "bar.clock.hour12";
             icon: "schedule"; title: "12-hour time"; desc: "With AM / PM"
             Toggle { checked: clockPrev.clock12; onToggled: on => Store.set("bar.clock.hour12", on) }
