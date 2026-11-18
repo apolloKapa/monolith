@@ -920,7 +920,11 @@ PanelWindow {
         readonly property string anim: Theme.animOn && !Theme.cyber ? Theme.menuAnim : "none"
         // (pop: overshoots a little and settles)
         function backOut(t) { const c1 = 1.5, c3 = c1 + 1, u = t - 1; return 1 + c3 * u * u * u + c1 * u * u; }
-        scale: anim === "zoom" ? Theme.popScale + (1 - Theme.popScale) * win.cardZoom
+        // (Fjord: its frost doesn't move, so the card also grows in from 94 % over the first
+        // part of it, and fades in: it was there in one frame, as a slab of ice)
+        readonly property real fjordIn: Theme.fxKind === "fjord" ? Math.min(1, win.cardZoom / 0.4) : 1
+        scale: Theme.fxKind === "fjord" ? 0.94 + 0.06 * (1 - Math.pow(1 - fjordIn, 3))
+             : anim === "zoom" ? Theme.popScale + (1 - Theme.popScale) * win.cardZoom
              : anim === "pop" ? 0.84 + 0.16 * backOut(win.cardZoom)
              : 1
         transform: [
@@ -1135,7 +1139,7 @@ PanelWindow {
         // menu starts closing: that showed the sharp backdrop through the card all the way out.
         // (Before, every effect waited for 70 % coming in and dropped at once going, so Fjord's
         // frost came in over a sharp backdrop, then the blur popped in under it)
-        readonly property var moments: ({ "": [0, 0.45], cyber: [0.7, 0.75], fjord: [0.08, 0.25], industrial: [0.1, 0.3], doodle: [0.15, 0.5],
+        readonly property var moments: ({ "": [0, 0.45], cyber: [0.7, 0.75], fjord: [0.16, 0.25], industrial: [0.1, 0.3], doodle: [0.15, 0.5],
                                           liquid: [0.45, 0.55], paper: [0.5, 0.55], terminal: [0.55, 0.7], concrete: [0.55, 0.6], luxe: [0.5, 0.55] })
         readonly property var when: moments[Theme.fxKind] || moments.cyber
         readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04

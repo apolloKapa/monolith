@@ -113,6 +113,7 @@ void main() {
     if (mode > 0.5) o *= 1.0 - smoothstep(0.72, 1.0, p);
     // (in quickly: the blur behind the menu comes on once it's whole, at 8 %, and before that it
     // was a blurred box with nothing on it, its edges showing as a band)
-    else o *= smoothstep(0.0, 0.08, p);
+    // (fading in over the first part, as the card grows in; the blur comes on at 16 %)
+    else o *= smoothstep(0.0, 0.25, p);
     fragColor = o * qt_Opacity;
 }
