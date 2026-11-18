@@ -77,7 +77,9 @@ Singleton {
     Process {
         id: watch
         running: ai.auto
-        command: ["sh", "-c", "mkdir -p \"$1\" && exec inotifywait -m -q -e close_write,moved_to,moved_from,delete --format %f \"$1\"", "_", ai.folder]
+        // (ended with the shell, as AppColours' watcher: left behind, one more was running after
+        // every restart)
+        command: ["sh", "-c", "mkdir -p \"$1\" || exit 1; inotifywait -m -q -e close_write,moved_to,moved_from,delete --format %f \"$1\" & w=$!; trap 'kill $w 2>/dev/null; exit' TERM INT HUP; while kill -0 $PPID 2>/dev/null && kill -0 $w 2>/dev/null; do sleep 4; done; kill $w 2>/dev/null", "_", ai.folder]
         stdout: SplitParser { onRead: line => { if (/\.appimage$/i.test(line)) settle.restart(); } }
     }
     Timer { id: settle; interval: 1500; onTriggered: { if (ai.queue.length === 0 && !worker.running) ai.sync(); } }

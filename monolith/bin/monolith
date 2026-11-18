@@ -47,7 +47,11 @@ start() {
     else niri msg action spawn -- env QSG_RHI_BACKEND="$rhi" quickshell -p "$qml"; fi
 }
 # any copy of the shell (an installed one, a checkout)
-stop() { pkill -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null; }
+# (its own helpers first: watchers it started kept running once it had gone, one more each restart)
+stop() {
+    for p in $(pgrep -f 'quickshell -p [^ ]*/shell/shell\.qml'); do pkill -P "$p" 2>/dev/null; done
+    pkill -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null
+}
 
 # page names the keybinds use → hub pages
 page_for() {

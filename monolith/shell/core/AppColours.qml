@@ -109,7 +109,9 @@ Singleton {
     Process {
         id: gtkWatch
         running: ac.gtkOn
-        command: ["gsettings", "monitor", "org.gnome.desktop.interface", "gtk-theme"]
+        // (ended with the shell: on its own it outlived every restart, and one more was left
+        // running each time; it watches for the shell, $PPID, and goes once that has)
+        command: ["sh", "-c", "gsettings monitor org.gnome.desktop.interface gtk-theme & w=$!; trap 'kill $w 2>/dev/null; exit' TERM INT HUP; while kill -0 $PPID 2>/dev/null && kill -0 $w 2>/dev/null; do sleep 4; done; kill $w 2>/dev/null"]
         stdout: SplitParser {
             onRead: line => {
                 const m = /'([^']*)'/.exec(line);
