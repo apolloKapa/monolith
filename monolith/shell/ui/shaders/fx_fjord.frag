@@ -37,8 +37,19 @@ void main() {
     float f = (mode < 0.5 ? p : 1.0 - p) * 1.25 - 0.08;
     float clear = 1.0 - smoothstep(f - 0.14, f, n);
     float edge = smoothstep(f - 0.16, f - 0.07, n) * (1.0 - smoothstep(f - 0.05, f + 0.01, n));
-    // the ice: pale, a touch of the accent, a little blurred beneath
-    vec4 soft = (tex(uv + vec2(3.0, 0.0) / itemSize) + tex(uv - vec2(3.0, 0.0) / itemSize) + tex(uv + vec2(0.0, 3.0) / itemSize) + tex(uv - vec2(0.0, 3.0) / itemSize)) * 0.25;
+    // the ice: pale, a touch of the accent, frosted beneath. Frosted glass scatters, so this
+    // gathers a dozen points in a spiral out to about 6 px, turned a different way for each
+    // pixel: a soft, slightly grainy blur. (It was four copies shifted 3 px left, right, up and
+    // down and averaged, and on icons and text that read as each one drawn twice, not frosted)
+    vec4 soft = vec4(0.0);
+    float turn = h21(floor(px)) * 6.2831853;
+    for (int i = 0; i < 12; i++) {
+        float fi = float(i);
+        float r = 1.0 + 5.0 * sqrt((fi + 0.5) / 12.0);
+        float a = turn + fi * 2.3999632;
+        soft += tex(uv + vec2(cos(a), sin(a)) * r / itemSize);
+    }
+    soft /= 12.0;
     vec3 ice = mix(vec3(0.86, 0.92, 0.97), cyan.rgb, 0.15);
     vec4 frost = vec4(mix(soft.rgb, ice * soft.a, 0.6), soft.a) * 0.92;
     vec4 o = mix(frost, c, clear);
