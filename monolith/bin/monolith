@@ -43,6 +43,10 @@ start() {
     # Hyprland 0.55+ with a Lua config, where dispatch takes a Lua expression: nothing started)
     # (Qt reads the icon theme from qt6ct only with this set: niri's config sets it, a
     # Hyprland config may not)
+    # (jemalloc, which Quickshell is usually built with: hand freed memory back in the background.
+    # Left alone it keeps it until the shell allocates again, and an idle shell doesn't: tens of MB
+    # stayed after a menu full of pictures had closed. Ignored by other allocators.)
+    export MALLOC_CONF="${MALLOC_CONF:-background_thread:true,dirty_decay_ms:2000,muzzy_decay_ms:2000}"
     if on_hyprland; then QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-qt6ct}" QSG_RHI_BACKEND="$rhi" setsid -f quickshell -p "$qml" >/dev/null 2>&1 < /dev/null
     else niri msg action spawn -- env QSG_RHI_BACKEND="$rhi" quickshell -p "$qml"; fi
 }

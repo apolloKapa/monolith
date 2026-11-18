@@ -98,7 +98,20 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: out ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
-    anchors { top: true; bottom: true; left: true; right: true }
+    // At rest it's only its edge strip (a couple of pixels along one edge), not the whole screen:
+    // a full-screen surface kept its buffers on the GPU all day for a strip nobody sees. Out, or
+    // on its way back in, it's the whole screen. (With several edges on, it stays whole: one
+    // window can't be two strips.)
+    readonly property bool whole: out || body.visible || edges.length !== 1 || !stripOn(edges[0])
+    readonly property string restEdge: edges.length === 1 ? edges[0] : ""
+    anchors {
+        top: whole || restEdge !== "bottom"
+        bottom: whole || restEdge !== "top"
+        left: whole || restEdge !== "right"
+        right: whole || restEdge !== "left"
+    }
+    implicitWidth: Math.ceil(hit)
+    implicitHeight: Math.ceil(hit)
     color: "transparent"
     // the edge strips take the mouse, and the bar (with its panel) while it's out
     mask: Region {

@@ -44,7 +44,14 @@ PanelWindow {
     // opened, right as the menu started moving, which made menus late on older laptops.
     property bool up: true
     property bool buried: false
-    visible: up
+    // Only there while something is being thrown (and a few seconds after): empty, it was still
+    // a full-screen surface on every screen, with its buffers on the GPU, all day. The real card
+    // waits for its copy to be drawn before it hides (Throw.ready), so it coming up a frame or
+    // two later shows as nothing.
+    readonly property bool busy: mine.length > 0 || rows.count > 0
+    onBusyChanged: if (!busy) keep.restart()
+    Timer { id: keep; interval: 4000 }
+    visible: up && (busy || keep.running)
     Connections {
         target: HubState
         function onRaisedChanged() { win.buried = true; }
