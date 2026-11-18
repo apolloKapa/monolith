@@ -21,7 +21,8 @@ PanelWindow {
     readonly property var edges: { const e = Store.get("quick.edges", null); return Array.isArray(e) ? e : [Store.get("quick.edge", "right")]; }
     readonly property var tools: { const t = Store.get("quick.tools", ["calc", "convert", "notes", "timer", "draw", "usage"]); return t && t.length ? t : ["notes"]; }
     // its own speed setting, scaled like every other animation (Theme → Effects → speed; 0 when off)
-    readonly property int speed: Theme.ms(Number(Store.get("quick.speed", 260)))
+    // (never under 140 ms: shorter, sliding out read as popping out)
+    readonly property int speed: Theme.animOn ? Math.max(140, Theme.ms(Number(Store.get("quick.speed", 260)))) : 0
     readonly property int showDelay: Number(Store.get("quick.delay", 250))
     readonly property int hideDelay: Number(Store.get("quick.hideDelay", 600))
     readonly property real hit: Math.max(1, Number(Store.get("quick.edgeSize", 2)))
@@ -44,7 +45,9 @@ PanelWindow {
     // when it may come out: not in Game mode, not over a fullscreen window, maybe only on an empty workspace
     readonly property var active: ToplevelManager.activeToplevel
     readonly property bool blocked: (GameMode.active && Store.get("quick.offInGameMode", true) !== false)
-        || (!!active && active.fullscreen && Store.get("quick.overFullscreen", false) !== true)
+        // (a fullscreen window on THIS screen. It asked the focused window, wherever it was: with
+        // something fullscreen on another monitor and focused last, no edge here answered at all)
+        || (Niri.fullscreenOn(modelData.name) && Store.get("quick.overFullscreen", false) !== true)
         || (Store.get("quick.emptyOnly", false) === true && focusedHasWindows)
     readonly property bool focusedHasWindows: {
         const ws = Niri.workspaces.find(w => w.output === modelData.name && w.is_active);
@@ -93,7 +96,10 @@ PanelWindow {
     function fold() { if (expanded) expanded = false; else hide(); }
     function step(d) { const i = tools.indexOf(tool); tool = tools[Math.max(0, Math.min(tools.length - 1, (i < 0 ? 0 : i) + d))]; }
 
-    visible: enabled
+    // (Hyprland, where it's always the whole screen: gone while a fullscreen window has this
+    // screen and it isn't allowed over those, so a game keeps the screen to itself)
+    readonly property bool fsHere: Niri.fullscreenOn(modelData.name) && Store.get("quick.overFullscreen", false) !== true
+    visible: enabled && !(Niri.hyprland && fsHere && !out)
     WlrLayershell.namespace: "monolith-quick"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: out ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
@@ -102,7 +108,10 @@ PanelWindow {
     // a full-screen surface kept its buffers on the GPU all day for a strip nobody sees. Out, or
     // on its way back in, it's the whole screen. (With several edges on, it stays whole: one
     // window can't be two strips.)
-    readonly property bool whole: out || body.visible || edges.length !== 1 || !stripOn(edges[0])
+    // Hyprland: always the whole screen. Growing from the strip to the screen as the bar came
+    // out made Hyprland lay the whole monitor out again, and everything on it twitched each time
+    // (it wasn't the blur: that's cut to the bar below, and it still did it)
+    readonly property bool whole: Niri.hyprland || out || body.visible || edges.length !== 1 || !stripOn(edges[0])
     readonly property string restEdge: edges.length === 1 ? edges[0] : ""
     anchors {
         top: whole || restEdge !== "bottom"
@@ -116,6 +125,7 @@ PanelWindow {
     // the edge strips take the mouse, and the bar (with its panel) while it's out
     mask: Region {
         Region { item: qa.out ? body : null }
+        Region { item: qa.out ? edgeZone : null }
         Region { item: strips.lStrip }
         Region { item: strips.rStrip }
         Region { item: strips.tStrip }
@@ -128,7 +138,8 @@ PanelWindow {
     readonly property real bottomRoom: Theme.barEdge === "bottom" ? Theme.islandH + Theme.barMargin + 6 : 0
     readonly property string dockEdge: Store.get("dock.enabled", true) !== false ? Store.get("dock.position", "bottom") : ""
     function stripOn(e) { return enabled && !out && edges.indexOf(e) !== -1 && e !== Theme.barEdge; }
-    function dockGap(e) { return dockEdge === e ? 0.25 : 0; }
+    // (the middle of an edge is left alone for the dock, or for a menu that opens there by hover)
+    function dockGap(e) { return dockEdge === e ? 0.25 : (HubState.hoverEdges.indexOf(e) !== -1 ? 0.22 : 0); }
     QtObject {
         id: strips
         property Item lStrip: qa.stripOn("left") ? stripL : null
@@ -162,7 +173,7 @@ PanelWindow {
             id: showTimer
             property real at: 0
             interval: qa.showDelay
-            onTriggered: qa.show(st.side, at, qa.opensFull)
+            onTriggered: { qa.byEdge = true; qa.show(st.side, at, qa.opensFull); }
         }
     }
     Strip { id: stripL; side: "left" }
@@ -203,27 +214,59 @@ PanelWindow {
     readonly property var foldCurve: [0.3, 0.0, 0.1, 1.0, 1, 1]
     readonly property real outBy: Math.max(-railT, Math.min(40, pull)) - slide      // >0: further out
 
+    // The Frame bar style: it comes out of the frame's inside edge, not the screen's (it came out
+    // over the frame's border, whose outline ran on behind it). `stage` is the screen inside the
+    // frame; the part of the bar still in the frame is cut off at its edge, the frame's outline
+    // leaves a gap where the bar joins it (HubState.frameGap), and the bar's own outline is the
+    // frame's, so the line runs along the frame, out round the bar and back
+    readonly property real inset: Theme.barStyle === "frame" ? Theme.frameW : 0
+    // (its foot goes half a line's width into the frame, where it's cut off: the outline along
+    // the foot would have drawn a line across the join)
+    readonly property real foot: inset > 0 ? Math.ceil(Theme.frameOutlineW / 2) + 0.5 : 0
+    // the gap in the frame's line runs from where the bar's curves leave the frame's edge: they
+    // start along it, so the first part of each lies in the frame (under the cut) and the frame's
+    // own line stands in for it up to there
+    readonly property var frameGap: {
+        if (!(inset > 0 && body.visible && body.t > 1)) return null;
+        const e = Math.max(0, Math.min(ear, body.t / 2));
+        const t = e > 0 ? Math.sqrt(Math.min(1, foot / e)) : 1;
+        const along = e * (2 * t - t * t);
+        return { edge: edge, a: mid - bodyLong / 2 - e + along, b: mid + bodyLong / 2 + e - along };
+    }
+    onFrameGapChanged: HubState.setFrameGap(modelData.name, frameGap, "quick")
+    Component.onDestruction: HubState.setFrameGap(modelData.name, null, "quick")
+    Item {
+        id: stage
+        x: qa.inset; y: qa.inset
+        width: qa.width - 2 * qa.inset; height: qa.height - 2 * qa.inset
+        clip: qa.inset > 0
     Item {
         id: body
         // the bar's own box (without the ears), placed against its edge
         readonly property real t: qa.bodyThick + Math.max(0, qa.outBy)
         width: qa.vertical ? t : qa.bodyLong
         height: qa.vertical ? qa.bodyLong : t
-        x: qa.edge === "left" ? Math.min(0, qa.outBy) : (qa.edge === "right" ? qa.width - width - Math.min(0, qa.outBy) : qa.mid - width / 2)
-        y: qa.edge === "top" ? Math.min(0, qa.outBy) : (qa.edge === "bottom" ? qa.height - height - Math.min(0, qa.outBy) : qa.mid - height / 2)
+        x: qa.edge === "left" ? Math.min(0, qa.outBy) : (qa.edge === "right" ? stage.width - width - Math.min(0, qa.outBy) : qa.mid - qa.inset - width / 2)
+        y: qa.edge === "top" ? Math.min(0, qa.outBy) : (qa.edge === "bottom" ? stage.height - height - Math.min(0, qa.outBy) : qa.mid - qa.inset - height / 2)
         visible: qa.out || qa.slide < qa.railT + qa.ear + 29
 
         // the outline: the island's shape (a body with curves joining the edge), turned to face out of this edge
         Item {
+            readonly property real foot: qa.foot
             width: qa.vertical ? body.height + 2 * qa.ear : body.width + 2 * qa.ear
-            height: qa.vertical ? body.width : body.height
+            height: (qa.vertical ? body.width : body.height) + foot
             anchors.centerIn: parent
+            anchors.horizontalCenterOffset: qa.edge === "right" ? foot / 2 : (qa.edge === "left" ? -foot / 2 : 0)
+            anchors.verticalCenterOffset: qa.edge === "bottom" ? foot / 2 : (qa.edge === "top" ? -foot / 2 : 0)
             rotation: ({ top: 0, right: 90, bottom: 180, left: -90 })[qa.edge]
             IslandShape {
                 anchors.fill: parent
                 bodyW: parent.width - 2 * e
                 r: Theme.islandRadius
-                fill: Theme.frame
+                // (out of the Frame: the frame's own colour, so the two are one piece)
+                fill: qa.inset > 0 ? Theme.frameFill : Theme.frame
+                lineW: qa.inset > 0 ? Theme.frameOutlineW : Theme.outlineW
+                lineColor: qa.inset > 0 ? Theme.frameOutlineColor : Theme.outlineColor
             }
         }
         HoverHandler { id: bodyHover; onHoveredChanged: if (hovered) hideTimer.stop(); else if (!qa.pinned) hideTimer.restart() }
@@ -346,13 +389,33 @@ PanelWindow {
         }
         }
     }
+    }
 
     // leaving it puts it away (unless pinned, or you're typing in it)
     Timer {
         id: hideTimer
         interval: qa.hideDelay
-        onTriggered: if (!qa.pinned && !bodyHover.hovered && !drag.active && !qa.typing && !HubState.quickHold) qa.hide()
+        onTriggered: if (!qa.pinned && !bodyHover.hovered && !edgeHover.hovered && !drag.active && !qa.typing && !HubState.quickHold) qa.hide()
     }
+    // The strip of edge the bar came out of, while it's out. Brought out by touching the edge, the
+    // pointer is on that strip, not on the bar yet (in the Frame the bar starts a border's width
+    // in): if it then went away without ever crossing the bar, nothing had been "left", the
+    // timer never started and the bar stayed out for good. Being on this strip counts as being
+    // on the bar, and leaving it starts the timer like leaving the bar does
+    Item {
+        id: edgeZone
+        readonly property real t: Math.max(qa.hit, qa.inset) + 2
+        visible: qa.out
+        x: qa.edge === "right" ? qa.width - t : (qa.vertical ? 0 : qa.mid - qa.bodyLong / 2 - qa.ear)
+        y: qa.edge === "bottom" ? qa.height - t : (qa.vertical ? qa.mid - qa.bodyLong / 2 - qa.ear : 0)
+        width: qa.vertical ? t : qa.bodyLong + 2 * qa.ear
+        height: qa.vertical ? qa.bodyLong + 2 * qa.ear : t
+        HoverHandler { id: edgeHover; onHoveredChanged: if (hovered) hideTimer.stop(); else if (!qa.pinned && !bodyHover.hovered) hideTimer.restart() }
+    }
+    // (brought out by the edge and the pointer already gone by the time it's out: the timer runs
+    // too. Opened by a keybind it still stays until the pointer has been on it and left)
+    property bool byEdge: false
+    Timer { id: hideAfterShow; interval: 900; onTriggered: if (qa.out && qa.byEdge && !qa.pinned && !bodyHover.hovered && !edgeHover.hovered && !HubState.quickHold) hideTimer.restart() }
 
     // the keyboard, while it's out
     Item {
@@ -365,21 +428,45 @@ PanelWindow {
             else if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) { qa.expanded = true; ev.accepted = true; }
         }
     }
-    onOutChanged: if (out) keys.forceActiveFocus()
+    onOutChanged: { if (out) { keys.forceActiveFocus(); if (byEdge && !pinned) hideAfterShow.restart(); } else byEdge = false; }
     // something in a tool has the keyboard (the calculator, notes): leaving doesn't put it away
     readonly property bool typing: { const f = keys.Window.activeFocusItem; return qa.expanded && !!f && f !== keys && (f instanceof TextInput || f instanceof TextEdit); }
 
     // blur behind it (Theme → Effects)
     // (kept while it slides away: it used to vanish the moment hiding started)
-    BackgroundEffect.blurRegion: Theme.blur && body.visible ? blurShape : null
+    // blur behind it, cut like its shape: only the part of it that's inside the window, and none
+    // at all until some of it is. Coming out, the window has only just grown from its edge strip
+    // to the whole screen and the bar is still past the edge: its region lay outside the surface,
+    // came out empty, and Hyprland then blurred the whole surface, now the whole screen, for a
+    // frame or two: everything twitched as the bar appeared (the dock did the same: dock/Dock.qml)
+    Item {
+        id: blurPart
+        // (the bar's box in the window: it sits in `stage`, inside the frame's border)
+        readonly property real bx: body.x + qa.inset
+        readonly property real by: body.y + qa.inset
+        readonly property real x0: Math.max(qa.inset, bx)
+        readonly property real y0: Math.max(qa.inset, by)
+        x: x0; y: y0
+        width: Math.max(0, Math.min(qa.width - qa.inset, bx + body.width) - x0)
+        height: Math.max(0, Math.min(qa.height - qa.inset, by + body.height) - y0)
+        // (and only once the window is the whole screen again: for its first frame it's still the strip)
+        readonly property bool some: body.visible && qa.whole && width > 2 && height > 2 && qa.width > 64 && qa.height > 64
+    }
+    BackgroundEffect.blurRegion: Theme.blur && blurPart.some ? blurShape : null
+    // (a dot that changes when the blur comes or goes, so the window draws one more frame: taking
+    // the blur away only reaches the compositor with the next frame, and once the bar is gone
+    // nothing here draws again. On Hyprland, where this window stays the whole screen, the blur
+    // was left sitting where the bar had been until it next came out)
+    Rectangle { width: 1; height: 1; color: Theme.blur && blurPart.some ? "#01000000" : "#01010101" }
     // cut like its shape: square against the edge, rounded inside, with the ears
     Region {
         id: blurShape
         EdgeBlur {
-            readonly property real thick: qa.vertical ? body.width : body.height
-            readonly property real long: qa.vertical ? body.height : body.width
+            readonly property real thick: qa.vertical ? blurPart.width : blurPart.height
+            readonly property real long: qa.vertical ? blurPart.height : blurPart.width
+            on: blurPart.some
             edge: qa.edge
-            bx: body.x; by: body.y; bw: body.width; bh: body.height
+            bx: blurPart.x; by: blurPart.y; bw: blurPart.width; bh: blurPart.height
             e: Math.max(0, Math.min(qa.ear, thick / 2))
             r: Math.max(0, Math.min(Theme.islandRadius, thick - e, long / 2))
         }

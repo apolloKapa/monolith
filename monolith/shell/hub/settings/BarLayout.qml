@@ -195,6 +195,25 @@ ColumnLayout {
         NumberBox { from: 0; to: 60; unit: "px"; value: Number(Store.get("bar.frameRadius", Theme.islandRadius)); onMoved: v => Store.set("bar.frameRadius", v) }
     }
     SettingRow {
+        key: "bar.frameOutline"; def: "style"
+        visible: Theme.barStyle === "frame"
+        icon: "border_style"; title: "Frame outline"
+        desc: Theme.frameOutline === "style" ? (Theme.outlineW > 0 ? "A line along the frame's inside edge: " + Look.style.name + "'s own" : "A line along the frame's inside edge. " + Look.style.name + " has none of its own")
+            : (Theme.frameOutline === "off" ? "No line along the frame's inside edge" : "A line along the frame's inside edge")
+        Dropdown {
+            width: 200; height: 36
+            opts: [["style", "The style's"], ["off", "Off"], ["accent", "Accent colour"], ["text", "Text colour"], ["subtle", "Subtle"]]
+            value: Theme.frameOutline
+            onPicked: v => v === "style" ? Store.unset("bar.frameOutline") : Store.set("bar.frameOutline", v)
+        }
+    }
+    SettingRow {
+        key: "bar.frameOutlineWidth"; def: 2
+        visible: Theme.barStyle === "frame" && Theme.frameOutline !== "style" && Theme.frameOutline !== "off"
+        icon: "line_weight"; title: "Outline width"
+        NumberBox { from: 1; to: 8; unit: "px"; value: Theme.frameOutlineW; onMoved: v => Store.set("bar.frameOutlineWidth", v) }
+    }
+    SettingRow {
         key: "bar.height";
         icon: "height"; title: "Height"
         NumberBox { from: 28; to: 72; slideTo: 60; unit: "px"; value: Theme.islandH; onMoved: v => Store.set("bar.height", v) }
@@ -224,6 +243,19 @@ ColumnLayout {
         visible: Theme.barStyle !== "frame" && Theme.barLengthMode === "fit"
         icon: "expand"; title: "At least this long"; desc: "It grows from here as modules need more room"
         NumberBox { from: 200; to: 2000; slideTo: 1400; step: 10; unit: "px"; value: Theme.islandMinW; onMoved: v => Store.set("bar.minWidth", v) }
+    }
+    // the bar's own background, apart from the menus' (Theme.barLook)
+    SettingRow {
+        key: "bar.look"
+        icon: "blur_on"; title: Theme.barStyle === "frame" ? "Frame background" : "Bar background"
+        desc: Theme.barLook === "solid" ? "Solid: the theme's colour as it is. The menus keep their own see-through and blur"
+            : (Theme.transparent ? "See-through" + (Theme.blur ? " and blurred" : "") + ", like the menus" : "Like the menus (see-through and blur are off in Appearance → Effects, so it's solid now)")
+        Segmented {
+            width: 260
+            opts: [["solid", "Solid"], ["glass", Theme.blur ? "Blur" : "See-through"]]
+            value: Theme.barLook
+            onPicked: v => Store.set("bar.look", v)
+        }
     }
     SettingRow {
         key: "bar.opacity";

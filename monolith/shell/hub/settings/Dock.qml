@@ -21,6 +21,11 @@ ColumnLayout {
         }
     }
     SettingRow {
+        key: "dock.hideDelay"; def: 400;
+        icon: "timer"; title: "Hides after"; desc: "How long it stays once the pointer leaves"
+        NumberBox { from: 0; to: 5000; slideTo: 2000; step: 50; unit: "ms"; value: Number(Store.get("dock.hideDelay", 400)); onMoved: v => Store.set("dock.hideDelay", v) }
+    }
+    SettingRow {
         key: "dock.size"; def: 56;
         icon: "photo_size_select_large"; title: "Size"
         NumberBox { from: 24; to: 160; slideTo: 120; step: 2; unit: "px"; value: Number(Store.get("dock.size", 56)); onMoved: v => Store.set("dock.size", v) }
@@ -41,9 +46,14 @@ ColumnLayout {
         Toggle { checked: Store.get("dock.running", true) !== false; onToggled: on => Store.set("dock.running", on) }
     }
     SettingRow {
-        key: "dock.opacity"; def: 1;
-        icon: "opacity"; title: "Dock opacity"; desc: "How solid the dock is"
-        NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Number(Store.get("dock.opacity", 1)); onMoved: v => Store.set("dock.opacity", v) }
+        key: "dock.runningScope"; def: "all";
+        icon: "filter_alt"; title: "Unpinned open apps"; desc: "Which of them show"
+        Dropdown { opts: [["all", "All of them"], ["screen", "On this screen"], ["workspace", "On this workspace"]]; value: Store.get("dock.runningScope", "all"); onPicked: v => Store.set("dock.runningScope", v) }
+    }
+    SettingRow {
+        key: "dock.maxApps"; def: 0;
+        icon: "apps"; title: "Most apps shown"; desc: "0: no limit"
+        NumberBox { from: 0; to: 40; slideTo: 20; zeroText: "All"; value: Number(Store.get("dock.maxApps", 0)); onMoved: v => Store.set("dock.maxApps", v) }
     }
     SettingRow {
         icon: "edit"; title: "Edit the dock"; desc: "Reorder (drag), unpin (×) and add apps (+). Or hold an app in the dock for a moment"
@@ -71,6 +81,11 @@ ColumnLayout {
         Toggle { checked: Store.get("dock.onTop", false) === true; onToggled: on => Store.set("dock.onTop", on) }
     }
     SettingRow {
+        key: "dock.opacity"; def: 1;
+        icon: "opacity"; title: "Dock opacity"; desc: "How solid the dock is"
+        NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Number(Store.get("dock.opacity", 1)); onMoved: v => Store.set("dock.opacity", v) }
+    }
+    SettingRow {
         key: "dock.border"; def: true;
         icon: "border_style"; title: "Outline"; desc: "A thin line around it (never on a fully see-through dock)"
         Toggle { checked: Store.get("dock.border", true) !== false; onToggled: on => Store.set("dock.border", on) }
@@ -96,20 +111,5 @@ ColumnLayout {
         key: "dock.spacing"; def: 4;
         icon: "space_bar"; title: "Space between apps"
         NumberBox { from: 0; to: 30; unit: "px"; value: Number(Store.get("dock.spacing", 4)); onMoved: v => Store.set("dock.spacing", v) }
-    }
-    SettingRow {
-        key: "dock.hideDelay"; def: 400;
-        icon: "timer"; title: "Hides after"; desc: "How long it stays once the pointer leaves"
-        NumberBox { from: 0; to: 5000; slideTo: 2000; step: 50; unit: "ms"; value: Number(Store.get("dock.hideDelay", 400)); onMoved: v => Store.set("dock.hideDelay", v) }
-    }
-    SettingRow {
-        key: "dock.maxApps"; def: 0;
-        icon: "apps"; title: "Most apps shown"; desc: "0: no limit"
-        NumberBox { from: 0; to: 40; slideTo: 20; zeroText: "All"; value: Number(Store.get("dock.maxApps", 0)); onMoved: v => Store.set("dock.maxApps", v) }
-    }
-    SettingRow {
-        key: "dock.runningScope"; def: "all";
-        icon: "filter_alt"; title: "Unpinned open apps"; desc: "Which of them show"
-        Dropdown { opts: [["all", "All of them"], ["screen", "On this screen"], ["workspace", "On this workspace"]]; value: Store.get("dock.runningScope", "all"); onPicked: v => Store.set("dock.runningScope", v) }
     }
 }

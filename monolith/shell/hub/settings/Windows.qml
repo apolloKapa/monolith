@@ -143,7 +143,7 @@ ColumnLayout {
         // (windows are cut to the rounded shape too: clip-to-geometry)
         NumberBox { from: 0; to: 100; slideTo: 40; unit: "px"; value: sec.num("window-rule|geometry-corner-radius", 0); onMoved: x => { sec.put("window-rule", "geometry-corner-radius", x); sec.put("window-rule", "clip-to-geometry", "true"); } }
     }
-    // (window animations and their speeds: Appearance → Animation speeds)
+    // (window animations and their speeds: Animations → Speeds & windows)
     SettingRow {
         icon: "animation"; title: "Window animations"; desc: "How fast windows, workspaces and the overview move: in Animations → Speeds & windows"
         Button { text: "Open"; icon: "arrow_forward"; onClicked: HubState.openSettings("animations") }

@@ -3,8 +3,8 @@ import QtQuick.Layouts
 import "../../core"
 import "../../ui"
 
-// Theme → Effects: see-through panels and the blur behind them, the finishes drawn over
-// panels, and how things move.
+// Theme → Effects: see-through panels and the blur behind them, the material and finishes drawn
+// over panels, and their shadows.
 ColumnLayout {
     spacing: 8
 
@@ -51,6 +51,27 @@ ColumnLayout {
     }
 
     SectionHead { text: "Finishes" }
+    // what the panels are made of (ui/MaterialPane): the style's own, none, or any of them
+    SettingRow {
+        key: "theme.material"; def: ""
+        icon: "texture"; title: "Material"
+        desc: Theme.liquid ? "Liquid glass is a material of its own"
+            : "What the bar, menus and dock are made of" + (Look.style.material ? " (" + Look.style.name + "'s own: " + ({ concrete: "concrete", paper: "paper", steel: "brushed steel" })[Look.style.material] + ")" : "")
+        Dropdown {
+            width: 220; height: 36
+            enabled: !Theme.liquid
+            opacity: enabled ? 1 : 0.4
+            opts: [["", "The style's own"], ["none", "None (flat)"], ["concrete", "Concrete"], ["paper", "Paper"], ["steel", "Brushed steel"], ["lacquer", "Black lacquer"]]
+            value: Store.get("theme.material", "") || ""
+            onPicked: v => v === "" ? Store.unset("theme.material") : Store.set("theme.material", v)
+        }
+    }
+    SettingRow {
+        key: "theme.materialStrength"; def: 1
+        visible: Theme.material !== ""
+        icon: "grain"; title: "Texture"; desc: "How much of the material shows"
+        NumberBox { from: 0.2; to: 1.5; step: 0.1; decimals: 1; factor: 100; unit: "%"; value: Theme.materialStrength; onMoved: v => Store.set("theme.materialStrength", v) }
+    }
     SettingRow {
         key: "theme.effects.grain"; def: false;
         icon: "grain"; title: "Film grain"; desc: "A faint grain over menus, floating panels and the dock"
@@ -98,12 +119,6 @@ ColumnLayout {
         visible: Theme.shadowOn
         icon: "format_color_fill"; title: "Colour"; desc: "Black, a glow in the accent colour, or the text colour"
         Segmented { width: 260; opts: [["black", "Black"], ["accent", "Accent"], ["ink", "Text"]]; value: ["black", "accent", "ink"].indexOf(Theme.shadowTint) !== -1 ? Theme.shadowTint : "black"; onPicked: v => Store.set("theme.shadow.colour", v) }
-    }
-    SettingRow {
-        key: "widgets.shadow"; def: "off";
-        icon: "widgets"; title: "Shadows under widgets"
-        desc: "For every desktop and lock screen widget that doesn't pick its own (each widget's Shadow setting)"
-        Segmented { width: 260; opts: [["off", "Off"], ["soft", "Soft"], ["strong", "Strong"]]; value: Theme.widgetShadow; onPicked: v => Store.set("widgets.shadow", v) }
     }
 
     // (the shell's and niri's animations: Animations → Speeds & windows, Animations.qml)

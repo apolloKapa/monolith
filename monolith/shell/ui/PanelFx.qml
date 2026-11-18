@@ -81,10 +81,16 @@ Item {
             GradientStop { position: 1; color: "transparent" }
         }
     }
+    // its glow under the line: as wide as the panel, rounded like its top corners (it started
+    // a corner's radius in from each side, a box of light with a darker strip either side of it)
+    // (the Cyberpunk style cuts a corner off: there it keeps clear of the corners)
     Rectangle {
         visible: Theme.fxEdge
-        x: fx.radius; y: 1
-        width: parent.width - 2 * x; height: Math.min(28, parent.height / 3)
+        readonly property real inset: Theme.chamfer ? fx.radius : 1
+        x: inset; y: 1
+        width: parent.width - 2 * inset; height: Math.max(Math.min(28, parent.height / 3), Theme.chamfer ? 0 : fx.radius)
+        topLeftRadius: Theme.chamfer || Theme.square ? 0 : Math.max(0, fx.radius - 1)
+        topRightRadius: Theme.chamfer || Theme.square ? 0 : Math.max(0, fx.radius - 1)
         gradient: Gradient {
             GradientStop { position: 0; color: Qt.alpha(Theme.accent, 0.10) }
             GradientStop { position: 1; color: "transparent" }

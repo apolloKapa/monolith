@@ -42,7 +42,9 @@ Singleton {
     // the setting as it's kept, and handing it to the compositor: Hyprland gets Monolith's
     // animations file (scripts/hypr_anims.py), niri its workspace-switch spring. Fade (niri)
     // switches at once and Monolith draws it; Glitch is the compositor's slide with Monolith's
-    // light over it (island/WorkspaceFade.qml)
+    // light over it, and "fx" the same with the style's own effect (island/WorkspaceFade.qml).
+    // niri can't slide sideways or fade: Slide sideways switches at once too and Monolith wipes the
+    // new workspace in; Slide and fade is niri's slide with Monolith's fade over it
     readonly property var wsDefault: ({ style: "slidevert", feel: "smooth", speed: "normal" })
     readonly property var wsStiffness: ({ relaxed: 450, normal: 900, fast: 1500, fastest: 2500 })
     readonly property var wsRatio: ({ smooth: 1.0, bouncy: 0.6 })
@@ -51,15 +53,17 @@ Singleton {
         Store.set("animations.workspaceSwitch", c);
         if (Niri.hyprland)
             Quickshell.execDetached(["python3", Qt.resolvedUrl("../scripts/hypr_anims.py").toString().replace("file://", ""), "apply", JSON.stringify(c)]);
-        // (Glitch: niri's own slide, Monolith's light over it; Fade: Monolith's fade over an instant switch)
-        else if (c.style === "off" || c.style === "fade")
+        // (Glitch, the style's effect, Slide and fade: niri's own slide, Monolith's over it; Fade and
+        // Slide sideways: Monolith's over an instant switch)
+        else if (c.style === "off" || c.style === "fade" || c.style === "slide")
             NiriConf.set("animations", "workspace-switch", "{ off; }");
         else
             NiriConf.set("animations", "workspace-switch", "{ spring damping-ratio=" + wsRatio[c.feel].toFixed(1)
                 + " stiffness=" + wsStiffness[c.speed] + " epsilon=0.0001; }");
     }
-    // a style that glitches (Cyberpunk) switches workspaces with the glitch too: picking it sets
-    // Glitch (remembering what you had), leaving it puts that back if Glitch is still set
+    // a style that glitches (Cyberpunk) switches workspaces with the glitch too, and a style with
+    // another effect of its own (Fjord's frost, Doodle's pencil…) with that ("fx"): picking it sets
+    // it (remembering what you had), leaving it for a plain style puts that back if it's still set
     // (Glitch was an instant switch with the compositor's animation off, until 2.9.64 made it the
     // compositor's slide with light over it: set that once where it was already picked)
     Timer {
@@ -76,11 +80,13 @@ Singleton {
         const next = styles.find(s => s.id === id);
         if (!next || next.id === style.id) return;
         const c = workspaceSwitch();
-        if (next.glitch === true && c.style !== "glitch") {
-            Store.set("animations.workspaceSwitchBefore", c.style);
-            c.style = "glitch";
+        const own = s => ["glitch", "fx"].indexOf(s) !== -1;
+        const want = next.glitch === true ? "glitch" : (next.fx ? "fx" : "");
+        if (want !== "" && c.style !== want) {
+            if (!own(c.style)) Store.set("animations.workspaceSwitchBefore", c.style);
+            c.style = want;
             applyWorkspaceSwitch(c);
-        } else if (next.glitch !== true && style.glitch === true && c.style === "glitch") {
+        } else if (want === "" && (style.glitch === true || !!style.fx) && own(c.style)) {
             c.style = Store.get("animations.workspaceSwitchBefore", "") || wsDefault.style;
             applyWorkspaceSwitch(c);
         }

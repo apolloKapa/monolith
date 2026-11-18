@@ -13,13 +13,13 @@ ColumnLayout {
     spacing: 8
 
     // niri's animations: [config name, title, what it is, niri's default]
+    // (workspace-switch isn't here: it has its own tab, Workspace switching, which writes it)
     readonly property var kinds: [
         ["window-open", "Window opening", "A new window appearing", "{ duration-ms 150; curve \"ease-out-expo\"; }"],
         ["window-close", "Window closing", "A window going away", "{ duration-ms 150; curve \"ease-out-quad\"; }"],
         ["window-movement", "Windows moving", "Windows sliding to their new places (one closed, moved or added)", "{ spring damping-ratio=1.0 stiffness=800 epsilon=0.0001; }"],
         ["window-resize", "Window resizing", "A window growing or shrinking", "{ spring damping-ratio=1.0 stiffness=800 epsilon=0.0001; }"],
         ["horizontal-view-movement", "Scrolling the windows", "The row of windows sliding left and right", "{ spring damping-ratio=1.0 stiffness=800 epsilon=0.0001; }"],
-        ["workspace-switch", "Switching workspaces", "Going up or down to another workspace", "{ spring damping-ratio=1.0 stiffness=1000 epsilon=0.0001; }"],
         ["overview-open-close", "Overview", "The overview zooming out and back in", "{ spring damping-ratio=1.0 stiffness=800 epsilon=0.0001; }"],
         ["recent-windows-close", "Recent windows switcher", "niri's window switcher closing", "{ spring damping-ratio=1.0 stiffness=800 epsilon=0.001; }"],
         ["screenshot-ui-open", "niri's screenshot screen", "niri's own screenshot tool opening", "{ duration-ms 200; curve \"ease-out-quad\"; }"],
@@ -190,41 +190,10 @@ ColumnLayout {
         desc: { const v = Number(Store.get("theme.animSpeed", 1)); return v === 1 ? "1 × is normal. Higher is faster, lower is slower" : (v > 1 ? "Animations take " + (Math.round(100 / v) / 100) + " × as long as normal (faster)" : "Animations take " + (Math.round(100 / v) / 100) + " × as long as normal (slower)"); }
         NumberBox { from: 0.25; to: 3; step: 0.05; decimals: 2; unit: "×"; value: Number(Store.get("theme.animSpeed", 1)); onMoved: v => Store.set("theme.animSpeed", v) }
     }
-    // the style's own effect (Cyberpunk's glitch, Doodle drawing menus in, Concrete crumbling…):
-    // its speed on its own, on top of the speed above
-    SettingRow {
-        key: "theme.fxSpeed"; def: 1;
-        visible: Theme.animOn && Theme.cyber
-        icon: "auto_awesome"; title: "Style effect speed"
-        desc: { const v = Theme.fxSpeed; const what = Look.style.name + "'s own effect (how its menus appear and go)"; return v === 1 ? what + ". 1 × is normal" : what + " takes " + (Math.round(100 / v) / 100) + " × as long" + (v > 1 ? " (faster)" : " (slower)"); }
-        NumberBox { from: 0.25; to: 3; step: 0.05; decimals: 2; unit: "×"; value: Theme.fxSpeed; onMoved: v => Store.set("theme.fxSpeed", v) }
-    }
-    // how menus open, and close the same way back (Theme.menuAnim); a style with its own effect
-    // (Style effect speed above) draws its menus its way instead
-    readonly property var menuAnimInfo: ({
-        zoom: ["zoom_out_map", "Zoom", "A menu fades in while growing a little, and shrinks away"],
-        pop: ["bubble_chart", "Pop", "A menu springs up from smaller, overshooting a touch, and shrinks back down"],
-        slide: ["north", "Slide up", "A menu rises into place, and sinks away"],
-        drop: ["south", "Drop down", "A menu comes down into place, and lifts away"],
-        fade: ["gradient", "Fade", "A menu just fades in, and out"],
-        unfold: ["unfold_more", "Unfold", "A menu opens out of a thin bright line through its middle, and folds back into it"]
-    })
-    SettingRow {
-        keys: ["theme.menuAnim", "theme.effects.unfold"]
-        visible: Theme.animOn && !Theme.cyber
-        icon: (sec.menuAnimInfo[Theme.menuAnim] || sec.menuAnimInfo.zoom)[0]; title: "How menus open"
-        desc: (sec.menuAnimInfo[Theme.menuAnim] || sec.menuAnimInfo.zoom)[2]
-        Dropdown {
-            width: 220
-            opts: Theme.menuAnims.map(k => [k, sec.menuAnimInfo[k][1]])
-            value: Theme.menuAnim
-            onPicked: v => { Store.set("theme.menuAnim", v); Store.unset("theme.effects.unfold"); }
-        }
-    }
 
     // ── niri ──
     SectionHead { text: "Windows (niri)"; visible: !Niri.hyprland }
-    Label { visible: Niri.hyprland; Layout.fillWidth: true; wrapMode: Text.Wrap; text: "On Hyprland, switching workspaces is in the next tab (Workspace switching); other window animations are in your Hyprland config (hyprland.lua or hyprland.conf)."; muted: true; Layout.leftMargin: 6 }
+    Label { visible: Niri.hyprland; Layout.fillWidth: true; wrapMode: Text.Wrap; text: "On Hyprland, switching workspaces is in its own tab (Workspace switching); other window animations are in your Hyprland config (hyprland.lua or hyprland.conf)."; muted: true; Layout.leftMargin: 6 }
     SettingRow {
         visible: !Niri.hyprland
         icon: "animation"; title: "Window animations"; desc: "Off: windows, workspaces and the overview move at once"

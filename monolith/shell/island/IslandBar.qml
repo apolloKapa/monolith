@@ -205,7 +205,7 @@ Item {
         width: bar.vertical ? bar.width : (zone ? zone.width + 16 : 0)
         height: bar.vertical ? (zone ? zone.height + 16 : 0) : bar.height
         radius: Theme.barRound(Math.min(width, height))
-        color: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+        color: Theme.barOpacity >= 0.99 ? Theme.barFill : Qt.alpha(Theme.barFill, Theme.barFill.a * Theme.barOpacity)
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
         // centred, so it doesn't read as a second pill below (hard-shadow styles keep theirs)

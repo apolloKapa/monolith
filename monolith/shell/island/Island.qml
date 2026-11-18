@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Shapes
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
@@ -42,6 +43,10 @@ PanelWindow {
         item: win.shown ? fullArea : (!(win.barHere || win.toastGrows) ? null : (win.tucked ? (win.covered ? null : sensor) : island))
         // a notification out of a full-width bar, or under a floating one
         Region { item: !win.shown && drop.height > 1 ? dropBody : null }
+        // the sides a menu opens from by hover
+        Region { item: senseL.live ? senseL : null }
+        Region { item: senseR.live ? senseR : null }
+        Region { item: senseB.live ? senseB : null }
         // the modules outside the bar
         Region { item: outLeft.visible ? outLeft : null }
         Region { item: outRight.visible ? outRight : null }
@@ -77,13 +82,14 @@ PanelWindow {
         return false;
     }
     Item { id: fullArea; anchors.fill: parent }
-    // Animations → Workspace switching → Fade (niri) or Glitch: drawn in this window, under everything in it,
+    // Animations → Workspace switching → Glitch or the style's effect, and niri's Fade, Slide and
+    // fade and Slide sideways (island/WorkspaceFade.qml): drawn in this window, under everything in it,
     // so it's over the windows and under the bar (a window of its own was made after the bar,
     // once the setting had loaded, and niri put it over the bar)
     Loader {
         anchors.fill: parent
         z: -1000
-        active: { const st = (Store.get("animations.workspaceSwitch", {}) || {}).style; return st === "glitch" || (!Niri.hyprland && st === "fade"); }
+        active: { const st = (Store.get("animations.workspaceSwitch", {}) || {}).style; return st === "glitch" || st === "fx" || (!Niri.hyprland && ["fade", "slide", "slidefadevert"].indexOf(st) !== -1); }
         sourceComponent: WorkspaceFade { screenName: win.modelData.name }
     }
 
@@ -95,7 +101,12 @@ PanelWindow {
     // the screen's top edge doesn't bring it back then, it would catch the game's mouse
     readonly property bool covered: Niri.hyprland && Niri.fullscreenOn(modelData.name)
     readonly property bool tucked: (autohide || covered) && !win.shown && (covered || (!sensorHover.hovered && !barHover.hovered))
-    Item { id: sensor; x: island.x; y: Theme.barBottom ? win.height - 3 : 0; width: island.width; height: 3; HoverHandler { id: sensorHover } }
+    // the Frame, auto-hide: windows make room for the bar while it's out (island/Frame.qml)
+    readonly property bool barIsOut: Theme.frameHide && barHere && !tucked && !covered
+    onBarIsOutChanged: HubState.setBarOut(modelData.name, barIsOut)
+    // (the Frame's border on the bar's edge is the whole strip you touch to bring the bar back)
+    readonly property real sensorH: Theme.frameHide ? Math.max(3, Theme.frameW) : 3
+    Item { id: sensor; x: Theme.frameHide ? 0 : island.x; y: Theme.barBottom ? win.height - win.sensorH : 0; width: Theme.frameHide ? win.width : island.width; height: win.sensorH; HoverHandler { id: sensorHover } }
     readonly property bool bottom: Theme.barBottom
 
     MouseArea { anchors.fill: parent; enabled: win.shown && !win.pinned; onClicked: HubState.close() }
@@ -162,19 +173,69 @@ PanelWindow {
     // (each menu can have its own place, Settings → Menus & launcher)
     // Two settings (Settings → Menus & launcher): out of the bar (menus.barPlace: off, or at the
     // bar's start, middle or end), else a floating place (menus.position). Each menu can have its own
-    // (menus.positions.<menu>: "bar-start" | "bar-center" | "bar-end", or a floating place).
+    // too, the same two: menus.barPlaces.<menu> ("same" as the default, off, start, center, end)
+    // and menus.positions.<menu> (a floating place; "" the default's). (Before each menu had the
+    // two, menus.positions.<menu> held either: "bar-start" | "bar-center" | "bar-end", or a
+    // floating place that also meant "not out of the bar". Still read that way where
+    // menus.barPlaces.<menu> isn't set.)
     // (before there were two, "top" meant out of the bar, in the middle: it still does)
+    // (out of a side of the screen: "left", "right", "bottom". The menu comes out through the
+    // frame there, one piece with it; in the other bar styles, out of the screen's edge)
+    readonly property var outPlaces: ["off", "start", "center", "end", "left", "right", "bottom"]
     readonly property string barPlaceDefault: {
         const b = String(Store.get("menus.barPlace", ""));
-        if (["off", "start", "center", "end"].indexOf(b) !== -1) return b;
+        if (outPlaces.indexOf(b) !== -1) return b;
         return String(Store.get("menus.position", "top")) === "top" ? "center" : "off";
     }
     readonly property string floatDefault: { const p = String(Store.get("menus.position", "center")); return p === "top" ? "center" : p; }
-    readonly property string place: {
-        const own = String(Store.get("menus.positions." + cardPage, "") || "");
-        if (own !== "") return own === "top" ? "bar-center" : own;
-        return barPlaceDefault !== "off" ? "bar-" + barPlaceDefault : floatDefault;
+    function placeOf(page) {
+        const own = String(Store.get("menus.positions." + page, "") || "");
+        const ownBar = String(Store.get("menus.barPlaces." + page, "") || "");
+        const ownFloat = own !== "" && own !== "top" && !own.startsWith("bar-") ? own : "";
+        let bar;
+        if (outPlaces.indexOf(ownBar) !== -1) bar = ownBar;
+        else if (ownBar === "same") bar = barPlaceDefault;
+        else if (own === "top" || own.startsWith("bar-")) bar = own === "top" ? "center" : own.slice(4);
+        else if (ownFloat !== "") bar = "off";
+        else bar = barPlaceDefault;
+        if (bar === "left" || bar === "right" || bar === "bottom") return "edge-" + bar;
+        return bar !== "off" ? "bar-" + bar : (ownFloat !== "" ? ownFloat : floatDefault);
     }
+    readonly property string place: { Store.revision; return placeOf(cardPage); }
+    // out of a side of the screen (not the bar's own edge: there it comes out of the bar)
+    readonly property string joinEdge: place.startsWith("edge-") && place.slice(5) !== Theme.barEdge ? place.slice(5) : ""
+    // ── opening by hover (Settings → Menus & launcher): rest the pointer on the middle of a side
+    // a menu comes out of, and it opens; it closes again a moment after the pointer leaves it ──
+    readonly property bool edgeHover: Store.get("menus.edgeHover", false) === true
+    function edgeMenu(e) {
+        if (e === Theme.barEdge) return "";
+        Store.revision;
+        for (const p of HubState.pages) if (placeOf(p) === "edge-" + e) return p;
+        return "";
+    }
+    readonly property var hoverEdges: edgeHover ? ["left", "right", "bottom"].filter(e => edgeMenu(e) !== "") : []
+    onHoverEdgesChanged: if (modelData === Quickshell.screens[0]) HubState.hoverEdges = hoverEdges
+    property bool hoverOpened: false
+    Connections { target: win; function onShownChanged() { if (!win.shown) win.hoverOpened = false; } }
+    component EdgeSensor: Item {
+        id: es
+        required property string side
+        readonly property bool vert: side !== "bottom"
+        readonly property real t: Math.max(3, Theme.barStyle === "frame" ? Theme.frameW : 3)
+        readonly property bool live: win.hoverEdges.indexOf(side) !== -1 && !win.shown && !win.covered && win.barHere
+        visible: live
+        // (the middle of the edge: its ends are left to the corners and whatever else lives there)
+        x: side === "right" ? win.width - t : (vert ? 0 : win.width * 0.3)
+        y: side === "bottom" ? win.height - t : win.height * 0.3
+        width: vert ? t : win.width * 0.4
+        height: vert ? win.height * 0.4 : t
+        HoverHandler { onHoveredChanged: if (hovered) openSoon.restart(); else openSoon.stop() }
+        Timer { id: openSoon; interval: 160; onTriggered: { const m = win.edgeMenu(es.side); if (m !== "" && es.live) { win.hoverOpened = true; HubState.show(m, win.modelData.name); win.hoverOpened = true; } } }
+    }
+    EdgeSensor { id: senseL; side: "left" }
+    EdgeSensor { id: senseR; side: "right" }
+    EdgeSensor { id: senseB; side: "bottom" }
+    Timer { id: hoverClose; interval: 380; onTriggered: if (win.hoverOpened && win.shown && !cardHover.hovered) HubState.close() }
     readonly property bool fromBar: place.startsWith("bar-")
     readonly property string barAlign: fromBar ? place.slice(4) : "center"
     readonly property real barFrac: barAlign === "start" ? 0 : (barAlign === "end" ? 1 : 0.5)
@@ -233,7 +294,7 @@ PanelWindow {
     // (holds them while the pointer is on one, only while one shows: see Notifs.holders)
     readonly property bool toastHolding: toastOn && toastHover.hovered
     onToastHoldingChanged: Notifs.setHold("island:" + modelData.name, toastHolding)
-    Component.onDestruction: Notifs.setHold("island:" + modelData.name, false)
+    Component.onDestruction: { Notifs.setHold("island:" + modelData.name, false); HubState.setBarOut(modelData.name, false); HubState.setFrameGap(modelData.name, null, "menu"); }
     readonly property real toastW: Math.min(560, width - 40)
     // pages stay loaded while the island shrinks back after being open (not for a toast)
     property bool wasOpen: false
@@ -294,6 +355,84 @@ PanelWindow {
         }
     }
 
+    // ── the Frame with auto-hide: drawn here, whole, in the bar's own window (island/Frame.qml
+    // only keeps windows off it then). Its border along the bar's edge swells into the bar as it
+    // comes out and shrinks back to a border as it goes, the inside corners staying round all the
+    // way; it follows the bar's own position, so the two never part. One shape, so one colour,
+    // one shadow and one blur all the way round: with the sides in the frame's window and the
+    // moving edge in this one, the sides' shadow showed through the edge and the two were
+    // never quite the same colour where they met ──
+    Item {
+        id: frameEdge
+        visible: Theme.frameHide && win.barHere
+        anchors.fill: parent
+        // how much of the bar's row is on the screen now, never less than the border
+        readonly property real out: win.bottom ? win.height - (island.y + island.height) + Theme.islandH : island.y + Theme.islandH
+        readonly property real h: Math.max(Theme.frameW, Math.min(Theme.islandH, out))
+        readonly property real r: Math.min(Theme.frameRadius, Math.max(0, hole.width / 2), Math.max(0, hole.height / 2))
+        // (its edge is on the move: between the border and the whole bar)
+        readonly property bool moving: h > Theme.frameW + 0.5 && h < Theme.islandH - 0.5
+        readonly property color col: Theme.frameFill
+        // (a borderless game under the bar: nothing of the shell over it)
+        opacity: win.covered ? 0 : 1
+        Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
+        // the inside (the screen your windows get)
+        Item {
+            id: hole
+            x: Theme.frameW
+            y: win.bottom ? Theme.frameW : frameEdge.h
+            width: win.width - 2 * Theme.frameW
+            height: win.height - Theme.frameW - frameEdge.h
+        }
+        Shape {
+            id: frameShape
+            anchors.fill: parent
+            preferredRendererType: Shape.CurveRenderer
+            // the shadow falls inwards. Not while the edge is moving: the shadow is made from a
+            // picture of the whole frame, and making that again for every frame of the motion
+            // (the whole screen, blurred, 240 times a second) is what made it stutter; it comes
+            // back the moment the edge is still
+            layer.enabled: Theme.barOpacity > 0.3 && !frameEdge.moving
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowBlur: Theme.shadowBlur
+                shadowColor: Theme.shadowColor
+                shadowVerticalOffset: 0
+                shadowHorizontalOffset: 0
+            }
+            ShapePath {
+                fillColor: frameEdge.col
+                strokeColor: "transparent"
+                fillRule: ShapePath.OddEvenFill
+                startX: 0; startY: 0
+                PathLine { x: frameShape.width; y: 0 }
+                PathLine { x: frameShape.width; y: frameShape.height }
+                PathLine { x: 0; y: frameShape.height }
+                PathLine { x: 0; y: 0 }
+                PathMove { x: hole.x + frameEdge.r; y: hole.y }
+                PathLine { x: hole.x + hole.width - frameEdge.r; y: hole.y }
+                PathArc { x: hole.x + hole.width; y: hole.y + frameEdge.r; radiusX: frameEdge.r; radiusY: frameEdge.r }
+                PathLine { x: hole.x + hole.width; y: hole.y + hole.height - frameEdge.r }
+                PathArc { x: hole.x + hole.width - frameEdge.r; y: hole.y + hole.height; radiusX: frameEdge.r; radiusY: frameEdge.r }
+                PathLine { x: hole.x + frameEdge.r; y: hole.y + hole.height }
+                PathArc { x: hole.x; y: hole.y + hole.height - frameEdge.r; radiusX: frameEdge.r; radiusY: frameEdge.r }
+                PathLine { x: hole.x; y: hole.y + frameEdge.r }
+                PathArc { x: hole.x + frameEdge.r; y: hole.y; radiusX: frameEdge.r; radiusY: frameEdge.r }
+            }
+        }
+        // its outline (the style's, or the one picked in Settings → Bar), along the inside edge
+        FrameLine {
+            anchors.fill: parent
+            hx: hole.x; hy: hole.y; hw: hole.width; hh: hole.height
+            r: frameEdge.r; lw: Theme.frameOutlineW; lineColor: Theme.frameOutlineColor
+            gap: HubState.frameGapOn(win.modelData.name)
+        }
+    }
+
+    // the gap a menu makes in the frame's outline: dropped out of the bar, or out of a side
+    readonly property var menuGap: drop.frameGap || floatCard.frameGap
+    onMenuGapChanged: HubState.setFrameGap(modelData.name, menuGap, "menu")
+
     // ── the island ──
     IslandShape {
         id: island
@@ -304,13 +443,15 @@ PanelWindow {
         // x, keeps it in step with its width as both change: an x worked out from a width still on
         // its way lagged behind it, and the island slid in from the side)
         property real along: win.grown ? win.barFrac : 0.5
-        Behavior on along { NumberAnimation { duration: win.grown ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
+        Behavior on along { NumberAnimation { duration: win.grown ? Theme.menuIn(Theme.growMs) : Theme.menuOut(Theme.shrinkMs); easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
         r: win.grown || win.toastGrows ? Theme.islandRadius : (Theme.fullBar ? (win.barShort ? Theme.islandRadius / 2 : 0) : Theme.barRound(height))
         // a floating bar draws its own rounded background (Solid) or none at all (Modular: its
         // sections have pills), so the hanging shape stays empty
         // the Frame paints the bar's background itself (as part of one shape), so here it's empty
-        readonly property bool empty: Theme.barFloats || (Theme.frameBand && !win.grown)
-        fill: empty ? "transparent" : (win.barSolid ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
+        readonly property bool empty: Theme.barFloats || ((Theme.frameBand || Theme.frameHide) && !win.grown)
+        // (the bar's own background while it's a bar; grown into a menu it's a menu's)
+        readonly property color barCol: win.grown || win.toastGrows ? Theme.frame : Theme.barFill
+        fill: empty ? "transparent" : (win.barSolid ? barCol : Qt.alpha(barCol, barCol.a * Theme.barOpacity))
         shadow: !empty && (win.barSolid || Theme.barOpacity > 0.3)
         outline: !empty
         // a screen with the bar turned off keeps it off while a menu is open, unless the menu
@@ -322,14 +463,21 @@ PanelWindow {
         onHeightChanged: if (!win.shown && win.docked && height <= Theme.islandH + 1) win.wasOpen = false
         x: Math.round(Math.max(0, Math.min(win.width - width, 8 + (win.width - 16 - width) * along)))
         flipped: win.bottom
-        y: win.bottom ? win.height - height - (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
-                      : (win.tucked ? -Theme.islandH - Theme.barMargin + 3 : Theme.barMargin)
+        // (tucked away it leaves 3 px to touch; in the Frame it goes all the way, the border is there)
+        readonly property real away: -Theme.islandH - Theme.barMargin + (Theme.frameHide ? 0 : 3)
+        y: win.bottom ? win.height - height - (win.tucked ? away : Theme.barMargin)
+                      : (win.tucked ? away : Theme.barMargin)
         // growing into a menu: with a bit of spring (a little past, and back); going back to a bar:
         // smoothly and quicker. Its place along the bar moves the same way
-        Behavior on bodyW { NumberAnimation { duration: win.grown ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
-        Behavior on height { NumberAnimation { duration: win.grown ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
+        Behavior on bodyW { NumberAnimation { duration: win.grown ? Theme.menuIn(Theme.growMs) : Theme.menuOut(Theme.shrinkMs); easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
+        Behavior on height { NumberAnimation { duration: win.grown ? Theme.menuIn(Theme.growMs) : Theme.menuOut(Theme.shrinkMs); easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
         Behavior on r { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
-        Behavior on y { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
+        // (the Frame's bar coming out of the frame and going back: a little longer, out with a
+        // soft landing and back in gathering speed, so the frame's edge is seen swelling)
+        Behavior on y { NumberAnimation {
+            duration: Theme.frameHide && Theme.animOn ? Math.max(200, Theme.ms(460)) : Theme.moveMs
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.frameHide ? (win.tucked ? [0.4, 0.0, 0.7, 0.2, 1, 1] : [0.2, 0.9, 0.2, 1.0, 1, 1]) : Theme.standardCurve } }
 
         // Solid: one rounded floating bar; Modular gets one too while a notification drops out
         // (a SmoothRect: the Cyberpunk style cuts its corner)
@@ -338,7 +486,7 @@ PanelWindow {
             anchors.fill: parent
             visible: Theme.barFloats && (Theme.barStyle === "solid" || win.toastGrows)
             radius: win.toastGrows ? Theme.islandRadius : Theme.barRound(height)
-            color: win.barSolid || win.toastOn ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+            color: win.toastOn ? Theme.frame : (win.barSolid ? Theme.barFill : Qt.alpha(Theme.barFill, Theme.barFill.a * Theme.barOpacity))
             border.width: Theme.outlineW
             border.color: Theme.outlineColor
             CardShadow { visible: win.barSolid || win.toastOn || Theme.barOpacity > 0.3 }
@@ -418,7 +566,7 @@ PanelWindow {
                         notif: win.toast
                         screenName: win.modelData.name
                         onHeldChanged: win.heldToast = held ? notif : null
-                        onClosed: Notifs.dismissPopup(win.toast, flying)
+                        onClosed: Notifs.dismissPopup(win.toast, flying, flying)
                     }
                 }
                 Pressable {
@@ -454,14 +602,14 @@ PanelWindow {
                 // and a little zoom, from the bar's side
                 scale: win.shown || Theme.fxUnfold ? 1 : Theme.popScale
                 transformOrigin: win.bottom && win.docked ? Item.Bottom : Item.Top
-                Behavior on scale { enabled: !HubState.snap; Anim { kind: win.shown ? "enter" : "exit" } }
+                Behavior on scale { enabled: !HubState.snap; Anim { kind: win.shown ? "enter" : "exit"; duration: win.shown ? Theme.menuIn(Theme.popInMs) : Theme.menuOut(Theme.popOutMs) } }
                 // Unfold (Theme → Effects): the menu opens out of a thin bright line through its
                 // middle and folds back into it
                 // (a floating menu unfolds whole, card and all: see floatCard; here it's the
                 // content of a menu growing out of the bar)
                 readonly property bool unfolds: Theme.fxUnfold && win.docked
                 property real unfold: win.shown ? 1 : 0
-                Behavior on unfold { enabled: Theme.fxUnfold; NumberAnimation { duration: win.shown ? Theme.ms(420) : Theme.ms(200); easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
+                Behavior on unfold { enabled: Theme.fxUnfold; NumberAnimation { duration: win.shown ? Theme.menuIn(Theme.ms(420)) : Theme.menuOut(Theme.ms(200)); easing.type: Easing.BezierSpline; easing.bezierCurve: win.shown ? Theme.enterCurve : Theme.exitCurve } }
                 transform: Scale {
                     origin.x: openArea.width / 2; origin.y: openArea.height / 2
                     yScale: openArea.unfolds ? Math.max(0.012, openArea.unfold) : 1
@@ -798,6 +946,15 @@ PanelWindow {
         bodyW: win.dropped ? win.openW : (toasting ? win.toastW : 160)
         height: win.dropped ? win.openH - Theme.islandH : (toasting ? toastArea.implicitHeight + win.pad * 1.5 : 0)
         r: Theme.islandRadius
+        // one piece with the bar it grows out of: the bar's own colour (the bar and the menu were
+        // two different shades, with a seam where they met), no outline across the join, and in
+        // the Frame the frame's line, which leaves a gap here and runs on round the menu
+        fill: Theme.barStyle === "frame" ? Theme.frameFill : Theme.barFill
+        baseLine: false
+        lineW: Theme.barStyle === "frame" ? Theme.frameOutlineW : Theme.outlineW
+        lineColor: Theme.barStyle === "frame" ? Theme.frameOutlineColor : Theme.outlineColor
+        readonly property var frameGap: Theme.barStyle === "frame" && visible && height > 1
+            ? { edge: Theme.barEdge, a: x, b: x + width } : null
         // where along the bar it hangs: its start or end (in from the bar's ends by their
         // roundness, so the shoulder meets the bar's straight edge), or the middle
         readonly property real barL: island.x + island.e
@@ -807,7 +964,7 @@ PanelWindow {
         // step with its width (see the island's). Going back in it stays where it is; a
         // notification hangs from the middle
         property real along: win.dropped || !toasting ? win.barFrac : 0.5
-        Behavior on along { enabled: drop.height > 1; NumberAnimation { duration: win.dropped ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springyCurve : Theme.sizeCurve } }
+        Behavior on along { enabled: drop.height > 1; NumberAnimation { duration: win.dropped ? Theme.menuIn(Theme.growMs) : Theme.menuOut(Theme.shrinkMs); easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springyCurve : Theme.sizeCurve } }
         readonly property real midX: (win.width - bodyW) / 2
         readonly property real wantBodyX: along <= 0.5 ? barL + inset + (midX - barL - inset) * along * 2
                                                        : midX + (barR - inset - bodyW - midX) * (along - 0.5) * 2
@@ -817,8 +974,8 @@ PanelWindow {
         y: win.bottom ? island.y - height + (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
                       : island.y + Theme.islandH - (Theme.see < 0.999 || Theme.barOpacity < 0.999 ? 0 : 1)
         // growing out of the bar with a bit of spring; going back in smoothly and quicker
-        Behavior on bodyW { NumberAnimation { duration: win.dropped ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springyCurve : Theme.sizeCurve } }
-        Behavior on height { NumberAnimation { duration: win.dropped ? Theme.growMs : Theme.shrinkMs; easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springyCurve : Theme.exitCurve } }
+        Behavior on bodyW { NumberAnimation { duration: win.dropped ? Theme.menuIn(Theme.growMs) : Theme.menuOut(Theme.shrinkMs); easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springyCurve : Theme.sizeCurve } }
+        Behavior on height { NumberAnimation { duration: win.dropped ? Theme.menuIn(Theme.growMs) : Theme.menuOut(Theme.shrinkMs); easing.type: Easing.BezierSpline; easing.bezierCurve: win.dropped ? Theme.springyCurve : Theme.exitCurve } }
         onHeightChanged: if (!win.shown && win.docked && height <= 1) win.wasOpen = false
         MouseArea { anchors.fill: parent }
         Item { id: dropBody; x: drop.e; width: drop.bodyW; height: drop.height; clip: true }
@@ -861,18 +1018,24 @@ PanelWindow {
         // where: the middle, an edge (left, right, bottom; "top-center" under the bar) or a corner
         // "top" means by the bar: next to it at the bottom when the bar is there
         // (by a bar down the side: beside it, in the middle of that edge)
-        readonly property string spot: win.side && (win.fromBar || win.place.startsWith("top")) ? Theme.barSide : (win.bottom && win.place.startsWith("top") ? "bottom" + win.place.slice(3) : win.place)
+        // Out of a side of the screen (win.joinEdge): flat against that side (the frame's inside
+        // edge in the Frame), one piece with it: the frame's own colour and outline, which leaves
+        // a gap there and runs on round the menu, the corners by the edge joined to it with the
+        // same curves as a menu out of the bar. It slides out of the edge and back into it
+        readonly property string joined: win.joinEdge
+        readonly property real edgeInset: Theme.barStyle === "frame" ? Theme.frameW : 0
+        readonly property string spot: joined !== "" ? joined : (win.side && (win.fromBar || win.place.startsWith("top")) ? Theme.barSide : (win.bottom && win.place.startsWith("top") ? "bottom" + win.place.slice(3) : win.place))
         readonly property bool onLeft: spot.indexOf("left") !== -1
         readonly property bool onRight: spot.indexOf("right") !== -1
         readonly property bool onTop: spot.startsWith("top")
         readonly property bool onBottom: spot.startsWith("bottom")
         // clear of the bar, wherever it is
-        readonly property real leftRoom: 16 + (Theme.barSide === "left" ? Theme.sideRoom : 0)
-        readonly property real rightRoom: 16 + (Theme.barSide === "right" ? Theme.sideRoom : 0)
+        readonly property real leftRoom: joined !== "" ? edgeInset : 16 + (Theme.barSide === "left" ? Theme.sideRoom : 0)
+        readonly property real rightRoom: joined !== "" ? edgeInset : 16 + (Theme.barSide === "right" ? Theme.sideRoom : 0)
         readonly property real homeX: onLeft ? leftRoom : (onRight ? win.width - width - rightRoom : Math.round((win.width - width) / 2))
         // moved by hand (drag an empty part of it): kept for each menu; a double-click on an empty
         // part puts it back. Always kept on the screen
-        readonly property var moved: Store.get("menus.moved." + win.cardPage, null)
+        readonly property var moved: joined !== "" ? null : Store.get("menus.moved." + win.cardPage, null)
         property point dragBy: Qt.point(0, 0)
         // (a switch's glide: the way still to go from the last menu's spot, down to 0)
         property real glideX: 0
@@ -893,7 +1056,7 @@ PanelWindow {
         // (the glide kept on the screen too: as the card grows on the way it would cross the edge)
         x: Math.round(Math.max(0, Math.min(win.width - width, Math.max(0, Math.min(win.width - width, homeX + (moved ? Number(moved.x) || 0 : 0) + dragBy.x)) + glideX)))
         readonly property real topRoom: win.bottom || win.side ? 16 : Theme.islandH + Theme.barMargin + 14
-        readonly property real bottomRoom: win.bottom ? Theme.islandH + Theme.barMargin + 14 : 16
+        readonly property real bottomRoom: joined === "bottom" ? edgeInset : (win.bottom ? Theme.islandH + Theme.barMargin + 14 : 16)
         readonly property real homeY: onTop ? topRoom : (onBottom ? win.height - height - bottomRoom : Math.max(topRoom, Math.min(win.height - height - bottomRoom, Math.round((win.height - height) / 2))))
         // where it'd be, and how far a notification's card pushes it (down under a top bar, up over
         // a bottom one) while it shows over the menu, so the notification can be read
@@ -904,9 +1067,35 @@ PanelWindow {
         Behavior on toastPush { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
         y: Math.round(Math.max(0, Math.min(win.height - height, baseY + toastPush)))
         radius: Theme.islandRadius
-        color: Theme.frame
-        border.width: Theme.outlineW
+        color: joined !== "" ? "transparent" : Theme.frame
+        border.width: joined !== "" ? 0 : Theme.outlineW
         border.color: Theme.outlineColor
+        // (joined to an edge: its shape, drawn behind what's in it, turned to hang from that edge)
+        Item {
+            visible: floatCard.joined !== ""
+            readonly property bool vert: floatCard.joined !== "bottom"
+            width: vert ? floatCard.height + 2 * edgeShape.e : floatCard.width + 2 * edgeShape.e
+            height: vert ? floatCard.width : floatCard.height
+            anchors.centerIn: parent
+            rotation: ({ right: 90, bottom: 180, left: -90 })[floatCard.joined] || 0
+            IslandShape {
+                id: edgeShape
+                anchors.fill: parent
+                bodyW: parent.width - 2 * e
+                r: Theme.islandRadius
+                fill: Theme.barStyle === "frame" ? Theme.frameFill : Theme.barFill
+                baseLine: false
+                lineW: Theme.barStyle === "frame" ? Theme.frameOutlineW : Theme.outlineW
+                lineColor: Theme.barStyle === "frame" ? Theme.frameOutlineColor : Theme.outlineColor
+            }
+        }
+        // how far out of its edge it is (0 … 1), eased: the slide it opens and closes with
+        readonly property real outK: 1 - Math.pow(1 - Math.max(0, Math.min(1, win.cardZoom)), 3)
+        readonly property real slideBy: joined === "" ? 0 : (1 - outK) * ((joined === "bottom" ? height : width) + edgeInset + 4)
+        // (the gap it makes in the frame's outline, along that edge)
+        readonly property var frameGap: joined !== "" && Theme.barStyle === "frame" && visible && outK > 0.01
+            ? (joined === "bottom" ? { edge: joined, a: x - edgeShape.e, b: x + width + edgeShape.e } : { edge: joined, a: y - edgeShape.e, b: y + height + edgeShape.e }) : null
+        HoverHandler { id: cardHover; onHoveredChanged: if (hovered) hoverClose.stop(); else if (win.hoverOpened) hoverClose.restart() }
         // fades in with a little zoom from where it sits, and out the same way
         // Unfold (Theme → Effects): instead, the whole card opens out of a thin bright line through
         // its middle and folds back into it
@@ -915,26 +1104,29 @@ PanelWindow {
         // its contents fade in. Faded in, there was always a moment of a half-there panel: over
         // the sharp backdrop, or brighter than the end with the blur behind it. Closing, it fades)
         // (Cyberpunk: whole until it's gone, CyberFx glitches it in and the Blackwall takes it)
-        opacity: Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (win.shown ? 1 : (Theme.cyber ? (win.cardZoom > 0.002 ? 1 : 0) : win.cardFade))
+        opacity: joined !== "" ? (win.shown || win.cardZoom > 0.002 ? 1 : 0)
+               : Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (win.shown ? 1 : (Theme.cyber ? (win.cardZoom > 0.002 ? 1 : 0) : win.cardFade))
         // How menus open (Theme.menuAnim), driven by cardZoom (0 … 1), and back the same way
-        readonly property string anim: Theme.animOn && !Theme.cyber ? Theme.menuAnim : "none"
+        readonly property string anim: joined !== "" ? "edge" : (Theme.animOn && !Theme.cyber ? Theme.menuAnim : "none")
         // (pop: overshoots a little and settles)
         function backOut(t) { const c1 = 1.5, c3 = c1 + 1, u = t - 1; return 1 + c3 * u * u * u + c1 * u * u; }
         // (Fjord: its frost doesn't move, so the card also grows in from 94 % over the first
         // part of it, and fades in: it was there in one frame, as a slab of ice)
         readonly property real fjordIn: Theme.fxKind === "fjord" ? Math.min(1, win.cardZoom / 0.4) : 1
-        scale: Theme.fxKind === "fjord" ? 0.94 + 0.06 * (1 - Math.pow(1 - fjordIn, 3))
+        scale: joined !== "" ? 1 : Theme.fxKind === "fjord" ? 0.94 + 0.06 * (1 - Math.pow(1 - fjordIn, 3))
              : anim === "zoom" ? Theme.popScale + (1 - Theme.popScale) * win.cardZoom
              : anim === "pop" ? 0.84 + 0.16 * backOut(win.cardZoom)
              : 1
         transform: [
             Scale {
                 origin.x: floatCard.width / 2; origin.y: floatCard.height / 2
-                yScale: Theme.fxUnfold ? Math.max(0.006, floatCard.unfold) : 1
-                xScale: Theme.fxUnfold ? 0.96 + 0.04 * floatCard.unfold : 1
+                yScale: Theme.fxUnfold && floatCard.joined === "" ? Math.max(0.006, floatCard.unfold) : 1
+                xScale: Theme.fxUnfold && floatCard.joined === "" ? 0.96 + 0.04 * floatCard.unfold : 1
             },
             Translate {
-                y: floatCard.anim === "slide" ? (1 - win.cardZoom) * 40 : (floatCard.anim === "drop" ? -(1 - win.cardZoom) * 40 : 0)
+                x: floatCard.joined === "left" ? -floatCard.slideBy : (floatCard.joined === "right" ? floatCard.slideBy : 0)
+                y: floatCard.joined === "bottom" ? floatCard.slideBy
+                    : floatCard.anim === "slide" ? (1 - win.cardZoom) * 40 : (floatCard.anim === "drop" ? -(1 - win.cardZoom) * 40 : 0)
             }
         ]
         Rectangle {
@@ -948,8 +1140,8 @@ PanelWindow {
             opacity: 1 - floatCard.unfold
         }
         transformOrigin: onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
-        CardShadow {}
-        CyberFx { target: floatCard; p: win.shown ? win.cardZoom : 1 - win.cardZoom; going: !win.shown }
+        CardShadow { visible: floatCard.joined === "" }
+        CyberFx { target: floatCard; allowed: floatCard.joined === ""; p: win.shown ? win.cardZoom : 1 - win.cardZoom; going: !win.shown }
         // (takes the clicks that land on the card but on nothing in it)
         MouseArea { anchors.fill: parent }
         PanelFx { anchors.fill: parent; radius: floatCard.radius }
@@ -1004,14 +1196,14 @@ PanelWindow {
     property real cardZoom: 0
     ParallelAnimation {
         id: cardIn
-        NumberAnimation { target: win; property: "cardFade"; to: 1; duration: Theme.cyber ? Theme.fxInMs : Theme.popInMs; easing.type: Easing.OutCubic }
-        NumberAnimation { target: win; property: "cardZoom"; to: 1; duration: Theme.cyber ? Theme.fxInMs : Theme.popInMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+        NumberAnimation { target: win; property: "cardFade"; to: 1; duration: Theme.menuInMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: win; property: "cardZoom"; to: 1; duration: Theme.menuInMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
     }
     ParallelAnimation {
         id: cardOut
         // (closing: the fade holds back so the way out is seen; it ends with the motion)
-        NumberAnimation { target: win; property: "cardFade"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.menuOutMs; easing.type: Theme.cyber ? Easing.OutCubic : Easing.InQuad }
-        NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.menuOutMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
+        NumberAnimation { target: win; property: "cardFade"; to: 0; duration: Theme.menuGoMs; easing.type: Theme.cyber ? Easing.OutCubic : Easing.InQuad }
+        NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: Theme.menuGoMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
     }
     onShownChanged: {
         if (shown) {
@@ -1044,7 +1236,7 @@ PanelWindow {
     readonly property bool overFullscreen: !Theme.blurOverFullscreen && Niri.fullscreenOn(modelData.name)
     // (none while auto-hide has the bar slid away: its blur would sit off the screen, and
     // Hyprland blurred the whole screen for that)
-    BackgroundEffect.blurRegion: Theme.blur && !overFullscreen && !(win.tucked && !win.toastGrows) ? blurShape : null
+    BackgroundEffect.blurRegion: Theme.blur && !overFullscreen && !(win.tucked && !win.toastGrows && !Theme.frameHide) ? blurShape : null
     Region {
         id: blurShape
         // (a screen with the bar turned off has no bar to blur behind: only its open menu)
@@ -1094,6 +1286,11 @@ PanelWindow {
             width: on ? p.width : 0; height: on ? p.height : 0
             radius: (Theme.chamfer || Theme.square) ? 0 : p.radius
             CutBlur { bx: blurShape.pillX + pillRegR.p.x; by: blurShape.pillY + pillRegR.p.y; bw: pillRegR.p.width; bh: pillRegR.p.height; c: pillRegR.p.r }
+        }
+        // the Frame with auto-hide (frameEdge): the whole frame, the screen minus its inside
+        Region {
+            item: frameEdge.visible && !win.covered ? fullArea : null
+            Region { item: hole; radius: frameEdge.r; intersection: Intersection.Subtract }
         }
         // the hanging shapes (Island, Fill, Frame): square against the edge, its ears too
         EdgeBlur {

@@ -48,18 +48,23 @@ ColumnLayout {
         icon: "palette"; title: "Use the style's sounds"; desc: Look.style.name + " has its own sounds; they play instead of the pack you picked"
         Toggle { checked: Sounds.followStyle; onToggled: on => { Store.set("sounds.followStyle", on); Qt.callLater(() => Sounds.demo(Sounds.pack)); } }
     }
-    Flow {
+    // (a grid with equal columns, not a Flow of cards a third of its width: the Flow and the page's
+    // layout kept laying each other out, and opening this page froze the whole menu for a tenth of
+    // a second every time, so whatever was moving then jumped)
+    GridLayout {
         visible: Sounds.on
         Layout.fillWidth: true
-        spacing: 8
+        columns: 3
+        rowSpacing: 8; columnSpacing: 8
         Repeater {
             model: Sounds.packs
             Pressable {
                 id: pc
                 required property var modelData
                 readonly property bool cur: Sounds.pack === modelData[0]
-                width: (parent.width - 16) / 3
-                height: 74
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: 74
                 radius: Theme.corner(56, 2)
                 color: cur ? Theme.accentContainer : (hovered ? Theme.mix(Theme.containerHigh, Theme.control, 0.55) : Theme.containerHigh)
                 border.width: cur ? 2 : Theme.outlineW
@@ -101,55 +106,73 @@ ColumnLayout {
                 hint: grp.anyOn ? "All off" : "All on"
                 onActed: Sounds.setGroup(grp.modelData[0], !grp.anyOn)
             }
-            // notifications: the sound one makes arriving
-            SettingRow {
-                visible: grp.modelData[0] === "notifications"
-                Layout.fillWidth: true
-                key: "notifications.sound"; def: true;
-                icon: "notifications_active"; title: "A notification arriving"; desc: "Plays even with the effects off; not for apps that ask for quiet"
-                Toggle { checked: sec.notifOn; onToggled: on => Store.set("notifications.sound", on) }
-            }
-            SettingRow {
-                visible: grp.modelData[0] === "notifications" && sec.notifOn
-                Layout.fillWidth: true
-                key: "notifications.soundStyle"; def: "tone";
-                icon: "music_note"; title: "Its sound"
-                desc: sec.nstyle === "tone" ? "One of Monolith's tones (urgent ones get an alert)" : sec.nstyle === "pack" ? "The sound pack's chime (" + ((Sounds.packs.find(p => p[0] === Sounds.pack) || ["", "Soft"])[1]) + ")" : sec.nstyle === "file" ? "A sound file of your own" : "The system's message sound (Monolith's tone when it has none)"
-                RowLayout {
-                    spacing: 6
-                    Segmented { width: 300; opts: [["tone", "Monolith"], ["pack", "Pack"], ["system", "System"], ["file", "Your file"]]; value: sec.nstyle; onPicked: v => { Store.set("notifications.soundStyle", v); Qt.callLater(() => Notifs.playSound(false)); } }
-                    Button { text: "Play"; icon: "play_arrow"; onClicked: Notifs.playSound(false) }
-                }
-            }
-            SettingRow {
-                visible: grp.modelData[0] === "notifications" && sec.notifOn && sec.nstyle === "tone"
-                Layout.fillWidth: true
-                key: "notifications.tone"; def: "chime";
-                icon: "library_music"; title: "Tone"; desc: "Urgent notifications play an alert instead"
-                RowLayout {
-                    spacing: 6
-                    Dropdown {
-                        width: 180; height: 36
-                        opts: Notifs.tones
-                        value: Store.get("notifications.tone", "chime") || "chime"
-                        onPicked: v => { Store.set("notifications.tone", v); Qt.callLater(() => Notifs.playSound(false)); }
+            // notifications: the sound one makes arriving. Made in the Notifications group only:
+            // as plain hidden rows they were built in every group (five times the selectors, fields
+            // and sliders), and building the page froze the whole menu for a moment each time it opened
+            Repeater {
+                model: grp.modelData[0] === "notifications" ? 1 : 0
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    SettingRow {
+                        visible: grp.modelData[0] === "notifications"
+                        Layout.fillWidth: true
+                        key: "notifications.sound"; def: true;
+                        icon: "notifications_active"; title: "A notification arriving"; desc: "Plays even with the effects off; not for apps that ask for quiet"
+                        Toggle { checked: sec.notifOn; onToggled: on => Store.set("notifications.sound", on) }
                     }
-                    Button { text: "Urgent"; icon: "priority_high"; onClicked: Notifs.playSound(true) }
+                    SettingRow {
+                        visible: grp.modelData[0] === "notifications" && sec.notifOn
+                        Layout.fillWidth: true
+                        key: "notifications.soundStyle"; def: "tone";
+                        icon: "music_note"; title: "Its sound"
+                        desc: sec.nstyle === "tone" ? "One of Monolith's tones (urgent ones get an alert)" : sec.nstyle === "pack" ? "The sound pack's chime (" + ((Sounds.packs.find(p => p[0] === Sounds.pack) || ["", "Soft"])[1]) + ")" : sec.nstyle === "file" ? "A sound file of your own" : "The system's message sound (Monolith's tone when it has none)"
+                        RowLayout {
+                            spacing: 6
+                            Segmented { width: 300; opts: [["tone", "Monolith"], ["pack", "Pack"], ["system", "System"], ["file", "Your file"]]; value: sec.nstyle; onPicked: v => { Store.set("notifications.soundStyle", v); Qt.callLater(() => Notifs.playSound(false)); } }
+                            Button { text: "Play"; icon: "play_arrow"; onClicked: Notifs.playSound(false) }
+                        }
+                    }
+                    SettingRow {
+                        visible: grp.modelData[0] === "notifications" && sec.notifOn && sec.nstyle === "tone"
+                        Layout.fillWidth: true
+                        key: "notifications.tone"; def: "chime";
+                        icon: "library_music"; title: "Tone"; desc: "Urgent notifications play an alert instead"
+                        RowLayout {
+                            spacing: 6
+                            Dropdown {
+                                width: 180; height: 36
+                                opts: Notifs.tones
+                                value: Store.get("notifications.tone", "chime") || "chime"
+                                onPicked: v => { Store.set("notifications.tone", v); Qt.callLater(() => Notifs.playSound(false)); }
+                            }
+                            Button { text: "Urgent"; icon: "priority_high"; onClicked: Notifs.playSound(true) }
+                        }
+                    }
+                    SettingRow {
+                        visible: grp.modelData[0] === "notifications" && sec.notifOn && sec.nstyle === "file"
+                        Layout.fillWidth: true
+                        key: "notifications.soundFile"; def: "";
+                        icon: "audio_file"; title: "Your own sound"; desc: "A sound file (.oga, .wav, .mp3)"
+                        Field { width: 280; text: Store.get("notifications.soundFile", ""); placeholder: "/path/to/sound.oga"; onAccepted: v => { const p = v.trim().replace(/^~/, Wall.home); if (p !== Store.get("notifications.soundFile", "")) Store.set("notifications.soundFile", p); } }
+                    }
+                    SettingRow {
+                        visible: grp.modelData[0] === "notifications" && sec.notifOn
+                        Layout.fillWidth: true
+                        key: "notifications.soundVolume"; def: 0.8;
+                        icon: "volume_up"; title: "Its volume"
+                        NumberBox { from: 0.05; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Number(Store.get("notifications.soundVolume", 0.8)); onMoved: v => Store.set("notifications.soundVolume", v) }
+                    }
+                    // (only where notifications are held back from a fullscreen app: Notifications → While an
+                    // app is fullscreen; showing over it, they sound as usual)
+                    SettingRow {
+                        visible: grp.modelData[0] === "notifications" && sec.notifOn && Store.get("notifications.fullscreen", "other") !== "show"
+                        Layout.fillWidth: true
+                        key: "notifications.fullscreenSound"; def: false;
+                        icon: "volume_off"; title: "Sound while fullscreen"; desc: "Off: notifications are silent while a fullscreen app covers the screen"
+                        Toggle { checked: Store.get("notifications.fullscreenSound", false) === true; onToggled: on => Store.set("notifications.fullscreenSound", on) }
+                    }
                 }
-            }
-            SettingRow {
-                visible: grp.modelData[0] === "notifications" && sec.notifOn && sec.nstyle === "file"
-                Layout.fillWidth: true
-                key: "notifications.soundFile"; def: "";
-                icon: "audio_file"; title: "Your own sound"; desc: "A sound file (.oga, .wav, .mp3)"
-                Field { width: 280; text: Store.get("notifications.soundFile", ""); placeholder: "/path/to/sound.oga"; onAccepted: v => { const p = v.trim().replace(/^~/, Wall.home); if (p !== Store.get("notifications.soundFile", "")) Store.set("notifications.soundFile", p); } }
-            }
-            SettingRow {
-                visible: grp.modelData[0] === "notifications" && sec.notifOn
-                Layout.fillWidth: true
-                key: "notifications.soundVolume"; def: 0.8;
-                icon: "volume_up"; title: "Its volume"
-                NumberBox { from: 0.05; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Number(Store.get("notifications.soundVolume", 0.8)); onMoved: v => Store.set("notifications.soundVolume", v) }
             }
             Repeater {
                 model: Sounds.on ? grp.evs : []

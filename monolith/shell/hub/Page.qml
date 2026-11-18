@@ -60,7 +60,7 @@ FocusScope {
     }
     SequentialAnimation {
         id: cyHold
-        PauseAnimation { duration: Theme.fxOutMs }
+        PauseAnimation { duration: Theme.menuGoMs }
         PropertyAction { target: pg; property: "opacity"; value: 0 }
     }
     // ── one open menu turning into another: each style its own way, by moving and fading only (no
@@ -170,9 +170,9 @@ FocusScope {
             // caught on its way out: from where it is
             if (opacity < 0.05) { shift = sw ? HubState.dir * travel : 0; scale = sw ? 1 : Theme.popScale; }
             inWait.duration = sw ? Theme.ms(70) : 0;
-            inFade.duration = sw ? Theme.ms(300) : Theme.popInMs;
-            inZoom.duration = Theme.popInMs;
-            inSlide.duration = sw ? Theme.ms(460) : Theme.popInMs;
+            inFade.duration = sw ? Theme.ms(300) : Theme.menuInMs;
+            inZoom.duration = sw ? Theme.popInMs : Theme.menuInMs;
+            inSlide.duration = sw ? Theme.ms(460) : Theme.menuInMs;
             inAnim.start();
         } else {
             // switching to another menu: out to the side, quickly. The menu closing: it holds

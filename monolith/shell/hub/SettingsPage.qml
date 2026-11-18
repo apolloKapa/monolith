@@ -22,7 +22,7 @@ Page {
         { id: "general", desc: "Who you are, the weather, profiles and updates", title: "General", icon: "person", tabs: [["general", "You & weather", "General"], ["profiles", "Profiles & backup", "Profiles"], ["about", "Updates & about", "About"]] },
         { id: "theme", desc: "How everything looks: style, colours, fonts, effects", title: "Appearance", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Dark mode, font & icons", "Appearance"], ["effects", "Effects", "Effects"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Fastfetchlings", "Fastfetch"]] },
         { id: "wallpaper", desc: "Your wallpaper, and changing it by itself", title: "Wallpaper", icon: "wallpaper", tabs: [["wallpaper", "Wallpaper", "Wallpaper"], ["playlist", "Playlist", "WallPlaylist"]] },
-        { id: "animations", desc: "How fast things move, and how workspaces switch", title: "Animations", icon: "animation", tabs: [["animations", "Speeds & windows", "Animations"], ["wsswitch", "Workspace switching", "WorkspaceSwitch"]] },
+        { id: "animations", desc: "How fast things move, and how workspaces switch", title: "Animations", icon: "animation", tabs: [["animations", "Speeds & windows", "Animations"], ["menuopen", "Menu opening", "MenuOpening"], ["wsswitch", "Workspace switching", "WorkspaceSwitch"]] },
         { id: "bar", desc: "What the bar shows and where it sits", title: "Bar", icon: "toolbar", gap: true, tabs: [["bar", "Layout & modules", "BarLayout"], ["status", "Auto-hide", "Status"], ["barscreens", "Bar & dock per screen", "BarScreens"]] },
         { id: "menus", desc: "The launcher, its apps, and where menus open", title: "Menus & launcher", icon: "apps", tabs: [["search", "Launcher", "Search"], ["apps", "Apps in the launcher", "Apps"], ["menus", "Where menus open", "Menus"]] },
         { id: "dock", desc: "Your pinned and running apps", title: "Dock", icon: "dock_to_bottom", tabs: [["dock", "Dock", "Dock"]] },
@@ -371,7 +371,7 @@ Page {
             Layout.fillWidth: true
             Layout.preferredHeight: 64
             visible: page.section !== "welcome"
-            // the icon pops and the words slide in each time another page opens
+            // the words slide in each time another page opens (the icon stays still)
             property real pop: 1
             NumberAnimation { id: popAnim; target: banner; property: "pop"; from: 0; to: 1; duration: Theme.ms(420); easing.type: Easing.OutCubic }
             SmoothRect {
@@ -381,8 +381,6 @@ Page {
                 width: 52; height: 52
                 radius: Theme.corner(height, 4)
                 color: Theme.accent
-                scale: 0.7 + 0.3 * banner.pop
-                rotation: -18 * (1 - banner.pop)
                 Icon { anchors.centerIn: parent; name: page.category.icon; size: 28; filled: true; color: Theme.onAccent }
             }
             Column {

@@ -20,23 +20,21 @@ ColumnLayout {
     SettingRow {
         keys: ["quick.edges", "quick.edge"];
         icon: "border_outer"; title: "Edges"; desc: "Where it can come out (not along the bar's own edge; on the dock's edge, only away from the dock)"
-        Row {
-            spacing: 6
-            Repeater {
-                model: [["left", "Left"], ["right", "Right"], ["top", "Top"], ["bottom", "Bottom"]]
-                Pressable {
-                    required property var modelData
-                    readonly property bool on: sec.edges.indexOf(modelData[0]) !== -1
-                    width: el.implicitWidth + 28; height: 34
-                    radius: Theme.rnd(17)
-                    color: on ? Theme.accent : (hovered ? Theme.control : Theme.containerHigh)
-                    onClicked: {
-                        const l = on ? sec.edges.filter(x => x !== modelData[0]) : sec.edges.concat([modelData[0]]);
-                        if (l.length) Store.set("quick.edges", l);
-                    }
-                    Label { id: el; anchors.centerIn: parent; text: parent.modelData[1]; color: parent.on ? Theme.onAccent : Theme.text; strong: parent.on }
-                }
+        // one edge, a pair, or all four (kept as a list; a set picked edge by edge before this
+        // was a menu still works, and shows as "Custom")
+        Dropdown {
+            width: 220; height: 36
+            readonly property var sets: ({ all: ["left", "right", "top", "bottom"], left: ["left"], right: ["right"], top: ["top"], bottom: ["bottom"],
+                                           sides: ["left", "right"], topbottom: ["top", "bottom"] })
+            readonly property string cur: {
+                const have = sec.edges.slice().sort().join(",");
+                for (const k in sets) if (sets[k].slice().sort().join(",") === have) return k;
+                return "custom";
             }
+            opts: [["all", "All four"], ["left", "Left"], ["right", "Right"], ["top", "Top"], ["bottom", "Bottom"], ["sides", "Left and right"], ["topbottom", "Top and bottom"]]
+                .concat(cur === "custom" ? [["custom", "Custom (" + sec.edges.join(", ") + ")"]] : [])
+            value: cur
+            onPicked: v => { if (sets[v]) Store.set("quick.edges", sets[v]); }
         }
     }
     SettingRow {
@@ -106,6 +104,84 @@ ColumnLayout {
                 Toggle {
                     checked: at >= 0
                     onToggled: on => Store.set("quick.tools", on ? sec.tools.concat([modelData[0]]) : sec.tools.filter(x => x !== modelData[0]))
+                }
+            }
+        }
+    }
+
+    // ── the whiteboard's keys: click one, press the new key (Esc: leave it) ──
+    SectionHead { text: "Whiteboard keys" }
+    Label {
+        Layout.fillWidth: true; Layout.leftMargin: 6; wrapMode: Text.Wrap; muted: true; font.pixelSize: Theme.sizeSmall
+        text: sec.recording !== "" ? "Press the new key… (Esc cancels)" : "They work while the whiteboard is the open tool. Click a key to change it"
+        color: sec.recording !== "" ? Theme.accent : Theme.subtext
+    }
+    property string recording: ""        // the action whose key is being picked
+    // a key press as Qt writes a shortcut: "Ctrl+Shift+Z", "[", "F5" ("" for a modifier alone)
+    function keyName(e) {
+        const names = ({ [Qt.Key_Delete]: "Del", [Qt.Key_Backspace]: "Backspace", [Qt.Key_Space]: "Space", [Qt.Key_Return]: "Return", [Qt.Key_Enter]: "Enter",
+            [Qt.Key_Tab]: "Tab", [Qt.Key_Left]: "Left", [Qt.Key_Right]: "Right", [Qt.Key_Up]: "Up", [Qt.Key_Down]: "Down", [Qt.Key_Home]: "Home", [Qt.Key_End]: "End",
+            [Qt.Key_PageUp]: "PgUp", [Qt.Key_PageDown]: "PgDown", [Qt.Key_Insert]: "Ins" });
+        let k = "";
+        if (names[e.key]) k = names[e.key];
+        else if (e.key >= Qt.Key_F1 && e.key <= Qt.Key_F12) k = "F" + (e.key - Qt.Key_F1 + 1);
+        else if (e.key > 0x20 && e.key < 0x7f) k = String.fromCharCode(e.key);
+        if (k === "") return "";
+        const m = [];
+        if (e.modifiers & Qt.ControlModifier) m.push("Ctrl");
+        if (e.modifiers & Qt.AltModifier) m.push("Alt");
+        if (e.modifiers & Qt.ShiftModifier) m.push("Shift");
+        if (e.modifiers & Qt.MetaModifier) m.push("Meta");
+        return m.concat([k]).join("+");
+    }
+    function setKey(id, seq) {
+        const o = Object.assign({}, Store.get("quick.drawKeys", {}) || {});
+        // (a key does one thing: whatever had it before is left without one)
+        for (const k of Sketch.drawKeys) if (k[0] !== id && Sketch.keysFor(k[0]).indexOf(seq) !== -1) o[k[0]] = "";
+        o[id] = seq;
+        Store.set("quick.drawKeys", o);
+    }
+    Item {
+        id: catcher
+        focus: sec.recording !== ""
+        Keys.onPressed: e => {
+            e.accepted = true;
+            if (e.isAutoRepeat) return;
+            if (e.key === Qt.Key_Escape && e.modifiers === Qt.NoModifier) { sec.recording = ""; return; }
+            const k = sec.keyName(e);
+            if (k === "") return;
+            sec.setKey(sec.recording, k);
+            sec.recording = "";
+        }
+    }
+    onRecordingChanged: if (recording !== "") catcher.forceActiveFocus()
+    Connections { target: HubState; function onOpenChanged() { if (!HubState.open) sec.recording = ""; } }
+    SettingRow {
+        key: "quick.drawKeys"
+        icon: "keyboard"; title: "All whiteboard keys"; desc: "Put every key back to its default"
+        Button { text: "Reset"; onClicked: { sec.recording = ""; Store.unset("quick.drawKeys"); } }
+    }
+    Repeater {
+        model: Sketch.drawKeys
+        SettingRow {
+            id: kr
+            required property var modelData
+            readonly property string now: { Store.revision; return Sketch.keyText(modelData[0]); }
+            readonly property bool own: { Store.revision; return typeof (Store.get("quick.drawKeys", {}) || {})[modelData[0]] === "string"; }
+            Layout.fillWidth: true
+            icon: "keyboard_command_key"; title: modelData[1]
+            desc: own ? "Default: " + modelData[2][0].replace(/\+(?=.)/g, " + ") : ""
+            Row {
+                spacing: 6
+                Button {
+                    text: sec.recording === kr.modelData[0] ? "Press a key…" : (kr.now !== "" ? kr.now : "No key")
+                    primary: sec.recording === kr.modelData[0]
+                    onClicked: sec.recording = sec.recording === kr.modelData[0] ? "" : kr.modelData[0]
+                }
+                Button {
+                    visible: kr.own
+                    text: "Default"
+                    onClicked: { const o = Object.assign({}, Store.get("quick.drawKeys", {}) || {}); delete o[kr.modelData[0]]; if (Object.keys(o).length) Store.set("quick.drawKeys", o); else Store.unset("quick.drawKeys"); }
                 }
             }
         }

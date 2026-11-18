@@ -35,12 +35,6 @@ ColumnLayout {
         }
     }
     SettingRow {
-        key: "notifications.fullscreenSound"; def: false;
-        visible: Store.get("notifications.fullscreen", "other") !== "show"
-        icon: "volume_off"; title: "Sound while fullscreen"; desc: "Off: notifications are silent while a fullscreen app covers the screen"
-        Toggle { checked: Store.get("notifications.fullscreenSound", false) === true; onToggled: on => Store.set("notifications.fullscreenSound", on) }
-    }
-    SettingRow {
         key: "notifications.throw"; def: "theme";
         readonly property string pick: Store.get("notifications.throw", "theme")
         icon: pick === "fall" ? "sports_baseball" : pick === "slide" ? "swipe_right" : "auto_awesome"

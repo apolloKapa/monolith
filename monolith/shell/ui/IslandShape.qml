@@ -15,6 +15,10 @@ Item {
     property color fill: Theme.frame
     property bool shadow: true
     property bool outline: true             // the style's outline (off where something else draws it)
+    // (or another line: something coming out of the Frame carries the frame's own outline on)
+    property real lineW: Theme.outlineW
+    property bool baseLine: true            // the outline runs along the edge it hangs from too
+    property color lineColor: Theme.outlineColor
     property bool flipped: false            // standing on the bottom edge instead (the bar at the bottom)
     width: bodyW + 2 * e
     // the curves never grow past what the size allows
@@ -68,8 +72,8 @@ Item {
         ShapePath {
             fillColor: s.fill
             // the style's outline (none by default)
-            strokeColor: s.outline && Theme.outlineW > 0 ? Theme.outlineColor : "transparent"
-            strokeWidth: s.outline ? Theme.outlineW : 0
+            strokeColor: s.outline && s.baseLine && s.lineW > 0 ? s.lineColor : "transparent"
+            strokeWidth: s.outline && s.baseLine ? s.lineW : 0
             // along the screen edge, left to right
             startX: 0; startY: 0
             PathLine { x: s.width; y: 0 }
@@ -81,6 +85,22 @@ Item {
             PathArc { x: s.e; y: s.height - s.lr; radiusX: Math.max(0.01, s.lr); radiusY: Math.max(0.01, s.lr); direction: PathArc.Clockwise }
             PathLine { x: s.e; y: s.e }
             // left ear: back up to the edge
+            PathQuad { controlX: s.e; controlY: 0; x: 0; y: 0 }
+        }
+        // (baseLine off: the same outline, but not along the edge it hangs from. Something growing
+        // out of a bar is one piece with it: a line across where they join cut it off from the bar)
+        ShapePath {
+            fillColor: "transparent"
+            strokeColor: s.outline && !s.baseLine && s.lineW > 0 ? s.lineColor : "transparent"
+            strokeWidth: s.outline && !s.baseLine ? s.lineW : 0
+            capStyle: ShapePath.FlatCap
+            startX: s.width; startY: 0
+            PathQuad { controlX: s.width - s.e; controlY: 0; x: s.width - s.e; y: s.e }
+            PathLine { x: s.width - s.e; y: s.height - s.rr }
+            PathArc { x: s.width - s.e - s.rr; y: s.height; radiusX: s.arcR; radiusY: s.arcR; direction: PathArc.Clockwise }
+            PathLine { x: s.e + s.lr; y: s.height }
+            PathArc { x: s.e; y: s.height - s.lr; radiusX: Math.max(0.01, s.lr); radiusY: Math.max(0.01, s.lr); direction: PathArc.Clockwise }
+            PathLine { x: s.e; y: s.e }
             PathQuad { controlX: s.e; controlY: 0; x: 0; y: 0 }
         }
     }

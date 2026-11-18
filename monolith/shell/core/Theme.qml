@@ -213,7 +213,22 @@ Singleton {
     readonly property int popOutMs: Math.round(180 * animScale)
     // a menu closing: most of the time it took to open, so its way out is seen (180 ms, and
     // faded before it had moved, read as no animation at all)
-    readonly property int menuOutMs: Math.round(260 * animScale)
+    readonly property int menuOutMs: menuOut(260 * animScale)
+    // Menus opening and closing: a speed of their own on top of everything else (Animations →
+    // Menu opening: 0.25 to 4 ×, higher is faster). menuIn(n) / menuOut(n) is a length n at that
+    // speed; the rest of the shell (hovers, pop-ups, pages switching) keeps the main speed
+    readonly property real menuInSpeed: Math.max(0.25, Math.min(4, Number(Store.get("theme.menuInSpeed", 1)) || 1))
+    readonly property real menuOutSpeed: Math.max(0.25, Math.min(4, Number(Store.get("theme.menuOutSpeed", 1)) || 1))
+    // (never so short it stops being motion: with the main speed and the menu speed both turned
+    // up, a menu's opening came to about 45 ms, its curve's whole fast part gone in a couple of
+    // frames, which reads as a jump and a twitch, not as fast. At least `lowIn` / `lowOut` ms)
+    readonly property int lowIn: 130
+    readonly property int lowOut: 100
+    function menuIn(n) { return n <= 0 ? 0 : Math.max(lowIn, Math.round(n / menuInSpeed)); }
+    function menuOut(n) { return n <= 0 ? 0 : Math.max(lowOut, Math.round(n / menuOutSpeed)); }
+    // a menu coming in / going, whatever draws it: the style's own effect, or the usual fade and move
+    readonly property int menuInMs: menuIn(cyber ? fxInMs : popInMs)
+    readonly property int menuGoMs: cyber ? menuOut(fxOutMs) : menuOutMs
 
     // ── the island (status line + hub in one shape hanging from the top edge) ──
     readonly property color frame: Qt.alpha(oled ? "#000000" : m("surface", mix(_base, _s0, 0.35)), see)   // the island's fill
@@ -278,6 +293,27 @@ Singleton {
     function barRound(h) { return square ? 0 : Math.min(h / 2, radius + Math.min(8, radius * 2 / 3)); }
     // the Frame draws the bar's background itself (one shape, so see-through styles don't double up)
     readonly property bool frameBand: barStyle === "frame" && Store.get("status.autohide", false) !== true
+    // Frame with auto-hide (a bar along the top or bottom): the frame keeps its border on the
+    // bar's edge, and that edge swells into the bar and shrinks back to a border, one shape all
+    // the way (island/Island.qml draws that edge, over the windows; island/Frame.qml the rest).
+    // Before, the frame had no border at all on that edge and the bar slid away as a separate
+    // strip with square ends
+    readonly property bool frameHide: barStyle === "frame" && barSide === "" && Store.get("status.autohide", false) === true
+    readonly property real frameRadius: square ? 0 : Math.max(0, Number(Store.get("bar.frameRadius", islandRadius)))
+    // The bar's (or the Frame's) own background, apart from the menus' (Settings → Bar → Bar
+    // background): "solid", the theme's colour as it is, or "glass", see-through and blurred like
+    // the menus when Effects → Transparency is on. The Frame is solid unless you say otherwise
+    // (see-through, a near-black theme's frame was a grey veil over the wallpaper); every other
+    // bar is glass unless you say otherwise, as it always was. Bar opacity thins either.
+    readonly property string barLook: { const v = String(Store.get("bar.look", "")); return v === "solid" || v === "glass" ? v : (barStyle === "frame" ? "solid" : "glass"); }
+    readonly property color barFill: barLook === "solid" && !liquid ? Qt.rgba(frame.r, frame.g, frame.b, 1) : frame
+    // (liquid glass panes are nearly clear, being glass: the frame isn't, so it gets a real fill)
+    readonly property color frameFill: { const base = liquid ? Qt.alpha(frame, 0.6) : barFill; return Qt.alpha(base, base.a * Math.max(0, Math.min(1, barOpacity))); }
+    // the line along the frame's inside edge (Settings → Bar → Frame outline): the style's own
+    // (none in most styles), off, or one you pick: its colour and how thick
+    readonly property string frameOutline: { const v = String(Store.get("bar.frameOutline", "style")); return ["style", "off", "accent", "text", "subtle"].indexOf(v) !== -1 ? v : "style"; }
+    readonly property real frameOutlineW: frameOutline === "style" ? outlineW : (frameOutline === "off" ? 0 : Math.max(1, Math.min(8, Number(Store.get("bar.frameOutlineWidth", 2)) || 2)))
+    readonly property color frameOutlineColor: frameOutline === "accent" ? accent : (frameOutline === "text" ? text : (frameOutline === "subtle" ? Qt.alpha(text, 0.22) : outlineColor))
     // the island's "spring": a curve that overshoots a little and settles. (Not Qt's
     // SpringAnimation: that steps every 16 ms, so it moves at 60 fps on any screen.)
     readonly property var springCurve: [0.22, 1.0, 0.36, 1.1, 1, 1]
@@ -288,8 +324,9 @@ Singleton {
     // a shape growing out of the bar (a menu, out of the bar): quick out of the start, a little
     // past where it's going and back, like something with a bit of spring in it
     readonly property var springyCurve: [0.38, 1.21, 0.22, 1.0, 1.0, 1.0]
-    readonly property int growMs: Math.round(560 * animScale)
-    readonly property int shrinkMs: Math.round(300 * animScale)
+    // (a shape growing into a menu and back: at least long enough to be seen growing)
+    readonly property int growMs: animOn ? Math.max(190, Math.round(560 * animScale)) : 0
+    readonly property int shrinkMs: animOn ? Math.max(130, Math.round(300 * animScale)) : 0
     // the soft shadow under floating shapes (drawn by the shell, no compositor blur)
     // (styles with a hard shadow: a solid offset copy in the ink colour)
     // (Theme → Effects → Shadows: on/off, strength, softness, distance, direction, colour)

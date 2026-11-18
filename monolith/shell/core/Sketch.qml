@@ -12,6 +12,26 @@ import Quickshell.Io
 // A picture (pasted or dropped in): { t: "img", f: its copy in picDir, x, y, w, h }.
 Singleton {
     id: sk
+    // The whiteboard's keys: [id, what it does, its default keys]. Changed in Settings → Desktop →
+    // Quick access (kept as quick.drawKeys: { id: "Ctrl+Z" }, "" for none); read here by the tool
+    // (status/quick/Draw.qml) and by that settings page.
+    readonly property var drawKeys: [
+        ["undo", "Undo", ["Ctrl+Z"]], ["redo", "Redo", ["Ctrl+Y", "Ctrl+Shift+Z"]],
+        ["copy", "Copy the drawing", ["Ctrl+C"]], ["paste", "Paste a picture", ["Ctrl+V"]], ["save", "Save to Pictures", ["Ctrl+S"]],
+        ["selectAll", "Select everything", ["Ctrl+A"]], ["cut", "Remove what's picked", ["Ctrl+X"]], ["dup", "Duplicate picked picture", ["Ctrl+D"]],
+        ["fit", "Fit it all in", ["Ctrl+0"]], ["zoomIn", "Zoom in", ["Ctrl+=", "Ctrl++"]], ["zoomOut", "Zoom out", ["Ctrl+-"]],
+        ["thinner", "Thinner", ["["]], ["thicker", "Thicker", ["]"]],
+        ["pen", "Pen", ["P"]], ["hl", "Highlighter", ["H"]], ["line", "Line", ["L"]], ["arrow", "Arrow", ["A"]], ["rect", "Rectangle", ["R"]],
+        ["ellipse", "Ellipse", ["O"]], ["eraser", "Eraser", ["E"]], ["hand", "Move around", ["M"]], ["move", "Move pictures", ["V"]], ["pic", "Add a picture", ["I"]]
+    ]
+    function keysFor(id) {
+        const set = (Store.get("quick.drawKeys", {}) || {})[id];
+        if (typeof set === "string") return set === "" ? [] : [set];
+        const k = drawKeys.find(x => x[0] === id);
+        return k ? k[2] : [];
+    }
+    // as shown: "Ctrl + Z" ("" when it has no key)
+    function keyText(id) { const k = keysFor(id); return k.length ? k[0].replace(/\+(?=.)/g, " + ") : ""; }
     property var strokes: []
     property real ox: 0
     property real oy: 0

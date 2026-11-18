@@ -5,7 +5,7 @@ import Quickshell.Io
 import "../../core"
 import "../../ui"
 
-// Theme → Style: the whole look (17 styles, each previewed; blur is a toggle under them), then its colours: the wallpaper's,
+// Theme → Style: the whole look (17 styles, each previewed) and how round its corners are, then its colours: the wallpaper's,
 // the style's own, or one of the colour themes.
 ColumnLayout {
     id: sec
@@ -96,53 +96,22 @@ ColumnLayout {
             StyleCard { required property var modelData; st: modelData }
         }
     }
+    // the shapes' corners (the style multiplies the roundness)
     SettingRow {
-        key: "theme.transparency"; def: true
-        icon: "opacity"; title: "Transparency"
-        desc: Theme.liquid ? "Liquid glass is glass: it's always see-through"
-            : (Theme.transparent ? "The bar, menus, dock and pop-ups are see-through. Off: plain, solid panels" : "Off: the bar, menus, dock and pop-ups are plain and solid, with no blur")
-        Toggle {
-            enabled: !Theme.liquid
-            opacity: enabled ? 1 : 0.4
-            checked: Theme.transparent
-            // (on: see-through enough to notice, if the opacity was at 100 %)
-            onToggled: on => { Store.set("theme.transparency", on); if (on && Number(Store.get("theme.panelOpacity", 1)) > 0.95) Store.set("theme.panelOpacity", 0.75); }
-        }
+        key: "theme.radius";
+        icon: "rounded_corner"; title: "Roundness"; desc: "How round the corners of everything are (the style multiplies it)"
+        NumberBox { from: 0; to: 60; slideTo: 40; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
     }
     SettingRow {
-        visible: Theme.transparent
-        keys: ["theme.blur", "theme.panelOpacity"]
-        icon: "blur_on"; title: "Blur behind panels"
-        desc: Theme.liquid ? "Liquid glass is glass already: it bends and frosts what's behind it by itself, so blur is off with it"
-            : "With any style: the bar, menus, dock and pop-ups turn see-through and blur what's behind them"
-        Toggle {
-            enabled: !Theme.liquid
-            opacity: enabled ? 1 : 0.4
-            checked: Theme.blur
-            onToggled: on => { Store.set("theme.blur", on); if (on && Theme.panelOpacity > 0.95) Store.set("theme.panelOpacity", 0.75); }
-        }
-    }
-
-    // what the panels are made of (ui/MaterialPane): the style's own, none, or any of them
-    SettingRow {
-        key: "theme.material"; def: ""
-        icon: "texture"; title: "Material"
-        desc: Theme.liquid ? "Liquid glass is a material of its own"
-            : "What the bar, menus and dock are made of" + (Look.style.material ? " (" + Look.style.name + "'s own: " + ({ concrete: "concrete", paper: "paper", steel: "brushed steel" })[Look.style.material] + ")" : "")
-        Dropdown {
-            width: 220; height: 36
-            enabled: !Theme.liquid
-            opacity: enabled ? 1 : 0.4
-            opts: [["", "The style's own"], ["none", "None (flat)"], ["concrete", "Concrete"], ["paper", "Paper"], ["steel", "Brushed steel"], ["lacquer", "Black lacquer"]]
-            value: Store.get("theme.material", "") || ""
-            onPicked: v => v === "" ? Store.unset("theme.material") : Store.set("theme.material", v)
-        }
+        key: "theme.continuousCorners"; def: true;
+        icon: "rounded_corner"; title: "Continuous corners"; desc: "Corners ease out of the sides (like a squircle) instead of being quarter circles"
+        Toggle { checked: Store.get("theme.continuousCorners", true) !== false; onToggled: on => Store.set("theme.continuousCorners", on) }
     }
     SettingRow {
-        key: "theme.materialStrength"; def: 1
-        visible: Theme.material !== ""
-        icon: "grain"; title: "Texture"; desc: "How much of the material shows"
-        NumberBox { from: 0.2; to: 1.5; step: 0.1; decimals: 1; factor: 100; unit: "%"; value: Theme.materialStrength; onMoved: v => Store.set("theme.materialStrength", v) }
+        visible: Store.get("theme.continuousCorners", true) !== false && !Theme.square
+        key: "theme.cornerSmoothing"; def: 0.6;
+        icon: "line_curve"; title: "Corner smoothing"; desc: "How gradually the corners ease in"
+        NumberBox { from: 10; to: 100; unit: "%"; value: Math.round(Theme.cornerSmooth * 100); onMoved: v => Store.set("theme.cornerSmoothing", v / 100) }
     }
 
     // ── colours ──

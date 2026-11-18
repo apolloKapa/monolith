@@ -15,6 +15,31 @@ Singleton {
     // screen's coordinates
     property string dropKind: ""        // "notifications" | "sound" | "tray" | "system"
     property string dropScreen: ""
+    // auto-hide: the screens whose bar is out now ({ name: true }). The Frame makes room for it
+    // (island/Frame.qml), told by the bar's own window (island/Island.qml)
+    // the Frame: where something is coming out of it now ({ screen: { edge, a, b } }, along that
+    // edge): the frame's outline leaves a gap there (ui/FrameLine.qml). Set by quick access
+    // (who: "menu", a menu dropping out of the bar, or "quick", the quick access bar; one gap is
+    // drawn, the menu's first)
+    property var frameGap: ({})
+    function setFrameGap(screen, gap, who) {
+        const c = Object.assign({}, frameGap);
+        const mine = Object.assign({}, c[screen] || {});
+        if (gap) mine[who || "quick"] = gap; else delete mine[who || "quick"];
+        if (Object.keys(mine).length) c[screen] = mine; else delete c[screen];
+        frameGap = c;
+    }
+    function frameGapOn(screen) { const g = frameGap[screen]; return g ? (g.menu || g.quick || null) : null; }
+    // the sides of the screen a menu opens from by hover (Island.qml): quick access leaves the
+    // middle of those to it
+    property var hoverEdges: []
+    property var barOut: ({})
+    function setBarOut(screen, on) {
+        if ((barOut[screen] === true) === on) return;
+        const c = Object.assign({}, barOut);
+        if (on) c[screen] = true; else delete c[screen];
+        barOut = c;
+    }
     property real dropX: 0
     property real dropY: 0
     function toggleDrop(kind, screen, x, y) {

@@ -52,7 +52,7 @@ PanelWindow {
     readonly property real length: Math.min(height - 2 * Theme.barMargin, Theme.barWidth(height, bar.needWidth))
     readonly property bool short: length < height - 2 * Theme.barMargin - 1
     readonly property real ear: Theme.barStyle === "island" ? Math.min(Theme.islandEar, thick / 2) : 0
-    readonly property color fill: Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity)
+    readonly property color fill: Theme.barOpacity >= 0.99 ? Theme.barFill : Qt.alpha(Theme.barFill, Theme.barFill.a * Theme.barOpacity)
     readonly property bool shadowed: Theme.barOpacity > 0.3
 
     // the bar's box: off the edge by the floating styles' margin; slid away when tucked

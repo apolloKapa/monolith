@@ -106,10 +106,25 @@ Singleton {
     }
 
     // gone at once (swiped away: it already flew off), or sliding away (clicked, timed out)
-    function dismissPopup(n, now) {
-        if (now) { popups = popups.filter(p => p !== n); return; }
+    function dismissPopup(n, now, thrown) {
+        if (now) {
+            popups = popups.filter(p => p !== n);
+            // thrown away (swiped off): gone for good, out of the Notifications list too. It only
+            // left the screen before, and was still sitting in the list afterwards. (A pop-up that
+            // just times out, or is closed by its app, stays in the list as before.)
+            // Only when it was thrown, and once: dismissing makes the notification say "closed",
+            // which comes back here (below, n.closed) — dismissing again from there went round
+            // and round until the shell ran out of stack and crashed
+            if (thrown === true && n && !_dismissing[n.id]) {
+                _dismissing[n.id] = true;
+                try { n.dismiss(); } catch (e) {}
+                delete _dismissing[n.id];
+            }
+            return;
+        }
         if (popups.indexOf(n) !== -1 && !leaving[n.id]) _leave([n]);
     }
+    property var _dismissing: ({})
     function _expire() {
         const now = Date.now();
         if (hold) {

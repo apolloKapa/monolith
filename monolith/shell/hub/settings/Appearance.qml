@@ -148,22 +148,6 @@ ColumnLayout {
         icon: "apps"; title: "Apps follow dark or light"; desc: "GTK apps, browsers and Qt apps (through the portal) switch with the shell"
         Toggle { checked: Store.get("theme.appsFollow", true) !== false; onToggled: on => { Store.set("theme.appsFollow", on); if (on) Wall.followApps(); } }
     }
-    SettingRow {
-        key: "theme.radius";
-        icon: "rounded_corner"; title: "Roundness"; desc: "How round the corners of everything are (the style multiplies it)"
-        NumberBox { from: 0; to: 60; slideTo: 40; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
-    }
-    SettingRow {
-        key: "theme.continuousCorners"; def: true;
-        icon: "rounded_corner"; title: "Continuous corners"; desc: "Corners ease out of the sides (like a squircle) instead of being quarter circles"
-        Toggle { checked: Store.get("theme.continuousCorners", true) !== false; onToggled: on => Store.set("theme.continuousCorners", on) }
-    }
-    SettingRow {
-        visible: Store.get("theme.continuousCorners", true) !== false && !Theme.square
-        key: "theme.cornerSmoothing"; def: 0.6;
-        icon: "line_curve"; title: "Corner smoothing"; desc: "How gradually the corners ease in"
-        NumberBox { from: 10; to: 100; unit: "%"; value: Math.round(Theme.cornerSmooth * 100); onMoved: v => Store.set("theme.cornerSmoothing", v / 100) }
-    }
     // ── font: every family by name; the preview shows the one under the pointer (or the
     // one in use) ──
     // ── + fonts: font files (from a download…) copied into ~/.local/share/fonts/monolith-added

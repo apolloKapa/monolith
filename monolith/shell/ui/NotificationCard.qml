@@ -22,11 +22,14 @@ Pressable {
         : (notif.appIcon !== "" ? (notif.appIcon.startsWith("/") || notif.appIcon.startsWith("file:") ? notif.appIcon : Quickshell.iconPath(notif.appIcon, true)) : "")
     readonly property bool urgent: notif.urgency === NotificationUrgency.Critical
 
+    // (the press is put back first: invoking the action can close the notification there and
+    // then, which takes this card away mid-click, and calling into it after that failed with
+    // "resetPress is not a function". If it's gone, it's closed already)
     onClicked: {
+        card.resetPress();
         const def = notif.actions.find(a => a.identifier === "default");
         if (def) def.invoke();
-        card.resetPress();
-        card.closed();
+        try { card.closed(); } catch (e) {}
     }
 
     // swipe it sideways to dismiss: past a third of its width (or flicked) it goes (slides off,
@@ -242,7 +245,7 @@ Pressable {
                         height: 30
                         width: actLabel.implicitWidth + 24
                         color: Theme.selected
-                        onClicked: { resetPress(); modelData.invoke(); card.closed(); }
+                        onClicked: { resetPress(); modelData.invoke(); try { card.closed(); } catch (e) {} }
                         Label { id: actLabel; anchors.centerIn: parent; width: Math.min(implicitWidth, 200); text: modelData.text; font.pixelSize: Theme.sizeSmall }
                     }
                 }

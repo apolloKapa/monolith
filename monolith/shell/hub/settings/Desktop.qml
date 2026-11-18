@@ -4,19 +4,14 @@ import Quickshell
 import "../../core"
 import "../../ui"
 
-// Desktop widgets and the lock screen's: both arranged in the widget editor, a full-screen
-// area where you drag, resize, restyle, add and remove them.
+// Desktop widgets: arranged in the widget editor, a full-screen area where you drag, resize,
+// restyle, add and remove them. (The lock screen's: Lock & idle → Arrange the lock screen)
 ColumnLayout {
     spacing: 8
     SettingRow {
         icon: "dashboard_customize"; title: "Desktop widgets"
         desc: WidgetLayout.items("desktop").length + " on your desktops. Opens the editor on the screen you're on"
         Button { text: "Edit the desktop"; primary: true; icon: "edit"; onClicked: HubState.editWidgetsOn("desktop") }
-    }
-    SettingRow {
-        icon: "lock"; title: "Lock screen widgets"
-        desc: WidgetLayout.items("lock").length + " on the lock screen (drag the password box there too)"
-        Button { text: "Edit the lock screen"; primary: true; icon: "edit"; onClicked: HubState.editWidgetsOn("lock") }
     }
     SettingRow {
         key: "widgets.github.user"; def: "";
@@ -32,6 +27,12 @@ ColumnLayout {
             Button { text: "Choose…"; icon: "folder_open"; primary: true; onClicked: Pictures.choose("Choose a picture for the picture widget", f => Store.set("widgets.imagePath", f)) }
             Button { visible: Store.get("widgets.imagePath", "") !== ""; text: "Clear"; onClicked: Store.unset("widgets.imagePath") }
         }
+    }
+    SettingRow {
+        key: "widgets.shadow"; def: "off";
+        icon: "widgets"; title: "Shadows under widgets"
+        desc: "For every desktop and lock screen widget that doesn't pick its own (each widget's Shadow setting)"
+        Segmented { width: 260; opts: [["off", "Off"], ["soft", "Soft"], ["strong", "Strong"]]; value: Theme.widgetShadow; onPicked: v => Store.set("widgets.shadow", v) }
     }
     SettingRow { icon: "keyboard"; title: "From a keybind"; desc: "monolith widgets  ·  monolith widgets lock" }
 }

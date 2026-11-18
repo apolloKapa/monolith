@@ -81,7 +81,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "lock.media"; def: true;
-        icon: "music_note"; title: "Media on the lock screen"; desc: "The media widget: what's playing, with play/pause (move it in Desktop → Widgets → Edit the lock screen)"
+        icon: "music_note"; title: "Media on the lock screen"; desc: "The media widget: what's playing, with play/pause (move it in the lock screen's editor, above)"
         Toggle { checked: Store.get("lock.media", true) !== false; onToggled: on => Store.set("lock.media", on) }
     }
     SettingRow {

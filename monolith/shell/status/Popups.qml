@@ -110,7 +110,7 @@ PanelWindow {
                         height: implicitHeight
                         y: Theme.cyber ? 0 : (1 - slot.drop) * (win.fromBottom ? 1 : -1) * (height * 0.6 + 24)
                         x: Theme.cyber ? 0 : slot.away * (win.corner.endsWith("left") ? -1 : 1) * (width * 0.5)
-                        onClosed: Notifs.dismissPopup(slot.modelData, pc.flying)
+                        onClosed: Notifs.dismissPopup(slot.modelData, pc.flying, pc.flying)
                         onImplicitHeightChanged: slot.cardH = implicitHeight
                         Component.onCompleted: slot.cardH = implicitHeight
                         screenName: win.modelData.name

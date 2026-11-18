@@ -29,7 +29,9 @@ PanelWindow {
     WlrLayershell.keyboardFocus: editing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     // on the same edge as the bar it sits clear of it (an exclusive dock is already moved by it)
     readonly property bool barEdge: !exclusive && side === Theme.barEdge
-    readonly property real margin: Number(Store.get("dock.margin", 12)) + (barEdge ? Theme.islandH + Theme.barMargin : 0)
+    // (the Frame's border runs along every edge: the dock sits inside it, not on it)
+    readonly property real frameIn: Theme.barStyle === "frame" && !exclusive && !barEdge ? Theme.frameW : 0
+    readonly property real margin: Number(Store.get("dock.margin", 12)) + (barEdge ? Theme.islandH + Theme.barMargin : 0) + frameIn
     color: "transparent"
     visible: enabled
     // shown: where the dock ends up (not where it is while sliding in: the pointer at the edge
@@ -153,12 +155,15 @@ PanelWindow {
         height: dock.vertical ? ch : ch + dock.margin
     }
     // the strip along its edge that brings it back
+    // (in the Frame it's the whole border along that edge, not only the screen's last 3 px:
+    // the border is where the pointer comes to rest, and resting on it brought nothing up)
     Item {
         id: hotZone
-        x: dock.side === "right" ? parent.width - 3 : 0
-        y: dock.side === "bottom" ? parent.height - 3 : 0
-        width: dock.vertical ? 3 : parent.width
-        height: dock.vertical ? parent.height : 3
+        readonly property real t: Math.max(3, dock.frameIn)
+        x: dock.side === "right" ? parent.width - t : 0
+        y: dock.side === "bottom" ? parent.height - t : 0
+        width: dock.vertical ? t : parent.width
+        height: dock.vertical ? parent.height : t
     }
     HoverHandler {
         onHoveredChanged: { dock.hovering = hovered; if (!hovered) leaveDelay.restart(); }

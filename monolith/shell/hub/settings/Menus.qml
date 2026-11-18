@@ -16,6 +16,12 @@ ColumnLayout {
                                       ["start", sideBar ? "Top of the bar" : "Left of the bar", "Grows " + grows + " out of the bar at its " + (sideBar ? "top" : "left") + " end"],
                                       ["center", "Middle of the bar", "Grows " + grows + " out of the bar, in the middle"],
                                       ["end", sideBar ? "Bottom of the bar" : "Right of the bar", "Grows " + grows + " out of the bar at its " + (sideBar ? "bottom" : "right") + " end"]]
+        // out of a side of the screen: through the frame in the Frame style, one piece with it
+        .concat([["left", "Left side of the screen", "Slides out of the screen's left side" + frameWord],
+                 ["right", "Right side of the screen", "Slides out of the screen's right side" + frameWord],
+                 ["bottom", "Bottom of the screen", "Slides up out of the screen's bottom" + frameWord]].filter(p => p[0] !== Theme.barEdge))
+    readonly property string frameWord: Theme.barStyle === "frame" ? ", through the frame" : ""
+    readonly property var outPlaces: ["off", "start", "center", "end", "left", "right", "bottom"]
     readonly property var places: [["center", "Middle of the screen", "A card floating in the middle"],
                                    ["top-center", "Top, under the bar", "A card at the top, the bar stays as it is"],
                                    ["bottom", "Bottom", "Slides up from the bottom edge"],
@@ -26,7 +32,7 @@ ColumnLayout {
     // what's set now (before there were two settings, "top" meant out of the bar, in the middle)
     readonly property string barPlace: {
         const b = String(Store.get("menus.barPlace", ""));
-        if (["off", "start", "center", "end"].indexOf(b) !== -1) return b;
+        if (outPlaces.indexOf(b) !== -1) return b;
         return String(Store.get("menus.position", "top")) === "top" ? "center" : "off";
     }
     readonly property string floatPlace: { const p = String(Store.get("menus.position", "center")); return p === "top" ? "center" : p; }
@@ -35,10 +41,28 @@ ColumnLayout {
         // (an old "top" floating place would mean out of the bar again: put it in the middle)
         if (String(Store.get("menus.position", "")) === "top") Store.set("menus.position", "center");
     }
-    // each menu can follow the default or have its own place
-    readonly property var withDefault: [["", "Same as the default", ""]]
-        .concat(barPlaces.slice(1).map(p => ["bar-" + p[0], "Out of the bar: " + p[1].replace(" of the bar", "").toLowerCase(), p[2]]))
-        .concat(places)
+    // each menu can follow the defaults or have its own two: out of the bar, and floating
+    readonly property var barOwn: [["same", "Same as the default", ""], ["off", "Off: float", ""]].concat(barPlaces.slice(1))
+    readonly property var floatOwn: [["", "Same as the default", ""]].concat(places)
+    // what a menu has now ([out of the bar, floating]); from before each had the two, its one
+    // setting held either ("bar-…", or a floating place that also meant not out of the bar)
+    function ownOf(id) {
+        const own = String(Store.get("menus.positions." + id, "") || "");
+        const ownBar = String(Store.get("menus.barPlaces." + id, "") || "");
+        const fl = own !== "" && own !== "top" && !own.startsWith("bar-") ? own : "";
+        let bar = "same";
+        if (ownBar === "same" || outPlaces.indexOf(ownBar) !== -1) bar = ownBar;
+        else if (own === "top") bar = "center";
+        else if (own.startsWith("bar-")) bar = own.slice(4);
+        else if (fl !== "") bar = "off";
+        return [bar, fl];
+    }
+    function setOwn(id, bar, fl) {
+        if (bar === "same") Store.unset("menus.barPlaces." + id); else Store.set("menus.barPlaces." + id, bar);
+        // (kept even when "same": an old one-setting value would be read the old way without it)
+        if (bar === "same" && fl !== "") Store.set("menus.barPlaces." + id, "same");
+        if (fl === "") Store.unset("menus.positions." + id); else Store.set("menus.positions." + id, fl);
+    }
     readonly property var menus: [
         ["search", "Launcher (Search)", "search"], ["quick", "Control center", "page_info"], ["notifications", "Notifications", "notifications"],
         ["media", "Media", "music_note"], ["calendar", "Calendar & weather", "calendar_month"], ["sound", "Sound", "volume_up"],
@@ -55,8 +79,10 @@ ColumnLayout {
     }
     SettingRow {
         keys: ["menus.barPlace"]
-        icon: Theme.barBottom ? "vertical_align_top" : "vertical_align_bottom"; title: "Out of the bar"
-        desc: sec.barPlace === "off" ? "Off: menus float, where the setting below says" : "Menus grow out of the bar, all one shape with it, and move with a little spring"
+        icon: Theme.barBottom ? "vertical_align_top" : "vertical_align_bottom"; title: Theme.barStyle === "frame" ? "Out of the bar or the frame" : "Out of the bar or a side"
+        desc: sec.barPlace === "off" ? "Off: menus float, where the setting below says"
+            : (["left", "right", "bottom"].indexOf(sec.barPlace) !== -1 ? (sec.barPlaces.find(p => p[0] === sec.barPlace) || ["", "", ""])[2] + ", all one shape with it"
+            : "Menus grow out of the bar, all one shape with it, and move with a little spring")
         Dropdown { width: 260; opts: sec.barPlaces; value: sec.barPlace; onPicked: v => sec.setBarPlace(v) }
     }
     SettingRow {
@@ -66,19 +92,55 @@ ColumnLayout {
         desc: sec.barPlace === "off" ? "Where every menu appears, unless you give it its own place below" : "Used when Out of the bar is off (and by menus you set to float)"
         Dropdown { width: 260; opts: sec.places; value: sec.floatPlace; onPicked: v => Store.set("menus.position", v) }
     }
+    SettingRow {
+        key: "menus.edgeHover"; def: false
+        icon: "left_click"; title: "Open by hovering the edge"
+        desc: "A menu set to come out of the left, right or bottom of the screen opens when the pointer rests on the middle of that edge, and closes a moment after the pointer leaves it. One menu per side: the first in the list below"
+        Toggle { checked: Store.get("menus.edgeHover", false) === true; onToggled: on => Store.set("menus.edgeHover", on) }
+    }
+    // Monolith's own menus and lists (ui/SmoothWheel), on top of the mouse's speed; works on any
+    // compositor (Monolith's setting)
+    SettingRow {
+        key: "menus.scrollSpeed"; def: 1
+        icon: "menu_open"; title: "Menu scroll speed"; desc: "How far one notch scrolls Monolith's menus, Settings and lists, on top of the mouse scroll speed. 1× is normal"
+        NumberBox {
+            from: 0.25; to: 4; slideTo: 3; step: 0.05; decimals: 2; unit: "×"
+            value: Number(Store.get("menus.scrollSpeed", 1))
+            onMoved: x => Store.set("menus.scrollSpeed", Number(x.toFixed(2)))
+        }
+    }
     Label { text: "Each menu"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 6 }
+    Label {
+        Layout.fillWidth: true; Layout.leftMargin: 6; wrapMode: Text.Wrap; muted: true; font.pixelSize: Theme.sizeSmall
+        text: "Two choices for each, like the defaults above: out of the bar (first), and where it floats when it isn't (second)"
+    }
     Repeater {
         model: sec.menus
         SettingRow {
+            id: mr
             required property var modelData
-            readonly property string own: Store.get("menus.positions." + modelData[0], "")
+            readonly property var own: { Store.revision; return sec.ownOf(modelData[0]); }
+            // where it ends up, in words
+            readonly property string barNow: own[0] === "same" ? sec.barPlace : own[0]
+            keys: ["menus.barPlaces." + modelData[0], "menus.positions." + modelData[0]]
             icon: modelData[2]; title: modelData[1]
-            desc: own === "" ? "Follows the default" : ""
-            Dropdown {
-                width: 260
-                opts: sec.withDefault
-                value: parent.parent.own === "top" ? "bar-center" : parent.parent.own
-                onPicked: v => Store.set("menus.positions." + modelData[0], v)
+            desc: own[0] === "same" && own[1] === "" ? "Follows the defaults"
+                : (barNow !== "off" ? "Out of the bar" : "Floats: " + ((sec.places.find(p => p[0] === (own[1] !== "" ? own[1] : sec.floatPlace)) || ["", "the default place"])[1]).toLowerCase())
+            Row {
+                spacing: 6
+                Dropdown {
+                    width: 196
+                    opts: sec.barOwn
+                    value: mr.own[0]
+                    onPicked: v => sec.setOwn(mr.modelData[0], v, mr.own[1])
+                }
+                Dropdown {
+                    width: 210
+                    opacity: mr.barNow === "off" ? 1 : 0.55
+                    opts: sec.floatOwn
+                    value: mr.own[1]
+                    onPicked: v => sec.setOwn(mr.modelData[0], mr.own[0], v)
+                }
             }
         }
     }

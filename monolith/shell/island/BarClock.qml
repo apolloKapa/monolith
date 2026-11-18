@@ -51,14 +51,19 @@ Item {
         font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Theme.sizeTiny
     }
 
-    // ── Pill: the hours on an accent capsule, the minutes on a quiet one (seconds smaller) ──
+    // ── Pill: the hours on an accent capsule, the minutes and seconds on quiet ones, all one size ──
     component Capsule: Rectangle {
         id: cap
         property string label: ""
         property bool strong: false
         property real size: 1
         height: Math.round(bc.room * 0.78 * size)
-        width: Math.max(height * 1.25, capText.implicitWidth + height * 0.6)
+        // as wide as two of the font's widest digit, whatever the time: sized to the text itself,
+        // a capsule grew and shrank through the day in a font whose digits differ in width (a 1
+        // is narrower than a 0), and the whole bar clock with it
+        FontMetrics { id: capFm; font: capText.font }
+        readonly property real digitW: Math.max.apply(null, ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].map(d => capFm.advanceWidth(d)))
+        width: Math.max(height * 1.25, Math.ceil(digitW * Math.max(2, label.length)) + height * 0.6)
         radius: Theme.corner(height, 99)
         color: strong ? Theme.accent : bc.well
         Text {
@@ -79,7 +84,7 @@ Item {
             horizontalItemAlignment: Grid.AlignHCenter; verticalItemAlignment: Grid.AlignVCenter
             Capsule { label: bc.hh; strong: true }
             Capsule { label: bc.mm }
-            Capsule { visible: bc.seconds; label: bc.ss; size: 0.78 }
+            Capsule { visible: bc.seconds; label: bc.ss }
             Meridiem {}
         }
     }

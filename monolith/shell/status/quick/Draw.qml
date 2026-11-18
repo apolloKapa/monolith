@@ -64,7 +64,40 @@ ColumnLayout {
     // the one picked with the move tool (its index in the strokes), -1: none
     property int picked: -1
     readonly property var pickedPic: picked >= 0 && picked < Sketch.strokes.length && Sketch.strokes[picked].t === "img" ? Sketch.strokes[picked] : null
-    Connections { target: Sketch; function onStrokesChanged() { if (!d.pickedPic) d.picked = -1; } }
+    Connections { target: Sketch; function onStrokesChanged() { if (!d.pickedPic) d.picked = -1; d.sel = []; } }
+    // ── several at once: Ctrl + drag a box round them (lines, shapes, pictures: anything it
+    // touches), then Delete (or the box's bin) removes them all in one undoable step ──
+    property var sel: []                 // their indices in the strokes
+    property var marq: null              // the box being dragged, in the pad's pixels: { x0, y0, x1, y1 }
+    function boxOf(s) {
+        if (s.t === "img") return { x0: s.x, y0: s.y, x1: s.x + s.w, y1: s.y + s.h };
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        const p = s.pts || [];
+        for (let i = 0; i + 1 < p.length; i += 2) { x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]); }
+        const pad = (s.s || 0) / 2;
+        return { x0: x0 - pad, y0: y0 - pad, x1: x1 + pad, y1: y1 + pad };
+    }
+    function selectIn(m) {
+        const a = toWorld(Math.min(m.x0, m.x1), Math.min(m.y0, m.y1)), b = toWorld(Math.max(m.x0, m.x1), Math.max(m.y0, m.y1));
+        const out = [];
+        Sketch.strokes.forEach((s, i) => { const k = boxOf(s); if (k.x1 >= a.x && k.x0 <= b.x && k.y1 >= a.y && k.y0 <= b.y) out.push(i); });
+        sel = out;
+    }
+    function deleteSel() {
+        if (!sel.length) return;
+        const gone = sel;
+        sel = []; picked = -1;
+        Sketch.commit(Sketch.strokes.filter((x, j) => gone.indexOf(j) === -1));
+    }
+    // the box round what's selected, in the pad's pixels (null: nothing)
+    readonly property var selBox: {
+        Sketch.rev;
+        if (!sel.length) return null;
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (const i of sel) { const s = Sketch.strokes[i]; if (!s) continue; const k = boxOf(s); x0 = Math.min(x0, k.x0); y0 = Math.min(y0, k.y0); x1 = Math.max(x1, k.x1); y1 = Math.max(y1, k.y1); }
+        if (!isFinite(x0)) return null;
+        return { x: (x0 - Sketch.ox) * Sketch.z, y: (y0 - Sketch.oy) * Sketch.z, w: (x1 - x0) * Sketch.z, h: (y1 - y0) * Sketch.z };
+    }
     // the topmost picture under a point of the drawing
     function picAt(w) {
         for (let i = Sketch.strokes.length - 1; i >= 0; i--) {
@@ -181,8 +214,47 @@ ColumnLayout {
             }
         }
     }
-    Shortcut { sequences: [StandardKey.Paste]; onActivated: d.pastePicture() }
-    Shortcut { sequences: [StandardKey.Delete, "Backspace"]; enabled: !!d.pickedPic; onActivated: { const i = d.picked; d.picked = -1; Sketch.commit(Sketch.strokes.filter((x, j) => j !== i)); } }
+    Shortcut { sequences: Sketch.keysFor("paste"); onActivated: d.pastePicture() }
+    // ── keys (while the whiteboard is the open tool; the keyboard button on the pad lists them;
+    // which key does what is in core/Sketch.qml, and can be changed in Settings) ──
+    Shortcut { sequences: Sketch.keysFor("undo"); onActivated: Sketch.undo() }
+    Shortcut { sequences: Sketch.keysFor("redo"); onActivated: Sketch.redo() }
+    // Ctrl+C: the whole drawing to the clipboard as a picture; Ctrl+S keeps it in Pictures too
+    Shortcut { sequences: Sketch.keysFor("copy"); onActivated: d.savePicture(false) }
+    Shortcut { sequences: Sketch.keysFor("save"); onActivated: d.savePicture(true) }
+    // Ctrl+X: the picked picture out of the drawing (Ctrl+Z brings it back); Ctrl+D: another of it, a little aside
+    Shortcut { sequences: Sketch.keysFor("cut"); enabled: !!d.pickedPic || d.sel.length > 0; onActivated: { if (d.sel.length) { d.deleteSel(); return; } const i = d.picked; d.picked = -1; Sketch.commit(Sketch.strokes.filter((x, j) => j !== i)); } }
+    Shortcut {
+        sequences: Sketch.keysFor("dup"); enabled: !!d.pickedPic
+        onActivated: {
+            const off = 24 / Sketch.z;
+            const copy = Object.assign({}, d.pickedPic, { x: d.pickedPic.x + off, y: d.pickedPic.y + off });
+            Sketch.commit(Sketch.strokes.concat([copy]));
+            d.picked = Sketch.strokes.length - 1;
+        }
+    }
+    Shortcut { sequences: Sketch.keysFor("fit"); onActivated: d.fit() }
+    Shortcut { sequences: Sketch.keysFor("zoomIn"); onActivated: d.zoomAt(pad.width / 2, pad.height / 2, 1.25) }
+    Shortcut { sequences: Sketch.keysFor("zoomOut"); onActivated: d.zoomAt(pad.width / 2, pad.height / 2, 0.8) }
+    Shortcut { sequences: Sketch.keysFor("thinner"); onActivated: d.size = Math.max(1, d.size - (d.size > 10 ? 2 : 1)) }
+    Shortcut { sequences: Sketch.keysFor("thicker"); onActivated: d.size = Math.min(40, d.size + (d.size >= 10 ? 2 : 1)) }
+    // the tools, by letter
+    Shortcut { sequences: Sketch.keysFor("pen"); onActivated: d.tool = "pen" }
+    Shortcut { sequences: Sketch.keysFor("hl"); onActivated: d.tool = "hl" }
+    Shortcut { sequences: Sketch.keysFor("line"); onActivated: d.tool = "line" }
+    Shortcut { sequences: Sketch.keysFor("arrow"); onActivated: d.tool = "arrow" }
+    Shortcut { sequences: Sketch.keysFor("rect"); onActivated: d.tool = "rect" }
+    Shortcut { sequences: Sketch.keysFor("ellipse"); onActivated: d.tool = "ellipse" }
+    Shortcut { sequences: Sketch.keysFor("eraser"); onActivated: d.tool = "eraser" }
+    Shortcut { sequences: Sketch.keysFor("hand"); onActivated: d.tool = "hand" }
+    Shortcut { sequences: Sketch.keysFor("move"); onActivated: d.tool = "move" }
+    Shortcut { sequences: Sketch.keysFor("pic"); onActivated: d.choosePicture() }
+    property bool showKeys: false
+    // (the keys as they're set now; change them in Settings → Desktop → Quick access)
+    readonly property var keyList: { Store.revision; return [["Ctrl + drag", "Select several"], ["Del", "Remove what's selected"]].concat(Sketch.drawKeys.map(k => [Sketch.keyText(k[0]) || "none", k[1]])); }
+    Shortcut { sequences: [StandardKey.Delete, "Backspace"]; enabled: !!d.pickedPic || d.sel.length > 0
+        onActivated: { if (d.sel.length) { d.deleteSel(); return; } const i = d.picked; d.picked = -1; Sketch.commit(Sketch.strokes.filter((x, j) => j !== i)); } }
+    Shortcut { sequences: Sketch.keysFor("selectAll"); onActivated: d.sel = Sketch.strokes.map((x, i) => i) }
     // the picture button: pick files
     function choosePicture() { chooseProc.running = true; }
     Process {
@@ -393,6 +465,32 @@ ColumnLayout {
         color: Theme.container
         clip: true
 
+        // the keys, over the pad (the keyboard button)
+        SmoothRect {
+            smoothing: 0
+            visible: d.showKeys
+            z: 20
+            anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 8
+            width: 250; height: Math.min(parent.height - 16, keyCol.implicitHeight + 20)
+            radius: Theme.corner(60, 2)
+            color: Qt.alpha(Theme.frame, 0.96)
+            border.width: 1; border.color: Theme.hairline
+            clip: true
+            MouseArea { anchors.fill: parent; onClicked: d.showKeys = false }
+            Column {
+                id: keyCol
+                x: 12; y: 10; width: parent.width - 24; spacing: 3
+                Repeater {
+                    model: d.keyList
+                    Item {
+                        required property var modelData
+                        width: keyCol.width; height: 17
+                        Label { text: parent.modelData[0]; strong: true; font.pixelSize: Theme.sizeSmall - 1; color: Theme.accent }
+                        Label { x: 92; width: parent.width - 92; text: parent.modelData[1]; font.pixelSize: Theme.sizeSmall - 1; elide: Text.ElideRight }
+                    }
+                }
+            }
+        }
         Canvas {
             id: cv
             anchors.fill: parent
@@ -517,8 +615,17 @@ ColumnLayout {
             property real ly: 0
             property var before: null       // the strokes before an erase (or a picture's move), for undo
             property var grab: null         // the picture being moved or sized
+            property bool boxing: false     // Ctrl + drag: a box round several things
             onPressed: mouse => {
                 lx = mouse.x; ly = mouse.y;
+                // Ctrl + left: drag a box to select several, whatever the tool
+                if (mouse.button === Qt.LeftButton && (mouse.modifiers & Qt.ControlModifier)) {
+                    boxing = true; panning = false;
+                    d.sel = []; d.picked = -1;
+                    d.marq = { x0: mouse.x, y0: mouse.y, x1: mouse.x, y1: mouse.y };
+                    return;
+                }
+                if (d.sel.length) d.sel = [];
                 panning = mouse.button !== Qt.LeftButton || d.tool === "hand";
                 if (panning) return;
                 const w0 = d.toWorld(mouse.x, mouse.y);
@@ -545,6 +652,7 @@ ColumnLayout {
             }
             onPositionChanged: mouse => {
                 if (!pressed) return;
+                if (boxing) { d.marq = { x0: d.marq.x0, y0: d.marq.y0, x1: mouse.x, y1: mouse.y }; return; }
                 if (panning) { d.panBy(mouse.x - lx, mouse.y - ly); lx = mouse.x; ly = mouse.y; return; }
                 const w0 = d.toWorld(mouse.x, mouse.y);
                 if (d.tool === "move") {
@@ -584,6 +692,7 @@ ColumnLayout {
                 cv.requestPaint();
             }
             onReleased: {
+                if (boxing) { boxing = false; if (d.marq) d.selectIn(d.marq); d.marq = null; return; }
                 if (panning) { panning = false; return; }
                 if (d.tool === "move") {
                     if (grab && before) { const now = Sketch.strokes; Sketch.strokes = before; Sketch.commit(now); }
@@ -616,6 +725,46 @@ ColumnLayout {
             onScaleChanged: delta => d.zoomAt(centroid.position.x, centroid.position.y, delta)
         }
 
+        // the box being dragged (Ctrl + drag)
+        Rectangle {
+            visible: !!d.marq
+            x: d.marq ? Math.min(d.marq.x0, d.marq.x1) : 0; y: d.marq ? Math.min(d.marq.y0, d.marq.y1) : 0
+            width: d.marq ? Math.abs(d.marq.x1 - d.marq.x0) : 0; height: d.marq ? Math.abs(d.marq.y1 - d.marq.y0) : 0
+            color: Qt.alpha(Theme.accent, 0.12)
+            border.width: 1.5; border.color: Theme.accent
+            z: 6
+        }
+        // what's selected: a box round it all, how many, and a bin
+        Rectangle {
+            visible: !!d.selBox
+            x: d.selBox ? d.selBox.x - 6 : 0; y: d.selBox ? d.selBox.y - 6 : 0
+            width: d.selBox ? d.selBox.w + 12 : 0; height: d.selBox ? d.selBox.h + 12 : 0
+            color: Qt.alpha(Theme.accent, 0.06)
+            border.width: 1.5; border.color: Theme.accent
+            radius: Theme.rnd(4)
+            z: 6
+            SmoothRect {
+                smoothing: 0
+                // (kept on the pad when the selection runs off it)
+                x: Math.max(-parent.x + 6, Math.min(pad.width - parent.x - width - 6, parent.width - width))
+                y: Math.max(-parent.y + 6, Math.min(pad.height - parent.y - height - 6, -height - 6))
+                width: selRow.implicitWidth + 16; height: 30
+                radius: Theme.corner(30, -2)
+                color: Theme.frame
+                border.width: 1; border.color: Theme.hairline
+                Row {
+                    id: selRow
+                    anchors.centerIn: parent; spacing: 8
+                    Label { text: d.sel.length + " selected"; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+                    Pressable {
+                        width: 24; height: 24; anchors.verticalCenter: parent.verticalCenter
+                        color: hovered ? Theme.danger : "transparent"
+                        onClicked: d.deleteSel()
+                        Icon { anchors.centerIn: parent; name: "delete"; size: 16; color: parent.hovered ? Theme.onAccent : Theme.text }
+                    }
+                }
+            }
+        }
         // the picture Save makes: all of it, drawn again off-screen at a good size
         Canvas {
             id: exporter
@@ -697,6 +846,7 @@ ColumnLayout {
             }
         }
         Item { Layout.fillWidth: true }
+        Tb { icon: "keyboard"; on: d.showKeys; onClicked: d.showKeys = !d.showKeys }
         Tb { icon: "undo"; enabled: Sketch.canUndo; onClicked: Sketch.undo() }
         Tb { icon: "redo"; enabled: Sketch.canRedo; onClicked: Sketch.redo() }
     }
