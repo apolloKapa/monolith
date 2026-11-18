@@ -43,7 +43,7 @@ FocusScope {
     // or Blackwall takes it along (Island.qml)
     property real cyP: 1
     property bool cyGoing: false
-    CyberFx { target: pg; p: pg.cyP; going: pg.cyGoing }
+    CyberFx { target: pg; content: true; p: pg.cyP; going: pg.cyGoing }
     SequentialAnimation {
         id: cyIn
         PropertyAction { target: pg; property: "cyGoing"; value: false }

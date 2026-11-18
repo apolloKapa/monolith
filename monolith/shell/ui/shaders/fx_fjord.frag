@@ -14,6 +14,7 @@ layout(std140, binding = 0) uniform buf {
     vec4 red;       // the effect's first colour (ui/CyberFx: the ink, mostly)
     vec4 cyan;      // its second (the accent, mostly)
     float base;     // how solid the panels are (Theme.see: below 1 when they're see-through)
+    float loose;    // 1: loose content (a menu's page), 0: a panel
 };
 layout(binding = 1) uniform sampler2D source;
 float h21(vec2 v) { return fract(sin(dot(v, vec2(127.1, 311.7)) + seed * 74.7) * 43758.5453); }
@@ -50,7 +51,9 @@ void main() {
         float fi = float(i);
         float r = 1.0 + 5.0 * sqrt((fi + 0.5) / 12.0);
         float a = turn + fi * 2.3999632;
-        soft += tex(uv + vec2(cos(a), sin(a)) * r / itemSize);
+        // (kept inside the panel: a point off its edge counted as empty, and the frost faded out
+        // round every edge)
+        soft += texture(source, clamp(uv + vec2(cos(a), sin(a)) * r / itemSize, 0.5 / itemSize, 1.0 - 0.5 / itemSize));
     }
     soft /= 12.0;
     vec3 ice = mix(vec3(0.86, 0.92, 0.97), cyan.rgb, 0.15);
@@ -59,7 +62,11 @@ void main() {
     // icons and words than over a see-through panel's background: each icon came out as a white
     // copy of itself over its blurred colours)
     vec3 under = soft.a > 0.001 ? soft.rgb / soft.a : vec3(0.0);
-    float sheet = smoothstep(0.0, 0.08, soft.a) * clamp(base > 0.0 ? base : 1.0, 0.0, 1.0);
+    // (its edge is the panel's own, sharp, rounded corners and all: taken from the blurred one it
+    // was a fuzzy rim)
+    // (loose content keeps the blurred shape: cut to the sharp one, each letter came out as a
+    // sharp pale copy of itself)
+    float sheet = (loose > 0.5 ? smoothstep(0.0, 0.08, soft.a) : smoothstep(0.0, 0.06, c.a)) * clamp(base > 0.0 ? base : 1.0, 0.0, 1.0);
     // (on a see-through panel, less of the pale ice: with nothing blurred behind it (over a
     // fullscreen game) a pale sheet that see-through just looked milky)
     float iceK = 0.6 * pow(clamp(base > 0.0 ? base : 1.0, 0.0, 1.0), 3.0);

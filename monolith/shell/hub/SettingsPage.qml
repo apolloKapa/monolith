@@ -469,7 +469,7 @@ Page {
                 onLoaded: { if (source !== shown) { shown = source; page.enterPage(); } else opacity = 1; if (page.findRow !== "") seekLater.restart(); }
                 // (Cyberpunk: the section glitches in instead, CyberFx)
                 property real cyP: 1
-                CyberFx { target: loader; p: loader.cyP }
+                CyberFx { target: loader; content: true; p: loader.cyP }
                 NumberAnimation { id: cyIn; target: loader; property: "cyP"; from: 0; to: 1; duration: Theme.fxInMs }
                 Timer { id: seekLater; interval: 80; onTriggered: page.seek() }
                 // the page fades in while its rows come up one after another (ui/SettingRow)

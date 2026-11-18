@@ -17,6 +17,9 @@ Item {
     // see-through (the dock), and the effect and its frame clock would have run on for nothing)
     // (false: not for this one, whatever the style: the dock only glitches with Cyberpunk)
     property bool allowed: true
+    // what it's on: a panel (a card, the dock: a solid shape, its edge kept sharp) or loose
+    // content with nothing behind it (a page of a menu: its edge is the blurred shape of what's on it)
+    property bool content: false
     readonly property bool on: allowed && Theme.cyber && !!target && target.visible && target.opacity > 0.001 && (going ? p > 0.001 : p < 0.999)
     // seconds since it started, and a fresh pattern each time
     property real t: 0
@@ -41,6 +44,7 @@ Item {
             property color cyan: Theme.fxKind === "terminal" ? Theme.text : Theme.accent
             // how solid the panels are (Fjord's frost lies over them as one even sheet that solid)
             property real base: Theme.see
+            property real loose: fx.content ? 1 : 0
             fragmentShader: Qt.resolvedUrl(Theme.fxKind === "cyber" ? "shaders/cyber.frag.qsb" : "shaders/fx_" + Theme.fxKind + ".frag.qsb")
         }
     }
