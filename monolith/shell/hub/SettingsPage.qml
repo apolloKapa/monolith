@@ -134,7 +134,10 @@ Page {
     // a section coming in: it fades and slides in (Cyberpunk: it glitches in)
     function enterPage() {
         popAnim.restart();
-        if (Theme.cyber) { pageIn.stop(); slideIn.stop(); loader.shiftY = 0; loader.opacity = 1; cyIn.restart(); }
+        // (only Cyberpunk glitches a page in. The other styles' effects (Fjord's frost and the rest)
+        // are for whole menus: on a page they were busy and rough, so a page shows a skeleton
+        // of its rows while it's made, and the rows fade in over it)
+        if (Theme.fxKind === "cyber") { pageIn.stop(); slideIn.stop(); loader.shiftY = 0; loader.opacity = 1; cyIn.restart(); }
         else { pageIn.restart(); slideIn.restart(); }
     }
     function aimPage() { pageDir = pageOrder.indexOf(tabId) >= pageOrder.indexOf(lastTab) ? 1 : -1; lastTab = tabId; }
@@ -469,11 +472,38 @@ Page {
                 onLoaded: { if (source !== shown) { shown = source; page.enterPage(); } else opacity = 1; if (page.findRow !== "") seekLater.restart(); }
                 // (Cyberpunk: the section glitches in instead, CyberFx)
                 property real cyP: 1
-                CyberFx { target: loader; content: true; p: loader.cyP }
+                CyberFx { target: loader; content: true; allowed: Theme.fxKind === "cyber"; p: loader.cyP }
                 NumberAnimation { id: cyIn; target: loader; property: "cyP"; from: 0; to: 1; duration: Theme.fxInMs }
                 Timer { id: seekLater; interval: 80; onTriggered: page.seek() }
                 // the page fades in while its rows come up one after another (ui/SettingRow)
                 NumberAnimation { id: pageIn; target: loader; property: "opacity"; from: 0; to: 1; duration: Theme.popInMs; easing.type: Easing.OutCubic }
+            }
+            // the skeleton: plain shapes where the rows will be, from the moment you pick a page
+            // until it has come in over them (so there's never an empty page, and nothing flashy)
+            Column {
+                id: skeleton
+                parent: flick
+                x: 0; y: 0
+                width: flick.width
+                spacing: 8
+                readonly property bool wanted: loader.active && Theme.fxKind !== "cyber" && (loader.status !== Loader.Ready || loader.opacity < 0.99)
+                opacity: wanted ? 1 - loader.opacity : 0
+                visible: opacity > 0.01
+                Repeater {
+                    model: skeleton.visible ? Math.max(3, Math.min(9, Math.floor(flick.height / 70))) : 0
+                    SmoothRect {
+                        smoothing: 0
+                        required property int index
+                        width: skeleton.width; height: 62
+                        radius: Theme.corner(62, 4)
+                        color: Theme.container
+                        border.width: Theme.outlineW; border.color: Theme.outlineColor
+                        Rectangle { x: 12; anchors.verticalCenter: parent.verticalCenter; width: 38; height: 38; radius: Theme.corner(38); color: Qt.alpha(Theme.text, 0.08) }
+                        Rectangle { x: 62; y: 16; width: Math.min(parent.width * 0.3, 120 + (index * 37) % 90); height: 11; radius: Theme.rnd(5); color: Qt.alpha(Theme.text, 0.12) }
+                        Rectangle { x: 62; y: 36; width: Math.min(parent.width * 0.55, 220 + (index * 53) % 140); height: 8; radius: Theme.rnd(4); color: Qt.alpha(Theme.text, 0.06) }
+                        Rectangle { anchors.right: parent.right; anchors.rightMargin: 14; anchors.verticalCenter: parent.verticalCenter; width: index % 3 === 0 ? 46 : 110; height: index % 3 === 0 ? 24 : 34; radius: Theme.corner(height); color: Qt.alpha(Theme.text, 0.07) }
+                    }
+                }
             }
             // more below: the page fades out at the bottom edge
             Rectangle {
