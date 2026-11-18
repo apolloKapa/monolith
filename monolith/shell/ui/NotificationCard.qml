@@ -75,8 +75,25 @@ Pressable {
     }
     // Clear (core/Notifs): thrown away with the rest, each in its own direction. Falling: tossed
     // up and to a random side, spinning; sliding: off to a random side
+    // how much of the card can actually be seen: a list makes cards a little past what it shows
+    // (for smooth scrolling) and clips them off, but to Qt they're "visible"
+    function shownPart() {
+        const r = card.mapToItem(null, 0, 0, card.width, card.height);
+        let x0 = r.x, y0 = r.y, x1 = r.x + r.width, y1 = r.y + r.height;
+        for (let it = card.parent; it; it = it.parent) {
+            if (!it.clip) continue;
+            const a = it.mapToItem(null, 0, 0, it.width, it.height);
+            x0 = Math.max(x0, a.x); y0 = Math.max(y0, a.y);
+            x1 = Math.min(x1, a.x + a.width); y1 = Math.min(y1, a.y + a.height);
+        }
+        const area = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
+        return r.width * r.height > 0 ? area / (r.width * r.height) : 0;
+    }
     function scatter() {
         if (!card.visible || !card.Window.window || !card.Window.window.visible || throwId >= 0 || flying) return;
+        // (only the cards you can see: the ones scrolled out of the list were thrown too, and
+        // flew in from above or below it, from nowhere)
+        if (shownPart() < 0.5) return;
         const p = card.mapToItem(null, -swipeX, 0);
         const scr = card.screenName || HubState.screenName || Niri.focusedOutput || "";
         const dir = Math.random() < 0.5 ? -1 : 1;
