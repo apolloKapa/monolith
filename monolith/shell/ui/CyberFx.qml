@@ -39,6 +39,8 @@ Item {
             // (Doodle), the phosphor and the text (Terminal); the ink and the accent elsewhere
             property color red: Theme.fxKind === "cyber" ? Theme.danger : (Theme.fxKind === "terminal" ? Theme.accent : Theme.text)
             property color cyan: Theme.fxKind === "terminal" ? Theme.text : Theme.accent
+            // how solid the panels are (Fjord's frost lies over them as one even sheet that solid)
+            property real base: Theme.see
             fragmentShader: Qt.resolvedUrl(Theme.fxKind === "cyber" ? "shaders/cyber.frag.qsb" : "shaders/fx_" + Theme.fxKind + ".frag.qsb")
         }
     }

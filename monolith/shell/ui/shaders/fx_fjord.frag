@@ -13,6 +13,7 @@ layout(std140, binding = 0) uniform buf {
     float seed;     // a fresh pattern each time
     vec4 red;       // the effect's first colour (ui/CyberFx: the ink, mostly)
     vec4 cyan;      // its second (the accent, mostly)
+    float base;     // how solid the panels are (Theme.see: below 1 when they're see-through)
 };
 layout(binding = 1) uniform sampler2D source;
 float h21(vec2 v) { return fract(sin(dot(v, vec2(127.1, 311.7)) + seed * 74.7) * 43758.5453); }
@@ -51,7 +52,13 @@ void main() {
     }
     soft /= 12.0;
     vec3 ice = mix(vec3(0.86, 0.92, 0.97), cyan.rgb, 0.15);
-    vec4 frost = vec4(mix(soft.rgb, ice * soft.a, 0.6), soft.a) * 0.92;
+    // one even sheet of ice over the whole panel, as solid as the panel is, what's under it only
+    // tinting it. (Ice laid on as thick as each pixel was solid made it far brighter over the
+    // icons and words than over a see-through panel's background: each icon came out as a white
+    // copy of itself over its blurred colours)
+    vec3 under = soft.a > 0.001 ? soft.rgb / soft.a : vec3(0.0);
+    float sheet = smoothstep(0.0, 0.08, soft.a) * clamp(base > 0.0 ? base : 1.0, 0.0, 1.0);
+    vec4 frost = vec4(mix(under, ice, 0.6) * sheet, sheet) * 0.92;
     vec4 o = mix(frost, c, clear);
     o.rgb += vec3(0.22) * edge * c.a;                 // a soft shine at the thawing edge
     if (mode > 0.5) o *= 1.0 - smoothstep(0.72, 1.0, p);
