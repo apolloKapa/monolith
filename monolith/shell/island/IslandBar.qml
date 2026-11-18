@@ -96,9 +96,9 @@ Item {
     readonly property bool clockStackTime: clockOpt("stackTime", false) === true      // hours over minutes
     readonly property bool clock12: clockOpt("hour12", false) === true
     // how the time is drawn (Settings → Bar → Clock → Theme): digital (plain text), pill, segment,
-    // flip, analog, words, binary
+    // flip, dots, analog, words, binary
     readonly property string clockTheme: { const t = clockThemeAs || String(clockOpt("theme", "digital"));
-        return ["digital", "pill", "segment", "flip", "analog", "words", "binary"].indexOf(t) >= 0 ? t : "digital"; }
+        return ["digital", "pill", "segment", "flip", "dots", "analog", "words", "binary"].indexOf(t) >= 0 ? t : "digital"; }
     // the time's lines: one ("14:05:09"), or stacked (always on a vertical bar)
     readonly property bool timeStacked: vertical || clockStackTime
     function timeText(d) {

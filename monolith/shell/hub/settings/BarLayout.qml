@@ -652,7 +652,7 @@ ColumnLayout {
         StylePick {
             module: "clock"
             kind: "theme"
-            opts: [["digital", "Digital"], ["pill", "Pill"], ["segment", "Segment"], ["flip", "Flip"],
+            opts: [["digital", "Digital"], ["pill", "Pill"], ["segment", "Segment"], ["flip", "Flip"], ["dots", "Dots"],
                    ["analog", "Analog"], ["words", "Words"], ["binary", "Binary"]]
             value: clockPrev.clockTheme
             onPicked: v => Store.set("bar.clock.theme", v)

@@ -1,5 +1,6 @@
 import QtQuick
 import "../core"
+import "../wall/faces" as Faces
 
 // The bar clock's time in one of its themes (Settings → Bar → Clock → Theme). "digital" isn't
 // here: that's the plain text IslandBar draws itself. Each theme takes the time, whether to show
@@ -37,7 +38,7 @@ Item {
     Loader {
         id: shown
         anchors.centerIn: parent
-        sourceComponent: ({ pill: pillC, segment: segC, flip: flipC, analog: analogC, words: wordsC, binary: binC })[bc.theme] || pillC
+        sourceComponent: ({ pill: pillC, segment: segC, flip: flipC, dots: dotsC, analog: analogC, words: wordsC, binary: binC })[bc.theme] || pillC
     }
 
     // AM / PM, small, after the time (or under it on a side bar)
@@ -137,14 +138,22 @@ Item {
         }
     }
 
-    // ── Flip: split-flap cards; when a number changes its top half folds down over it ──
-    // half a flip card (the top or the bottom), turning about the card's middle by `angle`
+    // ── Flip: a split-flap display, a card for each digit. When a digit changes, the top half
+    // of the old card falls forward (darkening as it turns away from the light) and the new
+    // card's bottom half lands over the old one, shadowing it as it comes, with a little bounce ──
+    // (solid colours, not see-through: a flap over a half would double a tint)
+    function solid(c) { return Qt.rgba(c.r, c.g, c.b, 1); }
+    readonly property color cardTop: Qt.tint(solid(Theme.frame), Qt.alpha(Theme.text, 0.24))
+    readonly property color cardBottom: Qt.tint(solid(Theme.frame), Qt.alpha(Theme.text, 0.18))
+    // half a card (top or bottom) showing `label`; it turns about the card's middle by `angle`, and
+    // `shade` (0 … 1) darkens it
     component Half: Item {
         id: half
         property var fc
         property string label
         property bool upper: true
         property real angle: 0
+        property real shade: 0
         y: upper ? 0 : fc.height / 2
         width: fc.width; height: fc.height / 2
         clip: true
@@ -153,51 +162,99 @@ Item {
             y: half.upper ? 0 : -fc.height / 2
             width: fc.width; height: fc.height
             radius: fc.r
-            color: bc.well
+            color: half.upper ? bc.cardTop : bc.cardBottom
+            antialiasing: true
             Text {
                 anchors.centerIn: parent
+                anchors.verticalCenterOffset: 0.5
                 text: half.label
                 color: Theme.text
                 font.family: Theme.fontFamily; font.weight: Font.Bold
-                font.pixelSize: Math.round(fc.height * 0.62)
+                font.pixelSize: Math.round(fc.height * 0.72)
             }
+            Rectangle { anchors.fill: parent; radius: fc.r; color: "#000000"; opacity: half.shade; visible: half.shade > 0.01 }
         }
     }
     component FlipCard: Item {
         id: fc
-        property string v: "00"
-        // what it showed before the change (its lower half stays until the new one folds over)
+        property string v: "0"
+        // what it showed before the change: its bottom half stays until the new one lands on it
         property string was: ""
         Component.onCompleted: was = v
-        property real fold: 1          // 0 … 1: the old top half folding down, then the new bottom half
-        height: Math.round(bc.room * 0.84)
-        width: Math.round(height * 1.05)
+        property real fall: 0           // the old top half: 0 standing … 90 flat (edge-on)
+        property real land: 0           // the new bottom half: 90 edge-on … 0 down (a little past on the bounce)
+        property int stage: 0           // 0 still, 1 falling, 2 landing
+        height: Math.round(bc.room * 0.94)
+        width: Math.round(height * 0.7)
+        readonly property real r: Theme.corner(height, Math.max(1.5, height * 0.14))
         onVChanged: {
-            if (bc.flipMs <= 0 || !fc.visible) { was = v; fold = 1; return; }
-            flip.stop(); fold = 0; flip.start();
+            flip.stop();
+            if (bc.flipMs <= 0 || !fc.visible) { was = v; stage = 0; return; }
+            flip.start();
         }
-        NumberAnimation { id: flip; target: fc; property: "fold"; from: 0; to: 1; duration: bc.flipMs * 2; easing.type: Easing.InOutQuad
-                          onFinished: fc.was = fc.v }
-        readonly property real r: Theme.corner(height, Math.max(2, height * 0.18))
-        // behind: the new top, the old bottom (until the new bottom has folded down over it)
-        Half { fc: fc; label: fc.v; upper: true }
-        Half { fc: fc; label: fc.fold >= 1 ? fc.v : fc.was; upper: false }
-        // folding: the old top going down (first half of the way), the new bottom coming down after
-        Half { fc: fc; visible: fc.fold < 0.5; label: fc.was; upper: true; angle: -180 * fc.fold }
-        Half { fc: fc; visible: fc.fold >= 0.5 && fc.fold < 1; label: fc.v; upper: false; angle: 180 * (1 - fc.fold) }
-        // the split across the middle
-        Rectangle { y: Math.round(fc.height / 2) - 0.5; width: fc.width; height: 1; color: Qt.alpha(Theme.frame, 0.9) }
+        SequentialAnimation {
+            id: flip
+            PropertyAction { target: fc; property: "stage"; value: 1 }
+            NumberAnimation { target: fc; property: "fall"; from: 0; to: 90; duration: bc.flipMs; easing.type: Easing.InQuad }
+            PropertyAction { target: fc; property: "stage"; value: 2 }
+            NumberAnimation { target: fc; property: "land"; from: 90; to: 0; duration: bc.flipMs * 0.8; easing.type: Easing.InQuad }
+            NumberAnimation { target: fc; property: "land"; from: 0; to: 14; duration: bc.flipMs * 0.28; easing.type: Easing.OutQuad }
+            NumberAnimation { target: fc; property: "land"; from: 14; to: 0; duration: bc.flipMs * 0.28; easing.type: Easing.InQuad }
+            ScriptAction { script: { fc.was = fc.v; fc.stage = 0; } }
+        }
+        // behind: the new top half, and the old bottom half until the new one has landed
+        Half { fc: fc; label: fc.v; upper: true
+               // (the falling flap's shadow on the card underneath, lifting as it goes)
+               shade: fc.stage === 1 ? 0.3 * (1 - fc.fall / 90) : 0 }
+        Half { fc: fc; label: fc.stage === 0 ? fc.v : fc.was; upper: false
+               shade: fc.stage === 2 ? 0.28 * (1 - Math.min(90, Math.max(0, fc.land)) / 90) : 0 }
+        // the moving flaps
+        Half { fc: fc; visible: fc.stage === 1; label: fc.was; upper: true; angle: -fc.fall; shade: 0.45 * Math.sin(fc.fall * Math.PI / 180) }
+        Half { fc: fc; visible: fc.stage === 2; label: fc.v; upper: false; angle: fc.land; shade: 0.4 * Math.sin(Math.max(0, fc.land) * Math.PI / 180) }
+        // the seam between the halves: a hairline, darker than the card (inset from its sides, so
+        // the seams of cards side by side don't join into one line across the clock)
+        Rectangle { x: 1; y: Math.round(fc.height / 2) - 0.5; width: fc.width - 2; height: 1; color: Qt.rgba(0, 0, 0, 0.55) }
+    }
+    // two digits, close together
+    component FlipPair: Row {
+        property string v: "00"
+        spacing: 1.5
+        FlipCard { v: parent.v[0] }
+        FlipCard { v: parent.v[1] }
     }
     Component {
         id: flipC
         Grid {
             flow: bc.vertical ? Grid.TopToBottom : Grid.LeftToRight
             columns: bc.vertical ? 1 : 4
-            spacing: 3
+            spacing: bc.vertical ? 3 : 4
             horizontalItemAlignment: Grid.AlignHCenter; verticalItemAlignment: Grid.AlignVCenter
-            FlipCard { v: bc.hh2 }
-            FlipCard { v: bc.mm }
-            FlipCard { visible: bc.seconds; v: bc.ss }
+            FlipPair { v: bc.hh2 }
+            FlipPair { v: bc.mm }
+            FlipPair { visible: bc.seconds; v: bc.ss }
+            Meridiem {}
+        }
+    }
+
+    // ── Dots: a dot-matrix clock like a Nothing phone's widgets: round white dots, the colon red ──
+    component DotPart: Faces.DotText {
+        cell: Math.max(2, Math.floor(bc.room * 0.92 / 7))
+        dotSize: 0.86
+        color: Theme.text
+    }
+    Component {
+        id: dotsC
+        Grid {
+            flow: bc.vertical ? Grid.TopToBottom : Grid.LeftToRight
+            columns: bc.vertical ? 1 : 6
+            // (a dot's room either side of a colon)
+            spacing: bc.vertical ? 3 : Math.max(2, Math.floor(bc.room * 0.92 / 7))
+            horizontalItemAlignment: Grid.AlignHCenter; verticalItemAlignment: Grid.AlignVCenter
+            DotPart { text: bc.hh2 }
+            DotPart { visible: !bc.vertical; text: ":"; color: Theme.c("red", "#d71921") }
+            DotPart { text: bc.mm }
+            DotPart { visible: bc.seconds && !bc.vertical; text: ":"; color: Theme.c("red", "#d71921") }
+            DotPart { visible: bc.seconds; text: bc.ss }
             Meridiem {}
         }
     }
