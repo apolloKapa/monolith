@@ -69,7 +69,7 @@ ColumnLayout {
                             anchors.verticalCenter: parent.verticalCenter
                             theme: ccard.modelData[0]
                             still: true
-                            now: cp.src ? cp.src.now : new Date()
+                            now: cp.src ? cp.src.frozen : new Date()
                             seconds: !!cp.src && cp.src.clockSeconds
                             h12: !!cp.src && cp.src.clock12
                             room: Theme.islandH - 14
@@ -77,7 +77,7 @@ ColumnLayout {
                         Text {
                             visible: ccard.digital
                             anchors.verticalCenter: parent.verticalCenter
-                            text: cp.src ? cp.src.timeText(cp.src.now) : ""
+                            text: cp.src ? cp.src.timeText(cp.src.frozen) : ""
                             horizontalAlignment: Text.AlignHCenter
                             lineHeight: cp.src && cp.src.timeStacked ? 0.82 : 1
                             color: Theme.text
@@ -88,13 +88,13 @@ ColumnLayout {
                             visible: sample.stackedDate
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: -2
-                            Text { visible: !!cp.src && cp.src.clockWeekday; text: cp.src ? Qt.formatDate(cp.src.now, "dddd") : ""; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1; font.weight: Font.Medium }
-                            Text { text: cp.src ? Qt.formatDate(cp.src.now, "d MMM") : ""; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1 }
+                            Text { visible: !!cp.src && cp.src.clockWeekday; text: cp.src ? Qt.formatDate(cp.src.frozen, "dddd") : ""; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1; font.weight: Font.Medium }
+                            Text { text: cp.src ? Qt.formatDate(cp.src.frozen, "d MMM") : ""; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1 }
                         }
                         Text {
                             visible: !!cp.src && cp.src.clockDate && cp.src.clockDateLayout === "inline"
                             anchors.verticalCenter: parent.verticalCenter
-                            text: cp.src ? Qt.formatDate(cp.src.now, cp.src.clockWeekday ? "ddd d MMM" : "d MMM") : ""
+                            text: cp.src ? Qt.formatDate(cp.src.frozen, cp.src.clockWeekday ? "ddd d MMM" : "d MMM") : ""
                             color: Theme.subtext
                             font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall
                         }
@@ -710,7 +710,8 @@ ColumnLayout {
                     color: Theme.frame
                     Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
                     IslandBar {
-                        still: true
+                        // (this one runs, so you see your clock as it really is: the theme cards
+                        // under it stay still, at the time the page opened)
                         id: clockPrev
                         enabled: false
                         only: ["clock"]
