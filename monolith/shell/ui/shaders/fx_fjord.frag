@@ -57,9 +57,11 @@ void main() {
     // over flat parts)
     float turn = vnoise(px / 2.5) * 12.566371;
     float got = 0.0;
-    for (int i = 0; i < 12; i++) {
+    // (out to about 28 px: at 6 px the panel's own rim, a plain band round its inside, still
+    // showed through as a stripe along the edges)
+    for (int i = 0; i < 16; i++) {
         float fi = float(i);
-        float r = 1.0 + 5.0 * sqrt((fi + 0.5) / 12.0);
+        float r = 1.5 + 26.0 * sqrt((fi + 0.5) / 16.0);
         float a = turn + fi * 2.3999632;
         vec2 q = uv + vec2(cos(a), sin(a)) * r / itemSize;
         // (a point off the panel is left out and the rest averaged: counted as empty, the frost
@@ -92,6 +94,8 @@ void main() {
     vec4 o = mix(frost, c, clear);
     o.rgb += vec3(0.22) * edge * c.a;                 // a soft shine at the thawing edge
     if (mode > 0.5) o *= 1.0 - smoothstep(0.72, 1.0, p);
-    else o *= smoothstep(0.0, 0.15, p);
+    // (in quickly: the blur behind the menu comes on once it's whole, at 8 %, and before that it
+    // was a blurred box with nothing on it, its edges showing as a band)
+    else o *= smoothstep(0.0, 0.08, p);
     fragColor = o * qt_Opacity;
 }
