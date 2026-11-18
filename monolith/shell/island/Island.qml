@@ -1135,7 +1135,9 @@ PanelWindow {
                                           liquid: [0.45, 0.55], paper: [0.5, 0.55], terminal: [0.55, 0.7], concrete: [0.55, 0.6], luxe: [0.5, 0.55] })
         readonly property var when: moments[Theme.fxKind] || moments.cyber
         readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04
-            : win.shown ? (win.cardZoom >= when[0] || !Theme.cyber)
+            // (coming in, only once the menu's own page shows: before that the card can still be
+            // the last menu's size and place, and a blurred box sat there with nothing in it)
+            : win.shown ? (pageIn && (win.cardZoom >= when[0] || !Theme.cyber))
             : (Theme.cyber ? win.cardZoom > when[1] : win.cardFade > when[1]))
         readonly property real part: Theme.fxUnfold ? Math.max(0.01, floatCard.unfold) : 1
         // the card zooms in and out from its own corner or side: the blur shrinks with it

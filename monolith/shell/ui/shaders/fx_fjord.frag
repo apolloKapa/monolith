@@ -43,7 +43,9 @@ void main() {
     // pixel: a soft, slightly grainy blur. (It was four copies shifted 3 px left, right, up and
     // down and averaged, and on icons and text that read as each one drawn twice, not frosted)
     vec4 soft = vec4(0.0);
-    float turn = h21(floor(px)) * 6.2831853;
+    // (turned by a smooth noise, not a fresh random each pixel: that made a fine dotted grid
+    // over flat parts)
+    float turn = vnoise(px / 2.5) * 12.566371;
     for (int i = 0; i < 12; i++) {
         float fi = float(i);
         float r = 1.0 + 5.0 * sqrt((fi + 0.5) / 12.0);
@@ -58,7 +60,10 @@ void main() {
     // copy of itself over its blurred colours)
     vec3 under = soft.a > 0.001 ? soft.rgb / soft.a : vec3(0.0);
     float sheet = smoothstep(0.0, 0.08, soft.a) * clamp(base > 0.0 ? base : 1.0, 0.0, 1.0);
-    vec4 frost = vec4(mix(under, ice, 0.6) * sheet, sheet) * 0.92;
+    // (on a see-through panel, less of the pale ice: with nothing blurred behind it (over a
+    // fullscreen game) a pale sheet that see-through just looked milky)
+    float iceK = 0.6 * pow(clamp(base > 0.0 ? base : 1.0, 0.0, 1.0), 3.0);
+    vec4 frost = vec4(mix(under, ice, iceK) * sheet, sheet) * 0.92;
     vec4 o = mix(frost, c, clear);
     o.rgb += vec3(0.22) * edge * c.a;                 // a soft shine at the thawing edge
     if (mode > 0.5) o *= 1.0 - smoothstep(0.72, 1.0, p);
