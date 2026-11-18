@@ -27,6 +27,7 @@ SmoothRect {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.sizeSmall + 1
         clip: true
+        cursorDelegate: Component { Caret { input: input } }
         onAccepted: fld.accepted(text)
         onActiveFocusChanged: if (!activeFocus) fld.accepted(text)
         Label { anchors.fill: parent; verticalAlignment: Text.AlignVCenter; visible: input.text === ""; text: fld.placeholder; muted: true; font.pixelSize: Theme.sizeSmall }

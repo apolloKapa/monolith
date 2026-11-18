@@ -51,6 +51,11 @@ Item {
     property var only: null
     // the visualiser shown even with nothing playing, as a still curve (its settings' preview)
     property bool visPreview: false
+    // a preview (Settings): nothing moves on its own. The time stays at when it was made, the
+    // visualiser is a still curve, nothing spins, blinks or polls; it still follows your settings
+    property bool still: false
+    property date frozen: new Date()
+    readonly property date now: still ? frozen : clock.date
     // a module's own setting (Settings → Bar → Layout & modules → Module settings): "bar.<k>"
     function mopt(k, d) { const v = Store.get("bar." + k, d); return v === undefined || v === null || v === "" ? d : v; }
     property string clockStyleAs: ""
@@ -139,7 +144,7 @@ Item {
     readonly property bool muted: sink && sink.audio ? sink.audio.muted : false
     readonly property var player: Mpris.players.values.find(p => p.isPlaying) || null
 
-    SystemClock { id: clock; precision: bar.clockSeconds ? SystemClock.Seconds : SystemClock.Minutes }
+    SystemClock { id: clock; enabled: !bar.still; precision: bar.clockSeconds ? SystemClock.Seconds : SystemClock.Minutes }
 
     // a row of things, or a column of them on a vertical bar, centred across
     component Line: Grid {
@@ -297,15 +302,16 @@ Item {
             BarClock {
                 visible: bar.clockTheme !== "digital"
                 theme: bar.clockTheme
-                now: clock.date
+                now: bar.now
                 seconds: bar.clockSeconds
                 h12: bar.clock12
                 vertical: bar.vertical
+                still: bar.still
                 room: Theme.islandH - 14
             }
             Text {
                 visible: bar.clockTheme === "digital"
-                text: bar.timeText(clock.date)
+                text: bar.timeText(bar.now)
                 horizontalAlignment: Text.AlignHCenter
                 // (stacked, the lines sit close; next to a stacked date the time is a bit bigger)
                 lineHeight: bar.timeStacked ? 0.82 : 1
@@ -316,12 +322,12 @@ Item {
             Column {
                 visible: parent.parent.stackedDate
                 spacing: -2
-                Text { visible: bar.clockWeekday; text: Qt.formatDate(clock.date, "dddd"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1; font.weight: Font.Medium }
-                Text { text: Qt.formatDate(clock.date, "d MMM"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1 }
+                Text { visible: bar.clockWeekday; text: Qt.formatDate(bar.now, "dddd"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1; font.weight: Font.Medium }
+                Text { text: Qt.formatDate(bar.now, "d MMM"); color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1 }
             }
             Text {
                 visible: bar.clockDate && bar.clockDateLayout === "inline" && !bar.vertical
-                text: Qt.formatDate(clock.date, bar.clockWeekday ? "ddd d MMM" : "d MMM")
+                text: Qt.formatDate(bar.now, bar.clockWeekday ? "ddd d MMM" : "d MMM")
                 color: Theme.subtext
                 font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall
             }
@@ -518,7 +524,7 @@ Item {
                     fillMode: Image.PreserveAspectCrop
                     sourceSize: Qt.size(64, 64)
                     rotation: 0
-                    RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: bar.player !== null && bar.mopt("media.spin", true) === true }
+                    RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: !bar.still && bar.player !== null && bar.mopt("media.spin", true) === true }
                 }
             }
             Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering;
@@ -569,7 +575,7 @@ Item {
             Rectangle {
                 visible: live.mode === "rec"
                 width: 9; height: 9; radius: (Theme.chamfer || Theme.square) ? 0 : 4.5; color: Theme.danger
-                SequentialAnimation on opacity { running: live.mode === "rec"; loops: Animation.Infinite; NumberAnimation { to: 0.3; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
+                SequentialAnimation on opacity { running: !bar.still && live.mode === "rec"; loops: Animation.Infinite; NumberAnimation { to: 0.3; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
             }
             Icon { visible: live.mode !== "rec"; name: live.mode === "timer" ? "timer" : "upgrade"; size: 16; color: Theme.accent }
             Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering;
@@ -765,8 +771,8 @@ Item {
                 fade: vm.opt("fade", true) === true
                 dynamic: vm.opt("dynamic", true) === true
                 smoothMs: Number(vm.opt("smoothing", 70))
-                live: bar.player !== null || (vm.opt("always", false) === true && !bar.visPreview)
-                preview: bar.visPreview
+                live: !bar.still && (bar.player !== null || (vm.opt("always", false) === true && !bar.visPreview))
+                preview: bar.visPreview || bar.still
                 color: vm.tint(vm.opt("colour", "accent"), Theme.accent)
                 color2: vm.tint(vm.opt("colour2", ""), color)
             }
@@ -789,5 +795,6 @@ Item {
             }
         }
     }
-    Timer { interval: 10000; running: true; repeat: true; triggeredOnStart: true; onTriggered: netProc.running = true }
+    // (a preview looks once)
+    Timer { interval: 10000; running: true; repeat: !bar.still; triggeredOnStart: true; onTriggered: netProc.running = true }
 }

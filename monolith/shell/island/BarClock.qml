@@ -15,6 +15,8 @@ Item {
     property bool h12: false
     property bool vertical: false
     property real room: 26
+    // a preview: no flipping or turning hands
+    property bool still: false
 
     implicitWidth: shown.item ? shown.item.implicitWidth : 0
     implicitHeight: shown.item ? shown.item.implicitHeight : 0
@@ -33,7 +35,7 @@ Item {
     // what capsules, cards and the face sit on: a tint of the text, so it shows on any bar (the
     // palette's container colour can be the bar's own)
     readonly property color well: Qt.alpha(Theme.text, 0.11)
-    readonly property int flipMs: Theme.animOn ? Math.max(120, Math.round(170 * Theme.animScale)) : 0
+    readonly property int flipMs: Theme.animOn && !still ? Math.max(120, Math.round(170 * Theme.animScale)) : 0
 
     Loader {
         id: shown
@@ -269,7 +271,7 @@ Item {
         x: (s - width) / 2; y: s / 2 - height
         antialiasing: true
         transform: Rotation { origin.x: width / 2; origin.y: s * len; angle: turn
-            Behavior on angle { enabled: Theme.animOn; RotationAnimation { duration: Theme.shortMs; direction: RotationAnimation.Shortest; easing.type: Easing.OutBack } } }
+            Behavior on angle { enabled: Theme.animOn && !bc.still; RotationAnimation { duration: Theme.shortMs; direction: RotationAnimation.Shortest; easing.type: Easing.OutBack } } }
     }
 
     // ── Analog: a small face with hands (a seconds hand with seconds on) ──

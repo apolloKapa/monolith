@@ -35,6 +35,75 @@ ColumnLayout {
     // the bar as it is now, live
     BarPreview { Layout.fillWidth: true; Layout.bottomMargin: 6 }
 
+    // the clock's themes, each card the clock itself (drawn on its own, not a whole bar each: eight
+    // bars made the page slow to open), with the parts you've turned on, at the time the page opened
+    component ClockPick: Flow {
+        id: cp
+        property var src: null          // the big preview's bar: its clock settings and its (still) time
+        property var opts: []
+        property string value: ""
+        signal picked(string v)
+        Layout.fillWidth: true
+        spacing: 8
+        Repeater {
+            model: cp.opts
+            Pressable {
+                id: ccard
+                required property var modelData
+                readonly property bool on: cp.value === modelData[0]
+                readonly property bool digital: modelData[0] === "digital"
+                width: Math.max(120, sample.implicitWidth + 44); height: Theme.islandH + 46
+                color: on ? Theme.accentContainer : (hovered ? Theme.containerHigh : Theme.container)
+                border.width: on ? 2 : 0; border.color: Theme.accent
+                onClicked: cp.picked(modelData[0])
+                Rectangle {
+                    x: 8; y: 8; width: parent.width - 16; height: Theme.islandH
+                    radius: (Theme.chamfer || Theme.square) ? 0 : (height / 2); color: Theme.frame; clip: true
+                    Row {
+                        id: sample
+                        anchors.centerIn: parent
+                        spacing: 6
+                        readonly property bool stackedDate: cp.src && cp.src.clockDate && cp.src.clockDateLayout === "stacked"
+                        BarClock {
+                            visible: !ccard.digital
+                            anchors.verticalCenter: parent.verticalCenter
+                            theme: ccard.modelData[0]
+                            still: true
+                            now: cp.src ? cp.src.now : new Date()
+                            seconds: !!cp.src && cp.src.clockSeconds
+                            h12: !!cp.src && cp.src.clock12
+                            room: Theme.islandH - 14
+                        }
+                        Text {
+                            visible: ccard.digital
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: cp.src ? cp.src.timeText(cp.src.now) : ""
+                            horizontalAlignment: Text.AlignHCenter
+                            lineHeight: cp.src && cp.src.timeStacked ? 0.82 : 1
+                            color: Theme.text
+                            font.family: Theme.fontFamily; font.weight: Font.Bold
+                            font.pixelSize: cp.src && cp.src.timeStacked ? (cp.src.clockSeconds || cp.src.clock12 ? 9 : 12) : (sample.stackedDate ? 16 : 14)
+                        }
+                        Column {
+                            visible: sample.stackedDate
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: -2
+                            Text { visible: !!cp.src && cp.src.clockWeekday; text: cp.src ? Qt.formatDate(cp.src.now, "dddd") : ""; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1; font.weight: Font.Medium }
+                            Text { text: cp.src ? Qt.formatDate(cp.src.now, "d MMM") : ""; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Theme.sizeTiny + 1 }
+                        }
+                        Text {
+                            visible: !!cp.src && cp.src.clockDate && cp.src.clockDateLayout === "inline"
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: cp.src ? Qt.formatDate(cp.src.now, cp.src.clockWeekday ? "ddd d MMM" : "d MMM") : ""
+                            color: Theme.subtext
+                            font.family: Theme.fontFamily; font.pixelSize: Theme.sizeSmall
+                        }
+                    }
+                }
+                Label { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 8; text: ccard.modelData[1]; strong: ccard.on; font.pixelSize: Theme.sizeSmall; color: ccard.on ? Theme.onAccentContainer : Theme.text }
+            }
+        }
+    }
     // a style choice shown as the module itself, drawn in each style
     component StylePick: Flow {
         id: sp
@@ -60,6 +129,7 @@ ColumnLayout {
                     x: 8; y: 8; width: parent.width - 16; height: Theme.islandH
                     radius: (Theme.chamfer || Theme.square) ? 0 : (height / 2); color: Theme.frame; clip: true
                     IslandBar {
+                        still: true
                         id: mod
                         anchors.centerIn: parent
                         enabled: false
@@ -572,6 +642,7 @@ ColumnLayout {
             color: Theme.frame
             Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
             IslandBar {
+                still: true
                 id: mpBar
                 enabled: false
                 screenName: Niri.focusedOutput || (Quickshell.screens.length ? Quickshell.screens[0].name : "")
@@ -610,377 +681,443 @@ ColumnLayout {
         key: "bar." + k; def: d
         NumberBox { from: mn.lo; to: mn.hi; unit: mn.unit; value: Number(Store.get("bar." + mn.k, mn.d)); onMoved: v => Store.set("bar." + mn.k, v) }
     }
-    ColumnLayout {
-        property string modTab: "clock"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        // the clock: one big live preview, and a toggle for each of its parts
-        SmoothRect {
-            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
+        active: sec.modTab === "clock"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "clock"
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.max(110, clockBox.height + 40)
-            radius: Theme.corner(80, 10)
-            color: Theme.container
-            border.width: Theme.outlineW; border.color: Theme.outlineColor
-            // the clock module on a piece of bar, twice its real size
-            readonly property real k: 2
+            spacing: 8
+            // the clock: one big live preview, and a toggle for each of its parts
             SmoothRect {
                 smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
-                id: clockBox
-                anchors.centerIn: parent
-                width: (clockPrev.implicitWidth + 16) * parent.k
-                height: Theme.islandH * parent.k
-                radius: Theme.barRound(Theme.islandH) * parent.k
-                color: Theme.frame
-                Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
-                IslandBar {
-                    id: clockPrev
-                    enabled: false
-                    only: ["clock"]
-                    scale: parent.parent.k
-                    transformOrigin: Item.Center
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.max(110, clockBox.height + 40)
+                radius: Theme.corner(80, 10)
+                color: Theme.container
+                border.width: Theme.outlineW; border.color: Theme.outlineColor
+                // the clock module on a piece of bar, twice its real size
+                readonly property real k: 2
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
+                    id: clockBox
                     anchors.centerIn: parent
+                    width: (clockPrev.implicitWidth + 16) * parent.k
+                    height: Theme.islandH * parent.k
+                    radius: Theme.barRound(Theme.islandH) * parent.k
+                    color: Theme.frame
+                    Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+                    IslandBar {
+                        still: true
+                        id: clockPrev
+                        enabled: false
+                        only: ["clock"]
+                        scale: parent.parent.k
+                        transformOrigin: Item.Center
+                        anchors.centerIn: parent
+                    }
+                }
+                Label {
+                    anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 8
+                    text: "Twice its real size"; muted: true; font.pixelSize: Theme.sizeSmall - 2
                 }
             }
+            Label { text: "Theme"; Layout.leftMargin: 6; Layout.topMargin: 4; strong: true }
+            ClockPick {
+                src: clockPrev
+                opts: [["digital", "Digital"], ["pill", "Pill"], ["segment", "Segment"], ["flip", "Flip"], ["dots", "Dots"],
+                       ["analog", "Analog"], ["words", "Words"], ["binary", "Binary"]]
+                value: clockPrev.clockTheme
+                onPicked: v => Store.set("bar.clock.theme", v)
+            }
+            SettingRow {
+                visible: clockPrev.clockTheme !== "words"
+                key: "bar.clock.seconds";
+                icon: "timer"; title: "Seconds"; desc: "Hours, minutes and seconds"
+                Toggle { checked: clockPrev.clockSeconds; onToggled: on => Store.set("bar.clock.seconds", on) }
+            }
+            SettingRow {
+                visible: clockPrev.clockTheme === "digital"
+                key: "bar.clock.stackTime";
+                icon: "view_agenda"; title: "Hours over minutes"; desc: "The time stacked in lines instead of one row"
+                Toggle { checked: clockPrev.clockStackTime; onToggled: on => Store.set("bar.clock.stackTime", on) }
+            }
+            SettingRow {
+                visible: ["words", "analog"].indexOf(clockPrev.clockTheme) < 0
+                key: "bar.clock.hour12";
+                icon: "schedule"; title: "12-hour time"; desc: "With AM / PM"
+                Toggle { checked: clockPrev.clock12; onToggled: on => Store.set("bar.clock.hour12", on) }
+            }
+            SettingRow {
+                key: "bar.clock.date";
+                icon: "calendar_today"; title: "Date"; desc: "The date beside the time"
+                Toggle { checked: clockPrev.clockDate; onToggled: on => Store.set("bar.clock.date", on) }
+            }
+            SettingRow {
+                key: "bar.clock.dateLayout";
+                visible: clockPrev.clockDate
+                icon: "splitscreen"; title: "Date layout"; desc: clockPrev.clockDateLayout === "stacked" ? "Two small lines beside the time" : "One line beside the time"
+                Segmented { width: 240; opts: [["stacked", "Stacked"], ["inline", "One line"]]; value: clockPrev.clockDateLayout; onPicked: v => Store.set("bar.clock.dateLayout", v) }
+            }
+            SettingRow {
+                key: "bar.clock.weekday";
+                visible: clockPrev.clockDate
+                icon: "event"; title: "Day of the week"; desc: "Its name with the date"
+                Toggle { checked: clockPrev.clockWeekday; onToggled: on => Store.set("bar.clock.weekday", on) }
+            }
+        }
+    }
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
+        Layout.fillWidth: true
+        active: sec.modTab === "workspaces"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "workspaces"
+            Layout.fillWidth: true
+            spacing: 8
+            Label { text: "Shown with four sample workspaces: the second open, the first three with windows"; Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6 }
+            StylePick {
+                module: "workspaces"
+                opts: [["pills", "Pills"], ["dots", "Dots"], ["lines", "Lines"], ["rings", "Rings"], ["squares", "Squares"],
+                       ["numbers", "Numbers"], ["numberPills", "Numbered pill"], ["bubbles", "Bubbles"]]
+                value: Store.get("bar.workspaces", "pills")
+                onPicked: v => Store.set("bar.workspaces", v)
+            }
+            SettingRow {
+                key: "bar.ws.anim"; def: "worm"
+                icon: "animation"; title: "Switching animation"
+                desc: ({ worm: "Stretches over to the next one, the front end first", slide: "Glides over in one piece", bouncy: "Slides over and wobbles into place",
+                         hop: "Jumps over in a little arc", fade: "Fades out where it was and in where it's going", grow: "No highlight: the pills themselves grow and change colour",
+                         none: "Switches at once" })[String(Store.get("bar.ws.anim", "worm"))] || ""
+                Dropdown {
+                    width: 180; height: 36
+                    opts: [["worm", "Worm"], ["slide", "Slide"], ["bouncy", "Bouncy"], ["hop", "Hop"], ["fade", "Fade"], ["grow", "Grow"], ["none", "None"]]
+                    value: String(Store.get("bar.ws.anim", "worm"))
+                    onPicked: v => Store.set("bar.ws.anim", v)
+                }
+            }
+            ModToggle { k: "ws.hideEmpty"; d: false; icon: "filter_alt"; title: "Hide empty workspaces"; desc: "Only the ones with windows, and the one you're on" }
+            ModToggle { k: "ws.scroll"; d: true; icon: "mouse"; title: "Scroll to switch"; desc: "The wheel over the workspaces goes to the next or previous one" }
+            SettingRow {
+                key: "bar.ws.gap"; def: -1
+                icon: "space_bar"; title: "Space between them"; desc: Number(Store.get("bar.ws.gap", -1)) < 0 ? "Automatic (by style)" : Store.get("bar.ws.gap", -1) + " px"
+                RowLayout {
+                    spacing: 8
+                    Button { visible: Number(Store.get("bar.ws.gap", -1)) >= 0; text: "Automatic"; onClicked: Store.unset("bar.ws.gap") }
+                    NumberBox { from: 0; to: 16; unit: "px"; value: Math.max(0, Number(Store.get("bar.ws.gap", -1)) < 0 ? 5 : Number(Store.get("bar.ws.gap", 5))); onMoved: v => Store.set("bar.ws.gap", v) }
+                }
+            }
+        }
+    }
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
+        Layout.fillWidth: true
+        active: sec.modTab === "visualizer"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "visualizer"
+            Layout.fillWidth: true
+            spacing: 8
             Label {
-                anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 8
-                text: "Twice its real size"; muted: true; font.pixelSize: Theme.sizeSmall - 2
+                text: sec.used.indexOf("visualizer") === -1 ? "Not on the bar yet: drag Visualizer into a zone above. It shows while music plays."
+                                                            : "It shows while music plays. The preview is a still curve, twice its real size."
+                Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6
             }
-        }
-        Label { text: "Theme"; Layout.leftMargin: 6; Layout.topMargin: 4; strong: true }
-        StylePick {
-            module: "clock"
-            kind: "theme"
-            opts: [["digital", "Digital"], ["pill", "Pill"], ["segment", "Segment"], ["flip", "Flip"], ["dots", "Dots"],
-                   ["analog", "Analog"], ["words", "Words"], ["binary", "Binary"]]
-            value: clockPrev.clockTheme
-            onPicked: v => Store.set("bar.clock.theme", v)
-        }
-        SettingRow {
-            visible: clockPrev.clockTheme !== "words"
-            key: "bar.clock.seconds";
-            icon: "timer"; title: "Seconds"; desc: "Hours, minutes and seconds"
-            Toggle { checked: clockPrev.clockSeconds; onToggled: on => Store.set("bar.clock.seconds", on) }
-        }
-        SettingRow {
-            visible: clockPrev.clockTheme === "digital"
-            key: "bar.clock.stackTime";
-            icon: "view_agenda"; title: "Hours over minutes"; desc: "The time stacked in lines instead of one row"
-            Toggle { checked: clockPrev.clockStackTime; onToggled: on => Store.set("bar.clock.stackTime", on) }
-        }
-        SettingRow {
-            visible: ["words", "analog"].indexOf(clockPrev.clockTheme) < 0
-            key: "bar.clock.hour12";
-            icon: "schedule"; title: "12-hour time"; desc: "With AM / PM"
-            Toggle { checked: clockPrev.clock12; onToggled: on => Store.set("bar.clock.hour12", on) }
-        }
-        SettingRow {
-            key: "bar.clock.date";
-            icon: "calendar_today"; title: "Date"; desc: "The date beside the time"
-            Toggle { checked: clockPrev.clockDate; onToggled: on => Store.set("bar.clock.date", on) }
-        }
-        SettingRow {
-            key: "bar.clock.dateLayout";
-            visible: clockPrev.clockDate
-            icon: "splitscreen"; title: "Date layout"; desc: clockPrev.clockDateLayout === "stacked" ? "Two small lines beside the time" : "One line beside the time"
-            Segmented { width: 240; opts: [["stacked", "Stacked"], ["inline", "One line"]]; value: clockPrev.clockDateLayout; onPicked: v => Store.set("bar.clock.dateLayout", v) }
-        }
-        SettingRow {
-            key: "bar.clock.weekday";
-            visible: clockPrev.clockDate
-            icon: "event"; title: "Day of the week"; desc: "Its name with the date"
-            Toggle { checked: clockPrev.clockWeekday; onToggled: on => Store.set("bar.clock.weekday", on) }
-        }
-    }
-    ColumnLayout {
-        property string modTab: "workspaces"
-        visible: sec.modTab === modTab
-        Layout.fillWidth: true
-        spacing: 8
-        Label { text: "Shown with four sample workspaces: the second open, the first three with windows"; Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6 }
-        StylePick {
-            module: "workspaces"
-            opts: [["pills", "Pills"], ["dots", "Dots"], ["lines", "Lines"], ["rings", "Rings"], ["squares", "Squares"],
-                   ["numbers", "Numbers"], ["numberPills", "Numbered pill"], ["bubbles", "Bubbles"]]
-            value: Store.get("bar.workspaces", "pills")
-            onPicked: v => Store.set("bar.workspaces", v)
-        }
-        SettingRow {
-            key: "bar.ws.anim"; def: "worm"
-            icon: "animation"; title: "Switching animation"
-            desc: ({ worm: "Stretches over to the next one, the front end first", slide: "Glides over in one piece", bouncy: "Slides over and wobbles into place",
-                     hop: "Jumps over in a little arc", fade: "Fades out where it was and in where it's going", grow: "No highlight: the pills themselves grow and change colour",
-                     none: "Switches at once" })[String(Store.get("bar.ws.anim", "worm"))] || ""
-            Dropdown {
-                width: 180; height: 36
-                opts: [["worm", "Worm"], ["slide", "Slide"], ["bouncy", "Bouncy"], ["hop", "Hop"], ["fade", "Fade"], ["grow", "Grow"], ["none", "None"]]
-                value: String(Store.get("bar.ws.anim", "worm"))
-                onPicked: v => Store.set("bar.ws.anim", v)
-            }
-        }
-        ModToggle { k: "ws.hideEmpty"; d: false; icon: "filter_alt"; title: "Hide empty workspaces"; desc: "Only the ones with windows, and the one you're on" }
-        ModToggle { k: "ws.scroll"; d: true; icon: "mouse"; title: "Scroll to switch"; desc: "The wheel over the workspaces goes to the next or previous one" }
-        SettingRow {
-            key: "bar.ws.gap"; def: -1
-            icon: "space_bar"; title: "Space between them"; desc: Number(Store.get("bar.ws.gap", -1)) < 0 ? "Automatic (by style)" : Store.get("bar.ws.gap", -1) + " px"
-            RowLayout {
-                spacing: 8
-                Button { visible: Number(Store.get("bar.ws.gap", -1)) >= 0; text: "Automatic"; onClicked: Store.unset("bar.ws.gap") }
-                NumberBox { from: 0; to: 16; unit: "px"; value: Math.max(0, Number(Store.get("bar.ws.gap", -1)) < 0 ? 5 : Number(Store.get("bar.ws.gap", 5))); onMoved: v => Store.set("bar.ws.gap", v) }
-            }
-        }
-    }
-    ColumnLayout {
-        property string modTab: "visualizer"
-        visible: sec.modTab === modTab
-        Layout.fillWidth: true
-        spacing: 8
-        Label {
-            text: sec.used.indexOf("visualizer") === -1 ? "Not on the bar yet: drag Visualizer into a zone above. It shows while music plays."
-                                                        : "It shows while music plays. The preview is a still curve, twice its real size."
-            Layout.fillWidth: true; wrapMode: Text.WordWrap; muted: true; font.pixelSize: Theme.sizeSmall - 1; Layout.leftMargin: 6
-        }
-        SmoothRect {
-            smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
-            Layout.fillWidth: true
-            Layout.preferredHeight: Theme.islandH * 2 + 40
-            radius: Theme.corner(80, 6)
-            color: Theme.container
-            border.width: Theme.outlineW; border.color: Theme.outlineColor
-            readonly property real k: 2
             SmoothRect {
                 smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
-                anchors.centerIn: parent
-                width: (visPrev.implicitWidth + 16) * parent.k
-                height: Theme.islandH * parent.k
-                radius: Theme.barRound(Theme.islandH) * parent.k
-                color: Theme.frame
-                Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
-                IslandBar {
-                    id: visPrev
-                    enabled: false
-                    only: ["visualizer"]
-                    visPreview: true
-                    scale: parent.parent.k
-                    transformOrigin: Item.Center
+                Layout.fillWidth: true
+                Layout.preferredHeight: Theme.islandH * 2 + 40
+                radius: Theme.corner(80, 6)
+                color: Theme.container
+                border.width: Theme.outlineW; border.color: Theme.outlineColor
+                readonly property real k: 2
+                SmoothRect {
+                    smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
                     anchors.centerIn: parent
-                }
-            }
-        }
-        SettingRow {
-            key: "bar.vis.style"; def: "bars";
-            icon: "graphic_eq"; title: "Look"; desc: "Separate bars, or one smooth filled shape"
-            Segmented { width: 220; opts: [["bars", "Bars"], ["smooth", "Smooth"]]; value: String(Store.get("bar.vis.style", "bars")); onPicked: v => Store.set("bar.vis.style", v) }
-        }
-        SettingRow {
-            key: "bar.vis.bars"; def: 9;
-            icon: "bar_chart"; title: "Bars"; desc: "How many"
-            NumberBox { from: 3; to: 48; value: Number(Store.get("bar.vis.bars", 9)); onMoved: v => Store.set("bar.vis.bars", v) }
-        }
-        SettingRow {
-            key: "bar.vis.width"; def: 46;
-            icon: "width"; title: "Width"
-            NumberBox { from: 16; to: 300; slideTo: 200; unit: "px"; value: Number(Store.get("bar.vis.width", 46)); onMoved: v => Store.set("bar.vis.width", v) }
-        }
-        SettingRow {
-            key: "bar.vis.height"; def: 16;
-            icon: "height"; title: "Height"; desc: "Never taller than the bar allows"
-            NumberBox { from: 6; to: 60; slideTo: 40; unit: "px"; value: Number(Store.get("bar.vis.height", 16)); onMoved: v => Store.set("bar.vis.height", v) }
-        }
-        SettingRow {
-            key: "bar.vis.spacing"; def: 2;
-            visible: Store.get("bar.vis.style", "bars") !== "smooth"
-            icon: "space_bar"; title: "Gap between bars"
-            NumberBox { from: 0; to: 12; unit: "px"; value: Number(Store.get("bar.vis.spacing", 2)); onMoved: v => Store.set("bar.vis.spacing", v) }
-        }
-        SettingRow {
-            key: "bar.vis.anchor"; def: "bottom";
-            icon: "vertical_align_center"; title: "Grows from"
-            Segmented { width: 300; opts: [["bottom", "Bottom"], ["middle", "Middle"], ["top", "Top"]]; value: String(Store.get("bar.vis.anchor", "bottom")); onPicked: v => Store.set("bar.vis.anchor", v) }
-        }
-        SettingRow {
-            key: "bar.vis.roundness";
-            visible: Store.get("bar.vis.style", "bars") !== "smooth"
-            icon: "rounded_corner"; title: "Bar ends"
-            VisPick { k: "roundness"; d: "1"; opts: [["0", "Square"], ["0.35", "Slightly round"], ["0.7", "Round"], ["1", "Fully round"]] }
-        }
-        SettingRow {
-            key: "bar.vis.scale";
-            icon: "expand"; title: "How tall loud parts get"
-            VisPick { k: "scale"; d: "1"; opts: [["0.5", "50 %"], ["0.75", "75 %"], ["1", "100 %"], ["1.25", "125 %"], ["1.5", "150 %"]] }
-        }
-        SettingRow {
-            key: "bar.vis.rest";
-            icon: "horizontal_rule"; title: "Height when silent"
-            VisPick { k: "rest"; d: "2"; opts: [["0", "0 px"], ["1", "1 px"], ["2", "2 px"], ["3", "3 px"], ["4", "4 px"], ["6", "6 px"]] }
-        }
-        SettingRow {
-            key: "bar.vis.smoothing";
-            visible: Store.get("bar.vis.style", "bars") !== "smooth"
-            icon: "animation"; title: "Movement"
-            VisPick { k: "smoothing"; d: "70"; opts: [["0", "Instant"], ["40", "Snappy"], ["70", "Smooth"], ["120", "Smoother"], ["200", "Slow"]] }
-        }
-        SettingRow {
-            key: "bar.vis.fade"; def: true;
-            icon: "gradient"; title: "Fade towards the edges"
-            Toggle { checked: Store.get("bar.vis.fade", true) === true; onToggled: on => Store.set("bar.vis.fade", on) }
-        }
-        SettingRow {
-            key: "bar.vis.dynamic"; def: true;
-            visible: Store.get("bar.vis.style", "bars") !== "smooth"
-            icon: "opacity"; title: "Quiet bars are dimmer"
-            Toggle { checked: Store.get("bar.vis.dynamic", true) === true; onToggled: on => Store.set("bar.vis.dynamic", on) }
-        }
-        // colours: the accent, a theme colour, or any #rrggbb; the second one blends across it
-        SettingRow {
-            key: "bar.vis.colour";
-            icon: "palette"; title: "Colour"
-            VisColour { k: "colour"; d: "accent" }
-        }
-        SettingRow {
-            key: "bar.vis.colour2";
-            icon: "gradient"; title: "Blend into"; desc: "A second colour across the bars (none: one colour)"
-            VisColour { k: "colour2"; d: "" }
-        }
-        SettingRow {
-            key: "bar.vis.always"; def: false;
-            icon: "visibility"; title: "Show with nothing playing"; desc: "Flat bars that move with any sound, instead of hiding"
-            Toggle { checked: Store.get("bar.vis.always", false) === true; onToggled: on => Store.set("bar.vis.always", on) }
-        }
-        SettingRow {
-            icon: "tune"; title: "What it hears"; desc: "Input, sensitivity, frequencies and the equaliser are cava's settings, shared with the desktop visualiser widgets (their settings in the widget editor)"
-        }
-    }
-    ColumnLayout {
-        property string modTab: "stats"
-        visible: sec.modTab === modTab
-        Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "stats" }
-        SettingRow {
-            key: "bar.stats"; def: ["cpu", "temp"];
-            icon: "memory"; title: "System stats"; desc: "Which ones show"
-            Row {
-                spacing: 4
-                Repeater {
-                    model: [["cpu", "CPU"], ["mem", "Memory"], ["temp", "CPU °"], ["gpu", "GPU"], ["vram", "VRAM"], ["gtemp", "GPU °"]]
-                    Pressable {
-                        required property var modelData
-                        readonly property var which: Store.get("bar.stats", ["cpu", "temp"])
-                        readonly property bool on: which.indexOf(modelData[0]) !== -1
-                        height: 32; width: sl.implicitWidth + 24
-                        color: on ? Theme.accentContainer : Theme.control
-                        onClicked: Store.set("bar.stats", on ? which.filter(x => x !== modelData[0]) : which.concat([modelData[0]]))
-                        Label { id: sl; anchors.centerIn: parent; text: parent.modelData[1]; strong: parent.on; font.pixelSize: Theme.sizeSmall }
+                    width: (visPrev.implicitWidth + 16) * parent.k
+                    height: Theme.islandH * parent.k
+                    radius: Theme.barRound(Theme.islandH) * parent.k
+                    color: Theme.frame
+                    Behavior on width { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+                    IslandBar {
+                        still: true
+                        id: visPrev
+                        enabled: false
+                        only: ["visualizer"]
+                        visPreview: true
+                        scale: parent.parent.k
+                        transformOrigin: Item.Center
+                        anchors.centerIn: parent
                     }
                 }
             }
+            SettingRow {
+                key: "bar.vis.style"; def: "bars";
+                icon: "graphic_eq"; title: "Look"; desc: "Separate bars, or one smooth filled shape"
+                Segmented { width: 220; opts: [["bars", "Bars"], ["smooth", "Smooth"]]; value: String(Store.get("bar.vis.style", "bars")); onPicked: v => Store.set("bar.vis.style", v) }
+            }
+            SettingRow {
+                key: "bar.vis.bars"; def: 9;
+                icon: "bar_chart"; title: "Bars"; desc: "How many"
+                NumberBox { from: 3; to: 48; value: Number(Store.get("bar.vis.bars", 9)); onMoved: v => Store.set("bar.vis.bars", v) }
+            }
+            SettingRow {
+                key: "bar.vis.width"; def: 46;
+                icon: "width"; title: "Width"
+                NumberBox { from: 16; to: 300; slideTo: 200; unit: "px"; value: Number(Store.get("bar.vis.width", 46)); onMoved: v => Store.set("bar.vis.width", v) }
+            }
+            SettingRow {
+                key: "bar.vis.height"; def: 16;
+                icon: "height"; title: "Height"; desc: "Never taller than the bar allows"
+                NumberBox { from: 6; to: 60; slideTo: 40; unit: "px"; value: Number(Store.get("bar.vis.height", 16)); onMoved: v => Store.set("bar.vis.height", v) }
+            }
+            SettingRow {
+                key: "bar.vis.spacing"; def: 2;
+                visible: Store.get("bar.vis.style", "bars") !== "smooth"
+                icon: "space_bar"; title: "Gap between bars"
+                NumberBox { from: 0; to: 12; unit: "px"; value: Number(Store.get("bar.vis.spacing", 2)); onMoved: v => Store.set("bar.vis.spacing", v) }
+            }
+            SettingRow {
+                key: "bar.vis.anchor"; def: "bottom";
+                icon: "vertical_align_center"; title: "Grows from"
+                Segmented { width: 300; opts: [["bottom", "Bottom"], ["middle", "Middle"], ["top", "Top"]]; value: String(Store.get("bar.vis.anchor", "bottom")); onPicked: v => Store.set("bar.vis.anchor", v) }
+            }
+            SettingRow {
+                key: "bar.vis.roundness";
+                visible: Store.get("bar.vis.style", "bars") !== "smooth"
+                icon: "rounded_corner"; title: "Bar ends"
+                VisPick { k: "roundness"; d: "1"; opts: [["0", "Square"], ["0.35", "Slightly round"], ["0.7", "Round"], ["1", "Fully round"]] }
+            }
+            SettingRow {
+                key: "bar.vis.scale";
+                icon: "expand"; title: "How tall loud parts get"
+                VisPick { k: "scale"; d: "1"; opts: [["0.5", "50 %"], ["0.75", "75 %"], ["1", "100 %"], ["1.25", "125 %"], ["1.5", "150 %"]] }
+            }
+            SettingRow {
+                key: "bar.vis.rest";
+                icon: "horizontal_rule"; title: "Height when silent"
+                VisPick { k: "rest"; d: "2"; opts: [["0", "0 px"], ["1", "1 px"], ["2", "2 px"], ["3", "3 px"], ["4", "4 px"], ["6", "6 px"]] }
+            }
+            SettingRow {
+                key: "bar.vis.smoothing";
+                visible: Store.get("bar.vis.style", "bars") !== "smooth"
+                icon: "animation"; title: "Movement"
+                VisPick { k: "smoothing"; d: "70"; opts: [["0", "Instant"], ["40", "Snappy"], ["70", "Smooth"], ["120", "Smoother"], ["200", "Slow"]] }
+            }
+            SettingRow {
+                key: "bar.vis.fade"; def: true;
+                icon: "gradient"; title: "Fade towards the edges"
+                Toggle { checked: Store.get("bar.vis.fade", true) === true; onToggled: on => Store.set("bar.vis.fade", on) }
+            }
+            SettingRow {
+                key: "bar.vis.dynamic"; def: true;
+                visible: Store.get("bar.vis.style", "bars") !== "smooth"
+                icon: "opacity"; title: "Quiet bars are dimmer"
+                Toggle { checked: Store.get("bar.vis.dynamic", true) === true; onToggled: on => Store.set("bar.vis.dynamic", on) }
+            }
+            // colours: the accent, a theme colour, or any #rrggbb; the second one blends across it
+            SettingRow {
+                key: "bar.vis.colour";
+                icon: "palette"; title: "Colour"
+                VisColour { k: "colour"; d: "accent" }
+            }
+            SettingRow {
+                key: "bar.vis.colour2";
+                icon: "gradient"; title: "Blend into"; desc: "A second colour across the bars (none: one colour)"
+                VisColour { k: "colour2"; d: "" }
+            }
+            SettingRow {
+                key: "bar.vis.always"; def: false;
+                icon: "visibility"; title: "Show with nothing playing"; desc: "Flat bars that move with any sound, instead of hiding"
+                Toggle { checked: Store.get("bar.vis.always", false) === true; onToggled: on => Store.set("bar.vis.always", on) }
+            }
+            SettingRow {
+                icon: "tune"; title: "What it hears"; desc: "Input, sensitivity, frequencies and the equaliser are cava's settings, shared with the desktop visualiser widgets (their settings in the widget editor)"
+            }
         }
-        ModToggle { k: "stats.icons"; d: true; icon: "image"; title: "Icons"; desc: "An icon before each number" }
-        ModNumber { k: "stats.gap"; d: 6; lo: 0; hi: 20; icon: "space_bar"; title: "Space between them" }
-        SettingRow {
-            key: "sysmon.dropdown"; def: true
-            icon: "monitoring"; title: "A click opens"; desc: "The system monitor under it, or the control center's Monitor tab"
-            Segmented { width: 300; opts: [["drop", "Dropdown"], ["cc", "Control center"]]; value: Store.get("sysmon.dropdown", true) === false ? "cc" : "drop"; onPicked: v => Store.set("sysmon.dropdown", v === "drop") }
+    }
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
+        Layout.fillWidth: true
+        active: sec.modTab === "stats"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "stats"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "stats" }
+            SettingRow {
+                key: "bar.stats"; def: ["cpu", "temp"];
+                icon: "memory"; title: "System stats"; desc: "Which ones show"
+                Row {
+                    spacing: 4
+                    Repeater {
+                        model: [["cpu", "CPU"], ["mem", "Memory"], ["temp", "CPU °"], ["gpu", "GPU"], ["vram", "VRAM"], ["gtemp", "GPU °"]]
+                        Pressable {
+                            required property var modelData
+                            readonly property var which: Store.get("bar.stats", ["cpu", "temp"])
+                            readonly property bool on: which.indexOf(modelData[0]) !== -1
+                            height: 32; width: sl.implicitWidth + 24
+                            color: on ? Theme.accentContainer : Theme.control
+                            onClicked: Store.set("bar.stats", on ? which.filter(x => x !== modelData[0]) : which.concat([modelData[0]]))
+                            Label { id: sl; anchors.centerIn: parent; text: parent.modelData[1]; strong: parent.on; font.pixelSize: Theme.sizeSmall }
+                        }
+                    }
+                }
+            }
+            ModToggle { k: "stats.icons"; d: true; icon: "image"; title: "Icons"; desc: "An icon before each number" }
+            ModNumber { k: "stats.gap"; d: 6; lo: 0; hi: 20; icon: "space_bar"; title: "Space between them" }
+            SettingRow {
+                key: "sysmon.dropdown"; def: true
+                icon: "monitoring"; title: "A click opens"; desc: "The system monitor under it, or the control center's Monitor tab"
+                Segmented { width: 300; opts: [["drop", "Dropdown"], ["cc", "Control center"]]; value: Store.get("sysmon.dropdown", true) === false ? "cc" : "drop"; onPicked: v => Store.set("sysmon.dropdown", v === "drop") }
+            }
         }
     }
-    ColumnLayout {
-        property string modTab: "media"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "media"; empty: "Play something to see it" }
-        ModChoice { k: "media.text"; d: "title"; icon: "text_fields"; title: "Text"; opts: [["title", "Title"], ["artist", "Artist"], ["both", "Both"], ["none", "None"]] }
-        ModNumber { k: "media.maxWidth"; d: 200; lo: 60; hi: 600; icon: "width"; title: "Longest text"; desc: "Longer names are cut with …" }
-        ModToggle { k: "media.art"; d: true; icon: "album"; title: "Album art" }
-        ModToggle { k: "media.round"; d: true; icon: "circle"; title: "Round art"; desc: "Off: a rounded square" }
-        ModToggle { k: "media.spin"; d: true; icon: "autorenew"; title: "Art spins while it plays" }
-        SettingRow {
-            key: "bar.mediaPeek"; def: true;
-            icon: "music_note"; title: "Now playing peek"; desc: "Hovering the Now playing module shows a small player under it"
-            Toggle { checked: Store.get("bar.mediaPeek", true) !== false; onToggled: on => Store.set("bar.mediaPeek", on) }
+        active: sec.modTab === "media"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "media"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "media"; empty: "Play something to see it" }
+            ModChoice { k: "media.text"; d: "title"; icon: "text_fields"; title: "Text"; opts: [["title", "Title"], ["artist", "Artist"], ["both", "Both"], ["none", "None"]] }
+            ModNumber { k: "media.maxWidth"; d: 200; lo: 60; hi: 600; icon: "width"; title: "Longest text"; desc: "Longer names are cut with …" }
+            ModToggle { k: "media.art"; d: true; icon: "album"; title: "Album art" }
+            ModToggle { k: "media.round"; d: true; icon: "circle"; title: "Round art"; desc: "Off: a rounded square" }
+            ModToggle { k: "media.spin"; d: true; icon: "autorenew"; title: "Art spins while it plays" }
+            SettingRow {
+                key: "bar.mediaPeek"; def: true;
+                icon: "music_note"; title: "Now playing peek"; desc: "Hovering the Now playing module shows a small player under it"
+                Toggle { checked: Store.get("bar.mediaPeek", true) !== false; onToggled: on => Store.set("bar.mediaPeek", on) }
+            }
         }
     }
-    ColumnLayout {
-        property string modTab: "sound"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "sound" }
-        SettingRow {
-            key: "bar.soundPercent"; def: true;
-            icon: "volume_up"; title: "Volume number"; desc: "Beside the sound icon"
-            Toggle { checked: Store.get("bar.soundPercent", true) !== false; onToggled: on => Store.set("bar.soundPercent", on) }
+        active: sec.modTab === "sound"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "sound"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "sound" }
+            SettingRow {
+                key: "bar.soundPercent"; def: true;
+                icon: "volume_up"; title: "Volume number"; desc: "Beside the sound icon"
+                Toggle { checked: Store.get("bar.soundPercent", true) !== false; onToggled: on => Store.set("bar.soundPercent", on) }
+            }
+            ModToggle { k: "sound.sign"; d: false; icon: "percent"; title: "% after the number" }
+            ModToggle { k: "sound.scroll"; d: true; icon: "mouse"; title: "Scroll to change the volume"; desc: "The wheel over the sound icon" }
+            ModNumber { k: "sound.step"; d: 5; lo: 1; hi: 20; unit: "%"; icon: "stairs"; title: "Volume step"; desc: "How much one wheel notch changes" }
         }
-        ModToggle { k: "sound.sign"; d: false; icon: "percent"; title: "% after the number" }
-        ModToggle { k: "sound.scroll"; d: true; icon: "mouse"; title: "Scroll to change the volume"; desc: "The wheel over the sound icon" }
-        ModNumber { k: "sound.step"; d: 5; lo: 1; hi: 20; unit: "%"; icon: "stairs"; title: "Volume step"; desc: "How much one wheel notch changes" }
     }
-    ColumnLayout {
-        property string modTab: "weather"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "weather"; empty: "No weather yet (Settings → General → You & weather)" }
-        ModToggle { k: "weather.icon"; d: true; icon: "partly_cloudy_day"; title: "Icon" }
-        ModToggle { k: "weather.feels"; d: false; icon: "thermostat"; title: "Feels-like temperature"; desc: "Instead of the measured one" }
-        ModToggle { k: "weather.unit"; d: false; icon: "device_thermostat"; title: "Show °C / °F"; desc: "Off: just °" }
-        ModToggle { k: "weather.desc"; d: false; icon: "short_text"; title: "Description"; desc: "Clear, Cloudy, Rain… beside it" }
+        active: sec.modTab === "weather"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "weather"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "weather"; empty: "No weather yet (Settings → General → You & weather)" }
+            ModToggle { k: "weather.icon"; d: true; icon: "partly_cloudy_day"; title: "Icon" }
+            ModToggle { k: "weather.feels"; d: false; icon: "thermostat"; title: "Feels-like temperature"; desc: "Instead of the measured one" }
+            ModToggle { k: "weather.unit"; d: false; icon: "device_thermostat"; title: "Show °C / °F"; desc: "Off: just °" }
+            ModToggle { k: "weather.desc"; d: false; icon: "short_text"; title: "Description"; desc: "Clear, Cloudy, Rain… beside it" }
+        }
     }
-    ColumnLayout {
-        property string modTab: "title"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "title"; empty: "No window focused" }
-        ModChoice { k: "title.text"; d: "title"; icon: "text_fields"; title: "Text"; opts: [["title", "Title"], ["app", "App name"], ["both", "Both"]] }
-        ModChoice { k: "title.icon"; d: "generic"; icon: "image"; title: "Icon"; opts: [["generic", "Window"], ["app", "App's icon"], ["none", "None"]] }
-        ModNumber { k: "title.maxWidth"; d: 220; lo: 60; hi: 800; icon: "width"; title: "Longest text"; desc: "Longer titles are cut with …" }
+        active: sec.modTab === "title"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "title"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "title"; empty: "No window focused" }
+            ModChoice { k: "title.text"; d: "title"; icon: "text_fields"; title: "Text"; opts: [["title", "Title"], ["app", "App name"], ["both", "Both"]] }
+            ModChoice { k: "title.icon"; d: "generic"; icon: "image"; title: "Icon"; opts: [["generic", "Window"], ["app", "App's icon"], ["none", "None"]] }
+            ModNumber { k: "title.maxWidth"; d: 220; lo: 60; hi: 800; icon: "width"; title: "Longest text"; desc: "Longer titles are cut with …" }
+        }
     }
-    ColumnLayout {
-        property string modTab: "notifications"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "notifications" }
-        ModToggle { k: "notif.count"; d: true; icon: "tag"; title: "How many"; desc: "The number beside the bell" }
-        ModToggle { k: "notif.hideEmpty"; d: false; icon: "visibility_off"; title: "Hide when there are none" }
+        active: sec.modTab === "notifications"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "notifications"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "notifications" }
+            ModToggle { k: "notif.count"; d: true; icon: "tag"; title: "How many"; desc: "The number beside the bell" }
+            ModToggle { k: "notif.hideEmpty"; d: false; icon: "visibility_off"; title: "Hide when there are none" }
+        }
     }
-    ColumnLayout {
-        property string modTab: "battery"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "battery"; empty: "No laptop battery here: it only shows on laptops" }
-        ModToggle { k: "battery.percent"; d: true; icon: "percent"; title: "Percentage" }
-        ModNumber { k: "battery.low"; d: 20; lo: 5; hi: 50; unit: "%"; icon: "battery_alert"; title: "Low at"; desc: "Below this it turns red" }
+        active: sec.modTab === "battery"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "battery"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "battery"; empty: "No laptop battery here: it only shows on laptops" }
+            ModToggle { k: "battery.percent"; d: true; icon: "percent"; title: "Percentage" }
+            ModNumber { k: "battery.low"; d: 20; lo: 5; hi: 50; unit: "%"; icon: "battery_alert"; title: "Low at"; desc: "Below this it turns red" }
+        }
     }
-    ColumnLayout {
-        property string modTab: "keyboard"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "keyboard"; empty: "Shows when niri reports a keyboard layout" }
-        ModToggle { k: "kb.icon"; d: true; icon: "keyboard"; title: "Icon" }
-        ModToggle { k: "kb.full"; d: false; icon: "text_fields"; title: "Full name"; desc: "English (US) instead of EN" }
+        active: sec.modTab === "keyboard"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "keyboard"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "keyboard"; empty: "Shows when niri reports a keyboard layout" }
+            ModToggle { k: "kb.icon"; d: true; icon: "keyboard"; title: "Icon" }
+            ModToggle { k: "kb.full"; d: false; icon: "text_fields"; title: "Full name"; desc: "English (US) instead of EN" }
+        }
     }
-    ColumnLayout {
-        property string modTab: "bluetooth"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "bluetooth"; empty: "No Bluetooth adapter found" }
-        ModToggle { k: "bt.count"; d: true; icon: "tag"; title: "Connected devices"; desc: "How many, beside the icon" }
-        ModToggle { k: "bt.hideOff"; d: false; icon: "visibility_off"; title: "Hide when Bluetooth is off" }
+        active: sec.modTab === "bluetooth"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "bluetooth"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "bluetooth"; empty: "No Bluetooth adapter found" }
+            ModToggle { k: "bt.count"; d: true; icon: "tag"; title: "Connected devices"; desc: "How many, beside the icon" }
+            ModToggle { k: "bt.hideOff"; d: false; icon: "visibility_off"; title: "Hide when Bluetooth is off" }
+        }
     }
-    ColumnLayout {
-        property string modTab: "tray"
-        visible: sec.modTab === modTab
+    // (each module's settings are made when you pick it: all of them at once, previews and all, made the page slow to open)
+    Loader {
         Layout.fillWidth: true
-        spacing: 8
-        ModPreview { module: "tray"; empty: "No tray icons right now" }
-        ModNumber { k: "tray.size"; d: 16; lo: 12; hi: 28; icon: "photo_size_select_small"; title: "Icon size" }
-        ModNumber { k: "tray.gap"; d: 2; lo: 0; hi: 16; icon: "space_bar"; title: "Space between icons" }
+        active: sec.modTab === "tray"
+        visible: active
+        sourceComponent: ColumnLayout {
+            readonly property string modTab: "tray"
+            Layout.fillWidth: true
+            spacing: 8
+            ModPreview { module: "tray"; empty: "No tray icons right now" }
+            ModNumber { k: "tray.size"; d: 16; lo: 12; hi: 28; icon: "photo_size_select_small"; title: "Icon size" }
+            ModNumber { k: "tray.gap"; d: 2; lo: 0; hi: 16; icon: "space_bar"; title: "Space between icons" }
+        }
     }
 }

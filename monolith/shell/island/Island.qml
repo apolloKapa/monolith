@@ -636,6 +636,9 @@ PanelWindow {
                         selectionColor: Theme.selected
                         clip: true
                         focus: win.shown
+                        // (no cursor while the field is hidden: it still takes the keys, but a blinking
+                        // cursor nobody can see redrew the whole menu twice a second)
+                        cursorDelegate: Component { Caret { input: query; shown: win.usesQuery || win.tabbed } }
                         // still takes the keys (Esc, arrows for the page) on a menu without a search
                         opacity: win.usesQuery || win.tabbed ? 1 : 0
                         // (goes quickly, so it's gone before a menu's name slides in over it)

@@ -106,6 +106,7 @@ ColumnLayout {
 
     // ── the shell ──
     SectionHead { text: "The shell (menus, the bar, pop-ups)" }
+    Label { Layout.fillWidth: true; Layout.leftMargin: 6; text: "Point at the preview to play it"; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
     // live preview: a pill gliding across a track and back at the shell's speed, with the same
     // timings (Theme.ms) and curves the menus use, so it shows how fast they'll feel. It changes
     // as soon as the speed does; with animations off it sits still in the middle
@@ -113,6 +114,9 @@ ColumnLayout {
         id: track
         Layout.fillWidth: true
         Layout.preferredHeight: 72
+        // (it plays while the pointer is on it: a demo looping by itself kept Settings drawing
+        // every frame for as long as it was open)
+        HoverHandler { id: trackHover }
         radius: Theme.corner(72, 6)
         color: Theme.container
         border.width: Theme.outlineW; border.color: Theme.outlineColor
@@ -153,7 +157,7 @@ ColumnLayout {
         }
         SequentialAnimation {
             id: glide
-            running: Theme.animOn && track.visible && track.width > 0
+            running: Theme.animOn && track.visible && track.width > 0 && trackHover.hovered
             loops: Animation.Infinite
             onRunningChanged: if (!running) { pill.scale = 1; if (Theme.animOn) pill.x = track.pad; }
             // across, the way a menu comes in (emphasized, decelerating)

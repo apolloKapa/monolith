@@ -43,7 +43,7 @@ ColumnLayout {
 
     Label {
         Layout.fillWidth: true; wrapMode: Text.Wrap; muted: true
-        text: "How workspaces move when you switch between them. The preview plays it."
+        text: "How workspaces move when you switch between them. Point at the preview to play it."
             + (Niri.hyprland ? "" : " niri itself only slides workspaces up and down; Fade is drawn by Monolith (the new workspace fades in over your wallpaper). niri's other animations are in Animation speeds.")
             + " Glitch: the workspaces slide as usual with a neon scan line sweeping over them the same way (the Cyberpunk style picks it)."
     }
@@ -54,6 +54,8 @@ ColumnLayout {
         id: stage
         Layout.fillWidth: true
         Layout.preferredHeight: 150
+        // (it switches back and forth while the pointer is on it, not by itself all the time)
+        HoverHandler { id: stageHover }
         radius: Theme.corner(60, 10)
         color: Theme.m("surface_container_lowest", "#101014")
         border.width: 1; border.color: Qt.alpha(Theme.text, 0.06)
@@ -69,7 +71,7 @@ ColumnLayout {
         // how far a workspace travels: all the way, or a fifth of it when it fades as it slides
         readonly property real dist: (vert ? height : width) * (fades ? 0.2 : 1)
         Timer {
-            interval: 1500; running: stage.visible; repeat: true
+            interval: 1500; running: stage.visible && stageHover.hovered; repeat: true; triggeredOnStart: true
             onTriggered: {
                 // Glitch: a picture of the workspace going, taken before the switch, glitches away over the new one
                 stage.target = 1 - stage.target; stage.last = Date.now();

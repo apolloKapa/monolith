@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Qt.labs.folderlistmodel
 
 // Which hub page is open (if any), and on which screen. Opened from the status line,
 // keybinds (`qs ipc -p … call hub toggle search`) or other pages.
@@ -194,5 +195,35 @@ Singleton {
         // the widget editor: desktop | lock
         function edit(mode: string): void { hub.editWidgetsOn(mode); }
         function done(): void { hub.editWidgets = ""; }
+    }
+
+    // Settings' pages compiled ahead, in the background, a while after the shell starts: the first
+    // time a page opened it was compiled then and there, and the big ones (Bar, Menus) took a
+    // good part of a second. Compiling makes nothing (no rows, no previews), so it costs little.
+    property var warmed: []
+    property var warmList: []
+    FolderListModel {
+        id: settingsFiles
+        folder: Qt.resolvedUrl("../hub/settings/")
+        nameFilters: ["*.qml"]
+        showDirs: false
+        onStatusChanged: if (status === FolderListModel.Ready && hub.warmList.length === 0) {
+            const l = [];
+            // (by the shell's own address for them, which is what Settings loads them by: the
+            // folder's file:// ones counted as different files and were compiled for nothing)
+            for (let i = 0; i < count; i++) l.push(Qt.resolvedUrl("../hub/settings/" + get(i, "fileName")));
+            // the page they live in first
+            hub.warmList = [Qt.resolvedUrl("../hub/SettingsPage.qml")].concat(l);
+        }
+    }
+    Timer {
+        id: warm
+        interval: hub.warmed.length === 0 ? 20000 : 400
+        running: hub.warmList.length > 0 && hub.warmed.length < hub.warmList.length
+        repeat: true
+        onTriggered: {
+            const url = hub.warmList[hub.warmed.length];
+            hub.warmed = hub.warmed.concat([Qt.createComponent(url, Component.Asynchronous)]);
+        }
     }
 }

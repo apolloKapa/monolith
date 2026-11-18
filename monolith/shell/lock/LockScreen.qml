@@ -131,6 +131,8 @@ WlSessionLock {
             enabled: !who.visible && !LockState.busy
             focus: !who.visible
             echoMode: TextInput.Password
+            // (no cursor: a blinking one nobody sees redrew the lock screen twice a second)
+            cursorDelegate: Component { Caret { input: ghost; shown: false } }
             readOnly: LockState.unlocking
             onTextChanged: if (LockState.typed !== text) LockState.typed = text
             onAccepted: if (text !== "") LockState.tryPassword(text)

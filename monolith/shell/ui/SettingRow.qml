@@ -52,9 +52,11 @@ SmoothRect {
     SequentialAnimation {
         id: enterAnim
         PauseAnimation { id: enterWait }
-        NumberAnimation { target: row; property: "enter"; to: 1; duration: Theme.ms(340); easing.type: Easing.OutCubic }
+        NumberAnimation { target: row; property: "enter"; to: 1; duration: Theme.ms(240); easing.type: Easing.OutCubic }
     }
-    Timer { interval: 1; running: true; onTriggered: { if (Theme.cyber) { row.enter = 1; return; } enterWait.duration = Theme.ms(Math.min(320, Math.max(0, row.y) * 0.4)); enterAnim.start(); } }
+    // (a quick ripple down the page: rows further down than a screen's worth are just there, since
+    // nobody sees them come in, and fifty rows each animating made opening a page slow and busy)
+    Timer { interval: 1; running: true; onTriggered: { if (Theme.cyber || row.y > 900) { row.enter = 1; return; } enterWait.duration = Theme.ms(Math.min(140, Math.max(0, row.y) * 0.18)); enterAnim.start(); } }
 
     // the icon leans in when the pointer is on its row
     Bubble {

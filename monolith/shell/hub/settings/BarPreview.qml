@@ -43,15 +43,27 @@ Column {
             CardShadow { visible: Theme.barOpacity > 0.3 }
         }
         Item {
+            id: barBox
             x: isl.e
             width: isl.bodyW
             height: isl.height
             clip: true
-            IslandBar {
+            // (the bar in the preview is a whole bar: made a moment after the page, so the page
+            // comes up without waiting for it, and fading in once it's there)
+            Loader {
                 id: real
-                screenName: pv.scr ? pv.scr.name : ""
-                x: Theme.fullBar ? 0 : Math.round((parent.width - width) / 2)
-                width: Theme.fullBar ? parent.width : (Theme.barSpread ? Math.max(needWidth, isl.bodyW) : implicitWidth)
+                readonly property real needWidth: item ? item.needWidth : 0
+                active: false
+                asynchronous: true
+                opacity: status === Loader.Ready ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
+                Timer { interval: 30; running: true; onTriggered: real.active = true }
+                sourceComponent: IslandBar {
+                    still: true
+                    screenName: pv.scr ? pv.scr.name : ""
+                    x: Theme.fullBar ? 0 : Math.round((barBox.width - width) / 2)
+                    width: Theme.fullBar ? barBox.width : (Theme.barSpread ? Math.max(needWidth, isl.bodyW) : implicitWidth)
+                }
             }
         }
     }
