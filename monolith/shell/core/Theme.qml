@@ -80,7 +80,10 @@ Singleton {
     // the layers, lowest to highest
     readonly property bool oled: Look.style.oled === true
     // how solid panels are: see-through styles, and your setting (Theme → Effects)
-    readonly property real panelOpacity: Number(Store.get("theme.panelOpacity", 1))
+    // Transparency (Settings → Appearance): off, every panel is solid, whatever the opacity and
+    // blur say (Liquid glass is glass, so it stays see-through)
+    readonly property bool transparent: liquid || Store.get("theme.transparency", true) !== false
+    readonly property real panelOpacity: transparent ? Number(Store.get("theme.panelOpacity", 1)) : 1
     // Liquid glass: panes are glass (ui/LiquidPane, shaders/glass.frag) with only a whisper of
     // fill over them; the compositor blur behind them is on unless you turned it off
     readonly property bool liquid: Look.style.liquid === true
@@ -96,7 +99,7 @@ Singleton {
     // blur behind the shell's panels (the compositor does it; strength in niri's config)
     // blur behind panels: a toggle for every style but Liquid glass (which is glass already);
     // on by default for anyone who'd picked the old Blur style
-    readonly property bool blur: !liquid && Store.get("theme.blur", Store.get("theme.style", "") === "blur") === true
+    readonly property bool blur: transparent && !liquid && Store.get("theme.blur", Store.get("theme.style", "") === "blur") === true
     // effects (Theme → Effects): film grain on panels, a light along their top edge, and menus
     // that unfold from a thin line (the old shell's theme.effects carry over)
     readonly property var oldFx: Prefs.raw.theme && Prefs.raw.theme.effects ? Prefs.raw.theme.effects : ({})

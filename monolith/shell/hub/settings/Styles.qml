@@ -97,6 +97,20 @@ ColumnLayout {
         }
     }
     SettingRow {
+        key: "theme.transparency"; def: true
+        icon: "opacity"; title: "Transparency"
+        desc: Theme.liquid ? "Liquid glass is glass: it's always see-through"
+            : (Theme.transparent ? "The bar, menus, dock and pop-ups are see-through. Off: plain, solid panels" : "Off: the bar, menus, dock and pop-ups are plain and solid, with no blur")
+        Toggle {
+            enabled: !Theme.liquid
+            opacity: enabled ? 1 : 0.4
+            checked: Theme.transparent
+            // (on: see-through enough to notice, if the opacity was at 100 %)
+            onToggled: on => { Store.set("theme.transparency", on); if (on && Number(Store.get("theme.panelOpacity", 1)) > 0.95) Store.set("theme.panelOpacity", 0.75); }
+        }
+    }
+    SettingRow {
+        visible: Theme.transparent
         keys: ["theme.blur", "theme.panelOpacity"]
         icon: "blur_on"; title: "Blur behind panels"
         desc: Theme.liquid ? "Liquid glass is glass already: it bends and frosts what's behind it by itself, so blur is off with it"
