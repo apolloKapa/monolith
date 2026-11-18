@@ -133,6 +133,7 @@ Page {
     Connections { target: HubState; function onOpenChanged() { if (!HubState.open) page.seenOpen = false; } }
     // a section coming in: it fades and slides in (Cyberpunk: it glitches in)
     function enterPage() {
+        popAnim.restart();
         if (Theme.cyber) { pageIn.stop(); slideIn.stop(); loader.shiftY = 0; loader.opacity = 1; cyIn.restart(); }
         else { pageIn.restart(); slideIn.restart(); }
     }
@@ -446,7 +447,17 @@ Page {
                 // (built in the background: a section built in one go froze the menu for a moment;
                 // it comes up once it's ready)
                 asynchronous: true
-                onSourceChanged: { flick.keepH = 0; flick.contentY = 0; pageIn.stop(); slideIn.stop(); opacity = 0; page.aimPage(); popAnim.restart(); }
+                // (Loader says the source changed twice: when it's set, and again once the page is
+                // built. Taken both times, the title came in while the page was still empty, then
+                // the page and the title vanished and came in again. Once per page now, and the
+                // title waits for its page, so they come in together)
+                property url took: ""
+                onSourceChanged: {
+                    if (source === took) return;
+                    took = source;
+                    flick.keepH = 0; flick.contentY = 0; pageIn.stop(); slideIn.stop(); opacity = 0; page.aimPage();
+                    popAnim.stop(); banner.pop = 0;
+                }
                 // view transition: the new page comes up from below when it's further down the
                 // list of sections than the last one, down from above when it's higher up
                 property real shiftY: 0
