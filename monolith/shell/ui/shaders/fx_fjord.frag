@@ -56,15 +56,22 @@ void main() {
     // (turned by a smooth noise, not a fresh random each pixel: that made a fine dotted grid
     // over flat parts)
     float turn = vnoise(px / 2.5) * 12.566371;
+    float got = 0.0;
     for (int i = 0; i < 12; i++) {
         float fi = float(i);
         float r = 1.0 + 5.0 * sqrt((fi + 0.5) / 12.0);
         float a = turn + fi * 2.3999632;
-        // (kept inside the panel: a point off its edge counted as empty, and the frost faded out
-        // round every edge)
-        soft += texture(source, clamp(uv + vec2(cos(a), sin(a)) * r / itemSize, 0.5 / itemSize, 1.0 - 0.5 / itemSize));
+        vec2 q = uv + vec2(cos(a), sin(a)) * r / itemSize;
+        // (a point off the panel is left out and the rest averaged: counted as empty, the frost
+        // faded out round the edges; pulled back onto the edge, the panel's outline was counted
+        // over and over, and a light band ran round it)
+        // (and the outline itself: a point on it lightened everything within reach of the edge)
+        vec2 m = 2.0 / itemSize;
+        if (q.x < m.x || q.x > 1.0 - m.x || q.y < m.y || q.y > 1.0 - m.y) continue;
+        soft += texture(source, q);
+        got += 1.0;
     }
-    soft /= 12.0;
+    soft /= max(got, 1.0);
     // (ice made from the panel's own colour, lightened and touched with the accent: a fixed pale
     // blue-white ignored the palette)
     vec3 ice = mix(mix(panel.rgb, vec3(1.0), 0.62), cyan.rgb, 0.15);
