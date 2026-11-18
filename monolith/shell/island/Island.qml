@@ -1014,10 +1014,22 @@ PanelWindow {
         NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: Theme.cyber ? Theme.fxOutMs : Theme.menuOutMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
     }
     onShownChanged: {
-        if (shown) { cardOut.stop(); if (HubState.snap) { cardFade = 0; cardZoom = 0; } cardIn.restart(); }
+        if (shown) {
+            cardOut.stop();
+            if (HubState.snap) { cardFade = 0; cardZoom = 0; }
+            // A menu that isn't built yet (its first opening since the shell started, or on this
+            // screen): the animation waits the few frames until it is, then plays as always.
+            // Started at once, the card came in empty at the last menu's size, jumped to this
+            // one's, and the page faded in late: a different animation, that one time only.
+            if (!win.currentPage && !win.docked) { cardFade = 0; cardZoom = 0; pageWait.restart(); }
+            else { pageWait.stop(); cardIn.restart(); }
+        }
         else { cardIn.stop(); cardOut.restart(); }
     }
     Connections { target: win; function onShownChanged() { if (win.shown) win.opened(); } }
+    // (at most this long: a page that's slow to build doesn't hold the menu back for ever)
+    Timer { id: pageWait; interval: 400; onTriggered: if (win.shown) cardIn.restart() }
+    onCurrentPageChanged: if (pageWait.running && currentPage) { pageWait.stop(); Qt.callLater(() => { if (win.shown) cardIn.restart(); }); }
     function opened() { fieldTile.play(); wasOpen = true; query.text = HubState.preset; HubState.preset = ""; query.forceActiveFocus(); }
     Connections {
         target: HubState
