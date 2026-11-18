@@ -99,6 +99,9 @@ Singleton {
     // blur behind the shell's panels (the compositor does it; strength in niri's config)
     // blur behind panels: a toggle for every style but Liquid glass (which is glass already);
     // on by default for anyone who'd picked the old Blur style
+    // blur behind menus over a fullscreen app too (Effects): on unless you turn it off; never in
+    // Game mode (a game under a menu would be blurred again on every frame)
+    readonly property bool blurOverFullscreen: Store.get("theme.blurOverFullscreen", true) !== false && !GameMode.active
     readonly property bool blur: transparent && !liquid && Store.get("theme.blur", Store.get("theme.style", "") === "blur") === true
     // effects (Theme → Effects): film grain on panels, a light along their top edge, and menus
     // that unfold from a thin line (the old shell's theme.effects carry over)

@@ -37,6 +37,13 @@ ColumnLayout {
         Toggle { enabled: !Theme.liquid; opacity: enabled ? 1 : 0.4; checked: Theme.blur; onToggled: on => { Store.set("theme.blur", on); if (on && Theme.panelOpacity > 0.95) Store.set("theme.panelOpacity", 0.75); } }
     }
     SettingRow {
+        visible: Theme.blur
+        key: "theme.blurOverFullscreen"; def: true
+        icon: "fullscreen"; title: "Blur over fullscreen apps"
+        desc: "Menus keep their blur over an app in fullscreen. Off: no blur there (lighter on a slow GPU). Never in Game mode"
+        Toggle { checked: Store.get("theme.blurOverFullscreen", true) !== false; onToggled: on => Store.set("theme.blurOverFullscreen", on) }
+    }
+    SettingRow {
         key: "theme.blurStrength"; def: 3;
         visible: Theme.blur
         icon: "deblur"; title: "Blur strength"; desc: "1 is a light haze, 8 is very soft"

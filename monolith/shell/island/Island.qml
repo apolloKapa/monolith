@@ -1023,7 +1023,9 @@ PanelWindow {
 
     // blur behind it (Theme → Effects), shaped like it. Not over a fullscreen app: blurring a
     // game or a video under the menu on every frame made menus late there on older laptops
-    readonly property bool overFullscreen: Niri.fullscreenOn(modelData.name)
+    // (only when that's turned off, or in Game mode: it used to be always, and with any app in
+    // fullscreen the menus lost their blur with the Blur switch on, which read as broken)
+    readonly property bool overFullscreen: !Theme.blurOverFullscreen && Niri.fullscreenOn(modelData.name)
     // (none while auto-hide has the bar slid away: its blur would sit off the screen, and
     // Hyprland blurred the whole screen for that)
     BackgroundEffect.blurRegion: Theme.blur && !overFullscreen && !(win.tucked && !win.toastGrows) ? blurShape : null
