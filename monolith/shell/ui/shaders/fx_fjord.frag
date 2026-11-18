@@ -61,14 +61,15 @@ void main() {
     // showed through as a stripe along the edges)
     for (int i = 0; i < 16; i++) {
         float fi = float(i);
-        float r = 1.5 + 26.0 * sqrt((fi + 0.5) / 16.0);
+        // (loose content, a page: a narrower reach, it only softens what's there)
+        float r = 1.5 + (loose > 0.5 ? 7.0 : 26.0) * sqrt((fi + 0.5) / 16.0);
         float a = turn + fi * 2.3999632;
         vec2 q = uv + vec2(cos(a), sin(a)) * r / itemSize;
         // (a point off the panel is left out and the rest averaged: counted as empty, the frost
         // faded out round the edges; pulled back onto the edge, the panel's outline was counted
         // over and over, and a light band ran round it)
         // (and the outline itself: a point on it lightened everything within reach of the edge)
-        vec2 m = 2.0 / itemSize;
+        vec2 m = (loose > 0.5 ? 0.0 : 2.0) / itemSize;
         if (q.x < m.x || q.x > 1.0 - m.x || q.y < m.y || q.y > 1.0 - m.y) continue;
         soft += texture(source, q);
         got += 1.0;
@@ -94,6 +95,11 @@ void main() {
     // fullscreen game) a pale sheet that see-through just looked milky)
     float iceK = 0.6 * pow(clamp(base > 0.0 ? base : 1.0, 0.0, 1.0), 3.0);
     vec4 frost = vec4(mix(under, ice, iceK) * sheet, sheet) * 0.92;
+    // Loose content (a page of a menu, switching to another): no sheet at all. A page has nothing
+    // behind it, so a sheet as solid as a panel wherever something was in reach came out as
+    // blotchy rectangles with ragged edges and holes. Its frost is just what's on it, softened
+    // and paled a little, as see-through as it was.
+    if (loose > 0.5) frost = vec4(mix(soft.rgb, ice * soft.a, 0.22), soft.a) * 0.95;
     vec4 o = mix(frost, c, clear);
     // (outside the outline, the panel's shadow stays as it is)
     if (loose < 0.5) o = mix(c, o, inShape(px));
