@@ -20,8 +20,8 @@ ColumnLayout {
         key: "nightlight.schedule";
         icon: "schedule"; title: "Schedule"
         desc: NightLight.schedule === "sun" ? (Weather.loc ? "From sunset to sunrise where you are" : "Sunset to sunrise needs your location (General → You & weather)") : NightLight.schedule === "custom" ? "Between the two times below" : "All day"
-        Segmented {
-            width: 360
+        Dropdown {
+            width: 220
             opts: [["always", "Always"], ["sun", "Sunset–sunrise"], ["custom", "Set times"]]
             value: NightLight.schedule
             onPicked: v => Store.set("nightlight.schedule", v)
@@ -29,7 +29,7 @@ ColumnLayout {
     }
     SettingRow {
         keys: ["nightlight.from", "nightlight.to"];
-        visible: NightLight.schedule === "custom"
+        show: NightLight.schedule === "custom"
         icon: "more_time"; title: "Custom hours"; desc: "24-hour times, like 21:00 and 07:00"
         Row {
             spacing: 6

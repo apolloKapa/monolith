@@ -82,7 +82,7 @@ Singleton {
     // how solid panels are: see-through styles, and your setting (Theme → Effects)
     // Transparency (Settings → Appearance): off, every panel is solid, whatever the opacity and
     // blur say (Liquid glass is glass, so it stays see-through)
-    readonly property bool transparent: liquid || Store.get("theme.transparency", true) !== false
+    readonly property bool transparent: !GameMode.lean && (liquid || Store.get("theme.transparency", true) !== false)
     readonly property real panelOpacity: transparent ? Number(Store.get("theme.panelOpacity", 1)) : 1
     // Liquid glass: panes are glass (ui/LiquidPane, shaders/glass.frag) with only a whisper of
     // fill over them; the compositor blur behind them is on unless you turned it off
@@ -102,7 +102,7 @@ Singleton {
     // blur behind menus over a fullscreen app too (Effects): on unless you turn it off; never in
     // Game mode (a game under a menu would be blurred again on every frame)
     readonly property bool blurOverFullscreen: Store.get("theme.blurOverFullscreen", true) !== false && !GameMode.active
-    readonly property bool blur: transparent && !liquid && Store.get("theme.blur", Store.get("theme.style", "") === "blur") === true
+    readonly property bool blur: !GameMode.lean && transparent && !liquid && Store.get("theme.blur", Store.get("theme.style", "") === "blur") === true
     // effects (Theme → Effects): film grain on panels, a light along their top edge, and menus
     // that unfold from a thin line (the old shell's theme.effects carry over)
     readonly property var oldFx: Prefs.raw.theme && Prefs.raw.theme.effects ? Prefs.raw.theme.effects : ({})
@@ -113,7 +113,10 @@ Singleton {
     // a little zoom), pop (springs up from smaller), slide (rises into place), drop (comes down
     // into place), fade (just fades), unfold (out of a thin bright line). The old Unfold switch
     // still counts until one is picked. (A style with its own effect draws menus its way instead)
-    readonly property var menuAnims: ["zoom", "pop", "slide", "drop", "fade", "unfold"]
+    // dynamic: a menu opened from a module of the bar grows out of that module, travels to its
+    // place and goes back into it when it closes (in every style, their own effects included;
+    // opened by a key, or out of the bar, it opens the usual way)
+    readonly property var menuAnims: ["zoom", "pop", "slide", "drop", "fade", "unfold", "dynamic"]
     readonly property string menuAnim: {
         const v = String(Store.get("theme.menuAnim", ""));
         if (menuAnims.indexOf(v) !== -1) return v;
@@ -174,7 +177,7 @@ Singleton {
     readonly property var exitCurve: [0.3, 0.0, 0.8, 0.15, 1.0, 1.0]
     readonly property var standardCurve: [0.2, 0.0, 0.0, 1.0, 1.0, 1.0]
     // animation speed (Theme → Effects): a multiplier on every duration; off = instant
-    readonly property bool animOn: Store.get("theme.animations", true) !== false
+    readonly property bool animOn: Store.get("theme.animations", true) !== false && !GameMode.lean
     readonly property real animScale: animOn ? 1 / Math.max(0.2, Number(Store.get("theme.animSpeed", 1))) : 0
     readonly property int enterMs: Math.round(500 * animScale)
     readonly property int exitMs: Math.round(200 * animScale)

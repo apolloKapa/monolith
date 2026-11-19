@@ -147,8 +147,8 @@ ColumnLayout {
                 height: visible ? 40 : 0
                 Icon { name: "image"; size: 18; color: modelData.active ? Theme.onAccentContainer : Theme.subtext }
                 Label { text: "Picture logo"; muted: !modelData.active; color: modelData.active ? Theme.onAccentContainer : Theme.subtext; Layout.fillWidth: true }
-                Segmented {
-                    width: 260
+                Dropdown {
+                    width: 220
                     opts: [["small", "Small"], ["medium", "Medium"], ["large", "Large"]]
                     value: modelData.size || ""
                     onPicked: v => sec.run(["picsize", modelData.name, v])

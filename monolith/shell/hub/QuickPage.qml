@@ -32,12 +32,14 @@ Page {
             Label { width: parent.width; text: page.hello + ", " + (Quickshell.env("USER") || "you"); strong: true; font.pixelSize: Theme.sizeTitle }
             Label { width: parent.width; text: Qt.formatDateTime(new Date(), "dddd d MMMM") + "  ·  up " + page.uptime; muted: true; font.pixelSize: Theme.sizeSmall + 1 }
         }
+        // (Gaming, at the end, isn't a tab of this page: it goes to the Gaming menu, where game mode's switch is)
         IconTabs {
+            id: tabsBar
             Layout.fillWidth: false
-            Layout.preferredWidth: 440
-            opts: page.tabs
+            Layout.preferredWidth: 580
+            opts: page.tabs.concat([["gaming", GameMode.active ? "Game mode on" : "Gaming", "sports_esports"]])
             value: page.tab
-            onPicked: v => HubState.ccTab = v
+            onPicked: v => { if (v === "gaming") HubState.show("gaming", HubState.screenName); else HubState.ccTab = v; }
         }
     }
     // how long it's been up, refreshed each minute while the page is open

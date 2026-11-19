@@ -14,6 +14,34 @@ Singleton {
     property var before: ({})
     readonly property bool overlay: Store.get("gaming.overlay", false) === true
     readonly property bool hideIsland: Store.get("gaming.hideIsland", false) === true
+    // Stripped down (gaming.lean, on unless switched off): while game mode is on the shell does
+    // as little as it can. No animations (Theme.animOn), no blur (Theme.blur), live wallpapers
+    // asleep whatever their own pause setting says (wall/Background.qml), the visualizer's cava
+    // stopped (core/Cava.qml), and the compositor's own animations off: niri's `animations { off }`
+    // (put back only if it was game mode that turned them off), Hyprland's animations, blur and
+    // shadows by keyword (its reload puts them back).
+    readonly property bool leanOn: Store.get("gaming.lean", true) !== false
+    readonly property bool lean: active && leanOn
+    onLeanChanged: {
+        if (Niri.hyprland) {
+            if (lean) Quickshell.execDetached(["hyprctl", "--batch", "keyword animations:enabled 0 ; keyword decoration:blur:enabled 0 ; keyword decoration:shadow:enabled 0"]);
+            else Quickshell.execDetached(["hyprctl", "reload"]);
+            return;
+        }
+        if (lean) {
+            if (before.niriAnims === true) return;        // (back after a restart: already done)
+            NiriConf.read(["animations|off"], r => {
+                if (!gm.lean || r["animations|off"] !== null) return;       // (off already: not ours to put back)
+                NiriConf.flag("animations", "off", true);
+                const b = Object.assign({}, gm.before); b.niriAnims = true; gm.before = b;
+                Store.set("gaming.session", b);
+            });
+        } else if (before.niriAnims === true) {
+            NiriConf.flag("animations", "off", false);
+            const b = Object.assign({}, before); delete b.niriAnims; before = b;
+            if (active) Store.set("gaming.session", b);
+        }
+    }
 
     function toggle() { active ? stop() : start(); }
     function start() {

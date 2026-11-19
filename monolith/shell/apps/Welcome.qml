@@ -551,8 +551,8 @@ PanelWindow {
                 Segmented {
                     Layout.preferredWidth: 220; Layout.preferredHeight: 40
                     opts: [["dark", "Dark"], ["light", "Light"]]
-                    value: Theme.modeName
-                    onPicked: v => Store.set("theme.mode", v)
+                    value: Look.mode
+                    onPicked: v => Look.setMode(v)
                 }
                 Item { Layout.fillWidth: true }
                 Button { text: "Choose a wallpaper"; icon: "wallpaper"; onClicked: HubState.showWall(wel.modelData.name) }

@@ -20,18 +20,43 @@ Singleton {
     readonly property string themesDir: Qt.resolvedUrl("../themes").toString().replace("file://", "")
     property var themeNames: []
     property var fileColors: null
-    readonly property var colors: paletteName === "style" ? (style.colors || null) : (paletteName === "wallpaper" ? null : fileColors)
+    readonly property var rawColors: paletteName === "style" ? (style.colors || null) : (paletteName === "wallpaper" ? null : fileColors)
+    // Dark or light. The wallpaper's colours come in both (theme.mode). A palette is one or the
+    // other as it's written, so the switch did nothing with one picked: now the other mode is
+    // the palette turned over (every colour keeps its hue, its lightness is mirrored, so a black
+    // background becomes white, white text black, and what stood out still stands out).
+    // theme.paletteFlip names the palette that's turned over: picking another starts as written.
+    readonly property string nativeMode: rawColors ? (lum(Qt.color(rawColors.base || "#000000")) < 0.5 ? "dark" : "light") : ""
+    readonly property bool flipped: !!rawColors && Store.get("theme.paletteFlip", "") === paletteName
+    readonly property var colors: flipped ? flip(rawColors) : rawColors
+    readonly property string mode: rawColors ? (flipped ? (nativeMode === "dark" ? "light" : "dark") : nativeMode) : Store.get("theme.mode", "dark")
+    function setMode(v) {
+        if (rawColors) { if (v === nativeMode) Store.unset("theme.paletteFlip"); else Store.set("theme.paletteFlip", paletteName); }
+        Store.set("theme.mode", v);
+    }
+    function flip(src) {
+        const out = {};
+        for (const k in src) {
+            const c = Qt.color(src[k]);
+            if (!c.valid) { out[k] = src[k]; continue; }
+            let l = 1 - c.hslLightness;
+            // (a colour, not a grey: kept where it still reads as that colour)
+            if (c.hslSaturation > 0.15) l = Math.max(0.3, Math.min(0.72, l));
+            out[k] = Qt.hsla(Math.max(0, c.hslHue), c.hslSaturation, l, c.a).toString();
+        }
+        return out;
+    }
     // a colour theme may give apps colours of their own (`apps`, e.g. Twilight: a dark shell
     // framing light apps) and say whether apps are dark or light (`appsMode`)
     property var fileApps: null
     property string fileAppsMode: ""
     readonly property bool fromFile: paletteName !== "style" && paletteName !== "wallpaper"
-    readonly property var appColors: fromFile ? fileApps : null
+    readonly property var appColors: fromFile && !flipped ? fileApps : null
     // dark or light for the apps (scripts/app_colours.py mode): the wallpaper's follow your
     // setting; a palette's follow the palette itself (a light theme made apps light), or its appsMode
     readonly property string appsMode: {
         if (!colors) return Store.get("theme.mode", "dark");
-        if (fromFile && (fileAppsMode === "dark" || fileAppsMode === "light")) return fileAppsMode;
+        if (fromFile && !flipped && (fileAppsMode === "dark" || fileAppsMode === "light")) return fileAppsMode;
         return lum(Qt.color(colors.base || "#000000")) < 0.5 ? "dark" : "light";
     }
     function lum(c) { return 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b; }

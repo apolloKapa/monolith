@@ -178,25 +178,25 @@ ColumnLayout {
     }
     SettingRow {
         key: "bar.margin";
-        visible: Theme.barFloats
+        show: Theme.barFloats
         icon: "vertical_align_top"; title: "Space from the edge"; desc: "How far the floating bar sits from the edge of the screen"
         NumberBox { from: 0; to: 40; unit: "px"; value: Theme.barMargin; onMoved: v => Store.set("bar.margin", v) }
     }
     SettingRow {
         key: "bar.frameWidth"; def: 8;
-        visible: Theme.barStyle === "frame"
+        show: Theme.barStyle === "frame"
         icon: "border_outer"; title: "Border width"; desc: "The frame round the screen"
         NumberBox { from: 2; to: 40; unit: "px"; value: Number(Store.get("bar.frameWidth", 8)); onMoved: v => Store.set("bar.frameWidth", v) }
     }
     SettingRow {
         key: "bar.frameRadius";
-        visible: Theme.barStyle === "frame"
+        show: Theme.barStyle === "frame"
         icon: "rounded_corner"; title: "Border's inside corners"
         NumberBox { from: 0; to: 60; unit: "px"; value: Number(Store.get("bar.frameRadius", Theme.islandRadius)); onMoved: v => Store.set("bar.frameRadius", v) }
     }
     SettingRow {
         key: "bar.frameOutline"; def: "style"
-        visible: Theme.barStyle === "frame"
+        show: Theme.barStyle === "frame"
         icon: "border_style"; title: "Frame outline"
         desc: Theme.frameOutline === "style" ? (Theme.outlineW > 0 ? "A line along the frame's inside edge: " + Look.style.name + "'s own" : "A line along the frame's inside edge. " + Look.style.name + " has none of its own")
             : (Theme.frameOutline === "off" ? "No line along the frame's inside edge" : "A line along the frame's inside edge")
@@ -209,7 +209,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "bar.frameOutlineWidth"; def: 2
-        visible: Theme.barStyle === "frame" && Theme.frameOutline !== "style" && Theme.frameOutline !== "off"
+        show: Theme.barStyle === "frame" && Theme.frameOutline !== "style" && Theme.frameOutline !== "off"
         icon: "line_weight"; title: "Outline width"
         NumberBox { from: 1; to: 8; unit: "px"; value: Theme.frameOutlineW; onMoved: v => Store.set("bar.frameOutlineWidth", v) }
     }
@@ -221,26 +221,26 @@ ColumnLayout {
     // the bar's length: as long as its modules need, a share of the screen, or an exact size
     SettingRow {
         key: "bar.lengthMode";
-        visible: Theme.barStyle !== "frame"
+        show: Theme.barStyle !== "frame"
         icon: "width"; title: "Length"
         desc: Theme.barLengthMode === "fit" ? "As long as its modules need" : (Theme.barLengthMode === "percent" ? "A share of the screen's width" : "An exact length, the same on every screen")
-        Segmented { width: 300; opts: [["fit", "Fit"], ["percent", "% of screen"], ["px", "Pixels"]]; value: Theme.barLengthMode; onPicked: v => Store.set("bar.lengthMode", v) }
+        Dropdown { width: 220; opts: [["fit", "Fit"], ["percent", "% of screen"], ["px", "Pixels"]]; value: Theme.barLengthMode; onPicked: v => Store.set("bar.lengthMode", v) }
     }
     SettingRow {
         key: "bar.length";
-        visible: Theme.barStyle !== "frame" && Theme.barLengthMode === "percent"
+        show: Theme.barStyle !== "frame" && Theme.barLengthMode === "percent"
         icon: "percent"; title: "Share of the screen"; desc: "Centred; it never gets shorter than its modules"
         NumberBox { from: 0.2; to: 1; step: 0.01; decimals: 2; factor: 100; unit: "%"; value: Theme.barLength; onMoved: v => Store.set("bar.length", v) }
     }
     SettingRow {
         key: "bar.lengthPx";
-        visible: Theme.barStyle !== "frame" && Theme.barLengthMode === "px"
+        show: Theme.barStyle !== "frame" && Theme.barLengthMode === "px"
         icon: "straighten"; title: "Length in pixels"; desc: "Centred; never shorter than its modules or longer than the screen"
         NumberBox { from: 200; to: 7680; slideTo: 2560; step: 10; unit: "px"; value: Theme.barLengthPx; onMoved: v => Store.set("bar.lengthPx", v) }
     }
     SettingRow {
         key: "bar.minWidth";
-        visible: Theme.barStyle !== "frame" && Theme.barLengthMode === "fit"
+        show: Theme.barStyle !== "frame" && Theme.barLengthMode === "fit"
         icon: "expand"; title: "At least this long"; desc: "It grows from here as modules need more room"
         NumberBox { from: 200; to: 2000; slideTo: 1400; step: 10; unit: "px"; value: Theme.islandMinW; onMoved: v => Store.set("bar.minWidth", v) }
     }
@@ -701,7 +701,9 @@ ColumnLayout {
         property string d: ""
         property var opts: []
         key: "bar." + k
-        Segmented { width: Math.min(420, 110 * mc.opts.length); opts: mc.opts; value: String(Store.get("bar." + mc.k, mc.d)); onPicked: v => Store.set("bar." + mc.k, v) }
+        // (two choices side by side; three or more in a list)
+        Segmented { visible: mc.opts.length < 3; width: 220; opts: mc.opts; value: String(Store.get("bar." + mc.k, mc.d)); onPicked: v => Store.set("bar." + mc.k, v) }
+        Dropdown { visible: mc.opts.length >= 3; width: 220; opts: mc.opts; value: String(Store.get("bar." + mc.k, mc.d)); onPicked: v => Store.set("bar." + mc.k, v) }
     }
     component ModNumber: SettingRow {
         id: mn
@@ -766,19 +768,19 @@ ColumnLayout {
                 onPicked: v => Store.set("bar.clock.theme", v)
             }
             SettingRow {
-                visible: clockPrev.clockTheme !== "words"
+                show: clockPrev.clockTheme !== "words"
                 key: "bar.clock.seconds";
                 icon: "timer"; title: "Seconds"; desc: "Hours, minutes and seconds"
                 Toggle { checked: clockPrev.clockSeconds; onToggled: on => Store.set("bar.clock.seconds", on) }
             }
             SettingRow {
-                visible: clockPrev.clockTheme === "digital"
+                show: clockPrev.clockTheme === "digital"
                 key: "bar.clock.stackTime";
                 icon: "view_agenda"; title: "Hours over minutes"; desc: "The time stacked in lines instead of one row"
                 Toggle { checked: clockPrev.clockStackTime; onToggled: on => Store.set("bar.clock.stackTime", on) }
             }
             SettingRow {
-                visible: ["words", "analog"].indexOf(clockPrev.clockTheme) < 0
+                show: ["words", "analog"].indexOf(clockPrev.clockTheme) < 0
                 key: "bar.clock.hour12";
                 icon: "schedule"; title: "12-hour time"; desc: "With AM / PM"
                 Toggle { checked: clockPrev.clock12; onToggled: on => Store.set("bar.clock.hour12", on) }
@@ -790,13 +792,13 @@ ColumnLayout {
             }
             SettingRow {
                 key: "bar.clock.dateLayout";
-                visible: clockPrev.clockDate
+                show: clockPrev.clockDate
                 icon: "splitscreen"; title: "Date layout"; desc: clockPrev.clockDateLayout === "stacked" ? "Two small lines beside the time" : "One line beside the time"
                 Segmented { width: 240; opts: [["stacked", "Stacked"], ["inline", "One line"]]; value: clockPrev.clockDateLayout; onPicked: v => Store.set("bar.clock.dateLayout", v) }
             }
             SettingRow {
                 key: "bar.clock.weekday";
-                visible: clockPrev.clockDate
+                show: clockPrev.clockDate
                 icon: "event"; title: "Day of the week"; desc: "Its name with the date"
                 Toggle { checked: clockPrev.clockWeekday; onToggled: on => Store.set("bar.clock.weekday", on) }
             }
@@ -909,18 +911,18 @@ ColumnLayout {
             }
             SettingRow {
                 key: "bar.vis.spacing"; def: 2;
-                visible: Store.get("bar.vis.style", "bars") !== "smooth"
+                show: Store.get("bar.vis.style", "bars") !== "smooth"
                 icon: "space_bar"; title: "Gap between bars"
                 NumberBox { from: 0; to: 12; unit: "px"; value: Number(Store.get("bar.vis.spacing", 2)); onMoved: v => Store.set("bar.vis.spacing", v) }
             }
             SettingRow {
                 key: "bar.vis.anchor"; def: "bottom";
                 icon: "vertical_align_center"; title: "Grows from"
-                Segmented { width: 300; opts: [["bottom", "Bottom"], ["middle", "Middle"], ["top", "Top"]]; value: String(Store.get("bar.vis.anchor", "bottom")); onPicked: v => Store.set("bar.vis.anchor", v) }
+                Dropdown { width: 220; opts: [["bottom", "Bottom"], ["middle", "Middle"], ["top", "Top"]]; value: String(Store.get("bar.vis.anchor", "bottom")); onPicked: v => Store.set("bar.vis.anchor", v) }
             }
             SettingRow {
                 key: "bar.vis.roundness";
-                visible: Store.get("bar.vis.style", "bars") !== "smooth"
+                show: Store.get("bar.vis.style", "bars") !== "smooth"
                 icon: "rounded_corner"; title: "Bar ends"
                 VisPick { k: "roundness"; d: "1"; opts: [["0", "Square"], ["0.35", "Slightly round"], ["0.7", "Round"], ["1", "Fully round"]] }
             }
@@ -936,7 +938,7 @@ ColumnLayout {
             }
             SettingRow {
                 key: "bar.vis.smoothing";
-                visible: Store.get("bar.vis.style", "bars") !== "smooth"
+                show: Store.get("bar.vis.style", "bars") !== "smooth"
                 icon: "animation"; title: "Movement"
                 VisPick { k: "smoothing"; d: "70"; opts: [["0", "Instant"], ["40", "Snappy"], ["70", "Smooth"], ["120", "Smoother"], ["200", "Slow"]] }
             }
@@ -947,7 +949,7 @@ ColumnLayout {
             }
             SettingRow {
                 key: "bar.vis.dynamic"; def: true;
-                visible: Store.get("bar.vis.style", "bars") !== "smooth"
+                show: Store.get("bar.vis.style", "bars") !== "smooth"
                 icon: "opacity"; title: "Quiet bars are dimmer"
                 Toggle { checked: Store.get("bar.vis.dynamic", true) === true; onToggled: on => Store.set("bar.vis.dynamic", on) }
             }

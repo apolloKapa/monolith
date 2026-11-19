@@ -44,7 +44,7 @@ ColumnLayout {
             : pick === "slide" ? "Swipe one away and it slides off to the side"
             : Theme.cyber ? "Swipe one away and it goes the way your style makes things go"
             : "Swipe one away and it goes the way your style makes things go (this one has no effect of its own, so it slides off)"
-        Segmented { width: 300; opts: [["theme", "Theme"], ["slide", "Slide off"], ["fall", "Fall"]]; value: Store.get("notifications.throw", "theme"); onPicked: v => Store.set("notifications.throw", v) }
+        Dropdown { width: 220; opts: [["theme", "Theme"], ["slide", "Slide off"], ["fall", "Fall"]]; value: Store.get("notifications.throw", "theme"); onPicked: v => Store.set("notifications.throw", v) }
     }
     SettingRow {
         icon: "science"; title: "Try it"; desc: "Send a test notification"
@@ -66,7 +66,7 @@ ColumnLayout {
         }
     }
     SettingRow {
-        visible: notifSec.side || Theme.barSide !== ""
+        show: notifSec.side || Theme.barSide !== ""
         key: "notifications.position"; def: "top-right";
         icon: "picture_in_picture"; title: "Where at the side"; desc: "On the screen you're using"
         Dropdown {
@@ -81,7 +81,7 @@ ColumnLayout {
     // another notification program took the bus: it shows its own popups (two kinds at once)
     // and Monolith's never come
     SettingRow {
-        visible: Notifs.otherDaemon !== ""
+        show: Notifs.otherDaemon !== ""
         icon: "warning"; title: Notifs.otherDaemon + " is showing notifications"
         desc: "Another notification program started and took them over, so its popups show instead of (or as well as) Monolith's. Use Monolith's stops it and keeps it from starting again."
         Button { text: "Use Monolith's"; icon: "notifications"; primary: true; onClicked: Notifs.takeBack() }

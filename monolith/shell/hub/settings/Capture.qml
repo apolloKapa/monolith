@@ -51,7 +51,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "capture.previewCorner"; def: "bottom-right";
-        visible: Capture.previewOn
+        show: Capture.previewOn
         icon: "position_bottom_right"; title: "Preview corner"
         Dropdown {
             opts: [["bottom-right", "Bottom right"], ["bottom-left", "Bottom left"], ["top-right", "Top right"], ["top-left", "Top left"]]
@@ -61,7 +61,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "capture.previewTime"; def: 6;
-        visible: Capture.previewOn
+        show: Capture.previewOn
         icon: "timer"; title: "Preview stays for"; desc: "The pointer on it keeps it"
         NumberBox { from: 2; to: 60; slideTo: 20; unit: " s"; value: Number(Store.get("capture.previewTime", 6)); onMoved: v => Store.set("capture.previewTime", v) }
     }
@@ -73,18 +73,18 @@ ColumnLayout {
     SettingRow {
         key: "capture.format"; def: "png";
         icon: "image"; title: "File type"; desc: Capture.format === "png" ? "PNG: exact, bigger files" : Capture.format === "jpg" ? "JPEG: small, slightly blurry text" : "WebP: small and sharp"
-        Segmented { width: 220; opts: [["png", "PNG"], ["jpg", "JPEG"], ["webp", "WebP"]]; value: Capture.format; onPicked: v => Store.set("capture.format", v) }
+        Dropdown { width: 220; opts: [["png", "PNG"], ["jpg", "JPEG"], ["webp", "WebP"]]; value: Capture.format; onPicked: v => Store.set("capture.format", v) }
     }
     SettingRow {
         key: "capture.quality"; def: 92;
-        visible: Capture.format !== "png"
+        show: Capture.format !== "png"
         icon: "high_quality"; title: "Quality"
         NumberBox { from: 40; to: 100; unit: "%"; value: Capture.quality; onMoved: v => Store.set("capture.quality", v) }
     }
     SettingRow {
         key: "capture.editor"; def: "builtin";
         icon: "edit"; title: "Editor"; desc: Capture.editor === "builtin" ? "Monolith's own: pen, highlighter, arrows, boxes, text, numbered steps, pixelate and crop" : "Opens in " + Capture.editor
-        Segmented { width: 260; opts: [["builtin", "Monolith"], ["satty", "Satty"], ["swappy", "Swappy"]]; value: Capture.editor; onPicked: v => Store.set("capture.editor", v) }
+        Dropdown { width: 220; opts: [["builtin", "Monolith"], ["satty", "Satty"], ["swappy", "Swappy"]]; value: Capture.editor; onPicked: v => Store.set("capture.editor", v) }
     }
     // ── which tools the capture menu has ──
     SettingRow { key: "capture.tools"; icon: "handyman"; title: "Tools in the capture menu"; desc: "Save is always there; the ones switched off lose their key too" }
@@ -117,10 +117,10 @@ ColumnLayout {
     SettingRow {
         key: "capture.delay"; def: 0;
         icon: "timer_3"; title: "Delay in the Capture page"; desc: "Region and Screen there wait this long first (a menu that has to be open). Also: monolith capture-in <seconds>"
-        Segmented { width: 260; opts: [["0", "None"], ["3", "3 s"], ["5", "5 s"], ["10", "10 s"]]; value: String(Store.get("capture.delay", 0)); onPicked: v => Store.set("capture.delay", Number(v)) }
+        Dropdown { width: 220; opts: [["0", "None"], ["3", "3 s"], ["5", "5 s"], ["10", "10 s"]]; value: String(Store.get("capture.delay", 0)); onPicked: v => Store.set("capture.delay", Number(v)) }
     }
     SettingRow {
-        visible: Capture.pins.length > 0
+        show: Capture.pins.length > 0
         icon: "push_pin"; title: Capture.pins.length + (Capture.pins.length === 1 ? " pinned shot" : " pinned shots"); desc: "Double-click one to let it go"
         Button { text: "Unpin all"; onClicked: Capture.pins = [] }
     }

@@ -21,19 +21,19 @@ ColumnLayout {
         Toggle { checked: Wall.playlistOn; onToggled: on => sec.put("on", on) }
     }
     SettingRow {
-        visible: Wall.playlistOn
+        show: Wall.playlistOn
         icon: "schedule"; title: "When"; desc: "Every few minutes, or at set times of day (a morning and an evening wallpaper)"
         Segmented { width: 260; opts: [["every", "Every few minutes"], ["times", "Times of day"]]; value: pl.mode || "every"; onPicked: v => sec.put("mode", v) }
     }
 
     // ── every few minutes ──
     SettingRow {
-        visible: Wall.playlistOn && !sec.timed
+        show: Wall.playlistOn && !sec.timed
         icon: "timer"; title: "Every"
         NumberBox { from: 1; to: 1440; slideTo: 240; step: 1; unit: " min"; value: pl.minutes || 30; onMoved: v => sec.put("minutes", v) }
     }
     SettingRow {
-        visible: Wall.playlistOn && !sec.timed
+        show: Wall.playlistOn && !sec.timed
         icon: "photo_library"; title: "From"; desc: sec.pl.from === "favourites" && Wall.favourites.length === 0 ? "No favourites yet: star wallpapers in the picker (the star on a card, or S)" : Wall.playlistPool().length + " wallpapers"
         Dropdown {
             opts: [["pictures", "Pictures"], ["live", "Live wallpapers"], ["all", "Pictures and live"], ["favourites", "Favourites (" + Wall.favourites.length + ")"]]
@@ -42,24 +42,24 @@ ColumnLayout {
         }
     }
     SettingRow {
-        visible: Wall.playlistOn && !sec.timed
+        show: Wall.playlistOn && !sec.timed
         icon: "shuffle"; title: "Order"
         Segmented { width: 220; opts: [["random", "Shuffled"], ["order", "In order"]]; value: sec.pl.order || "random"; onPicked: v => sec.put("order", v) }
     }
     SettingRow {
-        visible: Wall.playlistOn && !sec.timed && Quickshell.screens.length > 1
+        show: Wall.playlistOn && !sec.timed && Quickshell.screens.length > 1
         icon: "monitor"; title: "A different one on each screen"; desc: "Each screen gets its own pick from the set"
         Toggle { checked: sec.pl.perScreen === true; onToggled: on => sec.put("perScreen", on) }
     }
     SettingRow {
-        visible: Wall.playlistOn && !sec.timed
+        show: Wall.playlistOn && !sec.timed
         icon: "skip_next"; title: "Next wallpaper"; desc: "Move on now (the timer starts again)"
         Button { text: "Next"; icon: "skip_next"; onClicked: Wall.playlistNext() }
     }
 
     // ── times of day ──
     SettingRow {
-        visible: Wall.playlistOn && sec.timed
+        show: Wall.playlistOn && sec.timed
         icon: "add_alarm"; title: "Add a time"; desc: "Uses the wallpaper you have now; pick another one first to use that"
         Button { text: "Add"; icon: "add"; primary: true; onClicked: sec.put("times", sec.times.concat([{ at: Qt.formatTime(new Date(), "hh:mm"), path: Wall.path }])) }
     }

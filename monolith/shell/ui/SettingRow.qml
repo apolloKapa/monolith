@@ -18,7 +18,19 @@ SmoothRect {
     readonly property bool changed: allKeys.some(k => Store.has(k) && (def === undefined || allKeys.length > 1 || JSON.stringify(Store.get(k, null)) !== JSON.stringify(def)))
     default property alias control: slot.data
     Layout.fillWidth: true
-    implicitHeight: Math.max(64, texts.implicitHeight + 24)
+    // A row that's only there some of the time (the interval under "Check automatically", a
+    // strength under an effect's switch…): give it `show`, not `visible`. It then opens out and
+    // folds away, the rows under it gliding with it, instead of being there or gone in one frame
+    // with everything below jumping. (`visible` still works, with no animation.)
+    property bool show: true
+    property real openK: show ? 1 : 0
+    Behavior on openK { NumberAnimation { duration: Theme.animOn ? Math.max(150, Theme.ms(300)) : 0; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
+    visible: show || openK > 0.001
+    readonly property real fullH: Math.max(64, texts.implicitHeight + 24)
+    implicitHeight: fullH * openK
+    // (the gap the layout leaves under every row closes with it: 8 px in every settings page)
+    Layout.bottomMargin: -8 * (1 - openK)
+    clip: openK < 0.999
     radius: Theme.corner(56, 2)
     color: hov.hovered ? Theme.mix(Theme.containerHigh, Theme.control, 0.55) : Theme.containerHigh
     Behavior on color { ColorAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
@@ -47,7 +59,7 @@ SmoothRect {
 
     // rows come up one after another when a page opens (the lower, the later)
     property real enter: 0
-    opacity: enter
+    opacity: enter * Math.min(1, openK * 1.4)
     transform: Translate { y: (1 - row.enter) * 16 }
     SequentialAnimation {
         id: enterAnim

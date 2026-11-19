@@ -32,7 +32,7 @@ ColumnLayout {
         key: "widgets.shadow"; def: "off";
         icon: "widgets"; title: "Shadows under widgets"
         desc: "For every desktop and lock screen widget that doesn't pick its own (each widget's Shadow setting)"
-        Segmented { width: 260; opts: [["off", "Off"], ["soft", "Soft"], ["strong", "Strong"]]; value: Theme.widgetShadow; onPicked: v => Store.set("widgets.shadow", v) }
+        Dropdown { width: 220; opts: [["off", "Off"], ["soft", "Soft"], ["strong", "Strong"]]; value: Theme.widgetShadow; onPicked: v => Store.set("widgets.shadow", v) }
     }
     SettingRow { icon: "keyboard"; title: "From a keybind"; desc: "monolith widgets  ·  monolith widgets lock" }
 }

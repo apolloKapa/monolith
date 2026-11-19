@@ -175,10 +175,10 @@ ColumnLayout {
     }
     SettingRow {
         Layout.fillWidth: true
-        visible: sec.s.style !== "off"
+        show: sec.s.style !== "off"
         icon: "speed"; title: "Speed"; desc: "How quickly a switch is over"
-        Segmented {
-            width: 340
+        Dropdown {
+            width: 220
             opts: [["relaxed", "Relaxed"], ["normal", "Normal"], ["fast", "Fast"], ["fastest", "Fastest"]]
             value: sec.s.speed
             onPicked: v => sec.put("speed", v)
@@ -187,7 +187,7 @@ ColumnLayout {
     SettingRow {
         Layout.fillWidth: true
         // (niri's Fade and Slide sideways are Monolith's own, a plain ease: no bounce to choose)
-        visible: sec.s.style !== "off" && !sec.ours
+        show: sec.s.style !== "off" && !sec.ours
         icon: "waves"; title: "Feel"; desc: sec.s.feel === "bouncy" ? "Goes a little past and settles back" : "Eases in and stops, no bounce"
         Segmented {
             width: 220

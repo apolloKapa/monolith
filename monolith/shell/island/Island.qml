@@ -201,7 +201,29 @@ PanelWindow {
         if (bar === "left" || bar === "right" || bar === "bottom") return "edge-" + bar;
         return bar !== "off" ? "bar-" + bar : (ownFloat !== "" ? ownFloat : floatDefault);
     }
-    readonly property string place: { Store.revision; return placeOf(cardPage); }
+    // (Dynamic, opened from a module of the bar: a menu set to come out of the bar floats in its
+    // floating place instead, so it has somewhere to travel to)
+    function floatOf(page) {
+        const own = String(Store.get("menus.positions." + page, "") || "");
+        return own !== "" && own !== "top" && !own.startsWith("bar-") ? own : floatDefault;
+    }
+    readonly property string place: {
+        Store.revision;
+        const p = placeOf(cardPage);
+        return dynFrom && Theme.animOn && Theme.menuAnim === "dynamic" && p.startsWith("bar-") ? floatOf(cardPage) : p;
+    }
+    Connections {
+        target: HubState
+        function onOriginChanged() { const o = HubState.origin; if (o && o.screen === win.modelData.name) win.dynFrom = o; }
+        // another menu over this one, by a keybind: it goes back into its own module
+        function onPageChanged() {
+            if (!win.shown || Theme.menuAnim !== "dynamic") return;
+            const o = HubState.origin;
+            if (o && Date.now() - o.t < 400) return;
+            const b = win.moduleBox(HubState.page);
+            if (b) win.dynFrom = b;
+        }
+    }
     // out of a side of the screen (not the bar's own edge: there it comes out of the bar)
     readonly property string joinEdge: place.startsWith("edge-") && place.slice(5) !== Theme.barEdge ? place.slice(5) : ""
     // ── opening by hover (Settings → Menus & launcher): rest the pointer on the middle of a side
@@ -589,7 +611,8 @@ PanelWindow {
                 // kept in the middle while the card around it catches up
                 readonly property real goalW: !win.docked ? Math.round(win.openW + 2 * win.pad) : win.openW
                 readonly property real goalH: !win.docked ? Math.round(win.openH - Theme.islandH + win.pad) : (win.dropMode ? win.openH - Theme.islandH : win.openH)
-                x: Math.round((parent.width - width) / 2)
+                // (Dynamic: it keeps its place in the growing shape's corner; centred in the shape, it slid sideways as the shape widened)
+                x: !win.docked && floatCard.dyn ? Math.round((floatCard.width - width) / 2) : Math.round((parent.width - width) / 2)
                 y: win.docked && !win.dropMode && !win.bottom ? Theme.islandH + 2 : win.pad
                 width: (win.shown ? goalW : parent.width) - 2 * win.pad
                 height: (win.shown ? goalH : parent.height) - y - (win.docked && !win.dropMode && win.bottom ? Theme.islandH + 2 : win.pad)
@@ -1067,8 +1090,8 @@ PanelWindow {
         Behavior on toastPush { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
         y: Math.round(Math.max(0, Math.min(win.height - height, baseY + toastPush)))
         radius: Theme.islandRadius
-        color: joined !== "" ? "transparent" : Theme.frame
-        border.width: joined !== "" ? 0 : Theme.outlineW
+        color: joined !== "" || dyn ? "transparent" : Theme.frame
+        border.width: joined !== "" || dyn ? 0 : Theme.outlineW
         border.color: Theme.outlineColor
         // (joined to an edge: its shape, drawn behind what's in it, turned to hang from that edge)
         Item {
@@ -1100,20 +1123,43 @@ PanelWindow {
         // Unfold (Theme → Effects): instead, the whole card opens out of a thin bright line through
         // its middle and folds back into it
         readonly property real unfold: openArea.unfold
-        // (opening, the card itself is there at once, with its blur, and only zooms the last bit;
-        // its contents fade in. Faded in, there was always a moment of a half-there panel: over
-        // the sharp backdrop, or brighter than the end with the blur behind it. Closing, it fades)
+        // (it fades in as it fades out. Opening, the card used to be there at once and only its
+        // contents faded: it jumped in, and didn't match the way it left. The blur behind joins
+        // once it's nearly half there. Dynamic: over the first of its way out of the module)
         // (Cyberpunk: whole until it's gone, CyberFx glitches it in and the Blackwall takes it)
-        opacity: joined !== "" ? (win.shown || win.cardZoom > 0.002 ? 1 : 0)
-               : Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (win.shown ? 1 : (Theme.cyber ? (win.cardZoom > 0.002 ? 1 : 0) : win.cardFade))
+        opacity: dyn ? Math.max(0, Math.min(1, win.dynK / 0.14))
+               : joined !== "" ? (win.shown || win.cardZoom > 0.002 ? 1 : 0)
+               : Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (Theme.cyber ? (win.shown || win.cardZoom > 0.002 ? 1 : 0) : win.cardFade)
         // How menus open (Theme.menuAnim), driven by cardZoom (0 … 1), and back the same way
-        readonly property string anim: joined !== "" ? "edge" : (Theme.animOn && !Theme.cyber ? Theme.menuAnim : "none")
+        // (Dynamic, from a module of the bar: in any style. With nothing to come out of, the usual way)
+        readonly property bool dyn: joined === "" && Theme.animOn && Theme.menuAnim === "dynamic" && !!win.dynFrom
+        readonly property string anim: joined !== "" ? "edge" : dyn ? "dynamic"
+            : (Theme.animOn && !Theme.cyber ? (Theme.menuAnim === "dynamic" ? "zoom" : Theme.menuAnim) : "none")
+        // Dynamic: the module itself grows into the menu. A shape (`shell`, below) starts as the
+        // module's own box and changes its real size and place into the menu's, quickly, a touch
+        // past it, and settles; the menu's content rides in its top-left corner at full size,
+        // uncovered as the shape grows and fading in over the first part. Closing, it gathers speed
+        // back into the module. (It was the whole menu scaled down and flown across: a small copy
+        // of the menu, not the module opening up.) `mk`: how far the shape has got, 0 the module's
+        // box … 1 the menu's (a little over 1 on the way in: the overshoot)
+        readonly property real mk: Math.max(0, win.dynK)
+        // the shape's box, in this card's own coordinates
+        readonly property real fromX: dyn ? win.dynFrom.x - x : 0
+        readonly property real fromY: dyn ? win.dynFrom.y - y : 0
+        readonly property real fromW: dyn ? win.dynFrom.w : width
+        readonly property real fromH: dyn ? win.dynFrom.h : height
+        readonly property real mx: dyn ? fromX * (1 - mk) : 0
+        readonly property real my: dyn ? fromY * (1 - mk) : 0
+        readonly property real mw: dyn ? Math.max(8, fromW + (width - fromW) * mk) : width
+        readonly property real mh: dyn ? Math.max(8, fromH + (height - fromH) * mk) : height
+        // what's in it: in over the first part of the way, out before the shape is small again
+        readonly property real contentK: !dyn ? 1 : Math.max(0, Math.min(1, (win.dynK - 0.2) / 0.45))
         // (pop: overshoots a little and settles)
         function backOut(t) { const c1 = 1.5, c3 = c1 + 1, u = t - 1; return 1 + c3 * u * u * u + c1 * u * u; }
         // (Fjord: its frost doesn't move, so the card also grows in from 94 % over the first
         // part of it, and fades in: it was there in one frame, as a slab of ice)
         readonly property real fjordIn: Theme.fxKind === "fjord" ? Math.min(1, win.cardZoom / 0.4) : 1
-        scale: joined !== "" ? 1 : Theme.fxKind === "fjord" ? 0.94 + 0.06 * (1 - Math.pow(1 - fjordIn, 3))
+        scale: dyn || joined !== "" ? 1 : Theme.fxKind === "fjord" ? 0.94 + 0.06 * (1 - Math.pow(1 - fjordIn, 3))
              : anim === "zoom" ? Theme.popScale + (1 - Theme.popScale) * win.cardZoom
              : anim === "pop" ? 0.84 + 0.16 * backOut(win.cardZoom)
              : 1
@@ -1124,8 +1170,8 @@ PanelWindow {
                 xScale: Theme.fxUnfold && floatCard.joined === "" ? 0.96 + 0.04 * floatCard.unfold : 1
             },
             Translate {
-                x: floatCard.joined === "left" ? -floatCard.slideBy : (floatCard.joined === "right" ? floatCard.slideBy : 0)
-                y: floatCard.joined === "bottom" ? floatCard.slideBy
+                x: floatCard.dyn ? 0 : floatCard.joined === "left" ? -floatCard.slideBy : (floatCard.joined === "right" ? floatCard.slideBy : 0)
+                y: floatCard.dyn ? 0 : floatCard.joined === "bottom" ? floatCard.slideBy
                     : floatCard.anim === "slide" ? (1 - win.cardZoom) * 40 : (floatCard.anim === "drop" ? -(1 - win.cardZoom) * 40 : 0)
             }
         ]
@@ -1139,15 +1185,35 @@ PanelWindow {
             color: Theme.accent
             opacity: 1 - floatCard.unfold
         }
-        transformOrigin: onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
-        CardShadow { visible: floatCard.joined === "" }
-        CyberFx { target: floatCard; allowed: floatCard.joined === ""; p: win.shown ? win.cardZoom : 1 - win.cardZoom; going: !win.shown }
+        transformOrigin: dyn ? Item.Center : onTop ? (onLeft ? Item.TopLeft : (onRight ? Item.TopRight : Item.Top)) : (onBottom ? (onLeft ? Item.BottomLeft : (onRight ? Item.BottomRight : Item.Bottom)) : (onLeft ? Item.Left : (onRight ? Item.Right : Item.Center)))
+        CardShadow { visible: floatCard.joined === "" && !floatCard.dyn }
+        // (Dynamic: the card's own shape, growing out of the module and back)
+        SmoothRect {
+            id: shell
+            smoothing: 0
+            visible: floatCard.dyn
+            x: floatCard.mx; y: floatCard.my
+            width: floatCard.mw; height: floatCard.mh
+            radius: Math.min(Theme.islandRadius, height / 2, width / 2)
+            color: Theme.frame
+            border.width: Theme.outlineW
+            border.color: Theme.outlineColor
+            CardShadow {}
+        }
+        CyberFx { target: floatCard; allowed: floatCard.joined === "" && !floatCard.dyn; p: win.shown ? win.cardZoom : 1 - win.cardZoom; going: !win.shown }
         // (takes the clicks that land on the card but on nothing in it)
         MouseArea { anchors.fill: parent }
-        PanelFx { anchors.fill: parent; radius: floatCard.radius }
+        PanelFx { anchors.fill: parent; radius: floatCard.radius; visible: (Theme.fxGrain || Theme.fxEdge || Theme.chamfer) && (!floatCard.dyn || (win.shown && win.dynK > 0.97)) }
         // what's inside (openArea) is laid out at the size the menu is going to; this keeps it
         // within the card while the card grows to that size (it showed past the card's edges)
-        Item { id: cardClip; anchors.fill: parent; clip: true; z: 1 }
+        // (Dynamic: it's the growing shape's box, and what's in it rides in its corner)
+        Item {
+            id: cardClip
+            x: floatCard.mx; y: floatCard.my
+            width: floatCard.mw; height: floatCard.mh
+            opacity: floatCard.contentK
+            clip: true; z: 1
+        }
         // moving the card: Super (Meta) + drag anywhere on it, over what's in it too. Without
         // Super the press goes on to what's under it (a plain drag on the card moved it, and
         // dragging in a menu, a slider's knob just off its track, carried the whole menu off).
@@ -1194,20 +1260,59 @@ PanelWindow {
     // wherever the last menu's closing had got to
     property real cardFade: 0
     property real cardZoom: 0
+    // Dynamic (How menus open): the module of the bar this menu was opened from, kept while it's
+    // open so it goes back into the same one. A journey across the screen, so it gets longer
+    // than a fade in place (never under a quarter of a second: shorter, it's a jump again)
+    property var dynFrom: null
+    readonly property bool dynOn: floatCard.dyn
+    // It moves on a spring, not along a curve over a set time: the shape is pulled towards the
+    // menu's box (or back to the module's), so it leaves fast, goes a touch past and settles, and
+    // one that's turned round half-way (closed while opening, opened again while closing) carries
+    // on from where it is at the speed it has, with no jump. `dynK`: 0 the module's box … 1 the
+    // menu's. Coming, it's a little under-damped (about 2 % past); going back it's pulled straight
+    // into the module and stops there. The speed settings make the spring stiffer or looser.
+    property real dynK: 0
+    property real dynV: 0
+    readonly property real dynGoal: shown && (cardIn.running || cardZoom > 0) ? 1 : 0
+    readonly property real dynFastIn: Math.max(0.4, Math.min(1.5, Theme.menuInSpeed / Math.max(0.01, Theme.animScale)))
+    readonly property real dynFastOut: Math.max(0.4, Math.min(1.5, Theme.menuOutSpeed / Math.max(0.01, Theme.animScale)))
+    readonly property int dynInMs: Math.round(330 / dynFastIn)
+    readonly property int dynOutMs: Math.round(280 / dynFastOut)
+    FrameAnimation {
+        running: win.dynK !== win.dynGoal || win.dynV !== 0
+        onTriggered: {
+            const goal = win.dynGoal;
+            if (!win.dynOn) { win.dynK = goal; win.dynV = 0; return; }
+            const coming = goal > 0.5;
+            const w = coming ? 22 * win.dynFastIn : 17.3 * win.dynFastOut;       // how stiff
+            const z = coming ? 0.78 : 0.8;                                       // how damped
+            let k = win.dynK, v = win.dynV;
+            const n = 4, dt = Math.min(0.05, frameTime) / n;
+            for (let i = 0; i < n; i++) { v += (w * w * (goal - k) - 2 * z * w * v) * dt; k += v * dt; }
+            if (!coming && k <= 0) { k = 0; v = 0; }                              // back in the module: done
+            else if (Math.abs(goal - k) < 0.0006 && Math.abs(v) < 0.02) { k = goal; v = 0; }
+            win.dynK = k; win.dynV = v;
+        }
+    }
+    function moduleBox(page) { return bar.moduleBox(page) || outLeftBar.moduleBox(page) || outRightBar.moduleBox(page); }
     ParallelAnimation {
         id: cardIn
-        NumberAnimation { target: win; property: "cardFade"; to: 1; duration: Theme.menuInMs; easing.type: Easing.OutCubic }
-        NumberAnimation { target: win; property: "cardZoom"; to: 1; duration: Theme.menuInMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+        NumberAnimation { target: win; property: "cardFade"; to: 1; duration: win.dynOn ? win.dynInMs : Theme.menuInMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: win; property: "cardZoom"; to: 1; duration: win.dynOn ? win.dynInMs : Theme.menuInMs; easing.type: Theme.cyber || win.dynOn ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
     }
     ParallelAnimation {
         id: cardOut
+        onFinished: if (!win.shown) win.dynFrom = null
         // (closing: the fade holds back so the way out is seen; it ends with the motion)
-        NumberAnimation { target: win; property: "cardFade"; to: 0; duration: Theme.menuGoMs; easing.type: Theme.cyber ? Easing.OutCubic : Easing.InQuad }
-        NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: Theme.menuGoMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
+        NumberAnimation { target: win; property: "cardFade"; to: 0; duration: win.dynOn ? win.dynOutMs : Theme.menuGoMs; easing.type: Theme.cyber ? Easing.OutCubic : Easing.InQuad }
+        NumberAnimation { target: win; property: "cardZoom"; to: 0; duration: win.dynOn ? win.dynOutMs : Theme.menuGoMs; easing.type: Theme.cyber || win.dynOn ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
     }
     onShownChanged: {
         if (shown) {
             cardOut.stop();
+            const o = HubState.origin;
+            // (not opened from a module: a keybind, a command. Out of its module all the same, if it has one on the bar)
+            dynFrom = o && o.screen === modelData.name && Date.now() - o.t < 2500 ? o : (Theme.animOn && Theme.menuAnim === "dynamic" ? moduleBox(HubState.page) : null);
             if (HubState.snap) { cardFade = 0; cardZoom = 0; }
             // A menu that isn't built yet (its first opening since the shell started, or on this
             // screen): the animation waits the few frames until it is, then plays as always.
@@ -1351,10 +1456,11 @@ PanelWindow {
         readonly property var moments: ({ "": [0, 0.45], cyber: [0.7, 0.75], fjord: [0.16, 0.25], industrial: [0.1, 0.3], doodle: [0.15, 0.5],
                                           liquid: [0.45, 0.55], paper: [0.5, 0.55], terminal: [0.55, 0.7], concrete: [0.55, 0.6], luxe: [0.5, 0.55] })
         readonly property var when: moments[Theme.fxKind] || moments.cyber
-        readonly property bool on: !win.docked && (Theme.fxUnfold ? floatCard.unfold > 0.04
+        // (Dynamic: only once it's nearly in its place; the blur doesn't travel with it)
+        readonly property bool on: !win.docked && (floatCard.dyn ? win.dynK > 0.97 : Theme.fxUnfold ? floatCard.unfold > 0.04
             // (coming in, only once the menu's own page shows: before that the card can still be
             // the last menu's size and place, and a blurred box sat there with nothing in it)
-            : win.shown ? (pageIn && (win.cardZoom >= when[0] || !Theme.cyber))
+            : win.shown ? (pageIn && (Theme.cyber ? win.cardZoom >= when[0] : win.cardFade > when[1]))
             : (Theme.cyber ? win.cardZoom > when[1] : win.cardFade > when[1]))
         readonly property real part: Theme.fxUnfold ? Math.max(0.01, floatCard.unfold) : 1
         // the card zooms in and out from its own corner or side: the blur shrinks with it

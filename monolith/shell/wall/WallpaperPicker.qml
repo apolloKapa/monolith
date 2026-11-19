@@ -31,7 +31,8 @@ PanelWindow {
     visible: shown || t > 0.001
     WlrLayershell.namespace: "monolith-wallpicker"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: shown && !HubState.authOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // (a screenshot being taken gets the keyboard: its Ctrl+C, Enter, Esc… went to the picker instead)
+    WlrLayershell.keyboardFocus: shown && !HubState.authOpen && !Capture.active ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
@@ -47,6 +48,26 @@ PanelWindow {
     readonly property bool liveTab: tab === "live"
     readonly property bool favTab: tab === "favs"
     readonly property bool picTab: tab === "pictures"
+    // Motion between the views. Tabs: the one you leave slides a little towards where the new
+    // one comes from and fades, the new one slides in from its side (picK, liveK, favK: 0 away …
+    // 1 here). Coverflow ⇄ Grid (gridK, 0 the flow … 1 the grid): the picture in the middle of
+    // the flow shrinks into its own cell while the rest of the grid spreads out from behind it,
+    // and back the same way. (Only while the picker is open: it opens on the view it's on.)
+    readonly property int tabAt: Math.max(0, tabs.indexOf(tab))
+    readonly property int viewMs: Math.max(200, Theme.ms(460))
+    property real picK: picTab ? 1 : 0
+    property real liveK: liveTab ? 1 : 0
+    property real favK: favTab ? 1 : 0
+    property real gridK: coverflow ? 0 : 1
+    Behavior on picK { enabled: win.shown && Theme.animOn; NumberAnimation { duration: win.viewMs * 0.7; easing.type: Easing.OutCubic } }
+    Behavior on liveK { enabled: win.shown && Theme.animOn; NumberAnimation { duration: win.viewMs * 0.7; easing.type: Easing.OutCubic } }
+    Behavior on favK { enabled: win.shown && Theme.animOn; NumberAnimation { duration: win.viewMs * 0.7; easing.type: Easing.OutCubic } }
+    Behavior on gridK { enabled: win.shown && Theme.animOn; NumberAnimation { duration: win.viewMs; easing.type: Easing.InOutCubic } }
+    function tabShift(at, k) { return (at === tabAt ? (at - lastTabAt) : (at - tabAt)) * 70 * (1 - k); }
+    property int lastTabAt: 0
+    property int nowTabAt: 0
+    onTabAtChanged: { lastTabAt = nowTabAt; nowTabAt = tabAt; }
+    onCoverflowChanged: if (!coverflow && shown && picList.length) { grid.currentIndex = flow.currentIndex; grid.positionViewAtIndex(flow.currentIndex, GridView.Center); }
     readonly property var tabs: ["pictures", "live", "favs"]
     // the cards' list: replaced only when the pictures themselves change (every saved setting
     // re-runs Store.get bindings, and a new list would send the views back to the top)
@@ -87,7 +108,7 @@ PanelWindow {
     }
     function opened() { syncList(); Wall.rescan(); Qt.callLater(restorePos); keys.forceActiveFocus(); }
     // it's made already open (shell.qml loads it when the picker opens), so start here too
-    Component.onCompleted: if (shown) opened()
+    Component.onCompleted: { nowTabAt = tabAt; lastTabAt = tabAt; if (shown) opened(); }
     onShownChanged: if (shown) opened(); else { notePos(); Wall.savePos(); }
 
     // the room behind it dims; a click there closes it
@@ -138,14 +159,39 @@ PanelWindow {
                 Keys.onEscapePressed: HubState.wallOpen = false
                 readonly property var g: win.liveTab ? liveGrid : win.favTab ? favGrid : grid
                 readonly property bool f: win.coverflow && win.picTab
-                Keys.onLeftPressed: if (f) flow.decrementCurrentIndex(); else g.moveCurrentIndexLeft()
-                Keys.onRightPressed: if (f) flow.incrementCurrentIndex(); else g.moveCurrentIndexRight()
+                // Left and right, held: our own steady steps, not the keyboard's repeat. The repeat
+                // sent the cover flow's index far ahead of what was showing; holding the other
+                // arrow then, the flow raced the long way round through all it still owed. Now
+                // it's never more than a step ahead, and the key pressed last decides the way
+                // (let go of it and the other, if still down, takes over).
+                property bool leftDown: false
+                property bool rightDown: false
+                property int holdDir: 0
+                readonly property bool holding: holdDir !== 0 && holdStep.repeat
+                function step(d) { if (d < 0) { if (f) flow.go(-1); else g.moveCurrentIndexLeft(); } else if (d > 0) { if (f) flow.go(1); else g.moveCurrentIndexRight(); } }
+                function hold(d) { holdDir = d; holdStep.stop(); holdStep.repeat = false; holdStep.interval = 300; if (d !== 0) { step(d); holdStep.start(); } }
+                function letGo() { leftDown = false; rightDown = false; holdDir = 0; holdStep.stop(); holdStep.repeat = false; }
+                Timer { id: holdStep; interval: 300; onTriggered: { keys.step(keys.holdDir); if (!repeat) { repeat = true; interval = 110; start(); } } }
+                onActiveFocusChanged: if (!activeFocus) letGo()
+                Connections { target: win; function onShownChanged() { if (!win.shown) keys.letGo(); } }
+                Keys.onReleased: event => {
+                    if (event.isAutoRepeat || (event.key !== Qt.Key_Left && event.key !== Qt.Key_Right)) return;
+                    if (event.key === Qt.Key_Left) leftDown = false; else rightDown = false;
+                    const d = leftDown ? -1 : (rightDown ? 1 : 0);
+                    if (d === 0) letGo(); else if (d !== holdDir) hold(d);
+                    event.accepted = true;
+                }
                 Keys.onUpPressed: if (!f) g.moveCurrentIndexUp()
                 Keys.onDownPressed: if (!f) g.moveCurrentIndexDown()
                 Keys.onTabPressed: Store.set("wallpaper.tab", win.tabs[(win.tabs.indexOf(win.tab) + 1) % win.tabs.length])
                 Keys.onReturnPressed: { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) win.pick(win.list[i]); }
                 // S: star the one under the cursor (a favourite, for the playlist)
-                Keys.onPressed: event => { if (event.key === Qt.Key_S) { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) Wall.toggleFav(win.list[i]); event.accepted = true; } }
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_Left || event.key === Qt.Key_Right) {
+                        if (!event.isAutoRepeat) { if (event.key === Qt.Key_Left) leftDown = true; else rightDown = true; hold(event.key === Qt.Key_Left ? -1 : 1); }
+                        event.accepted = true; return;
+                    }
+                    if (event.key === Qt.Key_S) { const i = f ? flow.currentIndex : g.currentIndex; if (win.list.length) Wall.toggleFav(win.list[i]); event.accepted = true; } }
             }
 
             RowLayout {
@@ -171,7 +217,7 @@ PanelWindow {
                                       : Wall.dir.replace(Wall.home, "~") + "   ·   " + Wall.pictures.length + " pictures"
                 }
                 Segmented { visible: win.picTab; Layout.preferredWidth: 180; height: 36; opts: [["flow", "Coverflow"], ["grid", "Grid"]]; value: win.coverflow ? "flow" : "grid"; onPicked: v => Store.set("wallpaper.view", v) }
-                Segmented { Layout.preferredWidth: 160; height: 36; opts: [["dark", "Dark"], ["light", "Light"]]; value: Theme.modeName; onPicked: v => Store.set("theme.mode", v) }
+                Segmented { Layout.preferredWidth: 160; height: 36; opts: [["dark", "Dark"], ["light", "Light"]]; value: Look.mode; onPicked: v => Look.setMode(v) }
                 Pressable {
                     Layout.preferredWidth: 36; Layout.preferredHeight: 36
                     color: hovered ? Theme.containerHigh : "transparent"
@@ -239,8 +285,18 @@ PanelWindow {
             // ── coverflow: the pictures turn away on both sides of the middle one ──
             PathView {
                 id: flow
+                // one step left or right. (Not PathView's own increment/decrementCurrentIndex:
+                // those force the way it turns, so stepping back while it was still moving
+                // forward sent it the whole way round the other side to get one picture back,
+                // in the same third of a second: the flow spun past everything.) Set like this,
+                // it takes the short way from wherever it is
+                movementDirection: PathView.Shortest
+                function go(d) { const n = count; if (n > 0) currentIndex = ((currentIndex + d) % n + n) % n; }
                 onCurrentIndexChanged: if (win.placed && win.shown && win.picList.length) Wall.rememberPos("flow", currentIndex)
-                visible: win.coverflow && win.picTab
+                visible: win.picK > 0.001 && win.gridK < 0.999
+                opacity: win.picK * Math.max(0, 1 - win.gridK / 0.3)
+                scale: 1 - 0.1 * win.gridK
+                transform: Translate { x: win.tabShift(0, win.picK) }
                 y: head.height + 12
                 width: parent.width
                 height: parent.height - y - 34
@@ -252,7 +308,7 @@ PanelWindow {
                 preferredHighlightBegin: 0.5
                 preferredHighlightEnd: 0.5
                 highlightRangeMode: PathView.StrictlyEnforceRange
-                highlightMoveDuration: 380
+                highlightMoveDuration: keys.holding ? 150 : 380      // (held: it keeps up with the steps)
                 readonly property real cardW: Math.min(760, width * 0.46)
                 readonly property real cardH: Math.min(cardW * 0.6, height - 20)
                 path: Path {
@@ -311,10 +367,11 @@ PanelWindow {
                     }
                     Star { path: fc.modelData; hot: fc.middle }
                 }
-                WheelHandler { onWheel: event => { if (event.angleDelta.y > 0 || event.angleDelta.x > 0) flow.decrementCurrentIndex(); else flow.incrementCurrentIndex(); } }
+                WheelHandler { onWheel: event => { flow.go(event.angleDelta.y > 0 || event.angleDelta.x > 0 ? -1 : 1); } }
             }
             Label {
-                visible: win.coverflow && win.picTab && win.picList.length > 0
+                visible: flow.visible && win.picList.length > 0
+                opacity: flow.opacity
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
                 width: parent.width * 0.7
@@ -416,7 +473,9 @@ PanelWindow {
 
             Item {
                 id: liveView
-                visible: win.liveTab
+                visible: win.liveK > 0.001
+                opacity: win.liveK
+                transform: Translate { x: win.tabShift(1, win.liveK) }
                 y: head.height + 12
                 width: parent.width
                 height: parent.height - y
@@ -491,7 +550,12 @@ PanelWindow {
             GridView {
                 SmoothWheel {}
                 id: grid
-                visible: !win.coverflow && win.picTab
+                visible: win.picK > 0.001 && win.gridK > 0.001
+                opacity: win.picK
+                transform: Translate { x: win.tabShift(0, win.picK) }
+                // (where the flow's middle card is, in this view)
+                readonly property real midX: width / 2
+                readonly property real midY: (height - 34) / 2
                 y: head.height + 12
                 width: parent.width
                 height: parent.height - y
@@ -510,6 +574,19 @@ PanelWindow {
                     required property int index
                     width: grid.cellWidth
                     height: grid.cellHeight
+                    // out of the flow: the flow's middle picture is this cell's, grown to that
+                    // card's size and place; the others come from half-way to it, smaller, fading in
+                    readonly property bool hero: index === flow.currentIndex
+                    readonly property real away: 1 - win.gridK
+                    readonly property real toMidX: grid.midX - (x + width / 2)
+                    readonly property real toMidY: grid.midY - (y - grid.contentY + height / 2)
+                    z: hero ? 2 : 0
+                    opacity: hero ? 1 : Math.max(0, Math.min(1, (win.gridK - 0.15) / 0.5))
+                    transform: [
+                        Scale { origin.x: gcell.width / 2; origin.y: gcell.height / 2
+                                xScale: 1 + ((gcell.hero ? flow.cardW / Math.max(1, gcell.width - 10) : 0.55) - 1) * gcell.away; yScale: xScale },
+                        Translate { x: gcell.toMidX * gcell.away * (gcell.hero ? 1 : 0.6); y: gcell.toMidY * gcell.away * (gcell.hero ? 1 : 0.6) }
+                    ]
                     Card {
                         anchors.fill: parent
                         anchors.margins: 5
@@ -539,7 +616,9 @@ PanelWindow {
             GridView {
                 SmoothWheel {}
                 id: favGrid
-                visible: win.favTab
+                visible: win.favK > 0.001
+                opacity: win.favK
+                transform: Translate { x: win.tabShift(2, win.favK) }
                 y: head.height + 12
                 width: parent.width
                 height: parent.height - y

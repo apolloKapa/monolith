@@ -12,7 +12,6 @@ import Quickshell.Services.Pam
 Singleton {
     id: ls
     property bool locked: false
-    onLockedChanged: { typed = ""; if (locked) Sounds.play("lock"); }
     property string message: ""
     property bool busy: false
     property int failures: 0
@@ -76,6 +75,71 @@ Singleton {
         }
         onError: { ls.busy = false; ls.message = "Couldn't check the password"; }
     }
+
+    // ── Fingerprint (fprintd), for the Fingerprint widget on the lock screen. While it's locked
+    // and this user has a finger enrolled, fprintd-verify waits for a finger: a match unlocks
+    // (after the widget has had a moment to turn into its tick), a wrong finger shakes the widget
+    // and waits again. Five wrong ones in a row and it stops: the password then.
+    // fp: off (no reader, none enrolled, not locked) | ready | fail | ok ──
+    property string fp: "off"
+    property bool fpEnrolled: false
+    property int fpMisses: 0
+    signal fpFailed()
+    signal fpMatched()
+    Process {
+        id: fpList
+        running: true
+        command: ["sh", "-c", "command -v fprintd-list >/dev/null 2>&1 && fprintd-list \"$USER\" 2>/dev/null"]
+        stdout: StdioCollector { onStreamFinished: ls.fpEnrolled = /#\d+:/.test(text) }
+    }
+    Process {
+        id: fpVerify
+        command: ["fprintd-verify"]
+        stdout: SplitParser {
+            onRead: line => {
+                if (!ls.locked || ls.unlocking) return;
+                if (/verify-match/.test(line)) {
+                    ls.fp = "ok"; ls.fpMatched(); ls.failures = 0; ls.fpMisses = 0;
+                    Sounds.play("unlock"); fpUnlock.restart();
+                } else if (/verify-no-match|verify-unknown-error/.test(line)) {
+                    ls.fp = "fail"; ls.fpFailed(); ls.fpMisses++;
+                    Sounds.play("error"); fpAgain.restart();
+                }
+            }
+        }
+        // (it ends after each try, and on a swipe too short to read: wait for the next finger)
+        onExited: if (ls.locked && !ls.unlocking && ls.fp === "ready") fpAgain.restart()
+    }
+    Timer { id: fpUnlock; interval: 650; onTriggered: { ls.unlocking = true; release.restart(); } }
+    Timer {
+        id: fpAgain; interval: 900
+        onTriggered: {
+            if (!ls.locked || ls.unlocking || ls.fp === "ok") return;
+            if (ls.fpMisses >= 5) { ls.fp = "off"; ls.message = "Too many tries: use your password"; return; }
+            ls.fp = "ready";
+            fpVerify.running = true;
+        }
+    }
+    function fpStart() {
+        fpMisses = 0;
+        if (!fpEnrolled) { fp = "off"; return; }
+        fp = "ready"; fpVerify.running = true;
+    }
+    onLockedChanged: {
+        typed = "";
+        if (locked) Sounds.play("lock");
+        if (locked) { fpList.running = true; fpStart(); }
+        else { fpAgain.stop(); fpUnlock.stop(); fpVerify.running = false; fp = "off"; }
+    }
+    // a look at it without a reader (a click on the widget while not locked): wrong, then right
+    property bool fpDemoOk: false
+    function fpDemo() {
+        if (locked || fpDemoEnd.running) return;
+        fpDemoOk = !fpDemoOk;
+        if (fpDemoOk) { fp = "fail"; fpFailed(); } else { fp = "ok"; fpMatched(); }
+        fpDemoEnd.restart();
+    }
+    Timer { id: fpDemoEnd; interval: 1800; onTriggered: if (!ls.locked) ls.fp = "off" }
 
     IpcHandler {
         target: "lock"

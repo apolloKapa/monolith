@@ -536,7 +536,7 @@ Page {
                 }
                 Small { Layout.leftMargin: 6; Layout.topMargin: 6; text: "App limits" }
                 SettingRow {
-                    visible: Wellbeing.limits.length === 0
+                    show: Wellbeing.limits.length === 0
                     icon: "hourglass"; title: "No app limits yet"; desc: "Open an app from the list (Day) and set its daily limit there"
                 }
                 Repeater {

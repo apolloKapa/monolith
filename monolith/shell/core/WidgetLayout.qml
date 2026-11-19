@@ -40,7 +40,12 @@ Singleton {
         disk: { name: "Disk", icon: "hard_drive", size: [180, 130], lim: [90, 70, 600, 600], aspect: [0.6, 2.5],
             faces: [["default", "Card", "MetricCard"], ["circle", "Circle", "MetricCircle", [1, 1], [150, 150]], ["dot", "Dot", "MetricDot", [1, 1], [170, 170]], ["cyber", "Cyberpunk", "MetricCyber", [1, 2], [200, 170]]] },
         battery: { name: "Battery", icon: "battery_full", size: [260, 90], lim: [90, 60, 600, 600], aspect: [0.6, 4.5],
-            faces: [["default", "Bar", "BatteryBar", [1.5, 4.5]], ["circle", "Circle", "BatteryCircle", [1, 1], [150, 150]], ["dot", "Dot", "MetricDot", [1, 1], [170, 170]], ["cyber", "Cyberpunk", "MetricCyber", [1, 2], [200, 170]]] },
+            faces: [["default", "Bar", "BatteryBar", [1.5, 4.5]], ["circle", "Circle", "BatteryCircle", [1, 1], [150, 150]], ["dot", "Dot", "MetricDot", [1, 1], [170, 170]], ["cyber", "Cyberpunk", "MetricCyber", [1, 2], [200, 170]],
+                    ["cell", "Cell", "BatteryCell", [1.6, 3.2], [240, 110]], ["tall", "Tall", "BatteryTall", [0.4, 0.9], [120, 230]],
+                    ["minimal", "Minimal", "BatteryMinimal", [1.2, 5], [240, 100]]] },
+        // a fingerprint reader's finger on the lock screen: it shakes at a wrong finger and turns into a tick at the right one
+        fingerprint: { name: "Fingerprint", icon: "fingerprint", size: [150, 150], lim: [70, 70, 500, 500], aspect: [1, 1],
+            faces: [["default", "Normal", "FingerprintNormal"], ["dot", "Dot", "FingerprintDot", [1, 1], [170, 170]], ["cyber", "Cyberpunk", "FingerprintCyber", [0.8, 1.3], [190, 220]]] },
         github: { name: "GitHub", icon: "commit", size: [560, 190], lim: [320, 150, 1100, 320], aspect: [2, 5],
             faces: [["default", "Contributions", "GithubGrid"], ["cyber", "Cyberpunk", "GithubCyber", [1.6, 4], [420, 200]]] },
         notes: { name: "Notes", icon: "sticky_note_2", size: [300, 280], lim: [200, 160, 700, 700], aspect: [0.5, 2.5],
@@ -62,7 +67,7 @@ Singleton {
     })
     // the order they're offered in
     readonly property var order: ["clock", "date", "weather", "media", "visualizer", "calendar", "usage", "cpu", "ram", "temp", "disk",
-        "battery", "github", "notes", "text", "image", "user", "greeting", "notifications", "wellbeing"]
+        "battery", "github", "notes", "text", "image", "user", "greeting", "notifications", "wellbeing", "fingerprint"]
     // [type, name, icon] for the add palette, and each type's [face, name] for the style drop-downs
     readonly property var types: order.map(t => [t, spec[t].name, spec[t].icon])
     readonly property var faces: {
@@ -119,6 +124,8 @@ Singleton {
         "cpu/circle": [90, 90, 600, 600, 0.5, 2], "ram/circle": [90, 90, 600, 600, 0.5, 2],
         "temp/circle": [90, 90, 600, 600, 0.5, 2], "disk/circle": [90, 90, 600, 600, 0.5, 2],
         "battery/default": [160, 60, 600, 200, 1.5, 4.5], "battery/circle": [90, 90, 600, 600, 0.5, 2],
+        "battery/cell": [120, 60, 700, 320, 1.6, 3.2], "battery/tall": [60, 110, 400, 700, 0.4, 0.9], "battery/minimal": [120, 50, 800, 300, 1.2, 5],
+        "fingerprint/default": [70, 70, 500, 500, 1, 1], "fingerprint/dot": [90, 90, 500, 500, 1, 1], "fingerprint/cyber": [110, 130, 500, 600, 0.8, 1.3],
         "github/default": [520, 140, 1200, 380, 1.4, 8.5], "notes/default": [240, 180, 700, 700, 0.5, 2.5],
         "text/default": [60, 30, 2000, 800, 0.2, 20], "image/rect": [30, 30, 4000, 4000, 0.02, 50],
         "image/rounded": [30, 30, 4000, 4000, 0.02, 50], "image/round": [40, 40, 3000, 3000, 1, 1],
@@ -407,7 +414,7 @@ Singleton {
         ["media", "Media", "music_note", ["media", "visualizer", "image"]],
         ["system", "System", "monitoring", ["usage", "cpu", "ram", "temp", "disk", "battery"]],
         ["info", "Info", "info", ["weather", "notifications", "github"]],
-        ["you", "Personal", "person", ["user", "greeting", "notes", "text", "wellbeing"]]
+        ["you", "Personal", "person", ["user", "greeting", "notes", "text", "wellbeing", "fingerprint"]]
     ]
     // x/y: where its top-left goes, as fractions of the screen (else near the middle)
     function add(mode, type, screen, x, y, editH) {

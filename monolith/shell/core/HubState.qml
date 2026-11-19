@@ -9,7 +9,7 @@ import Qt.labs.folderlistmodel
 Singleton {
     id: hub
     property bool open: false
-    onOpenChanged: { Sounds.play(open ? "open" : "close"); if (open) { peekScreen = ""; dropScreen = ""; } }
+    onOpenChanged: { Sounds.play(open ? "open" : "close"); if (open) { peekScreen = ""; dropScreen = ""; } else origin = null; }
     // the bar's dropdowns: the bell and the volume drop a small card right under them
     // (status/NotifDrop.qml, status/SoundDrop.qml); which one, and where it hangs, in that
     // screen's coordinates
@@ -33,6 +33,10 @@ Singleton {
     // the sides of the screen a menu opens from by hover (Island.qml): quick access leaves the
     // middle of those to it
     property var hoverEdges: []
+    // where the last menu was opened from: the bar's module that was clicked, in its screen's
+    // coordinates ({ screen, x, y, w, h, t }), for the Dynamic way of opening (a menu grows out of
+    // that module and goes back into it). Opened by a key, there's none
+    property var origin: null
     property var barOut: ({})
     function setBarOut(screen, on) {
         if ((barOut[screen] === true) === on) return;

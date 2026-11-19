@@ -84,3 +84,10 @@ GreetingCyber 1.0 GreetingCyber.qml
 NotificationsCyber 1.0 NotificationsCyber.qml
 WellbeingCyber 1.0 WellbeingCyber.qml
 NotifFeed 1.0 NotifFeed.qml
+BatteryCell 1.0 BatteryCell.qml
+BatteryTall 1.0 BatteryTall.qml
+BatteryMinimal 1.0 BatteryMinimal.qml
+Fingerprint 1.0 Fingerprint.qml
+FingerprintNormal 1.0 FingerprintNormal.qml
+FingerprintDot 1.0 FingerprintDot.qml
+FingerprintCyber 1.0 FingerprintCyber.qml

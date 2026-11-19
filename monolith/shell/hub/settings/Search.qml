@@ -40,7 +40,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "search.gridColumns"; def: 6;
-        visible: Store.get("search.grid", false) === true
+        show: Store.get("search.grid", false) === true
         icon: "grid_view"; title: "Grid columns"
         NumberBox { from: 3; to: 12; value: Number(Store.get("search.gridColumns", 6)); onMoved: v => Store.set("search.gridColumns", v) }
     }
@@ -86,13 +86,13 @@ ColumnLayout {
     }
     SettingRow {
         key: "search.favColumns"; def: 6;
-        visible: ["left", "right"].indexOf(Store.get("search.favPlace", "top")) === -1
+        show: ["left", "right"].indexOf(Store.get("search.favPlace", "top")) === -1
         icon: "grid_view"; title: "Favourites per row"
         NumberBox { from: 2; to: 12; value: Number(Store.get("search.favColumns", 6)); onMoved: v => Store.set("search.favColumns", v) }
     }
     SettingRow {
         key: "search.favSideColumns"; def: 2;
-        visible: ["left", "right"].indexOf(Store.get("search.favPlace", "top")) !== -1
+        show: ["left", "right"].indexOf(Store.get("search.favPlace", "top")) !== -1
         icon: "view_column"; title: "Favourites per row (beside the apps)"
         desc: "How wide their column is"
         NumberBox { from: 1; to: 4; value: Number(Store.get("search.favSideColumns", 2)); onMoved: v => Store.set("search.favSideColumns", v) }

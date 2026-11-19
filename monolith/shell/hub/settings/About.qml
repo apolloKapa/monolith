@@ -143,7 +143,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "updates.interval"; def: 60;
-        visible: Store.get("updates.check", true) !== false
+        show: Store.get("updates.check", true) !== false
         icon: "schedule"; title: "Check every"; desc: "How often Monolith looks for a new version"
         NumberBox { from: 1; to: 60; step: 1; unit: "min"; value: Updates.everyMin; onMoved: v => Store.set("updates.interval", v) }
     }

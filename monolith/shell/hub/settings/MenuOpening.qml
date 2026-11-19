@@ -96,14 +96,14 @@ ColumnLayout {
 
     SettingRow {
         key: "theme.menuInSpeed"; def: 1
-        visible: Theme.animOn
+        show: Theme.animOn
         icon: "open_in_full"; title: "Opening speed"
         desc: sec.took(Theme.menuInSpeed, "A menu opening")
         NumberBox { from: 0.25; to: 4; step: 0.05; decimals: 2; unit: "×"; value: Theme.menuInSpeed; onMoved: v => Store.set("theme.menuInSpeed", v) }
     }
     SettingRow {
         key: "theme.menuOutSpeed"; def: 1
-        visible: Theme.animOn
+        show: Theme.animOn
         icon: "close_fullscreen"; title: "Closing speed"
         desc: sec.took(Theme.menuOutSpeed, "A menu closing")
         NumberBox { from: 0.25; to: 4; step: 0.05; decimals: 2; unit: "×"; value: Theme.menuOutSpeed; onMoved: v => Store.set("theme.menuOutSpeed", v) }
@@ -116,25 +116,28 @@ ColumnLayout {
         slide: ["north", "Slide up", "A menu rises into place, and sinks away"],
         drop: ["south", "Drop down", "A menu comes down into place, and lifts away"],
         fade: ["gradient", "Fade", "A menu just fades in, and out"],
-        unfold: ["unfold_more", "Unfold", "A menu opens out of a thin bright line through its middle, and folds back into it"]
+        unfold: ["unfold_more", "Unfold", "A menu opens out of a thin bright line through its middle, and folds back into it"],
+        dynamic: ["open_in_full", "Dynamic", "A menu grows out of its module on the bar on a spring, a touch past its size, and settles; closing, it goes back into the module. From a click or a keybind, for every menu that has a module on the bar. A menu set to come out of the bar floats instead"]
     })
+    // (a style with its own effect opens menus its own way: there the choice is that or Dynamic)
     SettingRow {
         keys: ["theme.menuAnim", "theme.effects.unfold"]
-        visible: Theme.animOn && !Theme.cyber
+        show: Theme.animOn
         icon: (sec.menuAnimInfo[Theme.menuAnim] || sec.menuAnimInfo.zoom)[0]; title: "How menus open"
-        desc: (sec.menuAnimInfo[Theme.menuAnim] || sec.menuAnimInfo.zoom)[2]
+        desc: Theme.cyber && Theme.menuAnim !== "dynamic" ? Look.style.name + " opens menus its own way. Dynamic replaces that for menus opened from the bar"
+            : (sec.menuAnimInfo[Theme.menuAnim] || sec.menuAnimInfo.zoom)[2]
         Dropdown {
             width: 220
-            opts: Theme.menuAnims.map(k => [k, sec.menuAnimInfo[k][1]])
-            value: Theme.menuAnim
-            onPicked: v => { Store.set("theme.menuAnim", v); Store.unset("theme.effects.unfold"); }
+            opts: Theme.cyber ? [["style", Look.style.name + "'s own"], ["dynamic", "Dynamic"]] : Theme.menuAnims.map(k => [k, sec.menuAnimInfo[k][1]])
+            value: Theme.cyber ? (Theme.menuAnim === "dynamic" ? "dynamic" : "style") : Theme.menuAnim
+            onPicked: v => { Store.set("theme.menuAnim", v === "style" ? "zoom" : v); Store.unset("theme.effects.unfold"); }
         }
     }
     // the style's own effect (Cyberpunk's glitch, Doodle drawing menus in, Concrete crumbling…):
     // its speed on its own, on top of the speeds above and the main speed
     SettingRow {
         key: "theme.fxSpeed"; def: 1;
-        visible: Theme.animOn && Theme.cyber
+        show: Theme.animOn && Theme.cyber
         icon: "auto_awesome"; title: "Style effect speed"
         desc: { const v = Theme.fxSpeed; const what = Look.style.name + "'s own effect (how its menus appear and go)"; return v === 1 ? what + ". 1 × is normal" : what + " takes " + (Math.round(100 / v) / 100) + " × as long" + (v > 1 ? " (faster)" : " (slower)"); }
         NumberBox { from: 0.25; to: 3; step: 0.05; decimals: 2; unit: "×"; value: Theme.fxSpeed; onMoved: v => Store.set("theme.fxSpeed", v) }

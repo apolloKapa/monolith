@@ -38,7 +38,31 @@ Item {
     readonly property real contentLen: len(leftZone) + len(leftMidZone) + len(midZone) + len(midRightZone) + len(rightZone) + freeLen
     readonly property real needWidth: Theme.barSpread ? spreadWidth : fitLength
     implicitHeight: vertical ? fitLength : Theme.islandH
-    function open(p) { HubState.toggle(p, bar.screenName); }
+    // (the module being clicked is noted first: Dynamic menus grow out of it)
+    property var pressedAt: null
+    function open(p) {
+        HubState.origin = pressedAt && Date.now() - pressedAt.t < 1500 ? pressedAt : null;
+        HubState.toggle(p, bar.screenName);
+    }
+    // the modules that are loaded, by name, and the ones each menu belongs to: a menu opened some
+    // other way (a keybind, a command) grows out of its module too when that's on this bar
+    property var modItems: ({})
+    readonly property var menuMods: ({
+        quick: ["cc", "battery", "power"], search: ["search"], calendar: ["clock", "weather"], media: ["media", "visualizer"],
+        windows: ["title"], network: ["network", "bluetooth"], gaming: ["gaming"], tools: ["live"]
+    })
+    function moduleBox(page) {
+        if (!bar.visible || bar.still) return null;
+        const names = menuMods[page] || [];
+        for (let i = 0; i < names.length; i++) {
+            const l = modItems[names[i]];
+            if (!l || !l.visible || !l.item || l.width < 4 || l.height < 4) continue;
+            const q = l.item.mapToItem(null, 0, 0);
+            if (q.x + l.item.width < 0 || q.y + l.item.height < 0) continue;      // (a bar that's tucked away)
+            return { screen: bar.screenName, x: q.x, y: q.y, w: l.item.width, h: l.item.height, t: Date.now() };
+        }
+        return null;
+    }
     // the point on a module's edge that faces into the screen (where its drop-downs hang from)
     function edgePoint(it) {
         if (vertical) return it.mapToItem(null, Theme.barSide === "right" ? 0 : it.width, it.height / 2);
@@ -156,6 +180,7 @@ Item {
     // a module: a hover pill with a ripple
     component Mod: Pressable {
         id: m
+        onPressedChanged: if (pressed) { const p = m.mapToItem(null, 0, 0); bar.pressedAt = { screen: bar.screenName, x: p.x, y: p.y, w: m.width, h: m.height, t: Date.now() }; }
         default property alias content: inner.data
         property real pad: 9
         property real spacing: bar.vertical ? 2 : 6
@@ -191,6 +216,8 @@ Item {
             Loader {
                 required property string modelData
                 sourceComponent: bar.mods[modelData] || null
+                Component.onCompleted: bar.modItems[modelData] = this
+                Component.onDestruction: if (bar.modItems[modelData] === this) delete bar.modItems[modelData]
                 // a module with nothing to show (`want: false`) takes no room
                 visible: !!item && item.want !== false
             }
@@ -260,6 +287,8 @@ Item {
         Loader {
             required property string modelData
             sourceComponent: bar.mods[modelData] || null
+            Component.onCompleted: bar.modItems[modelData] = this
+            Component.onDestruction: if (bar.modItems[modelData] === this) delete bar.modItems[modelData]
             visible: !!item && item.want !== false
             readonly property real at: Math.max(0, Math.min(1, Number(bar.freeAt[modelData] !== undefined ? bar.freeAt[modelData] : 0.5)))
             readonly property real along: bar.vertical ? height : width

@@ -23,13 +23,13 @@ ColumnLayout {
         }
     }
     SettingRow {
-        visible: Theme.transparent
+        show: Theme.transparent
         key: "theme.panelOpacity";
         icon: "opacity"; title: "Panel opacity"; desc: "How solid the bar, menus, dock and pop-ups are. Below 100 % you see through them"
         NumberBox { from: 0.2; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Theme.panelOpacity; onMoved: v => Store.set("theme.panelOpacity", v) }
     }
     SettingRow {
-        visible: Theme.transparent
+        show: Theme.transparent
         keys: ["theme.blur", "theme.panelOpacity"];
         icon: "blur_on"; title: "Blur behind panels"
         desc: Theme.liquid ? "Off with Liquid glass: it's glass already, and bends and frosts what's behind it by itself"
@@ -37,7 +37,7 @@ ColumnLayout {
         Toggle { enabled: !Theme.liquid; opacity: enabled ? 1 : 0.4; checked: Theme.blur; onToggled: on => { Store.set("theme.blur", on); if (on && Theme.panelOpacity > 0.95) Store.set("theme.panelOpacity", 0.75); } }
     }
     SettingRow {
-        visible: Theme.blur
+        show: Theme.blur
         key: "theme.blurOverFullscreen"; def: true
         icon: "fullscreen"; title: "Blur over fullscreen apps"
         desc: "Menus keep their blur over an app in fullscreen. Off: no blur there (lighter on a slow GPU). Never in Game mode"
@@ -45,7 +45,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "theme.blurStrength"; def: 3;
-        visible: Theme.blur
+        show: Theme.blur
         icon: "deblur"; title: "Blur strength"; desc: "1 is a light haze, 8 is very soft"
         NumberBox { from: 1; to: 8; value: Number(Store.get("theme.blurStrength", 3)); onMoved: v => Store.set("theme.blurStrength", v) }
     }
@@ -68,7 +68,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "theme.materialStrength"; def: 1
-        visible: Theme.material !== ""
+        show: Theme.material !== ""
         icon: "grain"; title: "Texture"; desc: "How much of the material shows"
         NumberBox { from: 0.2; to: 1.5; step: 0.1; decimals: 1; factor: 100; unit: "%"; value: Theme.materialStrength; onMoved: v => Store.set("theme.materialStrength", v) }
     }
@@ -92,33 +92,33 @@ ColumnLayout {
     }
     SettingRow {
         key: "theme.shadow.strength"; def: 1;
-        visible: Theme.shadowOn
+        show: Theme.shadowOn
         icon: "contrast"; title: "Strength"; desc: "How dark the shadow is. 100 % is the normal shade"
         NumberBox { from: 0.1; to: 2; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Theme.shadowStrength; onMoved: v => Store.set("theme.shadow.strength", v) }
     }
     SettingRow {
         key: "theme.shadow.softness"; def: 0.9;
-        visible: Theme.shadowOn
+        show: Theme.shadowOn
         icon: "blur_medium"; title: "Softness"; desc: "0 % is a crisp edge, 100 % fades out far"
         NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Theme.shadowSoftness; onMoved: v => Store.set("theme.shadow.softness", v) }
     }
     SettingRow {
         key: "theme.shadow.distance"; def: 6;
-        visible: Theme.shadowOn
+        show: Theme.shadowOn
         icon: "vertical_align_bottom"; title: "Distance"; desc: "How far down it falls (0 is all around)"
         NumberBox { from: -20; to: 30; unit: "px"; value: Theme.shadowDistance; onMoved: v => Store.set("theme.shadow.distance", v) }
     }
     SettingRow {
         key: "theme.shadow.sideways"; def: 0;
-        visible: Theme.shadowOn
+        show: Theme.shadowOn
         icon: "swap_horiz"; title: "Direction"; desc: "Left (below 0) or right (above 0) of the shape"
         NumberBox { from: -20; to: 20; unit: "px"; value: Theme.shadowSideways; onMoved: v => Store.set("theme.shadow.sideways", v) }
     }
     SettingRow {
         key: "theme.shadow.colour"; def: "black";
-        visible: Theme.shadowOn
+        show: Theme.shadowOn
         icon: "format_color_fill"; title: "Colour"; desc: "Black, a glow in the accent colour, or the text colour"
-        Segmented { width: 260; opts: [["black", "Black"], ["accent", "Accent"], ["ink", "Text"]]; value: ["black", "accent", "ink"].indexOf(Theme.shadowTint) !== -1 ? Theme.shadowTint : "black"; onPicked: v => Store.set("theme.shadow.colour", v) }
+        Dropdown { width: 220; opts: [["black", "Black"], ["accent", "Accent"], ["ink", "Text"]]; value: ["black", "accent", "ink"].indexOf(Theme.shadowTint) !== -1 ? Theme.shadowTint : "black"; onPicked: v => Store.set("theme.shadow.colour", v) }
     }
 
     // (the shell's and niri's animations: Animations → Speeds & windows, Animations.qml)

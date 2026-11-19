@@ -23,7 +23,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "sounds.volume"; def: 0.5;
-        visible: Sounds.on
+        show: Sounds.on
         icon: "volume_down"; title: "Volume"; desc: "How loud the effects are, next to everything else"
         NumberBox { from: 0; to: 1; step: 0.05; decimals: 2; factor: 100; unit: "%"; value: Sounds.volume; onMoved: v => { Store.set("sounds.volume", v); Sounds.play("click"); } }
     }
@@ -44,7 +44,7 @@ ColumnLayout {
     SectionHead { visible: Sounds.on; text: "Sound pack" }
     SettingRow {
         key: "sounds.followStyle"; def: true;
-        visible: Sounds.on && Sounds.stylePack !== ""
+        show: Sounds.on && Sounds.stylePack !== ""
         icon: "palette"; title: "Use the style's sounds"; desc: Look.style.name + " has its own sounds; they play instead of the pack you picked"
         Toggle { checked: Sounds.followStyle; onToggled: on => { Store.set("sounds.followStyle", on); Qt.callLater(() => Sounds.demo(Sounds.pack)); } }
     }
@@ -83,7 +83,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "sounds.customDir"; def: "";
-        visible: Sounds.on && Sounds.pack === "custom"
+        show: Sounds.on && Sounds.pack === "custom"
         icon: "folder"; title: "Your sounds folder"; desc: "One .wav for each sound; missing ones are silent. Names: " + Sounds.list.map(e => e[0]).join(", ") + ", notify"
         Field { width: 280; text: Store.get("sounds.customDir", ""); placeholder: "~/Music/ui-sounds"; onAccepted: v => { if (v.trim() !== Store.get("sounds.customDir", "")) Store.set("sounds.customDir", v.trim()); } }
     }
@@ -115,26 +115,26 @@ ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 8
                     SettingRow {
-                        visible: grp.modelData[0] === "notifications"
+                        show: grp.modelData[0] === "notifications"
                         Layout.fillWidth: true
                         key: "notifications.sound"; def: true;
                         icon: "notifications_active"; title: "A notification arriving"; desc: "Plays even with the effects off; not for apps that ask for quiet"
                         Toggle { checked: sec.notifOn; onToggled: on => Store.set("notifications.sound", on) }
                     }
                     SettingRow {
-                        visible: grp.modelData[0] === "notifications" && sec.notifOn
+                        show: grp.modelData[0] === "notifications" && sec.notifOn
                         Layout.fillWidth: true
                         key: "notifications.soundStyle"; def: "tone";
                         icon: "music_note"; title: "Its sound"
                         desc: sec.nstyle === "tone" ? "One of Monolith's tones (urgent ones get an alert)" : sec.nstyle === "pack" ? "The sound pack's chime (" + ((Sounds.packs.find(p => p[0] === Sounds.pack) || ["", "Soft"])[1]) + ")" : sec.nstyle === "file" ? "A sound file of your own" : "The system's message sound (Monolith's tone when it has none)"
                         RowLayout {
                             spacing: 6
-                            Segmented { width: 300; opts: [["tone", "Monolith"], ["pack", "Pack"], ["system", "System"], ["file", "Your file"]]; value: sec.nstyle; onPicked: v => { Store.set("notifications.soundStyle", v); Qt.callLater(() => Notifs.playSound(false)); } }
+                            Dropdown { width: 220; opts: [["tone", "Monolith"], ["pack", "Pack"], ["system", "System"], ["file", "Your file"]]; value: sec.nstyle; onPicked: v => { Store.set("notifications.soundStyle", v); Qt.callLater(() => Notifs.playSound(false)); } }
                             Button { text: "Play"; icon: "play_arrow"; onClicked: Notifs.playSound(false) }
                         }
                     }
                     SettingRow {
-                        visible: grp.modelData[0] === "notifications" && sec.notifOn && sec.nstyle === "tone"
+                        show: grp.modelData[0] === "notifications" && sec.notifOn && sec.nstyle === "tone"
                         Layout.fillWidth: true
                         key: "notifications.tone"; def: "chime";
                         icon: "library_music"; title: "Tone"; desc: "Urgent notifications play an alert instead"
@@ -150,14 +150,14 @@ ColumnLayout {
                         }
                     }
                     SettingRow {
-                        visible: grp.modelData[0] === "notifications" && sec.notifOn && sec.nstyle === "file"
+                        show: grp.modelData[0] === "notifications" && sec.notifOn && sec.nstyle === "file"
                         Layout.fillWidth: true
                         key: "notifications.soundFile"; def: "";
                         icon: "audio_file"; title: "Your own sound"; desc: "A sound file (.oga, .wav, .mp3)"
                         Field { width: 280; text: Store.get("notifications.soundFile", ""); placeholder: "/path/to/sound.oga"; onAccepted: v => { const p = v.trim().replace(/^~/, Wall.home); if (p !== Store.get("notifications.soundFile", "")) Store.set("notifications.soundFile", p); } }
                     }
                     SettingRow {
-                        visible: grp.modelData[0] === "notifications" && sec.notifOn
+                        show: grp.modelData[0] === "notifications" && sec.notifOn
                         Layout.fillWidth: true
                         key: "notifications.soundVolume"; def: 0.8;
                         icon: "volume_up"; title: "Its volume"
@@ -166,7 +166,7 @@ ColumnLayout {
                     // (only where notifications are held back from a fullscreen app: Notifications → While an
                     // app is fullscreen; showing over it, they sound as usual)
                     SettingRow {
-                        visible: grp.modelData[0] === "notifications" && sec.notifOn && Store.get("notifications.fullscreen", "other") !== "show"
+                        show: grp.modelData[0] === "notifications" && sec.notifOn && Store.get("notifications.fullscreen", "other") !== "show"
                         Layout.fillWidth: true
                         key: "notifications.fullscreenSound"; def: false;
                         icon: "volume_off"; title: "Sound while fullscreen"; desc: "Off: notifications are silent while a fullscreen app covers the screen"

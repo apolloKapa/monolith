@@ -14,31 +14,31 @@ ColumnLayout {
     }
     SettingRow {
         key: "idle.lockAfter";
-        visible: Idle.enabled
+        show: Idle.enabled
         icon: "lock"; title: "Lock after"
         NumberBox { from: 1; to: 1440; slideTo: 60; unit: "min"; value: Math.round(Idle.lockAfter / 60); onMoved: v => Store.set("idle.lockAfter", v * 60) }
     }
     SettingRow {
         key: "idle.screenOffAfter";
-        visible: Idle.enabled
+        show: Idle.enabled
         icon: "desktop_access_disabled"; title: "Screens off after"
         NumberBox { from: 0; to: 1440; slideTo: 120; unit: "min"; zeroText: "Never"; value: Math.round(Idle.screenOffAfter / 60); onMoved: v => Store.set("idle.screenOffAfter", v * 60) }
     }
     SettingRow {
         key: "idle.dimBefore";
-        visible: Idle.enabled
+        show: Idle.enabled
         icon: "brightness_low"; title: "Dim first"; desc: "The screens darken this long before locking (move to stop it)"
         NumberBox { from: 0; to: 600; slideTo: 120; step: 5; unit: "s"; zeroText: "Off"; value: Idle.dimBefore; onMoved: v => Store.set("idle.dimBefore", v) }
     }
     SettingRow {
         key: "idle.suspendAfter";
-        visible: Idle.enabled
+        show: Idle.enabled
         icon: "bedtime"; title: "Suspend after"; desc: "Put the PC to sleep when you've been away this long"
         NumberBox { from: 0; to: 1440; slideTo: 240; step: 5; unit: "min"; zeroText: "Never"; value: Idle.suspendAfter / 60; onMoved: v => Store.set("idle.suspendAfter", Math.round(v * 60)) }
     }
     SettingRow {
         key: "idle.mediaPauses";
-        visible: Idle.enabled
+        show: Idle.enabled
         icon: "play_circle"; title: "Not while playing"; desc: "Music or video playing counts as being here"
         Toggle { checked: Idle.mediaPauses; onToggled: on => Store.set("idle.mediaPauses", on) }
     }
@@ -46,14 +46,14 @@ ColumnLayout {
     Label { text: "Lock screen"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
     SettingRow {
         key: "lock.perScreen"; def: false;
-        visible: Quickshell.screens.length > 1
+        show: Quickshell.screens.length > 1
         icon: "monitor"; title: "Each screen its own lock screen"
         desc: WidgetLayout.lockPerScreen ? "Every screen has its own widgets and its own place for the password box (e.g. the clock on one, the password and news on the other)" : "Off: every screen shows the same lock screen"
         Toggle { checked: WidgetLayout.lockPerScreen; onToggled: on => WidgetLayout.setLockPerScreen(on) }
     }
     SettingRow {
         key: "lock.passwordScreen"; def: "";
-        visible: Quickshell.screens.length > 1
+        show: Quickshell.screens.length > 1
         icon: "password"; title: "Password box on"
         desc: WidgetLayout.passScreen === "" ? "Every screen" : "Only " + WidgetLayout.passScreen + ". You can type on any screen: the others show the dots and point you to it"
         Dropdown {
@@ -64,7 +64,7 @@ ColumnLayout {
     }
     // arranging it: once for all screens, or each screen on its own
     SettingRow {
-        visible: !WidgetLayout.lockPerScreen || Quickshell.screens.length < 2
+        show: !WidgetLayout.lockPerScreen || Quickshell.screens.length < 2
         icon: "dashboard_customize"; title: "Arrange the lock screen"; desc: "Widgets and where the password box sits (drag them in the editor)"
         Button { text: "Edit"; icon: "edit"; primary: true; onClicked: HubState.editWidgetsOn("lock") }
     }

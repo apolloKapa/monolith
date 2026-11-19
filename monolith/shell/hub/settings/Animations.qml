@@ -185,7 +185,7 @@ ColumnLayout {
     }
     SettingRow {
         key: "theme.animSpeed"; def: 1;
-        visible: Theme.animOn
+        show: Theme.animOn
         icon: "speed"; title: "Speed"
         desc: { const v = Number(Store.get("theme.animSpeed", 1)); return v === 1 ? "1 × is normal. Higher is faster, lower is slower" : (v > 1 ? "Animations take " + (Math.round(100 / v) / 100) + " × as long as normal (faster)" : "Animations take " + (Math.round(100 / v) / 100) + " × as long as normal (slower)"); }
         NumberBox { from: 0.25; to: 3; step: 0.05; decimals: 2; unit: "×"; value: Number(Store.get("theme.animSpeed", 1)); onMoved: v => Store.set("theme.animSpeed", v) }
@@ -195,12 +195,12 @@ ColumnLayout {
     SectionHead { text: "Windows (niri)"; visible: !Niri.hyprland }
     Label { visible: Niri.hyprland; Layout.fillWidth: true; wrapMode: Text.Wrap; text: "On Hyprland, switching workspaces is in its own tab (Workspace switching); other window animations are in your Hyprland config (hyprland.lua or hyprland.conf)."; muted: true; Layout.leftMargin: 6 }
     SettingRow {
-        visible: !Niri.hyprland
+        show: !Niri.hyprland
         icon: "animation"; title: "Window animations"; desc: "Off: windows, workspaces and the overview move at once"
         Toggle { checked: !sec.has("animations|off"); onToggled: on => { const c = Object.assign({}, sec.v); c["animations|off"] = on ? null : ""; sec.v = c; NiriConf.flag("animations", "off", !on); } }
     }
     SettingRow {
-        visible: !Niri.hyprland && !sec.has("animations|off")
+        show: !Niri.hyprland && !sec.has("animations|off")
         icon: "speed"; title: "Overall speed"
         desc: "Every window animation at once (niri's slowdown is 1 ÷ this). Each one's own speed is below"
         // shown as a speed (higher is faster); niri's slowdown is its inverse
@@ -215,11 +215,11 @@ ColumnLayout {
         }
     }
     SettingRow {
-        visible: !Niri.hyprland && !sec.has("animations|off")
+        show: !Niri.hyprland && !sec.has("animations|off")
         icon: "auto_awesome"; title: "Ready-made sets"
         desc: sec.currentPreset === "" ? "Yours: changed one by one below" : ({ monolith: "Monolith's: quick and calm", snappy: "Snappy: short and fast", smooth: "Smooth: slower and gliding", bouncy: "Bouncy: things overshoot a little and settle", niri: "niri's own defaults" })[sec.currentPreset]
-        Segmented {
-            width: 400
+        Dropdown {
+            width: 220
             opts: [["monolith", "Monolith"], ["snappy", "Snappy"], ["smooth", "Smooth"], ["bouncy", "Bouncy"], ["niri", "niri"]]
             value: sec.currentPreset
             onPicked: id => sec.applyPreset(id)
@@ -260,8 +260,8 @@ ColumnLayout {
                         Label { text: card.modelData[1]; strong: true; Layout.fillWidth: true; elide: Text.ElideRight }
                         Label { text: card.modelData[2]; muted: true; font.pixelSize: Theme.sizeSmall; Layout.fillWidth: true; wrapMode: Text.Wrap }
                     }
-                    Segmented {
-                        Layout.preferredWidth: 340; Layout.preferredHeight: 40
+                    Dropdown {
+                        Layout.preferredWidth: 220; Layout.preferredHeight: 40
                         opts: [["default", "niri's own"], ["spring", "Spring"], ["timed", "Timed"], ["off", "Off"]]
                         value: card.a.mode
                         onPicked: m => {

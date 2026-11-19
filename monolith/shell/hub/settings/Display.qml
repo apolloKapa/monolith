@@ -228,7 +228,7 @@ ColumnLayout {
     property string picked: ""
     readonly property string shownName: sec.outputs.some(o => o.name === picked) ? picked : (sec.outputs.length ? (sec.outputs.find(o => o.name === Niri.focusedOutput) || sec.outputs[0]).name : "")
     SettingRow {
-        visible: sec.outputs.length > 0
+        show: sec.outputs.length > 0
         icon: "desktop_windows"; title: "Display"; desc: "The screen to set up"
         Dropdown {
             width: 300; height: 36
@@ -289,7 +289,7 @@ ColumnLayout {
                 }
                 // every size and rate the screen offers
                 SettingRow {
-                    visible: card.on
+                    show: card.on
                     icon: "aspect_ratio"; title: "Resolution"
                     Dropdown {
                         width: 200; height: 36
@@ -302,7 +302,7 @@ ColumnLayout {
                     }
                 }
                 SettingRow {
-                    visible: card.on && card.rates.length > 1
+                    show: card.on && card.rates.length > 1
                     icon: "speed"; title: "Refresh rate"
                     Dropdown {
                         width: 200; height: 36
@@ -315,7 +315,7 @@ ColumnLayout {
                     }
                 }
                 SettingRow {
-                    visible: card.on
+                    show: card.on
                     icon: "zoom_in"; title: "Scale"; desc: "Bigger text and controls on this screen"
                     // any scale, in 5% steps (niri rounds it to what the screen can show sharply)
                     NumberBox {

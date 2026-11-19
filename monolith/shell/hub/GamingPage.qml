@@ -55,7 +55,7 @@ Page {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 3
                 Label { text: GameMode.active ? "Game mode is on" : "Game mode"; strong: true; font.pixelSize: Theme.sizeTitle + 2; color: GameMode.active ? Theme.onAccentContainer : Theme.text }
-                Label { width: parent.width; wrapMode: Text.Wrap; text: "Performance power profile, do not disturb, the screen stays awake" + (GameMode.hideIsland ? ", the island tucked away" : "") + ". Off puts it all back."; muted: true; font.pixelSize: Theme.sizeSmall }
+                Label { width: parent.width; wrapMode: Text.Wrap; text: "Performance power profile, do not disturb, the screen stays awake" + (GameMode.leanOn ? ", animations, blur and live wallpapers off" : "") + (GameMode.hideIsland ? ", the island tucked away" : "") + ". Off puts it all back."; muted: true; font.pixelSize: Theme.sizeSmall }
             }
             Toggle { id: gmToggle; anchors.right: parent.right; anchors.rightMargin: 18; anchors.verticalCenter: parent.verticalCenter; checked: GameMode.active; onToggled: GameMode.toggle() }
         }
@@ -114,6 +114,10 @@ Page {
             SettingRow {
                 icon: "monitoring"; title: "Performance overlay"; desc: "CPU and GPU in a corner, over everything"
                 Toggle { checked: GameMode.overlay; onToggled: on => Store.set("gaming.overlay", on) }
+            }
+            SettingRow {
+                icon: "bolt"; title: "Strip the shell down"; desc: "In game mode: no animations, blur, transparency or live wallpapers"
+                Toggle { checked: GameMode.leanOn; onToggled: on => Store.set("gaming.lean", on) }
             }
             SettingRow {
                 icon: "visibility_off"; title: "Tuck the island away"; desc: "While game mode is on"

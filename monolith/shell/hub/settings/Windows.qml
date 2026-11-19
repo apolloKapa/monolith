@@ -98,7 +98,7 @@ ColumnLayout {
         }
         SettingRow {
             Layout.fillWidth: true
-            visible: !!bs.val.b
+            show: !!bs.val.b
             icon: "gradient"; title: "Fades to"; desc: "And the direction it fades in"
             Row {
                 spacing: 10
@@ -109,36 +109,36 @@ ColumnLayout {
     }
 
     SettingRow {
-        visible: Niri.hyprland
+        show: Niri.hyprland
         icon: "line_weight"; title: "Border width"; desc: "0: no border"
         NumberBox { from: 0; to: 20; unit: "px"; value: sec.hyprB.width !== undefined ? sec.hyprB.width : 2
             onMoved: x => { const c = Object.assign({}, sec.hyprB); c.width = Math.round(x); sec.hyprB = c; hyprSave.restart(); } }
     }
 
     SettingRow {
-        visible: !Niri.hyprland
+        show: !Niri.hyprland
         icon: "padding"; title: "Gaps"; desc: "Space between windows and around them"
         NumberBox { from: 0; to: 200; slideTo: 60; unit: "px"; value: sec.num("layout|gaps", 16); onMoved: x => sec.put("layout", "gaps", x) }
     }
     SettingRow {
-        visible: !Niri.hyprland
+        show: !Niri.hyprland
         icon: "border_outer"; title: "Borders"; desc: "A line around each window, brighter on the focused one"
         Toggle { checked: sec.has("layout/border|on") || (!sec.has("layout/border|off") && sec.has("layout/border|width")); onToggled: on => sec.onOff("layout/border", on) }
     }
     SettingRow {
-        visible: !Niri.hyprland
+        show: !Niri.hyprland
         icon: "line_weight"; title: "Border width"
         NumberBox { from: 1; to: 50; slideTo: 12; unit: "px"; value: sec.num("layout/border|width", 2); onMoved: x => sec.put("layout/border", "width", x) }
     }
     BorderSide { side: "active"; title: "Focused window's border"; val: sec.activeB }
     BorderSide { side: "inactive"; title: "Other windows' border"; val: sec.inactiveB }
     SettingRow {
-        visible: !Niri.hyprland
+        show: !Niri.hyprland
         icon: "center_focus_strong"; title: "Focus ring"; desc: "A ring outside the focused window (on top of the border)"
         Toggle { checked: sec.has("layout/focus-ring|on"); onToggled: on => sec.onOff("layout/focus-ring", on) }
     }
     SettingRow {
-        visible: !Niri.hyprland
+        show: !Niri.hyprland
         icon: "rounded_corner"; title: "Window corners"; desc: "How round the windows are"
         // (windows are cut to the rounded shape too: clip-to-geometry)
         NumberBox { from: 0; to: 100; slideTo: 40; unit: "px"; value: sec.num("window-rule|geometry-corner-radius", 0); onMoved: x => { sec.put("window-rule", "geometry-corner-radius", x); sec.put("window-rule", "clip-to-geometry", "true"); } }
@@ -152,28 +152,28 @@ ColumnLayout {
     // ── Alt+Tab: niri's window switcher (live previews), in the shell's look (core/AltTab) ──
     SectionHead { text: "Alt+Tab"; visible: !Niri.hyprland }
     SettingRow {
-        visible: !Niri.hyprland
+        show: !Niri.hyprland
         icon: "tab"; title: "Window switcher"; desc: "Alt+Tab (Alt+Shift+Tab back) shows your windows, most recent first, with live previews; let go of Alt to switch"
         Toggle { checked: !sec.has("recent-windows|off"); onToggled: on => { const c = Object.assign({}, sec.v); c["recent-windows|off"] = on ? null : ""; sec.v = c; NiriConf.flag("recent-windows", "off", !on); } }
     }
     SettingRow {
-        visible: !Niri.hyprland && !sec.has("recent-windows|off")
+        show: !Niri.hyprland && !sec.has("recent-windows|off")
         key: "alttab.theme"; def: true
         icon: "palette"; title: "In the theme's look"; desc: "The chosen window is outlined in your accent colour, with your corners; it follows the wallpaper and theme"
         Toggle { checked: Store.get("alttab.theme", true) !== false; onToggled: on => Store.set("alttab.theme", on) }
     }
     SettingRow {
-        visible: !Niri.hyprland && !sec.has("recent-windows|off")
+        show: !Niri.hyprland && !sec.has("recent-windows|off")
         icon: "photo_size_select_large"; title: "Preview size"; desc: "How big each window's preview is"
-        Segmented {
-            width: 300
+        Dropdown {
+            width: 220
             opts: [["320", "Small"], ["480", "Medium"], ["640", "Large"]]
             value: { const h = sec.num("recent-windows/previews|max-height", 480); return h <= 400 ? "320" : (h <= 560 ? "480" : "640"); }
             onPicked: h => sec.put("recent-windows/previews", "max-height", h)
         }
     }
     SettingRow {
-        visible: !Niri.hyprland && !sec.has("recent-windows|off")
+        show: !Niri.hyprland && !sec.has("recent-windows|off")
         icon: "timer"; title: "Show after"; desc: "A quick Alt+Tab just switches to the last window; held this long, the switcher shows"
         NumberBox { from: 0; to: 1000; slideTo: 600; step: 10; unit: "ms"; value: sec.num("recent-windows|open-delay-ms", 150); onMoved: x => sec.put("recent-windows", "open-delay-ms", Math.round(x)) }
     }

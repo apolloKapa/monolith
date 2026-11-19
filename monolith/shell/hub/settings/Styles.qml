@@ -108,7 +108,7 @@ ColumnLayout {
         Toggle { checked: Store.get("theme.continuousCorners", true) !== false; onToggled: on => Store.set("theme.continuousCorners", on) }
     }
     SettingRow {
-        visible: Store.get("theme.continuousCorners", true) !== false && !Theme.square
+        show: Store.get("theme.continuousCorners", true) !== false && !Theme.square
         key: "theme.cornerSmoothing"; def: 0.6;
         icon: "line_curve"; title: "Corner smoothing"; desc: "How gradually the corners ease in"
         NumberBox { from: 10; to: 100; unit: "%"; value: Math.round(Theme.cornerSmooth * 100); onMoved: v => Store.set("theme.cornerSmoothing", v / 100) }

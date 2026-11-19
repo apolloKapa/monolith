@@ -67,9 +67,18 @@ Singleton {
     Process {
         id: write
         command: ["sh", "-c", "f=\"$1\"; shift; printf '%s\\n' \"$@\" > \"$f\"", "sh", cv.conf].concat(cv.lines)
-        onExited: { cv.written = cv.lines.join("\n"); run.running = cv.users > 0; }
+        onExited: { cv.written = cv.lines.join("\n"); run.running = cv.users > 0 && !GameMode.lean; }
+    }
+    // (game mode, stripped down: nothing listens and nothing moves; back on after it)
+    Connections {
+        target: GameMode
+        function onLeanChanged() {
+            if (GameMode.lean) { run.running = false; cv.bars = cv.bars.map(() => 0); }
+            else if (cv.users > 0 && !run.running && !write.running) write.running = true;
+        }
     }
     onUsersChanged: {
+        if (GameMode.lean) return;
         if (users > 0 && !run.running && !write.running) write.running = true;
         else if (users === 0) run.running = false;
     }

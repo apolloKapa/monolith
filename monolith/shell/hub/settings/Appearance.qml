@@ -137,9 +137,9 @@ ColumnLayout {
         key: "theme.mode";
         icon: "dark_mode"; title: "Dark or light"; desc: "The shell's colours in dark or light (the style and colour theme are in Style & colours)"
         Segmented {
-            opts: [["dark", "Dark"], ["light", "Light"]]; value: Theme.modeName
+            opts: [["dark", "Dark"], ["light", "Light"]]; value: Look.mode
             onPicked: v => {
-                Store.set("theme.mode", v);
+                Look.setMode(v);
             }
         }
     }

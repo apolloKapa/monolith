@@ -251,7 +251,7 @@ ColumnLayout {
 
     // add one
     SettingRow {
-        visible: sec.group === "" || sec.group === "apps"
+        show: sec.group === "" || sec.group === "apps"
         Layout.fillWidth: true
         icon: "add"
         title: "Add a shortcut"

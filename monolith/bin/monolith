@@ -26,7 +26,18 @@ niri_conf="${XDG_CONFIG_HOME:-$HOME/.config}/niri"
 shots="$HOME/Pictures/Screenshots"
 
 ipc() { quickshell ipc -p "$qml" call "$@"; }
-running() { pgrep -f "quickshell -p $qml" >/dev/null; }
+# Every running copy of the shell (an installed one, a checkout), by pid. Not only by command
+# line: after a crash Quickshell starts itself again as plain "quickshell", with no "-p …", and a
+# search for "quickshell -p …/shell.qml" no longer finds it. `monolith restart` then left that one
+# running and started a second shell next to it: two bars, two docks, everything doubled.
+# Quickshell's own list knows each instance's config, whatever its command line.
+shell_pids() {
+    {
+        pgrep -f 'quickshell -p [^ ]*/shell/shell\.qml'
+        quickshell list --all 2>/dev/null | awk '/Process ID:/ { pid = $3 } /Config path:/ && /\/shell\/shell\.qml$/ { print pid }'
+    } | sort -un
+}
+running() { [ -n "$(shell_pids)" ]; }
 # started by the compositor (so it gets the session's environment): niri, or Hyprland
 on_hyprland() { [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; }
 # Qt's renderer for the shell: OpenGL. Qt gives every window its own GPU device on Vulkan, and
@@ -53,8 +64,7 @@ start() {
 # any copy of the shell (an installed one, a checkout)
 # (its own helpers first: watchers it started kept running once it had gone, one more each restart)
 stop() {
-    for p in $(pgrep -f 'quickshell -p [^ ]*/shell/shell\.qml'); do pkill -P "$p" 2>/dev/null; done
-    pkill -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null
+    for p in $(shell_pids); do pkill -P "$p" 2>/dev/null; kill "$p" 2>/dev/null; done
 }
 
 # page names the keybinds use → hub pages
@@ -134,10 +144,10 @@ case "$1" in
         stop
         # wait for it to be gone, or `start` sees it still running and does nothing
         for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-            pgrep -f 'quickshell -p [^ ]*/shell/shell\.qml' >/dev/null || break
+            running || break
             sleep 0.15
         done
-        pkill -9 -f 'quickshell -p [^ ]*/shell/shell\.qml' 2>/dev/null
+        for p in $(shell_pids); do kill -9 "$p" 2>/dev/null; done
         start
         (reclaim_notifications "$t0") >/dev/null 2>&1 &
         ;;
