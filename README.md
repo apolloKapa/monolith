@@ -3,7 +3,7 @@ MONOLITH IS IN BETA AT THE MOMENT!
 
 **really good desktop :3**
 
-My Linux desktop (Arch or Gentoo): [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri config, keybinds and helper scripts.
+My Linux desktop (Arch or Gentoo): [niri](https://github.com/YaLTeR/niri) running **Monolith**, my [Quickshell](https://quickshell.org) desktop shell, plus my niri/hyprland config, keybinds and helper scripts.
 
 ---
 
