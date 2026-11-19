@@ -286,7 +286,11 @@ PanelWindow {
     // out of the bar: the island grows into the menu; a full-width bar (Full, Frame) or a floating
     // one (Solid, Modular) stays put and the menu drops out of it, joined to it by curved shoulders.
     // (a bar down the side: its menus open beside it, as a card at that edge)
-    readonly property bool docked: fromBar && !side
+    // (Modular: its sections are pills of their own, with no bar between them. A menu dropped
+    // out of the bar hung from an edge that isn't there, its top cut straight off in mid-air:
+    // there it opens as a card of its own just under the bar, at the bar's start, middle or end)
+    readonly property bool pillBar: Theme.barStyle === "modular"
+    readonly property bool docked: fromBar && !side && !pillBar
     readonly property bool dropMode: Theme.fullBar || Theme.barFloats
     readonly property bool grown: shown && docked && !dropMode
     readonly property bool dropped: shown && docked && dropMode
@@ -564,7 +568,7 @@ PanelWindow {
             // ── a new notification, while closed ──
             Column {
                 id: toastArea
-                parent: win.toastHost === "card" ? toastCard : (win.toastHost === "drop" ? dropBody : body)
+                parent: win.toastHost === "card" ? toastBody : (win.toastHost === "drop" ? dropBody : body)
                 x: win.pad
                 y: win.toastHost === "island" ? (win.bottom ? body.height - Theme.islandH - height : Theme.islandH)
                    : (win.toastHost === "drop" ? (win.bottom ? win.pad : win.pad * 0.5) : win.pad)
@@ -1016,7 +1020,6 @@ PanelWindow {
         color: Theme.frame
         border.width: Theme.outlineW
         border.color: Theme.outlineColor
-        clip: true
         // (over a floating menu that's open)
         z: 5
         opacity: on ? 1 : 0
@@ -1025,6 +1028,9 @@ PanelWindow {
         Behavior on height { NumberAnimation { duration: Theme.springMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.sizeCurve } }
         CardShadow {}
         MouseArea { anchors.fill: parent }
+        // what's in it is kept within the card as it comes down into it (the card itself isn't
+        // clipped: that cut its shadow off, and the card sat on the screen with a hard edge)
+        Item { id: toastBody; anchors.fill: parent; clip: true }
     }
 
     // ── the floating card (menus in the middle or on the right) ──
@@ -1047,7 +1053,9 @@ PanelWindow {
         // same curves as a menu out of the bar. It slides out of the edge and back into it
         readonly property string joined: win.joinEdge
         readonly property real edgeInset: Theme.barStyle === "frame" ? Theme.frameW : 0
-        readonly property string spot: joined !== "" ? joined : (win.side && (win.fromBar || win.place.startsWith("top")) ? Theme.barSide : (win.bottom && win.place.startsWith("top") ? "bottom" + win.place.slice(3) : win.place))
+        // (out of a Modular bar: by the bar, see win.pillBar)
+        readonly property string near: win.fromBar && win.pillBar ? "top-" + (win.barAlign === "start" ? "left" : (win.barAlign === "end" ? "right" : "center")) : win.place
+        readonly property string spot: joined !== "" ? joined : (win.side && (win.fromBar || win.place.startsWith("top")) ? Theme.barSide : (win.bottom && near.startsWith("top") ? "bottom" + near.slice(3) : near))
         readonly property bool onLeft: spot.indexOf("left") !== -1
         readonly property bool onRight: spot.indexOf("right") !== -1
         readonly property bool onTop: spot.startsWith("top")
