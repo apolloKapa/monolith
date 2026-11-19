@@ -86,6 +86,13 @@ ColumnLayout {
         Dropdown { width: 260; opts: sec.barPlaces; value: sec.barPlace; onPicked: v => sec.setBarPlace(v) }
     }
     SettingRow {
+        key: "menus.hangLook"; def: "same"
+        show: Theme.barStyle === "solid" || Theme.barStyle === "fill"
+        icon: "layers"; title: "Hanging from the bar"
+        desc: Theme.menuHang === "under" ? "A darker shade than the bar, as if the menu hung from behind it" : "The bar's own shade: the bar and the menu read as one piece"
+        Dropdown { width: 260; opts: [["same", "Same colour as the bar"], ["under", "Darker, behind the bar"]]; value: Theme.menuHang; onPicked: v => Store.set("menus.hangLook", v) }
+    }
+    SettingRow {
         keys: ["menus.position"]
         opacity: sec.barPlace === "off" ? 1 : 0.55
         icon: "open_in_new"; title: "Floating"

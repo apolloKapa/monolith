@@ -1005,7 +1005,12 @@ PanelWindow {
         // one piece with the bar it grows out of: the bar's own colour (the bar and the menu were
         // two different shades, with a seam where they met), no outline across the join, and in
         // the Frame the frame's line, which leaves a gap here and runs on round the menu
-        fill: Theme.barStyle === "frame" ? Theme.frameFill : Theme.barFill
+        // (or, Settings → Menus → Hanging from the bar: a darker shade, as if it hung from
+        // behind the bar. See-through, its shadow kept under it does that; solid, a darker fill)
+        readonly property color own: Theme.barStyle === "frame" ? Theme.frameFill : Theme.barFill
+        readonly property bool under: Theme.menuHang === "under" && Theme.barStyle !== "frame"
+        fill: under && own.a >= 0.99 ? Qt.rgba(own.r * 0.72, own.g * 0.72, own.b * 0.72, own.a) : own
+        hollowShadow: !under
         baseLine: false
         lineW: Theme.barStyle === "frame" ? Theme.frameOutlineW : Theme.outlineW
         lineColor: Theme.barStyle === "frame" ? Theme.frameOutlineColor : Theme.outlineColor

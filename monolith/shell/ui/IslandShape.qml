@@ -36,11 +36,23 @@ Item {
     // only the sides and the round lower corners cast it.
     // (cut off at the edge it hangs from: a shape hanging under the bar mustn't shade the bar)
     Item {
+        id: shadowBox
         x: -80; y: 0
         width: s.width + 160; height: s.height + 80
         clip: true
         visible: s.shadow && Theme.shadowOn && s.height > 1 && !Theme.chamfer
         transform: Scale { origin.y: s.height / 2; yScale: s.flipped ? -1 : 1 }
+        // a see-through fill: the shadow only outside the body, like a card's (ui/CardShadow).
+        // Under the body too it was a dark layer behind it, so a menu hanging from a floating
+        // bar came out a darker shade than the bar it is one piece with, and hid half the blur
+        layer.enabled: s.hollow && visible && Theme.rectShadows
+        layer.effect: MultiEffect {
+            maskEnabled: true
+            maskInverted: true
+            maskSource: hole
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 0.2
+        }
         // (loaded by URL: an older Qt doesn't have it, see RectShadow.qml)
         Loader {
             x: 80 + s.e; y: -s.rr - 40
@@ -54,6 +66,17 @@ Item {
                 item.color = Qt.binding(() => Theme.shadowColor);
             }
         }
+    }
+    // (false: the shadow stays under a see-through body too, which darkens it)
+    property bool hollowShadow: true
+    readonly property bool hollow: hollowShadow && s.fill.a > 0.01 && s.fill.a < 0.99
+    // the body, where it sits in the shadow's box (the mask: no shadow there)
+    Item {
+        id: hole
+        visible: false
+        width: shadowBox.width; height: shadowBox.height
+        layer.enabled: s.hollow && shadowBox.visible
+        Rectangle { x: 80 + s.e; y: -s.rr - 4; width: s.bodyW; height: s.height + s.rr + 4; radius: s.rr }
     }
     Shape {
         anchors.fill: parent

@@ -310,6 +310,9 @@ Singleton {
     // the menus when Effects → Transparency is on. The Frame is solid unless you say otherwise
     // (see-through, a near-black theme's frame was a grey veil over the wallpaper); every other
     // bar is glass unless you say otherwise, as it always was. Bar opacity thins either.
+    // A menu hanging from a floating or full-width bar (Settings → Menus): "same", the bar's
+    // own shade, one piece with it; or "under", a darker shade, as if it hung from behind the bar
+    readonly property string menuHang: Store.get("menus.hangLook", "same") === "under" ? "under" : "same"
     readonly property string barLook: { const v = String(Store.get("bar.look", "")); return v === "solid" || v === "glass" ? v : (barStyle === "frame" ? "solid" : "glass"); }
     readonly property color barFill: barLook === "solid" && !liquid ? Qt.rgba(frame.r, frame.g, frame.b, 1) : frame
     // (liquid glass panes are nearly clear, being glass: the frame isn't, so it gets a real fill)

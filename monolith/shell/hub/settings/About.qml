@@ -100,7 +100,8 @@ ColumnLayout {
                     visible: Updates.newer
                     text: Updates.state === "updating" ? "Updating…" : "Update now"; icon: "download"; primary: true
                     enabled: Updates.state !== "updating"
-                    onClicked: Updates.update()
+                    // (the menu gets out of the way: the update runs in a terminal that opens)
+                    onClicked: { Updates.update(); HubState.close(); }
                 }
             }
             // what changed, newest first
