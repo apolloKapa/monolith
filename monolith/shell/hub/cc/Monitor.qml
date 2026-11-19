@@ -91,8 +91,11 @@ ColumnLayout {
                         }
                         Rectangle {
                             width: parent.width; height: 8; radius: (Theme.chamfer || Theme.square) ? 0 : 4
-                            color: Theme.ringTrack
+                            color: Theme.wavy ? "transparent" : Theme.ringTrack
+                            WavyBar { visible: Theme.wavy; anchors.fill: parent; to: monFill.width / Math.max(1, parent.width); thick: 5; color: monFill.color }
                             Rectangle {
+                                id: monFill
+                                visible: !Theme.wavy
                                 height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 4
                                 width: Math.max(8, parent.width * modelData.used / Math.max(1, modelData.size))
                                 color: modelData.used / modelData.size > 0.9 ? Theme.danger : Theme.accent

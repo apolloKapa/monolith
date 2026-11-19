@@ -79,6 +79,10 @@ Singleton {
     // string "x,y wxh" (the capture overlay's selection), or { output: "DP-1" }.
     // The hub gets out of the way first (the caller closes it), then recording starts.
     function startRecording(target) {
+        // (a region: picked in the shell's own overlay, like the Capture menu's Record. It was
+        // slurp: nothing said an area had to be dragged, and the tile showed "Recording" and
+        // counted while it waited, with nothing being recorded)
+        if (target === true) { Capture.start({ kind: "video", mode: "region", closeHub: true }); return; }
         const name = recDir + "/Recording_" + Qt.formatDateTime(new Date(), "yyyyMMdd_hhmmss") + ".mp4";
         let how = "exec wf-recorder -f \"$2\"";
         if (target === true) how = "g=$(slurp) || exit 1; exec wf-recorder -g \"$g\" -f \"$2\"";

@@ -38,8 +38,11 @@ FaceBase {
                 width: parent.width; height: 22
                 SmoothRect {
                     smoothing: 0
-                    y: 0; width: parent.width; height: 7; radius: Theme.corner(7); color: Qt.alpha(Theme.text, 0.12)
+                    y: 0; width: parent.width; height: 7; radius: Theme.corner(7); color: Theme.wavy ? "transparent" : Qt.alpha(Theme.text, 0.12)
+                    WavyBar { visible: Theme.wavy; anchors.fill: parent; to: wcFill.width / Math.max(1, parent.width); color: wcFill.color; trackColor: Qt.alpha(Theme.text, 0.2) }
                     SmoothRect {
+                        id: wcFill
+                        visible: !Theme.wavy
                         smoothing: 0
                         height: parent.height; radius: parent.radius
                         width: Math.max(7, parent.width * Math.min(1, wd.total / Math.max(1, wd.goal)))

@@ -53,8 +53,9 @@ FaceBase {
         }
         Item {
             x: 14; y: 120; width: parent.width - 28; height: 30
-            Rectangle { y: 4; width: parent.width; height: 5; radius: Theme.chamfer ? 0 : 3; color: Qt.alpha(Theme.text, 0.15)
-                Rectangle { height: parent.height; radius: Theme.chamfer ? 0 : 3; color: Theme.accent; width: f.p && f.p.length > 0 ? parent.width * Math.min(1, pp.shown / f.p.length) : 0 } }
+            Rectangle { y: 4; width: parent.width; height: 5; radius: Theme.chamfer ? 0 : 3; color: Theme.wavy ? "transparent" : Qt.alpha(Theme.text, 0.15)
+                WavyBar { visible: Theme.wavy; anchors.fill: parent; to: mcFill.width / Math.max(1, parent.width); trackColor: Qt.alpha(Theme.text, 0.2); moving: !!f.p && f.p.isPlaying }
+                Rectangle { id: mcFill; visible: !Theme.wavy; height: parent.height; radius: Theme.chamfer ? 0 : 3; color: Theme.accent; width: f.p && f.p.length > 0 ? parent.width * Math.min(1, pp.shown / f.p.length) : 0 } }
             Text { renderType: Text.CurveRendering; y: 13; text: f.p ? f.mmss(pp.shown) : "0:00"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 11 }
             Text { renderType: Text.CurveRendering; y: 13; anchors.right: parent.right; text: f.p ? f.mmss(f.p.length) : "0:00"; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: 11 }
         }

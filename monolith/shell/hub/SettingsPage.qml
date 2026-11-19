@@ -188,7 +188,7 @@ Page {
                 Icon { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; name: page.query !== "" ? "close" : "search"; size: 18; color: Theme.subtext
                     MouseArea { anchors.fill: parent; anchors.margins: -6; enabled: page.query !== ""; cursorShape: Qt.PointingHandCursor; onClicked: findField.text = "" } }
             }
-            Rectangle { x: 16; y: 126; width: parent.width - 32; height: 1; color: Theme.hairline }
+            Rectangle { x: 16; y: 126; width: parent.width - 32; height: 1; color: Theme.wavy ? "transparent" : Theme.hairline; WavyBar { visible: Theme.wavy; anchors.fill: parent; thick: 1.5; track: false; to: 1; color: Theme.hairline } }
 
             // the results, in place of the sections while there's a search
             Flickable {
@@ -262,7 +262,7 @@ Page {
                             Item {
                                 visible: !!sec.modelData.gap
                                 width: parent.width; height: 11
-                                Rectangle { anchors.verticalCenter: parent.verticalCenter; x: 10; width: parent.width - 20; height: 1; color: Theme.hairline }
+                                Rectangle { anchors.verticalCenter: parent.verticalCenter; x: 10; width: parent.width - 20; height: 1; color: Theme.wavy ? "transparent" : Theme.hairline; WavyBar { visible: Theme.wavy; anchors.fill: parent; thick: 1.5; track: false; to: 1; color: Theme.hairline } }
                             }
                             Pressable {
                                 id: head

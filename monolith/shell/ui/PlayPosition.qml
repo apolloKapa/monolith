@@ -11,9 +11,12 @@ Item {
     property real at: 0
     property real shown: 0
     readonly property real len: player && player.lengthSupported ? player.length : 0
-    function sync() { if (player) { player.positionChanged(); pos = player.position; at = Date.now(); shown = pos; } else shown = 0; }
+    // (never past the end: a browser's video that has ended or looped keeps being counted on,
+    // and the time read 0:12 of 0:11)
+    function capped(p) { return Math.max(0, len > 0 ? Math.min(len, p) : p); }
+    function sync() { if (player) { player.positionChanged(); pos = capped(player.position); at = Date.now(); shown = pos; } else shown = 0; }
     onPlayerChanged: sync()
-    Connections { target: pp.player; ignoreUnknownSignals: true; function onPostTrackChanged() { pp.sync(); } function onIsPlayingChanged() { pp.sync(); } function onPositionChanged() { if (Math.abs(pp.player.position - pp.shown) > 1.5) { pp.pos = pp.player.position; pp.at = Date.now(); } } }
+    Connections { target: pp.player; ignoreUnknownSignals: true; function onPostTrackChanged() { pp.sync(); } function onIsPlayingChanged() { pp.sync(); } function onPositionChanged() { if (Math.abs(pp.player.position - pp.shown) > 1.5) { pp.pos = pp.capped(pp.player.position); pp.at = Date.now(); } } }
     Timer { interval: 1000; repeat: true; running: pp.active && !!pp.player; triggeredOnStart: true; onTriggered: pp.sync() }
     // 15 times a second: a progress bar moves a pixel every half second or so, and the time once
     // a second. (Every frame, it kept the widget's whole window redrawing at the screen's refresh

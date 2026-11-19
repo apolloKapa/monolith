@@ -103,6 +103,11 @@ ColumnLayout {
         NumberBox { from: 0; to: 60; slideTo: 40; unit: "px"; value: Math.round(Theme.radiusSetting); onMoved: v => Store.set("theme.radius", v) }
     }
     SettingRow {
+        key: "theme.wavyLines"; def: false;
+        icon: "airwave"; title: "Wavy lines"; desc: "Sliders, progress bars, dividers and the frames you drag (a screenshot's area, a widget's border) wave instead of running straight"
+        Toggle { checked: Theme.wavy; onToggled: on => Store.set("theme.wavyLines", on) }
+    }
+    SettingRow {
         key: "theme.continuousCorners"; def: true;
         icon: "rounded_corner"; title: "Continuous corners"; desc: "Corners ease out of the sides (like a squircle) instead of being quarter circles"
         Toggle { checked: Store.get("theme.continuousCorners", true) !== false; onToggled: on => Store.set("theme.continuousCorners", on) }

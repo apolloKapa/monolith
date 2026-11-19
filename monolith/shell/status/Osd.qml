@@ -147,8 +147,11 @@ PanelWindow {
             anchors.right: pct.left; anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             height: 8
-            Rectangle { anchors.fill: parent; radius: (Theme.chamfer || Theme.square) ? 0 : 4; color: Theme.control }
+            WavyBar { visible: Theme.wavy; anchors.fill: parent; to: osdFill.width / Math.max(1, parent.width); thick: 5; color: osdFill.color; trackColor: Theme.control }
+            Rectangle { visible: !Theme.wavy; anchors.fill: parent; radius: (Theme.chamfer || Theme.square) ? 0 : 4; color: Theme.control }
             Rectangle {
+                id: osdFill
+                visible: !Theme.wavy
                 width: parent.width * osd.level
                 height: parent.height
                 radius: (Theme.chamfer || Theme.square) ? 0 : 4

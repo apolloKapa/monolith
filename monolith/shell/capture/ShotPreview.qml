@@ -94,7 +94,9 @@ PanelWindow {
                     Image { anchors.fill: parent; source: win.shownFile !== "" ? Wall.url(win.shownFile) : ""; sourceSize: Qt.size(640, 360); fillMode: Image.PreserveAspectFit; asynchronous: true; cache: false }
                 }
                 // it goes in a moment: a thin line running out
+                WavyBar { visible: Theme.wavy; anchors.bottom: parent.bottom; anchors.bottomMargin: 3; width: parent.width; height: 3; thick: 3; track: false; to: hov.hovered ? 1 : win.remain }
                 Rectangle {
+                    visible: !Theme.wavy
                     anchors.bottom: parent.bottom; height: 3; color: Theme.accent; radius: (Theme.chamfer || Theme.square) ? 0 : 1.5
                     width: parent.width * (hov.hovered ? 1 : win.remain)
                 }

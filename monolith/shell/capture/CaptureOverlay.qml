@@ -50,9 +50,10 @@ PanelWindow {
         x: Capture.sel.x - 1; y: Capture.sel.y - 1
         width: Capture.sel.width + 2; height: Capture.sel.height + 2
         color: "transparent"
-        border.width: 2
+        border.width: Theme.wavy ? 0 : 2
         border.color: Theme.accent
         radius: (Theme.chamfer || Theme.square) ? 0 : 2
+        WavyFrame { visible: Theme.wavy && parent.visible; anchors.fill: parent; anchors.margins: 1 }
     }
     Repeater {
         model: win.mine && !win.screenMode && Capture.hasSel ? 4 : 0

@@ -17,9 +17,31 @@ Item {
     property bool dragging: false
     property real dragValue: 0
 
+    // Wavy lines (Theme.wavy): no thick track; a wave from the icon up to a pill you drag, a
+    // straight line on to the label
+    readonly property real lineX: height
+    readonly property real lineW: Math.max(10, width - height - Math.max(40, pctLabel.width) - 26)
+    WavyBar {
+        id: wave
+        visible: Theme.wavy
+        x: s.lineX; width: s.lineW; height: parent.height
+        to: s.shown; gap: 7; thick: 4
+        color: s.muted ? Theme.faint : Theme.accent
+        trackColor: Theme.control
+        Behavior on to { enabled: !s.dragging; NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+    }
+    Rectangle {
+        visible: Theme.wavy
+        x: s.lineX + s.lineW * wave.to - width / 2
+        anchors.verticalCenter: parent.verticalCenter
+        width: 6; height: s.dragging ? 28 : 24; radius: (Theme.chamfer || Theme.square) ? 0 : 3
+        color: s.muted ? Theme.faint : Theme.accent
+        Behavior on height { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
+    }
     SmoothRect {
         smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
         id: track
+        visible: !Theme.wavy
         anchors.fill: parent
         radius: Theme.corner(height)
         color: Theme.control
@@ -42,22 +64,23 @@ Item {
         name: s.icon
         size: 20
         filled: true
-        color: s.shown > 0.08 && !s.muted ? Theme.onAccent : Theme.text
+        color: !Theme.wavy && s.shown > 0.08 && !s.muted ? Theme.onAccent : Theme.text
         MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor; onClicked: s.iconClicked() }
     }
     Label {
+        id: pctLabel
         anchors.right: parent.right
         anchors.rightMargin: 14
         anchors.verticalCenter: parent.verticalCenter
         text: s.label !== "" ? s.label : Math.round(s.shown * 100) + "%"
         font.pixelSize: Theme.sizeSmall
-        color: s.shown > 0.9 && !s.muted ? Theme.onAccent : Theme.subtext
+        color: !Theme.wavy && s.shown > 0.9 && !s.muted ? Theme.onAccent : Theme.subtext
     }
     MouseArea {
         anchors.fill: parent
         anchors.leftMargin: s.height
         cursorShape: Qt.PointingHandCursor
-        function at(x) { return Math.max(0, Math.min(1, (x + s.height) / s.width)); }
+        function at(x) { return Math.max(0, Math.min(1, Theme.wavy ? (x + s.height - s.lineX) / s.lineW : (x + s.height) / s.width)); }
         onPressed: mouse => { s.dragging = true; s.dragValue = at(mouse.x); s.moved(s.dragValue); }
         onPositionChanged: mouse => { if (pressed) { s.dragValue = at(mouse.x); s.moved(s.dragValue); } }
         onReleased: s.dragging = false

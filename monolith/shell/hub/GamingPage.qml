@@ -31,6 +31,22 @@ Page {
         width: parent.width
         spacing: 10
 
+        // back to the control centre (its Gaming tab leads here, and there was no way back)
+        Pressable {
+            Layout.preferredWidth: backRow.implicitWidth + 28
+            Layout.preferredHeight: 38
+            radius: Theme.corner(38, 10)
+            color: Theme.containerHigh
+            onClicked: HubState.show("quick", HubState.screenName)
+            Row {
+                id: backRow
+                anchors.centerIn: parent
+                spacing: 8
+                Icon { name: "arrow_back"; size: 18; color: Theme.text; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: "Control center"; strong: true; font.pixelSize: Theme.sizeSmall + 1; anchors.verticalCenter: parent.verticalCenter }
+            }
+        }
+
         // ── game mode: a big switch with what it does ──
         Pressable {
             Rise {}

@@ -159,8 +159,9 @@ FaceBase {
                     anchors.right: spk.left; anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
                     width: Math.max(60, f.width * 0.22); height: 6
-                    Rectangle { anchors.fill: parent; radius: Theme.chamfer ? 0 : 3; color: Qt.alpha(Theme.text, 0.15) }
-                    Rectangle { width: parent.width * f.volume; height: parent.height; radius: Theme.chamfer ? 0 : 3; color: f.accentC }
+                    WavyBar { visible: Theme.wavy; anchors.fill: parent; to: f.volume; color: f.accentC; trackColor: Qt.alpha(Theme.text, 0.2) }
+                    Rectangle { visible: !Theme.wavy; anchors.fill: parent; radius: Theme.chamfer ? 0 : 3; color: Qt.alpha(Theme.text, 0.15) }
+                    Rectangle { visible: !Theme.wavy; width: parent.width * f.volume; height: parent.height; radius: Theme.chamfer ? 0 : 3; color: f.accentC }
                     MouseArea {
                         id: volDrag
                         anchors.fill: parent; anchors.margins: -8

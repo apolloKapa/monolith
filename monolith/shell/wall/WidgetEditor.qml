@@ -464,7 +464,8 @@ PanelWindow {
                     enabled: wrap.modelData.type === "image"
                     onEntered: drag => { drag.accepted = drag.hasUrls; }
                     onDropped: drop => { const f = Pictures.fromDrop(drop.urls); if (f !== "") { ed.selected = wrap.modelData.id; ed.setOption(wrap.modelData.id, "imagePath", f); drop.accept(); } }
-                    SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: Theme.rnd(10); visible: parent.containsDrag; color: Qt.alpha(Theme.accent, 0.18); border.width: 2; border.color: Theme.accent; z: 20 }
+                    SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: Theme.rnd(10); visible: parent.containsDrag; color: Theme.wavy ? "transparent" : Qt.alpha(Theme.accent, 0.18); border.width: Theme.wavy ? 0 : 2; border.color: Theme.accent; z: 20
+                        WavyFrame { visible: Theme.wavy && parent.visible; anchors.fill: parent; fill: Qt.alpha(Theme.accent, 0.18) } }
                 }
                 WidgetFace {
                     id: face
@@ -480,9 +481,10 @@ PanelWindow {
                     smoothing: 0
                     anchors.fill: parent; anchors.margins: -6
                     radius: Theme.rnd(10)
-                    color: wrap.sel ? Qt.alpha(Theme.accent, 0.08) : "transparent"
-                    border.width: 2
+                    color: wrap.sel && !Theme.wavy ? Qt.alpha(Theme.accent, 0.08) : "transparent"
+                    border.width: Theme.wavy ? 0 : 2
                     border.color: wrap.sel ? Theme.accent : Qt.alpha("#ffffff", 0.35)
+                    WavyFrame { visible: Theme.wavy; anchors.fill: parent; color: parent.border.color; fill: wrap.sel ? Qt.alpha(Theme.accent, 0.08) : "transparent" }
                 }
                 // move: drag anywhere on it
                 MouseArea {
@@ -1088,7 +1090,8 @@ PanelWindow {
         item: ({ id: "ghost", type: ed.dragType || "clock", face: "", opts: {} })
         x: ed.dragPos.x; y: ed.dragPos.y
         width: ed.dragSize[0]; height: ed.dragSize[1]
-        SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: Theme.rnd(10); color: "transparent"; border.width: 2; border.color: Theme.accent }
+        SmoothRect { smoothing: 0; anchors.fill: parent; anchors.margins: -6; radius: Theme.rnd(10); color: "transparent"; border.width: Theme.wavy ? 0 : 2; border.color: Theme.accent
+            WavyFrame { visible: Theme.wavy; anchors.fill: parent } }
     }
 
     // ── distances: while a widget moves, how far it is from each screen edge ──

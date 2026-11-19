@@ -37,8 +37,9 @@ FaceBase {
                         SmoothRect {
                             smoothing: 0
                             anchors.bottom: parent.bottom; anchors.bottomMargin: 2
-                            width: parent.width; height: 5; radius: Theme.corner(5); color: Qt.alpha(Theme.text, 0.1)
-                            SmoothRect { smoothing: 0; height: parent.height; radius: parent.radius; width: Math.max(5, parent.width * parent.parent.parent.modelData.secs / Math.max(1, wd.top[0].secs))
+                            width: parent.width; height: 5; radius: Theme.corner(5); color: Theme.wavy ? "transparent" : Qt.alpha(Theme.text, 0.1)
+                            WavyBar { visible: Theme.wavy; anchors.fill: parent; to: waFill.width / Math.max(1, parent.width); color: waFill.color; trackColor: Qt.alpha(Theme.text, 0.18) }
+                            SmoothRect { id: waFill; visible: !Theme.wavy; smoothing: 0; height: parent.height; radius: parent.radius; width: Math.max(5, parent.width * parent.parent.parent.modelData.secs / Math.max(1, wd.top[0].secs))
                                         color: parent.parent.parent.index === 0 ? f.accentC : Qt.alpha(f.accentC, 0.55) }
                         }
                     }

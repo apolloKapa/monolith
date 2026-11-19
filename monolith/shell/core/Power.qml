@@ -23,6 +23,18 @@ notify-send -a Monolith -i dialog-error "Couldn\'t $a" "Neither systemd nor elog
     function hibernate() { run("hibernate"); }
 
     // ── the buttons: a goodbye first ──
+    // (any button, by the action's name: a widget's, the lock screen's. They used to call run(),
+    // which does it on the spot: no goodbye. Sleep from the lock screen still does: it's
+    // already behind the lock)
+    function go(action) { if (action === "suspend" && LockState.locked) run(action); else begin(action); }
+    readonly property var words: ({
+        poweroff: ["power_settings_new", "Shutting down", "See you soon"],
+        reboot: ["restart_alt", "Restarting", "Back in a moment"],
+        logout: ["logout", "Logging out", "Closing everything"],
+        suspend: ["bedtime", "Going to sleep", "Good night"],
+    })
+    // on the lock screen: nothing can show over it, so it says goodbye itself (lock/LockScreen.qml)
+    property bool onLock: false
     function sleep() { begin("suspend"); }
     function reboot() { begin("reboot"); }
     function poweroff() { begin("poweroff"); }
@@ -41,6 +53,7 @@ notify-send -a Monolith -i dialog-error "Couldn\'t $a" "Neither systemd nor elog
         if (going !== "") return;
         going = action;
         shotsReady = false;
+        if (LockState.locked) { onLock = true; fire.restart(); return; }
         shotsTaken++;
         const cmds = Quickshell.screens.map(s => "grim -o '" + String(s.name).replace(/'/g, "") + "' '" + shotFor(s.name) + "' 2>/dev/null");
         shots.command = ["sh", "-c", "umask 077; mkdir -p '" + shotDir + "'; " + (cmds.join(" & ") || "true") + "; wait"];
@@ -69,6 +82,6 @@ notify-send -a Monolith -i dialog-error "Couldn\'t $a" "Neither systemd nor elog
         clear.interval = a === "suspend" ? 2500 : 12000;
         clear.restart();
     }
-    Timer { id: clear; onTriggered: { pw.going = ""; pw.shotsReady = false; pw.closing = false; cleanup.running = true; } }
+    Timer { id: clear; onTriggered: { pw.going = ""; pw.shotsReady = false; pw.closing = false; pw.onLock = false; cleanup.running = true; } }
     Process { id: cleanup; command: ["sh", "-c", "rm -rf \"$1\"", "_", pw.shotDir] }
 }

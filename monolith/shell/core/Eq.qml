@@ -26,11 +26,15 @@ Singleton {
         g[i] = Math.max(-12, Math.min(12, Math.round(db * 2) / 2));
         Store.set("eq.gains", g);
         Store.set("eq.preset", "Custom");
+        // (setting it up means wanting to hear it: with the switch off, picking Bass or
+        // dragging a band changed nothing you could hear)
+        if (!enabled) Store.set("eq.enabled", true);
         applyLater.restart();
     }
     function usePreset(name) {
         Store.set("eq.gains", presets[name].slice());
         Store.set("eq.preset", name);
+        if (!enabled) Store.set("eq.enabled", true);
         applyLater.restart();
     }
     function setEnabled(on) { Store.set("eq.enabled", on); applyLater.restart(); }

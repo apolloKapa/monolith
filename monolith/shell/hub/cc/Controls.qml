@@ -189,7 +189,7 @@ RowLayout {
                 icon: Tasks.recording ? "stop_circle" : "screen_record"; title: Tasks.recording ? "Recording" : "Record"
                 on: Tasks.recording
                 status: Tasks.recording ? Tasks.fmt(Tasks.recSeconds) + " · stop" : "A region"
-                onClicked: { if (Tasks.recording) Tasks.stopRecording(); else { HubState.close(); Tasks.startRecording(true); } }
+                onClicked: { if (Tasks.recording) Tasks.stopRecording(); else Tasks.startRecording(true); }
             }
         }
 
@@ -316,8 +316,11 @@ RowLayout {
                 Rectangle {
                     visible: !!cc.player && cc.player.lengthSupported
                     width: parent.width; height: 4; radius: (Theme.chamfer || Theme.square) ? 0 : 2
-                    color: Theme.ringTrack
+                    color: Theme.wavy ? "transparent" : Theme.ringTrack
+                    WavyBar { visible: Theme.wavy; anchors.fill: parent; to: ccFill.width / Math.max(1, parent.width); moving: !!cc.player && cc.player.isPlaying }
                     Rectangle {
+                        id: ccFill
+                        visible: !Theme.wavy
                         height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 2
                         color: Theme.accent
                         width: cc.player && cc.player.length > 0 ? parent.width * Math.min(1, cc.player.position / cc.player.length) : 0

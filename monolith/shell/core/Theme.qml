@@ -162,6 +162,8 @@ Singleton {
     function inset(r, base) { return Math.max(base, Math.round(r * 0.3 + base * 0.4)); }
     // continuous corners (Appearance → Corner rounding): corners are superellipse arcs that ease
     // out of the straight sides instead of quarter circles (ui/SmoothRect); 0: plain round corners
+    // lines wave: sliders, progress, dividers, the frames you drag (ui/WavyBar, ui/WavyFrame)
+    readonly property bool wavy: Store.get("theme.wavyLines", false) === true
     readonly property real cornerSmooth: square || Store.get("theme.continuousCorners", true) === false ? 0
                                          : Math.max(0, Math.min(1, Number(Store.get("theme.cornerSmoothing", 0.6))))
 

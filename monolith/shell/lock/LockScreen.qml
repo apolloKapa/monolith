@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Mpris
@@ -269,7 +270,7 @@ WlSessionLock {
                             else if (level < 1) { lbFill.stop(); lbDrain.duration = Theme.ms(320 * level + 1); lbDrain.restart(); }
                         }
                         onClicked: {
-                            if (!held) { Power.run(modelData[1]); return; }
+                            if (!held) { Power.go(modelData[1]); return; }
                             if (done) return;
                             if (auto) { auto = false; lbFill.stop(); lbDrain.duration = Theme.ms(320 * level + 1); lbDrain.restart(); return; }
                             if (Date.now() - downAt > 300) return;     // (letting go of a hold early: backing out)
@@ -280,7 +281,7 @@ WlSessionLock {
                             id: lbFill
                             target: lb; property: "level"; to: 1
                             // full, still held: it happens (see Controls.qml: checked when the fill finishes)
-                            onFinished: if (lb.held && !lb.done && (lb.pressed || lb.auto) && lb.level >= 0.999) { lb.done = true; lb.auto = false; Power.run(lb.modelData[1]); lbUndo.restart(); }
+                            onFinished: if (lb.held && !lb.done && (lb.pressed || lb.auto) && lb.level >= 0.999) { lb.done = true; lb.auto = false; Power.go(lb.modelData[1]); lbUndo.restart(); }
                         }
                         NumberAnimation { id: lbDrain; target: lb; property: "level"; to: 0; easing.type: Easing.OutCubic }
                         // full: it happens right then
@@ -314,6 +315,64 @@ WlSessionLock {
                     }
                 }
             }
+        }
+
+        // ── restarting or shutting down from here: the goodbye (status/Goodbye.qml can't show
+        // over the lock): the screen dims, a ring spins round the action's icon with what's
+        // happening under it, then everything goes to black as it runs ──
+        Rectangle {
+            id: bye
+            readonly property bool on: Power.onLock && Power.going !== ""
+            readonly property var w: Power.words[Power.going] || Power.words.poweroff
+            anchors.fill: parent
+            z: 1000
+            color: "#000000"
+            opacity: on ? 0.72 : 0
+            visible: opacity > 0.001
+            Behavior on opacity { NumberAnimation { duration: Math.max(1, Theme.ms(500)); easing.type: Easing.OutCubic } }
+            MouseArea { anchors.fill: parent; enabled: bye.on; acceptedButtons: Qt.AllButtons; hoverEnabled: true }
+        }
+        Column {
+            z: 1001
+            anchors.centerIn: parent
+            spacing: 22
+            opacity: bye.on ? 1 : 0
+            visible: opacity > 0.001
+            scale: bye.on ? 1 : 0.94
+            Behavior on opacity { NumberAnimation { duration: Math.max(1, Theme.ms(500)); easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: Math.max(1, Theme.ms(600)); easing.type: Easing.OutCubic } }
+            Item {
+                width: 128; height: 128
+                anchors.horizontalCenter: parent.horizontalCenter
+                Shape {
+                    id: byeArc
+                    anchors.fill: parent
+                    preferredRendererType: Shape.CurveRenderer
+                    property real sweep: 60
+                    RotationAnimator on rotation { from: 0; to: 360; duration: 1300; loops: Animation.Infinite; running: bye.on && Theme.animOn }
+                    SequentialAnimation on sweep {
+                        running: bye.on && Theme.animOn
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 40; to: 250; duration: 750; easing.type: Easing.InOutCubic }
+                        NumberAnimation { from: 250; to: 40; duration: 750; easing.type: Easing.InOutCubic }
+                    }
+                    ShapePath {
+                        strokeColor: Theme.accent; strokeWidth: 4; fillColor: "transparent"; capStyle: ShapePath.RoundCap
+                        PathAngleArc { centerX: 64; centerY: 64; radiusX: 55; radiusY: 55; startAngle: -90; sweepAngle: byeArc.sweep }
+                    }
+                }
+                Icon { anchors.centerIn: parent; name: bye.w[0]; size: 44; color: "#ffffff" }
+            }
+            Label { anchors.horizontalCenter: parent.horizontalCenter; text: bye.w[1] + "…"; strong: true; font.pixelSize: 30; color: "#ffffff" }
+            Label { anchors.horizontalCenter: parent.horizontalCenter; text: bye.w[2]; font.pixelSize: Theme.sizeSmall + 2; color: "#ffffff"; opacity: 0.72 }
+        }
+        Rectangle {
+            anchors.fill: parent
+            z: 1002
+            color: "#000000"
+            opacity: Power.onLock && Power.closing ? 1 : 0
+            visible: opacity > 0.001
+            Behavior on opacity { NumberAnimation { duration: Math.max(1, Theme.ms(420)); easing.type: Easing.InCubic } }
         }
     }
 }

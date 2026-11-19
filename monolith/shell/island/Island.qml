@@ -919,6 +919,34 @@ PanelWindow {
                     height: parent.height - y
                     // (a page cut short by a small screen stays inside the card)
                     clip: !!win.currentPage && win.currentPage.implicitHeight > height + 1
+                    // ... and scrolls there: the wheel moves the page up to show the rest (on a
+                    // small screen the control centre's Monitor tab ended mid-card, with no way
+                    // down). Named like a Flickable's, so a slider under the pointer leaves the
+                    // wheel to it (ui/Slider looks for these)
+                    readonly property int flickableDirection: 1
+                    readonly property real contentHeight: win.currentPage ? win.currentPage.implicitHeight : 0
+                    readonly property real over: Math.max(0, contentHeight - height)
+                    property real contentY: 0
+                    onOverChanged: if (contentY > over) contentY = over
+                    Connections { target: HubState; function onPageChanged() { pages.contentY = 0; } }
+                    Behavior on contentY { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
+                    WheelHandler {
+                        enabled: pages.over > 1
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onWheel: e => {
+                            const d = e.pixelDelta.y !== 0 ? e.pixelDelta.y : e.angleDelta.y / 120 * 110;
+                            pages.contentY = Math.max(0, Math.min(pages.over, pages.contentY - d));
+                        }
+                    }
+                    Rectangle {
+                        visible: pages.over > 1
+                        z: 5
+                        anchors.right: parent.right
+                        width: 4; radius: 2
+                        height: Math.max(30, pages.height * pages.height / Math.max(1, pages.contentHeight))
+                        y: (pages.height - height) * pages.contentY / Math.max(1, pages.over)
+                        color: Qt.alpha(Theme.text, 0.35)
+                    }
                     Repeater {
                         model: HubState.pages
                         Loader {
@@ -936,6 +964,7 @@ PanelWindow {
                             // the new menu's card and reflowed as it faded)
                             readonly property bool leaving: !isCur && !!item && win.shown
                             x: Math.round((pages.width - width) / 2)
+                            y: isCur ? -Math.round(pages.contentY) : 0
                             // built in the background, so opening a menu for the first time doesn't
                             // freeze everything for a moment (the card's change raced ahead while
                             // the old page sat there, fully drawn, stretched across it)
@@ -1420,7 +1449,19 @@ PanelWindow {
             r: drop.rr; e: drop.e
         }
         Region {
-            item: blurBox.on ? blurBox : null; radius: floatCard.blurRadius * blurBox.k
+            // (Dynamic: its shape (`shell`) has plain round corners, tighter than a continuous
+            // corner's reach: with the card's radius the blur stopped short of the corners, which
+            // showed the sharp backdrop through them)
+            // (its own place and size, not `item: blurBox`: an item's region is read once, when it
+            // comes on. A menu zooming in from 94 % was about 98 % then, so the blur stayed that
+            // much short of the card's far edge: 17 px on a wide menu like Settings)
+            // (flush with the card. A pixel inside, to hide the blur's unsmoothed edge, left the
+            // sharp backdrop showing as a dark line all the way round; the corner's radius is
+            // already one more than the card's (SmoothRect.blurRadius), which keeps that edge
+            // under the card's own where it curves)
+            x: blurBox.x; y: blurBox.y
+            width: blurBox.on ? blurBox.width : 0; height: blurBox.on ? blurBox.height : 0
+            radius: floatCard.dyn ? shell.blurRadius : floatCard.blurRadius * blurBox.k
             CutBlur { bx: blurBox.x; by: blurBox.y; bw: blurBox.width; bh: blurBox.height; c: floatCard.r * blurBox.k }
         }
         Region {
@@ -1475,6 +1516,9 @@ PanelWindow {
         readonly property real k: floatCard.scale
         readonly property real fx: floatCard.onLeft ? 0 : (floatCard.onRight ? 1 : 0.5)
         readonly property real fy: floatCard.onTop ? 0 : (floatCard.onBottom ? 1 : 0.5)
+        // (Dynamic too: the card's own box, where the shape ends up. Following the shape while
+        // it settled left the blur wherever the shape was the moment it came on: the region
+        // isn't read again as it moves, so it sat short of the card's far edge)
         width: Math.round(floatCard.width * k)
         height: Math.round(floatCard.height * k * part)
         x: Math.round(floatCard.x + (floatCard.width - width) * fx)

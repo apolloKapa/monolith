@@ -133,7 +133,7 @@ PanelWindow {
                         color: parent.back ? Theme.accent : Theme.text
                     }
                 }
-                Rectangle { width: col.width; height: 1; color: Qt.alpha(Theme.text, 0.08) }
+                Rectangle { width: col.width; height: 1; color: Theme.wavy ? "transparent" : Qt.alpha(Theme.text, 0.08); WavyBar { visible: Theme.wavy; anchors.fill: parent; thick: 1.5; track: false; to: 1; color: Qt.alpha(Theme.text, 0.14) } }
 
                 Repeater {
                     model: dd.entries
@@ -152,7 +152,7 @@ PanelWindow {
                         readonly property real wantW: sep ? 0 : rowLabel.implicitWidth + 38 + 16 + (e.hasChildren ? 26 : 0)
                         width: col.width
                         height: sep ? 9 : dd.rowH
-                        Rectangle { visible: row.sep; anchors.centerIn: parent; width: parent.width - 16; height: 1; color: Qt.alpha(Theme.text, 0.1) }
+                        Rectangle { visible: row.sep; anchors.centerIn: parent; width: parent.width - 16; height: 1; color: Theme.wavy ? "transparent" : Qt.alpha(Theme.text, 0.1); WavyBar { visible: Theme.wavy && row.sep; anchors.fill: parent; thick: 1.5; track: false; to: 1; color: Qt.alpha(Theme.text, 0.16) } }
                         Pressable {
                             visible: !row.sep
                             anchors.fill: parent

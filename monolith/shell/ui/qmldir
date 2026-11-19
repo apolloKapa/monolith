@@ -47,3 +47,5 @@ MaterialPane 1.0 MaterialPane.qml
 Anim 1.0 Anim.qml
 ColorAnim 1.0 ColorAnim.qml
 Caret 1.0 Caret.qml
+WavyBar 1.0 WavyBar.qml
+WavyFrame 1.0 WavyFrame.qml

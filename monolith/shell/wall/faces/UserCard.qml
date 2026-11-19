@@ -89,7 +89,7 @@ FaceBase {
                         }
                         // full, still held: it happens (checked when the fill finishes: see hub/cc/Controls.qml)
                         NumberAnimation { id: filling; target: act; property: "level"; to: 1
-                            onFinished: if (act.level >= 0.999 && !act.done && (ma.pressed || act.auto)) { act.auto = false; act.done = true; flashAnim.start(); Power.run(act.modelData[0]); reset.start(); } }
+                            onFinished: if (act.level >= 0.999 && !act.done && (ma.pressed || act.auto)) { act.auto = false; act.done = true; flashAnim.start(); Power.go(act.modelData[0]); reset.start(); } }
                         NumberAnimation { id: draining; target: act; property: "level"; to: 0; duration: Theme.ms(500); easing.type: Easing.OutCubic }
                         NumberAnimation { id: flashAnim; target: flash; property: "opacity"; from: 0.6; to: 0; duration: Theme.ms(500); easing.type: Easing.OutExpo }
                         Timer { id: reset; interval: 1500; onTriggered: { act.done = false; draining.start(); } }

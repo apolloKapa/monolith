@@ -253,7 +253,8 @@ FloatingWindow {
                         Rectangle { x: 0; y: (parent.c.y + parent.c.h) * parent.k; width: parent.width; height: parent.height - y; color: parent.dim }
                         Rectangle { x: 0; y: parent.c.y * parent.k; width: parent.c.x * parent.k; height: parent.c.h * parent.k; color: parent.dim }
                         Rectangle { x: (parent.c.x + parent.c.w) * parent.k; y: parent.c.y * parent.k; width: parent.width - x; height: parent.c.h * parent.k; color: parent.dim }
-                        Rectangle { x: parent.c.x * parent.k; y: parent.c.y * parent.k; width: parent.c.w * parent.k; height: parent.c.h * parent.k; color: "transparent"; border.width: 2; border.color: Theme.accent }
+                        Rectangle { x: parent.c.x * parent.k; y: parent.c.y * parent.k; width: parent.c.w * parent.k; height: parent.c.h * parent.k; color: "transparent"; border.width: Theme.wavy ? 0 : 2; border.color: Theme.accent
+                            WavyFrame { visible: Theme.wavy; anchors.fill: parent; anchors.margins: 1 } }
                     }
 
                     MouseArea {

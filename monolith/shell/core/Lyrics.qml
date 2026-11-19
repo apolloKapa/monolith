@@ -14,9 +14,75 @@ Singleton {
     property var lines: []          // [{ t: seconds, text }]
     property string plain: ""
     property string state: "none"   // none | loading | ok | missing
+    // Where the song is, for the lines: counted on ten times a second from the last time the
+    // player was asked, and the player is asked itself (its Position, over D-Bus) every few
+    // seconds while lyrics show. It was player.position, which is only worked out again when
+    // something asks for it (a progress bar somewhere, once a second), so a line could come up
+    // to a second late, and it's counted on from the last seek or track change, so it drifted
+    // from the music when a song started a moment late or stalled.
+    property real base: 0       // seconds, at `baseAt`
+    property real baseAt: 0
+    property real now: 0
+    property real seenPos: 0    // the player's own position the last time it said, and when
+    property real seenAt: 0
+    readonly property bool timing: !!player && lines.length > 0
+    function fromPlayer() {
+        if (!player) { now = 0; return; }
+        player.positionChanged();
+        base = player.position; baseAt = Date.now(); now = base;
+        seenPos = base; seenAt = baseAt;
+    }
+    function ask() {
+        if (!player || !player.dbusName || truth.running) return;
+        truth.t0 = Date.now();
+        truth.command = ["sh", "-c", "busctl --user get-property \"$1\" /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player Position 2>/dev/null"
+            + " || gdbus call --session --dest \"$1\" --object-path /org/mpris/MediaPlayer2 --method org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player Position 2>/dev/null", "_", player.dbusName];
+        truth.running = true;
+    }
+    Process {
+        id: truth
+        property real t0: 0
+        stdout: StdioCollector {
+            onStreamFinished: {
+                // "x 249620000" (busctl) or "(<int64 249620000>,)" (gdbus): microseconds
+                const m = text.match(/(-?\d+)\D*$/);
+                if (!m || !ly.player) return;
+                const p = Number(m[1]) / 1e6;
+                if (!(p >= 0)) return;
+                // (asked a moment ago: the answer is from about the middle of the wait)
+                ly.base = p; ly.baseAt = (truth.t0 + Date.now()) / 2;
+                ly.now = ly.player.isPlaying ? p + (Date.now() - ly.baseAt) / 1000 * (ly.player.rate || 1) : p;
+            }
+        }
+    }
+    onPlayerChanged: { fromPlayer(); askSoon.restart(); }
+    onTimingChanged: if (timing) { fromPlayer(); ask(); }
+    Connections {
+        target: ly.player
+        ignoreUnknownSignals: true
+        function onPostTrackChanged() { ly.fromPlayer(); askSoon.restart(); }
+        function onIsPlayingChanged() { ly.fromPlayer(); askSoon.restart(); }
+        // (a seek: the player's own position jumps from where it would have got to by itself.
+        // Not compared with ours: the two can differ by more than that, which is the point)
+        function onPositionChanged() {
+            const p = ly.player.position, t = Date.now();
+            const due = ly.seenPos + (ly.player.isPlaying ? (t - ly.seenAt) / 1000 * (ly.player.rate || 1) : 0);
+            const jumped = ly.seenAt > 0 && Math.abs(p - due) > 1.5;
+            ly.seenPos = p; ly.seenAt = t;
+            if (jumped) { ly.base = p; ly.baseAt = t; ly.now = p; askSoon.restart(); }
+        }
+    }
+    // (a track that just changed still answers with the last one's place for a moment)
+    Timer { id: askSoon; interval: 700; onTriggered: if (ly.timing) ly.ask() }
+    Timer { interval: 4000; repeat: true; running: ly.timing && ly.player.isPlaying; onTriggered: ly.ask() }
+    Timer {
+        interval: 100; repeat: true
+        running: ly.timing && ly.player.isPlaying
+        onTriggered: ly.now = ly.base + (Date.now() - ly.baseAt) / 1000 * (ly.player.rate || 1)
+    }
     readonly property int currentIndex: {
         if (!player || lines.length === 0) return -1;
-        const p = player.position;
+        const p = now;
         let i = -1;
         for (let k = 0; k < lines.length; k++) { if (lines[k].t <= p + 0.25) i = k; else break; }
         return i;

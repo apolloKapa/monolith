@@ -9,8 +9,9 @@ import Quickshell.Widgets
 import "../core"
 import "../ui"
 
-// The wallpaper picker: a panel in the middle of the screen. It opens as a bubble that drops
-// out of the island and grows into the panel (and shrinks back up into it on close). Inside,
+// The wallpaper picker: a panel in the middle of the screen. It opens and closes the way the
+// menus do (Settings → Menu opening: Theme.menuAnim, at the menus' speed; a style with its own
+// effect uses that). Inside,
 // a coverflow (or a grid) of your pictures: ←/→ or the wheel to browse, Enter or a click on
 // the middle one to set it, right-click for this screen only, Esc to close. With more than one
 // screen, "Set on" picks which one a click sets (All, or one screen; Wall.aim).
@@ -21,14 +22,26 @@ PanelWindow {
     readonly property bool here: HubState.wallScreen === "" ? (Quickshell.screens.length > 0 && modelData === Quickshell.screens[0]) : HubState.wallScreen === modelData.name
     readonly property bool shown: HubState.wallOpen && here
 
-    // t: 0 closed … 1 open. The first part is the bubble's fall, the rest its growing into the panel.
-    property real t: shown ? 1 : 0
-    Behavior on t { NumberAnimation { duration: win.shown ? Theme.ms(720) : Theme.ms(380); easing.type: win.shown ? Easing.Linear : Easing.InQuad } }
-    readonly property real fall: ease(Math.min(1, t / 0.42))
-    readonly property real grow: ease(Math.max(0, (t - 0.42) / 0.58))
-    function ease(x) { return 1 - Math.pow(1 - x, 3); }
+    // How far open it is, 0 … 1: `fade` its opacity, `zoom` the move of the way menus open
+    // (the same two, lengths and curves the menus' cards have in Island.qml). It was a bubble
+    // that fell out of the island and grew into the panel.
+    property real fade: 0
+    property real zoom: 0
+    // (Dynamic grows a menu out of its module on the bar; this has none, so it zooms)
+    readonly property string anim: !Theme.animOn || Theme.cyber ? "none" : Theme.menuAnim === "dynamic" ? "zoom" : Theme.menuAnim
+    ParallelAnimation {
+        id: comeIn
+        NumberAnimation { target: win; property: "fade"; to: 1; duration: Theme.menuInMs; easing.type: Easing.OutCubic }
+        NumberAnimation { target: win; property: "zoom"; to: 1; duration: Theme.menuInMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.enterCurve }
+    }
+    ParallelAnimation {
+        id: goOut
+        NumberAnimation { target: win; property: "fade"; to: 0; duration: Theme.menuGoMs; easing.type: Theme.cyber ? Easing.OutCubic : Easing.InQuad }
+        NumberAnimation { target: win; property: "zoom"; to: 0; duration: Theme.menuGoMs; easing.type: Theme.cyber ? Easing.Linear : Easing.BezierSpline; easing.bezierCurve: Theme.exitCurve }
+    }
+    function backOut(t) { const c1 = 1.5, c3 = c1 + 1, u = t - 1; return 1 + c3 * u * u * u + c1 * u * u; }
 
-    visible: shown || t > 0.001
+    visible: shown || fade > 0.001 || zoom > 0.001
     WlrLayershell.namespace: "monolith-wallpicker"
     WlrLayershell.layer: WlrLayer.Overlay
     // (a screenshot being taken gets the keyboard: its Ctrl+C, Enter, Esc… went to the picker instead)
@@ -108,49 +121,55 @@ PanelWindow {
     }
     function opened() { syncList(); Wall.rescan(); Qt.callLater(restorePos); keys.forceActiveFocus(); }
     // it's made already open (shell.qml loads it when the picker opens), so start here too
-    Component.onCompleted: { nowTabAt = tabAt; lastTabAt = tabAt; if (shown) opened(); }
-    onShownChanged: if (shown) opened(); else { notePos(); Wall.savePos(); }
+    Component.onCompleted: { nowTabAt = tabAt; lastTabAt = tabAt; if (shown) { opened(); comeIn.restart(); } }
+    onShownChanged: {
+        if (shown) { opened(); goOut.stop(); comeIn.restart(); }
+        else { notePos(); Wall.savePos(); comeIn.stop(); goOut.restart(); }
+    }
 
     // the room behind it dims; a click there closes it
     Rectangle {
         anchors.fill: parent
         color: "black"
-        opacity: 0.38 * win.t
+        opacity: 0.38 * win.fade
     }
     MouseArea { anchors.fill: parent; enabled: win.shown; onClicked: HubState.wallOpen = false }
 
-    // ── the bubble that becomes the panel ──
-    readonly property real bubble: 64
+    // ── the panel ──
     readonly property real panelW: Math.min(width - 80, 1560)
     readonly property real panelH: Math.min(height - 100, 860)
     SmoothRect {
         id: panel
-        readonly property real w: win.bubble + (win.panelW - win.bubble) * win.grow
-        readonly property real h: win.bubble + (win.panelH - win.bubble) * win.grow
-        // the centre falls from the island to the middle of the screen
-        readonly property real cy: Theme.islandH / 2 + (win.height / 2 - Theme.islandH / 2) * win.fall
-        width: w
-        height: h
-        x: (win.width - w) / 2
-        y: cy - h / 2
-        radius: win.bubble / 2 + (Theme.corner(80, 14) - win.bubble / 2) * win.grow
+        width: win.panelW
+        height: win.panelH
+        x: (win.width - width) / 2
+        y: (win.height - height) / 2
+        radius: Theme.corner(80, 14)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
-        scale: 0.4 + 0.6 * Math.min(1, win.t / 0.2)
-        opacity: Math.min(1, win.t * 4)
+        // (a style's own effect draws it in and takes it away whole: CyberFx. Unfold: there
+        // until it has folded shut)
+        opacity: Theme.cyber ? (win.shown || win.zoom > 0.002 ? 1 : 0)
+               : win.anim === "unfold" ? (win.shown || win.zoom > 0.02 ? 1 : 0) : win.fade
+        scale: win.anim === "zoom" ? Theme.popScale + (1 - Theme.popScale) * win.zoom
+             : win.anim === "pop" ? 0.84 + 0.16 * win.backOut(win.zoom) : 1
+        transform: [
+            Scale {
+                origin.x: panel.width / 2; origin.y: panel.height / 2
+                yScale: win.anim === "unfold" ? Math.max(0.006, win.zoom) : 1
+                xScale: win.anim === "unfold" ? 0.96 + 0.04 * win.zoom : 1
+            },
+            Translate { y: win.anim === "slide" ? (1 - win.zoom) * 40 : win.anim === "drop" ? -(1 - win.zoom) * 40 : 0 }
+        ]
         CardShadow {}
-        PanelFx { anchors.fill: parent; radius: panel.radius; opacity: win.grow }
+        CyberFx { target: panel; p: win.shown ? win.zoom : 1 - win.zoom; going: !win.shown }
+        PanelFx { anchors.fill: parent; radius: panel.radius }
         MouseArea { anchors.fill: parent }   // clicks on the panel stay on it
-
-        // the bubble's icon, until it opens up
-        Icon { anchors.centerIn: parent; name: "wallpaper"; size: 28; filled: true; color: Theme.accent; opacity: 1 - win.grow * 3 }
 
         Item {
             id: content
             anchors.fill: parent
             anchors.margins: 18
-            opacity: Math.max(0, (win.grow - 0.55) / 0.45)
-            visible: opacity > 0.01
             clip: true
 
             Item {
@@ -676,7 +695,11 @@ PanelWindow {
     Region {
         id: blurShape
         // (gone the moment it starts closing: the blur cannot fade out with it)
-        item: win.shown ? panel : null
+        // (its own place and size, not `item: panel`: an item's region is read once, with the
+        // zoom it has at that moment. Zooming in from 94 %, the blur stayed a smaller box
+        // inside the panel, which showed as a lighter rectangle with a dark band round it)
+        x: panel.x; y: panel.y
+        width: win.shown ? panel.width : 0; height: win.shown ? panel.height : 0
         radius: panel.blurRadius
     }
 }

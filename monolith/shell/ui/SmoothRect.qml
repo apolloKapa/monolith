@@ -27,7 +27,14 @@ Item {
     // for a blur region behind it (regions only have round corners): a circle this big sits
     // just inside the continuous corner, so no blur shows past the edge
     // (a cut one: square, with ui/CutBlur taking the cut corner out of the region)
-    readonly property real blurRadius: cut ? 0 : (curved ? extent : r)
+    // (it was the corner's whole reach, `extent`: well inside, but a circle that big cuts the
+    // corner short, 2 to 3 px at the diagonal, and the sharp backdrop showed there as a dark
+    // crescent round every blurred corner. The blur's edge isn't smoothed, so it has to stay
+    // under ours: a continuous corner crosses a circle of radius r at 45° and runs just inside
+    // it towards the sides, where r + 1 still let single blurred pixels out past the edge;
+    // r + 2 stays inside all the way round, under a pixel short at the diagonal. A plain round
+    // corner needs only the one. Whole numbers: a region's radius is one)
+    readonly property real blurRadius: cut || r <= 0.5 ? 0 : Math.min(half, Math.ceil(r) + (curved ? 2 : 1))
     readonly property bool painted: color.a > 0.002 || (border.width > 0 && border.color.a > 0.002)
 
     Rectangle {

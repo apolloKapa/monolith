@@ -134,8 +134,11 @@ Page {
                     }
                     Rectangle {
                         width: parent.width; height: 5; radius: (Theme.chamfer || Theme.square) ? 0 : 3
-                        color: Theme.control
+                        color: Theme.wavy ? "transparent" : Theme.control
+                        WavyBar { visible: Theme.wavy; anchors.fill: parent; to: wbFill.width / Math.max(1, parent.width); color: wbFill.color; trackColor: Theme.control }
                         Rectangle {
+                            id: wbFill
+                            visible: !Theme.wavy
                             width: parent.width * Math.min(1, ar.modelData.s / Math.max(1, al.list.length ? al.list[0].s : 1))
                             height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 3
                             color: ar.limit > 0 && ar.modelData.s >= ar.limit * 60 ? Theme.danger : Theme.accent
@@ -273,8 +276,9 @@ Page {
                             anchors.margins: 18; anchors.bottomMargin: 12
                             spacing: 4
                             Rectangle {
-                                width: parent.width; height: 6; radius: (Theme.chamfer || Theme.square) ? 0 : 3; color: Theme.control
-                                Rectangle { height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 3; width: parent.width * Math.min(1, page.dayTotal / Math.max(1, totalBox.cap * 60)); color: page.dayTotal >= totalBox.cap * 60 ? Theme.danger : Theme.accent }
+                                width: parent.width; height: 6; radius: (Theme.chamfer || Theme.square) ? 0 : 3; color: Theme.wavy ? "transparent" : Theme.control
+                                WavyBar { visible: Theme.wavy; anchors.fill: parent; to: capFill.width / Math.max(1, parent.width); color: capFill.color; trackColor: Theme.control }
+                                Rectangle { id: capFill; visible: !Theme.wavy; height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : 3; width: parent.width * Math.min(1, page.dayTotal / Math.max(1, totalBox.cap * 60)); color: page.dayTotal >= totalBox.cap * 60 ? Theme.danger : Theme.accent }
                             }
                             Small {
                                 font.pixelSize: Theme.sizeTiny + 1

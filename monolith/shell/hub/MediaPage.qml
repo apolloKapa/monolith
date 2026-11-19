@@ -63,7 +63,7 @@ Page {
     property real pos: 0
     property real posAt: 0
     readonly property real len: player && player.lengthSupported ? player.length : 0
-    function syncPos() { if (player) { player.positionChanged(); pos = player.position; posAt = Date.now(); } }
+    function syncPos() { if (player) { player.positionChanged(); pos = Math.max(0, len > 0 ? Math.min(len, player.position) : player.position); posAt = Date.now(); } }
     onPlayerChanged: syncPos()
     Connections { target: page.player; function onPostTrackChanged() { page.syncPos(); } function onIsPlayingChanged() { page.syncPos(); } }
     Timer { interval: 1000; repeat: true; running: page.current && HubState.open && !!page.player; triggeredOnStart: true; onTriggered: page.syncPos() }
@@ -242,17 +242,20 @@ Page {
                     id: track
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width; height: seek.big ? 8 : 5; radius: (Theme.chamfer || Theme.square) ? 0 : height / 2
-                    color: Qt.alpha(Theme.text, 0.14)
+                    color: Theme.wavy ? "transparent" : Qt.alpha(Theme.text, 0.14)
                     Behavior on height { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
-                    Rectangle { width: Math.max(height, parent.width * seek.frac); height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : height / 2; color: page.tone }
+                    WavyBar { visible: Theme.wavy; anchors.fill: parent; to: seek.frac; thick: 4; gap: seek.can ? 7 : 0; color: page.tone; trackColor: Qt.alpha(Theme.text, 0.2); moving: !!page.player && page.player.isPlaying && !seek.dragging }
+                    Rectangle { visible: !Theme.wavy; width: Math.max(height, parent.width * seek.frac); height: parent.height; radius: (Theme.chamfer || Theme.square) ? 0 : height / 2; color: page.tone }
                 }
                 Rectangle {
                     visible: seek.can
                     x: parent.width * seek.frac - width / 2
                     anchors.verticalCenter: parent.verticalCenter
-                    width: seek.big ? 16 : 0; height: width; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
+                    // (wavy lines: a pill standing on the line, always there)
+                    width: Theme.wavy ? 6 : (seek.big ? 16 : 0); height: Theme.wavy ? (seek.big ? 24 : 20) : width; radius: (Theme.chamfer || Theme.square) ? 0 : width / 2
                     color: page.tone
-                    border.width: 3; border.color: Theme.frame
+                    border.width: Theme.wavy ? 0 : 3; border.color: Theme.frame
+                    Behavior on height { enabled: Theme.wavy; NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
                     Behavior on width { NumberAnimation { duration: Theme.ms(140); easing.type: Easing.OutCubic } }
                 }
                 MouseArea {
@@ -438,10 +441,13 @@ Page {
                             width: 8
                             height: parent.height - 42
                             radius: (Theme.chamfer || Theme.square) ? 0 : 4
-                            color: Qt.alpha(Theme.text, 0.12)
+                            color: Theme.wavy ? "transparent" : Qt.alpha(Theme.text, 0.12)
                             readonly property real mid: height / 2
+                            WavyBar { visible: Theme.wavy; anchors.fill: parent; vertical: true; from: 0.5; to: 0.5 - bandItem.g / 24; thick: 4; color: page.tone; trackColor: Qt.alpha(Theme.text, 0.2)
+                                      Behavior on to { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } } }
                             // the fill, from the middle (0 dB) up or down
                             Rectangle {
+                                visible: !Theme.wavy
                                 width: parent.width; radius: (Theme.chamfer || Theme.square) ? 0 : 4
                                 color: page.tone
                                 readonly property real off: Math.abs(bandItem.g) / 12 * track.mid

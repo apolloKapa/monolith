@@ -41,12 +41,13 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         height: 10
         radius: (Theme.chamfer || Theme.square) ? 0 : 5
-        color: Theme.control
+        color: Theme.wavy ? "transparent" : Theme.control
+        WavyBar { visible: Theme.wavy; anchors.fill: parent; to: (handle.x + handle.width / 2) / Math.max(1, parent.width); gap: 7; trackColor: Theme.control }
         // the fill: up to the handle's middle, so the handle always caps it (sized on its own, its
         // rounded end used to poke out past the handle)
         Rectangle {
             width: Math.max(0, handle.x + handle.width / 2)
-            visible: width > 0.5
+            visible: width > 0.5 && !Theme.wavy
             height: parent.height
             radius: (Theme.chamfer || Theme.square) ? 0 : (Math.min(parent.radius, width / 2))
             color: Theme.accent
