@@ -531,15 +531,10 @@ Page {
             anchors.fill: parent
             visible: page.view === "audio"
             spacing: 16
-            readonly property var vols: page.sink && page.sink.audio ? page.sink.audio.volumes : []
-            // balance from the two channels' volumes: -1 all left .. 1 all right
-            readonly property real balance: vols.length >= 2 && Math.max(vols[0], vols[1]) > 0 ? (vols[1] - vols[0]) / Math.max(vols[0], vols[1]) : 0
-            function setBalance(b) {
-                if (!page.sink || !page.sink.audio || vols.length < 2) return;
-                const v = page.sink.audio.volume;
-                const l = v * (b > 0 ? 1 - b : 1), r = v * (b < 0 ? 1 + b : 1);
-                page.sink.audio.volumes = vols.map((x, i) => i % 2 === 0 ? l : r);
-            }
+            // -1 all left .. 1 all right, kept per output (core/AudioBalance: some devices
+            // flatten uneven channel volumes, so it's done with PipeWire's software volumes)
+            readonly property real balance: AudioBalance.value
+            function setBalance(b) { AudioBalance.set(b); }
             component Line: Row {
                 property string label
                 spacing: 12
