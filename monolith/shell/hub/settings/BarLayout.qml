@@ -4,6 +4,7 @@ import Quickshell
 import "../../core"
 import "../../ui"
 import "../../island"
+import Quickshell.Services.UPower
 
 // Bar → Layout & modules: the bar's shape and height, which modules sit in each zone (left,
 // centre, right) and in what order, and the modules' own looks.
@@ -1109,7 +1110,12 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: 8
             ModPreview { module: "battery"; empty: "No laptop battery here: it only shows on laptops" }
-            ModToggle { k: "battery.percent"; d: true; icon: "percent"; title: "Percentage" }
+            ModChoice { k: "battery.look"; d: "icon"; icon: "battery_full"; title: "Look"; desc: UPower.displayDevice && UPower.displayDevice.isLaptopBattery ? "" : "No battery here: the preview shows one at 72 %"
+                        opts: [["icon", "Icon"], ["cell", "Battery"], ["ring", "Ring"], ["text", "Number only"]] }
+            ModToggle { show: Store.get("bar.battery.look", "icon") !== "text"; k: "battery.percent"; d: true; icon: "percent"; title: "Percentage" }
+            ModChoice { show: ["cell", "ring"].indexOf(String(Store.get("bar.battery.look", "icon"))) !== -1 && Store.get("bar.battery.percent", true) === true
+                        k: "battery.pctPlace"; d: "beside"; icon: "format_align_center"; title: "Percentage goes"; desc: "In the battery or the ring, or beside it"
+                        opts: [["beside", "Beside"], ["inside", "Inside"]] }
             ModNumber { k: "battery.low"; d: 20; lo: 5; hi: 50; unit: "%"; icon: "battery_alert"; title: "Low at"; desc: "Below this it turns red" }
         }
     }

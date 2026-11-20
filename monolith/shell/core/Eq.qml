@@ -41,6 +41,21 @@ Singleton {
 
     Timer { id: applyLater; interval: 250; onTriggered: eq.apply() }
 
+    // EasyEffects' equaliser is LSP's, loaded as an LV2 plugin. Without it (Gentoo builds
+    // lsp-plugins as VST3 only unless asked) EasyEffects takes the preset and does nothing,
+    // so the bands moved and nothing could be heard. `missing`: say so instead
+    property bool missing: false
+    property bool noApp: false
+    Process {
+        id: look
+        running: true
+        command: ["sh", "-c", "command -v easyeffects >/dev/null || { echo app; exit; }; "
+            + "for d in ${LV2_PATH:-} \"$HOME/.lv2\" /usr/lib64/lv2 /usr/lib/lv2 /usr/local/lib64/lv2 /usr/local/lib/lv2 /usr/lib/x86_64-linux-gnu/lv2; do "
+            + "[ -n \"$d\" ] && ls -d \"$d\"/lsp-plugins*.lv2 >/dev/null 2>&1 && { echo ok; exit; }; done; echo lv2"]
+        stdout: StdioCollector { onStreamFinished: { const t = text.trim(); eq.noApp = t === "app"; eq.missing = t === "lv2"; } }
+    }
+    function recheck() { look.running = true; }
+
     function band(i, g) {
         return { "frequency": freqs[i], "gain": eq.enabled ? g : 0, "mode": "RLC (BT)", "mute": false,
                  "q": 1.5, "slope": "x1", "solo": false, "type": "Bell" };

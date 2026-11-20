@@ -743,20 +743,99 @@ Item {
             }
         }
     }
-    // the battery (laptops; hidden when there's none)
+    // the battery (laptops; hidden when there's none). Its look (Settings → Bar → Battery):
+    // "icon" the battery icon, "cell" a little battery drawn filling up, "ring" a ring round
+    // a bolt or the number, "text" only the number. (Its settings' preview shows one at 72 %
+    // on a computer without a battery: there was nothing to see there before)
     Component {
         id: batC
         Mod {
+            id: bm
             readonly property var dev: UPower.displayDevice
-            property bool want: !!dev && dev.isLaptopBattery
+            readonly property bool real: !!dev && dev.isLaptopBattery
+            property bool want: real || bar.still
+            readonly property real level: real ? dev.percentage : 0.72
+            readonly property bool charging: real && dev.state === UPowerDeviceState.Charging
+            readonly property bool low: level < Number(bar.mopt("battery.low", 20)) / 100
+            readonly property string look: { const v = String(bar.mopt("battery.look", "icon")); return ["icon", "cell", "ring", "text"].indexOf(v) !== -1 ? v : "icon"; }
+            readonly property color tone: low && !charging ? Theme.danger : (charging ? Theme.accent : Theme.text)
+            readonly property bool showPct: look === "text" || bar.mopt("battery.percent", true) === true
+            // the number in the battery or the ring instead of beside it (Settings → Battery → Percentage)
+            readonly property bool inside: showPct && (look === "cell" || look === "ring") && bar.mopt("battery.pctPlace", "beside") === "inside"
+            readonly property string pct: Math.round(level * 100) + ""
             pad: 7
             onClicked: bar.open("quick")
             Icon {
-                name: !parent.parent.dev ? "battery_full" : (parent.parent.dev.state === UPowerDeviceState.Charging ? "battery_charging_full" : (parent.parent.dev.percentage < Number(bar.mopt("battery.low", 20)) / 100 ? "battery_alert" : "battery_full"))
+                visible: bm.look === "icon"
+                name: bm.charging ? "battery_charging_full" : (bm.low ? "battery_alert" : "battery_full")
                 size: 18; filled: true
-                color: parent.parent.dev && parent.parent.dev.percentage < Number(bar.mopt("battery.low", 20)) / 100 ? Theme.danger : Theme.text
+                color: bm.low && !bm.charging ? Theme.danger : Theme.text
             }
-            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; visible: bar.mopt("battery.percent", true) === true; text: parent.parent.dev ? Math.round(parent.parent.dev.percentage * 100) + "%" : ""; font.pixelSize: Theme.sizeSmall }
+            // a battery: an outline with a nub, filled to the level
+            Item {
+                visible: bm.look === "cell"
+                width: cellBody.width + 3; height: cellBody.height
+                Rectangle {
+                    id: cellBody
+                    // (bigger with the number in it)
+                    width: bm.inside ? 32 : 23; height: bm.inside ? 17 : 14
+                    radius: (Theme.chamfer || Theme.square) ? 0 : 4
+                    color: "transparent"
+                    border.width: 1.6; border.color: Qt.alpha(bm.tone, 0.85)
+                    Rectangle {
+                        x: 2.5; y: 2.5
+                        width: Math.max(2, (parent.width - 5) * Math.max(0, Math.min(1, bm.level)))
+                        height: parent.height - 5
+                        radius: (Theme.chamfer || Theme.square) ? 0 : 2
+                        color: bm.tone
+                        Behavior on width { NumberAnimation { duration: Theme.ms(400); easing.type: Easing.OutCubic } }
+                    }
+                    Icon { visible: bm.charging && !bm.inside; anchors.centerIn: parent; name: "bolt"; size: 12; filled: true; color: Theme.frame }
+                    // the number: the bar's colour where the fill is under it, the fill's colour where it isn't
+                    Text {
+                        id: cellPct
+                        visible: bm.inside
+                        anchors.centerIn: parent
+                        text: bm.pct
+                        color: bm.tone
+                        font.family: Theme.fontFamily; font.pixelSize: 10; font.weight: Font.Black
+                    }
+                    Item {
+                        visible: bm.inside
+                        x: 2.5; y: 2.5
+                        width: Math.max(2, (parent.width - 5) * Math.max(0, Math.min(1, bm.level))); height: parent.height - 5
+                        clip: true
+                        Text {
+                            x: cellPct.x - 2.5; y: cellPct.y - 2.5
+                            text: bm.pct
+                            color: Theme.frame.a > 0.5 ? Qt.rgba(Theme.frame.r, Theme.frame.g, Theme.frame.b, 1) : "#000000"
+                            font: cellPct.font
+                        }
+                    }
+                }
+                Rectangle { x: 24; anchors.verticalCenter: cellBody.verticalCenter; width: 2; height: 6; radius: (Theme.chamfer || Theme.square) ? 0 : 1; color: Qt.alpha(bm.tone, 0.85) }
+            }
+            // a ring round a bolt (charging) or a dot, filled round to the level
+            Canvas {
+                id: ring
+                visible: bm.look === "ring"
+                width: bm.inside ? 24 : 18; height: width
+                onWidthChanged: requestPaint()
+                readonly property real lv: bm.level
+                readonly property color c: bm.tone
+                readonly property color track: Qt.alpha(Theme.text, 0.18)
+                onLvChanged: requestPaint(); onCChanged: requestPaint(); onVisibleChanged: if (visible) requestPaint()
+                onPaint: {
+                    const g = getContext("2d"); g.reset();
+                    const r = width / 2 - 1.8;
+                    g.lineWidth = 2.6; g.lineCap = "round";
+                    g.strokeStyle = track; g.beginPath(); g.arc(width / 2, height / 2, r, 0, 2 * Math.PI); g.stroke();
+                    g.strokeStyle = c; g.beginPath(); g.arc(width / 2, height / 2, r, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * Math.max(0.02, Math.min(1, lv))); g.stroke();
+                }
+                Icon { visible: bm.charging && !bm.inside; anchors.centerIn: parent; name: "bolt"; size: 11; filled: true; color: bm.tone }
+                Text { visible: bm.inside; anchors.centerIn: parent; text: bm.pct; color: bm.tone; font.family: Theme.fontFamily; font.pixelSize: bm.pct.length > 2 ? 7 : 9; font.weight: Font.Black }
+            }
+            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; visible: bm.showPct && !bm.inside; text: Math.round(bm.level * 100) + "%"; font.pixelSize: Theme.sizeSmall; color: bm.look === "text" ? bm.tone : Theme.text }
         }
     }
     Component {

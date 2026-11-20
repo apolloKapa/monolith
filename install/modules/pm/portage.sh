@@ -144,6 +144,9 @@ portage_write_conf() {
             "# no manual: its doc flag pulls in GNOME's help viewer and with it webkit-gtk, a browser" \
             "# engine that takes hours to build" \
             "media-sound/easyeffects -doc" \
+            "# the equalizer (Media → Equalizer) is EasyEffects running LSP's: it loads them as LV2," \
+            "# and Gentoo builds them as VST3 only, so the equalizer did nothing" \
+            "media-libs/lsp-plugins lv2" \
             ${librewolf_llvm:+"# LibreWolf on the same LLVM as the installed Rust (no old Rust bootstrap chain)"} \
             ${librewolf_llvm:+"$librewolf_llvm"} \
             | sudo tee "$f" >/dev/null

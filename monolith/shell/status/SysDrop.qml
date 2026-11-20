@@ -44,7 +44,8 @@ PanelWindow {
         readonly property real pad: Theme.inset(radius, 12)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
-        clip: true
+        // (no clip here: it cut the card's own shadow to the card's square box, which filled
+        // its round corners with shadow. What's in it scrolls inside a list that clips itself)
         opacity: dd.shown ? 1 : 0
         scale: dd.shown ? 1 : Theme.popScale
         transformOrigin: Theme.dropOrigin
@@ -91,7 +92,7 @@ PanelWindow {
                         color: Theme.containerHigh
                         border.width: Theme.outlineW; border.color: Theme.outlineColor
                         clip: true
-                        Spark { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 46; values: tile.hist; color: tile.tint }
+                        Spark { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 46; values: tile.hist; color: tile.tint; radius: tile.blurRadius }
                         Row {
                             x: 12; y: 10; spacing: 6
                             Icon { name: tile.icon; size: 16; color: Theme.subtext; anchors.verticalCenter: parent.verticalCenter }

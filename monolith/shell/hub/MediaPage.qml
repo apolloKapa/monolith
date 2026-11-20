@@ -83,13 +83,30 @@ Page {
         id: backdrop
         anchors.fill: parent
         anchors.margins: -4
-        Image { id: blurSrc; anchors.fill: parent; source: page.art; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(160, 160); visible: false }
+        // (blurred small and drawn large: a copy an eighth of the size, blurred all the way, then
+        // stretched smoothly over the card. Blurred at the card's own size, 64 px of blur on a
+        // card 800 px wide still showed the picture, as hard-edged blotches of its colours)
+        Item {
+            id: wash
+            readonly property real k: 8
+            width: Math.ceil(backdrop.width / k); height: Math.ceil(backdrop.height / k)
+            visible: false
+            layer.enabled: true
+            layer.smooth: true
+            Image { id: blurSrc; anchors.fill: parent; anchors.margins: -12; source: page.art; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(128, 128); visible: false }
+            MultiEffect {
+                anchors.fill: parent
+                source: blurSrc
+                visible: blurSrc.status === Image.Ready
+                blurEnabled: true; blur: 1.0; blurMax: 32
+                saturation: 0.3
+            }
+        }
+        ShaderEffectSource { id: washBig; anchors.fill: parent; sourceItem: wash; smooth: true; visible: false }
         MultiEffect {
             anchors.fill: parent
-            source: blurSrc
+            source: washBig
             visible: blurSrc.status === Image.Ready
-            blurEnabled: true; blur: 1.0; blurMax: 64
-            saturation: 0.3
             opacity: 0.42
             maskEnabled: true
             maskSource: bdMask
@@ -379,6 +396,27 @@ Page {
         Item {
             anchors.fill: parent
             visible: page.view === "eq"
+            onVisibleChanged: if (visible) Eq.recheck()
+            // (nothing to run it: say what's missing, over the bands)
+            Rectangle {
+                visible: Eq.missing || Eq.noApp
+                z: 20
+                anchors.fill: parent
+                radius: Theme.corner(60, 12)
+                color: Qt.alpha(Theme.frame, 0.92)
+                Column {
+                    anchors.centerIn: parent
+                    width: parent.width - 60
+                    spacing: 8
+                    Icon { anchors.horizontalCenter: parent.horizontalCenter; name: "equalizer"; size: 34; color: Theme.subtext }
+                    Label { width: parent.width; horizontalAlignment: Text.AlignHCenter; strong: true; text: Eq.noApp ? "The equalizer needs EasyEffects" : "The equalizer needs LSP's plugins as LV2" }
+                    Label {
+                        width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; muted: true; font.pixelSize: Theme.sizeSmall
+                        text: Eq.noApp ? "Install easyeffects; the equalizer runs through it."
+                            : "EasyEffects is here, but its equalizer can't load without them, so it does nothing. On Gentoo: put \"media-libs/lsp-plugins lv2\" in /etc/portage/package.use and run emerge -1 lsp-plugins (Monolith's next update does that)."
+                    }
+                }
+            }
             RowLayout {
                 id: eqHead
                 width: parent.width

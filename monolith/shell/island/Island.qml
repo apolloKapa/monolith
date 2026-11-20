@@ -616,10 +616,15 @@ PanelWindow {
                 readonly property real goalW: !win.docked ? Math.round(win.openW + 2 * win.pad) : win.openW
                 readonly property real goalH: !win.docked ? Math.round(win.openH - Theme.islandH + win.pad) : (win.dropMode ? win.openH - Theme.islandH : win.openH)
                 // (Dynamic: it keeps its place in the growing shape's corner; centred in the shape, it slid sideways as the shape widened)
-                x: !win.docked && floatCard.dyn ? Math.round((floatCard.width - width) / 2) : Math.round((parent.width - width) / 2)
+                // (and stays put while the shape overshoots round it: `ow`)
+                x: !win.docked && floatCard.dyn ? Math.round((floatCard.width - width + floatCard.ow) / 2) : Math.round((parent.width - width) / 2)
                 y: win.docked && !win.dropMode && !win.bottom ? Theme.islandH + 2 : win.pad
-                width: (win.shown ? goalW : parent.width) - 2 * win.pad
-                height: (win.shown ? goalH : parent.height) - y - (win.docked && !win.dropMode && win.bottom ? Theme.islandH + 2 : win.pad)
+                // (Dynamic: its full size going back in too. Laid out at the shrinking shape's size,
+                // centred on the card, it slid off to the right of the shape as it went, and the
+                // shape cut it off: it has to ride in the shape's corner both ways)
+                readonly property bool keepSize: win.shown || (!win.docked && floatCard.dyn)
+                width: (keepSize ? goalW : parent.width) - 2 * win.pad
+                height: (keepSize ? goalH : parent.height) - y - (win.docked && !win.dropMode && win.bottom ? Theme.islandH + 2 : win.pad)
                 // (closing a floating menu, what's in it stays and goes with the card: the card
                 // fades and moves away whole. On its own it had gone before the card moved, which
                 // read as no animation at all)
@@ -1190,8 +1195,14 @@ PanelWindow {
         readonly property real fromY: dyn ? win.dynFrom.y - y : 0
         readonly property real fromW: dyn ? win.dynFrom.w : width
         readonly property real fromH: dyn ? win.dynFrom.h : height
-        readonly property real mx: dyn ? fromX * (1 - mk) : 0
-        readonly property real my: dyn ? fromY * (1 - mk) : 0
+        // (the overshoot only makes it a touch bigger, evenly round its middle: its place stops
+        // where the card is. It used to carry on past that too, so the whole menu swung a few
+        // pixels off to the far side of the module and back, off centre)
+        readonly property real mp: Math.min(1, mk)
+        readonly property real ow: dyn && mk > 1 ? (width - fromW) * (mk - 1) : 0
+        readonly property real oh: dyn && mk > 1 ? (height - fromH) * (mk - 1) : 0
+        readonly property real mx: dyn ? fromX * (1 - mp) - ow / 2 : 0
+        readonly property real my: dyn ? fromY * (1 - mp) - oh / 2 : 0
         readonly property real mw: dyn ? Math.max(8, fromW + (width - fromW) * mk) : width
         readonly property real mh: dyn ? Math.max(8, fromH + (height - fromH) * mk) : height
         // what's in it: in over the first part of the way, out before the shape is small again
@@ -1521,12 +1532,13 @@ PanelWindow {
         readonly property real k: floatCard.scale
         readonly property real fx: floatCard.onLeft ? 0 : (floatCard.onRight ? 1 : 0.5)
         readonly property real fy: floatCard.onTop ? 0 : (floatCard.onBottom ? 1 : 0.5)
-        // (Dynamic too: the card's own box, where the shape ends up. Following the shape while
-        // it settled left the blur wherever the shape was the moment it came on: the region
-        // isn't read again as it moves, so it sat short of the card's far edge)
-        width: Math.round(floatCard.width * k)
-        height: Math.round(floatCard.height * k * part)
-        x: Math.round(floatCard.x + (floatCard.width - width) * fx)
-        y: Math.round(floatCard.y + (floatCard.height * k - height) / 2 + (floatCard.height - floatCard.height * k) * fy)
+        // (Dynamic: the shape's own box, as it settles. Its region is set from these numbers,
+        // so it follows; at the card's box it showed as a dark band beside the shape on the
+        // side it was still coming from, and the shape swelled past it)
+        readonly property bool dyn: floatCard.dyn
+        width: dyn ? Math.round(floatCard.mw) : Math.round(floatCard.width * k)
+        height: dyn ? Math.round(floatCard.mh) : Math.round(floatCard.height * k * part)
+        x: dyn ? Math.round(floatCard.x + floatCard.mx) : Math.round(floatCard.x + (floatCard.width - width) * fx)
+        y: dyn ? Math.round(floatCard.y + floatCard.my) : Math.round(floatCard.y + (floatCard.height * k - height) / 2 + (floatCard.height - floatCard.height * k) * fy)
     }
 }

@@ -70,7 +70,8 @@ PanelWindow {
         readonly property real pad: Theme.inset(radius, 12)
         color: Theme.frame
         border.width: Theme.outlineW; border.color: Theme.outlineColor
-        clip: true
+        // (no clip here: it cut the card's own shadow to the card's square box, which filled
+        // its round corners with shadow. What's in it scrolls inside a list that clips itself)
         // drops down from the bar with a little zoom, and goes back up the same way
         opacity: dd.shown ? 1 : 0
         scale: dd.shown ? 1 : Theme.popScale
