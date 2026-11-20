@@ -37,15 +37,15 @@ WlSessionLock {
             visible: shot.status === Image.Ready
             source: shot
             blurEnabled: true
-            blur: surface.enter
+            blur: surface.bgK
             blurMax: 64
-            saturation: -0.9 * surface.enter
-            brightness: -0.08 * surface.enter
+            saturation: -0.9 * surface.bgK
+            brightness: -0.08 * surface.bgK
         }
         Item {
             anchors.fill: parent
             // over the picture it fades in (and out when unlocking); without one it's just there
-            opacity: shot.status === Image.Ready ? surface.enter : 1
+            opacity: shot.status === Image.Ready ? surface.bgK : 1
             // ── the wallpaper, blurred and faded ──
             Image {
                 id: wp
@@ -77,22 +77,31 @@ WlSessionLock {
 
         SystemClock { id: clock; precision: SystemClock.Seconds }
         // 0 → 1 as it locks, back to 0 as it unlocks (then the session unlocks)
+        // (linear: each piece takes its own stretch of it and eases that, so they come in one
+        // after another: the desktop blurs and dims first, the island drops in, the widgets rise
+        // one by one, the password box comes up last; unlocking, the same in reverse, quicker.
+        // It was one curve for everything: all of it arrived at once, the clock popping in)
         property real enter: 0
         Component.onCompleted: enter = 1
         Connections { target: LockState; function onUnlockingChanged() { surface.enter = LockState.unlocking ? 0 : 1; } }
         Behavior on enter {
-            NumberAnimation {
-                duration: LockState.unlocking ? Theme.ms(650) : Theme.ms(800)
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: LockState.unlocking ? Theme.exitCurve : Theme.enterCurve
-            }
+            NumberAnimation { duration: LockState.unlocking ? Theme.ms(680) : Theme.ms(1150); easing.type: Easing.Linear }
         }
+        // a piece's own 0 … 1, over its stretch [a, b] of `enter`, eased (out coming in; going, the
+        // same curve backwards, so it gathers speed as it leaves)
+        function piece(a, b) {
+            const t = Math.max(0, Math.min(1, (enter - a) / (b - a)));
+            return 1 - Math.pow(1 - t, 3);
+        }
+        readonly property real bgK: piece(0, 0.55)
+        readonly property real islK: piece(0.12, 0.62)
+        readonly property real whoK: piece(0.42, 1)
 
         // ── the island: locked, the date, the weather ──
         IslandShape {
             id: isl
             anchors.horizontalCenter: parent.horizontalCenter
-            y: -Theme.islandH * (1 - surface.enter)
+            y: -(Theme.islandH + 12) * (1 - surface.islK)
             height: Theme.islandH
             bodyW: islRow.implicitWidth + 2 * Theme.islandPad + 10
             r: height / 2
@@ -112,14 +121,19 @@ WlSessionLock {
             // (the media widget only while Lock & idle → Media on the lock screen is on)
             model: WidgetLayout.on("lock", surface.shotName).filter(i => i.type !== "media" || Store.get("lock.media", true) !== false)
             WidgetFace {
+                id: lw
                 required property var modelData
+                required property int index
+                // (one after another, a little apart)
+                readonly property real k: surface.piece(0.22 + Math.min(4, index) * 0.06, 0.78 + Math.min(4, index) * 0.04)
+                transform: Translate { y: (1 - lw.k) * 26 }
                 item: WidgetLayout.fitted(modelData, surface.height)
                 width: implicitWidth
                 height: implicitHeight
                 x: Math.max(0, Math.min(modelData.x * surface.width, surface.width - width))
                 y: Math.max(0, Math.min(modelData.y * surface.height, surface.height - height))
-                opacity: surface.enter
-                scale: surface.enter > 0.999 ? 1 : Theme.popScale + (1 - Theme.popScale) * surface.enter   // (exactly 1 once in: 0.99999… resampled the clock and blurred it)
+                opacity: k
+                scale: k > 0.999 ? 1 : Theme.popScale + (1 - Theme.popScale) * k   // (exactly 1 once in: 0.99999… resampled the clock and blurred it)
             }
         }
 
@@ -148,7 +162,8 @@ WlSessionLock {
             anchors.bottom: parent.bottom; anchors.bottomMargin: parent.height * 0.06
             width: noteRow.implicitWidth + 32; height: 44; radius: Theme.corner(48, 8) * 44 / 64
             color: Qt.alpha(Theme.frame, 0.85)
-            opacity: surface.enter
+            opacity: surface.whoK
+            transform: Translate { y: (1 - surface.whoK) * 30 }
             Row {
                 id: noteRow
                 anchors.centerIn: parent; spacing: 10
@@ -176,8 +191,9 @@ WlSessionLock {
             y: Math.max(0, Math.min(parent.height - height, placed ? at.y * parent.height - height / 2 : parent.height * 0.92 - height))
             spacing: 14
             // fades in with a little zoom (and out when unlocking)
-            opacity: surface.enter
-            scale: surface.enter > 0.999 ? 1 : Theme.popScale + (1 - Theme.popScale) * surface.enter   // (exactly 1 once in: 0.99999… resampled the clock and blurred it)
+            opacity: surface.whoK
+            scale: surface.whoK > 0.999 ? 1 : Theme.popScale + (1 - Theme.popScale) * surface.whoK   // (exactly 1 once in: 0.99999… resampled the clock and blurred it)
+            transform: Translate { y: (1 - surface.whoK) * 30 }
             transformOrigin: placed ? Item.Center : Item.Bottom
             readonly property string avatar: Store.get("general.avatar", "") || ((Prefs.raw.general && Prefs.raw.general.avatarPath) ? Prefs.raw.general.avatarPath : (Quickshell.env("HOME") + "/.face"))
 

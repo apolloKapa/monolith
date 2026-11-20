@@ -207,6 +207,54 @@ Item {
         Icon { name: g.icon; size: 18; filled: g.on; color: g.tint }
     }
 
+    // ── a module moved (Settings → Bar: another zone, another place in one, along the bar) ──
+    // Its new copy starts where the old one was and glides to its place (it jumped there).
+    // `lastAt`: where each module was on the bar when it went, and when
+    // (noted a few times a second while Settings is open, the only place modules are moved:
+    // noting it as the old copy went didn't always happen, and was a call into something
+    // already being taken apart)
+    property var lastAt: ({})
+    function noteAll() {
+        const now = Date.now(), m = {};
+        for (const k in modItems) {
+            const it = modItems[k];
+            if (!it || !it.visible || it.flipX !== 0 || it.flipY !== 0) { if (lastAt[k]) m[k] = lastAt[k]; continue; }
+            const p = it.mapToItem(bar, 0, 0);
+            m[k] = { x: p.x, y: p.y, t: now };
+        }
+        lastAt = m;
+    }
+    Timer { interval: 200; repeat: true; running: !bar.still && !bar.only && HubState.open && HubState.page === "settings"; onTriggered: bar.noteAll() }
+    // (new copies wait for the bar's own timer, once they're laid out: a delayed call of their
+    // own outlived them when the bar was rebuilt, a call into something already gone)
+    property var glideQueue: []
+    function queueGlide(key, it) { glideQueue.push({ key: key, it: it }); glideTick.restart(); }
+    Timer {
+        id: glideTick
+        interval: 1
+        onTriggered: {
+            const q = bar.glideQueue;
+            bar.glideQueue = [];
+            for (const g of q) {
+                if (bar.modItems[g.key] !== g.it) continue;      // gone again already
+                if (g.it.settled !== undefined) g.it.settled = true;
+                bar.glideIn(g.key, g.it);
+            }
+        }
+    }
+    function glideIn(key, it) {
+        const was = lastAt[key];
+        if (still || !Theme.animOn || !was || Date.now() - was.t > 1500 || !it) return;
+        const p = it.mapToItem(bar, 0, 0);
+        it.flipX = was.x - p.x; it.flipY = was.y - p.y;
+        it.startGlide();
+    }
+    component Glide: ParallelAnimation {
+        property Item who
+        NumberAnimation { target: who; property: "flipX"; to: 0; duration: Theme.ms(420); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springyCurve }
+        NumberAnimation { target: who; property: "flipY"; to: 0; duration: Theme.ms(420); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springyCurve }
+    }
+
     // ── the zones ──
     component Zone: Line {
         property var keys: []
@@ -214,9 +262,15 @@ Item {
         Repeater {
             model: parent.keys
             Loader {
+                id: zl
                 required property string modelData
                 sourceComponent: bar.mods[modelData] || null
-                Component.onCompleted: bar.modItems[modelData] = this
+                property real flipX: 0
+                property real flipY: 0
+                function startGlide() { zlGlide.restart(); }
+                transform: Translate { x: zl.flipX; y: zl.flipY }
+                Glide { id: zlGlide; who: zl }
+                Component.onCompleted: { bar.modItems[modelData] = this; bar.queueGlide(modelData, this); }
                 Component.onDestruction: if (bar.modItems[modelData] === this) delete bar.modItems[modelData]
                 // a module with nothing to show (`want: false`) takes no room
                 visible: !!item && item.want !== false
@@ -285,9 +339,15 @@ Item {
         id: freeRep
         model: bar.zones.free || []
         Loader {
+            id: fl
             required property string modelData
             sourceComponent: bar.mods[modelData] || null
-            Component.onCompleted: bar.modItems[modelData] = this
+            property real flipX: 0
+            property real flipY: 0
+            function startGlide() { flGlide.restart(); }
+            transform: Translate { x: fl.flipX; y: fl.flipY }
+            Glide { id: flGlide; who: fl }
+            Component.onCompleted: { bar.modItems[modelData] = this; bar.queueGlide(modelData, this); }
             Component.onDestruction: if (bar.modItems[modelData] === this) delete bar.modItems[modelData]
             visible: !!item && item.want !== false
             readonly property real at: Math.max(0, Math.min(1, Number(bar.freeAt[modelData] !== undefined ? bar.freeAt[modelData] : 0.5)))
@@ -295,6 +355,11 @@ Item {
             readonly property real pos: Math.round(Math.max(Theme.islandPad, Math.min(bar.barLen - Theme.islandPad - along, bar.barLen * at - along / 2)))
             x: bar.vertical ? Math.round((bar.width - width) / 2) : pos
             y: bar.vertical ? pos : Math.round((bar.height - height) / 2)
+            // moved along the bar (Settings → Bar): it glides to its new place, the same way as in
+            // the settings' lane. Not as the bar is first laid out, and not in a still preview
+            property bool settled: false
+            Behavior on x { enabled: settled && !bar.vertical && !bar.still && Theme.animOn; NumberAnimation { duration: Theme.ms(420); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springyCurve } }
+            Behavior on y { enabled: settled && bar.vertical && !bar.still && Theme.animOn; NumberAnimation { duration: Theme.ms(420); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springyCurve } }
         }
     }
 
@@ -642,7 +707,11 @@ Item {
     }
     // a new version of Monolith: shows only then; opens Settings → About & updates
     Component { id: updC; Glyph { property bool want: Updates.newer; icon: "upgrade"; on: true; tint: Theme.accent; onClicked: HubState.openSettings("about", bar.screenName) } }
-    Component { id: gameC; Glyph { property bool want: GameMode.active; icon: "sports_esports"; on: true; tint: Theme.accent; onClicked: bar.open("gaming") } }
+    // game mode: always there once it's on the bar (it only showed while game mode was on, so
+    // a bar with it looked as if it had lost it); lit up in the accent while game mode is on.
+    // Click: the Gaming menu; right-click: game mode on or off
+    Component { id: gameC; Glyph { icon: "sports_esports"; on: GameMode.active; tint: GameMode.active ? Theme.accent : Theme.text
+                                   onClicked: bar.open("gaming"); onRightClicked: GameMode.toggle() } }
 
     Component {
         id: trayC

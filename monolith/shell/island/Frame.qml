@@ -94,7 +94,9 @@ Scope {
         }
 
         // blur styles: the wallpaper blurred behind the frame
-        BackgroundEffect.blurRegion: Theme.blur ? frameRegion : null
+        BackgroundEffect.blurRegion: Theme.blur && !Intro.playing ? frameRegion : null
+        // Smooth sailing (core/Intro): the frame fades in with the bar
+        Binding { target: win.contentItem; property: "opacity"; value: Intro.barK; when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
         Region {
             id: frameRegion
             item: win.contentItem

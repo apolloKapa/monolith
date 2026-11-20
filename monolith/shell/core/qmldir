@@ -36,3 +36,4 @@ singleton AltTab 1.0 AltTab.qml
 singleton Placeholders 1.0 Placeholders.qml
 singleton Brightness 1.0 Brightness.qml
 singleton HyprMouse 1.0 HyprMouse.qml
+singleton Intro 1.0 Intro.qml

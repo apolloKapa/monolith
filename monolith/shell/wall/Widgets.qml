@@ -33,6 +33,9 @@ Item {
                 NumberAnimation { target: wf; property: "cyP"; from: 0; to: 1; duration: Theme.fxInMs }
             }
             CyberFx { target: wf; p: wf.cyP }
+            // Smooth sailing (core/Intro): rising in, one after another, when the shell first starts
+            opacity: opt("opacity", 1) * Intro.widgetK(index)
+            transform: Translate { y: (1 - Intro.widgetK(wf.index)) * 34 }
             item: WidgetLayout.fitted(modelData, desk.height)
             width: implicitWidth
             height: implicitHeight

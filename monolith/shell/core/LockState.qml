@@ -49,6 +49,7 @@ Singleton {
     // never wait long for the picture
     Timer { id: giveUp; interval: 800; onTriggered: { shooting.running = false; ls.hasShot = false; ls.locked = true; } }
     // the right password: animate out, then unlock
+    // (as long as the lock screen's way out: lock/LockScreen.qml)
     Timer { id: release; interval: Theme.ms(700); onTriggered: { ls.locked = false; ls.unlocking = false; } }
     function tryPassword(pw) {
         if (busy) return;

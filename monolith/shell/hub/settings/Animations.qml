@@ -184,6 +184,13 @@ ColumnLayout {
         Toggle { checked: Theme.animOn; onToggled: on => Store.set("theme.animations", on) }
     }
     SettingRow {
+        key: "theme.smoothSailing"; def: false
+        show: Theme.animOn
+        icon: "sailing"; title: "Smooth sailing"
+        desc: "When you log in, the bar glides in from its edge, the desktop's widgets rise in one after another and the dock comes up last (once per login; restarting the shell doesn't play it again)"
+        Toggle { checked: Store.get("theme.smoothSailing", false) === true; onToggled: on => Store.set("theme.smoothSailing", on) }
+    }
+    SettingRow {
         key: "theme.animSpeed"; def: 1;
         show: Theme.animOn
         icon: "speed"; title: "Speed"

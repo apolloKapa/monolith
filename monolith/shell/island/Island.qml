@@ -1394,7 +1394,11 @@ PanelWindow {
     readonly property bool overFullscreen: !Theme.blurOverFullscreen && Niri.fullscreenOn(modelData.name)
     // (none while auto-hide has the bar slid away: its blur would sit off the screen, and
     // Hyprland blurred the whole screen for that)
-    BackgroundEffect.blurRegion: Theme.blur && !overFullscreen && !(win.tucked && !win.toastGrows && !Theme.frameHide) ? blurShape : null
+    // Smooth sailing (core/Intro): the whole bar glides in from its edge when the shell first
+    // starts (its blur waits until it's there: a blur region can't move with it)
+    Binding { target: win.contentItem; property: "y"; value: (win.bottom ? 1 : -1) * (1 - Intro.barK) * (Theme.islandH + Theme.barMargin + 28); when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
+    Binding { target: win.contentItem; property: "opacity"; value: Intro.barK; when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
+    BackgroundEffect.blurRegion: Theme.blur && !Intro.playing && !overFullscreen && !(win.tucked && !win.toastGrows && !Theme.frameHide) ? blurShape : null
     Region {
         id: blurShape
         // (a screen with the bar turned off has no bar to blur behind: only its open menu)

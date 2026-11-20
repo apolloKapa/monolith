@@ -621,7 +621,14 @@ PanelWindow {
         height: Math.max(0, Math.min(dock.height, capsule.y + capsule.height) - y0)
         readonly property bool some: width > 2 && height > 2 && (capsule.glitchy ? capsule.opacity > 0.01 : dock.shown || capsule.opacity > 0.01)
     }
-    BackgroundEffect.blurRegion: Theme.blur && blurPart.some ? blurShape : null
+    // Smooth sailing (core/Intro): up from its edge, last, when the shell first starts
+    Binding {
+        target: dock.contentItem; property: dock.side === "left" || dock.side === "right" ? "x" : "y"
+        value: (dock.side === "top" || dock.side === "left" ? -1 : 1) * (1 - Intro.dockK) * 140
+        when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue
+    }
+    Binding { target: dock.contentItem; property: "opacity"; value: Intro.dockK; when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
+    BackgroundEffect.blurRegion: Theme.blur && !Intro.playing && blurPart.some ? blurShape : null
     Region {
         id: blurShape
         item: blurPart.some ? blurPart : null

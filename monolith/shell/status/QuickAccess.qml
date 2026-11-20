@@ -99,7 +99,11 @@ PanelWindow {
     // (Hyprland, where it's always the whole screen: gone while a fullscreen window has this
     // screen and it isn't allowed over those, so a game keeps the screen to itself)
     readonly property bool fsHere: Niri.fullscreenOn(modelData.name) && Store.get("quick.overFullscreen", false) !== true
-    visible: enabled && !(Niri.hyprland && fsHere && !out)
+    // (niri too: gone while a fullscreen window has this screen, or game mode is on. Its strip along
+    // the edge stayed over the game and took the mouse whenever the pointer reached that edge: a
+    // game's camera turning drifts it there, and the game lost the mouse at the screen's edge)
+    readonly property bool standDown: fsHere || blocked
+    visible: enabled && !(standDown && !out)
     WlrLayershell.namespace: "monolith-quick"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: out ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
@@ -137,7 +141,7 @@ PanelWindow {
     readonly property real topRoom: Theme.barEdge === "top" ? Theme.islandH + Theme.barMargin + 6 : 0
     readonly property real bottomRoom: Theme.barEdge === "bottom" ? Theme.islandH + Theme.barMargin + 6 : 0
     readonly property string dockEdge: Store.get("dock.enabled", true) !== false ? Store.get("dock.position", "bottom") : ""
-    function stripOn(e) { return enabled && !out && edges.indexOf(e) !== -1 && e !== Theme.barEdge; }
+    function stripOn(e) { return enabled && !standDown && !out && edges.indexOf(e) !== -1 && e !== Theme.barEdge; }
     // (the middle of an edge is left alone for the dock, or for a menu that opens there by hover)
     function dockGap(e) { return dockEdge === e ? 0.25 : (HubState.hoverEdges.indexOf(e) !== -1 ? 0.22 : 0); }
     QtObject {

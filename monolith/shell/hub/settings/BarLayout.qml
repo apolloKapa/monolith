@@ -480,6 +480,11 @@ ColumnLayout {
                     readonly property real at: Number(ft.ed.freeAt[modelData] !== undefined ? ft.ed.freeAt[modelData] : 0.5)
                     x: Math.round(Math.max(0, Math.min(trk.width - width, trk.width * at - width / 2)))
                     anchors.verticalCenter: parent.verticalCenter
+                    // dropped somewhere else along the bar: it glides there (it jumped). Not when it's
+                    // first laid out, or it slid in from the start of the lane
+                    property bool settled: false
+                    Component.onCompleted: Qt.callLater(() => settled = true)
+                    Behavior on x { enabled: settled && Theme.animOn; NumberAnimation { duration: Theme.ms(420); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springyCurve } }
                 }
             }
         }
