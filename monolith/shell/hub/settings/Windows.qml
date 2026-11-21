@@ -150,7 +150,7 @@ ColumnLayout {
     }
 
     // ── Alt+Tab: niri's window switcher (live previews), in the shell's look (core/AltTab) ──
-    SectionHead { text: "Alt+Tab"; visible: !Niri.hyprland }
+    SectionHead { text: "Alt+Tab" }
     SettingRow {
         show: !Niri.hyprland
         icon: "tab"; title: "Window switcher"; desc: "Alt+Tab (Alt+Shift+Tab back) shows your windows, most recent first, with live previews; let go of Alt to switch"
@@ -176,5 +176,29 @@ ColumnLayout {
         show: !Niri.hyprland && !sec.has("recent-windows|off")
         icon: "timer"; title: "Show after"; desc: "A quick Alt+Tab just switches to the last window; held this long, the switcher shows"
         NumberBox { from: 0; to: 1000; slideTo: 600; step: 10; unit: "ms"; value: sec.num("recent-windows|open-delay-ms", 150); onMoved: x => sec.put("recent-windows", "open-delay-ms", Math.round(x)) }
+    }
+    // ── Alt+Tab on Hyprland: the shell's own switcher (core/HyprSwitch, status/WindowSwitcher) ──
+    SettingRow {
+        show: Niri.hyprland
+        key: "alttab.hyprShow"; def: true
+        icon: "tab"; title: "Window switcher"; desc: "Alt+Tab (Alt+Shift+Tab back) shows every window, most recent first, with live previews; let go of Alt to switch. Off: Alt+Tab just goes back to the last window"
+        Toggle { checked: Store.get("alttab.hyprShow", true) !== false; onToggled: on => Store.set("alttab.hyprShow", on) }
+    }
+    SettingRow {
+        show: Niri.hyprland && Store.get("alttab.hyprShow", true) !== false
+        key: "alttab.hyprSize"; def: 170
+        icon: "photo_size_select_large"; title: "Preview size"; desc: "How big each window's preview is"
+        Dropdown {
+            width: 220
+            opts: [["130", "Small"], ["170", "Medium"], ["230", "Large"]]
+            value: String(Store.get("alttab.hyprSize", 170))
+            onPicked: h => Store.set("alttab.hyprSize", Number(h))
+        }
+    }
+    SettingRow {
+        show: Niri.hyprland && Store.get("alttab.hyprShow", true) !== false
+        key: "alttab.hyprDelay"; def: 150
+        icon: "timer"; title: "Show after"; desc: "A quick Alt+Tab just switches to the last window; held this long, the switcher shows"
+        NumberBox { from: 0; to: 1000; slideTo: 600; step: 10; unit: "ms"; value: Number(Store.get("alttab.hyprDelay", 150)); onMoved: x => Store.set("alttab.hyprDelay", Math.round(x)) }
     }
 }

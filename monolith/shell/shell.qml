@@ -68,12 +68,14 @@ ShellRoot {
     Lazy { id: welcomeL; when: HubState.welcomeOpen; linger: 1500 }
     Variants { model: welcomeL.on ? Quickshell.screens : []; Welcome {} }
     Variants { model: Quickshell.screens; QuickAccess {} }
+    // Alt+Tab on Hyprland (niri has its own): there while you cycle
+    Variants { model: HyprSwitch.active ? Quickshell.screens : []; WindowSwitcher {} }
     Lazy { id: editL; when: HubState.editWidgets !== ""; linger: 400 }
     Variants { model: editL.on ? Quickshell.screens : []; WidgetEditor {} }
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own
-    Component.onCompleted: { Notifs.dnd; AudioBalance.value; HyprMouse.held; Idle.enabled; Wall.path; Wellbeing.loaded; Updates.available; NightLight.enabled; AppColours.targets; NiriShell.passes; AltTab.follow; Profiles.current; if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
+    Component.onCompleted: { Notifs.dnd; AudioBalance.value; HyprMouse.held; Idle.enabled; Wall.path; Wellbeing.loaded; Updates.available; NightLight.enabled; AppColours.targets; NiriShell.passes; AltTab.follow; HyprSwitch.on; Profiles.current; if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
     // the icon font (Material Symbols Rounded): every icon is drawn with it. Not there (a fresh
     // install, a distro without it): fetch it, then restart so the shell can use it
     Process {

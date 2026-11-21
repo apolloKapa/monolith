@@ -180,6 +180,10 @@ Singleton {
         const m = {};
         let fid = null;
         for (const t of Hyprland.toplevels.values) {
+            // (only windows on a workspace: games under Proton and Steam leave dozens of hidden
+            // helper windows ("Default IME", "Input", rundll32, steamwebhelper) that Hyprland
+            // never maps or lists, but Quickshell's list still has; Alt+Tab showed them all)
+            if (!t.workspace) continue;
             const o = t.lastIpcObject || {};
             const mon = t.monitor;
             const at = o.at, size = o.size;
@@ -191,6 +195,8 @@ Singleton {
                 // (Hyprland: 0 none, 1 maximised, 2 fullscreen. Counting a maximised window as
                 // fullscreen put the live wallpaper to sleep whenever one was open)
                 is_fullscreen: Number(o.fullscreen || 0) >= 2, pid: o.pid || 0,
+                // Hyprland's own most-recently-used order (0 = focused last); Alt+Tab starts from it
+                focus_history: typeof o.focusHistoryID === "number" ? o.focusHistoryID : 1000000,
                 // where it is on its screen (the dock's "dodge windows" reads this, as on niri)
                 // (window_size: what covers() reads, so a borderless window the size of the screen
                 // counts as fullscreen, as on niri)

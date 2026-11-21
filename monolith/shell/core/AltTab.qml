@@ -7,8 +7,7 @@ import Quickshell
 // theme's accent (red-ish urgent windows: the theme's danger colour) and the theme's roundness,
 // written to niri's config (recent-windows → highlight) whenever they change. Settings →
 // Windows → Alt+Tab ("In the theme's look") turns that off; the switcher's other options are
-// there too. Not on Hyprland: it has no switcher, so its keybinds (install/modules/hypr_keys.py)
-// make Alt+Tab go to the next window and raise it.
+// there too. Not on Hyprland: it has no switcher, so the shell has its own there (HyprSwitch).
 Singleton {
     id: at
     readonly property bool follow: Store.get("alttab.theme", true) !== false && !Niri.hyprland

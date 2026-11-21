@@ -33,6 +33,7 @@ singleton Sketch 1.0 Sketch.qml
 singleton Profiles 1.0 Profiles.qml
 singleton Pictures 1.0 Pictures.qml
 singleton AltTab 1.0 AltTab.qml
+singleton HyprSwitch 1.0 HyprSwitch.qml
 singleton Placeholders 1.0 Placeholders.qml
 singleton Brightness 1.0 Brightness.qml
 singleton HyprMouse 1.0 HyprMouse.qml

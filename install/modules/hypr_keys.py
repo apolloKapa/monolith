@@ -206,23 +206,30 @@ def translate(path, monolith):
         lua = "hl.bind(%s, %s%s)" % (lua_str(" + ".join(mods + [k])), what, ", { locked = true }" if locked else "")
         conf = "%s = %s, %s, %s" % ("bindl" if locked else "bind", " ".join(mods), k, got[1])
         out.append((mods, k, locked, lua, conf, got, secs.get(raw, "")))
-    # Alt+Tab: niri has its own switcher (not in the keymap), Hyprland has none. Here it goes to
-    # the workspace's next window and raises it (Shift: back), unless the keymap uses those keys
-    for mods, lua_what, conf_what in ALT_TAB:
-        if (frozenset(mods), "tab") in seen:
-            continue
+    # Alt+Tab: niri has its own switcher (not in the keymap), Hyprland has none, so the shell has
+    # one (core/HyprSwitch): Alt+Tab and Alt+Shift+Tab go to it as global shortcuts, and letting
+    # go of Alt (a release bind that passes the key on to the app) tells it to switch. Unless the
+    # keymap uses those keys
+    if (frozenset(["ALT"]), "tab") in seen:
+        return out
+    for mods, name in ALT_TAB:
         seen.add((frozenset(mods), "tab"))
-        out.append((mods, "TAB", False, "hl.bind(%s, %s)" % (lua_str(" + ".join(mods + ["TAB"])), lua_what),
-                    "\n".join("bind = %s, TAB, %s" % (" ".join(mods), c) for c in conf_what), (lua_what, conf_what[0]), "Alt+Tab"))
+        what = "hl.dsp.global(%s)" % lua_str("quickshell:" + name)
+        out.append((mods, "TAB", False, "hl.bind(%s, %s)" % (lua_str(" + ".join(mods + ["TAB"])), what),
+                    "bind = %s, TAB, global, quickshell:%s" % (" ".join(mods), name), (what, "global"), "Alt+Tab"))
+    # (also by key code, 64 and 108: Hyprland 0.57 counts a named Alt as a modifier, and a
+    # modifier's release bind doesn't fire while another key is still held, so letting go of Alt
+    # before Tab, as you do when you're quick, was lost and the switcher stayed up. By its code
+    # it's a plain key, which fires whatever else is held. Both firing is fine: the second does nothing)
+    for key in ("ALT_L", "ALT_R", "code:64", "code:108"):
+        what = "hl.dsp.global(%s)" % lua_str("quickshell:monolith-alttab-done")
+        out.append(([], key, False,
+                    "hl.bind(%s, %s, { release = true, ignore_mods = true, non_consuming = true, transparent = true })" % (lua_str(key), what),
+                    "bindirnt = , %s, global, quickshell:monolith-alttab-done" % key, (what, "global"), "Alt+Tab"))
     return out
 
 
-ALT_TAB = [
-    (["ALT"], "function() hl.dispatch(hl.dsp.window.cycle_next()); hl.dispatch(hl.dsp.window.bring_to_top()) end",
-     ["cyclenext", "bringactivetotop"]),
-    (["ALT", "SHIFT"], "function() hl.dispatch(hl.dsp.window.cycle_next({ next = false })); hl.dispatch(hl.dsp.window.bring_to_top()) end",
-     ["cyclenext, prev", "bringactivetotop"]),
-]
+ALT_TAB = [(["ALT"], "monolith-alttab"), (["ALT", "SHIFT"], "monolith-alttab-back")]
 
 
 def scroll_delay(path, lua):
