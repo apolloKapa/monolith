@@ -31,6 +31,46 @@ def underscan_file():
     return os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "aquamarine", "underscan")
 
 
+def us_driver(name):
+    """the graphics driver of the card a connector is on (only amdgpu, radeon and nouveau have
+    underscan)"""
+    import glob
+    for c in glob.glob("/sys/class/drm/card*-" + name):
+        card = os.path.basename(c).split("-", 1)[0]
+        d = os.path.realpath("/sys/class/drm/%s/device/driver" % card)
+        if os.path.isdir(d):
+            return os.path.basename(d)
+    return ""
+
+
+def underscan_running():
+    """Does the Hyprland that's running use the patched aquamarine? Installed isn't enough: a
+    running Hyprland keeps the library it started with until you log out and in (the slider moved
+    and nothing happened). "yes", "restart" (patched on disk, not loaded yet) or "no"."""
+    sig = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
+    pid = None
+    try:
+        # (the running Hyprland: the one whose lock names this instance)
+        pid = int(open(os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/run/user/%d" % os.getuid()), "hypr", sig, "hyprland.lock")).readline().strip())
+    except (OSError, ValueError):
+        pass
+    loaded = None
+    if pid:
+        try:
+            for line in open("/proc/%d/maps" % pid):
+                if "libaquamarine" in line:
+                    loaded = line.split(None, 5)[5].strip()
+                    break
+        except OSError:
+            pass
+    if loaded and not loaded.endswith("(deleted)"):
+        try:
+            return "yes" if b"aquamarine/underscan" in open(loaded, "rb").read() else ("restart" if underscan_patched() else "no")
+        except OSError:
+            pass
+    return "restart" if underscan_patched() else "no"
+
+
 def underscan_patched():
     """Is the aquamarine Hyprland uses one with the underscan patch? (its library names the file)"""
     import glob
@@ -74,6 +114,7 @@ def niri_shape(m, saved_state=None, patched=False):
     return {"name": m["name"], "make": m.get("make", ""), "model": m.get("model", ""), "modes": modes,
             "current_mode": cur, "mirror_of": "" if mirror in ("none", "") else mirror,
             "underscan": float(s.get("underscan", 0) or 0), "underscan_max": umax, "underscan_ok": patched,
+            "underscan_driver": us_driver(m["name"]),
             "logical": None if off else {"x": m.get("x", 0), "y": m.get("y", 0), "width": lw, "height": lh, "scale": sc,
                                          "transform": m.get("transform", 0)}}
 
@@ -175,8 +216,12 @@ def reapply(name):
 def main():
     a = sys.argv[1:]
     if not a or a[0] == "read":
-        st, ok = saved(), underscan_patched()
-        print(json.dumps({m["name"]: niri_shape(m, st, ok) for m in monitors()}))
+        st, run = saved(), underscan_running()
+        ok = run == "yes"
+        out = {m["name"]: niri_shape(m, st, ok) for m in monitors()}
+        for o in out.values():
+            o["underscan_restart"] = run == "restart"
+        print(json.dumps(out))
         return
     if a[0] == "set" and len(a) >= 4:
         name, key, value = a[1], a[2], a[3]

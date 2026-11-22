@@ -349,10 +349,17 @@ ColumnLayout {
                     readonly property var us: sec.niriUs.outputs ? sec.niriUs.outputs[card.o.name] : null
                     readonly property real most: Niri.hyprland ? Number(card.o.underscan_max || 0) : (us ? Number(us.max || 0) : 0)
                     readonly property real now: Niri.hyprland ? Number(card.o.underscan || 0) : (us ? Number(us.pct || 0) : 0)
-                    readonly property bool can: (Niri.hyprland ? card.o.underscan_ok === true : sec.niriUs.patched === true) && most > 0
+                    // (only these drivers can draw the picture smaller: not Intel's, not NVIDIA's own)
+                    readonly property string driver: Niri.hyprland ? String(card.o.underscan_driver || "") : (us ? String(us.driver || "") : "")
+                    readonly property bool driverOk: driver === "" || ["amdgpu", "radeon", "nouveau"].indexOf(driver) !== -1
+                    readonly property bool can: driverOk && (Niri.hyprland ? card.o.underscan_ok === true : sec.niriUs.patched === true) && most > 0
+                    // (installed, but what's running started before it: it takes a new session)
+                    readonly property bool restart: Niri.hyprland ? card.o.underscan_restart === true : sec.niriUs.restart === true
                     show: card.on && /^HDMI/.test(card.o.name)
                     icon: "fit_screen"; title: "HDMI scaling"
                     desc: can ? "Makes the picture smaller so a TV that zooms in shows the edges. The screen goes dark for a moment when it changes"
+                        : !driverOk ? "Edges cut off on a TV? This graphics driver (" + driver + ") can't draw the picture smaller (only AMD's and nouveau can), so turn the zoom off on the TV: Samsung, Picture Size → Fit to Screen; LG, Just Scan; Sony, Full Pixel"
+                        : restart ? "Installed: log out and in to start using it (" + (Niri.hyprland ? "Hyprland" : "niri") + " is still running the version from before)"
                         : "Edges cut off on a TV? This needs " + (Niri.hyprland ? "Hyprland's display library" : "niri") + " with Monolith's HDMI scaling patch: turn on \"HDMI scaling\" in the installer's menu (monolith installer). Until then, on the TV: Samsung, Picture Size → Fit to Screen; LG, Just Scan; Sony, Full Pixel"
                     NumberBox {
                         visible: hdmiRow.can
