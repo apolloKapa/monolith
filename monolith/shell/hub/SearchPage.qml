@@ -257,11 +257,22 @@ Page {
         // (a new row of favourites slides the apps down instead of jumping)
         Behavior on height { enabled: !page.favSide; NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
         visible: showing
-        // (beside the apps, they scroll if there are more than fit)
-        clip: page.favSide
+        // The wheel over the favourites: beside the apps they scroll themselves when there are
+        // more than fit (they were cut off there, with no way to the rest); otherwise, and above
+        // or below the apps, it scrolls the apps, as it does anywhere else in the launcher.
+        SmoothWheel { flick: page.showGrid ? appGrid : list }
+        Flickable {
+            id: favFlick
+            anchors.fill: parent
+            contentHeight: favGrid.height
+            // (the wheel only: a drag on a favourite moves that favourite)
+            interactive: false
+            clip: page.favSide
+            boundsBehavior: Flickable.StopAtBounds
+            SmoothWheel {}
         Grid {
             id: favGrid
-            width: parent.width
+            width: favFlick.width
             columns: page.favColumns
             rowSpacing: 4
             readonly property real cellW: width / page.favColumns
@@ -321,6 +332,7 @@ Page {
                 }
             }
         }
+        }
         // the line between them and the apps, on the apps' side
         Rectangle {
             readonly property string side: ({ top: "bottom", bottom: "top", left: "right", right: "left" })[page.favPlace] || "bottom"
@@ -338,7 +350,7 @@ Page {
             width: 64; height: 64
             radius: Theme.corner(64, 6)
             x: page.favPos.x - width / 2
-            y: page.favPos.y - height / 2
+            y: page.favPos.y - height / 2 - favFlick.contentY
             color: Theme.accentContainer
             border.width: 2; border.color: Theme.accent
             Image {

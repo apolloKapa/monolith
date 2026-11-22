@@ -7,8 +7,9 @@ import "../core"
 WheelHandler {
     id: sw
     // the list it scrolls: inside a Flickable a handler ends up on its content item, so this
-    // walks up to the first item that actually scrolls
-    readonly property var flick: {
+    // walks up to the first item that actually scrolls. (Or name one: the wheel over something
+    // beside a list scrolls that list, `SmoothWheel { flick: theList }`)
+    property var flick: {
         let p = parent;
         while (p && (p.contentY === undefined || p.flickableDirection === undefined)) p = p.parent;
         return p;
@@ -17,6 +18,15 @@ WheelHandler {
     property real step: 110 * Math.max(0.1, Math.min(5, Number(Store.get("menus.scrollSpeed", 1)) || 1))
     property bool horizontal: false
     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+    // A list with nothing to scroll lets the wheel through to what's behind it (a list inside a
+    // page scrolls the page; the wheel over the launcher's favourites scrolls the apps). A
+    // handler keeps the wheel to itself by default, whatever it does with it.
+    blocking: {
+        const f = flick;
+        if (!f) return false;
+        const lim = limits();
+        return lim[1] > lim[0];
+    }
     property real target: 0
 
     function limits() {

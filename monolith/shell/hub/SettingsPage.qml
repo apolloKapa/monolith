@@ -91,6 +91,15 @@ Page {
         out.sort((a, b) => a.score - b.score);
         return out.slice(0, 60);
     }
+    // the results that are in the list now (a plain object, looked at by each new row as it's
+    // made: see the results' rows)
+    property var seenRows: ({})
+    function markRows() {
+        const now = {};
+        if (query.trim() !== "") for (const r of results) now[r.tab + "|" + r.title] = true;
+        seenRows = now;
+    }
+    onQueryChanged: if (query.trim() === "") markRows()
     // the row to go to once its page has loaded
     property string findRow: ""
     function go(res) {
@@ -195,18 +204,47 @@ Page {
                 x: 10; y: 78
                 width: parent.width - 20; height: 40
                 placeholder: "Search settings"
+                // (Enter opens the first result. Not when the field just loses focus: clicking
+                // anywhere else used to jump to the first result too)
+                acceptOnBlur: false
                 onTextChanged: page.query = text
                 onAccepted: v => { if (page.results.length) page.go(page.results[0]); }
                 Keys.onEscapePressed: { text = ""; }
-                Icon { anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter; name: page.query !== "" ? "close" : "search"; size: 18; color: Theme.subtext
-                    MouseArea { anchors.fill: parent; anchors.margins: -6; enabled: page.query !== ""; cursorShape: Qt.PointingHandCursor; onClicked: findField.text = "" } }
+                // the glass turns into the ✕ (which clears the search) as you start typing
+                Item {
+                    id: findIcon
+                    readonly property bool typed: page.query !== ""
+                    anchors.right: parent.right; anchors.rightMargin: 12; anchors.verticalCenter: parent.verticalCenter
+                    width: 18; height: 18
+                    Icon {
+                        anchors.centerIn: parent; name: "search"; size: 18; color: findField.editing ? Theme.accent : Theme.subtext
+                        opacity: findIcon.typed ? 0 : 1; scale: findIcon.typed ? 0.5 : 1; rotation: findIcon.typed ? 90 : 0
+                        Behavior on opacity { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
+                        Behavior on rotation { NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
+                        Behavior on color { ColorAnimation { duration: Theme.fastMs } }
+                    }
+                    Icon {
+                        anchors.centerIn: parent; name: "close"; size: 18; color: Theme.subtext
+                        opacity: findIcon.typed ? 1 : 0; scale: findIcon.typed ? 1 : 0.5; rotation: findIcon.typed ? 0 : -90
+                        Behavior on opacity { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
+                        Behavior on scale { NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutBack } }
+                        Behavior on rotation { NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
+                    }
+                    MouseArea { anchors.fill: parent; anchors.margins: -6; enabled: findIcon.typed; cursorShape: Qt.PointingHandCursor; onClicked: { findField.text = ""; findField.forceInput(); } }
+                }
             }
             Rectangle { x: 16; y: 126; width: parent.width - 32; height: 1; color: Theme.wavy ? "transparent" : Theme.hairline; WavyBar { visible: Theme.wavy; anchors.fill: parent; thick: 1.5; track: false; to: 1; color: Theme.hairline } }
 
             // the results, in place of the sections while there's a search
             Flickable {
                 SmoothWheel {}
-                visible: page.query.trim() !== ""
+                id: resFlick
+                readonly property bool on: page.query.trim() !== ""
+                opacity: on ? 1 : 0
+                visible: opacity > 0.01
+                Behavior on opacity { NumberAnimation { duration: Theme.ms(170); easing.type: Easing.OutCubic } }
+                transform: Translate { y: resFlick.on ? 0 : 10; Behavior on y { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } } }
                 x: 8; y: 133
                 width: parent.width - 16
                 height: parent.height - y - 8
@@ -223,10 +261,28 @@ Page {
                         Pressable {
                             id: res
                             required property var modelData
+                            required property int index
                             width: resCol.width
                             height: rc.implicitHeight + 16
                             color: hovered ? Theme.containerHigh : "transparent"
                             onClicked: page.go(modelData)
+                            // A result that wasn't in the list a moment ago rises in, one after
+                            // another down the list; one that was already there just stays (the
+                            // rows are made again with every letter, and all of them fading in
+                            // each time flickered)
+                            readonly property string rowKey: modelData.tab + "|" + modelData.title
+                            property real inK: 1
+                            opacity: inK
+                            transform: Translate { y: (1 - res.inK) * 12 }
+                            SequentialAnimation {
+                                id: resIn
+                                PauseAnimation { duration: Theme.ms(Math.min(220, res.index * 22)) }
+                                NumberAnimation { target: res; property: "inK"; to: 1; duration: Theme.ms(240); easing.type: Easing.OutCubic }
+                            }
+                            Component.onCompleted: {
+                                if (Theme.animOn && !page.seenRows[rowKey]) { inK = 0; resIn.start(); }
+                                Qt.callLater(page.markRows);
+                            }
                             Icon { id: ri; x: 10; y: 10; name: res.modelData.icon || "tune"; size: 19; color: Theme.subtext }
                             Column {
                                 id: rc
@@ -243,7 +299,12 @@ Page {
 
             Flickable {
                 SmoothWheel {}
-                visible: page.query.trim() === ""
+                id: secFlick
+                readonly property bool on: page.query.trim() === ""
+                opacity: on ? 1 : 0
+                visible: opacity > 0.01
+                Behavior on opacity { NumberAnimation { duration: Theme.ms(170); easing.type: Easing.OutCubic } }
+                transform: Translate { y: secFlick.on ? 0 : -10; Behavior on y { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } } }
                 x: 8; y: 133
                 width: parent.width - 16
                 height: parent.height - y - 8
