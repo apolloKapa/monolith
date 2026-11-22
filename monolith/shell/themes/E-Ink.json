@@ -1,0 +1,33 @@
+{
+  "name": "E-Ink",
+  "desc": "Light: an e-reader's grey paper with black ink, no colour to speak of",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#e8e6e0",
+    "mantle": "#dfddd6",
+    "crust": "#d5d3cc",
+    "surface0": "#dad8d1",
+    "surface1": "#cbc9c2",
+    "surface2": "#bbb9b2",
+    "overlay0": "#9e9c96",
+    "overlay1": "#8a8984",
+    "overlay2": "#767570",
+    "text": "#141414",
+    "subtext1": "#3a3a38",
+    "subtext0": "#62625e",
+    "mauve": "#1c1c1c",
+    "red": "#8a3a34",
+    "maroon": "#6e2e2a",
+    "pink": "#6a5560",
+    "flamingo": "#70605c",
+    "rosewater": "#857a74",
+    "peach": "#7a5c40",
+    "yellow": "#77693a",
+    "green": "#4f6650",
+    "teal": "#4a6666",
+    "blue": "#454f66",
+    "sapphire": "#4a5c70",
+    "sky": "#5c6e80",
+    "lavender": "#5c5a72"
+  }
+}

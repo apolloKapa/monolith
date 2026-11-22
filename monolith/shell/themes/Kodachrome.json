@@ -1,0 +1,33 @@
+{
+  "name": "Kodachrome",
+  "desc": "Slide film: deep warm black with rich red, yellow and blue",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#14100e",
+    "mantle": "#0f0c0a",
+    "crust": "#0a0807",
+    "surface0": "#211a17",
+    "surface1": "#2e2521",
+    "surface2": "#3c312b",
+    "overlay0": "#65584b",
+    "overlay1": "#817260",
+    "overlay2": "#9e8d77",
+    "text": "#f7ecd9",
+    "subtext1": "#dccdb4",
+    "subtext0": "#b9a78c",
+    "mauve": "#e63b2e",
+    "red": "#ff5a4d",
+    "maroon": "#a8281f",
+    "pink": "#f2788a",
+    "flamingo": "#f29a8a",
+    "rosewater": "#f5d5c8",
+    "peach": "#f28b30",
+    "yellow": "#f7c531",
+    "green": "#5fae5a",
+    "teal": "#2f9e9a",
+    "blue": "#2f6fd0",
+    "sapphire": "#3b93d6",
+    "sky": "#74b8e8",
+    "lavender": "#9d8fd9"
+  }
+}

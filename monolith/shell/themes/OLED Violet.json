@@ -1,0 +1,33 @@
+{
+  "name": "OLED Violet",
+  "desc": "OLED: true black with an electric violet accent",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#000000",
+    "mantle": "#000000",
+    "crust": "#000000",
+    "surface0": "#0e0e0e",
+    "surface1": "#181818",
+    "surface2": "#242424",
+    "overlay0": "#4c4952",
+    "overlay1": "#676271",
+    "overlay2": "#827b91",
+    "text": "#ffffff",
+    "subtext1": "#cdc6da",
+    "subtext0": "#9d94b0",
+    "mauve": "#a86bff",
+    "red": "#ff4f72",
+    "maroon": "#c22a55",
+    "pink": "#ff66c4",
+    "flamingo": "#ff8fc0",
+    "rosewater": "#ffd9ec",
+    "peach": "#ff9461",
+    "yellow": "#ffd35a",
+    "green": "#52e09a",
+    "teal": "#38d6d0",
+    "blue": "#6f8cff",
+    "sapphire": "#57b6ff",
+    "sky": "#8fd0ff",
+    "lavender": "#c3a8ff"
+  }
+}

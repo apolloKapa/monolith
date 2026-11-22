@@ -27,16 +27,71 @@ Singleton {
     // Each one can be put back on its own; the theme file itself never changes.
     readonly property string editKey: paletteName === "style" ? "style:" + styleId : paletteName
     readonly property var overrides: { const o = Store.get("theme.overrides", {}) || {}; return o[editKey] || {}; }
-    readonly property var rawColors: baseColors ? Object.assign({}, baseColors, overrides) : null
+    // The whole theme turned at once (Edit colours → The whole theme), kept per theme like the
+    // changes above: theme.adjust = { name: { hue, saturation, brightness, contrast } }. Hue is
+    // degrees round the colour wheel (-180..180), the others -100..100 with 0 as the theme has
+    // it. A colour you set yourself stays exactly as you set it.
+    readonly property var adjust: {
+        const a = (Store.get("theme.adjust", {}) || {})[editKey] || {};
+        return { hue: Number(a.hue) || 0, saturation: Number(a.saturation) || 0, brightness: Number(a.brightness) || 0, contrast: Number(a.contrast) || 0 };
+    }
+    readonly property bool adjusted: isAdjusted(adjust)
+    function isAdjusted(a) { return !!a && (!!a.hue || !!a.saturation || !!a.brightness || !!a.contrast); }
+    function setAdjust(key, value) {
+        const all = Object.assign({}, Store.get("theme.adjust", {}) || {});
+        const mine = Object.assign({}, all[editKey] || {});
+        if (Number(value)) mine[key] = Number(value); else delete mine[key];
+        if (Object.keys(mine).length) all[editKey] = mine; else delete all[editKey];
+        Store.set("theme.adjust", all);
+    }
+    function resetAdjust() {
+        const all = Object.assign({}, Store.get("theme.adjust", {}) || {});
+        delete all[editKey];
+        Store.set("theme.adjust", all);
+    }
+    // one colour through the four: the hue turned, then more or less colour (greys stay grey),
+    // then contrast (away from or towards mid grey), then lighter (towards white) or darker
+    function tuneColour(value, a) {
+        const c = Qt.color(value);
+        if (!c.valid) return value;
+        const hue = Number(a.hue) || 0, more = Number(a.saturation) || 0, light = Number(a.brightness) || 0, con = Number(a.contrast) || 0;
+        let k = c;
+        if (hue || more) {
+            const grey = c.hslHue < 0 || c.hslSaturation < 0.005;
+            const h = grey ? 0 : (((c.hslHue + hue / 360) % 1) + 1) % 1;
+            const sat = grey ? 0 : Math.max(0, Math.min(1, c.hslSaturation * (1 + more / 100)));
+            k = Qt.hsla(h, sat, c.hslLightness, 1);
+        }
+        let ch = [k.r, k.g, k.b];
+        if (con) { const f = 1 + con / 100 * (con > 0 ? 0.8 : 0.6); ch = ch.map(v => (v - 0.5) * f + 0.5); }
+        if (light) { const b = light / 100 * 0.6; ch = ch.map(v => b > 0 ? v + (1 - v) * b : v * (1 + b)); }
+        const hex = v => { const x = Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16); return x.length < 2 ? "0" + x : x; };
+        return "#" + hex(ch[0]) + hex(ch[1]) + hex(ch[2]) + (c.a < 0.999 ? hex(c.a) : "");
+    }
+    function tune(src, a) {
+        if (!src || !isAdjusted(a)) return src;
+        const out = {};
+        for (const k in src) out[k] = tuneColour(src[k], a);
+        return out;
+    }
+    // (a theme's card in Settings shows it as you have it: `name` is its edit key)
+    function adjustOf(name) {
+        const a = (Store.get("theme.adjust", {}) || {})[name] || {};
+        return { hue: Number(a.hue) || 0, saturation: Number(a.saturation) || 0, brightness: Number(a.brightness) || 0, contrast: Number(a.contrast) || 0 };
+    }
+    // the theme with the whole-theme adjustments, before your own colours
+    readonly property var tunedColors: tune(baseColors, adjust)
+    readonly property var rawColors: baseColors ? Object.assign({}, tunedColors, overrides) : null
     function setColour(key, value) {
         const all = Object.assign({}, Store.get("theme.overrides", {}) || {});
         const mine = Object.assign({}, all[editKey] || {});
-        if (baseColors && String(baseColors[key]).toLowerCase() === String(value).toLowerCase()) delete mine[key];
+        // (back to what the theme has, as it's adjusted: not a change any more)
+        if (value === "" || (tunedColors && String(tunedColors[key]).toLowerCase() === String(value).toLowerCase())) delete mine[key];
         else mine[key] = value;
         if (Object.keys(mine).length) all[editKey] = mine; else delete all[editKey];
         Store.set("theme.overrides", all);
     }
-    function resetColour(key) { setColour(key, baseColors ? baseColors[key] : ""); }
+    function resetColour(key) { setColour(key, ""); }
     function resetColours() {
         const all = Object.assign({}, Store.get("theme.overrides", {}) || {});
         delete all[editKey];
@@ -72,7 +127,7 @@ Singleton {
     property var fileApps: null
     property string fileAppsMode: ""
     readonly property bool fromFile: paletteName !== "style" && paletteName !== "wallpaper"
-    readonly property var appColors: fromFile && !flipped ? fileApps : null
+    readonly property var appColors: fromFile && !flipped ? tune(fileApps, adjust) : null
     // dark or light for the apps (scripts/app_colours.py mode): the wallpaper's follow your
     // setting; a palette's follow the palette itself (a light theme made apps light), or its appsMode
     readonly property string appsMode: {

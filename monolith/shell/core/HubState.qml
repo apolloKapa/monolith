@@ -165,7 +165,8 @@ Singleton {
     property string ccTab: "controls"
     // Settings opened at a section (keybinds, the island, other pages)
     property string settingsSection: "appearance"
-    function openSettings(section, screen) { if (section) settingsSection = section; show("settings", screen); }
+    // (Auto-hide's own page is a row of Layout & modules now: anything still asking for it gets that)
+    function openSettings(section, screen) { if (section) settingsSection = section === "status" ? "bar" : section; show("settings", screen); }
     function step(d) { const p = pages[(pages.indexOf(page) + d + pages.length) % pages.length]; if (open) { dir = d > 0 ? 1 : -1; switched(); } page = p; }
 
     IpcHandler {

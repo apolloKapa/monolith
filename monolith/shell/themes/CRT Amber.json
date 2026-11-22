@@ -1,0 +1,33 @@
+{
+  "name": "CRT Amber",
+  "desc": "An amber CRT terminal: black glass and glowing amber",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#0a0600",
+    "mantle": "#080500",
+    "crust": "#050300",
+    "surface0": "#1a1002",
+    "surface1": "#261804",
+    "surface2": "#352207",
+    "overlay0": "#5e421a",
+    "overlay1": "#795726",
+    "overlay2": "#956e33",
+    "text": "#ffd9a0",
+    "subtext1": "#e0b06a",
+    "subtext0": "#b08340",
+    "mauve": "#ffb000",
+    "red": "#ff5c33",
+    "maroon": "#b33a14",
+    "pink": "#ffb878",
+    "flamingo": "#ffc48f",
+    "rosewater": "#ffe3c2",
+    "peach": "#ff8c1a",
+    "yellow": "#ffd24d",
+    "green": "#d9c24a",
+    "teal": "#d9b36a",
+    "blue": "#e69a2e",
+    "sapphire": "#f0ab47",
+    "sky": "#f5c070",
+    "lavender": "#f2c98f"
+  }
+}

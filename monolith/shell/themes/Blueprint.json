@@ -1,0 +1,33 @@
+{
+  "name": "Blueprint",
+  "desc": "A technical drawing: deep blueprint blue with white lines and cyan",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#0d2440",
+    "mantle": "#0a1d35",
+    "crust": "#07172b",
+    "surface0": "#143258",
+    "surface1": "#1b406e",
+    "surface2": "#244f85",
+    "overlay0": "#476d9e",
+    "overlay1": "#5f82ae",
+    "overlay2": "#7797c0",
+    "text": "#eaf3ff",
+    "subtext1": "#bcd2ee",
+    "subtext0": "#8fabd0",
+    "mauve": "#6fd3ff",
+    "red": "#ff7a7a",
+    "maroon": "#c4505a",
+    "pink": "#ffa3c7",
+    "flamingo": "#ffb8b8",
+    "rosewater": "#ffe0e0",
+    "peach": "#ffb26b",
+    "yellow": "#ffe07a",
+    "green": "#7fe0a8",
+    "teal": "#5fe0d6",
+    "blue": "#8fb8ff",
+    "sapphire": "#5fc4f5",
+    "sky": "#9fe0ff",
+    "lavender": "#b8c4ff"
+  }
+}

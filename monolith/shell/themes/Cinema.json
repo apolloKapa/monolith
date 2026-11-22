@@ -1,0 +1,33 @@
+{
+  "name": "Cinema",
+  "desc": "The teal and orange of a blockbuster: deep teal shadows, warm highlights",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#081417",
+    "mantle": "#061013",
+    "crust": "#040c0e",
+    "surface0": "#0f2227",
+    "surface1": "#163037",
+    "surface2": "#1e3e47",
+    "overlay0": "#4c6061",
+    "overlay1": "#6a7673",
+    "overlay2": "#8a8e85",
+    "text": "#f3e6d4",
+    "subtext1": "#d3c8b8",
+    "subtext0": "#a9a497",
+    "mauve": "#ff8a3d",
+    "red": "#ff5f52",
+    "maroon": "#b8402f",
+    "pink": "#f08f8f",
+    "flamingo": "#f2a48a",
+    "rosewater": "#f5d8c4",
+    "peach": "#ffa35c",
+    "yellow": "#f5c75a",
+    "green": "#6fc7a0",
+    "teal": "#2fb6c0",
+    "blue": "#3f9fc4",
+    "sapphire": "#35b3d1",
+    "sky": "#7fd0de",
+    "lavender": "#9bb7d9"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Silver Screen",
+  "desc": "Black-and-white cinema: soft charcoal greys with a cool silver accent",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#131416",
+    "mantle": "#0f1011",
+    "crust": "#0a0b0c",
+    "surface0": "#1e2023",
+    "surface1": "#292c30",
+    "surface2": "#363a3f",
+    "overlay0": "#575b62",
+    "overlay1": "#6d7279",
+    "overlay2": "#848991",
+    "text": "#eceef1",
+    "subtext1": "#c7cbd1",
+    "subtext0": "#9a9fa8",
+    "mauve": "#c9d2e0",
+    "red": "#e06a6a",
+    "maroon": "#a34a4a",
+    "pink": "#d5c4cf",
+    "flamingo": "#d9c8c8",
+    "rosewater": "#e8dfe0",
+    "peach": "#d9b99c",
+    "yellow": "#e0d5a8",
+    "green": "#b1c7b3",
+    "teal": "#a9c5c7",
+    "blue": "#a9b9d1",
+    "sapphire": "#b3c6d9",
+    "sky": "#c6d6e3",
+    "lavender": "#c2c2dc"
+  }
+}

@@ -77,6 +77,7 @@ ColumnLayout {
     SettingRow {
         key: "search.favPlace"; def: "top";
         icon: "dashboard"; title: "Where the favourites are"
+        desc: "Above or below the apps, or in a column on their left or right. Also in the launcher: right-click an app"
         Dropdown {
             width: 240
             opts: [["top", "Above the apps"], ["bottom", "Below the apps"], ["left", "On the left"], ["right", "On the right"]]

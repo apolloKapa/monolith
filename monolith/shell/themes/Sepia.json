@@ -1,0 +1,33 @@
+{
+  "name": "Sepia",
+  "desc": "An old photograph: dark sepia browns with tan and gold",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#1a130c",
+    "mantle": "#150f09",
+    "crust": "#100b06",
+    "surface0": "#261c12",
+    "surface1": "#33271a",
+    "surface2": "#423324",
+    "overlay0": "#64523c",
+    "overlay1": "#7a674c",
+    "overlay2": "#927c5c",
+    "text": "#ecdcc0",
+    "subtext1": "#cdb893",
+    "subtext0": "#a8916c",
+    "mauve": "#c9a063",
+    "red": "#c9684a",
+    "maroon": "#96462f",
+    "pink": "#c99684",
+    "flamingo": "#cfa283",
+    "rosewater": "#e6cfb4",
+    "peach": "#cf8a4a",
+    "yellow": "#d9b961",
+    "green": "#9aa268",
+    "teal": "#8aa38a",
+    "blue": "#9c9a82",
+    "sapphire": "#a6a58c",
+    "sky": "#b8b79f",
+    "lavender": "#b5a08c"
+  }
+}

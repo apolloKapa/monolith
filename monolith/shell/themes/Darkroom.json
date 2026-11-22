@@ -1,0 +1,33 @@
+{
+  "name": "Darkroom",
+  "desc": "A photo darkroom: black under a red safelight",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#0b0101",
+    "mantle": "#080101",
+    "crust": "#050000",
+    "surface0": "#190404",
+    "surface1": "#260707",
+    "surface2": "#350b0b",
+    "overlay0": "#602b28",
+    "overlay1": "#7d413c",
+    "overlay2": "#9b5750",
+    "text": "#ffc9c0",
+    "subtext1": "#e39a90",
+    "subtext0": "#b86d64",
+    "mauve": "#ff2a1a",
+    "red": "#ff6b4a",
+    "maroon": "#a31208",
+    "pink": "#ff6f6f",
+    "flamingo": "#ff8a7a",
+    "rosewater": "#ffc9bd",
+    "peach": "#ff7a33",
+    "yellow": "#ffa64d",
+    "green": "#d98a6a",
+    "teal": "#c98585",
+    "blue": "#e0564a",
+    "sapphire": "#eb7a6e",
+    "sky": "#f09a8f",
+    "lavender": "#e8a39c"
+  }
+}

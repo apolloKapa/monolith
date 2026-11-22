@@ -1,0 +1,33 @@
+{
+  "name": "Phosphor",
+  "desc": "A green CRT terminal: black glass and glowing green",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#020a04",
+    "mantle": "#020803",
+    "crust": "#010502",
+    "surface0": "#07180c",
+    "surface1": "#0b2413",
+    "surface2": "#10321b",
+    "overlay0": "#265934",
+    "overlay1": "#347344",
+    "overlay2": "#438e56",
+    "text": "#b6ffc4",
+    "subtext1": "#7fd993",
+    "subtext0": "#52a866",
+    "mauve": "#33ff66",
+    "red": "#ff6b57",
+    "maroon": "#b3402f",
+    "pink": "#9dffb0",
+    "flamingo": "#b0ffc0",
+    "rosewater": "#d6ffdd",
+    "peach": "#d9e04a",
+    "yellow": "#c8ff4d",
+    "green": "#33ff66",
+    "teal": "#2dffb0",
+    "blue": "#4dd9a0",
+    "sapphire": "#57e6c0",
+    "sky": "#8cffd9",
+    "lavender": "#a6ffd0"
+  }
+}

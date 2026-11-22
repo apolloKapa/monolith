@@ -177,6 +177,13 @@ ColumnLayout {
             onPicked: v => Store.set("bar.position", v)
         }
     }
+    // (it had a page of its own, Bar → Auto-hide, for this one switch)
+    SettingRow {
+        key: "status.autohide"; def: false;
+        icon: "visibility_off"; title: "Auto-hide"
+        desc: "The bar slides away off the " + Theme.barEdge + " of the screen; touch that edge to bring it back (Super+A switches this)"
+        Toggle { checked: Store.get("status.autohide", false) === true; onToggled: on => Store.set("status.autohide", on) }
+    }
     SettingRow {
         key: "bar.margin";
         show: Theme.barFloats

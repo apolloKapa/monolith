@@ -516,6 +516,30 @@ Page {
                 onClicked: { page.toggleFav(page.menuEntry); page.menuEntry = null; }
             }
             MenuRow { icon: "visibility_off"; text: "Hide from the launcher"; danger: true; onClicked: { page.hide(page.menuEntry); page.menuEntry = null; } }
+            // where the favourites are: above, below, left or right of the apps (Settings → Launcher too)
+            Item {
+                visible: page.showFavs
+                width: menuCol.width; height: 70
+                Rectangle { x: 6; y: 5; width: parent.width - 12; height: 1; color: Theme.hairline }
+                Label { x: 10; y: 12; text: "Favourites go"; muted: true; font.pixelSize: Theme.sizeSmall }
+                Row {
+                    x: 6; y: 32
+                    spacing: 4
+                    Repeater {
+                        model: [["top", "vertical_align_top", "Above the apps"], ["bottom", "vertical_align_bottom", "Below the apps"],
+                                ["left", "align_horizontal_left", "On the left"], ["right", "align_horizontal_right", "On the right"]]
+                        Pressable {
+                            required property var modelData
+                            readonly property bool on: page.favPlace === modelData[0]
+                            width: (menuCol.width - 12 - 12) / 4; height: 32
+                            radius: Theme.corner(32, 4)
+                            color: on ? Theme.accent : (hovered ? Theme.control : Theme.container)
+                            onClicked: Store.set("search.favPlace", modelData[0])
+                            Icon { anchors.centerIn: parent; name: parent.modelData[1]; size: 18; color: parent.on ? Theme.onAccent : Theme.text }
+                        }
+                    }
+                }
+            }
         }
     }
     Keys.onEscapePressed: event => { if (page.menuEntry) { page.menuEntry = null; event.accepted = true; } else event.accepted = false; }

@@ -1,0 +1,33 @@
+{
+  "name": "Polaroid",
+  "desc": "Light: an instant photo's warm white frame, dark ink and the rainbow stripe's colours",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#f7f2e8",
+    "mantle": "#efe9dc",
+    "crust": "#e6dfd0",
+    "surface0": "#e9e2d3",
+    "surface1": "#dcd4c3",
+    "surface2": "#cfc6b3",
+    "overlay0": "#afa797",
+    "overlay1": "#9a9284",
+    "overlay2": "#837c71",
+    "text": "#2a2622",
+    "subtext1": "#4a443d",
+    "subtext0": "#6e675e",
+    "mauve": "#1f7ed6",
+    "red": "#d93a2f",
+    "maroon": "#a32a22",
+    "pink": "#d6508f",
+    "flamingo": "#d9706a",
+    "rosewater": "#c98a7a",
+    "peach": "#e8792a",
+    "yellow": "#c99a10",
+    "green": "#3d9a4a",
+    "teal": "#1f9a94",
+    "blue": "#2f67c9",
+    "sapphire": "#1f8fc2",
+    "sky": "#3aa3d6",
+    "lavender": "#7a6fd0"
+  }
+}

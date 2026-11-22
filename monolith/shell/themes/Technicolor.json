@@ -1,0 +1,33 @@
+{
+  "name": "Technicolor",
+  "desc": "Old Hollywood colour: inky black with saturated red, gold and emerald",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#0c0d14",
+    "mantle": "#090a10",
+    "crust": "#06070b",
+    "surface0": "#171926",
+    "surface1": "#212436",
+    "surface2": "#2c3047",
+    "overlay0": "#555767",
+    "overlay1": "#70717c",
+    "overlay2": "#8d8c93",
+    "text": "#f6f2e6",
+    "subtext1": "#d5d1c8",
+    "subtext0": "#a8a6a8",
+    "mauve": "#e3263b",
+    "red": "#ff4f5e",
+    "maroon": "#9c1a2c",
+    "pink": "#ff6f9c",
+    "flamingo": "#ff9494",
+    "rosewater": "#f7d4d0",
+    "peach": "#ff8c2e",
+    "yellow": "#f6c62b",
+    "green": "#1fb866",
+    "teal": "#17b3a3",
+    "blue": "#2f6ee6",
+    "sapphire": "#2a9df4",
+    "sky": "#6cc4ff",
+    "lavender": "#9a8cff"
+  }
+}

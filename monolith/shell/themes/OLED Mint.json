@@ -1,0 +1,33 @@
+{
+  "name": "OLED Mint",
+  "desc": "OLED: true black with a fresh mint green accent",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#000000",
+    "mantle": "#000000",
+    "crust": "#000000",
+    "surface0": "#0e0e0e",
+    "surface1": "#181818",
+    "surface2": "#242424",
+    "overlay0": "#474e4b",
+    "overlay1": "#5f6a65",
+    "overlay2": "#778780",
+    "text": "#ffffff",
+    "subtext1": "#c2cfc9",
+    "subtext0": "#8fa39a",
+    "mauve": "#2ee6a6",
+    "red": "#ff5c6c",
+    "maroon": "#c23048",
+    "pink": "#ff7fb5",
+    "flamingo": "#ff9fae",
+    "rosewater": "#ffdbe0",
+    "peach": "#ff9a52",
+    "yellow": "#f5d547",
+    "green": "#5fe37a",
+    "teal": "#22d3c5",
+    "blue": "#4cc9f0",
+    "sapphire": "#35d0e0",
+    "sky": "#7fe3f0",
+    "lavender": "#9fe8cf"
+  }
+}

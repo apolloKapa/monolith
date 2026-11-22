@@ -23,7 +23,7 @@ Page {
         { id: "theme", desc: "How everything looks: style, colours, fonts, effects", title: "Appearance", icon: "palette", tabs: [["style", "Style & colours", "Styles"], ["appearance", "Dark mode, font & icons", "Appearance"], ["effects", "Effects", "Effects"], ["colours", "Other apps' colours", "Colours"], ["fastfetch", "Fastfetchlings", "Fastfetch"]] },
         { id: "wallpaper", desc: "Your wallpaper, and changing it by itself", title: "Wallpaper", icon: "wallpaper", tabs: [["wallpaper", "Wallpaper", "Wallpaper"], ["playlist", "Playlist", "WallPlaylist"]] },
         { id: "animations", desc: "How fast things move, and how workspaces switch", title: "Animations", icon: "animation", tabs: [["animations", "Speeds & windows", "Animations"], ["menuopen", "Menu opening", "MenuOpening"], ["wsswitch", "Workspace switching", "WorkspaceSwitch"]] },
-        { id: "bar", desc: "What the bar shows and where it sits", title: "Bar", icon: "toolbar", gap: true, tabs: [["bar", "Layout & modules", "BarLayout"], ["status", "Auto-hide", "Status"], ["barscreens", "Bar & dock per screen", "BarScreens"]] },
+        { id: "bar", desc: "What the bar shows and where it sits", title: "Bar", icon: "toolbar", gap: true, tabs: [["bar", "Layout & modules", "BarLayout"], ["barscreens", "Bar & dock per screen", "BarScreens"]] },
         { id: "menus", desc: "The launcher, its apps, and where menus open", title: "Menus & launcher", icon: "apps", tabs: [["search", "Launcher", "Search"], ["apps", "Apps in the launcher", "Apps"], ["menus", "Where menus open", "Menus"]] },
         { id: "dock", desc: "Your pinned and running apps", title: "Dock", icon: "dock_to_bottom", tabs: [["dock", "Dock", "Dock"]] },
         { id: "desktop", desc: "Widgets and the screen edges", title: "Desktop", icon: "widgets", tabs: [["desktop", "Widgets", "Desktop"], ["quickaccess", "Quick access (screen edges)", "QuickAccess"]] },
@@ -61,20 +61,33 @@ Page {
         if (q === "") return [];
         const words = q.split(/\s+/);
         const hit = text => words.every(w => text.indexOf(w) !== -1);
-        const out = [];
+        let out = [];
         // pages first
         for (const c of categories) for (const t of c.tabs) {
             const name = (c.title + " " + t[1]).toLowerCase();
             if (hit(name + " " + (c.desc || "").toLowerCase())) out.push({ tab: t[0], title: t[1], where: c.title, desc: c.desc || "", icon: c.icon, row: "", score: t[1].toLowerCase().startsWith(q) ? 0 : 1 });
         }
+        // (the same setting isn't offered twice: a row that's only on the other desktop is left
+        // out (niri's and Hyprland's twins of one setting share a name), so is a second row of
+        // the same name on the same page, and a row that only points at another page when the
+        // setting itself was found)
+        const desktop = Niri.hyprland ? "hyprland" : "niri";
+        const seen = {}, real = {};
+        for (const r of out) seen[r.tab + "|" + r.title.toLowerCase()] = true;
         for (const e of index) {
             const pl = placeOf(e.file);
             if (!pl) continue;
+            if (e.only && e.only !== desktop) continue;
             const title = e.title.toLowerCase();
             if (!hit(title + " " + e.desc.toLowerCase() + " " + pl[2].toLowerCase())) continue;
-            out.push({ tab: pl[0], title: e.title, where: pl[1] + " › " + pl[2], desc: e.desc, icon: e.icon || pl[3], row: e.title,
+            const key = pl[0] + "|" + title;
+            if (seen[key]) continue;
+            seen[key] = true;
+            if (!e.link) real[title] = true;
+            out.push({ tab: pl[0], title: e.title, where: pl[1] + " › " + pl[2], desc: e.desc, icon: e.icon || pl[3], row: e.title, link: e.link === true,
                        score: title.startsWith(q) ? 0 : (hit(title) ? 1 : 2) });
         }
+        out = out.filter(r => !(r.link && real[r.title.toLowerCase()]));
         out.sort((a, b) => a.score - b.score);
         return out.slice(0, 60);
     }

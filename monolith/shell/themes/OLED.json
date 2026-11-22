@@ -1,0 +1,33 @@
+{
+  "name": "OLED",
+  "desc": "OLED: true black, white text and vivid colours; a bright blue accent",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#000000",
+    "mantle": "#000000",
+    "crust": "#000000",
+    "surface0": "#0e0e0e",
+    "surface1": "#181818",
+    "surface2": "#242424",
+    "overlay0": "#4c4c4c",
+    "overlay1": "#666666",
+    "overlay2": "#828282",
+    "text": "#ffffff",
+    "subtext1": "#c9c9c9",
+    "subtext0": "#9c9c9c",
+    "mauve": "#3d9bff",
+    "red": "#ff4d5e",
+    "maroon": "#c2283a",
+    "pink": "#ff5fb0",
+    "flamingo": "#ff8fa3",
+    "rosewater": "#ffd6dc",
+    "peach": "#ff9040",
+    "yellow": "#ffd43b",
+    "green": "#3ddc84",
+    "teal": "#1fd1c1",
+    "blue": "#5c7cff",
+    "sapphire": "#2fb8ff",
+    "sky": "#6fd3ff",
+    "lavender": "#a9a4ff"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "VHS",
+  "desc": "A worn videotape: deep indigo with hot magenta and cyan",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#0e0b1f",
+    "mantle": "#0a0817",
+    "crust": "#070510",
+    "surface0": "#19153a",
+    "surface1": "#241e50",
+    "surface2": "#312968",
+    "overlay0": "#544b88",
+    "overlay1": "#6b619e",
+    "overlay2": "#8379b4",
+    "text": "#efeaff",
+    "subtext1": "#c9c0ee",
+    "subtext0": "#9a8fca",
+    "mauve": "#ff3ea5",
+    "red": "#ff4f6d",
+    "maroon": "#b3245a",
+    "pink": "#ff7ad1",
+    "flamingo": "#ff9ac2",
+    "rosewater": "#ffd6ee",
+    "peach": "#ff9a5c",
+    "yellow": "#ffe45c",
+    "green": "#4dffa6",
+    "teal": "#2de2e6",
+    "blue": "#5c8cff",
+    "sapphire": "#3dc8ff",
+    "sky": "#7de8ff",
+    "lavender": "#b79cff"
+  }
+}

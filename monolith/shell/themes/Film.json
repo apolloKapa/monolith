@@ -1,0 +1,33 @@
+{
+  "name": "Film",
+  "desc": "Analog film: faded warm blacks, cream text and an amber glow, colours a little washed out",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#1b1815",
+    "mantle": "#161310",
+    "crust": "#110f0c",
+    "surface0": "#27221d",
+    "surface1": "#332d26",
+    "surface2": "#413a31",
+    "overlay0": "#675e50",
+    "overlay1": "#807565",
+    "overlay2": "#9a8e7a",
+    "text": "#efe5d2",
+    "subtext1": "#d4c8b2",
+    "subtext0": "#b3a68f",
+    "mauve": "#e0a458",
+    "red": "#d9695a",
+    "maroon": "#a8493f",
+    "pink": "#d99a9a",
+    "flamingo": "#dba896",
+    "rosewater": "#ead3c2",
+    "peach": "#e08a55",
+    "yellow": "#e3c56b",
+    "green": "#a3b577",
+    "teal": "#7fb0a0",
+    "blue": "#8ba6b8",
+    "sapphire": "#7db3bd",
+    "sky": "#a2c4c9",
+    "lavender": "#b9a9c2"
+  }
+}

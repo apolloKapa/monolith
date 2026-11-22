@@ -4,11 +4,17 @@ import "../core"
 
 // A colour setting: a swatch that opens a picker (a saturation/brightness square, a hue strip,
 // see-through, the hex code, and a few quick picks from the theme). `value` is "#rrggbb" or
-// "#rrggbbaa"; `picked(c)` fires as it changes.
+// "#rrggbbaa"; `picked(c)` fires as it changes. `plain`: only the swatch (`swatch` wide, at the left),
+// no code beside it and no fill of its own, for a tile that says the rest itself (Settings → Edit
+// colours): the whole of it still opens the picker.
 Item {
     id: cp
     property string value: "#ffffff"
     property bool alpha: true            // offer see-through (adds aa to the code)
+    property bool plain: false
+    property real swatch: 22
+    property real swatchX: 10
+    readonly property alias open: pop.visible
     signal picked(string c)
     implicitWidth: 120; implicitHeight: 36
 
@@ -52,22 +58,26 @@ Item {
     // ── the swatch ──
     Pressable {
         anchors.fill: parent
-        color: Theme.containerHigh
+        color: cp.plain ? "transparent" : Theme.containerHigh
+        radius: cp.plain ? Theme.corner(height, 2) : Theme.corner(height)
         onClicked: { if (pop.visible) { pop.close(); return; } cp.load(); pop.open(); }
         Row {
-            anchors.centerIn: parent
+            x: cp.plain ? cp.swatchX : (parent.width - width) / 2
+            y: (parent.height - height) / 2
             spacing: 8
             // (a checkerboard under it, so see-through shows)
             Item {
-                width: 22; height: 22
+                readonly property real side: cp.plain ? cp.swatch : 22
+                width: side; height: side
                 anchors.verticalCenter: parent.verticalCenter
                 Grid {
+                    visible: cp.alpha
                     anchors.fill: parent; columns: 4; clip: true
-                    Repeater { model: 16; Rectangle { required property int index; width: 5.5; height: 5.5; color: (index + Math.floor(index / 4)) % 2 ? "#bbbbbb" : "#ffffff" } }
+                    Repeater { model: 16; Rectangle { required property int index; width: parent.width / 4; height: parent.height / 4; color: (index + Math.floor(index / 4)) % 2 ? "#bbbbbb" : "#ffffff" } }
                 }
-                SmoothRect { smoothing: 0; anchors.fill: parent; radius: Theme.rnd(6); color: cp.shown; border.width: 1; border.color: Qt.alpha(Theme.text, 0.3) }
+                SmoothRect { smoothing: 0; anchors.fill: parent; radius: Theme.rnd(cp.plain ? Math.min(10, parent.side / 3.4) : 6); color: cp.shown; border.width: 1; border.color: Qt.alpha(Theme.text, 0.3) }
             }
-            Label { text: cp.value.toUpperCase(); font.family: "monospace"; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
+            Label { visible: !cp.plain; text: cp.value.toUpperCase(); font.family: "monospace"; font.pixelSize: Theme.sizeSmall; anchors.verticalCenter: parent.verticalCenter }
         }
     }
 
