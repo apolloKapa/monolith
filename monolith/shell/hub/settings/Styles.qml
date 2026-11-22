@@ -22,7 +22,9 @@ ColumnLayout {
                 for (const l of text.split("\n")) {
                     const i = l.indexOf("\t");
                     if (i < 0) continue;
-                    try { out.push({ name: l.substring(0, i), colors: JSON.parse(l.substring(i + 1)).colors || {} }); } catch (e) {}
+                    // (its description too, for the search: "red" finds the red ones; and its apps'
+                    // own colours, which the card shows)
+                    try { const d = JSON.parse(l.substring(i + 1)); out.push({ name: l.substring(0, i), desc: d.desc || "", colors: d.colors || {}, apps: d.apps || null }); } catch (e) {}
                 }
                 sec.themes = out;
             }
@@ -144,11 +146,100 @@ ColumnLayout {
         }
     }
 
+    // ── your changes to the theme's colours (Look.overrides, kept per theme). The shell's own
+    // colours first, then the ones other apps get (the terminal's, GTK and Qt apps') ──
+    property bool editing: false
+    readonly property var shellKeys: [["base", "Background"], ["mantle", "Cards and panels"], ["surface0", "Rows and tiles"],
+        ["surface1", "Buttons and tracks"], ["surface2", "Raised buttons"], ["text", "Text"], ["subtext0", "Quieter text"],
+        ["mauve", "Accent: buttons, switches, highlights"], ["red", "Warnings and errors"]]
+    readonly property var appNames: ({ crust: "Darkest background", subtext1: "Secondary text", overlay0: "Outlines", overlay1: "Dim lines",
+        overlay2: "Faint text", pink: "Pink", maroon: "Deep red", peach: "Orange", yellow: "Yellow", green: "Green", teal: "Teal",
+        sapphire: "Sapphire", blue: "Blue", sky: "Sky", lavender: "Lavender", flamingo: "Flamingo", rosewater: "Rosewater" })
+    readonly property var appKeys: {
+        const b = Look.baseColors || {};
+        const shell = shellKeys.map(k => k[0]);
+        return Object.keys(b).filter(k => shell.indexOf(k) === -1 && /^#[0-9a-fA-F]{6,8}$/.test(String(b[k])))
+            .sort((x, y) => (sec.appNames[x] ? 0 : 1) - (sec.appNames[y] ? 0 : 1) || x.localeCompare(y))
+            .map(k => [k, sec.appNames[k] || k]);
+    }
+    readonly property int changedCount: Object.keys(Look.overrides).length
+    SettingRow {
+        show: !!Look.baseColors
+        icon: "format_color_fill"; title: "Edit colours"
+        desc: sec.changedCount > 0 ? sec.changedCount + (sec.changedCount === 1 ? " colour" : " colours") + " changed in " + (Look.paletteName === "style" ? Look.style.name + "'s colours" : Look.paletteName) + ". The arrow by one puts it back"
+                                   : "Change any colour of " + (Look.paletteName === "style" ? Look.style.name + "'s colours" : "the " + Look.paletteName + " theme") + "; each theme keeps its own changes"
+        Row {
+            spacing: 6
+            Button { visible: sec.changedCount > 0; text: "Reset all"; icon: "undo"; onClicked: Look.resetColours() }
+            Button { text: sec.editing ? "Done" : "Edit"; icon: sec.editing ? "check" : "edit"; primary: sec.editing; onClicked: sec.editing = !sec.editing }
+        }
+    }
+    Label { visible: !Look.baseColors && sec.editing; text: "Pick a colour theme below to edit its colours (the wallpaper's come from the wallpaper)"; muted: true; Layout.leftMargin: 6 }
+    // one colour: its swatch (click to pick), what it colours, its code, and ↺ once changed
+    component ColourEdit: SmoothRect {
+        id: ce
+        property string key: ""
+        property string label: ""
+        readonly property string now: Look.rawColors ? String(Look.rawColors[key] || "") : ""
+        readonly property bool changed: Look.overrides[key] !== undefined
+        Layout.fillWidth: true
+        Layout.preferredHeight: 52
+        radius: Theme.corner(52, 2)
+        color: Theme.containerHigh
+        border.width: Theme.outlineW; border.color: Theme.outlineColor
+        ColourPick {
+            id: pick
+            x: 10; anchors.verticalCenter: parent.verticalCenter
+            width: 124; height: 34
+            alpha: false
+            value: ce.now
+            // (dragging in the picker: saved a moment after it stops, not on every move)
+            onPicked: c => { later.v = c; later.restart(); }
+            Timer { id: later; property string v: ""; interval: 140; onTriggered: Look.setColour(ce.key, v) }
+        }
+        Column {
+            anchors.left: pick.right; anchors.leftMargin: 12
+            anchors.right: back.left; anchors.rightMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            Label { width: parent.width; elide: Text.ElideRight; text: ce.label; strong: ce.changed }
+            Label { width: parent.width; elide: Text.ElideRight; text: ce.changed ? "Changed · the theme's is " + String(Look.baseColors[ce.key] || "") : "As the theme has it"; muted: true; font.pixelSize: Theme.sizeSmall - 1 }
+        }
+        // (the picker keeps its own value once used: a reset, or another theme, shows here too)
+        onNowChanged: if (pick.value.toLowerCase() !== now.toLowerCase()) pick.value = now
+        Pressable {
+            id: back
+            anchors.right: parent.right; anchors.rightMargin: 8; anchors.verticalCenter: parent.verticalCenter
+            width: 34; height: 34
+            visible: ce.changed
+            color: hovered ? Theme.control : "transparent"
+            onClicked: Look.resetColour(ce.key)
+            Icon { anchors.centerIn: parent; name: "undo"; size: 19; color: Theme.accent }
+        }
+    }
+    ColumnLayout {
+        visible: sec.editing && !!Look.baseColors
+        Layout.fillWidth: true
+        spacing: 8
+        Label { text: "The shell"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6 }
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 2; rowSpacing: 8; columnSpacing: 8
+            Repeater { model: sec.shellKeys.filter(k => Look.baseColors && Look.baseColors[k[0]]); ColourEdit { required property var modelData; key: modelData[0]; label: modelData[1] } }
+        }
+        Label { visible: sec.appKeys.length > 0; text: "Other apps (the terminal, GTK and Qt apps)"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 4 }
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 3; rowSpacing: 8; columnSpacing: 8
+            Repeater { model: sec.appKeys; ColourEdit { required property var modelData; key: modelData[0]; label: modelData[1] } }
+        }
+    }
+
     // a colour theme: a little window in its colours, named in its own text colour
     component ThemeCard: Pressable {
         id: tc
         property var th: ({ name: "", colors: {} })
-        readonly property var k: th.colors
+        // (with your changes to it, if any)
+        readonly property var k: Object.assign({}, th.colors, (Store.get("theme.overrides", {}) || {})[th.name] || {})
         readonly property bool on: Look.paletteName === th.name
         // a quarter of the row, also when a search leaves only one or two (they stretched)
         Layout.preferredWidth: (sec.width - 24) / 4

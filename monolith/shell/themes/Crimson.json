@@ -1,0 +1,33 @@
+{
+  "name": "Crimson",
+  "desc": "Red: near-black with a vivid crimson",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#14080a",
+    "mantle": "#0e0607",
+    "crust": "#090404",
+    "surface0": "#231012",
+    "surface1": "#32181b",
+    "surface2": "#412025",
+    "overlay0": "#71474c",
+    "overlay1": "#8b5b61",
+    "overlay2": "#a2777c",
+    "text": "#fae5e8",
+    "subtext1": "#e3b5bb",
+    "subtext0": "#c88d95",
+    "mauve": "#e8283f",
+    "red": "#ff5a6a",
+    "maroon": "#ab2b3c",
+    "pink": "#ff7d8c",
+    "flamingo": "#ff7d8c",
+    "rosewater": "#f6cbd1",
+    "peach": "#ff9466",
+    "yellow": "#f2c27a",
+    "green": "#b7c48a",
+    "teal": "#93c2b2",
+    "blue": "#e3868f",
+    "sapphire": "#e8a0a7",
+    "sky": "#f0b8bd",
+    "lavender": "#e8b4c0"
+  }
+}

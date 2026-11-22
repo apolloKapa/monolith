@@ -5,15 +5,16 @@ import Quickshell.Io
 import "../../core"
 import "../../ui"
 
-// Displays: on/off, resolution, refresh rate and scale for each monitor. Written into niri's
-// output config (niri applies it straight away and keeps it).
+// Displays: on/off, resolution, refresh rate and scale for each monitor, and (Hyprland) a screen
+// mirroring another. Written into niri's output config (niri applies it straight away and keeps
+// it), or on Hyprland into Monolith's monitors file.
 ColumnLayout {
     id: sec
     spacing: 8
     property var outputs: []
     readonly property string hyprScript: Qt.resolvedUrl("../../scripts/hypr_monitors.py").toString().replace("file://", "")
     // a change to one screen: niri's output config, or on Hyprland Monolith's monitors file
-    // (key: mode "WxH@R" / position "x=X y=Y" / scale / off)
+    // (key: mode "WxH@R" / position "x=X y=Y" / scale / off / mirror: a screen's name or "")
     Process { id: hyprSet; onExited: requery.restart() }
     property var hyprQueue: []
     function put(o, key, value) {
@@ -73,7 +74,8 @@ ColumnLayout {
         clip: true
 
         // the screens that are on: { name, w, h } in logical pixels, and where each one is
-        readonly property var mons: sec.outputs.filter(o => o.logical).map(o => ({ name: o.name, w: o.logical.width, h: o.logical.height, model: (o.make + " " + o.model).trim() }))
+        // (a screen mirroring another has no place of its own)
+        readonly property var mons: sec.outputs.filter(o => o.logical && !o.mirror_of).map(o => ({ name: o.name, w: o.logical.width, h: o.logical.height, model: (o.make + " " + o.model).trim() }))
         property var pos: ({})          // name -> [x, y]
         property bool dirty: false
         // where the screen being dragged will land (preview pixels), shown as an outline: null
@@ -280,7 +282,7 @@ ColumnLayout {
                 spacing: 8
                 SettingRow {
                     icon: "monitor"; title: card.o.name + "  ·  " + (card.o.make + " " + card.o.model).trim()
-                    desc: card.on ? card.cur.width + " × " + card.cur.height + " at " + Math.round(card.cur.refresh_rate / 1000) + " Hz, scale " + (card.o.logical ? card.o.logical.scale : 1) : "Off"
+                    desc: card.on && card.o.mirror_of ? "Showing the same as " + card.o.mirror_of : card.on ? card.cur.width + " × " + card.cur.height + " at " + Math.round(card.cur.refresh_rate / 1000) + " Hz, scale " + (card.o.logical ? card.o.logical.scale : 1) : "Off"
                     Toggle {
                         checked: card.on
                         // never the last screen that's on
@@ -323,6 +325,28 @@ ColumnLayout {
                         value: card.o.logical ? card.o.logical.scale : 1
                         onMoved: v => scaleLater.go(v)
                         Timer { id: scaleLater; property real v: 1; interval: 700; function go(x) { v = x; restart(); } onTriggered: sec.put(card.o, "scale", v.toFixed(2)) }
+                    }
+                }
+                // HDMI scaling (a TV cutting off the edges): the GPU's underscan, which neither
+                // Hyprland nor niri lets anything set on Linux, so this says where it's fixed
+                SettingRow {
+                    show: card.on && /^HDMI/.test(card.o.name)
+                    icon: "fit_screen"; title: "HDMI scaling"
+                    desc: "Edges cut off on a TV? The TV is zooming in (overscan), and on Linux only the TV can turn that off (Hyprland and niri can't shrink the picture the way Windows' HDMI scaling does). On the TV: Samsung, Picture Size → Fit to Screen (or 16:9 and Screen Fit); LG, Just Scan; Sony, Display Area → Full Pixel. Renaming the TV's input to \"PC\" also stops it on many TVs."
+                }
+                // the same picture as another screen (a TV or projector beside your monitor)
+                SettingRow {
+                    id: mirrorRow
+                    readonly property var others: sec.outputs.filter(x => x.name !== card.o.name && x.current_mode !== null && !x.mirror_of)
+                    show: others.length > 0 || !!card.o.mirror_of
+                    icon: "screen_share"; title: "Mirror"
+                    desc: !Niri.hyprland ? "niri can't mirror screens yet" : card.o.mirror_of ? "Shows the same as " + card.o.mirror_of + " (turns on with it)" : "Show the same picture as another screen, say on a TV or projector"
+                    Dropdown {
+                        visible: Niri.hyprland
+                        width: 230; height: 36
+                        opts: [["", "Off (its own screen)"]].concat(mirrorRow.others.map(x => [x.name, "Same as " + x.name]))
+                        value: card.o.mirror_of || ""
+                        onPicked: v => sec.put(card.o, "mirror", v)
                     }
                 }
             }

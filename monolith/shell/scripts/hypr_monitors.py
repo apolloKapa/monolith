@@ -2,7 +2,8 @@
 """Screens on Hyprland (Settings -> Displays): read them in niri's shape, and keep changes.
 
     hypr_monitors.py read                  JSON like `niri msg -j outputs` (name -> output)
-    hypr_monitors.py set NAME KEY VALUE    KEY: mode ("WxH@R"), position ("X Y"), scale, off ("1"/"0")
+    hypr_monitors.py set NAME KEY VALUE    KEY: mode ("WxH@R"), position ("X Y"), scale, off ("1"/"0"),
+                                           mirror (another screen's name: show the same; "" its own)
 
 Changes go to Monolith's folder, ~/.config/hypr/monolith/monitors.lua (or .conf), loaded by its
 init after your own config, so they win; each screen keeps what it has for the rest (its
@@ -41,8 +42,9 @@ def niri_shape(m):
     lw, lh = round(m["width"] / sc), round(m["height"] / sc)
     if rot:
         lw, lh = lh, lw
+    mirror = m.get("mirrorOf") or ""
     return {"name": m["name"], "make": m.get("make", ""), "model": m.get("model", ""), "modes": modes,
-            "current_mode": cur,
+            "current_mode": cur, "mirror_of": "" if mirror in ("none", "") else mirror,
             "logical": None if off else {"x": m.get("x", 0), "y": m.get("y", 0), "width": lw, "height": lh, "scale": sc,
                                          "transform": m.get("transform", 0)}}
 
@@ -77,6 +79,14 @@ def write(state):
             out.append('hl.monitor({ output = "%s", disabled = true })' % name if lua else "monitor = %s, disable" % name)
             continue
         pos = s["position"].replace(" ", "x")
+        if s.get("mirror"):
+            # (showing another screen: it has no place of its own)
+            if lua:
+                out.append('hl.monitor({ output = "%s", mode = "%s", position = "auto", scale = %s, mirror = "%s", disabled = false })'
+                           % (name, s["mode"], s["scale"], s["mirror"]))
+            else:
+                out.append("monitor = %s, %s, auto, %s, mirror, %s" % (name, s["mode"], s["scale"], s["mirror"]))
+            continue
         if lua:
             # (disabled = false said outright: hl.monitor merges the rules for a screen, so one
             # your config turns off would stay off)
@@ -122,6 +132,16 @@ def main():
                 s["position"] = "%s %s" % (g[0], g[1])
         elif key == "scale":
             s["scale"] = round(float(value), 2)
+        elif key == "mirror":
+            if value and value != name and value in live:
+                s["mirror"] = value
+                s["off"] = False
+                # (a screen can't show one that is itself showing another)
+                for other, o in state.items():
+                    if other == value and o.get("mirror"):
+                        o.pop("mirror", None)
+            else:
+                s.pop("mirror", None)
         state[name] = s
         write(state)
         print(json.dumps({"ok": True}))

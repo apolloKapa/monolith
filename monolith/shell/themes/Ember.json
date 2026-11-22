@@ -1,0 +1,33 @@
+{
+  "name": "Ember",
+  "desc": "Red: glowing red and warm amber",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#140a08",
+    "mantle": "#0e0706",
+    "crust": "#090504",
+    "surface0": "#231310",
+    "surface1": "#321d18",
+    "surface2": "#402621",
+    "overlay0": "#704e48",
+    "overlay1": "#8a635c",
+    "overlay2": "#a17e78",
+    "text": "#fae9e5",
+    "subtext1": "#e3bdb5",
+    "subtext0": "#c8978d",
+    "mauve": "#f2542d",
+    "red": "#ff7a45",
+    "maroon": "#ab402b",
+    "pink": "#ffa070",
+    "flamingo": "#ffa070",
+    "rosewater": "#f6d2cb",
+    "peach": "#ff9466",
+    "yellow": "#f2c27a",
+    "green": "#b7c48a",
+    "teal": "#93c2b2",
+    "blue": "#e3868f",
+    "sapphire": "#e8a0a7",
+    "sky": "#f0b8bd",
+    "lavender": "#e8b4c0"
+  }
+}

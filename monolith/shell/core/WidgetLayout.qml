@@ -193,6 +193,8 @@ Singleton {
             o.push(["mainColor", "Main colour", "colour", ""], ["accentColor", "Accent colour", "colour", ""]);
         if (["cpu", "ram", "temp", "disk", "battery"].indexOf(t) !== -1 && id === "circle")
             o.push(["sineWave", "Wavy ring", "toggle", true], ["lineThickness", "Line thickness", "slider", 8, [3, 16, 1]]);
+        if (t === "media" && id === "simpleLyrics")
+            o.push(["lyricsStyle", "How lines come in", "choice", "scroll", [["scroll", "Scroll"], ["pop", "Pop"], ["slide", "Slide"], ["words", "Word by word"]]]);
         if (t === "media" && (id === "lyrics" || id === "simpleLyrics"))
             o.push(["lyricsLines", "Lines before and after", "slider", id === "lyrics" ? 2 : 1, [0, 4, 1]], ["lyricsAlignment", "Alignment", "choice", "left", [["left", "Left"], ["center", "Centre"], ["right", "Right"]]],
                    ["showNoLyrics", "Say when there are no lyrics", "toggle", true]);

@@ -20,7 +20,28 @@ Singleton {
     readonly property string themesDir: Qt.resolvedUrl("../themes").toString().replace("file://", "")
     property var themeNames: []
     property var fileColors: null
-    readonly property var rawColors: paletteName === "style" ? (style.colors || null) : (paletteName === "wallpaper" ? null : fileColors)
+    // the theme as it comes (the style's own palette, or a theme file's)
+    readonly property var baseColors: paletteName === "style" ? (style.colors || null) : (paletteName === "wallpaper" ? null : fileColors)
+    // Your changes to a theme's colours (Settings → Style & colours → Edit colours), kept per
+    // theme ("style" for a style's own palette): theme.overrides = { name: { key: "#rrggbb" } }.
+    // Each one can be put back on its own; the theme file itself never changes.
+    readonly property string editKey: paletteName === "style" ? "style:" + styleId : paletteName
+    readonly property var overrides: { const o = Store.get("theme.overrides", {}) || {}; return o[editKey] || {}; }
+    readonly property var rawColors: baseColors ? Object.assign({}, baseColors, overrides) : null
+    function setColour(key, value) {
+        const all = Object.assign({}, Store.get("theme.overrides", {}) || {});
+        const mine = Object.assign({}, all[editKey] || {});
+        if (baseColors && String(baseColors[key]).toLowerCase() === String(value).toLowerCase()) delete mine[key];
+        else mine[key] = value;
+        if (Object.keys(mine).length) all[editKey] = mine; else delete all[editKey];
+        Store.set("theme.overrides", all);
+    }
+    function resetColour(key) { setColour(key, baseColors ? baseColors[key] : ""); }
+    function resetColours() {
+        const all = Object.assign({}, Store.get("theme.overrides", {}) || {});
+        delete all[editKey];
+        Store.set("theme.overrides", all);
+    }
     // Dark or light. The wallpaper's colours come in both (theme.mode). A palette is one or the
     // other as it's written, so the switch did nothing with one picked: now the other mode is
     // the palette turned over (every colour keeps its hue, its lightness is mirrored, so a black

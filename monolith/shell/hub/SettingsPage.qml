@@ -38,7 +38,7 @@ Page {
         { id: "lock", desc: "Locking, sleeping and what happens when you're away", title: "Lock & idle", icon: "lock_clock", gap: true, tabs: [["idle", "Lock & idle", "Idle"]] },
         { id: "capture", desc: "Screenshots and recordings", title: "Screenshots", icon: "screenshot_region", tabs: [["capture", "Screenshots", "Capture"]] },
         { id: "sysmon", desc: "Live graphs, the busiest apps, and warnings when it runs hot or full", title: "System monitor", icon: "monitoring", tabs: [["sysmon", "System monitor", "SysMon"]] },
-        { id: "software", desc: "Apps that start with you, and AppImages", title: "Startup & AppImages", icon: "deployed_code", tabs: [["software", "Startup apps & AppImages", "Software"]] }
+        { id: "software", desc: "Default apps, apps that start with you, and AppImages", title: "Apps & startup", icon: "deployed_code", tabs: [["defaults", "Default apps", "DefaultApps"], ["software", "Startup apps & AppImages", "Software"]] }
     ]
     // ── search: every row of every page (scripts/settings_index.py reads their titles and
     // descriptions), plus the pages themselves. A result opens its page, scrolls to the row and

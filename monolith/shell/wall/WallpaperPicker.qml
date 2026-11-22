@@ -68,9 +68,15 @@ PanelWindow {
     // and back the same way. (Only while the picker is open: it opens on the view it's on.)
     readonly property int tabAt: Math.max(0, tabs.indexOf(tab))
     readonly property int viewMs: Math.max(200, Theme.ms(460))
-    property real picK: picTab ? 1 : 0
-    property real liveK: liveTab ? 1 : 0
-    property real favK: favTab ? 1 : 0
+    // Wallhaven (the button by the tabs): search wallhaven.cc and download into the folder; it
+    // takes the place of the tabs' pictures while it's open (wall/WallhavenView)
+    property bool online: false
+    function goOnline(on) { online = on; if (on) Qt.callLater(() => wallhaven.focusSearch()); else keys.forceActiveFocus(); }
+    property real picK: picTab && !online ? 1 : 0
+    property real liveK: liveTab && !online ? 1 : 0
+    property real favK: favTab && !online ? 1 : 0
+    property real onK: online ? 1 : 0
+    Behavior on onK { enabled: win.shown && Theme.animOn; NumberAnimation { duration: win.viewMs * 0.7; easing.type: Easing.OutCubic } }
     property real gridK: coverflow ? 0 : 1
     Behavior on picK { enabled: win.shown && Theme.animOn; NumberAnimation { duration: win.viewMs * 0.7; easing.type: Easing.OutCubic } }
     Behavior on liveK { enabled: win.shown && Theme.animOn; NumberAnimation { duration: win.viewMs * 0.7; easing.type: Easing.OutCubic } }
@@ -124,7 +130,7 @@ PanelWindow {
     Component.onCompleted: { nowTabAt = tabAt; lastTabAt = tabAt; if (shown) { opened(); comeIn.restart(); } }
     onShownChanged: {
         if (shown) { opened(); goOut.stop(); comeIn.restart(); }
-        else { notePos(); Wall.savePos(); comeIn.stop(); goOut.restart(); }
+        else { notePos(); Wall.savePos(); comeIn.stop(); goOut.restart(); online = false; }
     }
 
     // the room behind it dims; a click there closes it
@@ -175,7 +181,7 @@ PanelWindow {
             Item {
                 id: keys
                 focus: true
-                Keys.onEscapePressed: HubState.wallOpen = false
+                Keys.onEscapePressed: { if (win.online) win.goOnline(false); else HubState.wallOpen = false; }
                 readonly property var g: win.liveTab ? liveGrid : win.favTab ? favGrid : grid
                 readonly property bool f: win.coverflow && win.picTab
                 // Left and right, held: our own steady steps, not the keyboard's repeat. The repeat
@@ -219,7 +225,20 @@ PanelWindow {
                 height: 40
                 Icon { name: "wallpaper"; size: 22; filled: true; color: Theme.accent }
                 Label { text: "Wallpaper"; strong: true; font.pixelSize: Theme.sizeTitle + 2 }
-                Segmented { Layout.leftMargin: 10; Layout.preferredWidth: 330; height: 36; opts: [["pictures", "Pictures"], ["live", "Live"], ["favs", "Favourites"]]; value: win.tab; onPicked: v => Store.set("wallpaper.tab", v) }
+                Segmented { Layout.leftMargin: 10; Layout.preferredWidth: 330; height: 36; opts: [["pictures", "Pictures"], ["live", "Live"], ["favs", "Favourites"]]; value: win.online ? "" : win.tab; onPicked: v => { Store.set("wallpaper.tab", v); win.goOnline(false); } }
+                // Wallhaven: find new ones online
+                Pressable {
+                    Layout.preferredWidth: whRow.implicitWidth + 26; Layout.preferredHeight: 36
+                    color: win.online ? Theme.selected : (hovered ? Theme.containerHigh : Theme.container)
+                    onClicked: win.goOnline(!win.online)
+                    Row {
+                        id: whRow
+                        anchors.centerIn: parent
+                        spacing: 6
+                        Icon { name: "travel_explore"; size: 18; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: "Wallhaven"; font.pixelSize: Theme.sizeSmall; strong: win.online; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                }
                 // which screen a click sets: all of them, or just one
                 Label { visible: Quickshell.screens.length > 1; Layout.leftMargin: 10; text: "Set on"; muted: true; font.pixelSize: Theme.sizeSmall }
                 Segmented {
@@ -231,11 +250,12 @@ PanelWindow {
                 }
                 Label {
                     Layout.leftMargin: 8; Layout.fillWidth: true; elide: Text.ElideRight; muted: true; font.pixelSize: Theme.sizeSmall
-                    text: win.favTab ? win.favList.length + (win.favList.length === 1 ? " favourite" : " favourites") + "   ·   S or the star to add or remove"
+                    text: win.online ? "wallhaven.cc   ·   the download button saves it to " + Wall.dir.replace(Wall.home, "~") + " and puts it on"
+                        : win.favTab ? win.favList.length + (win.favList.length === 1 ? " favourite" : " favourites") + "   ·   S or the star to add or remove"
                         : win.liveTab ? Wall.live.length + (Wall.live.length === 1 ? " live wallpaper" : " live wallpapers") + "   ·   hover to preview"
                                       : Wall.dir.replace(Wall.home, "~") + "   ·   " + Wall.pictures.length + " pictures"
                 }
-                Segmented { visible: win.picTab; Layout.preferredWidth: 180; height: 36; opts: [["flow", "Coverflow"], ["grid", "Grid"]]; value: win.coverflow ? "flow" : "grid"; onPicked: v => Store.set("wallpaper.view", v) }
+                Segmented { visible: win.picTab && !win.online; Layout.preferredWidth: 180; height: 36; opts: [["flow", "Coverflow"], ["grid", "Grid"]]; value: win.coverflow ? "flow" : "grid"; onPicked: v => Store.set("wallpaper.view", v) }
                 Segmented { Layout.preferredWidth: 160; height: 36; opts: [["dark", "Dark"], ["light", "Light"]]; value: Look.mode; onPicked: v => Look.setMode(v) }
                 Pressable {
                     Layout.preferredWidth: 36; Layout.preferredHeight: 36
@@ -621,6 +641,20 @@ PanelWindow {
                     HoverHandler { id: ghov }
                     Star { path: gcell.modelData; hot: ghov.hovered; anchors.margins: 10 }
                 }
+            }
+
+            // ── Wallhaven ──
+            WallhavenView {
+                id: wallhaven
+                y: head.height + 12
+                width: parent.width
+                height: parent.height - y
+                visible: win.onK > 0.001
+                opacity: win.onK
+                transform: Translate { x: (1 - win.onK) * 70 }
+                active: win.shown && win.online
+                onChosen: p => win.pick(p)
+                onBack: win.goOnline(false)
             }
 
             // ── favourites: the starred pictures and live wallpapers together ──

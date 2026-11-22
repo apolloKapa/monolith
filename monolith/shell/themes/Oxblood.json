@@ -1,0 +1,33 @@
+{
+  "name": "Oxblood",
+  "desc": "Red: deep wine, quiet and dark",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#12080a",
+    "mantle": "#0d0607",
+    "crust": "#080404",
+    "surface0": "#211013",
+    "surface1": "#2f181c",
+    "surface2": "#3e2126",
+    "overlay0": "#6f494f",
+    "overlay1": "#895d64",
+    "overlay2": "#a0797f",
+    "text": "#fae5e9",
+    "subtext1": "#e3b5bd",
+    "subtext0": "#c88d97",
+    "mauve": "#c42b43",
+    "red": "#e04a5f",
+    "maroon": "#ab2b40",
+    "pink": "#e8798a",
+    "flamingo": "#e8798a",
+    "rosewater": "#f6cbd2",
+    "peach": "#ff9466",
+    "yellow": "#f2c27a",
+    "green": "#b7c48a",
+    "teal": "#93c2b2",
+    "blue": "#e3868f",
+    "sapphire": "#e8a0a7",
+    "sky": "#f0b8bd",
+    "lavender": "#e8b4c0"
+  }
+}

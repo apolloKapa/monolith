@@ -1,0 +1,33 @@
+{
+  "name": "Scarlet",
+  "desc": "Red: dark red with a bright scarlet",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#160908",
+    "mantle": "#100606",
+    "crust": "#0a0404",
+    "surface0": "#261110",
+    "surface1": "#351918",
+    "surface2": "#442120",
+    "overlay0": "#734745",
+    "overlay1": "#8d5b59",
+    "overlay2": "#a37775",
+    "text": "#fae6e5",
+    "subtext1": "#e3b7b5",
+    "subtext0": "#c88f8d",
+    "mauve": "#ff3b30",
+    "red": "#ff6b5e",
+    "maroon": "#ab2f2b",
+    "pink": "#ff8f87",
+    "flamingo": "#ff8f87",
+    "rosewater": "#f6cccb",
+    "peach": "#ff9466",
+    "yellow": "#f2c27a",
+    "green": "#b7c48a",
+    "teal": "#93c2b2",
+    "blue": "#e3868f",
+    "sapphire": "#e8a0a7",
+    "sky": "#f0b8bd",
+    "lavender": "#e8b4c0"
+  }
+}

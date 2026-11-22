@@ -1,0 +1,33 @@
+{
+  "name": "Rouge",
+  "desc": "Red: dark red with a rose red",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#15090b",
+    "mantle": "#0f0708",
+    "crust": "#0a0405",
+    "surface0": "#241114",
+    "surface1": "#33191e",
+    "surface2": "#422227",
+    "overlay0": "#70484e",
+    "overlay1": "#8a5c63",
+    "overlay2": "#a1787e",
+    "text": "#fae5e9",
+    "subtext1": "#e3b5bd",
+    "subtext0": "#c88d97",
+    "mauve": "#ff4d6d",
+    "red": "#ff6f88",
+    "maroon": "#ab2b40",
+    "pink": "#ff99ab",
+    "flamingo": "#ff99ab",
+    "rosewater": "#f6cbd2",
+    "peach": "#ff9466",
+    "yellow": "#f2c27a",
+    "green": "#b7c48a",
+    "teal": "#93c2b2",
+    "blue": "#e3868f",
+    "sapphire": "#e8a0a7",
+    "sky": "#f0b8bd",
+    "lavender": "#e8b4c0"
+  }
+}

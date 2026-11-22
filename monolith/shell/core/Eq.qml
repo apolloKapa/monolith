@@ -68,10 +68,34 @@ Singleton {
             "equalizer#0": { "balance": 0.0, "bypass": !eq.enabled, "input-gain": 0.0, "output-gain": 0.0,
                              "mode": "IIR", "num-bands": 10, "split-channels": false,
                              "pitch-left": 0.0, "pitch-right": 0.0, "left": left, "right": right } } };
-        writer.command = ["sh", "-c", "mkdir -p \"$(dirname \"$1\")\" && printf '%s' \"$2\" > \"$1\" && "
-            + "(pgrep -x easyeffects >/dev/null || (setsid -f easyeffects --gapplication-service >/dev/null 2>&1; sleep 1)) && "
-            + "easyeffects -l monolith", "_", eq.file, JSON.stringify(preset)];
+        // (EasyEffects started in the background if it isn't running, and the preset only sent
+        // once its sink is there (up to 15 s): loaded while it was still starting, it was lost.
+        // Nothing may ask EasyEffects anything before then either: an `easyeffects` command run
+        // too early becomes the running copy itself, and the one being started quits)
+        writer.command = ["sh", "-c", "mkdir -p \"$(dirname \"$1\")\" && printf '%s' \"$2\" > \"$1\" || exit 1; "
+            + "pgrep -x easyeffects >/dev/null || setsid -f easyeffects --service-mode >/dev/null 2>&1; "
+            + "for i in $(seq 1 30); do pactl list short sinks 2>/dev/null | grep -q easyeffects_sink && { sleep 0.5; exec easyeffects -l monolith; }; sleep 0.5; done; exit 1", "_", eq.file, JSON.stringify(preset)];
         writer.running = true;
     }
     Process { id: writer }
+
+    // Signing in: the equaliser comes back on. EasyEffects was only started when a band or
+    // preset changed, so after a restart or a new login the sound wasn't equalised until you
+    // touched it. Then, while it's on, EasyEffects is started again if it quits or crashes.
+    property bool resumed: false
+    Timer {
+        interval: 3000
+        running: Store.loaded && !eq.resumed
+        onTriggered: { eq.resumed = true; if (eq.enabled && !eq.noApp) eq.apply(); }
+    }
+    Timer {
+        interval: 30000; repeat: true
+        running: eq.resumed && eq.enabled && !eq.noApp
+        onTriggered: if (!watch.running && !writer.running) watch.running = true
+    }
+    Process {
+        id: watch
+        command: ["sh", "-c", "pgrep -x easyeffects >/dev/null || echo gone"]
+        stdout: StdioCollector { onStreamFinished: if (text.trim() === "gone" && eq.enabled) eq.apply() }
+    }
 }

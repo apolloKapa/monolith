@@ -1,0 +1,33 @@
+{
+  "name": "Red Noir",
+  "desc": "Red: pure black, white and red",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#0b0a0a",
+    "mantle": "#080707",
+    "crust": "#050404",
+    "surface0": "#171515",
+    "surface1": "#231f1f",
+    "surface2": "#2f2a2a",
+    "overlay0": "#675151",
+    "overlay1": "#816565",
+    "overlay2": "#9a7e7e",
+    "text": "#f5eaea",
+    "subtext1": "#d4c4c4",
+    "subtext0": "#b0a6a6",
+    "mauve": "#e50914",
+    "red": "#ff3b44",
+    "maroon": "#ab2b2b",
+    "pink": "#ff6b72",
+    "flamingo": "#ff6b72",
+    "rosewater": "#f6cbcb",
+    "peach": "#ff9466",
+    "yellow": "#f2c27a",
+    "green": "#b7c48a",
+    "teal": "#93c2b2",
+    "blue": "#e3868f",
+    "sapphire": "#e8a0a7",
+    "sky": "#f0b8bd",
+    "lavender": "#e8b4c0"
+  }
+}

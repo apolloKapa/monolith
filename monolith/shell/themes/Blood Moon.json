@@ -1,0 +1,33 @@
+{
+  "name": "Blood Moon",
+  "desc": "Red: almost black, one burning red",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#0e090a",
+    "mantle": "#0a0707",
+    "crust": "#060404",
+    "surface0": "#1b1314",
+    "surface1": "#281d1e",
+    "surface2": "#352728",
+    "overlay0": "#675153",
+    "overlay1": "#816567",
+    "overlay2": "#9a7e81",
+    "text": "#f7e8ea",
+    "subtext1": "#dabec0",
+    "subtext0": "#ba9c9e",
+    "mauve": "#ff1f3d",
+    "red": "#ff4d63",
+    "maroon": "#ab2b36",
+    "pink": "#ff7a8a",
+    "flamingo": "#ff7a8a",
+    "rosewater": "#f6cbcf",
+    "peach": "#ff9466",
+    "yellow": "#f2c27a",
+    "green": "#b7c48a",
+    "teal": "#93c2b2",
+    "blue": "#e3868f",
+    "sapphire": "#e8a0a7",
+    "sky": "#f0b8bd",
+    "lavender": "#e8b4c0"
+  }
+}

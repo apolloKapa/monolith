@@ -1,0 +1,33 @@
+{
+  "name": "Cinnabar",
+  "desc": "Red: dark with an orange-red",
+  "isColorFocused": true,
+  "colors": {
+    "base": "#140a08",
+    "mantle": "#0e0706",
+    "crust": "#090404",
+    "surface0": "#231210",
+    "surface1": "#321b18",
+    "surface2": "#412520",
+    "overlay0": "#714c47",
+    "overlay1": "#8b615b",
+    "overlay2": "#a27c77",
+    "text": "#fae8e5",
+    "subtext1": "#e3bbb5",
+    "subtext0": "#c8958d",
+    "mauve": "#ec4a2c",
+    "red": "#ff6f4f",
+    "maroon": "#ab3c2b",
+    "pink": "#ff9a80",
+    "flamingo": "#ff9a80",
+    "rosewater": "#f6d1cb",
+    "peach": "#ff9466",
+    "yellow": "#f2c27a",
+    "green": "#b7c48a",
+    "teal": "#93c2b2",
+    "blue": "#e3868f",
+    "sapphire": "#e8a0a7",
+    "sky": "#f0b8bd",
+    "lavender": "#e8b4c0"
+  }
+}
