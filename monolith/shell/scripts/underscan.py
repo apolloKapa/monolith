@@ -163,6 +163,16 @@ def status():
         print("Chosen in the installer:", open(os.path.expanduser("~/.local/state/monolith/hdmi-scaling")).read().strip() or "no")
     except OSError:
         print("Chosen in the installer: no")
+    # (Arch: what the build said last, when it isn't patched)
+    log = os.path.expanduser("~/.local/state/monolith/hdmi-scaling.log")
+    if state != "yes" and os.path.exists(log):
+        try:
+            tail = open(log, encoding="utf-8", errors="replace").read().splitlines()[-12:]
+            print("The last build's log ends (%s):" % log)
+            for l in tail:
+                print("   ", l)
+        except OSError:
+            pass
 
 
 if __name__ == "__main__":

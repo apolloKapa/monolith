@@ -8,8 +8,9 @@
 #   Gentoo: the patch goes in Portage's user patches for the installed version, and the package
 #           is emerged again (it stays patched across rebuilds of that version)
 #   Arch:   Arch's own PKGBUILD for the installed version, with the patch added, built with makepkg
-#           (its pkgrel gets a ".1", so the repo's same version doesn't replace it; a newer one
-#           does, and the next Monolith update builds that one patched again)
+#           (it keeps the installed version exactly and is installed over it, so the repo's same
+#           version doesn't replace it; a newer one does, and the next Monolith update builds
+#           that one patched again)
 # Asked for once in the installer's menu; remembered ($HDMI_STATE_FILE), and an update patches it
 # again when an upgrade replaced it. A patch that doesn't fit a new version is left out (the
 # package stays as it is) and Settings says HDMI scaling needs it.
@@ -50,7 +51,11 @@ install_hdmi_scaling() {
         pacman:*) _hdmi_arch "$target" "$patch" ;;
         *) echo -e "  ${C_YELLOW}HDMI scaling:${RESET} not available on this system yet" ;;
     esac
-    hdmi_patched && echo -e "  HDMI scaling: ready after you log out and in again (Settings → Displays → HDMI scaling, on an HDMI screen)"
+    if hdmi_patched; then
+        echo -e "  HDMI scaling: ready after you log out and in again (Settings → Displays → HDMI scaling, on an HDMI screen)"
+    else
+        echo -e "  ${C_YELLOW}HDMI scaling:${RESET} $target still isn't the patched one. See what's missing with: python3 ~/.local/share/monolith/shell/scripts/underscan.py status"
+    fi
     return 0
 }
 
@@ -71,38 +76,47 @@ _hdmi_gentoo() {
 }
 
 _hdmi_arch() {
-    local pn="$1" patch="$2" ver build
-    ver=$(pacman -Q "$pn" 2>/dev/null | awk '{print $2}')
-    [ -n "$ver" ] || { echo -e "  ${C_YELLOW}HDMI scaling:${RESET} $pn isn't installed"; return 0; }
-    # (our own build of the same version: ".1" on the release; the repo's version, to match)
-    ver="${ver%.1}"
+    local pn="$1" patch="$2" full rel pkgver_inst tag build log
+    full=$(pacman -Q "$pn" 2>/dev/null | awk '{print $2}')
+    [ -n "$full" ] || { echo -e "  ${C_YELLOW}HDMI scaling:${RESET} $pn isn't installed (a -git package isn't supported yet)"; return 0; }
+    # installed: [epoch:]version-release. Arch's own PKGBUILD has a tag per version-release; a
+    # rebuild of it (CachyOS: 26.04-1.1 for Arch's 26.04-1) is built from the same one
+    rel="${full##*-}"
+    pkgver_inst="${full%-*}"; pkgver_inst="${pkgver_inst#*:}"
+    tag="$pkgver_inst-${rel%%.*}"
     build="${XDG_CACHE_HOME:-"$HOME/.cache"}/monolith-$pn"
+    log="$(dirname "$HDMI_STATE_FILE")/hdmi-scaling.log"
     rm -rf "$build"
-    echo -e "\n\e[36m[ INFO ]\e[0m Building $pn $ver with HDMI scaling"
-    # Arch's PKGBUILD for exactly that version (its tag), else the newest
-    gitx clone -q --depth 1 --branch "$ver" "https://gitlab.archlinux.org/archlinux/packaging/packages/$pn.git" "$build" 2>/dev/null \
+    echo -e "\n\e[36m[ INFO ]\e[0m Building $pn $full with HDMI scaling (the log: $log)"
+    gitx clone -q --depth 1 --branch "$tag" "https://gitlab.archlinux.org/archlinux/packaging/packages/$pn.git" "$build" 2>/dev/null \
         || gitx clone -q --depth 1 "https://gitlab.archlinux.org/archlinux/packaging/packages/$pn.git" "$build" 2>/dev/null \
         || { echo -e "  ${C_YELLOW}HDMI scaling:${RESET} couldn't download Arch's $pn package"; return 0; }
     cp "$patch" "$build/monolith-underscan.patch"
-    # the patch added to its sources and put in before the build (after Arch's own prepare, if it
-    # has one); its release one higher, so pacman keeps it over the repo's same version
+    # The patch added to its sources and put in before the build (after Arch's own prepare, if it
+    # has one). The package keeps the version that's installed, exactly, and is installed over it:
+    # the repo's same version doesn't replace it, a newer one does (and the next Monolith update
+    # patches that). It used to get ".1" on its release, which is what CachyOS's own packages
+    # have: the build had the installed one's version, pacman was told to skip what's up to date,
+    # and nothing was installed, without a word.
     sed -i 's/^prepare()/_arch_prepare()/' "$build/PKGBUILD"
-    cat >> "$build/PKGBUILD" <<'EOF'
+    cat >> "$build/PKGBUILD" <<PKGBUILD_END
 
 # ── Monolith: HDMI scaling (underscan) ──
 source+=("monolith-underscan.patch")
-[ "${#sha256sums[@]}" -gt 0 ] && sha256sums+=('SKIP')
-[ "${#sha512sums[@]}" -gt 0 ] && sha512sums+=('SKIP')
-[ "${#b2sums[@]}" -gt 0 ] && b2sums+=('SKIP')
-pkgrel="${pkgrel}.1"
+[ "\${#sha256sums[@]}" -gt 0 ] && sha256sums+=('SKIP')
+[ "\${#sha512sums[@]}" -gt 0 ] && sha512sums+=('SKIP')
+[ "\${#b2sums[@]}" -gt 0 ] && b2sums+=('SKIP')
+[ "\$pkgver" = "$pkgver_inst" ] && pkgrel="$rel"
 prepare() {
-	if declare -f _arch_prepare >/dev/null; then (cd "$srcdir" && _arch_prepare) || return 1; fi
-	cd "$srcdir/${_archive:-$pkgname-$pkgver}" && patch -Np1 -i "$srcdir/monolith-underscan.patch"
+	if declare -f _arch_prepare >/dev/null; then (cd "\$srcdir" && _arch_prepare) || return 1; fi
+	cd "\$srcdir/\${_archive:-\$pkgname-\$pkgver}" && patch -Np1 -i "\$srcdir/monolith-underscan.patch"
 }
-EOF
-    # (--nocheck: niri's test suite takes long and isn't what changed)
-    if ! (cd "$build" && makepkg -si --noconfirm --needed --nocheck); then
-        echo -e "  ${C_YELLOW}HDMI scaling:${RESET} building $pn with the patch failed; left as it was"
+PKGBUILD_END
+    # (--nocheck: niri's test suite takes long and isn't what changed; no --needed: it's the
+    # installed version on purpose)
+    mkdir -p "$(dirname "$log")"
+    if ! (set -o pipefail; cd "$build" && makepkg -si --noconfirm --nocheck 2>&1 | tee "$log"); then
+        echo -e "  ${C_YELLOW}HDMI scaling:${RESET} building $pn with the patch failed; left as it was (the log: $log)"
     fi
     rm -rf "$build"
 }
