@@ -21,6 +21,7 @@ FaceBase {
         anchors.fill: parent
         anchors.margins: Math.max(10, Math.min(24, f.height * 0.06))
         lines: f.opt("lyricsLines", 2)
+        offset: Number(f.opt("lyricsOffset", 0)) || 0
         align: f.opt("lyricsAlignment", "left")
         sayMissing: f.opt("showNoLyrics", true)
         hasPlayer: !!f.p

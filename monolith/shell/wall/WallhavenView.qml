@@ -32,7 +32,10 @@ Item {
         return w > 0 ? w + "x" + h : "";
     }
 
-    property var results: []
+    // the pictures found so far. A ListModel that the next page is added to: it used to be a list
+    // made again with every page, and the grid went back to the top each time more came in
+    ListModel { id: results }
+    property var seen: ({})
     property int page: 0
     property int lastPage: 1
     property string phase: "idle"     // idle, loading, more (next page), done, error
@@ -53,7 +56,7 @@ Item {
     }
     function load(fresh) {
         if (fetch.running) return;
-        if (fresh) { page = 0; lastPage = 1; results = []; grid.contentY = 0; }
+        if (fresh) { page = 0; lastPage = 1; results.clear(); seen = {}; grid.contentY = 0; }
         if (page >= lastPage) return;
         phase = fresh ? "loading" : "more";
         fetch.command = ["curl", "-fsS", "--max-time", "20", "-A", "Monolith", url(page + 1)];
@@ -66,9 +69,13 @@ Item {
                 if (text.trim() === "") return;      // (failed: onExited says why)
                 try {
                     const d = JSON.parse(text);
-                    const seen = {};
-                    for (const r of wh.results) seen[r.id] = true;
-                    wh.results = wh.results.concat((d.data || []).filter(r => !seen[r.id] && /^[a-z0-9]+$/.test(r.id) && String(r.path).startsWith("https://w.wallhaven.cc/")));
+                    const seen = Object.assign({}, wh.seen);
+                    for (const r of (d.data || [])) {
+                        if (seen[r.id] || !/^[a-z0-9]+$/.test(r.id) || !String(r.path).startsWith("https://w.wallhaven.cc/")) continue;
+                        seen[r.id] = true;
+                        results.append({ wid: r.id, path: String(r.path), thumb: r.thumbs ? String(r.thumbs.large || "") : "", resolution: String(r.resolution || "") });
+                    }
+                    wh.seen = seen;
                     wh.page = d.meta ? d.meta.current_page : wh.page + 1;
                     wh.lastPage = d.meta ? d.meta.last_page : wh.page;
                     wh.phase = "done";
@@ -85,7 +92,7 @@ Item {
             wh.error = code === 22 ? "Wallhaven is busy or limiting searches. Try again in a minute." : "Couldn't reach Wallhaven. Check your connection.";
         }
     }
-    onActiveChanged: if (active && results.length === 0 && phase !== "loading") load(true)
+    onActiveChanged: if (active && results.count === 0 && phase !== "loading") load(true)
 
     // ── downloads: one at a time, in the order asked ──
     property var queue: []
@@ -181,7 +188,7 @@ Item {
         cellHeight: cellWidth * 0.62
         cacheBuffer: Math.max(0, height)
         boundsBehavior: Flickable.StopAtBounds
-        model: wh.results
+        model: results
         // near the end: the next page
         onContentYChanged: if (wh.phase === "done" && contentHeight > 0 && contentY + height > contentHeight - cellHeight * 1.5) wh.load(false)
         footer: Item {
@@ -194,9 +201,13 @@ Item {
         }
         delegate: Item {
             id: cell
-            required property var modelData
+            required property string wid
+            required property string path
+            required property string thumb
+            required property string resolution
             required property int index
-            readonly property string st: wh.downloads[modelData.id] || ""
+            readonly property var pic: ({ id: wid, path: path })
+            readonly property string st: wh.downloads[wid] || ""
             width: grid.cellWidth
             height: grid.cellHeight
             ClippingRectangle {
@@ -207,7 +218,7 @@ Item {
                 color: Theme.container
                 Image {
                     anchors.fill: parent
-                    source: cell.modelData.thumbs ? cell.modelData.thumbs.large : ""
+                    source: cell.thumb
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: true
@@ -222,19 +233,19 @@ Item {
                     anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 10
                     width: res.implicitWidth + 16; height: 24; radius: Theme.corner(height)
                     color: Qt.rgba(0, 0, 0, 0.55)
-                    Label { id: res; anchors.centerIn: parent; text: String(cell.modelData.resolution || "").replace("x", " × "); color: "white"; font.pixelSize: Theme.sizeSmall - 1 }
+                    Label { id: res; anchors.centerIn: parent; text: cell.resolution.replace("x", " × "); color: "white"; font.pixelSize: Theme.sizeSmall - 1 }
                 }
             }
             HoverHandler { id: hov; cursorShape: Qt.PointingHandCursor }
             // anywhere on it: download and put it on
-            TapHandler { onTapped: wh.download(cell.modelData) }
+            TapHandler { onTapped: wh.download(cell.pic) }
             // the download button, bottom right: a spinner while it comes, a tick once it's on
             Pressable {
                 anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 14
                 width: 40; height: 40
                 color: cell.st === "done" ? Theme.accent : cell.st === "failed" ? Theme.danger : Qt.rgba(0, 0, 0, 0.6)
                 opacity: hov.hovered || cell.st !== "" ? 1 : 0.85
-                onClicked: wh.download(cell.modelData)
+                onClicked: wh.download(cell.pic)
                 Icon {
                     anchors.centerIn: parent; size: 22
                     name: cell.st === "loading" ? "progress_activity" : cell.st === "done" ? "check" : cell.st === "failed" ? "refresh" : "download"
@@ -250,7 +261,7 @@ Item {
     Empty {
         anchors.centerIn: grid
         width: grid.width
-        visible: wh.results.length === 0
+        visible: results.count === 0
         spinning: wh.phase === "loading"
         icon: wh.phase === "loading" ? "progress_activity" : wh.phase === "error" ? "cloud_off" : "image_search"
         title: wh.phase === "loading" ? "Searching Wallhaven…" : wh.phase === "error" ? "Wallhaven didn't answer" : "Nothing found"

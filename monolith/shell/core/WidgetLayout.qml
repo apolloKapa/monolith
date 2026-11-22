@@ -197,7 +197,9 @@ Singleton {
             o.push(["lyricsStyle", "How lines come in", "choice", "scroll", [["scroll", "Scroll"], ["pop", "Pop"], ["slide", "Slide"], ["words", "Word by word"]]]);
         if (t === "media" && (id === "lyrics" || id === "simpleLyrics"))
             o.push(["lyricsLines", "Lines before and after", "slider", id === "lyrics" ? 2 : 1, [0, 4, 1]], ["lyricsAlignment", "Alignment", "choice", "left", [["left", "Left"], ["center", "Centre"], ["right", "Right"]]],
-                   ["showNoLyrics", "Say when there are no lyrics", "toggle", true]);
+                   ["showNoLyrics", "Say when there are no lyrics", "toggle", true],
+                   // (the player can say where it is before you hear it: the audio's delay)
+                   ["lyricsOffset", "Timing: later (+) or earlier (−), seconds", "slider", 0, [-3, 3, 0.1]]);
         if (t === "media" && id === "full")
             o.push(["showBars", "Visualiser behind it", "toggle", true], ["continuous", "Smooth visualiser", "toggle", false]);
         if (t === "clock" && (id === "analog" || id === "materialAnalog" || id === "lumen"))

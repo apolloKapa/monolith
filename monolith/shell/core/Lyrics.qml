@@ -80,9 +80,11 @@ Singleton {
         running: ly.timing && ly.player.isPlaying
         onTriggered: ly.now = ly.base + (Date.now() - ly.baseAt) / 1000 * (ly.player.rate || 1)
     }
-    readonly property int currentIndex: {
+    readonly property int currentIndex: indexAt(now)
+    // the line being sung at p seconds into the song (a quarter of a second early, so the move to it
+    // lands on time). A widget's own Timing setting asks at now plus or minus that
+    function indexAt(p) {
         if (!player || lines.length === 0) return -1;
-        const p = now;
         let i = -1;
         for (let k = 0; k < lines.length; k++) { if (lines[k].t <= p + 0.25) i = k; else break; }
         return i;
@@ -152,7 +154,17 @@ Singleton {
                 times.push(Number(m[1]) * 60 + Number(m[2].replace(":", ".")));
                 rest = rest.slice(m[0].length);
             }
-            for (const t of times) out.push({ t: t, text: rest.trim() });
+            // word times inside the line ("enhanced" LRC: <00:12.34>word): kept for word by word, and
+            // taken out of the text
+            const words = [];
+            const tag = /<(\d+):(\d+(?:[.:]\d+)?)>([^<]*)/g;
+            let w;
+            while ((w = tag.exec(rest))) {
+                const txt = w[3];
+                if (txt.trim() !== "") words.push({ t: Number(w[1]) * 60 + Number(w[2].replace(":", ".")), text: txt.trim(), space: /\s$/.test(txt) });
+            }
+            const text = rest.replace(/<\d+:\d+(?:[.:]\d+)?>/g, "").replace(/\s+/g, " ").trim();
+            for (const t of times) out.push(words.length && times.length === 1 ? { t: t, text: text, words: words } : { t: t, text: text });
         }
         return out.sort((a, b) => a.t - b.t);
     }

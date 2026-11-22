@@ -177,8 +177,18 @@ install_live_wallpapers() {
         mapfile -t rows < <(printf '%s\n' "${rows[@]}" | shuf -n "$want")
     fi
 
-    local total=${#rows[@]} count=0 failed=0 row name size sum dest
-    for row in "${rows[@]}"; do
+    fetch_live_wallpapers "$base" "$live_dir" "${rows[@]}"
+}
+
+# Downloads live wallpapers (rows "name<TAB>size<TAB>sha256") from $1 into $2. The ones that fail
+# are noted in $2/.monolith-retry (the address on its first line), and the installer's Update
+# downloads them then (retry_live_wallpapers). It used to say "try again with Update", but Update
+# skips the wallpapers, so they never came.
+fetch_live_wallpapers() {
+    local base="$1" live_dir="$2"; shift 2
+    local retry="$live_dir/.monolith-retry"
+    local total=$# count=0 failed=() row name size sum dest
+    for row in "$@"; do
         IFS=$'\t' read -r name size sum <<< "$row"
         dest="$live_dir/$name"
         count=$((count + 1))
@@ -191,9 +201,32 @@ install_live_wallpapers() {
             mv -f "$dest.part" "$dest"
         else
             rm -f "$dest.part"
-            failed=$((failed + 1))
+            failed+=("$row")
         fi
     done
     echo ""
-    [ "$failed" -eq 0 ] || echo -e "  ${C_YELLOW}live wallpapers:${RESET} $failed couldn't be downloaded; try again with the installer's Update"
+    if [ "${#failed[@]}" -eq 0 ]; then
+        rm -f "$retry"
+    else
+        { printf 'base\t%s\n' "$base"; printf '%s\n' "${failed[@]}"; } > "$retry"
+        echo -e "  ${C_YELLOW}live wallpapers:${RESET} ${#failed[@]} couldn't be downloaded; the next Update (monolith installer --update) tries them again"
+    fi
+}
+
+# Update: the live wallpapers an earlier install couldn't download, downloaded now
+retry_live_wallpapers() {
+    local live_dir retry base rows=() name size sum
+    live_dir="$(get_wallpaper_dir)/Live"
+    retry="$live_dir/.monolith-retry"
+    [ -s "$retry" ] || return 0
+    command -v curl >/dev/null 2>&1 || return 0
+    base=$(head -n 1 "$retry" | cut -f2)
+    [[ "$base" =~ ^https://[^[:space:]]+$ ]] || { rm -f "$retry"; return 0; }
+    while IFS=$'\t' read -r name size sum; do
+        [[ -n "$name" && "$name" != */* && "$name" != .* && "$size" =~ ^[0-9]+$ && "$sum" =~ ^[0-9a-f]{64}$ ]] || continue
+        rows+=("$name"$'\t'"$size"$'\t'"$sum")
+    done < <(tail -n +2 "$retry")
+    [ "${#rows[@]}" -gt 0 ] || { rm -f "$retry"; return 0; }
+    echo -e "\n\e[36m[ INFO ]\e[0m Downloading the live wallpapers that didn't come last time"
+    fetch_live_wallpapers "$base" "$live_dir" "${rows[@]}"
 }

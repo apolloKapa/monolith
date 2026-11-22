@@ -1,0 +1,107 @@
+--- a/src/backend/drm/impl/Atomic.cpp	2026-11-01 20:07:09.000000000 +0200
++++ b/src/backend/drm/impl/Atomic.cpp	2026-11-22 17:30:52.270713306 +0200
+@@ -8,6 +8,10 @@
+ #include <sys/mman.h>
+ #include <sstream>
+ #include <optional>
++#include <fstream>
++#include <cstdlib>
++#include <functional>
++#include <algorithm>
+ #include "Shared.hpp"
+ #include "aquamarine/output/Output.hpp"
+ 
+@@ -190,6 +194,77 @@
+     add(plane->id, plane->props.values.crtc_y, (uint64_t)(int64_t)pos.y);
+ }
+ 
++
++// HDMI scaling (underscan) for TVs that cut the edges off (overscan): the borders the GPU puts
++// around the picture, per connector, from $XDG_CONFIG_HOME/aquamarine/underscan, one line each:
++//     HDMI-A-1 48 27        (name, horizontal border, vertical border, in pixels)
++// Set with the connector's other properties when its mode is set (never per frame), on drivers
++// that offer it (amdgpu and radeon: "underscan", "underscan hborder", "underscan vborder").
++// A connector not listed, or listed with 0 0, has it off. (Monolith patch)
++static void underscanFor(int fd, const std::string& name, uint32_t connectorID, const std::function<void(uint32_t, uint64_t)>& set, std::string& said) {
++    long        hb = 0, vb = 0;
++    std::string path;
++    if (const char* x = getenv("XDG_CONFIG_HOME"); x && *x)
++        path = std::string(x) + "/aquamarine/underscan";
++    else if (const char* h = getenv("HOME"); h && *h)
++        path = std::string(h) + "/.config/aquamarine/underscan";
++    if (!path.empty()) {
++        std::ifstream f(path);
++        std::string   n;
++        long          a = 0, b = 0;
++        while (f >> n >> a >> b) {
++            if (n == name) {
++                hb = a;
++                vb = b;
++            }
++        }
++    }
++
++    drmModeObjectProperties* props = drmModeObjectGetProperties(fd, connectorID, DRM_MODE_OBJECT_CONNECTOR);
++    if (!props)
++        return;
++    uint32_t pOn = 0, pH = 0, pV = 0;
++    uint64_t on = 0, off = 0, hMax = 128, vMax = 128;
++    bool     haveOn = false, haveOff = false;
++    for (uint32_t i = 0; i < props->count_props; i++) {
++        drmModePropertyRes* p = drmModeGetProperty(fd, props->props[i]);
++        if (!p)
++            continue;
++        if (!strcmp(p->name, "underscan")) {
++            pOn = p->prop_id;
++            for (int e = 0; e < p->count_enums; e++) {
++                if (!strcmp(p->enums[e].name, "on")) {
++                    on     = p->enums[e].value;
++                    haveOn = true;
++                } else if (!strcmp(p->enums[e].name, "off")) {
++                    off     = p->enums[e].value;
++                    haveOff = true;
++                }
++            }
++        } else if (!strcmp(p->name, "underscan hborder")) {
++            pH = p->prop_id;
++            if (p->count_values >= 2)
++                hMax = p->values[1];
++        } else if (!strcmp(p->name, "underscan vborder")) {
++            pV = p->prop_id;
++            if (p->count_values >= 2)
++                vMax = p->values[1];
++        }
++        drmModeFreeProperty(p);
++    }
++    drmModeFreeObjectProperties(props);
++    if (!pOn || !pH || !pV || !haveOn || !haveOff)
++        return;
++
++    const uint64_t H   = std::clamp<long>(hb, 0, (long)hMax);
++    const uint64_t V   = std::clamp<long>(vb, 0, (long)vMax);
++    const bool     USE = H > 0 || V > 0;
++    set(pH, USE ? H : 0);
++    set(pV, USE ? V : 0);
++    set(pOn, USE ? on : off);
++    said = std::format("underscan {}: {}x{}", USE ? "on" : "off", H, V);
++}
++
+ void Aquamarine::CDRMAtomicRequest::setConnector(Hyprutils::Memory::CSharedPointer<SDRMConnector> connector) {
+     conn = connector;
+ }
+@@ -249,6 +324,15 @@
+ 
+         if (connector->props.values.hdr_output_metadata && data.atomic.hdrd)
+             add(connector->id, connector->props.values.hdr_output_metadata, data.atomic.hdrBlob);
++
++        // HDMI scaling (Monolith patch): only with the connector's other properties
++        if (forceConnProps) {
++            std::string said;
++            underscanFor(
++                backend->gpu->fd, connector->szName, connector->id, [&](uint32_t prop, uint64_t val) { add(connector->id, prop, val); }, said);
++            if (!said.empty())
++                backend->log(AQ_LOG_DEBUG, std::format("drm: {} {}", connector->szName, said));
++        }
+     } else
+         addConnectorModeset(connector, data);
+ 

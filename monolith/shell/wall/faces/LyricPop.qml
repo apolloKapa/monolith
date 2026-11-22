@@ -14,8 +14,11 @@ Item {
     property color ink: "#ffffff"
     property real size: 16
     property real side: 4
+    // the widget's Timing setting, in seconds: more shows the lines later
+    property real offset: 0
+    readonly property real at: Lyrics.now - offset
     readonly property int hAlign: align === "center" ? Text.AlignHCenter : (align === "right" ? Text.AlignRight : Text.AlignLeft)
-    readonly property int cur: Lyrics.currentIndex
+    readonly property int cur: Lyrics.indexAt(at)
     readonly property bool anim: Theme.animOn
     function ms(v) { return anim ? Theme.ms(v) : 0; }
     clip: true
@@ -35,6 +38,10 @@ Item {
         const L = Lyrics.lines;
         shownAt = cur >= 0 && cur < L.length ? L[cur].t : 0;
         shownEnd = cur >= 0 && cur + 1 < L.length ? L[cur + 1].t : shownAt + 4;
+        // (worked out here, once everything about the line is known: as a binding it was made
+        // again as each of these changed, the first times with the last line's times, so words
+        // popped up at once, went, and came back)
+        words = makeWords(cur >= 0 && cur < L.length ? L[cur] : null);
         outAnim.restart();
         inAnim.restart();
     }
@@ -43,13 +50,40 @@ Item {
     Connections { target: Lyrics; function onLinesChanged() { lp.shownIndex = -2; lp.swap(true); } }
     Component.onCompleted: swap(true)
 
-    // ── word by word: when each word of the line comes in ──
-    readonly property var words: shownText === "" ? [] : shownText.split(/\s+/).filter(w => w !== "")
-    function wordAt(i) {
-        const n = Math.max(1, words.length);
-        // over most of the line's time, but no slower than about a third of a second a word
-        const span = Math.max(0.2, Math.min((shownEnd - shownAt) * 0.85, n * 0.35));
-        return shownAt + span * i / n;
+    // ── word by word ──
+    // The lyrics only say when each line starts (LRCLIB has no word times), so when the line's
+    // words are sung is worked out: in the order they come, each taking time for its length (a
+    // Japanese or Chinese character about as long as two or three letters), over about as long
+    // as it takes to sing them, never past the next line. Japanese and Chinese have no spaces:
+    // they come in a few characters at a time. A lyrics file with word times (enhanced LRC) is
+    // followed exactly.
+    function isCjk(ch) { return /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uff66-\uff9f\uac00-\ud7af]/.test(ch); }
+    function weightOf(t) { let w = 0; for (const ch of t) w += isCjk(ch) ? 2.5 : (/\s/.test(ch) ? 0 : 1); return Math.max(1, w); }
+    // [{ text, space (a space after it), t (when it comes in) }]
+    property var words: []
+    function makeWords(line) {
+        if (shownText === "") return [];
+        if (line && line.words && line.words.length) return line.words.map(w => ({ text: w.text, space: w.space !== false, t: w.t }));
+        const out = [];
+        for (const word of shownText.split(/\s+/).filter(x => x !== "")) {
+            const chars = Array.from(word);
+            if (!chars.some(isCjk)) { out.push({ text: word, space: true }); continue; }
+            // two characters at a time; punctuation stays with the characters before it
+            let cur = "";
+            for (let i = 0; i < chars.length; i++) {
+                cur += chars[i];
+                const next = chars[i + 1];
+                const lone = next !== undefined && /[、。，！？!?,.…・〜~」』）)】〉》]/.test(next);
+                if (Array.from(cur).length >= 2 && !lone && next !== undefined) { out.push({ text: cur, space: false }); cur = ""; }
+            }
+            if (cur !== "") out.push({ text: cur, space: true });
+        }
+        const total = out.reduce((a, w) => a + weightOf(w.text), 0);
+        const gap = Math.max(0.3, shownEnd - shownAt);
+        const span = Math.max(0.3, Math.min(gap * 0.9, total * 0.075));
+        let before = 0;
+        for (const w of out) { w.t = shownAt + span * before / total; before += weightOf(w.text); }
+        return out;
     }
 
     // where the text goes: left, centre or right, inside the margins
@@ -107,21 +141,22 @@ Item {
         property int rows: 1
         // (greedy wrapping, then each row moved for the alignment)
         function layout() {
-            const gap = lp.size * 0.3, lineH = lp.size * 1.3;
+            const space = lp.size * 0.3, lineH = lp.size * 1.3;
             const items = [];
             for (let i = 0; i < wordRep.count; i++) { const it = wordRep.itemAt(i); if (it) items.push(it); }
             const rowsOf = [[]];
             let x = 0;
+            const after = it => it.modelData.space ? space : 0;
             for (const it of items) {
                 const w = it.implicitWidth;
                 if (x > 0 && x + w > width) { rowsOf.push([]); x = 0; }
                 rowsOf[rowsOf.length - 1].push(it);
-                x += w + gap;
+                x += w + after(it);
             }
             rowsOf.forEach((row, r) => {
-                const used = row.reduce((s, it) => s + it.implicitWidth, 0) + gap * Math.max(0, row.length - 1);
+                const used = row.reduce((s, it, k) => s + it.implicitWidth + (k < row.length - 1 ? after(it) : 0), 0);
                 let px = lp.hAlign === Text.AlignHCenter ? (width - used) / 2 : (lp.hAlign === Text.AlignRight ? width - used : 0);
-                for (const it of row) { it.x = Math.round(px); it.y = Math.round(r * lineH); px += it.implicitWidth + gap; }
+                for (const it of row) { it.x = Math.round(px); it.y = Math.round(r * lineH); px += it.implicitWidth + after(it); }
             });
             rows = Math.max(1, rowsOf.length);
         }
@@ -132,10 +167,10 @@ Item {
             onCountChanged: Qt.callLater(wordBox.layout)
             Text {
                 id: wd
-                required property string modelData
+                required property var modelData
                 required property int index
                 renderType: Text.CurveRendering
-                text: modelData
+                text: modelData.text
                 color: lp.ink
                 font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: lp.size
                 onImplicitWidthChanged: Qt.callLater(wordBox.layout)
@@ -143,7 +178,7 @@ Item {
                 // it's made: the first word's moment has always come, and it just appeared)
                 property bool made: false
                 Component.onCompleted: made = true
-                readonly property bool on: made && Lyrics.now >= lp.wordAt(index)
+                readonly property bool on: made && lp.at >= modelData.t
                 opacity: on ? 1 : 0
                 scale: on ? 1 : 0.85
                 transform: Translate { y: wd.on ? 0 : lp.size * 0.55; Behavior on y { NumberAnimation { duration: lp.ms(380); easing.type: Easing.OutBack; easing.overshoot: 1.6 } } }

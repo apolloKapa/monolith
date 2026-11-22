@@ -19,6 +19,7 @@ FaceBase {
         lines: f.opt("lyricsLines", 1)
         align: f.opt("lyricsAlignment", "left")
         sayMissing: f.opt("showNoLyrics", true)
+        offset: Number(f.opt("lyricsOffset", 0)) || 0
         hasPlayer: !!f.player
         side: Math.max(12, f.width * 0.05)
         ink: "#ffffff"
@@ -30,6 +31,7 @@ FaceBase {
         anchors.fill: parent
         visible: !f.scrolling && !!f.player
         mode: f.style
+        offset: Number(f.opt("lyricsOffset", 0)) || 0
         align: f.opt("lyricsAlignment", "left")
         side: Math.max(12, f.width * 0.05)
         // (the line being sung, in the accent colour as in the scrolling column)

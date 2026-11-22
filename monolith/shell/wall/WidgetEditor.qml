@@ -793,9 +793,9 @@ PanelWindow {
                                 from: on ? oc.modelData[4][0] : 0; to: on ? oc.modelData[4][1] : 1
                                 step: on ? oc.modelData[4][2] : 1
                                 readonly property bool pct: oc.modelData[0] === "opacity" || oc.modelData[0] === "blurStrength"
-                                decimals: pct ? 2 : 0
+                                decimals: pct ? 2 : (oc.modelData[0] === "lyricsOffset" ? 1 : 0)
                                 factor: pct ? 100 : 1
-                                unit: pct ? "%" : (oc.modelData[0] === "lineThickness" || oc.modelData[0] === "radius" ? "px" : "")
+                                unit: pct ? "%" : (oc.modelData[0] === "lineThickness" || oc.modelData[0] === "radius" ? "px" : (oc.modelData[0] === "lyricsOffset" ? " s" : ""))
                                 // Rounding not set yet: the look's own (shown as the style's corner size)
                                 value: oc.modelData[0] === "radius" && Number(oc.val) < 0 ? Math.round(Theme.corner(80, 12)) : Number(oc.val)
                                 onMoved: v => ed.setOption(wrap.modelData.id, oc.modelData[0], v)

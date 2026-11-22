@@ -18,9 +18,11 @@ Item {
     property real inactiveOpacity: 0.7
     property real size: 16
     property real side: 4
+    // the widget's Timing setting, in seconds: more shows the lines later
+    property real offset: 0
     readonly property real lineH: Math.max(18, size * 1.4)
     readonly property real gap: Math.max(2, size * 0.25)
-    readonly property int cur: Lyrics.currentIndex
+    readonly property int cur: Lyrics.indexAt(Lyrics.now - offset)
     readonly property bool have: Lyrics.lines.length > 0
     readonly property int hAlign: align === "center" ? Text.AlignHCenter : (align === "right" ? Text.AlignRight : Text.AlignLeft)
     clip: true

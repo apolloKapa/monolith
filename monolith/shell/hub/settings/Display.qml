@@ -327,12 +327,27 @@ ColumnLayout {
                         Timer { id: scaleLater; property real v: 1; interval: 700; function go(x) { v = x; restart(); } onTriggered: sec.put(card.o, "scale", v.toFixed(2)) }
                     }
                 }
-                // HDMI scaling (a TV cutting off the edges): the GPU's underscan, which neither
-                // Hyprland nor niri lets anything set on Linux, so this says where it's fixed
+                // HDMI scaling (a TV cutting off the edges, its overscan): the GPU draws the picture
+                // smaller, with a border, as Windows' HDMI scaling does. Hyprland can't on its own:
+                // it takes aquamarine with Monolith's underscan patch (monolith/patches), which
+                // reads the borders when the screen's mode is set, so a change turns the screen off
+                // and on (a moment of black). Without the patch, or on niri, it says what to do
                 SettingRow {
+                    id: hdmiRow
+                    readonly property bool can: Niri.hyprland && card.o.underscan_ok === true && card.o.underscan_max > 0
                     show: card.on && /^HDMI/.test(card.o.name)
                     icon: "fit_screen"; title: "HDMI scaling"
-                    desc: "Edges cut off on a TV? The TV is zooming in (overscan), and on Linux only the TV can turn that off (Hyprland and niri can't shrink the picture the way Windows' HDMI scaling does). On the TV: Samsung, Picture Size → Fit to Screen (or 16:9 and Screen Fit); LG, Just Scan; Sony, Display Area → Full Pixel. Renaming the TV's input to \"PC\" also stops it on many TVs."
+                    desc: can ? "Makes the picture smaller so a TV that zooms in shows the edges. The screen goes dark for a moment when it changes"
+                        : !Niri.hyprland ? "Edges cut off on a TV? niri can't shrink the picture: turn the zoom off on the TV (Samsung: Picture Size → Fit to Screen; LG: Just Scan; Sony: Full Pixel)"
+                        : "Edges cut off on a TV? This needs Hyprland's display library with Monolith's HDMI scaling patch (see monolith/patches/README.md). Until then: on the TV, Samsung: Picture Size → Fit to Screen; LG: Just Scan; Sony: Full Pixel"
+                    NumberBox {
+                        visible: hdmiRow.can
+                        from: 0; to: Math.max(0.5, card.o.underscan_max || 0); step: 0.5; decimals: 1; unit: "%"
+                        value: Number(card.o.underscan || 0)
+                        onMoved: v => underLater.go(v)
+                        // (put in once you've stopped: every step turns the screen off and on)
+                        Timer { id: underLater; property real v: 0; interval: 900; function go(x) { v = x; restart(); } onTriggered: sec.put(card.o, "underscan", v.toFixed(1)) }
+                    }
                 }
                 // the same picture as another screen (a TV or projector beside your monitor)
                 SettingRow {

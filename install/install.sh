@@ -164,6 +164,9 @@ fi
 if [ "$WALLPAPERS" != none ]; then
     step "Wallpapers"
     install_wallpapers "$([ "$WALLPAPERS" = full ] && echo true || echo false)"
+else
+    # (an update: live wallpapers that couldn't be downloaded before)
+    retry_live_wallpapers || true
 fi
 
 step "Settings"
