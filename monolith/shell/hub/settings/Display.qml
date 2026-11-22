@@ -43,7 +43,18 @@ ColumnLayout {
             }
         }
     }
-    Timer { id: requery; interval: 1200; onTriggered: query.running = true }
+    Timer { id: requery; interval: 1200; onTriggered: { query.running = true; if (!Niri.hyprland) usRead.running = true; } }
+    // HDMI scaling on niri (niri with Monolith's patch; scripts/underscan.py): whether it's patched,
+    // and each screen's setting. (On Hyprland, hypr_monitors.py says both, with the rest)
+    readonly property string usScript: Qt.resolvedUrl("../../scripts/underscan.py").toString().replace("file://", "")
+    property var niriUs: ({ patched: false, outputs: {} })
+    Process {
+        id: usRead
+        running: !Niri.hyprland
+        command: ["python3", sec.usScript, "read"]
+        stdout: StdioCollector { onStreamFinished: { try { sec.niriUs = JSON.parse(text); } catch (e) {} } }
+    }
+    Process { id: usSet; onExited: requery.restart() }
     Connections { target: NiriConf; function onChanged() { requery.restart(); } }
 
     function block(o) { return "output " + NiriConf.quote(o.name); }
@@ -328,25 +339,36 @@ ColumnLayout {
                     }
                 }
                 // HDMI scaling (a TV cutting off the edges, its overscan): the GPU draws the picture
-                // smaller, with a border, as Windows' HDMI scaling does. Hyprland can't on its own:
-                // it takes aquamarine with Monolith's underscan patch (monolith/patches), which
-                // reads the borders when the screen's mode is set, so a change turns the screen off
-                // and on (a moment of black). Without the patch, or on niri, it says what to do
+                // smaller, with a border, as Windows' HDMI scaling does. Neither compositor can on its
+                // own: it takes Hyprland's aquamarine, or niri, with Monolith's underscan patch
+                // (monolith/patches; the installer builds it), which reads the borders as a screen is
+                // turned on, so a change turns the screen off and on (a moment of black). Without the
+                // patch it says what to do
                 SettingRow {
                     id: hdmiRow
-                    readonly property bool can: Niri.hyprland && card.o.underscan_ok === true && card.o.underscan_max > 0
+                    readonly property var us: sec.niriUs.outputs ? sec.niriUs.outputs[card.o.name] : null
+                    readonly property real most: Niri.hyprland ? Number(card.o.underscan_max || 0) : (us ? Number(us.max || 0) : 0)
+                    readonly property real now: Niri.hyprland ? Number(card.o.underscan || 0) : (us ? Number(us.pct || 0) : 0)
+                    readonly property bool can: (Niri.hyprland ? card.o.underscan_ok === true : sec.niriUs.patched === true) && most > 0
                     show: card.on && /^HDMI/.test(card.o.name)
                     icon: "fit_screen"; title: "HDMI scaling"
                     desc: can ? "Makes the picture smaller so a TV that zooms in shows the edges. The screen goes dark for a moment when it changes"
-                        : !Niri.hyprland ? "Edges cut off on a TV? niri can't shrink the picture: turn the zoom off on the TV (Samsung: Picture Size → Fit to Screen; LG: Just Scan; Sony: Full Pixel)"
-                        : "Edges cut off on a TV? This needs Hyprland's display library with Monolith's HDMI scaling patch (see monolith/patches/README.md). Until then: on the TV, Samsung: Picture Size → Fit to Screen; LG: Just Scan; Sony: Full Pixel"
+                        : "Edges cut off on a TV? This needs " + (Niri.hyprland ? "Hyprland's display library" : "niri") + " with Monolith's HDMI scaling patch: turn on \"HDMI scaling\" in the installer's menu (monolith installer). Until then, on the TV: Samsung, Picture Size → Fit to Screen; LG, Just Scan; Sony, Full Pixel"
                     NumberBox {
                         visible: hdmiRow.can
-                        from: 0; to: Math.max(0.5, card.o.underscan_max || 0); step: 0.5; decimals: 1; unit: "%"
-                        value: Number(card.o.underscan || 0)
+                        from: 0; to: Math.max(0.5, hdmiRow.most); step: 0.5; decimals: 1; unit: "%"
+                        value: hdmiRow.now
                         onMoved: v => underLater.go(v)
                         // (put in once you've stopped: every step turns the screen off and on)
-                        Timer { id: underLater; property real v: 0; interval: 900; function go(x) { v = x; restart(); } onTriggered: sec.put(card.o, "underscan", v.toFixed(1)) }
+                        Timer {
+                            id: underLater; property real v: 0; interval: 900
+                            function go(x) { v = x; restart(); }
+                            onTriggered: {
+                                if (Niri.hyprland) { sec.put(card.o, "underscan", v.toFixed(1)); return; }
+                                usSet.command = ["python3", sec.usScript, "set", card.o.name, v.toFixed(1)];
+                                usSet.running = true;
+                            }
+                        }
                     }
                 }
                 // the same picture as another screen (a TV or projector beside your monitor)

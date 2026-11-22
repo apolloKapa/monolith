@@ -1,0 +1,85 @@
+--- a/src/backend/tty.rs	2026-04-25 14:19:21.000000000 +0300
++++ b/src/backend/tty.rs	2026-11-22 17:38:09.094473510 +0200
+@@ -1308,6 +1308,12 @@
+                 Err(err) => debug!("couldn't reset HDR properties: {err:?}"),
+             }
+ 
++            // HDMI scaling (Monolith patch)
++            match set_underscan(&props, &connector_name) {
++                Ok(()) => (),
++                Err(err) => debug!("couldn't set underscan: {err:?}"),
++            }
++
+             match get_panel_orientation(&props) {
+                 Ok(x) => orientation = Some(x),
+                 Err(err) => {
+@@ -3293,6 +3299,69 @@
+     Ok(())
+ }
+ 
++// HDMI scaling (underscan) for TVs that cut the edges off (overscan): the borders the GPU puts
++// around the picture, per connector, from $XDG_CONFIG_HOME/aquamarine/underscan, one line each:
++//     HDMI-A-1 48 27        (name, horizontal border, vertical border, in pixels)
++// (the file Monolith's Displays settings write; its aquamarine patch reads the same one on
++// Hyprland). Set as the connector comes on, before its mode is; a connector not listed, or
++// listed with 0 0, has it off. Only on drivers that offer it (amdgpu and radeon). (Monolith patch)
++fn set_underscan(props: &ConnectorProperties, name: &str) -> anyhow::Result<()> {
++    let (on_info, on_now) = props.find(c"underscan")?;
++    let (h_info, h_now) = props.find(c"underscan hborder")?;
++    let (v_info, v_now) = props.find(c"underscan vborder")?;
++
++    let property::ValueType::Enum(enums) = on_info.value_type() else {
++        bail!("wrong property type")
++    };
++    let (_, values) = enums.values();
++    let find = |want: &std::ffi::CStr| values.iter().find(|e| e.name() == want).map(|e| e.value());
++    let (Some(on), Some(off)) = (find(c"on"), find(c"off")) else {
++        bail!("no on/off for underscan")
++    };
++    let max = |info: &property::Info| match info.value_type() {
++        property::ValueType::UnsignedRange(_, hi) => hi,
++        _ => 128,
++    };
++
++    let path = match std::env::var_os("XDG_CONFIG_HOME").filter(|x| !x.is_empty()) {
++        Some(dir) => std::path::PathBuf::from(dir).join("aquamarine/underscan"),
++        None => match std::env::var_os("HOME") {
++            Some(home) => std::path::PathBuf::from(home).join(".config/aquamarine/underscan"),
++            None => bail!("no home"),
++        },
++    };
++    let (mut h, mut v) = (0u64, 0u64);
++    if let Ok(text) = std::fs::read_to_string(&path) {
++        for line in text.lines() {
++            let mut it = line.split_whitespace();
++            if let (Some(n), Some(a), Some(b)) = (it.next(), it.next(), it.next()) {
++                if n == name {
++                    h = a.parse().unwrap_or(0);
++                    v = b.parse().unwrap_or(0);
++                }
++            }
++        }
++    }
++    let h = h.min(max(h_info));
++    let v = v.min(max(v_info));
++    let use_it = h > 0 || v > 0;
++
++    let set = |info: &property::Info, now: property::RawValue, want: property::RawValue| {
++        if now == want {
++            return Ok(());
++        }
++        props
++            .device
++            .set_property(props.connector, info.handle(), want)
++            .context("error setting property")
++    };
++    set(h_info, *h_now, if use_it { h } else { 0 })?;
++    set(v_info, *v_now, if use_it { v } else { 0 })?;
++    set(on_info, *on_now, if use_it { on } else { off })?;
++    debug!("{name}: underscan {} {h}x{v}", if use_it { "on" } else { "off" });
++    Ok(())
++}
++
+ fn is_vrr_capable(device: &DrmDevice, connector: connector::Handle) -> Option<bool> {
+     let (_, info, value) = find_drm_property(device, connector, "vrr_capable")?;
+     info.value_type().convert_value(value).as_boolean()

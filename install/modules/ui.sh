@@ -463,6 +463,9 @@ run_installer_ui() {
             labels+=("niri config (keybinds, displays, workspaces) $niri_label")
             actions+=(niri)
         fi
+        # (a rebuild of Hyprland's display library, or of niri, with Monolith's patch: modules/hdmi.sh)
+        labels+=("HDMI scaling for TVs that cut the edges off $(on_off "$OPT_HDMI") ${DIM}(rebuilds $(hdmi_target) with a patch)${RESET}")
+        actions+=(hdmi)
         labels+=("Login screen (SDDM theme) $(on_off "$OPT_SDDM")" "Wallpapers $wp_label")
         actions+=(sddm wallpapers)
         if [ "$INSTALL_STATE" = current ]; then
@@ -502,6 +505,7 @@ run_installer_ui() {
             desktop) DESKTOP=$([ "$DESKTOP" = hyprland ] && echo niri || echo hyprland)
                      cursor=0; printf "\033[2J\033[H" ;;
             hyprkeys) HYPR_KEYS=$([ "$HYPR_KEYS" = monolith ] && echo mine || echo monolith) ;;
+            hdmi) OPT_HDMI=$([ "$OPT_HDMI" = true ] && echo false || echo true) ;;
             packages) show_package_overview ;;
             keybind_apps) OPT_KEYBIND_APPS=$([ "$OPT_KEYBIND_APPS" = true ] && echo false || echo true) ;;
             niri) NIRI_MODE=$([ "$NIRI_MODE" = replace ] && echo keep || echo replace) ;;

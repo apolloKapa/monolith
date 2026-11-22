@@ -81,6 +81,7 @@ source "$MODULES_DIR/sddm.sh"
 source "$MODULES_DIR/wallpapers.sh"
 source "$MODULES_DIR/migrate.sh"
 source "$MODULES_DIR/hyprland.sh"
+source "$MODULES_DIR/hdmi.sh"
 source "$MODULES_DIR/ui.sh"
 source "$MODULES_DIR/strings.sh"
 
@@ -95,6 +96,10 @@ DESKTOP="$(guess_desktop)"
 # Hyprland's keys: what Monolith set up last time, else your own
 HYPR_KEYS="$(hypr_keys_saved)"; HYPR_KEYS="${HYPR_KEYS:-mine}"
 
+
+# HDMI scaling (the compositor's display code patched): what was chosen before, else off
+OPT_HDMI=false
+{ hdmi_wanted || hdmi_patched; } && OPT_HDMI=true
 
 if [ "$UPDATE_ONLY" = true ]; then
     NIRI_MODE=keep
@@ -111,6 +116,7 @@ fi
 STEP_TOTAL=5
 [ "$OPT_SDDM" = true ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 [ "$WALLPAPERS" != none ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
+[ "$OPT_HDMI" = true ] && ! hdmi_patched && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 
 # the password once, up front: sudo forgets it after a few minutes, and a long build (Portage can
 # take hours) left the next package asking again, halfway through, maybe with no one there. Kept
@@ -152,6 +158,14 @@ upgrade_rofi_binds "$NIRI_DIR/config/keybinds.kdl"
 upgrade_local_bin_commands
 # keeping your own niri config: your keys stay, another shell's become Monolith's
 [ "$NIRI_MODE" = keep ] && merge_niri_keys "$PROJECT_ROOT"
+fi
+# HDMI scaling (aquamarine on Hyprland, niri on niri, patched): chosen in the menu, or patched
+# again after an upgrade replaced it
+if [ "$OPT_HDMI" = true ]; then
+    hdmi_patched || step "HDMI scaling"
+    install_hdmi_scaling "$PROJECT_ROOT"
+elif [ -f "$HDMI_STATE_FILE" ]; then
+    echo off > "$HDMI_STATE_FILE"
 fi
 # an older config (the classic shell's monolithd, its zoom script) moves over to this shell
 "$BIN_DIR/monolith" migrate
