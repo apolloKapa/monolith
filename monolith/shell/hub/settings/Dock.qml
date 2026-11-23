@@ -51,6 +51,11 @@ ColumnLayout {
         Dropdown { opts: [["all", "All of them"], ["screen", "On this screen"], ["workspace", "On this workspace"]]; value: Store.get("dock.runningScope", "all"); onPicked: v => Store.set("dock.runningScope", v) }
     }
     SettingRow {
+        key: "dock.ownScreen"; def: false;
+        icon: "desktop_windows"; title: "Open apps only on their screen"; desc: "With the dock on several screens, an open app leaves the docks of the screens it isn't on"
+        Toggle { checked: Store.get("dock.ownScreen", false) === true; onToggled: on => Store.set("dock.ownScreen", on) }
+    }
+    SettingRow {
         key: "dock.maxApps"; def: 0;
         icon: "apps"; title: "Most apps shown"; desc: "0: no limit"
         NumberBox { from: 0; to: 40; slideTo: 20; zeroText: "All"; value: Number(Store.get("dock.maxApps", 0)); onMoved: v => Store.set("dock.maxApps", v) }

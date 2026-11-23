@@ -16,6 +16,7 @@
     },
     "deps": {
       "syncing": "Synchronizing and updating system packages (pacman -syyu)...",
+      "mirror_skipped": "The mirror {mirror} lists packages it doesn't have (it answers 404): leaving it out for this install.",
       "all_installed": "-> All packages are already installed! Skipping package download phase.",
       "missing_count": "-> Found {count} missing packages to install.",
       "installing_title": "Installing system packages and dependencies...",

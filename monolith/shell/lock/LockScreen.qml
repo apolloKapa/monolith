@@ -130,8 +130,8 @@ WlSessionLock {
                 item: WidgetLayout.fitted(modelData, surface.height)
                 width: implicitWidth
                 height: implicitHeight
-                x: Math.max(0, Math.min(modelData.x * surface.width, surface.width - width))
-                y: Math.max(0, Math.min(modelData.y * surface.height, surface.height - height))
+                x: Math.round(Math.max(0, Math.min(modelData.x * surface.width, surface.width - width)))
+                y: Math.round(Math.max(0, Math.min(modelData.y * surface.height, surface.height - height)))
                 opacity: k
                 scale: k > 0.999 ? 1 : Theme.popScale + (1 - Theme.popScale) * k   // (exactly 1 once in: 0.99999… resampled the clock and blurred it)
             }

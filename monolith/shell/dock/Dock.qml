@@ -185,9 +185,35 @@ PanelWindow {
         return out;
     }
     readonly property var items: dock.editing ? pinnedList.map(a => ({ id: a.id, name: a.name, icon: a.icon, pinned: true })) : allItems
+    // "Open apps only on their screen": with the dock on several screens, an app that's open
+    // shows only in the dock of the screen(s) its windows are on. An app that isn't open shows in
+    // every dock, and so does one whose windows are all on screens without a dock (it would
+    // otherwise be in none).
+    readonly property bool ownScreen: Store.get("dock.ownScreen", false) === true
+    // app id (lower case) -> true: open, and on other screens' docks only
+    readonly property var elsewhere: {
+        const out = {};
+        if (!ownScreen) return out;
+        const off = Store.get("dock.hiddenScreens", []) || [];
+        const docked = Quickshell.screens.map(s => s.name).filter(n => off.indexOf(n) === -1);
+        if (docked.length < 2 || docked.indexOf(dock.modelData.name) === -1) return out;
+        const outputOf = {};
+        for (const ws of Niri.workspaces) outputOf[ws.id] = ws.output;
+        const here = {};
+        for (const k in Niri.windows) {
+            const w = Niri.windows[k];
+            const id = (w.app_id || "").toLowerCase();
+            const o = outputOf[w.workspace_id];
+            if (id === "" || !o) continue;
+            if (o === dock.modelData.name) here[id] = true;
+            else if (docked.indexOf(o) !== -1) out[id] = true;
+        }
+        for (const id in here) delete out[id];
+        return out;
+    }
     readonly property var allItems: {
-        const pinned = pinnedList.map(a => ({ id: a.id, name: a.name, icon: a.icon, pinned: true }));
-        const known = pinned.map(p => p.id.toLowerCase());
+        const pinned = pinnedList.filter(a => !dock.elsewhere[(a.id || "").toLowerCase()]).map(a => ({ id: a.id, name: a.name, icon: a.icon, pinned: true }));
+        const known = pinnedList.map(p => p.id.toLowerCase());
         const extra = [];
         // open apps that aren't pinned (unless that's switched off): all of them, or only those on
         // this workspace or this screen
@@ -199,7 +225,7 @@ PanelWindow {
             if (scope === "workspace" && (!dock.activeWs || w.workspace_id !== dock.activeWs.id)) continue;
             if (scope === "screen" && wsIds.indexOf(w.workspace_id) === -1) continue;
             const id = (w.app_id || "").toLowerCase();
-            if (id === "" || known.indexOf(id) !== -1 || extra.find(e => e.id.toLowerCase() === id)) continue;
+            if (id === "" || known.indexOf(id) !== -1 || dock.elsewhere[id] || extra.find(e => e.id.toLowerCase() === id)) continue;
             const entry = DesktopEntries.byId(w.app_id);
             extra.push({ id: w.app_id, name: entry ? entry.name : w.app_id, icon: entry ? entry.icon : w.app_id, pinned: false });
         }

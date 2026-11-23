@@ -70,6 +70,7 @@ PanelWindow {
             clip: true
             contentHeight: grid.height
             interactive: contentHeight > height
+            SmoothWheel {}
             // keep the chosen one in view (more than 3 rows: it scrolls)
             readonly property real wantY: Math.floor(HyprSwitch.index / win.across) * (win.ph + 46 + win.gap)
             onWantYChanged: contentY = Math.max(0, Math.min(contentHeight - height, wantY - (height - win.ph - 46) / 2))

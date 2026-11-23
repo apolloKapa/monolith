@@ -41,9 +41,13 @@ Item {
 
     Loader {
         id: body
-        anchors.centerIn: parent
-        width: w.turn ? w.size[0] : w.width
-        height: w.turn ? w.size[1] : w.height
+        // On whole pixels, and a whole number of them: with a shadow it's drawn as a picture of
+        // itself, and one that's half a pixel off (or a fraction wider than its picture) comes
+        // out soft all over, text most of all.
+        width: Math.round(w.turn ? w.size[0] : w.width)
+        height: Math.round(w.turn ? w.size[1] : w.height)
+        x: Math.round((w.width - width) / 2)
+        y: Math.round((w.height - height) / 2)
         rotation: w.rot
         readonly property var ctx: w
         // its shadow (its own Shadow setting, else Settings → Effects → Shadows under widgets):
@@ -54,6 +58,8 @@ Item {
         // (sampled smoothly: a widget can be turned to any angle, and nearest-pixel sampling made
         // its turned edges and text jagged)
         layer.smooth: true
+        // (turned: its picture is made twice as big, so turning it doesn't soften it)
+        layer.textureSize: w.rot !== 0 ? Qt.size(Math.ceil(width * 2 * Screen.devicePixelRatio), Math.ceil(height * 2 * Screen.devicePixelRatio)) : Qt.size(0, 0)
         layer.effect: MultiEffect {
             shadowEnabled: true
             shadowColor: body.shadow === "glow" ? Qt.alpha(Theme.accent, 0.85) : Qt.alpha(Theme.shadowBase, body.shadow === "strong" ? 0.8 : 0.5)

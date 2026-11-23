@@ -245,7 +245,9 @@ case "$1" in
     edit-image) ipc capture editFile "$(realpath "$2")" ;;
     pin-image) ipc capture pinFile "$(realpath "$2")" ;;
     record) ipc tasks record "$([ "$2" = region ] && echo true || echo false)" ;;
-    set) ipc store set "$2" "$3" ;;
+    # (a leading space: quickshell's command line reads a value in [brackets] as a list of its
+    # own and takes the brackets off, so ["DP-2"] arrived as "DP-2" and [] as nothing)
+    set) case "$3" in \[*) ipc store set "$2" " $3" ;; *) ipc store set "$2" "$3" ;; esac ;;
     get) ipc store get "$2" ;;
     installer)
         shift

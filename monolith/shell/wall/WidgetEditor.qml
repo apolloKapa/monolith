@@ -443,8 +443,8 @@ PanelWindow {
             // itself while it lasts; bindings broken by a drag left it in the wrong place after a
             // turn, so the bar and the settings flew off with it)
             function home() {
-                x = Math.max(0, Math.min(modelData.x * ed.width, ed.width - width));
-                y = Math.max(0, Math.min(modelData.y * ed.height, ed.height - height));
+                x = Math.round(Math.max(0, Math.min(modelData.x * ed.width, ed.width - width)));
+                y = Math.round(Math.max(0, Math.min(modelData.y * ed.height, ed.height - height)));
             }
             onModelDataChanged: home()
             Component.onCompleted: home()

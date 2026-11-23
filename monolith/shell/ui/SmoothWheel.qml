@@ -59,9 +59,14 @@ WheelHandler {
         }
         event.accepted = true;
     }
+    // The glide to the new place is short and always the same length. It's how quickly a list
+    // answers the wheel, not a decoration, so it doesn't follow the theme's animation speed: at
+    // the default speed it took 200 ms a notch and the menus felt slow next to any app, and
+    // only a desktop with its animations sped up scrolled briskly. Animations off: no glide.
+    property int glideMs: 70
     property NumberAnimation anim: NumberAnimation {
         target: sw.flick
-        duration: Math.max(1, 200 * Theme.animScale)
+        duration: Theme.animOn ? sw.glideMs : 1
         easing.type: Easing.OutCubic
     }
 }

@@ -373,6 +373,9 @@ install_dependencies() {
         [[ $SAFE_JOBS -lt 1 ]] && SAFE_JOBS=1
         [[ $SAFE_JOBS -gt 4 ]] && SAFE_JOBS=4
 
+        # pacman: leave out a mirror that doesn't have the files, before the downloads start
+        if declare -f pm_prepare_downloads >/dev/null; then pm_prepare_downloads "${MISSING_PKGS[@]}" || true; fi
+
         if declare -f pm_install_batch >/dev/null; then
             pm_install_batch "${MISSING_PKGS[@]}"
             MISSING_PKGS=("${PM_BATCH_LEFT[@]}")

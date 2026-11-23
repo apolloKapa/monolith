@@ -111,14 +111,27 @@ def exec_target(e):
     return words[0] if words else ""
 
 
+def plain_launch(e):
+    """True when an entry just starts its program (Exec has nothing after it but %f/%F/%u/%U): not a shortcut
+    an app made to run something with it, like a launcher's per-game entries or a hidden "open with" entry"""
+    try:
+        words = shlex.split(e.get("Exec", ""))
+    except ValueError:
+        return False
+    return all(w in ("%f", "%F", "%u", "%U") for w in words[1:])
+
+
 def entries():
-    """file -> (entry path, entry) for every app entry that runs an AppImage"""
+    """file -> (entry path, entry) for every app entry that runs an AppImage; entries made here win"""
     out = {}
     for d in sorted(glob.glob(os.path.join(APPS, "*.desktop"))):
         e = read_desktop(d)
         t = exec_target(e)
-        if t and (MARK in e or t.lower().endswith(".appimage")):
-            out[os.path.realpath(os.path.expanduser(t))] = (d, e)
+        if not t or not (MARK in e or (t.lower().endswith(".appimage") and plain_launch(e))):
+            continue
+        key = os.path.realpath(os.path.expanduser(t))
+        if MARK in e or key not in out:
+            out[key] = (d, e)
     return out
 
 
