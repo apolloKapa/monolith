@@ -5,8 +5,10 @@ import Quickshell.Io
 import "../core"
 import "../ui"
 
-// Keys: your niri keybinds (from ~/.config/niri/config.kdl), the keys as chips and what they do;
-// the search field filters them.
+// Keys: your keybinds, the keys as chips and what they do; the search field filters them.
+// niri: from ~/.config/niri/config.kdl and the files it includes. Hyprland: from scripts/keys.py
+// (Monolith's keys, your own config's, whether hyprland.lua or hyprland.conf, and whatever else
+// Hyprland has bound).
 Page {
     id: page
     pageId: "keys"
@@ -18,8 +20,19 @@ Page {
     implicitHeight: 540
 
     // config.kdl and the files it includes (binds often live in their own file)
-    onCurrentChanged: if (current) readProc.running = true
-    Component.onCompleted: readProc.running = true
+    onCurrentChanged: if (current) page.read()
+    Component.onCompleted: page.read()
+    function read() { if (Niri.hyprland) hyprProc.running = true; else readProc.running = true; }
+    Process {
+        id: hyprProc
+        command: ["python3", Qt.resolvedUrl("../scripts/keys.py").toString().replace("file://", ""), "list", "--hyprland"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try { page.binds = (JSON.parse(text).items || []).map(i => ({ keys: i.label.replace(/ \+ /g, "+"), what: i.title })); }
+                catch (e) { page.binds = []; }
+            }
+        }
+    }
     Process {
         id: readProc
         command: ["sh", "-c", "d=\"${XDG_CONFIG_HOME:-$HOME/.config}/niri\"; cd \"$d\" && cat config.kdl $(grep -o 'include \"[^\"]*\"' config.kdl | cut -d'\"' -f2) 2>/dev/null"]
@@ -61,7 +74,7 @@ Page {
         visible: page.shown.length === 0
         icon: page.binds.length === 0 ? "keyboard" : "search_off"
         title: page.binds.length === 0 ? "No keybinds found" : "Nothing matches"
-        sub: page.binds.length === 0 ? "niri's keybinds file couldn't be read." : "Try fewer letters."
+        sub: page.binds.length === 0 ? (Niri.hyprland ? "Hyprland didn't report any keybinds." : "niri's keybinds file couldn't be read.") : "Try fewer letters."
     }
 
     GridView {

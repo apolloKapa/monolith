@@ -61,8 +61,12 @@ Column {
                 sourceComponent: IslandBar {
                     still: true
                     screenName: pv.scr ? pv.scr.name : ""
-                    x: Theme.fullBar ? 0 : Math.round((barBox.width - width) / 2)
-                    width: Theme.fullBar ? barBox.width : (Theme.barSpread ? Math.max(needWidth, isl.bodyW) : implicitWidth)
+                    // (as on the screen: too long for it, the row is drawn smaller to fit)
+                    maxLen: isl.bodyW
+                    x: Math.round((barBox.width - width) / 2)
+                    width: (Theme.fullBar ? barBox.width : (Theme.barSpread ? Math.max(needWidth, isl.bodyW) : implicitWidth)) / squeeze
+                    scale: squeeze
+                    transformOrigin: Item.Center
                 }
             }
         }

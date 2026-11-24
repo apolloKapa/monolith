@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import "../../core"
@@ -10,6 +11,10 @@ import "../../ui"
 Flow {
     id: fl
     spacing: 10
+    // (the page gives it its width: its five cards in a row mustn't make the page wider than the
+    // window, which cut the page's right side off on a smaller screen. Too narrow: they wrap)
+    Layout.preferredWidth: 1
+    Layout.minimumWidth: 1
     readonly property string wall: { const s = Quickshell.screens.find(x => x.name === Niri.focusedOutput) || Quickshell.screens[0]; const p = s ? Wall.pathFor(s.name) : ""; return Wall.isVideo(p) ? Wall.thumb(p) : p; }
 
     // what sits on a bar: a dot and a pill on the left, a pill in the middle, three dots on the

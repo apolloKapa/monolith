@@ -95,6 +95,9 @@ Item {
     // the longest the bar can be (the screen's room; 0: no limit). When the modules don't fit even
     // then, the visualiser gives up length (down to a few bars) instead of being drawn over
     property real maxLen: 0
+    // and when they still don't fit (a small screen, many modules), the whole row is drawn a little
+    // smaller so it fits, down to 72%, instead of its far end being cut off by the screen's edge
+    readonly property real squeeze: !vertical && maxLen > 0 && needWidth > maxLen + 0.5 ? Math.max(0.72, maxLen / needWidth) : 1
     property real visCap: 100000
     property real visNow: 0                 // the visualiser's length as drawn
     function settleVis() {

@@ -40,7 +40,31 @@ HEADERS = {
 }
 
 
+def running_config():
+    """The config file the running Hyprland loaded (its log says so), or None. With both a
+    hyprland.lua and a hyprland.conf around, only this tells which one Hyprland actually reads."""
+    sig = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE")
+    if not sig:
+        return None
+    for base in (os.environ.get("XDG_RUNTIME_DIR") or "/run/user/%d" % os.getuid(), "/tmp"):
+        log = os.path.join(base, "hypr", sig, "hyprland.log")
+        try:
+            with open(log, encoding="utf-8", errors="replace") as f:
+                head = f.read(200000)
+        except OSError:
+            continue
+        m = re.search(r"(?:Regular config at|[Uu]sing config(?: file)?:?|config file:?)\s+(\S+\.(?:lua|conf))\b", head)
+        if m:
+            return m.group(1)
+    return None
+
+
 def kind():
+    """lua or conf: what the running Hyprland loaded; else hyprland.lua if there is one (Hyprland
+    0.55+ prefers it), else hyprland.conf"""
+    loaded = running_config()
+    if loaded:
+        return "lua" if loaded.endswith(".lua") else "conf"
     return "lua" if os.path.exists(os.path.join(HYPR, "hyprland.lua")) or not os.path.exists(os.path.join(HYPR, "hyprland.conf")) else "conf"
 
 

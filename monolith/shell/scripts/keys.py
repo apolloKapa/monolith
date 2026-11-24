@@ -17,6 +17,7 @@ Hyprland: Monolith's ~/.config/hypr/monolith/keybinds file is edited, and the ch
 ~/.config/monolith/keys-hyprland.json, so an update (which writes that file again) keeps it. If
 Hyprland reports a new config error after a change, the change is undone.
 """
+import glob
 import json
 import os
 import re
@@ -406,9 +407,181 @@ def hypr_action(action, lua):
     return (lua_map if lua else conf_map).get(action.get("name"))
 
 
+# ── Hyprland: the keys in your own config (not Monolith's files), and what Hyprland has live ──
+# Someone running Hyprland with their own config (or another shell's) has their keys there, not
+# in Monolith's keybinds file: they're listed too, as yours (change them in that file).
+def hypr_config_files():
+    """Hyprland's main config and every file it pulls in (require/dofile in Lua, source = in a
+    classic config), Monolith's own folder left out (it's read on its own)."""
+    import hypr_files as hf
+    lua = hf.kind() == "lua"
+    main = hf.running_config() or hf.main_config()
+    found, seen = [], set()
+
+    def visit(p, depth):
+        p = os.path.realpath(os.path.expanduser(p))
+        if p in seen or depth > 6 or len(found) >= 80 or not os.path.isfile(p):
+            return
+        seen.add(p)
+        if p.startswith(os.path.realpath(hf.FOLDER) + os.sep):
+            return
+        try:
+            text = open(p, encoding="utf-8", errors="replace").read()
+        except OSError:
+            return
+        found.append((p, text))
+        base = os.path.dirname(p)
+        if lua:
+            for m in re.finditer(r"""\brequire\s*\(?\s*["']([^"']+)["']""", text):
+                mod = m.group(1).replace(".", "/")
+                for cand in (os.path.join(hf.HYPR, mod + ".lua"), os.path.join(hf.HYPR, mod, "init.lua")):
+                    visit(cand, depth + 1)
+            for m in re.finditer(r"""\bdofile\s*\(?\s*["']([^"']+)["']""", text):
+                visit(os.path.join(base, os.path.expanduser(m.group(1))), depth + 1)
+        else:
+            for m in re.finditer(r"^\s*source\s*=\s*(.+?)\s*$", text, re.M):
+                pat = os.path.join(base, os.path.expanduser(m.group(1)))
+                for f in sorted(glob.glob(pat)) or [pat]:
+                    visit(f, depth + 1)
+    visit(main, 0)
+    return found, lua
+
+
+def lua_calls(text, name):
+    """Each name("first", rest…) call in Lua source, however it's spread over lines: (first, rest)."""
+    out, i = [], 0
+    rx = re.compile(re.escape(name) + r'\s*\(\s*"((?:[^"\\]|\\.)*)"\s*,')
+    while True:
+        m = rx.search(text, i)
+        if not m:
+            return out
+        j, depth, q = m.end(), 1, None
+        while j < len(text) and depth:
+            c = text[j]
+            if q:
+                if c == "\\":
+                    j += 1
+                elif c == q:
+                    q = None
+            elif c in "\"'":
+                q = c
+            elif c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+            j += 1
+        out.append((m.group(1), text[m.end():j - 1].strip()))
+        i = j
+
+
+def conf_key(mods, key, variables):
+    mods = re.sub(r"\$(\w+)", lambda v: variables.get(v.group(1), v.group(0)), mods)
+    words = [w for w in re.split(r"[\s_+]+", mods.strip()) if w]
+    return " + ".join(words + [key.strip()])
+
+
+def hypr_config_items():
+    files, lua = hypr_config_files()
+    items = []
+    for path, text in files:
+        tag = "Your Hyprland config (" + os.path.basename(path) + ")"
+        if lua:
+            body = re.sub(r"--\[\[.*?\]\]", "", text, flags=re.S)
+            body = "\n".join(l for l in body.split("\n") if not l.strip().startswith("--"))
+            for key, rest in lua_calls(body, "hl.bind"):
+                pk = parse_key(key)
+                if pk:
+                    items.append({"key": "+".join(pk[0] + [pk[1]]), "label": label(*pk), "section": tag,
+                                  "title": describe_hypr(rest), "action": rest, "mine": True})
+        else:
+            variables = {}
+            for line in text.split("\n"):
+                line = line.split("#", 1)[0].rstrip()
+                v = re.match(r"^\s*\$(\w+)\s*=\s*(.*)$", line)
+                if v:
+                    variables[v.group(1)] = v.group(2).strip()
+                    continue
+                m = re.match(r"^\s*bind([a-z]*)\s*=\s*(.*)$", line)
+                if not m:
+                    continue
+                parts = [x.strip() for x in m.group(2).split(",")]
+                if len(parts) < 3:
+                    continue
+                desc = None
+                if "d" in m.group(1) and len(parts) >= 4:
+                    desc = parts.pop(2)
+                dispatch = parts[2] + ", " + ", ".join(parts[3:]) if len(parts) > 3 else parts[2] + ","
+                pk = parse_key(conf_key(parts[0], parts[1], variables))
+                if pk:
+                    items.append({"key": "+".join(pk[0] + [pk[1]]), "label": label(*pk), "section": tag,
+                                  "title": desc or describe_hypr(dispatch), "action": dispatch, "mine": True})
+    return items
+
+
+HYPR_MODS = ((64, "Super"), (4, "Ctrl"), (8, "Alt"), (1, "Shift"))
+HYPR_WHAT = {"exec": "Run a program", "exec_cmd": "Run a program", "killactive": "Close the window", "close": "Close the window",
+             "movefocus": "Focus", "focus": "Focus", "movewindow": "Move the window", "move": "Move", "workspace": "Workspace",
+             "movetoworkspace": "Move the window to a workspace", "fullscreen": "Fullscreen", "togglefloating": "Float or tile the window",
+             "float": "Float or tile the window", "resizeactive": "Resize the window", "resize": "Resize the window", "exit": "Log out",
+             "global": "A shortcut of an app", "layout": "Layout", "pass": "Passed to an app", "submap": "Key mode", "dpms": "Turn the screens off"}
+
+
+def hypr_live_items():
+    """What the running Hyprland has bound (hyprctl binds): the keys and the kind of action."""
+    try:
+        r = subprocess.run(["hyprctl", "binds", "-j"], capture_output=True, text=True, timeout=5)
+        binds = json.loads(r.stdout or "[]")
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return []
+    items = []
+    for b in binds if isinstance(binds, list) else []:
+        if b.get("mouse") or b.get("submap"):
+            continue
+        key = str(b.get("key") or "")
+        if not key:
+            continue
+        side = re.match(r"^(ALT|SUPER|CONTROL|SHIFT|META)_([LR])$", key, re.I)
+        if side:
+            key = ("Left " if side.group(2).upper() == "L" else "Right ") + {"control": "Ctrl"}.get(side.group(1).lower(), side.group(1).capitalize())
+        mods = [n for bit, n in HYPR_MODS if int(b.get("modmask") or 0) & bit]
+        pk = parse_key(" + ".join(mods + [key]))
+        if not pk:
+            continue
+        d = str(b.get("dispatcher") or "")
+        name = re.sub(r"^HL\.Dispatcher\((.*)\)$", r"\1", d)
+        arg = str(b.get("arg") or "")
+        if b.get("has_description") and b.get("description"):
+            title = b["description"]
+        elif name != d:
+            title = HYPR_WHAT.get(name, name.replace("_", " ").capitalize())
+        else:
+            title = describe_hypr(name + ", " + arg)
+        items.append({"key": "+".join(pk[0] + [pk[1]]), "label": label(*pk), "section": "Set in Hyprland",
+                      "title": title, "action": d + (" " + arg if name == d and arg else ""), "mine": True})
+    return items
+
+
+def hypr_all_items():
+    """Monolith's keys and your my-keys, then your own config's, then anything else Hyprland
+    has live; a key listed once (the first place it's found)."""
+    try:
+        first = hypr_items()
+    except OSError:
+        first = []
+    out, keys = [], set()
+    for group in (first, hypr_config_items(), hypr_live_items()):
+        for it in group:
+            k = it["key"].lower()
+            if k in keys:
+                continue
+            keys.add(k)
+            out.append(it)
+    return out
+
+
 # ── commands ──
 def items():
-    return hypr_items() if HYPR else niri_items()
+    return hypr_all_items() if HYPR else niri_items()
 
 
 def taken_by(key, skip=None):

@@ -15,12 +15,22 @@ Singleton {
     // running on Hyprland (it sets this for everything it starts)
     readonly property bool hyprland: (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") || "") !== ""
     readonly property string compositor: hyprland ? "Hyprland" : "niri"
-    // Hyprland reads hyprland.lua when there is one (and then its dispatchers are Lua)
+    // Hyprland's config is Lua (hyprland.lua, then its dispatchers are Lua) or classic: what the
+    // running Hyprland loaded (scripts/hypr_files.py reads its log), as a file both may be there
     property bool hyprLua: false
     Process {
         running: niri.hyprland
-        command: ["sh", "-c", "[ -f \"${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprland.lua\" ] && echo lua"]
-        stdout: StdioCollector { onStreamFinished: niri.hyprLua = text.trim() === "lua" }
+        command: ["python3", Qt.resolvedUrl("../scripts/hypr_files.py").toString().replace("file://", ""), "kind"]
+        stdout: StdioCollector { onStreamFinished: { niri.hyprLua = text.trim() === "lua"; niri.hyprStill(); } }
+    }
+    // Monolith's panels (the bar's full-screen layer, the dock, the menus) animate themselves:
+    // Hyprland's own open/close animation on top made the bar fly across the screen (a config
+    // that animates layers, like another shell's). Off for them, whatever the config includes.
+    function hyprStill() {
+        if (hyprLua)
+            Quickshell.execDetached(["hyprctl", "eval", 'hl.layer_rule({ name = "monolith-still", match = { namespace = "^monolith" }, no_anim = true })']);
+        else   // (the rule's wording changed in 0.53: both are sent, the one it doesn't know is refused)
+            Quickshell.execDetached(["sh", "-c", "hyprctl keyword layerrule 'noanim, ^(monolith.*)$'; hyprctl keyword layerrule 'match:namespace ^monolith, no_anim on'"]);
     }
 
     property var workspaces: []          // sorted by output, then idx
