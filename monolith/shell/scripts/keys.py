@@ -155,6 +155,9 @@ def describe_niri(words):
     return ACTIONS.get(name, name.replace("-", " ").capitalize())
 
 
+DIRS = {"l": "left", "r": "right", "u": "up", "d": "down"}
+
+
 def describe_hypr(dispatch):
     m = re.search(r'exec_cmd\(\s*"((?:[^"\\]|\\.)*)"', dispatch) or re.match(r"^exec,\s*(.*)$", dispatch)
     if m:
@@ -174,17 +177,20 @@ def describe_hypr(dispatch):
         return {"m+1": "Next workspace", "m-1": "Previous workspace"}.get(w, "Workspace " + w)
     m = re.search(r'focus\(\{\s*monitor = "(\w)"|focusmonitor,\s*(\w)', dispatch)
     if m:
-        return "Focus the screen " + {"l": "left", "r": "right", "u": "up", "d": "down"}[m.group(1) or m.group(2)]
-    m = re.search(r'window\.move\(\{\s*monitor = "(\w)"', dispatch)
+        d = m.group(1) or m.group(2)
+        return "Focus the screen " + DIRS.get(d, d)
+    m = re.search(r'window\.move\(\{\s*monitor = "(\w)"|movewindow,\s*mon:(\w+)', dispatch)
     if m:
-        return "Move the window to the screen " + {"l": "left", "r": "right", "u": "up", "d": "down"}[m.group(1)]
+        d = m.group(1) or m.group(2)
+        return "Move the window to the screen " + DIRS.get(d, d)
     m = re.search(r'focus\(\{\s*direction = "(\w+)"|movefocus,\s*(\w)', dispatch)
     if m:
         d = m.group(1) or m.group(2)
-        return "Focus " + {"l": "left", "r": "right", "u": "up", "d": "down"}.get(d, d)
-    m = re.search(r'window\.move\(\{\s*direction = "(\w)"|movewindow,\s*(\w)', dispatch)
+        return "Focus " + DIRS.get(d, d)
+    m = re.search(r'window\.move\(\{\s*direction = "(\w)"|movewindow,\s*(\w+)\s*$', dispatch)
     if m:
-        return "Move the window " + {"l": "left", "r": "right", "u": "up", "d": "down"}[m.group(1) or m.group(2)]
+        d = m.group(1) or m.group(2)
+        return "Move the window " + DIRS.get(d, d)
     m = re.search(r"resize\(\{\s*x = (-?\d+), y = (-?\d+)|resizeactive,\s*(-?\d+)\s+(-?\d+)", dispatch)
     if m:
         x, y = int(m.group(1) or m.group(3)), int(m.group(2) or m.group(4))
@@ -279,7 +285,11 @@ def hypr_line_key(line, lua):
         m = HYPR_LUA.match(line)
         return (m.group(2), m.group(3)) if m else None
     m = HYPR_CONF.match(line)
-    return ((m.group(3).strip() + " + " + m.group(4).strip()).strip(" +"), m.group(5)) if m else None
+    if not m:
+        return None
+    # mods are written "SUPER SHIFT" (or SUPER_SHIFT): each one its own part of the key
+    mods = [x for x in re.split(r"[\s_+]+", m.group(3)) if x]
+    return " + ".join(mods + [m.group(4).strip()]), m.group(5)
 
 
 def hypr_items():

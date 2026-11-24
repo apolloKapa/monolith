@@ -5,8 +5,9 @@ import Quickshell.Io
 import "../core"
 import "../ui"
 
-// Keys: your niri keybinds (from ~/.config/niri/config.kdl), the keys as chips and what they do;
-// the search field filters them.
+// Keys: your keybinds, the keys as chips and what they do; the search field filters them.
+// niri: read from ~/.config/niri/config.kdl and the files it includes. Hyprland: scripts/keys.py
+// (the list Settings -> Keyboard shortcuts shows: Monolith's keybinds file and your my-keys).
 Page {
     id: page
     pageId: "keys"
@@ -16,10 +17,25 @@ Page {
     readonly property var shown: query.trim() === "" ? binds
         : binds.filter(b => (b.keys + " " + b.what).toLowerCase().indexOf(query.trim().toLowerCase()) !== -1)
     implicitHeight: 540
+    readonly property bool hypr: (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") || "") !== ""
+    readonly property string script: Qt.resolvedUrl("../scripts/keys.py").toString().replace("file://", "")
 
     // config.kdl and the files it includes (binds often live in their own file)
-    onCurrentChanged: if (current) readProc.running = true
-    Component.onCompleted: readProc.running = true
+    function load() { if (hypr) hyprProc.running = true; else readProc.running = true; }
+    onCurrentChanged: if (current) load()
+    Component.onCompleted: load()
+    Process {
+        id: hyprProc
+        command: ["python3", page.script, "list", "--hyprland"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const r = JSON.parse(text);
+                    page.binds = (r.items || []).map(it => ({ keys: it.key, what: it.title }));
+                } catch (e) { page.binds = []; }
+            }
+        }
+    }
     Process {
         id: readProc
         command: ["sh", "-c", "d=\"${XDG_CONFIG_HOME:-$HOME/.config}/niri\"; cd \"$d\" && cat config.kdl $(grep -o 'include \"[^\"]*\"' config.kdl | cut -d'\"' -f2) 2>/dev/null"]
@@ -61,7 +77,7 @@ Page {
         visible: page.shown.length === 0
         icon: page.binds.length === 0 ? "keyboard" : "search_off"
         title: page.binds.length === 0 ? "No keybinds found" : "Nothing matches"
-        sub: page.binds.length === 0 ? "niri's keybinds file couldn't be read." : "Try fewer letters."
+        sub: page.binds.length === 0 ? (page.hypr ? "Hyprland's" : "niri's") + " keybinds file couldn't be read." : "Try fewer letters."
     }
 
     GridView {
