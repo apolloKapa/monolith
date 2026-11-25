@@ -15,14 +15,24 @@ Singleton {
     property var displays: []
     property real backlight: -1                 // 0..1
     readonly property bool available: mode !== ""
-    // what the slider and the pop-up show: the focused screen's (DDC), else the first
-    readonly property real level: {
+    // the focused screen's level (DDC), else the first's: what `monolith brightness get` answers
+    readonly property real level: levelFor(Niri.focusedOutput)
+    // a screen's own level (the control center's slider reads the one it was opened on)
+    function levelFor(name) {
         if (mode === "backlight") return Math.max(0, backlight);
-        if (mode !== "ddc" || !displays.length) return 0;
-        const d = displays.find(x => x.name === Niri.focusedOutput) || displays[0];
-        return d.value / 100;
+        const d = display(name);
+        return d ? d.value / 100 : 0;
     }
-    // a change made from here (keys, slider, command): the pop-up shows it
+    // the DDC monitor that stands for a screen: its own, else the focused one's, else the first
+    // (a screen with no DDC/CI can't be changed: its slider moves the one you're on instead)
+    function display(name) {
+        if (mode !== "ddc" || !displays.length) return null;
+        return displays.find(x => x.name === name) || displays.find(x => x.name === Niri.focusedOutput) || displays[0];
+    }
+    function target(name) { const d = display(name); return d ? d.name : ""; }
+    // a change made from here (keys, slider, command): the pop-up shows it, on the screen that
+    // changed when it was one screen (lastScreen), else on the one you're on
+    property string lastScreen: ""
     signal changed()
 
     Component.onCompleted: detect.running = true
@@ -95,6 +105,7 @@ Singleton {
             });
             displays = list;
         } else return;
+        lastScreen = mode === "ddc" && name ? name : "";
         changed();
     }
     // DDC is slow (a tenth of a second or so each): one write at a time, the monitors one after

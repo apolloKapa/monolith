@@ -28,7 +28,10 @@ PanelWindow {
     implicitHeight: vertical ? 300 : 60
     color: "transparent"
     mask: Region {}
-    visible: here && (hold.running || pill.opacity > 0.01)
+    // (a brightness change made for one screen shows on that screen)
+    property string shownOn: ""
+    readonly property bool mine: shownOn !== "" ? shownOn === modelData.name : here
+    visible: mine && (hold.running || pill.opacity > 0.01)
 
     PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
     readonly property var audio: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio : null
@@ -36,7 +39,7 @@ PanelWindow {
     property bool ready: false
     Timer { interval: 1500; running: true; onTriggered: osd.ready = true }   // not on startup
 
-    function flash(k) { if (!ready || Store.get("osd.enabled", true) === false || Store.get("osd.show." + k, true) === false) return; kind = k; hold.restart(); }
+    function flash(k, on) { if (!ready || Store.get("osd.enabled", true) === false || Store.get("osd.show." + k, true) === false) return; kind = k; shownOn = on || ""; hold.restart(); }
     Connections {
         target: osd.audio
         function onVolumeChanged() { osd.flash("volume"); if (osd.here) Sounds.play("tick"); }
@@ -44,11 +47,11 @@ PanelWindow {
     }
     Connections {
         target: Brightness
-        function onChanged() { osd.flash("brightness"); }
+        function onChanged() { osd.flash("brightness", Brightness.lastScreen); }
     }
     // the level the bar shows: the volume or the brightness
     readonly property bool hasLevel: kind === "volume" || kind === "brightness"
-    readonly property real level: kind === "brightness" ? Brightness.level : Math.min(1, audio ? audio.volume : 0)
+    readonly property real level: kind === "brightness" ? Brightness.levelFor(shownOn || Niri.focusedOutput) : Math.min(1, audio ? audio.volume : 0)
     readonly property bool dim: kind === "volume" && !!audio && audio.muted
     Connections {
         target: Niri

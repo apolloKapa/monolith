@@ -227,8 +227,10 @@ RowLayout {
                     visible: Brightness.available
                     name: "Brightness"
                     icon: "light_mode"
-                    value: Brightness.level
-                    onMoved: v => Brightness.set(Math.round(v * 100))
+                    // the screen this control center was opened on (not the focused one)
+                    readonly property string output: Brightness.target(HubState.screenName)
+                    value: Brightness.mode === "ddc" ? Brightness.levelFor(output) : Brightness.level
+                    onMoved: v => Brightness.set(Math.round(v * 100), output)
                 }
             }
         }
