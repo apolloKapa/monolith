@@ -41,7 +41,13 @@ WheelHandler {
         if (!(hi > lo)) { event.accepted = false; return; }
         const pos = horizontal ? f.contentX : f.contentY;
         let next;
-        if (event.pixelDelta.y !== 0 || event.pixelDelta.x !== 0) {
+        // A mouse wheel's notch is a whole number of 120ths (one notch: 120). Qt 6.12 on Hyprland
+        // sends a pixel distance with it too (15, and the device says "touchpad"), and taking that
+        // for a touchpad moved the list 15 px a notch: menus crawled. Only a touchpad's own
+        // movement (no whole notch) follows the fingers exactly.
+        const ad = horizontal ? (event.angleDelta.x || event.angleDelta.y) : event.angleDelta.y;
+        const notch = ad !== 0 && ad % 120 === 0;
+        if (!notch && (event.pixelDelta.y !== 0 || event.pixelDelta.x !== 0)) {
             // a touchpad: follow it exactly
             anim.stop();
             next = pos - (horizontal ? (event.pixelDelta.x || event.pixelDelta.y) : event.pixelDelta.y);
