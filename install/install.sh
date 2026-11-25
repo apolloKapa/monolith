@@ -80,6 +80,7 @@ source "$MODULES_DIR/pam.sh"
 source "$MODULES_DIR/sddm.sh"
 source "$MODULES_DIR/wallpapers.sh"
 source "$MODULES_DIR/migrate.sh"
+source "$MODULES_DIR/replace.sh"
 source "$MODULES_DIR/hyprland.sh"
 source "$MODULES_DIR/hdmi.sh"
 source "$MODULES_DIR/ui.sh"
@@ -101,9 +102,15 @@ HYPR_KEYS="$(hypr_keys_saved)"; HYPR_KEYS="${HYPR_KEYS:-mine}"
 OPT_HDMI=false
 { hdmi_wanted || hdmi_patched; } && OPT_HDMI=true
 
+# other shells on this PC (Noctalia, Caelestia, Waybar …): Monolith replaces them unless told not to
+OTHER_SHELLS_FOUND="$(found_shells | paste -sd ',' - | sed 's/,/, /g')"
+OPT_REPLACE_SHELLS=false
+[ -n "$OTHER_SHELLS_FOUND" ] && OPT_REPLACE_SHELLS=true
+
 if [ "$UPDATE_ONLY" = true ]; then
     NIRI_MODE=keep
     OPT_SDDM=false
+    OPT_REPLACE_SHELLS=false   # (an update never uninstalls anything)
     WALLPAPERS=none
     IS_REINSTALL=false
     printf "\n%sUpdating Monolith%s %s -> %s (%s)\n" "$BOLD" "$RESET" "${OLD_VERSION:-?}" "$TARGET_VERSION" "$TARGET_COMMIT"
@@ -117,6 +124,7 @@ STEP_TOTAL=5
 [ "$OPT_SDDM" = true ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 [ "$WALLPAPERS" != none ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 [ "$OPT_HDMI" = true ] && ! hdmi_patched && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
+[ "$OPT_REPLACE_SHELLS" = true ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 
 # the password once, up front: sudo forgets it after a few minutes, and a long build (Portage can
 # take hours) left the next package asking again, halfway through, maybe with no one there. Kept
@@ -130,6 +138,12 @@ fi
 
 step "Packages"
 install_dependencies "$PROJECT_ROOT" "$INSTALL_STATE"
+
+# another shell, replaced: gone before Monolith's keys go into the niri / Hyprland config
+if [ "$OPT_REPLACE_SHELLS" = true ]; then
+    step "Other shells"
+    remove_other_shells
+fi
 
 step "Monolith shell"
 SHELL_WAS_RUNNING=false

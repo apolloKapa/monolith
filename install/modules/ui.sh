@@ -468,6 +468,15 @@ run_installer_ui() {
         actions+=(hdmi)
         labels+=("Login screen (SDDM theme) $(on_off "$OPT_SDDM")" "Wallpapers $wp_label")
         actions+=(sddm wallpapers)
+        # another shell found: replaced (uninstalled, its files backed up, its keys made Monolith's) or kept
+        if [ -n "${OTHER_SHELLS_FOUND:-}" ]; then
+            local rep_label
+            [ "$OPT_REPLACE_SHELLS" = true ] \
+                && rep_label="${C_GREEN}[remove]${RESET} ${DIM}(uninstalled, its files backed up, its keys become Monolith's)${RESET}" \
+                || rep_label="${C_YELLOW}[keep]${RESET} ${DIM}(stays installed, kept out of Monolith's sessions)${RESET}"
+            labels+=("Other shells: ${OTHER_SHELLS_FOUND} $rep_label")
+            actions+=(replace)
+        fi
         if [ "$INSTALL_STATE" = current ]; then
             labels+=("${BOLD}${C_GREEN}Update${RESET}" "${BOLD}${C_YELLOW}Reinstall (fresh settings)${RESET}" "${DIM}Exit${RESET}")
             actions+=(install reinstall exit)
@@ -506,6 +515,7 @@ run_installer_ui() {
                      cursor=0; printf "\033[2J\033[H" ;;
             hyprkeys) HYPR_KEYS=$([ "$HYPR_KEYS" = monolith ] && echo mine || echo monolith) ;;
             hdmi) OPT_HDMI=$([ "$OPT_HDMI" = true ] && echo false || echo true) ;;
+            replace) OPT_REPLACE_SHELLS=$([ "$OPT_REPLACE_SHELLS" = true ] && echo false || echo true) ;;
             packages) show_package_overview ;;
             keybind_apps) OPT_KEYBIND_APPS=$([ "$OPT_KEYBIND_APPS" = true ] && echo false || echo true) ;;
             niri) NIRI_MODE=$([ "$NIRI_MODE" = replace ] && echo keep || echo replace) ;;

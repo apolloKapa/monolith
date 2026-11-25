@@ -31,6 +31,11 @@ Column {
         ear: Theme.fullBar ? 0 : Theme.islandEar
         fill: Theme.barFloats ? "transparent" : (Theme.barOpacity >= 0.99 ? Theme.frame : Qt.alpha(Theme.frame, Theme.frame.a * Theme.barOpacity))
         shadow: !Theme.barFloats && Theme.barOpacity > 0.3
+        // no outline round the whole bar when it floats, as on the real bar (island/Island.qml):
+        // Solid draws its own below, Modular one on each pill. (It was left on: a style with an
+        // outline, Luxe's gold line, ran along the whole bar across the gaps between Modular's
+        // pills, in Settings and in the welcome's bar step)
+        outline: !Theme.barFloats
         // Solid: its own rounded floating bar
         SmoothRect {
             smoothing: 0   // (plain corners in other styles; the Cyberpunk style cuts one)
