@@ -98,16 +98,48 @@ PanelWindow {
             readonly property real g: 3200
             x: phase === "held" || phase === "back" ? modelData.x + dx : px
             y: phase === "held" || phase === "back" ? modelData.y : py
-            // held, it stays solid and hangs off the tray instead: it turns on its top corner that's
-            // still in (pulled right: the top-left one) and its free end droops, more the further
-            // it's out, up to ~28° a whole card's width out. Springing back, it swings level again
+            // Held, it stays solid and hangs off the tray like card stock pulled off a ledge: it
+            // pivots where it crosses the tray's side (that point slides along it as it's pulled),
+            // the part that's out droops, more the further it's out (up to ~75° all of it out),
+            // and it has weight: it tips with a little overshoot, settles, and swings when the
+            // pointer speeds up or slows down. It can't tip in (the tray holds it up); springing
+            // back, the tray lifts it level again. (hangStep, from the FrameAnimation below)
             readonly property bool hanging: phase === "held" || phase === "back"
-            readonly property real hang: {
-                if (!hanging) return 0;
-                const t = Math.min(1, Math.abs(dx) / Math.max(1, width));
-                return (dx < 0 ? -1 : 1) * 28 * (1 - (1 - t) * (1 - t));
+            property real theta: 0               // the tilt, degrees (clockwise)
+            property real omega: 0               // and how fast it's turning, radians/s
+            property real lastDx: 0
+            property real ptrV: 0                // the pointer's speed and its change, px/s, px/s²
+            property real ptrA: 0
+            // where it crosses the tray's side, along its top edge (pulled left: the tray's left
+            // side is |dx| in from its left end)
+            readonly property real pivotX: dx < 0 ? Math.min(width, -dx) : Math.max(0, width - dx)
+            transform: Rotation { origin.x: card.pivotX; origin.y: 0; angle: card.hanging ? card.theta : 0 }
+            function hangStep(dt) {
+                // the pointer's motion (smoothed: a wobbly hand shouldn't shake it)
+                const v = (dx - lastDx) / dt;
+                lastDx = dx;
+                const a = Math.max(-25000, Math.min(25000, (v - ptrV) / dt));
+                ptrV += (v - ptrV) * 0.5;
+                ptrA += (a - ptrA) * 0.25;
+                // where it wants to hang: like card stock, the part that's out droops from the
+                // start, more the more is out (up to ~75° all of it out)
+                const out = Math.min(1, Math.abs(dx) / Math.max(1, width));
+                const e = Math.max(0, Math.min(1, (out - 0.06) / 0.94));
+                const side = dx < 0 ? -1 : 1;
+                const want = side * 75 * Math.pow(e * e * (3 - 2 * e), 1.15) * Math.PI / 180;
+                // it gets there like something with weight: springy, a little past it and back,
+                // and the pointer speeding up or slowing down swings it (its weight lags behind:
+                // torque of −a at its middle about the pivot, over a flat card's moment there)
+                const t = theta * Math.PI / 180;
+                const rx = width / 2 - pivotX, ry = height / 2;
+                const ryr = rx * Math.sin(t) + ry * Math.cos(t);
+                const inertia = rx * rx + ry * ry + (width * width + height * height) / 12;
+                omega += (38 * (want - t) - 5.5 * omega + ryr * ptrA / inertia) * dt;
+                let th = theta + omega * dt * 180 / Math.PI;
+                // the tray holds it up: it tips out over the edge, never in
+                if (th * side < 0) { th = 0; if (omega * side < 0) omega = -omega * 0.2; }
+                theta = th;
             }
-            transform: Rotation { origin.x: card.dx < 0 ? card.width : 0; origin.y: 0; angle: card.hang }
             // sliding off, it fades as it goes (from where it was let go); falling it stays solid
             opacity: dropFade * (phase === "slide" ? Math.max(0, 1 - travelled / (width * 1.1)) : 1)
             // the press ripple, carried on from where it was when grabbed: it spreads to the edges
@@ -159,14 +191,16 @@ PanelWindow {
                     card.px = card.modelData.x + card.dx; card.py = card.modelData.y;
                     // the hang becomes the flight's own turn: the same angle about the middle,
                     // moved so the card stays exactly where it hung (no jump as it's let go)
-                    const a = card.hang * Math.PI / 180;
-                    const ox = (card.dx < 0 ? card.width : 0) - card.width / 2, oy = -card.height / 2;
+                    const a = card.theta * Math.PI / 180;
+                    const ox = card.pivotX - card.width / 2, oy = -card.height / 2;
                     card.px += ox - (ox * Math.cos(a) - oy * Math.sin(a));
                     card.py += oy - (ox * Math.sin(a) + oy * Math.cos(a));
-                    card.rotation = card.hang;
+                    card.rotation = card.theta;
+                    const turning = card.omega * 180 / Math.PI;
                     card.travelled = 0;
                     card.vx = vx; card.vy = mode === "fall" ? vy : 0;
-                    card.spin = mode === "fall" ? Math.max(-720, Math.min(720, vx * 0.35 + (Math.random() - 0.5) * 120)) : 0;
+                    // (it keeps turning the way it was swinging)
+                    card.spin = mode === "fall" ? Math.max(-720, Math.min(720, turning + vx * 0.25 + (Math.random() - 0.5) * 90)) : 0;
                     card.phase = mode;
                     // Theme: the style's own way out (only then: Fall and Slide off stay what they are)
                     if (mode === "theme") { card.phase = "wall"; card.vy = 0; card.rotation = 0; burnAnim.restart(); }
@@ -185,6 +219,7 @@ PanelWindow {
                     // leaving a gap): the real card can hide now
                     if (++card.frames === 2) Throw.ready(card.modelData.id);
                     const dt = Math.min(0.05, frameTime);
+                    if (card.hanging) { card.hangStep(Math.max(0.001, dt)); return; }
                     // (taken by the Blackwall: a slow drift the way it was thrown, nothing else)
                     if (card.phase === "wall") { card.px += card.vx * dt * 0.12; return; }
                     if (card.phase !== "fall" && card.phase !== "slide") return;
