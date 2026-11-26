@@ -310,6 +310,12 @@ Singleton {
     readonly property string barsDir: (Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share")) + "/monolith/plugins"
     readonly property string barsScript: Qt.resolvedUrl("../scripts/hyprbars.sh").toString().replace("file://", "")
     property string barsFor: ""
+    // (what the build can do beyond the plugin's own: "double-click", the double click's speed)
+    property string barsFeatures: ""
+    FileView { path: desk.barsDir + "/hyprbars.features"; watchChanges: true; printErrors: false; onLoaded: desk.barsFeatures = text().trim(); onFileChanged: reload(); onLoadFailed: desk.barsFeatures = "" }
+    readonly property bool barsDoubleClick: barsFeatures.indexOf("double-click") !== -1
+    // the longest time between the two clicks of a double click on a title bar (Settings)
+    readonly property int doubleClickMs: Math.max(150, Math.min(700, Number(Store.raw("desktop.doubleClickMs", 300)) || 300))
     property string hyprCommit: ""
     readonly property string barsState: !Niri.hyprland ? "" : (barsFor === "" ? "none" : (hyprCommit !== "" && barsFor !== hyprCommit ? "old" : "ready"))
     readonly property bool barsReady: barsState === "ready" && hyprCommit !== ""
@@ -352,6 +358,9 @@ Singleton {
             + "bar_text_align = \"center\", bar_blur = " + (Theme.blur ? "true" : "false") + ", bar_part_of_window = true, bar_precedence_over_border = true, "
             + "bar_padding = 10, bar_button_padding = 6, inactive_button_color = \"" + hex(Qt.alpha(Theme.subtext, 0.35)) + "\", "
             + "on_double_click = " + act("max") + " } } }); "
+            // (only to a build that has the setting: an older one reports it as a config error,
+            // Hyprland's red banner over the screen)
+            + (barsDoubleClick ? "hl.config({ plugin = { hyprbars = { double_click_ms = " + doubleClickMs + " } } }); " : "")
             + "MonolithDesk.barAct = function(kind) "
             +   "local c = hl.get_cursor_pos(); if not c then return end; local cx, cy = c.x or c[1], c.y or c[2]; "
             +   "local bh = tonumber(hl.get_config(\"plugin:hyprbars:bar_height\")) or 34; "

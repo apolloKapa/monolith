@@ -31,6 +31,16 @@ if [ -n "$commit" ]; then
     if [ -n "$pin" ]; then echo "Using the plugins made for this Hyprland ($pin)"; git -C "$src" checkout -q -f "$pin"; fi
 fi
 
+# Monolith's own small change: the double click's speed as a setting (double_click_ms; it was
+# 400 ms, fixed: two clicks half a second apart still made a double click). Built without it when
+# the plugins have moved on and it no longer fits
+patch="$(dirname "$0")/hyprbars-double-click.patch"
+if [ -f "$patch" ] && git -C "$src" apply --check "$patch" 2>/dev/null; then
+    git -C "$src" apply "$patch" && echo "With Monolith's double-click speed setting" && features="double-click"
+else
+    echo "(Without the double-click speed setting: it doesn't fit this version)"
+fi
+
 echo "Building hyprbars…"
 # Lua's headers (Hyprland's config is Lua): some distros keep them in a folder of their own
 # (Gentoo: /usr/include/lua5.4), which the plugin's build doesn't look in
@@ -47,5 +57,7 @@ cp "$src/hyprbars/hyprbars.so" "$dest/hyprbars.so.new"
 mv -f "$dest/hyprbars.so.new" "$dest/hyprbars.so"
 # which Hyprland it's for (Monolith only loads it into that one)
 printf '%s\n' "${commit:-$(pkg-config --modversion hyprland)}" > "$dest/hyprbars.for"
+# (what this build can do beyond the plugin's own: Settings asks for a new build otherwise)
+printf '%s\n' "${features:-}" > "$dest/hyprbars.features"
 echo
 echo "Done: windows get title bars while Desktop mode is on."

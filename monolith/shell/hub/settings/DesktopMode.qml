@@ -86,14 +86,23 @@ ColumnLayout {
     SettingRow {
         show: Niri.hyprland
         icon: "build"; title: "Title bars on every window"
-        desc: Desk.barsState === "ready" ? "Built for this Hyprland (the hyprbars plugin, from Hyprland's own plugins). Build it again after Hyprland updates"
+        desc: Desk.barsState === "ready" && !Desk.barsDoubleClick ? "Build it again for the double-click speed setting below (a minute or so)"
+            : Desk.barsState === "ready" ? "Built for this Hyprland (the hyprbars plugin, from Hyprland's own plugins). Build it again after Hyprland updates"
             : Desk.barsState === "old" ? "Built for another Hyprland version: build it again for this one"
             : "Hyprland draws no title bars itself: this builds its hyprbars plugin from Hyprland's own plugins, in a terminal (a minute or so, no password)"
         Button {
             text: Desk.barsState === "ready" ? "Build again" : (Desk.barsState === "old" ? "Build again" : "Build")
-            icon: "build"; primary: Desk.barsState !== "ready"
+            icon: "build"; primary: Desk.barsState !== "ready" || !Desk.barsDoubleClick
             onClicked: Desk.buildBars()
         }
+    }
+    SettingRow {
+        key: "desktop.doubleClickMs"; def: 300
+        show: Niri.hyprland && Desk.barsReady
+        icon: "ads_click"; title: "Double-click speed"
+        desc: Desk.barsDoubleClick ? "How quick the two clicks on a title bar have to be to maximise the window. Lower: they have to come closer together"
+            : "Needs the title bars built again (Build again above): this build always takes two clicks 0.4 s apart as a double click"
+        NumberBox { from: 150; to: 700; step: 10; unit: "ms"; value: Desk.doubleClickMs; onMoved: v => Store.set("desktop.doubleClickMs", v) }
     }
     SettingRow {
         key: "desktop.noBar"

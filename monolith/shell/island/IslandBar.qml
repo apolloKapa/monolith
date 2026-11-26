@@ -30,14 +30,19 @@ Item {
     // the free modules: room for them all, wherever they sit
     readonly property real freeLen: { let n = 0; for (let i = 0; i < freeRep.count; i++) { const it = freeRep.itemAt(i); if (it && it.visible) n += (vertical ? it.height : it.width) + gap; } return n; }
     readonly property real fitLength: part(leftZone) + part(leftMidZone) + part(midZone) + part(midRightZone) + len(rightZone) + freeLen + 2 * Theme.islandPad
-    implicitWidth: vertical ? Theme.islandH : fitLength
+    // (Desktop mode: its middle (the start button and the apps) right in the middle of the screen,
+    // whatever its length setting. Fitting its modules, the middle came right after the left end,
+    // wherever that ended)
+    readonly property bool centerMid: Desk.on && !only && (zones.center || []).length > 0
+    readonly property bool spread: Theme.barSpread || centerMid
+    implicitWidth: vertical ? Theme.islandH : (centerMid ? spreadWidth : fitLength)
     // spread out, the middle stays in the middle: the shortest it can be without the sides running into it
     readonly property real spreadWidth: Math.max(fitLength, len(midZone) + 2 * Math.max(part(leftZone) + part(leftMidZone), part(rightZone) + part(midRightZone)) + 2 * Theme.islandPad)
     // the length the bar needs (its width, or its height when it's vertical)
     // how long the modules alone are (0: none of them has anything to show)
     readonly property real contentLen: len(leftZone) + len(leftMidZone) + len(midZone) + len(midRightZone) + len(rightZone) + freeLen
-    readonly property real needWidth: Theme.barSpread ? spreadWidth : fitLength
-    implicitHeight: vertical ? fitLength : Theme.islandH
+    readonly property real needWidth: spread ? spreadWidth : fitLength
+    implicitHeight: vertical ? (centerMid ? spreadWidth : fitLength) : Theme.islandH
     // (the module being clicked is noted first: Dynamic menus grow out of it)
     property var pressedAt: null
     function open(p) {
@@ -325,16 +330,16 @@ Item {
     readonly property real leftAt: Theme.islandPad
     // (spread: in the middle, unless a side has grown into it, a long tray on a bar the screen
     // caps: then it moves aside, between the two, instead of the sides drawing over it)
-    readonly property real midAt: Theme.barSpread
+    readonly property real midAt: spread
         ? Math.round(Math.max(leftAt + part(leftZone) + part(leftMidZone),
                               Math.min((barLen - len(midZone)) / 2, barLen - Theme.islandPad - part(rightZone) - part(midRightZone) - len(midZone))))
         : leftAt + part(leftZone) + part(leftMidZone)
-    readonly property real rightAt: Theme.barSpread ? barLen - len(rightZone) - Theme.islandPad : midAt + part(midZone) + part(midRightZone)
+    readonly property real rightAt: spread ? barLen - len(rightZone) - Theme.islandPad : midAt + part(midZone) + part(midRightZone)
     // the in-between zones: in the middle of their gap (kept clear of what's either side)
-    readonly property real leftMidAt: Theme.barSpread
+    readonly property real leftMidAt: spread
         ? Math.round(Math.max(leftAt + part(leftZone), Math.min((leftAt + len(leftZone) + midAt - len(leftMidZone)) / 2, midAt - part(leftMidZone))))
         : leftAt + part(leftZone)
-    readonly property real midRightAt: Theme.barSpread
+    readonly property real midRightAt: spread
         ? Math.round(Math.max(midAt + part(midZone), Math.min((midAt + len(midZone) + rightAt - len(midRightZone)) / 2, rightAt - part(midRightZone))))
         : midAt + part(midZone)
     Zone { id: leftZone; x: bar.vertical ? Math.round((bar.width - width) / 2) : bar.leftAt; y: bar.vertical ? bar.leftAt : Math.round((bar.height - height) / 2); keys: bar.zones.left || [] }
@@ -397,6 +402,10 @@ Item {
           - (Theme.barStyle === "island" ? 2 * Theme.islandEar + 24 : 0) - taskOthers
     // (what the taskbar's apps leave to the rest: every zone but its own, and the start button)
     readonly property real taskOthers: {
+        // (the middle centred, Desktop mode: as much room taken on each side as the wider side needs)
+        if (centerMid && (zones.center || []).indexOf("taskbar") !== -1)
+            return 2 * Math.max(part(leftZone) + part(leftMidZone), part(rightZone) + part(midRightZone))
+                + ((zones.center || []).length - 1) * (Theme.islandH + Number(Store.get("bar.gap", 2)));
         const zs = [[leftZone, "left"], [leftMidZone, "leftMid"], [midZone, "center"], [midRightZone, "midRight"], [rightZone, "right"]];
         let n = 0;
         for (const z of zs) {
