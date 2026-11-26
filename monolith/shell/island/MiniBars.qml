@@ -25,6 +25,8 @@ PanelWindow {
                                      // windows keep clear of it unless you say otherwise (`clear`): over a maximised
                                      // window's top it took the clicks meant for its title bar's buttons
                                      clear: !(m && m.clear === false),
+                                     // its size (Settings → Mini bars), 60 % to 160 %
+                                     scale: m && Number(m.scale) > 0 ? Math.max(0.6, Math.min(1.6, Number(m.scale))) : 1,
                                      show: m && ["always", "dodge", "edge"].indexOf(m.show) !== -1 ? m.show : "bar" }))
         .filter(m => m.modules.length > 0)
     readonly property var places: ["top-left", "top", "top-right", "left", "right", "bottom-left", "bottom", "bottom-right"]
@@ -151,8 +153,11 @@ PanelWindow {
             readonly property string edge: win.edgeOf(place)
             readonly property bool vert: place === "left" || place === "right"
             readonly property real along: vert ? height : width
-            width: vert ? Theme.islandH : mbar.implicitWidth
-            height: vert ? mbar.implicitHeight : Theme.islandH
+            // its size: what's in it drawn bigger or smaller, the pill around it to match (where it
+            // sits, the room windows keep and the menus that open from it all go by this size)
+            readonly property real k: modelData.scale
+            width: Math.round((vert ? Theme.islandH : mbar.implicitWidth) * k)
+            height: Math.round((vert ? mbar.implicitHeight : Theme.islandH) * k)
             // (nothing in it to show (a visualiser with nothing playing): not there at all, rather
             // than an empty pill; while moving them it shows, so it can be moved)
             readonly property bool hasContent: mbar.contentLen > 0
@@ -226,6 +231,8 @@ PanelWindow {
                 trayWindow: win
                 width: implicitWidth
                 height: implicitHeight
+                transformOrigin: Item.TopLeft
+                scale: pill.k
                 enabled: !win.editing
             }
             // moving: grab it anywhere
@@ -304,7 +311,7 @@ PanelWindow {
             const stays = m.show === "always" || (m.show === "bar" && !Theme.barTucks);
             if (!m.clear || !stays) continue;
             const e = edgeOf(m.place);
-            z[e] = Math.max(z[e] || 0, Theme.islandH + gap + 4);
+            z[e] = Math.max(z[e] || 0, (it.vert ? it.width : it.height) + gap + 4);   // (its thickness, at its size)
         }
         return Object.keys(z).map(e => e + ":" + Math.round(z[e]));
     }

@@ -156,6 +156,22 @@ ColumnLayout {
                         onPicked: v => page.setOf(card.index, "show", v)
                     }
                 }
+                // its size: 60 % to 160 %, in steps of 5
+                Item {
+                    width: col.width; height: 40
+                    readonly property real k: Number(card.modelData.scale) > 0 ? Math.max(0.6, Math.min(1.6, Number(card.modelData.scale))) : 1
+                    Label { anchors.verticalCenter: parent.verticalCenter; text: "Size"; font.pixelSize: Theme.sizeSmall }
+                    Slider {
+                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                        width: 250; implicitHeight: 36
+                        icon: "zoom_in"
+                        value: (parent.k - 0.6) / 1.0
+                        label: Math.round(parent.k * 100) + "%"
+                        onMoved: v => { const k = Math.round((0.6 + v * 1.0) * 20) / 20; if (Math.abs(k - parent.k) > 0.001) page.setOf(card.index, "scale", k); }
+                        // (its icon: back to 100 %)
+                        onIconClicked: page.setOf(card.index, "scale", 1)
+                    }
+                }
                 // every module, as pills: tap one to put it in (it goes at the end), again to take it out
                 Label { text: "Modules: tap to add or take out"; muted: true; font.pixelSize: Theme.sizeSmall }
                 Flow {
