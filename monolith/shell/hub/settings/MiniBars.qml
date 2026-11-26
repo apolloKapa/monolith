@@ -53,12 +53,14 @@ ColumnLayout {
         }
     }
 
+    // (made from how many there are, each reading its own: a list for a model made every card
+    // anew whenever anything in one changed, the size slider among them, in the middle of a drag)
     Repeater {
-        model: page.minis
+        model: page.minis.length
         SmoothRect {
             id: card
-            required property var modelData
             required property int index
+            readonly property var modelData: page.minis[index] || ({})
             // (lists handed through a Repeater aren't always JS Arrays: read it from the store itself)
             readonly property var mods: { const m = page.minis[index]; const l = m && m.modules ? Array.prototype.slice.call(m.modules) : []; return l; }
             Layout.fillWidth: true
@@ -156,7 +158,7 @@ ColumnLayout {
                         onPicked: v => page.setOf(card.index, "show", v)
                     }
                 }
-                // its size: 60 % to 160 %, in steps of 5
+                // its size: 60 % to 160 %
                 Item {
                     width: col.width; height: 40
                     readonly property real k: Number(card.modelData.scale) > 0 ? Math.max(0.6, Math.min(1.6, Number(card.modelData.scale))) : 1
@@ -167,7 +169,7 @@ ColumnLayout {
                         icon: "zoom_in"
                         value: (parent.k - 0.6) / 1.0
                         label: Math.round(parent.k * 100) + "%"
-                        onMoved: v => { const k = Math.round((0.6 + v * 1.0) * 20) / 20; if (Math.abs(k - parent.k) > 0.001) page.setOf(card.index, "scale", k); }
+                        onMoved: v => { const k = Math.round((0.6 + v * 1.0) * 100) / 100; if (Math.abs(k - parent.k) > 0.001) page.setOf(card.index, "scale", k); }
                         // (its icon: back to 100 %)
                         onIconClicked: page.setOf(card.index, "scale", 1)
                     }

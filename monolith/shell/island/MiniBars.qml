@@ -142,13 +142,17 @@ PanelWindow {
     }
 
     // ── the mini bars ──
+    // (made from how many there are, each reading its own: a list for a model made each pill and
+    // everything in it anew whenever anything changed, every step of its size slider)
     Repeater {
         id: rep
-        model: win.minis
+        model: win.minis.length
         SmoothRect {
             id: pill
-            required property var modelData
             required property int index
+            readonly property var modelData: win.minis[index] || ({ place: "top-right", modules: [], show: "bar", clear: true, scale: 1 })
+            // (its modules handed on only when they're really others: the bar in it would be made anew)
+            readonly property string modKey: JSON.stringify(modelData.modules || [])
             readonly property string place: modelData.place
             readonly property string edge: win.edgeOf(place)
             readonly property bool vert: place === "left" || place === "right"
@@ -224,7 +228,7 @@ PanelWindow {
             }
             IslandBar {
                 id: mbar
-                only: pill.modelData.modules
+                only: JSON.parse(pill.modKey)
                 vertical: pill.vert
                 edge: pill.edge
                 screenName: win.modelData.name
@@ -264,7 +268,7 @@ PanelWindow {
     // it from the edge doesn't send it away again)
     Repeater {
         id: sens
-        model: win.minis
+        model: win.minis.length
         Item {
             required property int index
             readonly property Item pill: rep.count > index ? rep.itemAt(index) : null
