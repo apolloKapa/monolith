@@ -248,8 +248,9 @@ Singleton {
     function addr(w) { return "address:0x" + String(w.id).replace(/^0x/, ""); }
     function hypr(lua, classic) { if (Niri.hyprLua) Hyprland.dispatch(lua); else if (classic) Hyprland.dispatch(classic); }
     function niri(args) { Quickshell.execDetached(["niri", "msg", "action"].concat(args)); }
-    // (niri, patched: a window's own minimise button)
-    Connections { target: Niri; function onMinimizeRequested(id) { if (desk.on) desk.minimize(Niri.windows[id]); } }
+    // (niri, patched: a window's own minimise button. With Desktop mode off too: the dock, Alt+Tab
+    // or going to it bring it back, see onFocusedWindowIdChanged)
+    Connections { target: Niri; function onMinimizeRequested(id) { if (!Niri.hyprland) desk.minimize(Niri.windows[id]); } }
     function minimize(w) {
         if (!w) return;
         if (Niri.hyprland) {

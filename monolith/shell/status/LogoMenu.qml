@@ -33,7 +33,9 @@ PanelWindow {
     property string hoverName: ""
     readonly property int cols: 9
     readonly property real cell: 44
+    readonly property bool grid: Store.get("desktop.startIcon", "distro") === "grid"
     function pick(key) {
+        if (key === "grid") { Store.set("desktop.startIcon", "grid"); HubState.closeDrop(); return; }
         if (key === "") Store.unset("desktop.startLogo"); else Store.set("desktop.startLogo", key);
         Store.set("desktop.startIcon", "distro");      // (it showed the grid: the logo now)
         HubState.closeDrop();
@@ -44,13 +46,15 @@ PanelWindow {
         property string key: ""
         property string glyph: ""
         property string label: ""
-        readonly property bool current: key === Distro.picked || (key === "" && Distro.picked === "")
+        readonly property bool current: key === "grid" ? dd.grid : !dd.grid && (key === Distro.picked || (key === "" && Distro.picked === ""))
         width: dd.cell; height: dd.cell
         radius: Theme.corner(height, 6)
         color: current ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
         onClicked: dd.pick(key)
         onHoveredChanged: if (hovered) dd.hoverName = label; else if (dd.hoverName === label) dd.hoverName = ""
+        Icon { visible: tile.key === "grid"; anchors.centerIn: parent; name: "grid_view"; size: 22; filled: true; color: tile.current ? Theme.accent : Theme.text }
         Text {
+            visible: tile.key !== "grid"
             anchors.centerIn: parent
             text: tile.glyph
             font.family: Distro.fontFamily
@@ -96,6 +100,11 @@ PanelWindow {
                 spacing: 10
                 Tile { key: ""; glyph: Distro.own; label: "Your distribution" + (Distro.name ? " (" + Distro.name + ")" : "") }
                 Label { anchors.verticalCenter: parent.verticalCenter; text: "Your distribution"; font.pixelSize: Theme.sizeSmall }
+                Item { width: 12; height: 1 }
+                // (the grid instead of a logo: its own setting is on Desktop mode's page, hidden
+                // without experimental features)
+                Tile { key: "grid"; label: "A grid instead of a logo" }
+                Label { anchors.verticalCenter: parent.verticalCenter; text: "Grid"; font.pixelSize: Theme.sizeSmall }
             }
             Label { x: 4; text: "Distributions and systems"; muted: true; font.pixelSize: Theme.sizeSmall }
             Grid {
