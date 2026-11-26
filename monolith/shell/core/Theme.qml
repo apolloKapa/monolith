@@ -300,13 +300,24 @@ Singleton {
     // square in square styles)
     function barRound(h) { return square ? 0 : Math.min(h / 2, radius + Math.min(8, radius * 2 / 3)); }
     // the Frame draws the bar's background itself (one shape, so see-through styles don't double up)
-    readonly property bool frameBand: barStyle === "frame" && Store.get("status.autohide", false) !== true
+    // When the bar shows (Settings → Bar → When it shows): "always"; "dodge", out of the way while
+    // a window is where it sits; "edge", only when you touch its edge (auto-hide). bar.show, or
+    // before there was a choice the auto-hide switch (status.autohide, kept in step: game mode and
+    // Super+A still flip it, and it means "edge" then)
+    readonly property string barShow: {
+        const v = String(Store.get("bar.show", ""));
+        const s = ["always", "dodge", "edge"].indexOf(v) !== -1 ? v : "always";
+        return s === "always" && Store.get("status.autohide", false) === true ? "edge" : s;
+    }
+    // it can go away (edge or dodge): no room kept for it, the Frame's edge moves with it
+    readonly property bool barTucks: barShow !== "always"
+    readonly property bool frameBand: barStyle === "frame" && !barTucks
     // Frame with auto-hide (a bar along the top or bottom): the frame keeps its border on the
     // bar's edge, and that edge swells into the bar and shrinks back to a border, one shape all
     // the way (island/Island.qml draws that edge, over the windows; island/Frame.qml the rest).
     // Before, the frame had no border at all on that edge and the bar slid away as a separate
     // strip with square ends
-    readonly property bool frameHide: barStyle === "frame" && barSide === "" && Store.get("status.autohide", false) === true
+    readonly property bool frameHide: barStyle === "frame" && barSide === "" && barTucks
     readonly property real frameRadius: square ? 0 : Math.max(0, Number(Store.get("bar.frameRadius", islandRadius)))
     // The bar's (or the Frame's) own background, apart from the menus' (Settings → Bar → Bar
     // background): "solid", the theme's colour as it is, or "glass", see-through and blurred like

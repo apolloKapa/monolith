@@ -205,7 +205,8 @@ Singleton {
     IpcHandler {
         target: "status"
         // auto-hide on/off (Super+A)
-        function toggle(): void { Store.set("status.autohide", Store.get("status.autohide", false) !== true); }
+        // (Super+A: between always and only at the edge; from dodge, back to always)
+        function toggle(): void { const away = Theme.barTucks; Store.set("bar.show", away ? "always" : "edge"); Store.set("status.autohide", !away); }
     }
     IpcHandler {
         target: "dock"

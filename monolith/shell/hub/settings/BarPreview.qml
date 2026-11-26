@@ -176,11 +176,11 @@ Column {
                     Bar { x: Math.round((pv.sw - width) / 2); y: Theme.barMargin; screenW: pv.sw; flipped: Theme.barBottom }
                 }
                 Rectangle {
-                    visible: Store.get("status.autohide", false) === true
+                    visible: Theme.barTucks
                     anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 8
                     height: 22; width: ah.implicitWidth + 16; radius: Theme.rnd(11)
                     color: Qt.alpha(Theme.frame, 0.85)
-                    Label { id: ah; anchors.centerIn: parent; text: "Hides until the pointer reaches the edge"; font.pixelSize: Theme.sizeSmall - 1 }
+                    Label { id: ah; anchors.centerIn: parent; text: Theme.barShow === "dodge" ? "Steps aside while a window is where it sits" : "Hides until the pointer reaches the edge"; font.pixelSize: Theme.sizeSmall - 1 }
                 }
                 // a little glare over the glass
                 Rectangle {

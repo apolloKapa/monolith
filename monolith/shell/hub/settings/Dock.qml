@@ -12,17 +12,34 @@ ColumnLayout {
         desc: "The dock is the taskbar's apps while it's on (pinned apps and the icons' look still come from here)"
         Button { text: "Desktop mode"; icon: "arrow_forward"; onClicked: HubState.settingsSection = "desktopmode" }
     }
+    SectionHead { text: "Where it sits" }
     SettingRow {
         key: "dock.enabled"; def: true;
-        icon: "dock_to_bottom"; title: "Dock"; desc: "Your pinned and open apps at the bottom of the screen"
+        icon: "dock_to_bottom"; title: "Dock"; desc: "Your pinned and open apps, along an edge of the screen"
         Toggle { checked: Store.get("dock.enabled", true); onToggled: on => Store.set("dock.enabled", on) }
     }
     SettingRow {
+        key: "dock.position"; def: "bottom";
+        icon: "border_bottom"; title: "Position"
+        Dropdown { opts: [["bottom", "Bottom"], ["left", "Left"], ["right", "Right"], ["top", "Top"]]; value: Store.get("dock.position", "bottom"); onPicked: v => Store.set("dock.position", v) }
+    }
+    SettingRow {
+        key: "dock.margin"; def: 12;
+        readonly property string side: Store.get("dock.position", "bottom")
+        icon: side === "top" ? "vertical_align_top" : (side === "bottom" ? "vertical_align_bottom" : "width")
+        title: side === "bottom" ? "How high it sits" : (side === "top" ? "How low it sits" : "Distance from the edge")
+        desc: "How far it is from the edge of the screen. You can also hold the dock for a second and drag it by its background"
+        NumberBox { from: 0; to: 400; slideTo: 200; unit: "px"; value: Number(Store.get("dock.margin", 12)); onMoved: v => Store.set("dock.margin", v) }
+    }
+    SectionHead { text: "When it shows" }
+    SettingRow {
         key: "dock.show";
-        icon: "space_dashboard"; title: "When it shows"; desc: "Dodge windows: out of the way only while a window is where it sits. Touching the edge always brings it"
+        icon: "visibility"; title: "When it shows"
+        desc: "Dodge windows: out of the way while a window is where it sits. Touching its edge always brings it (the bar has the same choices: Bar → When it shows)"
         Dropdown {
-            width: 230
-            opts: [["always", "Always"], ["dodge", "Dodge windows"], ["empty", "On empty workspaces"], ["edge", "Only at the edge"]]
+            width: 250
+            opts: [["always", "Always", "There all the time"], ["dodge", "Dodge windows", "Out of the way while a window is where it sits"],
+                   ["empty", "On empty workspaces", "When nothing is open on the workspace"], ["edge", "Only when you touch the edge", "Away until you touch its edge"]]
             value: Store.get("dock.show", Store.get("dock.onEmpty", true) ? "empty" : "edge")
             onPicked: v => Store.set("dock.show", v)
         }
@@ -33,20 +50,16 @@ ColumnLayout {
         NumberBox { from: 0; to: 5000; slideTo: 2000; step: 50; unit: "ms"; value: Number(Store.get("dock.hideDelay", 400)); onMoved: v => Store.set("dock.hideDelay", v) }
     }
     SettingRow {
-        key: "dock.size"; def: 56;
-        icon: "photo_size_select_large"; title: "Size"
-        NumberBox { from: 24; to: 160; slideTo: 120; step: 2; unit: "px"; value: Number(Store.get("dock.size", 56)); onMoved: v => Store.set("dock.size", v) }
+        key: "dock.exclusive"; def: false;
+        icon: "fit_screen"; title: "Keep windows clear of it"; desc: "Windows leave room for the dock (it then always shows)"
+        Toggle { checked: Store.get("dock.exclusive", false) === true; onToggled: on => Store.set("dock.exclusive", on) }
     }
     SettingRow {
-        key: "dock.magnify"; def: false;
-        icon: "zoom_in"; title: "Magnify on hover"; desc: "The app under the pointer grows"
-        Toggle { checked: Store.get("dock.magnify", false) === true; onToggled: on => Store.set("dock.magnify", on) }
+        key: "dock.onTop"; def: false;
+        icon: "layers"; title: "Above fullscreen apps"
+        Toggle { checked: Store.get("dock.onTop", false) === true; onToggled: on => Store.set("dock.onTop", on) }
     }
-    SettingRow {
-        key: "dock.dots"; def: true;
-        icon: "more_horiz"; title: "Open-window dots"; desc: "A dot under an app per open window"
-        Toggle { checked: Store.get("dock.dots", true) !== false; onToggled: on => Store.set("dock.dots", on) }
-    }
+    SectionHead { text: "Apps" }
     SettingRow {
         key: "dock.running"; def: true;
         icon: "apps"; title: "Open apps that aren't pinned"; desc: "Show them after the pinned ones"
@@ -75,8 +88,27 @@ ColumnLayout {
         icon: "push_pin"; title: "Pinned apps"; desc: "Right-click an app in the dock to pin or unpin it. Reset puts back the default list"
         Button { text: "Reset"; onClicked: Store.set("dock.pinned", null) }
     }
-
-    Label { text: "Look"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
+    SectionHead { text: "Size and look" }
+    SettingRow {
+        key: "dock.size"; def: 56;
+        icon: "photo_size_select_large"; title: "Size"
+        NumberBox { from: 24; to: 160; slideTo: 120; step: 2; unit: "px"; value: Number(Store.get("dock.size", 56)); onMoved: v => Store.set("dock.size", v) }
+    }
+    SettingRow {
+        key: "dock.spacing"; def: 4;
+        icon: "space_bar"; title: "Space between apps"
+        NumberBox { from: 0; to: 30; unit: "px"; value: Number(Store.get("dock.spacing", 4)); onMoved: v => Store.set("dock.spacing", v) }
+    }
+    SettingRow {
+        key: "dock.magnify"; def: false;
+        icon: "zoom_in"; title: "Magnify on hover"; desc: "The app under the pointer grows"
+        Toggle { checked: Store.get("dock.magnify", false) === true; onToggled: on => Store.set("dock.magnify", on) }
+    }
+    SettingRow {
+        key: "dock.dots"; def: true;
+        icon: "more_horiz"; title: "Open-window dots"; desc: "A dot under an app per open window"
+        Toggle { checked: Store.get("dock.dots", true) !== false; onToggled: on => Store.set("dock.dots", on) }
+    }
     SettingRow {
         key: "dock.glass"; def: "theme";
         icon: "water_drop"; title: "Glass"
@@ -105,23 +137,6 @@ ColumnLayout {
             }
         }
     }
-
-    Label { text: "Where and how"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
-    SettingRow {
-        key: "dock.position"; def: "bottom";
-        icon: "border_bottom"; title: "Position"
-        Dropdown { opts: [["bottom", "Bottom"], ["left", "Left"], ["right", "Right"], ["top", "Top"]]; value: Store.get("dock.position", "bottom"); onPicked: v => Store.set("dock.position", v) }
-    }
-    SettingRow {
-        key: "dock.exclusive"; def: false;
-        icon: "fit_screen"; title: "Keep windows clear of it"; desc: "Windows leave room for the dock (it then always shows)"
-        Toggle { checked: Store.get("dock.exclusive", false) === true; onToggled: on => Store.set("dock.exclusive", on) }
-    }
-    SettingRow {
-        key: "dock.onTop"; def: false;
-        icon: "layers"; title: "Above fullscreen apps"
-        Toggle { checked: Store.get("dock.onTop", false) === true; onToggled: on => Store.set("dock.onTop", on) }
-    }
     SettingRow {
         key: "dock.opacity"; def: 1;
         icon: "opacity"; title: "Dock opacity"; desc: "How solid the dock is"
@@ -140,18 +155,5 @@ ColumnLayout {
             Toggle { anchors.verticalCenter: parent.verticalCenter; checked: Number(Store.get("dock.radius", -1)) >= 0; onToggled: on => Store.set("dock.radius", on ? 24 : -1) }
             NumberBox { visible: Number(Store.get("dock.radius", -1)) >= 0; width: 240; from: 0; to: 80; slideTo: 50; unit: "px"; value: Math.max(0, Number(Store.get("dock.radius", -1))); onMoved: v => Store.set("dock.radius", v) }
         }
-    }
-    SettingRow {
-        key: "dock.margin"; def: 12;
-        readonly property string side: Store.get("dock.position", "bottom")
-        icon: side === "top" ? "vertical_align_top" : (side === "bottom" ? "vertical_align_bottom" : "width")
-        title: side === "bottom" ? "How high it sits" : (side === "top" ? "How low it sits" : "Distance from the edge")
-        desc: "How far it is from the edge of the screen. You can also hold the dock for a second and drag it by its background"
-        NumberBox { from: 0; to: 400; slideTo: 200; unit: "px"; value: Number(Store.get("dock.margin", 12)); onMoved: v => Store.set("dock.margin", v) }
-    }
-    SettingRow {
-        key: "dock.spacing"; def: 4;
-        icon: "space_bar"; title: "Space between apps"
-        NumberBox { from: 0; to: 30; unit: "px"; value: Number(Store.get("dock.spacing", 4)); onMoved: v => Store.set("dock.spacing", v) }
     }
 }

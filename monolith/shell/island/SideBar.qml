@@ -37,10 +37,14 @@ PanelWindow {
     }
 
     // auto-hide (Settings → Bar): it slides off the edge and comes back when the pointer touches it
-    readonly property bool autohide: Store.get("status.autohide", false) === true
+    readonly property bool autohide: Theme.barTucks
+    // dodge: a window where it sits (its box when it's out)
+    readonly property bool dodged: Theme.barShow === "dodge" && side !== ""
+        && Niri.overlaps(modelData.name, onLeft ? Theme.barMargin : width - thick - Theme.barMargin, Math.round((height - length) / 2), thick, length)
+    readonly property bool wantsAway: Theme.barShow === "edge" || dodged
     // (Hyprland: slid away for a borderless window as big as the screen, see Island)
     readonly property bool covered: Niri.hyprland && Niri.fullscreenOn(modelData.name)
-    readonly property bool tucked: (autohide || covered) && (covered || (!sensorHover.hovered && !barHover.hovered)) && !HubState.open && HubState.dropScreen === ""
+    readonly property bool tucked: (wantsAway || covered) && (covered || (!sensorHover.hovered && !barHover.hovered)) && !HubState.open && HubState.dropScreen === ""
     onTuckedChanged: if (side !== "") HubState.setBarTucked(modelData.name, tucked && autohide)
     Component.onCompleted: if (side !== "") HubState.setBarTucked(modelData.name, tucked && autohide)
     Item {

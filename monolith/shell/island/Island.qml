@@ -97,12 +97,18 @@ PanelWindow {
 
     // auto-hide (Settings → Status line): the collapsed island slides up, and comes back when
     // the pointer touches the top edge
-    readonly property bool autohide: Store.get("status.autohide", false) === true
+    // (When it shows: only at the edge, or out of the way of windows; see Theme.barShow)
+    readonly property bool autohide: Theme.barTucks
+    // dodge: a window where the bar sits (where it is when it's out) on this screen's workspace
+    readonly property bool dodged: Theme.barShow === "dodge" && !side
+        && Niri.overlaps(modelData.name, island.x, bottom ? height - Theme.islandH - Theme.barMargin : Theme.barMargin, island.width, Theme.islandH)
+    // whether it goes away now: at the edge always, dodging only while a window is there
+    readonly property bool wantsAway: Theme.barShow === "edge" || dodged
     // Hyprland: a window as big as the screen that isn't fullscreen (a game's borderless mode)
     // sits under the bar, so the bar slides away for it (real fullscreen covers the bar already);
     // the screen's top edge doesn't bring it back then, it would catch the game's mouse
     readonly property bool covered: Niri.hyprland && Niri.fullscreenOn(modelData.name)
-    readonly property bool tucked: (autohide || covered) && !win.shown && (covered || (!sensorHover.hovered && !barHover.hovered))
+    readonly property bool tucked: (wantsAway || covered) && !win.shown && (covered || (!sensorHover.hovered && !barHover.hovered))
     // the Frame, auto-hide: windows make room for the bar while it's out (island/Frame.qml)
     readonly property bool barIsOut: Theme.frameHide && barHere && !tucked && !covered
     onTuckedChanged: if (!side) HubState.setBarTucked(modelData.name, tucked && autohide)

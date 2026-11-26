@@ -11,7 +11,7 @@ Scope {
     // no bar on this screen (hidden here, or auto-hide): no strip at all. Changing the zone of a
     // strip that's already there doesn't reach niri (an empty 1 px window never redraws, so the
     // change is never committed) and windows kept stopping short of the top.
-    readonly property bool reserves: Store.loaded && Store.get("status.autohide", false) !== true && (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) === -1
+    readonly property bool reserves: Store.loaded && !Theme.barTucks && (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) === -1
 
     // (along the bar's edge: the top, the bottom or a side. Made anew when the bar moves to
     // another edge, for the same reason)

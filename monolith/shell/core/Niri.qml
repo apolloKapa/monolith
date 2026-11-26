@@ -79,6 +79,24 @@ Singleton {
         }
         return false;
     }
+    // does a window on the workspace showing on this screen overlap (or touch) the box (x, y, w, h,
+    // in the screen's own coordinates)? The bar's and the dock's "dodge windows". A tiled window
+    // on niri, which doesn't say where its tile is, counts (tiles fill the screen)
+    function overlaps(output, x, y, w, h) {
+        const ws = workspaces.find(z => z.output === output && z.is_active);
+        if (!ws) return false;
+        const t = 4;
+        for (const k in windows) {
+            const win = windows[k];
+            if (!win || win.workspace_id !== ws.id) continue;
+            const L = win.layout;
+            const pos = L ? L.tile_pos_in_workspace_view : null;
+            if (!pos) { if (!win.is_floating) return true; continue; }
+            const sz = L.tile_size || [0, 0];
+            if (pos[0] < x + w + t && pos[0] + sz[0] > x - t && pos[1] < y + h + t && pos[1] + sz[1] > y - t) return true;
+        }
+        return false;
+    }
     // the screen with the focused workspace
     readonly property string focusedOutput: { const w = workspaces.find(w => w.is_focused); return w ? (w.output || "") : ""; }
     readonly property string layoutName: layouts.length > layoutIndex ? layouts[layoutIndex] : ""

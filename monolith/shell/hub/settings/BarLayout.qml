@@ -148,6 +148,7 @@ ColumnLayout {
         }
     }
 
+    SectionHead { text: "Style and place" }
     // the bar's style: five cards, each a little picture of it
     Row {
         Layout.leftMargin: 6
@@ -178,13 +179,23 @@ ColumnLayout {
             onPicked: v => Store.set(Desk.on ? "desktop.edge" : "bar.position", v)
         }
     }
-    // (it had a page of its own, Bar → Auto-hide, for this one switch)
+    // (the dock's own has the same choices, worded the same: Dock → When it shows)
+    SectionHead { text: "When it shows" }
     SettingRow {
-        key: "status.autohide"; def: false;
-        icon: "visibility_off"; title: "Auto-hide"
-        desc: "The bar slides away off the " + Theme.barEdge + " of the screen; touch that edge to bring it back (Super+A switches this)"
-        Toggle { checked: Store.get("status.autohide", false) === true; onToggled: on => Store.set("status.autohide", on) }
+        key: "bar.show"; keys: ["status.autohide"]
+        icon: "visibility"; title: "When it shows"
+        desc: Theme.barShow === "dodge" ? "Out of the way while a window is where it sits; touching the " + Theme.barEdge + " edge always brings it"
+            : Theme.barShow === "edge" ? "Away off the " + Theme.barEdge + " edge until you touch it (auto-hide). Super+A switches between this and Always"
+            : "Always there, and windows keep clear of it"
+        Dropdown {
+            width: 250
+            opts: [["always", "Always", "Windows keep clear of it"], ["dodge", "Dodge windows", "Out of the way while a window is where it sits"],
+                   ["edge", "Only when you touch the edge", "Auto-hide: away until you touch its edge"]]
+            value: Theme.barShow
+            onPicked: v => { Store.set("bar.show", v); Store.set("status.autohide", v === "edge"); }
+        }
     }
+    SectionHead { text: "Size and spacing" }
     SettingRow {
         key: "bar.margin";
         show: Theme.barFloats
@@ -266,6 +277,7 @@ ColumnLayout {
             onPicked: v => Store.set("bar.look", v)
         }
     }
+    SectionHead { text: "Look" }
     SettingRow {
         key: "bar.opacity";
         icon: "opacity"; title: "Bar opacity"; desc: "0 %: the bar disappears and only its modules stay"

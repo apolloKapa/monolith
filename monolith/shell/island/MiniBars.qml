@@ -28,7 +28,7 @@ PanelWindow {
     readonly property bool editing: HubState.miniEdit === modelData.name
     readonly property bool overFullscreen: Niri.fullscreenOn(modelData.name)
     // auto-hide: they go away with the bar and come back with it (while moving them they stay)
-    readonly property bool tucked: Store.get("status.autohide", false) === true && HubState.barTucked[modelData.name] === true && !editing
+    readonly property bool tucked: Theme.barTucks && HubState.barTucked[modelData.name] === true && !editing
     visible: barHere && minis.length > 0
 
     WlrLayershell.namespace: "monolith-minibars"
