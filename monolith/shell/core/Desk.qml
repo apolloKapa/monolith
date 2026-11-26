@@ -613,6 +613,39 @@ Singleton {
             desk.wasFloating = now;
         }
     }
+    // niri keeps a floating window's place from the top of the room it gives: the bar (and the mini
+    // bars that go with it) starting or stopping to keep room (auto-hide on or off, Meta+A) moved
+    // every window up or down. Where they were is noted the moment that changes, and they're put back
+    property var keepAt: null
+    function noteKeep() {
+        if (Niri.hyprland || !on) return;
+        const m = {};
+        for (const k in Niri.windows) {
+            const w = Niri.windows[k];
+            if (!w || !w.is_floating || isMin(w)) continue;
+            const p = w.layout ? w.layout.tile_pos_in_workspace_view : null;
+            if (p) m[k] = [p[0], p[1]];
+        }
+        keepAt = m;
+        keepTries = 0;
+        keepFor.restart();
+    }
+    function putBack() {
+        for (const k in keepAt) {
+            const w = Niri.windows[k], t = keepAt[k];
+            const p = w && w.layout ? w.layout.tile_pos_in_workspace_view : null;
+            if (!p || (Math.abs(p[0] - t[0]) <= 1 && Math.abs(p[1] - t[1]) <= 1)) continue;
+            // (by the difference: niri's absolute place counts from the top of the room it gives,
+            // which is just what moved)
+            const dx = Math.round(t[0] - p[0]), dy = Math.round(t[1] - p[1]);
+            niri(["move-floating-window", "--id", String(k), "-x", (dx >= 0 ? "+" : "") + dx, "-y", (dy >= 0 ? "+" : "") + dy]);
+        }
+    }
+    // (looked at a few times as niri takes the new room: it doesn't always say a floating window
+    // moved for that)
+    property int keepTries: 0
+    Timer { id: keepFor; interval: 150; repeat: true; onTriggered: { desk.putBack(); if (++desk.keepTries >= 8) { stop(); desk.keepAt = null; } } }
+    Connections { target: Theme; function onBarTucksChanged() { desk.noteKeep(); } }
     // (centred once its new size has been taken: centred straight after the resize, niri used the
     // old size and the window sat at the top)
     property var toCenter: []
