@@ -1401,7 +1401,12 @@ PanelWindow {
     // starts (its blur waits until it's there: a blur region can't move with it)
     Binding { target: win.contentItem; property: "y"; value: (win.bottom ? 1 : -1) * (1 - Intro.barK) * (Theme.islandH + Theme.barMargin + 28); when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
     Binding { target: win.contentItem; property: "opacity"; value: Intro.barK; when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
-    BackgroundEffect.blurRegion: Theme.blur && !Intro.playing && !overFullscreen && !(win.tucked && !win.toastGrows && !Theme.frameHide) ? blurShape : null
+    // (and only once the bar is all the way on the screen: coming back from auto-hide, the blur
+    // switched on as the slide started, while the bar was still above the screen's edge; for that
+    // frame the blur region lay outside the window and Hyprland blurred the whole screen, which
+    // looked like the screen shaking. It comes on as the bar arrives, like the Intro's)
+    readonly property bool islandIn: island.y >= -0.5 && island.y + island.height <= win.height + 0.5
+    BackgroundEffect.blurRegion: Theme.blur && !Intro.playing && !overFullscreen && islandIn && !(win.tucked && !win.toastGrows && !Theme.frameHide) ? blurShape : null
     Region {
         id: blurShape
         // (a screen with the bar turned off has no bar to blur behind: only its open menu)
