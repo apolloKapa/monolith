@@ -4,184 +4,206 @@ import Quickshell.Services.Pipewire
 import "../../core"
 import "../../ui"
 
-// Music, controls: a slim player. On top the seek bar (a wave while it plays) between the time
-// played and the time left; under it repeat (off, the playlist, this track), previous, play or
-// pause, next, and the volume (the player's own when it has one, else the speakers'): click the
-// speaker to mute, scroll on it or drag the bar that opens beside it.
+// Music, controls: a slim player on glass. Along the top, the time played, the seek bar (a wave
+// while the song plays) and the time still to go. Underneath: repeat on the left (off, the whole
+// list, this song), previous / play-pause / next in the middle, and the volume on the right, the
+// player's own if it has one, otherwise the speakers'. Click the speaker to mute and unmute;
+// hover or scroll on it and a slider slides out beside it.
 FaceBase {
-    id: f
-    readonly property var p: f.player
-    readonly property bool active: !!p && p.trackTitle !== ""
-    PlayPosition { id: pp; player: f.p; active: f.live && f.visible }
-    function mmss(t) { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); }
-
-    // sizes follow the widget's height
-    readonly property real pad: Math.max(8, Math.min(20, height * 0.12))
-    readonly property real btn: Math.max(24, Math.min(64, height * 0.4))
-    readonly property real timeSize: Math.max(9, Math.min(18, height * 0.14))
-
-    // repeat: off → the playlist → this track → off
-    readonly property bool canLoop: !!p && p.loopSupported
-    function cycleLoop() {
-        if (!canLoop) return;
-        p.loopState = p.loopState === MprisLoopState.None ? MprisLoopState.Playlist
-            : (p.loopState === MprisLoopState.Playlist ? MprisLoopState.Track : MprisLoopState.None);
+    id: face
+    readonly property var mp: face.player
+    readonly property bool hasTrack: !!mp && mp.trackTitle !== ""
+    PlayPosition { id: clock; player: face.mp; active: face.live && face.visible }
+    // seconds as m:ss
+    function stamp(sec) {
+        const t = Math.max(0, Math.floor(sec || 0));
+        return Math.floor(t / 60) + ":" + (t % 60 < 10 ? "0" : "") + (t % 60);
     }
 
-    // volume
+    // everything is sized from the widget's height
+    readonly property real gutter: Math.max(8, Math.min(20, height * 0.12))
+    readonly property real button: Math.max(24, Math.min(64, height * 0.4))
+    readonly property real timePx: Math.max(9, Math.min(18, height * 0.14))
+    readonly property color hoverInk: Qt.alpha(Theme.text, 0.1)
+
+    // repeat goes round: off, the list, the song, off again
+    readonly property bool repeats: !!mp && mp.loopSupported
+    readonly property bool repeating: !!mp && mp.loopState !== MprisLoopState.None
+    readonly property var repeatAfter: ({ [MprisLoopState.None]: MprisLoopState.Playlist, [MprisLoopState.Playlist]: MprisLoopState.Track, [MprisLoopState.Track]: MprisLoopState.None })
+    function stepRepeat() { if (repeats) mp.loopState = repeatAfter[mp.loopState]; }
+
+    // the volume
     PwObjectTracker { objects: Pipewire.defaultAudioSink ? [Pipewire.defaultAudioSink] : [] }
-    readonly property var sink: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio : null
-    readonly property bool ownVolume: !!p && p.volumeSupported
-    readonly property real volume: ownVolume ? p.volume : (sink ? (sink.muted ? 0 : sink.volume) : 0)
-    property real lastVolume: 0.5
-    property bool volOpen: false
-    function setVolume(v) {
-        v = Math.max(0, Math.min(1, v));
-        if (ownVolume) p.volume = v;
-        else if (sink) { sink.muted = false; sink.volume = v; }
-        volOpen = true; volClose.restart();
+    QtObject {
+        id: loudness
+        readonly property var speakers: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio : null
+        readonly property bool playerOwn: !!face.mp && face.mp.volumeSupported
+        readonly property real level: playerOwn ? face.mp.volume : (speakers ? (speakers.muted ? 0 : speakers.volume) : 0)
+        property real beforeMute: 0.5
+        property bool shown: false
+        function put(v) {
+            const x = v < 0 ? 0 : (v > 1 ? 1 : v);
+            if (playerOwn) face.mp.volume = x;
+            else if (speakers) { speakers.muted = false; speakers.volume = x; }
+            shown = true;
+            hideSlider.restart();
+        }
+        function flipMute() {
+            if (level > 0.001) { beforeMute = level; put(0); }
+            else put(beforeMute > 0.01 ? beforeMute : 0.5);
+        }
     }
-    function toggleMute() {
-        if (volume > 0.001) { lastVolume = volume; setVolume(0); }
-        else setVolume(lastVolume > 0.01 ? lastVolume : 0.5);
-    }
-    Timer { id: volClose; interval: 2500; onTriggered: if (!volArea.containsMouse && !volDrag.pressed) f.volOpen = false }
+    Timer { id: hideSlider; interval: 2500; onTriggered: if (!volumeHover.containsMouse && !sliderDrag.pressed) loudness.shown = false }
 
-    Glass { anchors.fill: parent; ctx: f.ctx; radius: Theme.corner(Math.min(f.height, 120), 16) }
+    // a round button with an icon; `lead` is the big accent-filled play button
+    component Disc: Pressable {
+        id: disc
+        property string glyph: ""
+        property bool lead: false
+        property real glyphPart: 0.42
+        property bool lit: false
+        property bool solid: true
+        radius: height / 2
+        color: lead ? face.accentC : (lit ? Qt.alpha(face.accentC, 0.22) : (hovered ? face.hoverInk : "transparent"))
+        Icon {
+            anchors.centerIn: parent
+            name: disc.glyph
+            filled: disc.solid
+            size: Math.round(face.button * disc.glyphPart)
+            color: disc.lead ? Theme.onAccent : (disc.lit ? face.accentC : face.mainC)
+        }
+    }
+    component Stamp: Text {
+        anchors.verticalCenter: parent.verticalCenter
+        renderType: Text.CurveRendering
+        color: face.subC
+        font.family: Theme.fontFamily
+        font.weight: Font.Bold
+        font.pixelSize: face.timePx
+    }
+
+    Glass { anchors.fill: parent; ctx: face.ctx; radius: Theme.corner(Math.min(face.height, 120), 16) }
 
     Column {
         anchors.fill: parent
-        anchors.leftMargin: f.pad * 1.3; anchors.rightMargin: f.pad * 1.3
-        anchors.topMargin: f.pad * 0.8; anchors.bottomMargin: f.pad * 0.6
-        spacing: Math.max(2, f.pad * 0.3)
+        anchors.leftMargin: face.gutter * 1.3
+        anchors.rightMargin: face.gutter * 1.3
+        anchors.topMargin: face.gutter * 0.8
+        anchors.bottomMargin: face.gutter * 0.6
+        spacing: Math.max(2, face.gutter * 0.3)
 
-        // the time played, the seek bar, the time left
         Row {
-            id: seekRow
+            id: timeline
             width: parent.width
-            height: Math.max(16, f.timeSize * 1.4)
-            spacing: Math.max(6, f.pad * 0.6)
-            Text { renderType: Text.CurveRendering;
-                id: played
-                anchors.verticalCenter: parent.verticalCenter
-                text: f.active ? f.mmss(pp.shown) : "-:--"
-                color: f.subC; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: f.timeSize
-            }
+            height: Math.max(16, face.timePx * 1.4)
+            spacing: Math.max(6, face.gutter * 0.6)
+            Stamp { id: gone; text: face.hasTrack ? face.stamp(clock.shown) : "-:--" }
             WavySeek {
                 anchors.verticalCenter: parent.verticalCenter
-                width: seekRow.width - played.width - left.width - 2 * seekRow.spacing
-                height: seekRow.height
-                live: f.live
-                color: f.accentC
-                value: f.active ? pp.shown : 0
-                to: f.active && f.p.length > 0 ? f.p.length : 1
-                playing: f.active && f.p.isPlaying
-                onMoved: v => { if (f.p && f.p.canSeek) { f.p.position = v; pp.sync(); } }
+                width: timeline.width - gone.width - toGo.width - 2 * timeline.spacing
+                height: timeline.height
+                live: face.live
+                color: face.accentC
+                value: face.hasTrack ? clock.shown : 0
+                to: face.hasTrack && face.mp.length > 0 ? face.mp.length : 1
+                playing: face.hasTrack && face.mp.isPlaying
+                onMoved: v => { if (face.mp && face.mp.canSeek) { face.mp.position = v; clock.sync(); } }
             }
-            Text { renderType: Text.CurveRendering;
-                id: left
-                anchors.verticalCenter: parent.verticalCenter
-                text: f.active && f.p.length > 0 ? "-" + f.mmss(f.p.length - pp.shown) : "-:--"
-                color: f.subC; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: f.timeSize
-            }
+            Stamp { id: toGo; text: face.hasTrack && face.mp.length > 0 ? "-" + face.stamp(face.mp.length - clock.shown) : "-:--" }
         }
 
-        // the buttons
         Item {
             width: parent.width
-            height: parent.height - seekRow.height - parent.spacing
+            height: parent.height - timeline.height - parent.spacing
 
-            // repeat, on the left
-            Pressable {
-                anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                width: f.btn * 0.8; height: width
-                radius: width / 2
-                enabledInput: f.canLoop
-                opacity: f.canLoop ? 1 : 0.4
-                color: f.p && f.p.loopState !== MprisLoopState.None ? Qt.alpha(f.accentC, 0.22) : (hovered ? Qt.alpha(Theme.text, 0.1) : "transparent")
-                onClicked: f.cycleLoop()
-                Icon {
-                    anchors.centerIn: parent
-                    name: f.p && f.p.loopState === MprisLoopState.Track ? "repeat_one" : "repeat"
-                    size: Math.round(f.btn * 0.36)
-                    color: f.p && f.p.loopState !== MprisLoopState.None ? f.accentC : f.mainC
-                }
+            Disc {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                width: face.button * 0.8
+                height: width
+                glyph: face.mp && face.mp.loopState === MprisLoopState.Track ? "repeat_one" : "repeat"
+                glyphPart: 0.36
+                solid: false
+                lit: face.repeating
+                enabledInput: face.repeats
+                opacity: face.repeats ? 1 : 0.4
+                onClicked: face.stepRepeat()
             }
 
-            // previous, play / pause, next, in the middle
             Row {
                 anchors.centerIn: parent
-                spacing: Math.max(4, f.pad * 0.5)
-                Repeater {
-                    model: [["skip_previous", 0], [f.p && f.p.isPlaying ? "pause" : "play_arrow", 1], ["skip_next", 2]]
-                    Pressable {
-                        required property var modelData
-                        readonly property bool main: modelData[1] === 1
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: main ? f.btn * 1.25 : f.btn * 0.9; height: main ? f.btn : f.btn * 0.9
-                        radius: height / 2
-                        enabledInput: !!f.p
-                        color: main ? f.accentC : (hovered ? Qt.alpha(Theme.text, 0.1) : "transparent")
-                        ink: main ? Theme.onAccent : Theme.text
-                        onClicked: {
-                            if (!f.p) return;
-                            if (modelData[1] === 0) f.p.previous();
-                            else if (modelData[1] === 1) f.p.togglePlaying();
-                            else f.p.next();
-                        }
-                        Icon {
-                            anchors.centerIn: parent
-                            name: parent.modelData[0]; filled: true
-                            size: Math.round(f.btn * (parent.main ? 0.5 : 0.42))
-                            color: parent.main ? Theme.onAccent : f.mainC
-                        }
-                    }
+                spacing: Math.max(4, face.gutter * 0.5)
+                Disc {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: face.button * 0.9; height: width
+                    glyph: "skip_previous"
+                    enabledInput: !!face.mp
+                    ink: Theme.text
+                    onClicked: if (face.mp) face.mp.previous()
+                }
+                Disc {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: face.button * 1.25; height: face.button
+                    lead: true
+                    glyph: face.mp && face.mp.isPlaying ? "pause" : "play_arrow"
+                    glyphPart: 0.5
+                    enabledInput: !!face.mp
+                    ink: Theme.onAccent
+                    onClicked: if (face.mp) face.mp.togglePlaying()
+                }
+                Disc {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: face.button * 0.9; height: width
+                    glyph: "skip_next"
+                    enabledInput: !!face.mp
+                    ink: Theme.text
+                    onClicked: if (face.mp) face.mp.next()
                 }
             }
 
-            // the volume, on the right: the speaker, and a bar that opens beside it
+            // the speaker, with its slider sliding out to the left of it
             Item {
-                anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
-                height: f.btn * 0.8
-                width: height + (f.volOpen ? volBar.width + 8 : 0)
-                Behavior on width { NumberAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                height: face.button * 0.8
+                width: height + (loudness.shown ? slider.width + 8 : 0)
                 clip: true
+                Behavior on width { NumberAnimation { duration: Theme.fastMs; easing.type: Easing.OutCubic } }
                 MouseArea {
-                    id: volArea
+                    id: volumeHover
                     anchors.fill: parent
                     hoverEnabled: true
                     acceptedButtons: Qt.NoButton
-                    onWheel: wheel => f.setVolume(f.volume + (wheel.angleDelta.y > 0 ? 0.05 : -0.05))
-                    onContainsMouseChanged: if (containsMouse) { f.volOpen = true; volClose.stop(); } else volClose.restart()
+                    onWheel: e => loudness.put(loudness.level + (e.angleDelta.y > 0 ? 0.05 : -0.05))
+                    onContainsMouseChanged: { if (containsMouse) { loudness.shown = true; hideSlider.stop(); } else hideSlider.restart(); }
                 }
                 Item {
-                    id: volBar
-                    anchors.right: spk.left; anchors.rightMargin: 8
+                    id: slider
+                    anchors.right: speaker.left
+                    anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
-                    width: Math.max(60, f.width * 0.22); height: 6
-                    WavyBar { visible: Theme.wavy; anchors.fill: parent; to: f.volume; color: f.accentC; trackColor: Qt.alpha(Theme.text, 0.2) }
+                    width: Math.max(60, face.width * 0.22)
+                    height: 6
+                    WavyBar { visible: Theme.wavy; anchors.fill: parent; to: loudness.level; color: face.accentC; trackColor: Qt.alpha(Theme.text, 0.2) }
                     Rectangle { visible: !Theme.wavy; anchors.fill: parent; radius: Theme.chamfer ? 0 : 3; color: Qt.alpha(Theme.text, 0.15) }
-                    Rectangle { visible: !Theme.wavy; width: parent.width * f.volume; height: parent.height; radius: Theme.chamfer ? 0 : 3; color: f.accentC }
+                    Rectangle { visible: !Theme.wavy; width: parent.width * loudness.level; height: parent.height; radius: Theme.chamfer ? 0 : 3; color: face.accentC }
                     MouseArea {
-                        id: volDrag
-                        anchors.fill: parent; anchors.margins: -8
-                        onPressed: mouse => f.setVolume((mouse.x - 8) / volBar.width)
-                        onPositionChanged: mouse => { if (pressed) f.setVolume((mouse.x - 8) / volBar.width); }
+                        id: sliderDrag
+                        anchors.fill: parent
+                        anchors.margins: -8
+                        onPressed: e => loudness.put((e.x - 8) / slider.width)
+                        onPositionChanged: e => { if (pressed) loudness.put((e.x - 8) / slider.width); }
                     }
                 }
-                Pressable {
-                    id: spk
-                    anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                Disc {
+                    id: speaker
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
                     width: parent.height; height: width
-                    radius: width / 2
-                    color: hovered ? Qt.alpha(Theme.text, 0.1) : "transparent"
-                    onClicked: f.toggleMute()
-                    Icon {
-                        anchors.centerIn: parent
-                        name: f.volume < 0.001 ? "volume_off" : (f.volume < 0.5 ? "volume_down" : "volume_up")
-                        size: Math.round(f.btn * 0.36)
-                        color: f.mainC
-                    }
+                    glyph: loudness.level < 0.001 ? "volume_off" : (loudness.level < 0.5 ? "volume_down" : "volume_up")
+                    glyphPart: 0.36
+                    solid: false
+                    onClicked: loudness.flipMute()
                 }
             }
         }
