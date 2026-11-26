@@ -200,13 +200,18 @@ Item {
         property real spacing: bar.vertical ? 2 : 6
         // (stacked on a vertical bar: less room above and below)
         readonly property real vpad: Math.round(pad * 0.7)
+        // (at least this wide inside, its things centred: a module that keeps one width while
+        // what's in it changes, the stats, with the spare room split between both ends)
+        property real minInner: 0
+        readonly property real contentW: inner.implicitWidth
+        readonly property real innerW: Math.max(inner.implicitWidth, minInner)
         height: bar.vertical ? inner.implicitHeight + 2 * vpad : Theme.islandH - 10
-        width: bar.vertical ? Theme.islandH - 10 : inner.implicitWidth + 2 * pad
+        width: bar.vertical ? Theme.islandH - 10 : innerW + 2 * pad
         // on a see-through bar, modules can sit on their own pills
         color: hovered ? Theme.containerHigh : (Theme.barPills ? Qt.alpha(Theme.frame, Math.max(0.85, Theme.frame.a)) : "transparent")
         Line {
             id: inner
-            x: bar.vertical ? Math.round((m.width - width) / 2) : m.pad
+            x: bar.vertical ? Math.round((m.width - width) / 2) : m.pad + Math.round((m.innerW - width) / 2)
             y: bar.vertical ? m.vpad : Math.round((m.height - height) / 2)
             spacing: m.spacing
         }
@@ -791,6 +796,11 @@ Item {
         Mod {
             id: statsMod
             spacing: bar.vertical ? 2 : Number(bar.mopt("stats.gap", 6))
+            // as wide as with every value at 100 % (a number changing width moved everything after
+            // it, and a bar that fits its modules changed length), the values against their icons
+            // and the spare room even at both ends
+            minInner: bar.vertical ? 0 : contentW + slack
+            readonly property real slack: { let w = 0; for (let i = 0; i < statRep.count; i++) { const it = statRep.itemAt(i); if (it) w += it.slack; } return w; }
             readonly property var which: Store.get("bar.stats", ["cpu", "temp"])
             // the system monitor drops down under it (Settings → System monitor), or the control center's Monitor
             onClicked: {
@@ -806,7 +816,7 @@ Item {
                 Line {
                     required property var modelData
                     spacing: bar.vertical ? 0 : 3
-                    // (what it's short of its widest value, 100 %: made up at the end of the module)
+                    // (what it's short of its widest value, 100 %: the module makes it up at both ends)
                     readonly property real slack: bar.vertical ? 0 : Math.max(0, widest.width - statText.implicitWidth)
                     Icon { visible: bar.mopt("stats.icons", true) === true; name: modelData[1]; size: 15; color: Theme.subtext }
                     Label {
@@ -816,14 +826,6 @@ Item {
                         TextMetrics { id: widest; font: statText.font; text: "100" + modelData[2].slice(-1) }
                     }
                 }
-            }
-            // the room the values are short of 100 %, all together after the last one: the module
-            // stays one width (a number changing width moved everything after it, and a bar that
-            // fits its modules changed length), without a gap before every short number
-            Item {
-                visible: !bar.vertical
-                width: { let w = 0; for (let i = 0; i < statRep.count; i++) { const it = statRep.itemAt(i); if (it) w += it.slack; } return w; }
-                height: 1
             }
         }
     }
