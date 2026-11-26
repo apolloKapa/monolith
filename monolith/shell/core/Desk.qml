@@ -312,7 +312,17 @@ Singleton {
         Quickshell.execDetached(["sh", "-c", Prefs.terminal + " sh -c '" + cmd.replace(/'/g, "'\\''") + "' _ \"$0\"", barsScript]);
     }
     readonly property var noBarDefault: ["firefox", "librewolf", "zen", "brave-browser", "chromium", "google-chrome", "vivaldi-stable", "org.gnome.*", "*discord*", "*vesktop*", "*spotify*", "code", "codium", "*vscodium*", "obsidian", "steam"]
-    readonly property var noBar: { const v = Store.raw("desktop.noBar", null); return Array.isArray(v) ? v : noBarDefault; }
+    // (Vesktop with its system title bar, nativeTitleBar in its settings, gets ours: with Discord's
+    // own, double-clicking it lost track of whether it was maximised)
+    readonly property var noBar: {
+        const v = Store.raw("desktop.noBar", null);
+        const l = Array.isArray(v) ? v : noBarDefault;
+        return vesktopNative ? l.filter(x => x.toLowerCase().indexOf("vesktop") === -1) : l;
+    }
+    property bool vesktopNative: false
+    function readVesktop(t) { try { if (t) vesktopNative = JSON.parse(t).nativeTitleBar === true; } catch (e) {} }
+    FileView { path: Quickshell.env("HOME") + "/.config/vesktop/settings.json"; watchChanges: true; printErrors: false; onLoaded: desk.readVesktop(text()); onFileChanged: reload() }
+    FileView { path: Quickshell.env("HOME") + "/.var/app/dev.vencord.Vesktop/config/vesktop/settings.json"; watchChanges: true; printErrors: false; onLoaded: desk.readVesktop(text()); onFileChanged: reload() }
     function hex(c) { const h = x => ("0" + Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16)).slice(-2); return "rgba(" + h(c.r) + h(c.g) + h(c.b) + h(c.a) + ")"; }
     readonly property string barsLua: {
         const dsp = a => "[[hyprctl dispatch '" + a + "']]";
@@ -335,7 +345,7 @@ Singleton {
             +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.danger, 0.92)) + "\", fg_color = \"" + hex(Theme.card) + "\", size = 22, icon = \"\ue5cd\", action = " + dsp("hl.dsp.window.close()") + " }); "
             +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.text, 0.12)) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 22, icon = \"\ue3c6\", action = " + dsp(max) + " }); "
             +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.text, 0.12)) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 22, icon = \"\ue15b\", action = " + dsp('hl.dsp.window.move({ workspace = "special:' + minName + '", follow = false })') + " }) end; "
-            + (pat === "" ? "" : "if MonolithDesk.noBar then MonolithDesk.noBar:set_enabled(false) end; MonolithDesk.noBar = hl.window_rule({ name = \"monolith-nobar-" + Qt.md5(pat).slice(0, 8) + "\", match = { class = [[(?i)^(" + pat + ")$]] }, [\"hyprbars:no_bar\"] = true })");
+            + (pat === "" ? "if MonolithDesk.noBar then MonolithDesk.noBar:set_enabled(false); MonolithDesk.noBar = nil end" : "if MonolithDesk.noBar then MonolithDesk.noBar:set_enabled(false) end; MonolithDesk.noBar = hl.window_rule({ name = \"monolith-nobar-" + Qt.md5(pat).slice(0, 8) + "\", match = { class = [[(?i)^(" + pat + ")$]] }, [\"hyprbars:no_bar\"] = true })");
     }
     function hyprBars(want) {
         if (!Niri.hyprland || !Niri.hyprLua || !barsReady) return;
