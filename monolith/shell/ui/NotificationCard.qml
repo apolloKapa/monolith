@@ -48,7 +48,9 @@ Pressable {
     // held under the pointer (the island keeps showing this one meanwhile, see Island's toast)
     readonly property bool held: swipe.active && !flying
     transform: Translate { x: card.swipeX }
-    opacity: handed ? 0 : Math.max(0, 1 - Math.abs(swipeX) / (width * 1.1))
+    // (while its copy takes over it stays solid: the copy hangs off the tray, it doesn't fade.
+    // With no copy (animations off) it fades as it's swiped, as before)
+    opacity: handed ? 0 : (throwId >= 0 || Throw.on ? 1 : Math.max(0, 1 - Math.abs(swipeX) / (width * 1.1)))
     Behavior on swipeX { enabled: !swipe.active && !card.resetting; NumberAnimation { duration: card.flying ? Theme.popOutMs : Theme.shortMs; easing.type: card.flying ? Easing.InCubic : Easing.OutBack } }
 
     // the swipe starts: photograph the card where it is, the copy takes over from there

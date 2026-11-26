@@ -98,8 +98,18 @@ PanelWindow {
             readonly property real g: 3200
             x: phase === "held" || phase === "back" ? modelData.x + dx : px
             y: phase === "held" || phase === "back" ? modelData.y : py
-            // fades as it goes sideways (held and sliding); falling it stays solid
-            opacity: dropFade * (phase === "fall" || phase === "wall" ? 1 : Math.max(0, 1 - Math.abs(phase === "slide" ? travelled : dx) / (width * 1.1)))
+            // held, it stays solid and hangs off the tray instead: it turns on its top corner that's
+            // still in (pulled right: the top-left one) and its free end droops, more the further
+            // it's out, up to ~28° a whole card's width out. Springing back, it swings level again
+            readonly property bool hanging: phase === "held" || phase === "back"
+            readonly property real hang: {
+                if (!hanging) return 0;
+                const t = Math.min(1, Math.abs(dx) / Math.max(1, width));
+                return (dx < 0 ? -1 : 1) * 28 * (1 - (1 - t) * (1 - t));
+            }
+            transform: Rotation { origin.x: card.dx < 0 ? card.width : 0; origin.y: 0; angle: card.hang }
+            // sliding off, it fades as it goes (from where it was let go); falling it stays solid
+            opacity: dropFade * (phase === "slide" ? Math.max(0, 1 - travelled / (width * 1.1)) : 1)
             // the press ripple, carried on from where it was when grabbed: it spreads to the edges
             // and fades, as on the card (the photograph has none: it froze half-grown there)
             readonly property var inkAt: fink !== "" ? JSON.parse(fink) : null
@@ -147,7 +157,14 @@ PanelWindow {
                 function onLetGo(id, vx, vy, mode) {
                     if (id !== card.modelData.id) return;
                     card.px = card.modelData.x + card.dx; card.py = card.modelData.y;
-                    card.travelled = Math.abs(card.dx);
+                    // the hang becomes the flight's own turn: the same angle about the middle,
+                    // moved so the card stays exactly where it hung (no jump as it's let go)
+                    const a = card.hang * Math.PI / 180;
+                    const ox = (card.dx < 0 ? card.width : 0) - card.width / 2, oy = -card.height / 2;
+                    card.px += ox - (ox * Math.cos(a) - oy * Math.sin(a));
+                    card.py += oy - (ox * Math.sin(a) + oy * Math.cos(a));
+                    card.rotation = card.hang;
+                    card.travelled = 0;
                     card.vx = vx; card.vy = mode === "fall" ? vy : 0;
                     card.spin = mode === "fall" ? Math.max(-720, Math.min(720, vx * 0.35 + (Math.random() - 0.5) * 120)) : 0;
                     card.phase = mode;
