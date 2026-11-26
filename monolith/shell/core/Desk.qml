@@ -422,18 +422,29 @@ Singleton {
                 // put the pointer in its middle; yours back when Desktop mode is off)
                 + (want ? "if MonolithDesk.dragWas == nil then MonolithDesk.dragWas = hl.get_config(\"binds.drag_center_window\") end; hl.config({ binds = { drag_center_window = false } }); "
                         : "if MonolithDesk.dragWas ~= nil then hl.config({ binds = { drag_center_window = MonolithDesk.dragWas } }); MonolithDesk.dragWas = nil end; ")
-                + "if MonolithDesk.hv ~= 6 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\", \"fsHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 6 end; "
-                // out of fullscreen, a floating window gets its size nudged a pixel and back: Electron apps
-                // (Discord) kept laying themselves out for the fullscreen they'd left, the stream left
-                // hanging over the chat, until they were resized
-                + "if not MonolithDesk.fsHook then MonolithDesk.fsHook = hl.on(\"window.fullscreen\", function(w) "
-                +   "if not MonolithDesk.on or not w then return end; "
-                +   "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; local s = \"address:\" .. a; "
-                +   "hl.timer(function() local v = hl.get_window(s); if not v or not v.floating or (v.fullscreen or 0) ~= 0 then return end; "
-                +     "local z = v.size; local zw, zh = (z.x or z[1] or 0), (z.y or z[2] or 0); if zw < 50 or zh < 50 then return end; "
-                +     "hl.dispatch(hl.dsp.window.resize({ x = zw + 1, y = zh, window = s })); "
-                +     "hl.timer(function() hl.dispatch(hl.dsp.window.resize({ x = zw, y = zh, window = s })) end, { timeout = 80, type = \"oneshot\" }) "
-                +   "end, { timeout = 150, type = \"oneshot\" }) end) end; "
+                + "if MonolithDesk.hv ~= 7 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\", \"fsHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 7 end; "
+                // out of fullscreen, back to how it was before: Hyprland tells every app it's maximised
+                // (so they draw no title bars of their own) and takes any maximise or unmaximise an app
+                // asks for as "the other way round". Electron asks for one as it leaves fullscreen, so
+                // Discord out of a fullscreen stream (Escape, or a window opening over it: the
+                // screenshare picker) was put back maximised and at once shrunk to its floating size,
+                // its page still laid out for the big one. For a moment after, it goes back to what it was
+                + "if not MonolithDesk.fsHook then MonolithDesk.fsMode = { }; MonolithDesk.fsBack = { }; "
+                +   "for _, v in ipairs(hl.get_windows() or { }) do local a = tostring(v.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; MonolithDesk.fsMode[a] = v.fullscreen or 0 end; "
+                +   "MonolithDesk.fsFix = function(a) local b = MonolithDesk.fsBack[a]; if not b then return end; local s = \"address:\" .. a; local v = hl.get_window(s); "
+                +     "if not v then MonolithDesk.fsBack[a] = nil; return end; local m = v.fullscreen or 0; if m >= 2 or m == b.want then return end; "
+                +     "hl.dispatch(hl.dsp.window.fullscreen({ mode = \"maximized\", action = (b.want == 1) and \"set\" or \"unset\", window = s })) end; "
+                +   "MonolithDesk.fsHook = hl.on(\"window.fullscreen\", function(w) "
+                +     "if not MonolithDesk.on or not w then return end; "
+                +     "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; "
+                +     "local m = w.fullscreen or 0; local was = MonolithDesk.fsMode[a] or 0; MonolithDesk.fsMode[a] = m; "
+                +     "if m >= 2 then if was < 2 then MonolithDesk.fsBack[a] = { want = was } end; return end; "
+                +     "local b = MonolithDesk.fsBack[a]; if not b then return end; "
+                +     "if was >= 2 then b.n = (b.n or 0) + 1; local n = b.n; "
+                +       "hl.timer(function() MonolithDesk.fsFix(a) end, { timeout = 120, type = \"oneshot\" }); "
+                +       "hl.timer(function() MonolithDesk.fsFix(a) end, { timeout = 700, type = \"oneshot\" }); "
+                +       "hl.timer(function() if MonolithDesk.fsBack[a] and MonolithDesk.fsBack[a].n == n then MonolithDesk.fsFix(a); MonolithDesk.fsBack[a] = nil end end, { timeout = 1600, type = \"oneshot\" }) "
+                +     "end end) end; "
                 // minimising: noted for a moment (see the hook below), then off to the minimised workspace
                 + "MonolithDesk.minimizeWin = function(s) MonolithDesk.justMin = true; "
                 +   "hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = s })); "
