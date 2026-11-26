@@ -42,6 +42,7 @@ Singleton {
         return Store.raw("dock.enabled", true) !== false ? dockOwnEdge : "bottom";
     }
     readonly property bool vertical: edge === "left" || edge === "right"
+    readonly property string lengthMode: { const v = String(Store.raw("desktop.lengthMode", "")); return ["fit", "percent", "px"].indexOf(v) !== -1 ? v : (String(Store.raw("bar.style", "")) === "island" ? "fit" : "percent"); }
     // the middle of the taskbar, from the screen's edge (a floating bar is off the edge by its margin)
     readonly property real bandMid: Theme.barMargin + size / 2
     // how thick it is
@@ -74,6 +75,12 @@ Singleton {
             // bar, pills; only where it is and how tall it is are the taskbar's)
             "bar.position": edge,
             "bar.height": size,
+            // the taskbar's own length (Bar → Length sets it while Desktop mode is on): across the
+            // screen unless you say otherwise. Your bar's (1230 px, say) left the apps no room and
+            // they came out tiny. An island fits what's in it, unless you give it a length here
+            "bar.lengthMode": lengthMode,
+            "bar.length": Math.max(0.2, Math.min(1, Number(Store.raw("desktop.length", 1)) || 1)),
+            "bar.lengthPx": Math.max(200, Number(Store.raw("desktop.lengthPx", 1600)) || 1600),
             "bar.modules": mods,
             "dock.exclusive": false,
             // the start menu: a card just off the taskbar, over its start button (above a bottom

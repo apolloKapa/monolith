@@ -233,19 +233,19 @@ ColumnLayout {
         show: Theme.barStyle !== "frame"
         icon: "width"; title: "Length"
         desc: Theme.barLengthMode === "fit" ? "As long as its modules need" : (Theme.barLengthMode === "percent" ? "A share of the screen's width" : "An exact length, the same on every screen")
-        Dropdown { width: 220; opts: [["fit", "Fit"], ["percent", "% of screen"], ["px", "Pixels"]]; value: Theme.barLengthMode; onPicked: v => Store.set("bar.lengthMode", v) }
+        Dropdown { width: 220; opts: [["fit", "Fit"], ["percent", "% of screen"], ["px", "Pixels"]]; value: Theme.barLengthMode; onPicked: v => Store.set(Desk.on ? "desktop.lengthMode" : "bar.lengthMode", v) }
     }
     SettingRow {
         key: "bar.length";
         show: Theme.barStyle !== "frame" && Theme.barLengthMode === "percent"
         icon: "percent"; title: "Share of the screen"; desc: "Centred; it never gets shorter than its modules"
-        NumberBox { from: 0.2; to: 1; step: 0.01; decimals: 2; factor: 100; unit: "%"; value: Theme.barLength; onMoved: v => Store.set("bar.length", v) }
+        NumberBox { from: 0.2; to: 1; step: 0.01; decimals: 2; factor: 100; unit: "%"; value: Theme.barLength; onMoved: v => Store.set(Desk.on ? "desktop.length" : "bar.length", v) }
     }
     SettingRow {
         key: "bar.lengthPx";
         show: Theme.barStyle !== "frame" && Theme.barLengthMode === "px"
         icon: "straighten"; title: "Length in pixels"; desc: "Centred; never shorter than its modules or longer than the screen"
-        NumberBox { from: 200; to: 7680; slideTo: 2560; step: 10; unit: "px"; value: Theme.barLengthPx; onMoved: v => Store.set("bar.lengthPx", v) }
+        NumberBox { from: 200; to: 7680; slideTo: 2560; step: 10; unit: "px"; value: Theme.barLengthPx; onMoved: v => Store.set(Desk.on ? "desktop.lengthPx" : "bar.lengthPx", v) }
     }
     SettingRow {
         key: "bar.minWidth";
