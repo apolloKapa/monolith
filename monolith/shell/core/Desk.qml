@@ -422,7 +422,7 @@ Singleton {
                 // put the pointer in its middle; yours back when Desktop mode is off)
                 + (want ? "if MonolithDesk.dragWas == nil then MonolithDesk.dragWas = hl.get_config(\"binds.drag_center_window\") end; hl.config({ binds = { drag_center_window = false } }); "
                         : "if MonolithDesk.dragWas ~= nil then hl.config({ binds = { drag_center_window = MonolithDesk.dragWas } }); MonolithDesk.dragWas = nil end; ")
-                + "if MonolithDesk.hv ~= 8 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\", \"fsHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 8 end; "
+                + "if MonolithDesk.hv ~= 9 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\", \"fsHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 9 end; "
                 // out of fullscreen, back to how it was before: Hyprland tells every app it's maximised
                 // (so they draw no title bars of their own) and takes any maximise or unmaximise an app
                 // asks for as "the other way round". Electron asks for one as it leaves fullscreen, so
@@ -443,11 +443,15 @@ Singleton {
                 +     "if m >= 2 then if was < 2 then MonolithDesk.fsBack[a] = { want = was } end; return end; "
                 +     "if was >= 2 and not MonolithDesk.fsBack[a] then MonolithDesk.fsBack[a] = { want = 1 } end; "
                 +     "local b = MonolithDesk.fsBack[a]; if not b then return end; if m == 1 then b.want = 1 end; "
-                +     "if was >= 2 then b.n = (b.n or 0) + 1; local n = b.n; "
+                +     "if was >= 2 then b.out = true; b.n = (b.n or 0) + 1; local n = b.n; "
                 +       "hl.timer(function() MonolithDesk.fsFix(a) end, { timeout = 120, type = \"oneshot\" }); "
                 +       "hl.timer(function() MonolithDesk.fsFix(a) end, { timeout = 700, type = \"oneshot\" }); "
                 +       "hl.timer(function() if MonolithDesk.fsBack[a] and MonolithDesk.fsBack[a].n == n then MonolithDesk.fsFix(a); MonolithDesk.fsBack[a] = nil end end, { timeout = 1600, type = \"oneshot\" }) "
-                +     "end end) end; "
+                // (straight away, inside the same step: Hyprland tells the app its new size only once it's
+                // done, so it's never told the small one. Put right 0.1 s later, it showed small first)
+                +     "end; "
+                +     "if m == 0 and b.out and b.want == 1 then hl.dispatch(hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"set\", window = \"address:\" .. a })) end "
+                +     "end) end; "
                 // minimising: noted for a moment (see the hook below), then off to the minimised workspace
                 + "MonolithDesk.minimizeWin = function(s) MonolithDesk.justMin = true; "
                 +   "hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = s })); "
