@@ -47,43 +47,28 @@ FaceBase {
     // without the second hand, once a second
     Timer { interval: face.seconds ? 33 : 1000; repeat: true; running: face.live && face.visible; triggeredOnStart: !face.seconds; onTriggered: face.update() }
 
-    LobeDial {
+    // the disc: a lobe per hour, its height following how lit that hour is (28 % of it always
+    // there), lit from the top left, a faint light rim. Drawn on the GPU (ui/shaders/lumendial.frag):
+    // painted in software it took most of the shell's time while the clock was on screen, up to 30
+    // times a second with the sweeping second hand
+    ShaderEffect {
         id: disc
         anchors.fill: parent
-        steps: 360
         readonly property real base: face.side * 0.435
         readonly property real swell: face.side * 0.042
-        // a lobe per hour, its height following how lit that hour is (28 % of it always there)
-        radiusAt: deg => {
-            const hour = Math.round(deg / 30) % 12;
-            const off = Math.min(Math.abs(deg - hour * 30), 360 - Math.abs(deg - hour * 30));
-            return base + swell * (0.28 + 0.72 * (face.lit[hour] || 0)) * (1 + Math.cos(off / 15 * Math.PI)) / 2;
-        }
-        // lit from the top left: lighter there, darker at the far edge, a faint light rim
-        shade: g => {
-            const grad = g.createRadialGradient(width / 2 - face.side * 0.16, height / 2 - face.side * 0.2, 0, width / 2, height / 2, base + swell);
-            grad.addColorStop(0, Qt.lighter(face.dialInk, 1.16));
-            grad.addColorStop(0.6, face.dialInk);
-            grad.addColorStop(1, Qt.darker(face.dialInk, 1.1));
-            return grad;
-        }
-        rimWidth: Math.max(1, face.side * 0.0035)
-        rimColor: Qt.rgba(1, 1, 1, 0.12)
-        fill: face.dialInk
-        // Painting it is the costly part (in software), so with the sweeping second hand it's
-        // redrawn at most 30 times a second and only once a lobe has moved visibly.
-        property var drawnWith: []
-        property bool stale: false
-        onPaint: drawnWith = face.lit.slice()
-        function moved() {
-            if (drawnWith.length !== face.lit.length) return true;
-            return face.lit.some((v, i) => Math.abs(v - drawnWith[i]) > 0.012);
-        }
-        Connections {
-            target: face
-            function onLitChanged() { if (!face.seconds) disc.redraw(); else if (disc.moved()) disc.stale = true; }
-        }
-        Timer { interval: 33; repeat: true; running: disc.stale && face.live && face.visible; onTriggered: { disc.stale = false; disc.redraw(); } }
+        property vector4d lit0: Qt.vector4d(face.lit[0] || 0, face.lit[1] || 0, face.lit[2] || 0, face.lit[3] || 0)
+        property vector4d lit1: Qt.vector4d(face.lit[4] || 0, face.lit[5] || 0, face.lit[6] || 0, face.lit[7] || 0)
+        property vector4d lit2: Qt.vector4d(face.lit[8] || 0, face.lit[9] || 0, face.lit[10] || 0, face.lit[11] || 0)
+        property size px: Qt.size(width, height)
+        property real baseR: base
+        property real swellR: swell
+        property point lightAt: Qt.point(-face.side * 0.16, -face.side * 0.2)
+        property color inkLight: Qt.lighter(face.dialInk, 1.16)
+        property color ink: face.dialInk
+        property color inkDark: Qt.darker(face.dialInk, 1.1)
+        property vector4d rim: Qt.vector4d(1, 1, 1, 0.12)
+        property real rimW: Math.max(1, face.side * 0.0035)
+        fragmentShader: Qt.resolvedUrl("../../ui/shaders/lumendial.frag.qsb")
     }
     // the hours: a small dot when unlit, a halo and the number when a hand is near
     Repeater {

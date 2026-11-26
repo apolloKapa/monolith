@@ -19,7 +19,7 @@ FaceBase {
             id: pic
             width: Math.min(parent.height, parent.width * 0.38); height: width
             anchors.verticalCenter: parent.verticalCenter
-            Image { anchors.fill: parent; anchors.margins: c.line * 2; source: Wall.url(f.avatar); fillMode: Image.PreserveAspectCrop; asynchronous: true; smooth: true }
+            Image { anchors.fill: parent; anchors.margins: c.line * 2; source: Wall.url(f.avatar); sourceSize: Qt.size(256, 256); fillMode: Image.PreserveAspectCrop; asynchronous: true; smooth: true }
             Rectangle { anchors.fill: parent; color: "transparent"; border.width: c.line; border.color: c.edge }
             Rectangle { x: parent.width - width; y: 0; width: parent.width * 0.35; height: Math.max(2, c.u * 0.018); color: c.neon }
         }

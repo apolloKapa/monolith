@@ -25,7 +25,13 @@ Singleton {
     property real now: 0
     property real seenPos: 0    // the player's own position the last time it said, and when
     property real seenAt: 0
-    readonly property bool timing: !!player && lines.length > 0
+    // something shows lyrics: a music widget with lyrics (desktop or lock screen), or the media
+    // menu. Nothing looked up or counted otherwise (every song played was looked up on LRCLIB, and
+    // counted along ten times a second, with nothing on screen to show it)
+    readonly property bool wanted: (HubState.open && HubState.page === "media")
+        || ["desktop", "lock"].some(m => (WidgetLayout.items(m) || []).some(i => i && i.type === "media" && ["lyrics", "simpleLyrics", "lyricLine"].indexOf(String(i.face || "")) !== -1))
+    onWantedChanged: if (wanted && state === "none") fetchLater.restart()
+    readonly property bool timing: wanted && !!player && lines.length > 0
     function fromPlayer() {
         if (!player) { now = 0; return; }
         player.positionChanged();
@@ -130,7 +136,7 @@ Singleton {
 
     function fetch() {
         lines = []; plain = ""; fromFile = false;
-        if (!player || !player.trackTitle) { state = "none"; return; }
+        if (!wanted || !player || !player.trackTitle) { state = "none"; return; }
         state = "loading";
         local.command = ["sh", "-c", "for f in \"$1\" \"${2%.*}.lrc\"; do [ -n \"$f\" ] && [ \"$f\" != .lrc ] && [ -f \"$f\" ] && exec cat \"$f\"; done; true", "_", pickedFile, trackFile];
         local.running = true;

@@ -67,7 +67,7 @@ FaceBase {
             radius: Theme.corner(width, 8)
             color: Theme.control
             Icon { visible: art.status !== Image.Ready; anchors.centerIn: parent; name: "music_note"; size: parent.width * 0.38; color: Theme.subtext }
-            Image { id: art; visible: false; anchors.fill: parent; asynchronous: true; fillMode: Image.PreserveAspectCrop; source: face.hasTrack ? (face.mp.trackArtUrl || "") : "" }
+            Image { id: art; visible: false; anchors.fill: parent; sourceSize: Qt.size(640, 640); asynchronous: true; fillMode: Image.PreserveAspectCrop; source: face.hasTrack ? (face.mp.trackArtUrl || "") : "" }
             CardShape { id: coverShape; radius: cover.radius }
             MultiEffect { visible: art.status === Image.Ready; anchors.fill: parent; source: art; maskEnabled: true; maskSource: coverShape }
         }

@@ -696,7 +696,7 @@ Item {
                     fillMode: Image.PreserveAspectCrop
                     sourceSize: Qt.size(64, 64)
                     rotation: 0
-                    RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: !bar.still && bar.player !== null && bar.mopt("media.spin", true) === true }
+                    RotationAnimation on rotation { from: 0; to: 360; duration: 9000; loops: Animation.Infinite; running: !bar.still && bar.player !== null && bar.mopt("media.spin", true) === true; paused: running && !bar.player.isPlaying }
                 }
             }
             Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering;

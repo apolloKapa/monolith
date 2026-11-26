@@ -19,7 +19,7 @@ FaceBase {
             id: art
             x: 14; y: 14; width: 92; height: 92; radius: Theme.corner(92, 8); color: Theme.control; clip: true
             Icon { anchors.centerIn: parent; name: "music_note"; size: 36; color: Theme.subtext; visible: cov.status !== Image.Ready }
-            Image { id: cov; anchors.fill: parent; source: f.p ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; visible: false; asynchronous: true }
+            Image { id: cov; anchors.fill: parent; sourceSize: Qt.size(640, 640); source: f.p ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; visible: false; asynchronous: true }
             MultiEffect { anchors.fill: parent; source: cov; visible: cov.status === Image.Ready; maskEnabled: true; maskSource: am }
             SmoothRect { smoothing: 0; id: am; anchors.fill: parent; radius: parent.radius; visible: false; antialiasing: true; layer.enabled: true; layer.smooth: true }
         }

@@ -11,7 +11,7 @@ FaceBase {
     readonly property real r: Theme.corner(80, 14)
     SmoothRect { smoothing: 0; anchors.fill: parent; radius: f.r; color: Theme.control }
     Icon { anchors.centerIn: parent; name: "music_note"; size: Math.min(f.width, f.height) * 0.3; color: Theme.subtext; visible: cov.status !== Image.Ready }
-    Image { id: cov; anchors.fill: parent; source: f.p ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; visible: false; asynchronous: true }
+    Image { id: cov; anchors.fill: parent; sourceSize: Qt.size(640, 640); source: f.p ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; visible: false; asynchronous: true }
     MultiEffect { anchors.fill: parent; source: cov; visible: cov.status === Image.Ready; maskEnabled: true; maskSource: cm }
     SmoothRect { smoothing: 0; id: cm; anchors.fill: parent; radius: f.r; visible: false; antialiasing: true; layer.enabled: true; layer.smooth: true }
     Rectangle {

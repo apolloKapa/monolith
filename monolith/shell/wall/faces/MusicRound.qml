@@ -108,7 +108,7 @@ FaceBase {
             // a turn every 24 s, holding still while paused
             NumberAnimation on rotation { from: 0; to: 360; duration: 24000; loops: Animation.Infinite; running: face.live; paused: running && !face.playing }
             Ring { width: parent.width; color: Theme.control }
-            Image { id: sleeve; visible: false; anchors.fill: parent; asynchronous: true; fillMode: Image.PreserveAspectCrop; source: face.hasTrack ? (face.mp.trackArtUrl || "") : "" }
+            Image { id: sleeve; visible: false; anchors.fill: parent; sourceSize: Qt.size(640, 640); asynchronous: true; fillMode: Image.PreserveAspectCrop; source: face.hasTrack ? (face.mp.trackArtUrl || "") : "" }
             Ring { id: roundCut; width: parent.width; visible: false; antialiasing: true; layer.enabled: true; layer.smooth: true }
             MultiEffect {
                 anchors.fill: parent

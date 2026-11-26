@@ -30,7 +30,8 @@ Page {
     Optimistic { id: playO; actual: !!(page.player && page.player.isPlaying); patience: 3000 }
 
     // ── the cover's colour: the most colourful of its main colours, made readable ──
-    ColorQuantizer { id: cq; source: page.art; depth: 3 }
+    // (its colours from a small copy: the whole cover was gone through, thousands of pixels a side)
+    ColorQuantizer { id: cq; source: page.art; depth: 3; rescaleSize: 64 }
     readonly property color picked: {
         const cs = cq.colors || [];
         let best = null, score = -1;
@@ -164,6 +165,8 @@ Page {
                 id: coverImg
                 anchors.fill: parent
                 source: page.art
+                // (twice as big as it's drawn at most: a cover can be thousands of pixels a side)
+                sourceSize: Qt.size(720, 720)
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 visible: false

@@ -93,6 +93,9 @@ Singleton {
         interval: 60; repeat: true
         onTriggered: {
             const now = Date.now();
+            // (nothing left to take away: it stops, till the next one. It ran 16 times a second
+            // for good once a single notification had gone)
+            if (!gone.queue.length) { stop(); return; }
             const due = gone.queue.filter(q => q.at <= now);
             if (!due.length) return;
             gone.queue = gone.queue.filter(q => q.at > now);
