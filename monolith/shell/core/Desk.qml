@@ -118,6 +118,18 @@ Singleton {
             Store.over = computeOverrides();
             overJson = JSON.stringify(Store.over);
             Qt.callLater(() => desk.windowsFor(true));
+            // (niri tells the shell its windows a moment after the start: floated then, they
+            // stayed in their tiles, none being known yet)
+            if (!Niri.hyprland) floatPending = true;
+        }
+    }
+    property bool floatPending: false
+    Connections {
+        target: Niri
+        function onWindowsChanged() {
+            if (!desk.floatPending || Niri.hyprland || Object.keys(Niri.windows).length === 0) return;
+            desk.floatPending = false;
+            if (desk.on && desk.floating) desk.windowsFor(true);
         }
     }
     Component.onCompleted: settle()
@@ -270,7 +282,15 @@ Singleton {
                     if (!w || w.is_floating || isMin(w) || (Niri.hyprland && Number(w.workspace_id) < 0)) continue;
                     ids.push(w.id);
                     if (Niri.hyprland) hypr('hl.dsp.window.float({ action = "enable", window = "' + addr(w) + '" })', "setfloating " + addr(w));
-                    else niri(["move-window-to-floating", "--id", String(w.id)]);
+                    else {
+                        // (niri keeps a tile's size as it floats: a full-height column covered the
+                        // taskbar. The size you last gave the app, or two thirds of the screen)
+                        const s = sizes[String(w.app_id || "").toLowerCase()];
+                        niri(["move-window-to-floating", "--id", String(w.id)]);
+                        niri(["set-window-width", "--id", String(w.id), s ? String(Math.round(s[0])) : "66%"]);
+                        niri(["set-window-height", "--id", String(w.id), s ? String(Math.round(s[1])) : "70%"]);
+                        centerLater(w.id);
+                    }
                 }
                 floated = floated.concat(ids);
             }
@@ -525,6 +545,11 @@ Singleton {
     // niri: a window opening, the first of its app, gets the size its app had (a rule per app
     // made its other windows, a screen-share picker or a dialog, as big as its main one too)
     property var seenIds: null
+    // (centred once its new size has been taken: centred straight after the resize, niri used the
+    // old size and the window sat at the top)
+    property var toCenter: []
+    function centerLater(id) { toCenter = toCenter.concat([id]); centerTimer.restart(); }
+    Timer { id: centerTimer; interval: 250; onTriggered: { for (const id of desk.toCenter) desk.niri(["center-window", "--id", String(id)]); desk.toCenter = []; } }
     function niriOpened() {
         if (Niri.hyprland) return;
         const now = {}, fresh = [];
@@ -542,7 +567,7 @@ Singleton {
             if (n > 0) continue;
             niri(["set-window-width", "--id", String(w.id), String(Math.round(s[0]))]);
             niri(["set-window-height", "--id", String(w.id), String(Math.round(s[1]))]);
-            niri(["center-window", "--id", String(w.id)]);
+            centerLater(w.id);
         }
     }
     function noteSizes() {
