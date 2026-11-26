@@ -117,29 +117,52 @@ PanelWindow {
             readonly property real pivotX: dx < 0 ? Math.min(width, -dx) : Math.max(0, width - dx)
             transform: Rotation { origin.x: card.pivotX; origin.y: 0; angle: card.hanging ? card.theta : 0 }
             function hangStep(dt) {
-                // the pointer's motion (smoothed: a wobbly hand shouldn't shake it)
-                const v = (dx - lastDx) / dt;
-                lastDx = dx;
-                const a = Math.max(-25000, Math.min(25000, (v - ptrV) / dt));
-                ptrV += (v - ptrV) * 0.5;
-                ptrA += (a - ptrA) * 0.25;
+                // A fast hand moves the card a long way between two frames. Worked out once per
+                // frame, the hang skipped every angle in between, and crossing from one side of
+                // the tray to the other (or springing back past the middle) moved the pivot from
+                // one end of a tilted card to the other in one go: it jumped. So the frame's move
+                // is split into small steps along the way (at most 12 px or 4 ms each) and the
+                // card swings through each of them.
+                const from = lastDx, to = dx;
+                const n = Math.max(1, Math.min(32, Math.ceil(Math.max(dt / 0.004, Math.abs(to - from) / 12))));
+                const h = dt / n;
+                // the pointer's speed and its change, smoothed over time (the same on a 60 Hz and
+                // a 240 Hz screen; a wobbly or bursty hand doesn't shake it)
+                const v = (to - from) / dt;
+                const a = Math.max(-20000, Math.min(20000, (v - ptrV) / dt));
+                ptrV += (v - ptrV) * (1 - Math.exp(-dt / 0.03));
+                ptrA += (a - ptrA) * (1 - Math.exp(-dt / 0.06));
+                for (let i = 1; i <= n; i++) hangAt(from + (to - from) * i / n, h);
+                lastDx = to;
+            }
+            // one small step, with the card pulled out to d
+            function hangAt(d, h) {
                 // where it wants to hang: like card stock, the part that's out droops from the
                 // start, more the more is out (up to ~75° all of it out)
-                const out = Math.min(1, Math.abs(dx) / Math.max(1, width));
+                const out = Math.min(1, Math.abs(d) / Math.max(1, width));
                 const e = Math.max(0, Math.min(1, (out - 0.06) / 0.94));
-                const side = dx < 0 ? -1 : 1;
+                const side = d < 0 ? -1 : 1;
                 const want = side * 75 * Math.pow(e * e * (3 - 2 * e), 1.15) * Math.PI / 180;
                 // it gets there like something with weight: springy, a little past it and back,
                 // and the pointer speeding up or slowing down swings it (its weight lags behind:
                 // torque of −a at its middle about the pivot, over a flat card's moment there)
+                const pv = d < 0 ? Math.min(width, -d) : Math.max(0, width - d);
                 const t = theta * Math.PI / 180;
-                const rx = width / 2 - pivotX, ry = height / 2;
+                const rx = width / 2 - pv, ry = height / 2;
                 const ryr = rx * Math.sin(t) + ry * Math.cos(t);
                 const inertia = rx * rx + ry * ry + (width * width + height * height) / 12;
-                omega += (38 * (want - t) - 5.5 * omega + ryr * ptrA / inertia) * dt;
-                let th = theta + omega * dt * 180 / Math.PI;
+                omega += (38 * (want - t) - 5.5 * omega + ryr * ptrA / inertia) * h;
+                let th = theta + omega * h * 180 / Math.PI;
                 // the tray holds it up: it tips out over the edge, never in
                 if (th * side < 0) { th = 0; if (omega * side < 0) omega = -omega * 0.2; }
+                // and it can't hang further than what's out lets it (all of it from 70 % out): mostly on the tray,
+                // it lies flat on it (so it's level as it crosses from one side to the other, and
+                // the pivot changing ends doesn't show); never past 100°, however hard it's swung
+                const lim = 100 * Math.min(1, out / 0.7);
+                if (Math.abs(th) > lim) {
+                    th = th < 0 ? -lim : lim;
+                    if (omega * th > 0) omega = -omega * 0.2;
+                }
                 theta = th;
             }
             // sliding off, it fades as it goes (from where it was let go); falling it stays solid
