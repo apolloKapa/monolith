@@ -561,6 +561,41 @@ Singleton {
     // niri: a window opening, the first of its app, gets the size its app had (a rule per app
     // made its other windows, a screen-share picker or a dialog, as big as its main one too)
     property var seenIds: null
+    // niri: a floating window let go of across two screens was cut off at its own screen's edge
+    // (niri draws a resting window on one screen only): it slides wholly onto its screen, along the
+    // edge it shares with the other one. Off an edge with no screen beyond, it's left as it is
+    Timer { id: keepTimer; interval: 180; onTriggered: desk.keepOnScreens() }
+    Connections { target: Niri; function onWindowsChanged() { if (desk.on && !Niri.hyprland) keepTimer.restart(); } }
+    function keepOnScreens() {
+        const scr = Quickshell.screens;
+        const t = 8;   // (a border's width over is nothing)
+        for (const k in Niri.windows) {
+            const w = Niri.windows[k];
+            if (!w || !w.is_floating || isMin(w)) continue;
+            const L = w.layout, pos = L ? L.tile_pos_in_workspace_view : null;
+            if (!pos) continue;                       // (being dragged)
+            const ws = Niri.workspaces.find(z => z.id === w.workspace_id);
+            if (!ws || !ws.is_active) continue;
+            let s = null;
+            for (let i = 0; i < scr.length; i++) if (scr[i].name === ws.output) s = scr[i];
+            if (!s) continue;
+            const sz = L.tile_size || L.window_size || [0, 0];
+            const gx = s.x + pos[0], gy = s.y + pos[1];
+            let nx = pos[0], ny = pos[1];
+            for (let i = 0; i < scr.length; i++) {
+                const o = scr[i];
+                if (o === s || !(gx < o.x + o.width - t && gx + sz[0] > o.x + t && gy < o.y + o.height - t && gy + sz[1] > o.y + t)) continue;
+                if (o.y + o.height <= s.y + 1) ny = Math.max(ny, 0);                          // a screen above
+                else if (o.y >= s.y + s.height - 1) ny = Math.min(ny, s.height - sz[1]);      // below
+                if (o.x + o.width <= s.x + 1) nx = Math.max(nx, 0);                           // to the left
+                else if (o.x >= s.x + s.width - 1) nx = Math.min(nx, s.width - sz[0]);        // to the right
+            }
+            // (bigger than the screen: its top left corner on it)
+            nx = Math.max(nx, Math.min(0, pos[0])); ny = Math.max(ny, Math.min(0, pos[1]));
+            if (Math.abs(nx - pos[0]) > 1 || Math.abs(ny - pos[1]) > 1)
+                niri(["move-floating-window", "--id", String(w.id), "-x", String(Math.round(nx)), "-y", String(Math.round(ny))]);
+        }
+    }
     // (centred once its new size has been taken: centred straight after the resize, niri used the
     // old size and the window sat at the top)
     property var toCenter: []
