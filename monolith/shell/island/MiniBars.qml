@@ -172,9 +172,12 @@ PanelWindow {
             readonly property string showMode: modelData.show
             readonly property Item sensor: sens.count > index ? sens.itemAt(index) : null
             readonly property bool touching: pillHover.hovered || (!!sensor && sensor.hovered)
-            readonly property bool dodged: showMode === "dodge" && Niri.overlaps(win.modelData.name, homeX, homeY, width, height)
-            readonly property bool tuckedHere: !win.editing && !dragging && (showMode === "bar" ? win.tucked
-                : (showMode === "always" ? false : (showMode === "edge" || dodged) && !touching))
+            // (like a bar that dodges windows: it dodges them itself, where it sits; following the
+            // bar, every mini bar went away whenever a window was over the bar, over them or not)
+            readonly property string mode: showMode === "bar" && Theme.barShow === "dodge" ? "dodge" : showMode
+            readonly property bool dodged: mode === "dodge" && Niri.overlaps(win.modelData.name, homeX, homeY, width, height)
+            readonly property bool tuckedHere: !win.editing && !dragging && (mode === "bar" ? win.tucked
+                : (mode === "always" ? false : (mode === "edge" || dodged) && !touching))
             HoverHandler { id: pillHover }
             // (going and coming back: the bar's pace, no spring)
             property bool tuckMoving: false
@@ -251,7 +254,7 @@ PanelWindow {
         Item {
             required property int index
             readonly property Item pill: rep.count > index ? rep.itemAt(index) : null
-            readonly property bool live: !!pill && !win.editing && (pill.showMode === "dodge" || pill.showMode === "edge")
+            readonly property bool live: !!pill && !win.editing && (pill.mode === "dodge" || pill.mode === "edge")
             readonly property bool hovered: hov.hovered
             readonly property real t: !pill ? 3 : (pill.tuckedHere ? 3 : win.room(pill.edge) + 2)
             visible: live

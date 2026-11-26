@@ -86,6 +86,9 @@ Singleton {
         const ws = workspaces.find(z => z.output === output && z.is_active);
         if (!ws) return false;
         const t = 4;
+        // (Desktop mode's title bars sit on top of a window, outside what Hyprland says is its box:
+        // a window dragged up under a bar by its title bar touched it with that, not its body)
+        const bar = hyprland && Desk.on && Desk.titlebars && Desk.barsReady ? 34 : 0;
         for (const k in windows) {
             const win = windows[k];
             if (!win || win.workspace_id !== ws.id) continue;
@@ -93,7 +96,7 @@ Singleton {
             const pos = L ? L.tile_pos_in_workspace_view : null;
             if (!pos) { if (!win.is_floating) return true; continue; }
             const sz = L.tile_size || [0, 0];
-            if (pos[0] < x + w + t && pos[0] + sz[0] > x - t && pos[1] < y + h + t && pos[1] + sz[1] > y - t) return true;
+            if (pos[0] < x + w + t && pos[0] + sz[0] > x - t && pos[1] - bar < y + h + t && pos[1] + sz[1] > y - t) return true;
         }
         return false;
     }
@@ -235,9 +238,19 @@ Singleton {
             m[w.id] = w;
             if (w.is_focused) fid = w.id;
         }
-        windows = m;
-        focusedWindowId = fid;
+        // (only when something did change: read often while windows are dragged, see below, a new
+        // list each time made everything that looks at windows look again)
+        const j = JSON.stringify(m);
+        if (j !== lastSync) { lastSync = j; windows = m; }
+        if (focusedWindowId !== fid) focusedWindowId = fid;
     }
+    property string lastSync: ""
+    // something dodges windows (the bar, a mini bar, the dock): Hyprland says where a window is
+    // only once it's dropped, so while one is dodging the windows are read ten times a second,
+    // and the bar gets out of the way the moment a window is dragged over it
+    readonly property bool dodging: hyprland && (Theme.barShow === "dodge" || String(Store.get("dock.show", "")) === "dodge"
+        || (Store.get("bar.minis", []) || []).some(m => m && (m.show === "dodge" || ((!m.show || m.show === "bar") && Theme.barShow === "dodge"))))
+    Timer { interval: 100; repeat: true; running: niri.dodging; onTriggered: { Hyprland.refreshToplevels(); hyprLater.restart(); } }
     // many events come together (a window opening is several): one sync for all of them
     Timer { id: hyprLater; interval: 40; onTriggered: niri.hyprSync() }
     Connections {
