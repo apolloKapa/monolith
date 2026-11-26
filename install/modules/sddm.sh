@@ -139,6 +139,13 @@ setup_sddm() {
             sudo cp -r "$sddm_theme_src/font/"*.ttf /usr/share/fonts/TTF/ 2>/dev/null || true
             fc-cache -f /usr/share/fonts >/dev/null 2>&1 || true
         fi
+        # the shell's icon font, for the theme's own buttons (loaded by the theme, not installed)
+        sudo cp "$project_root/monolith/shell/fonts/MonolithSymbols-Rounded.ttf" "$sddm_theme_dest/font/" 2>/dev/null || true
+        # your look, kept up to date by the shell (core/LoginSync.qml, scripts/login_sync.py):
+        # a folder you own that SDDM can read; the theme reads its settings through the link
+        sudo install -d -m 755 -o "$(id -un)" -g "$(id -gn)" /var/lib/monolith/login
+        sudo chmod 755 /var/lib/monolith 2>/dev/null || true
+        sudo ln -sfn /var/lib/monolith/login/theme.conf.user "$sddm_theme_dest/theme.conf.user"
     fi
 
     sudo mkdir -p /etc/sddm.conf.d

@@ -1,11 +1,11 @@
 [SddmGreeterTheme]
 Name=Monolith
-Description=Monolith login screen (based on the Material-you theme by Darkkal44), black and white
-Author=Darkkal44
+Description=Monolith's login screen: your wallpaper, colours and picture from the desktop, a clock, the password
+Author=Monolith
 Copyright=(c) 2026
-License=MIT
+License=AGPL-3.0-or-later
 Type=sddm-theme
-Version=1.0
+Version=2.0
 MainScript=Main.qml
 ConfigFile=theme.conf
 QtVersion=6
