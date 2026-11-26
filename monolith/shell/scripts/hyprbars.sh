@@ -32,6 +32,14 @@ if [ -n "$commit" ]; then
 fi
 
 echo "Building hyprbars…"
+# Lua's headers (Hyprland's config is Lua): some distros keep them in a folder of their own
+# (Gentoo: /usr/include/lua5.4), which the plugin's build doesn't look in
+luainc=""
+for p in lua5.4 lua-5.4 lua54 lua; do
+    luainc=$(pkg-config --cflags-only-I "$p" 2>/dev/null | sed 's/-I//g; s/ *$//') && [ -n "$luainc" ] && break
+done
+[ -z "$luainc" ] && for d in /usr/include/lua5.4 /usr/include/lua54 /usr/include/lua; do [ -f "$d/lua.h" ] && luainc=$d && break; done
+[ -n "$luainc" ] && export CPATH="$luainc${CPATH:+:$CPATH}"
 make -C "$src/hyprbars" clean >/dev/null 2>&1 || true
 make -C "$src/hyprbars"
 mkdir -p "$dest"
