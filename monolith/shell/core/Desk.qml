@@ -339,7 +339,8 @@ Singleton {
         const cmd = "sh \"$1\"; echo; echo 'You can close this window.'; read -r _";
         Quickshell.execDetached(["sh", "-c", Prefs.terminal + " sh -c '" + cmd.replace(/'/g, "'\\''") + "' _ \"$0\"", barsScript]);
     }
-    readonly property var noBarDefault: ["firefox", "librewolf", "zen", "brave-browser", "chromium", "google-chrome", "vivaldi-stable", "org.gnome.*", "*discord*", "*vesktop*", "*spotify*", "code", "codium", "*vscodium*", "obsidian", "steam"]
+    // (Spotify isn't here: on Linux it draws no window buttons of its own, and without ours it had none)
+    readonly property var noBarDefault: ["firefox", "librewolf", "zen", "brave-browser", "chromium", "google-chrome", "vivaldi-stable", "org.gnome.*", "*discord*", "*vesktop*", "code", "codium", "*vscodium*", "obsidian", "steam"]
     // (Vesktop with its system title bar, nativeTitleBar in its settings, gets ours: with Discord's
     // own, double-clicking it lost track of whether it was maximised)
     readonly property var noBar: {
