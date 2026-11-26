@@ -7,11 +7,16 @@ import Quickshell.Io
 // switch between ("Clean", "Gaming"…), and a backup to a file you can bring back. Kept in
 // ~/.config/monolith/profiles/<name>.json as { name, saved, wallpaper, data }. What's yours
 // rather than a look (launch counts, notes, update checks, where the picker was) stays as it is.
+// Profiles and backups hold only the look, so they're safe to give to someone: nothing that
+// says who you are (your GitHub name, your weather place, your picture) goes in, and paths in
+// your home folder are written as ~/… (not /home/<you>/…), made yours again when loaded.
 Singleton {
     id: pr
     readonly property string dir: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/monolith/profiles"
     readonly property var keep: ["welcome", "launches", "updates", "notes", "software", "quick.calcHistory",
         "wallpaper.pickerPos", "wallpaper.playlistLast", "wallpaper.playlistApplied", "profile", "gaming.session"]
+    // who you are: never written into a profile or a backup, and kept as they are when one is loaded
+    readonly property var personal: ["widgets.github.user", "weather.location", "general.avatar"]
     property var list: []              // [{ name, saved, wallpaper, file }]
     readonly property string current: Store.get("profile.current", "")
     property string message: ""
@@ -49,18 +54,42 @@ Singleton {
     }
     Component { id: outC; StdioCollector {} }
 
-    // what goes in a profile: the settings without the personal bits (and without the wallpaper
-    // when it shouldn't switch it)
-    function snapshot(withWall) {
-        const d = JSON.parse(JSON.stringify(Store.data));
-        for (const path of keep) {
+    function dropPaths(d, paths) {
+        for (const path of paths) {
             const keys = path.split(".");
             let cur = d;
             for (let i = 0; i < keys.length - 1 && cur; i++) cur = cur[keys[i]];
             if (cur && typeof cur === "object") delete cur[keys[keys.length - 1]];
         }
+    }
+    // every text inside, changed by f (lists and objects gone through)
+    function mapText(v, f) {
+        if (typeof v === "string") return f(v);
+        if (Array.isArray(v)) return v.map(x => pr.mapText(x, f));
+        if (v && typeof v === "object") {
+            const o = {};
+            for (const k in v) o[k] = pr.mapText(v[k], f);
+            return o;
+        }
+        return v;
+    }
+    // /home/<you>/… -> ~/… (so the file doesn't carry your user name), and back when loaded
+    function homeOut(v) {
+        const h = Quickshell.env("HOME");
+        return pr.mapText(v, t => h && (t === h || t.startsWith(h + "/")) ? "~" + t.slice(h.length) : t);
+    }
+    function homeIn(v) {
+        const h = Quickshell.env("HOME");
+        return pr.mapText(v, t => t === "~" ? h : (t.startsWith("~/") ? h + t.slice(1) : t));
+    }
+    // what goes in a profile: the look only, without what's yours (launch counts, notes…) or
+    // who you are, with ~/ for your home folder (and without the wallpaper when it shouldn't
+    // switch it)
+    function snapshot(withWall) {
+        const d = JSON.parse(JSON.stringify(Store.data));
+        dropPaths(d, keep.concat(personal));
         if (!withWall && d.wallpaper) { delete d.wallpaper.path; delete d.wallpaper.screens; }
-        return d;
+        return homeOut(d);
     }
     function save(name, withWall) {
         name = (name || "").trim();
@@ -83,7 +112,7 @@ Singleton {
     }
     function use(data, keepWall) {
         const before = Store.get("wallpaper.path", "");
-        Store.replace(data, keep.concat(keepWall ? ["wallpaper.path", "wallpaper.screens"] : []));
+        Store.replace(homeIn(data), keep.concat(personal).concat(keepWall ? ["wallpaper.path", "wallpaper.screens"] : []));
         const after = Store.get("wallpaper.path", "");
         if (after !== "" && after !== before) Wall.makePalette(after);
     }
@@ -103,7 +132,10 @@ Singleton {
         p.stdout = out;
         out.streamFinished.connect(() => {
             const f = out.text.trim();
-            if (f !== "") writeJson(f, { monolith: "settings", saved: new Date().toISOString(), data: Store.data }, ok => pr.message = ok ? "Backed up to " + f.replace(Quickshell.env("HOME"), "~") : "Couldn't write " + f);
+            // (the look and your other settings, but not who you are, and ~/ for your home folder)
+            const d = JSON.parse(JSON.stringify(Store.data));
+            pr.dropPaths(d, pr.personal);
+            if (f !== "") writeJson(f, { monolith: "settings", saved: new Date().toISOString(), data: pr.homeOut(d) }, ok => pr.message = ok ? "Backed up to " + f.replace(Quickshell.env("HOME"), "~") : "Couldn't write " + f);
             p.destroy();
         });
         p.running = true;
