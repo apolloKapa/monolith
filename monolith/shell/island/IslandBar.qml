@@ -380,7 +380,9 @@ Item {
     // the room it has: the bar, less the other zones (it's alone in its own, the middle or the left)
     // (of the screen's room: the bar's own length grows as it's squeezed smaller to fit)
     // (an island's curved ends hang outside its body: room for them too)
-    readonly property real taskRoom: (maxLen > 0 ? Math.min(maxLen, barLen) : barLen) - 2 * Theme.islandPad - freeLen - 2 * gap
+    // (a bar that fits its modules has no length of its own to go by: it would shrink with the
+    // taskbar, and the taskbar with it, down to the smallest icons. The screen's room then)
+    readonly property real taskRoom: (Theme.barSpread ? (maxLen > 0 ? Math.min(maxLen, barLen) : barLen) : (maxLen > 0 ? maxLen : 100000)) - 2 * Theme.islandPad - freeLen - 2 * gap
         - (Theme.barStyle === "island" ? 2 * Theme.islandEar + 24 : 0)
         - ((zones.center || []).indexOf("taskbar") !== -1 ? part(leftZone) + part(leftMidZone) + part(midRightZone) + part(rightZone)
                                                           : part(midZone) + part(leftMidZone) + part(midRightZone) + part(rightZone))

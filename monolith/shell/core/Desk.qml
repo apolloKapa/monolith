@@ -311,16 +311,18 @@ Singleton {
         const bg = Qt.alpha(Theme.frame, Math.max(0.55, Theme.frame.a));
         const pat = noBar.filter(x => /^[A-Za-z0-9_.*+-]+$/.test(x)).map(x => x.replace(/\./g, "\\.").replace(/\*/g, ".*")).join("|");
         return "MonolithDesk = MonolithDesk or {}; "
-            + "hl.config({ plugin = { hyprbars = { enabled = true, bar_height = 30, bar_color = \"" + hex(bg) + "\", "
-            + "col = { text = \"" + hex(Theme.text) + "\" }, bar_text_size = 11, bar_text_font = " + JSON.stringify(Theme.fontFamily) + ", "
+            + "hl.config({ plugin = { hyprbars = { enabled = true, bar_height = 34, bar_color = \"" + hex(bg) + "\", "
+            // (the buttons' icons are the shell's own, Material Symbols, after your font for the title)
+            + "col = { text = \"" + hex(Theme.text) + "\" }, bar_text_size = 12, bar_text_weight = \"medium\", bar_text_font = " + JSON.stringify(Theme.fontFamily + ", Material Symbols Rounded") + ", "
             + "bar_text_align = \"center\", bar_blur = " + (Theme.blur ? "true" : "false") + ", bar_part_of_window = true, bar_precedence_over_border = true, "
-            + "bar_padding = 10, bar_button_padding = 8, inactive_button_color = \"" + hex(Qt.alpha(Theme.subtext, 0.35)) + "\", "
+            + "bar_padding = 10, bar_button_padding = 6, inactive_button_color = \"" + hex(Qt.alpha(Theme.subtext, 0.35)) + "\", "
             + "on_double_click = " + dsp(max) + " } } }); "
             // (buttons stay until a config reload clears them: added once per reload. Right to left)
+            // (round buttons with the shell's icons: close in the theme's red, the others soft)
             + "if not MonolithDesk.barButtons then MonolithDesk.barButtons = true; "
-            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Theme.danger) + "\", fg_color = \"" + hex(Theme.card) + "\", size = 15, icon = \"×\", action = " + dsp("hl.dsp.window.close()") + " }); "
-            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Theme.containerHigh) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 15, icon = \"□\", action = " + dsp(max) + " }); "
-            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Theme.containerHigh) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 15, icon = \"–\", action = " + dsp('hl.dsp.window.move({ workspace = "special:' + minName + '", follow = false })') + " }) end; "
+            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.danger, 0.92)) + "\", fg_color = \"" + hex(Theme.card) + "\", size = 22, icon = \"\ue5cd\", action = " + dsp("hl.dsp.window.close()") + " }); "
+            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.text, 0.12)) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 22, icon = \"\ue3c6\", action = " + dsp(max) + " }); "
+            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.text, 0.12)) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 22, icon = \"\ue15b\", action = " + dsp('hl.dsp.window.move({ workspace = "special:' + minName + '", follow = false })') + " }) end; "
             + (pat === "" ? "" : "if MonolithDesk.noBar then MonolithDesk.noBar:set_enabled(false) end; MonolithDesk.noBar = hl.window_rule({ name = \"monolith-nobar-" + Qt.md5(pat).slice(0, 8) + "\", match = { class = [[(?i)^(" + pat + ")$]] }, [\"hyprbars:no_bar\"] = true })");
     }
     function hyprBars(want) {
