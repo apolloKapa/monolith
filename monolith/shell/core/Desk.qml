@@ -325,8 +325,10 @@ Singleton {
     FileView { path: Quickshell.env("HOME") + "/.var/app/dev.vencord.Vesktop/config/vesktop/settings.json"; watchChanges: true; printErrors: false; onLoaded: desk.readVesktop(text()); onFileChanged: reload() }
     function hex(c) { const h = x => ("0" + Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16)).slice(-2); return "rgba(" + h(c.r) + h(c.g) + h(c.b) + h(c.a) + ")"; }
     readonly property string barsLua: {
-        const dsp = a => "[[hyprctl dispatch '" + a + "']]";
-        const max = 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })';
+        // (the buttons and the double click act on the window whose bar is under the pointer,
+        // MonolithDesk.barAct below: "the window you're in" was a moment late, and with focus
+        // following the mouse it was sometimes another one, or none, and the button did nothing)
+        const act = k => "[[hyprctl eval 'MonolithDesk.barAct(\"" + k + "\")']]";
         const bg = Qt.alpha(Theme.frame, Math.max(0.55, Theme.frame.a));
         const pat = noBar.filter(x => /^[A-Za-z0-9_.*+-]+$/.test(x)).map(x => x.replace(/\./g, "\\.").replace(/\*/g, ".*")).join("|");
         return "MonolithDesk = MonolithDesk or {}; "
@@ -335,16 +337,29 @@ Singleton {
             + "col = { text = \"" + hex(Theme.text) + "\" }, bar_text_size = 12, bar_text_weight = \"medium\", bar_text_font = " + JSON.stringify(Theme.fontFamily + ", Material Symbols Rounded") + ", "
             + "bar_text_align = \"center\", bar_blur = " + (Theme.blur ? "true" : "false") + ", bar_part_of_window = true, bar_precedence_over_border = true, "
             + "bar_padding = 10, bar_button_padding = 6, inactive_button_color = \"" + hex(Qt.alpha(Theme.subtext, 0.35)) + "\", "
-            + "on_double_click = " + dsp(max) + " } } }); "
+            + "on_double_click = " + act("max") + " } } }); "
+            + "MonolithDesk.barAct = function(kind) "
+            +   "local c = hl.get_cursor_pos(); if not c then return end; local cx, cy = c.x or c[1], c.y or c[2]; "
+            +   "local bh = tonumber(hl.get_config(\"plugin:hyprbars:bar_height\")) or 34; "
+            +   "local function xy(v) if type(v) == \"table\" then return (v.x or v[1] or 0), (v.y or v[2] or 0) end return 0, 0 end; "
+            +   "local function hit(w) if not w then return false end; local ax, ay = xy(w.at); local zw, zh = xy(w.size); return cx >= ax and cx <= ax + zw and cy >= ay - bh - 6 and cy <= ay + zh end; "
+            +   "local win = hl.get_active_window(); "
+            +   "if not hit(win) then win = nil; for _, w in ipairs(hl.get_windows()) do if w.mapped and w.visible and hit(w) then win = w; break end end end; "
+            +   "if not win then return end; "
+            +   "local a = tostring(win.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; local s = \"address:\" .. a; "
+            +   "if kind == \"close\" then hl.dispatch(hl.dsp.window.close({ window = s })) "
+            +   "elseif kind == \"max\" then hl.dispatch(hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", window = s })) "
+            +   "elseif kind == \"min\" then hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = s })) end "
+            + "end; "
             // (buttons stay until a config reload clears them: added once per reload. Right to left)
             // (round buttons with the shell's icons: close in the theme's red, the others soft)
             // (a config reload clears them: a hook in Hyprland notes that, once per reload. Noted
             // from the shell, a reload reported twice put every button there twice)
             + "if not MonolithDesk.reloadHook then MonolithDesk.reloadHook = hl.on(\"config.reloaded\", function() MonolithDesk.barButtons = nil end) end; "
-            + "if not MonolithDesk.barButtons then MonolithDesk.barButtons = true; "
-            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.danger, 0.92)) + "\", fg_color = \"" + hex(Theme.card) + "\", size = 22, icon = \"\ue5cd\", action = " + dsp("hl.dsp.window.close()") + " }); "
-            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.text, 0.12)) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 22, icon = \"\ue3c6\", action = " + dsp(max) + " }); "
-            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.text, 0.12)) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 22, icon = \"\ue15b\", action = " + dsp('hl.dsp.window.move({ workspace = "special:' + minName + '", follow = false })') + " }) end; "
+            + "if MonolithDesk.barButtons ~= 2 then MonolithDesk.barButtons = 2; "
+            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.danger, 0.92)) + "\", fg_color = \"" + hex(Theme.card) + "\", size = 22, icon = \"\ue5cd\", action = " + act("close") + " }); "
+            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.text, 0.12)) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 22, icon = \"\ue3c6\", action = " + act("max") + " }); "
+            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.text, 0.12)) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 22, icon = \"\ue15b\", action = " + act("min") + " }) end; "
             + (pat === "" ? "if MonolithDesk.noBar then MonolithDesk.noBar:set_enabled(false); MonolithDesk.noBar = nil end" : "if MonolithDesk.noBar then MonolithDesk.noBar:set_enabled(false) end; MonolithDesk.noBar = hl.window_rule({ name = \"monolith-nobar-" + Qt.md5(pat).slice(0, 8) + "\", match = { class = [[(?i)^(" + pat + ")$]] }, [\"hyprbars:no_bar\"] = true })");
     }
     function hyprBars(want) {
@@ -371,6 +386,10 @@ Singleton {
         if (Niri.hyprLua) {
             // (hooks made by an older version are taken out first, so the ones below replace them)
             const lua = "MonolithDesk = MonolithDesk or {}; "
+                // (dragging a window: from where you took hold of it. Hyprland's drag_center_window
+                // put the pointer in its middle; yours back when Desktop mode is off)
+                + (want ? "if MonolithDesk.dragWas == nil then MonolithDesk.dragWas = hl.get_config(\"binds.drag_center_window\") end; hl.config({ binds = { drag_center_window = false } }); "
+                        : "if MonolithDesk.dragWas ~= nil then hl.config({ binds = { drag_center_window = MonolithDesk.dragWas } }); MonolithDesk.dragWas = nil end; ")
                 + "if MonolithDesk.hv ~= 3 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 3 end; "
                 + "MonolithDesk.on = " + (want ? "true" : "false") + "; "
                 + "if MonolithDesk.rule then MonolithDesk.rule:set_enabled(MonolithDesk.on and " + (floating ? "true" : "false") + ") "
