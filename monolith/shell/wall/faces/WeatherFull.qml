@@ -3,63 +3,76 @@ import QtQuick.Layouts
 import "../../core"
 import "../../ui"
 
-// Weather, full: glass; the condition's icon top-left and the temperature (with what it feels
-// like) bottom-left; the city and conditions top-right and the next hours bottom-right. Sizes
-// follow the widget: everything grows with it, and a wider one shows a fourth hour.
+// Weather, full: on glass. On the left the condition's icon at the top and the temperature with
+// "feels like" at the bottom; on the right the city and the conditions at the top and the next few
+// hours (temperature, icon, time) at the bottom. Everything scales with the widget; from 360 px
+// wide it shows four hours instead of three.
 FaceBase {
-    id: f
-    WeatherTone { id: wt }
-    readonly property real ref: Math.min(height, width * 0.6)
-    readonly property real m: Math.max(12, ref * 0.09)
-    readonly property real gap: Math.max(8, ref * 0.05)
-    readonly property real inner: Math.max(0, height - 2 * m)
-    readonly property int count: width >= 360 ? 4 : 3
-    // the hours from now on
-    readonly property var next: {
-        const h = new Date().getHours(), l = Weather.hours;
-        let i = l.findIndex(x => parseInt(x.time) >= h);
-        return l.slice(Math.max(0, i), Math.max(0, i) + count);
+    id: face
+    WeatherTone { id: sky }
+    // the size things are measured against: the height, unless the widget is unusually narrow
+    readonly property real basis: Math.min(height, width * 0.6)
+    readonly property real pad: Math.max(12, basis * 0.09)
+    readonly property real gutter: Math.max(8, basis * 0.05)
+    readonly property real room: Math.max(0, height - 2 * pad)
+    // a size between `lo` and `hi`, `part` of the room
+    function sized(part, lo, hi) { return Math.max(lo, Math.min(hi, room * part)); }
+    // the hours still to come today, from this one
+    readonly property var upcoming: {
+        const now = face.now.getHours(), all = Weather.hours;
+        const from = Math.max(0, all.findIndex(h => parseInt(h.time) >= now));
+        return all.slice(from, from + (width >= 360 ? 4 : 3));
     }
-    Glass { anchors.fill: parent; ctx: f.ctx; radius: Theme.corner(80, 16) }
-    Text { renderType: Text.CurveRendering;
+    component Line: Text { renderType: Text.CurveRendering; font.family: Theme.fontFamily; color: Theme.subtext }
+    Glass { anchors.fill: parent; ctx: face.ctx; radius: Theme.corner(80, 16) }
+    Line {
+        visible: !sky.ready
         anchors.centerIn: parent
-        visible: !wt.ready
-        text: (Weather.noPlace ? "No location: set your city in Settings → General" : "Getting the weather…")
-        color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Math.max(11, f.inner * 0.09)
+        text: Weather.noPlace ? "No location: set your city in Settings → General" : "Getting the weather…"
+        font.pixelSize: Math.max(11, face.room * 0.09)
     }
     RowLayout {
-        visible: wt.ready
+        visible: sky.ready
         anchors.fill: parent
-        anchors.margins: f.m
-        spacing: f.gap
+        anchors.margins: face.pad
+        spacing: face.gutter
+        // now
         ColumnLayout {
-            Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredWidth: 1
             spacing: 0
-            Icon { Layout.alignment: Qt.AlignTop | Qt.AlignLeft; name: wt.icon; filled: true; size: Math.max(28, Math.min(78, f.inner * 0.36)); color: wt.color }
+            Icon { Layout.alignment: Qt.AlignTop | Qt.AlignLeft; name: sky.icon; filled: true; color: sky.color; size: face.sized(0.36, 28, 78) }
             Item { Layout.fillHeight: true }
-            Text { renderType: Text.CurveRendering; text: wt.temp; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: Math.max(24, Math.min(64, f.inner * 0.3)) }
-            Text { renderType: Text.CurveRendering;
-                text: wt.ready && Weather.current.feels !== undefined ? "Feels like " + Math.round(Weather.current.feels) + "°" : ""
-                color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Medium; font.pixelSize: Math.max(10, Math.min(14, f.inner * 0.085))
+            Line { text: sky.temp; color: Theme.text; font.weight: Font.Black; font.pixelSize: face.sized(0.3, 24, 64) }
+            Line {
+                text: sky.ready && Weather.current.feels !== undefined ? "Feels like " + Math.round(Weather.current.feels) + "°" : ""
+                font.weight: Font.Medium
+                font.pixelSize: face.sized(0.085, 10, 14)
             }
         }
+        // where, what, and what's coming
         ColumnLayout {
-            Layout.fillWidth: true; Layout.fillHeight: true; Layout.preferredWidth: 1.3
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredWidth: 1.3
             spacing: 2
-            Text { renderType: Text.CurveRendering; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight; text: Weather.city || "Weather"; color: Theme.text; font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(13, Math.min(20, f.inner * 0.105)) }
-            Text { renderType: Text.CurveRendering; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight; text: wt.words; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Medium; font.pixelSize: Math.max(11, Math.min(16, f.inner * 0.085)) }
+            Line { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight; text: Weather.city || "Weather"; color: Theme.text; font.weight: Font.Bold; font.pixelSize: face.sized(0.105, 13, 20) }
+            Line { Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; elide: Text.ElideRight; text: sky.words; font.weight: Font.Medium; font.pixelSize: face.sized(0.085, 11, 16) }
             Item { Layout.fillHeight: true }
             RowLayout {
                 Layout.alignment: Qt.AlignBottom | Qt.AlignRight
-                spacing: Math.max(6, f.gap * 0.9)
+                spacing: Math.max(6, face.gutter * 0.9)
                 Repeater {
-                    model: f.next
+                    model: face.upcoming
                     ColumnLayout {
+                        id: hour
                         required property var modelData
+                        readonly property int at: parseInt(modelData.time)
                         spacing: 4
-                        Text { renderType: Text.CurveRendering; Layout.alignment: Qt.AlignHCenter; text: Math.round(modelData.temp) + "°"; color: Theme.subtext; font.family: Theme.fontFamily; font.weight: Font.Medium; font.pixelSize: Math.max(11, Math.min(18, f.inner * 0.085)) }
-                        Icon { Layout.alignment: Qt.AlignHCenter; name: Weather.icon(modelData.code, parseInt(modelData.time) >= 6 && parseInt(modelData.time) < 20); filled: true; size: Math.max(20, Math.min(32, f.inner * 0.15)); color: wt.tone(modelData.code) }
-                        Text { renderType: Text.CurveRendering; Layout.alignment: Qt.AlignHCenter; text: modelData.time; color: Theme.subtext; font.family: Theme.fontFamily; font.pixelSize: Math.max(9, Math.min(13, f.inner * 0.065)) }
+                        Line { Layout.alignment: Qt.AlignHCenter; text: Math.round(hour.modelData.temp) + "°"; font.weight: Font.Medium; font.pixelSize: face.sized(0.085, 11, 18) }
+                        Icon { Layout.alignment: Qt.AlignHCenter; name: Weather.icon(hour.modelData.code, hour.at >= 6 && hour.at < 20); filled: true; color: sky.tone(hour.modelData.code); size: face.sized(0.15, 20, 32) }
+                        Line { Layout.alignment: Qt.AlignHCenter; text: hour.modelData.time; font.pixelSize: face.sized(0.065, 9, 13) }
                     }
                 }
             }
