@@ -96,7 +96,9 @@ Grid {
         color: on ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
         onPressedChanged: if (pressed) { const p = start.mapToItem(null, 0, 0); strip.host.pressedAt = { screen: strip.host.screenName, x: p.x, y: p.y, w: start.width, h: start.height, t: Date.now() }; }
         onClicked: strip.host.open("search")
+        // the grid: on a tile of the accent
         SmoothRect {
+            visible: !start.logo
             smoothing: 0
             anchors.centerIn: parent
             width: Math.round(strip.cell * 0.66); height: width
@@ -104,16 +106,19 @@ Grid {
             color: start.on ? Theme.accent : Theme.accentContainer
             scale: start.pressed ? 0.88 : 1
             Behavior on scale { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
-            // your distribution's logo (core/Distro.qml), or the grid (Settings → Desktop mode)
-            Icon { visible: !start.logo; anchors.centerIn: parent; name: "grid_view"; size: Math.round(strip.cell * 0.4); filled: true; color: start.on ? Theme.onAccent : Theme.onAccentContainer }
-            Text {
-                visible: start.logo
-                anchors.centerIn: parent
-                text: Distro.glyph
-                font.family: Distro.fontFamily
-                font.pixelSize: Math.round(strip.cell * 0.42)
-                color: start.on ? Theme.onAccent : Theme.onAccentContainer
-            }
+            Icon { anchors.centerIn: parent; name: "grid_view"; size: Math.round(strip.cell * 0.4); filled: true; color: start.on ? Theme.onAccent : Theme.onAccentContainer }
+        }
+        // your distribution's logo (core/Distro.qml): the logo itself, as big as the apps' icons
+        // beside it, in the accent (squeezed into a tile of its own it was small and grey)
+        Text {
+            visible: start.logo
+            anchors.centerIn: parent
+            text: Distro.glyph
+            font.family: Distro.fontFamily
+            font.pixelSize: Math.round(strip.cell * 0.6)
+            color: Theme.accent
+            scale: start.pressed ? 0.86 : (start.hovered ? 1.06 : 1)
+            Behavior on scale { NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
         }
     }
 
