@@ -584,6 +584,31 @@ Singleton {
     // niri: a window opening, the first of its app, gets the size its app had (a rule per app
     // made its other windows, a screen-share picker or a dialog, as big as its main one too)
     property var seenIds: null
+    // niri: a window that opened fullscreen (mpv --fs, a video player's next file) never had a
+    // floating place: out of fullscreen niri floats it at its own small size in the screen's top
+    // left corner. It gets its app's size and the middle of the screen, like a window opening
+    property var wasFloating: ({})
+    Connections {
+        target: Niri
+        function onWindowsChanged() {
+            if (Niri.hyprland) return;
+            const now = {};
+            for (const k in Niri.windows) {
+                const w = Niri.windows[k];
+                now[k] = w.is_floating;
+                if (!desk.on || !desk.floating || !w.is_floating || desk.wasFloating[k] !== false || desk.isMin(w)) continue;
+                const pos = w.layout ? w.layout.tile_pos_in_workspace_view : null;
+                if (!pos || pos[0] > 1 || pos[1] > 1) continue;
+                const s = desk.sizes[String(w.app_id || "").toLowerCase()];
+                if (s) {
+                    desk.niri(["set-window-width", "--id", String(w.id), String(Math.round(s[0]))]);
+                    desk.niri(["set-window-height", "--id", String(w.id), String(Math.round(s[1]))]);
+                }
+                desk.centerLater(w.id);
+            }
+            desk.wasFloating = now;
+        }
+    }
     // (centred once its new size has been taken: centred straight after the resize, niri used the
     // old size and the window sat at the top)
     property var toCenter: []
