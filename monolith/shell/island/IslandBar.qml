@@ -29,7 +29,13 @@ Item {
     function part(z) { return len(z) > 0 ? len(z) + gap : 0; }
     // the free modules: room for them all, wherever they sit
     readonly property real freeLen: { let n = 0; for (let i = 0; i < freeRep.count; i++) { const it = freeRep.itemAt(i); if (it && it.visible) n += (vertical ? it.height : it.width) + gap; } return n; }
-    readonly property real fitLength: part(leftZone) + part(leftMidZone) + part(midZone) + part(midRightZone) + len(rightZone) + freeLen + 2 * Theme.islandPad
+    // (without a gap after the last thing in it: with nothing at its end, the last zone's gap ran
+    // on into empty room, a mini bar a gap longer on one side than the other)
+    readonly property real fitLength: {
+        let n = part(leftZone) + part(leftMidZone) + part(midZone) + part(midRightZone) + len(rightZone) + freeLen;
+        if (len(rightZone) === 0 && n > 0) n -= gap;
+        return n + 2 * Theme.islandPad;
+    }
     // (Desktop mode: its middle (the start button and the apps) right in the middle of the screen,
     // whatever its length setting. Fitting its modules, the middle came right after the left end,
     // wherever that ended)
