@@ -413,7 +413,7 @@ Singleton {
                 // put the pointer in its middle; yours back when Desktop mode is off)
                 + (want ? "if MonolithDesk.dragWas == nil then MonolithDesk.dragWas = hl.get_config(\"binds.drag_center_window\") end; hl.config({ binds = { drag_center_window = false } }); "
                         : "if MonolithDesk.dragWas ~= nil then hl.config({ binds = { drag_center_window = MonolithDesk.dragWas } }); MonolithDesk.dragWas = nil end; ")
-                + "if MonolithDesk.hv ~= 4 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 4 end; "
+                + "if MonolithDesk.hv ~= 5 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 5 end; "
                 // minimising: noted for a moment (see the hook below), then off to the minimised workspace
                 + "MonolithDesk.minimizeWin = function(s) MonolithDesk.justMin = true; "
                 +   "hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = s })); "
@@ -447,11 +447,11 @@ Singleton {
                 +   "local m = w.monitor; local z = w.size; local ww, wh = 0, 0; "
                 +   "if type(z) == \"table\" then ww = z[1] or z.x or 0; wh = z[2] or z.y or 0 end; "
                 +   "if ww < 300 or wh < 200 then return end; "
-                // (only an app's first window: its others (a screen-share picker, a dialog) were
-                // made as big as its main one, and didn't work)
-                +   "local cls = string.lower(tostring(w.class)); local n = 0; "
-                +   "for _, o in ipairs(hl.get_windows()) do if string.lower(tostring(o.class)) == cls then n = n + 1 end end; "
-                +   "if n > 1 then return end; "
+                // (not a window an open one opened, a screen-share picker or a dialog: those come
+                // from the same process, and made as big as its main one they didn't work. Another
+                // window of the app on its own, a second terminal, gets the size too)
+                +   "local cls = string.lower(tostring(w.class)); local me = tostring(w.address); "
+                +   "for _, o in ipairs(hl.get_windows()) do if tostring(o.address) ~= me and string.lower(tostring(o.class)) == cls and o.pid == w.pid then return end end; "
                 +   "local s = MonolithDesk.sizes and MonolithDesk.sizes[string.lower(tostring(w.class))]; "
                 +   "if not s and m and ww >= m.width * 0.8 and wh >= m.height * 0.8 then s = { math.floor(m.width * 0.62), math.floor(m.height * 0.68) } end; "
                 +   "if not s then return end; "
@@ -498,9 +498,10 @@ Singleton {
             const id = String(w.app_id || "").toLowerCase();
             const s = sizes[id];
             if (!s || !w.is_floating) continue;
+            // (not one an open window of the same process opened: a dialog, a picker)
             let n = 0;
-            for (const j in Niri.windows) if (String(Niri.windows[j].app_id || "").toLowerCase() === id) n++;
-            if (n > 1) continue;
+            for (const j in Niri.windows) { const o = Niri.windows[j]; if (j !== k && String(o.app_id || "").toLowerCase() === id && o.pid === w.pid) n++; }
+            if (n > 0) continue;
             niri(["set-window-width", "--id", String(w.id), String(Math.round(s[0]))]);
             niri(["set-window-height", "--id", String(w.id), String(Math.round(s[1]))]);
             niri(["center-window", "--id", String(w.id)]);
@@ -510,14 +511,15 @@ Singleton {
         const cur = Object.assign({}, sizes);
         const biggest = {};
         let changed = false;
-        // (the window you're in last: its size wins over another of the same app's)
-        const ids = Object.keys(Niri.windows).sort((a, b) => (Niri.windows[a].is_focused ? 1 : 0) - (Niri.windows[b].is_focused ? 1 : 0));
+        // (the window you're in: resizing a window puts you in it. Not one that's only a little
+        // window, a splash screen or a dialog: Vesktop's splash came out as its size)
+        const ids = Object.keys(Niri.windows).filter(k => Niri.windows[k].is_focused);
         for (const k of ids) {
             const w = Niri.windows[k];
             if (!w || !w.is_floating || w.is_fullscreen || isMin(w)) continue;
             const sz = w.layout ? w.layout.window_size : null;
             const id = String(w.app_id || "").toLowerCase();
-            if (!sz || id === "" || sz[0] < 300 || sz[1] < 200) continue;
+            if (!sz || id === "" || sz[0] < 480 || sz[1] < 360) continue;
             const ws = Niri.workspaces.find(x => x.id === w.workspace_id);
             const scr = ws ? Quickshell.screens.find(x => x.name === ws.output) : null;
             if (scr && (sz[0] >= scr.width * 0.95 || sz[1] >= scr.height * 0.88)) continue;
