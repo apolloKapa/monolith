@@ -134,18 +134,32 @@ Grid {
                 scale: app.pressed ? 0.86 : (app.hovered ? 1.06 : 1)
                 Behavior on scale { NumberAnimation { duration: Theme.ms(200); easing.type: Easing.OutCubic } }
             }
-            // a line along the screen's edge while it has windows: long for the one you're in,
-            // short for the rest, faint when they're all minimised
-            Rectangle {
-                visible: app.wins.length > 0
-                property real along: app.focused ? strip.cell * 0.42 : strip.cell * 0.16
-                Behavior on along { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
-                width: strip.vertical ? 3 : along
-                height: strip.vertical ? along : 3
-                radius: (Theme.chamfer || Theme.square) ? 0 : 1.5
-                color: app.focused ? Theme.accent : (app.allMin ? Qt.alpha(Theme.subtext, 0.6) : Theme.subtext)
+            // a mark along the screen's edge per open window (up to three, like the dock's dots):
+            // long for the one you're in, short for the rest, faint when they're all minimised.
+            // (It was one line however many windows: two terminals looked like one)
+            Grid {
+                id: marks
+                visible: app.wins.length > 0 && Store.get("dock.dots", true) !== false
+                rows: strip.vertical ? 0 : 1
+                columns: strip.vertical ? 1 : 0
+                spacing: 3
                 x: strip.edge === "left" ? 1 : (strip.edge === "right" ? app.width - width - 1 : Math.round((app.width - width) / 2))
                 y: strip.edge === "bottom" ? app.height - height - 1 : (strip.edge === "top" ? 1 : Math.round((app.height - height) / 2))
+                Repeater {
+                    model: Math.min(3, app.wins.length)
+                    Rectangle {
+                        required property int index
+                        // (the one you're in; past three, the first stands for it)
+                        readonly property bool current: app.focused && (index < app.wins.length && app.wins[index].id === Niri.focusedWindowId
+                            || index === 0 && app.wins.slice(0, 3).every(w => w.id !== Niri.focusedWindowId))
+                        property real along: current ? strip.cell * 0.32 : strip.cell * 0.1
+                        Behavior on along { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
+                        width: strip.vertical ? 3 : along
+                        height: strip.vertical ? along : 3
+                        radius: (Theme.chamfer || Theme.square) ? 0 : 1.5
+                        color: current ? Theme.accent : (app.allMin ? Qt.alpha(Theme.subtext, 0.6) : Theme.subtext)
+                    }
+                }
             }
         }
     }
