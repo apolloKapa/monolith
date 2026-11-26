@@ -163,8 +163,15 @@ PanelWindow {
                 : (place.endsWith("left") ? win.room("left") + off
                 : (place.endsWith("right") ? win.width - width - win.room("right") - off
                 : Math.round((win.width - win.group(place)) / 2) + off))
+            // (on the bar's edge, beside the bar and not over it: on the bar's own row, level with it.
+            // It sat a row higher, as if the bar ran the whole width of the screen)
+            readonly property var barBox: HubState.barBox[win.modelData.name]
+            readonly property bool level: !vert && edge === Theme.barEdge && win.barHere && !!barBox && Theme.barSide === ""
+                && (homeX + width + 10 < barBox.x || homeX > barBox.x + barBox.w + 10)
+            readonly property real rowY: Theme.barMargin
             readonly property real homeY: vert ? Math.round((win.height - win.group(place)) / 2) + off
-                : (place.startsWith("top") ? win.room("top") : win.height - height - win.room("bottom"))
+                : (level ? (edge === "top" ? rowY : win.height - height - rowY)
+                : (place.startsWith("top") ? win.room("top") : win.height - height - win.room("bottom")))
             property bool dragging: false
             // when it shows (Settings → Mini bars): like the bar (it goes and comes back with an
             // auto-hidden or dodging bar), always, out of the way of windows, or only when you touch
@@ -290,7 +297,7 @@ PanelWindow {
         const z = {};
         for (let j = 0; j < rep.count; j++) {
             const it = rep.itemAt(j);
-            if (!it || !it.hasContent) continue;
+            if (!it || !it.hasContent || it.level) continue;   // (level with the bar: its room is the bar's)
             const m = it.modelData;
             // (only one that stays out: always, or with a bar that does. One that goes away gets
             // out of the way by itself)

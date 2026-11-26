@@ -44,6 +44,14 @@ Singleton {
         if (on) c[screen] = true; else delete c[screen];
         barOut = c;
     }
+    // where the bar is along its row on each screen ({ x, w }, the screen's own coordinates): a
+    // mini bar on the same edge sits on that row beside it when there's room (island/MiniBars.qml)
+    property var barBox: ({})
+    function setBarBox(screen, x, w) {
+        const b = barBox[screen];
+        if (b && Math.abs(b.x - x) < 1 && Math.abs(b.w - w) < 1) return;
+        const c = Object.assign({}, barBox); c[screen] = { x: x, w: w }; barBox = c;
+    }
     // the bar tucked away (auto-hide) on these screens: mini bars go and come back with it
     property var barTucked: ({})
     function setBarTucked(screen, on) {

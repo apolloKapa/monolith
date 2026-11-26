@@ -112,6 +112,14 @@ PanelWindow {
     // the Frame, auto-hide: windows make room for the bar while it's out (island/Frame.qml)
     readonly property bool barIsOut: Theme.frameHide && barHere && !tucked && !covered
     onTuckedChanged: if (!side) HubState.setBarTucked(modelData.name, tucked && autohide)
+    // (where it is along its row, at rest, for mini bars beside it: not while it's a menu)
+    readonly property real restX: island.x
+    readonly property real restWidth: island.width
+    function noteBox() { if (!side && !grown && !shown) HubState.setBarBox(modelData.name, restX, restWidth); }
+    onRestXChanged: noteBox()
+    onRestWidthChanged: noteBox()
+    // (and once it's settled after starting: a bar that never moves never said where it was)
+    Timer { running: true; interval: 1500; onTriggered: win.noteBox() }
     onBarIsOutChanged: HubState.setBarOut(modelData.name, barIsOut)
     // (the Frame's border on the bar's edge is the whole strip you touch to bring the bar back)
     readonly property real sensorH: Theme.frameHide ? Math.max(3, Theme.frameW) : 3

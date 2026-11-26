@@ -34,10 +34,15 @@ Singleton {
     // the config, as lines (rebuilt whenever a setting changes)
     readonly property var lines: {
         const _ = Store.revision;
-        const method = ["pipewire", "pulse", "alsa", "jack", "sndio", "oss", "portaudio"].indexOf(String(get("method"))) !== -1 ? String(get("method")) : "pipewire";
-        // (auto: where the apps actually play, see `heard`; your own pick otherwise)
+        const chosen = ["pipewire", "pulse", "alsa", "jack", "sndio", "oss", "portaudio"].indexOf(String(get("method"))) !== -1 ? String(get("method")) : "pipewire";
+        // (auto: where the apps actually play, see `heard`; your own pick otherwise. Listening to an
+        // output by name goes through PulseAudio's side of PipeWire, to its monitor: cava's PipeWire
+        // input handed an output's name plugged itself into the microphone instead, and every
+        // visualiser lay flat however loud the music)
         const own = String(get("source") || "auto").replace(/[\r\n]/g, "");
-        const src = own !== "auto" ? own : (heard === "" ? "auto" : (method === "pulse" ? heard + ".monitor" : heard));
+        const byName = own === "auto" && heard !== "" && (chosen === "pipewire" || chosen === "pulse");
+        const method = byName ? "pulse" : chosen;
+        const src = own !== "auto" ? own : (byName ? heard + ".monitor" : "auto");
         const lo = n("lowerCutoff", 10, 2000), hi = Math.max(lo + 100, n("higherCutoff", 1000, 22000));
         const out = ["[general]", "bars = " + count, "framerate = " + n("framerate", 1, 360),
             "autosens = " + b("autosens"), "overshoot = " + n("overshoot", 0, 100), "sensitivity = " + n("sensitivity", 1, 1000),
