@@ -307,9 +307,23 @@ Singleton {
             bars(false);
         }
     }
+    // kitty's own title bar (niri draws none, and Monolith's kitty.conf hides kitty's): a file of
+    // Monolith's, monolith-desktop.conf, included once at the end of your kitty.conf, says
+    // "hide_window_decorations no" while Desktop mode is on, and nothing otherwise. Your kitty.conf
+    // itself is left as it is. Kitty takes it in its windows opened from then on
+    function kittyBars(want) {
+        Quickshell.execDetached(["sh", "-c",
+            'd="${XDG_CONFIG_HOME:-$HOME/.config}/kitty"; [ -f "$d/kitty.conf" ] || exit 0; '
+            + 'printf "%s\\n" "# Written by Monolith: Desktop mode on niri turns kitty\'s own title bar on here (niri draws none). Changes here are replaced." > "$d/monolith-desktop.conf"; '
+            + '[ "$1" = on ] && printf "hide_window_decorations no\\n" >> "$d/monolith-desktop.conf"; '
+            + 'grep -q "include monolith-desktop.conf" "$d/kitty.conf" || printf "\\n# Monolith Desktop mode (niri): kitty\'s title bar\\ninclude monolith-desktop.conf\\n" >> "$d/kitty.conf"',
+            "_", want ? "on" : "off"]);
+    }
     // the apps' own title bars, on or back to how you had them
     function bars(want) {
         if (gtkButtons.want === want && !gtkButtons.running) gtkButtons.go(); else gtkButtons.want = want;
+        // (on Hyprland its title bars plugin draws one: kitty's own would make two)
+        kittyBars(want && !Niri.hyprland);
         if (Niri.hyprland) { hyprBars(want); return; }
         if (want) NiriConf.read(["-|prefer-no-csd"], r => {
             if (r && r["-|prefer-no-csd"] !== null && r["-|prefer-no-csd"] !== undefined) {
