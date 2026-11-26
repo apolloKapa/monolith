@@ -805,8 +805,10 @@ Item {
             // as wide as with every value at 100 % (a number changing width moved everything after
             // it, and a bar that fits its modules changed length), the values against their icons
             // and the spare room even at both ends
-            minInner: bar.vertical ? 0 : contentW + slack
-            readonly property real slack: { let w = 0; for (let i = 0; i < statRep.count; i++) { const it = statRep.itemAt(i); if (it) w += it.slack; } return w; }
+            // (from the icons and the widest values only, never the values themselves: added up
+            // from what's shown plus what it's short of, the two changed a moment apart and the
+            // module, and the taskbar round it, flicked a digit wider and back)
+            minInner: { if (bar.vertical) return 0; let w = 0, n = 0; for (let i = 0; i < statRep.count; i++) { const it = statRep.itemAt(i); if (it) { w += it.fullW; n++; } } return w + Math.max(0, n - 1) * spacing; }
             readonly property var which: Store.get("bar.stats", ["cpu", "temp"])
             // the system monitor drops down under it (Settings → System monitor), or the control center's Monitor
             onClicked: {
@@ -822,9 +824,9 @@ Item {
                 Line {
                     required property var modelData
                     spacing: bar.vertical ? 0 : 3
-                    // (what it's short of its widest value, 100 %: the module makes it up at both ends)
-                    readonly property real slack: bar.vertical ? 0 : Math.max(0, widest.width - statText.implicitWidth)
-                    Icon { visible: bar.mopt("stats.icons", true) === true; name: modelData[1]; size: 15; color: Theme.subtext }
+                    // (as wide as it gets: its icon and its widest value, 100 %)
+                    readonly property real fullW: (statIcon.visible ? statIcon.implicitWidth + spacing : 0) + Math.ceil(widest.width)
+                    Icon { id: statIcon; visible: bar.mopt("stats.icons", true) === true; name: modelData[1]; size: 15; color: Theme.subtext }
                     Label {
                         id: statText
                         renderType: bar.only ? Text.QtRendering : Text.NativeRendering
@@ -866,11 +868,15 @@ Item {
                 const p = bar.edgePoint(soundMod);
                 HubState.toggleDrop("sound", bar.screenName, p.x, p.y);
             }
+            // (as wide as at 100: the volume gaining a digit made the taskbar round it a step wider)
+            minInner: bar.vertical || !volText.visible ? 0 : volIcon.implicitWidth + spacing + Math.ceil(volWidest.width)
             Icon {
+                id: volIcon
                 name: bar.muted || bar.volume === 0 ? "volume_off" : (bar.volume < 0.4 ? "volume_down" : "volume_up")
                 size: 18; filled: true; color: bar.muted ? Theme.subtext : Theme.text
             }
-            Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; visible: Store.get("bar.soundPercent", true) !== false; text: Math.round(bar.volume * 100) + (bar.mopt("sound.sign", false) === true ? "%" : ""); font.pixelSize: Theme.sizeSmall }
+            Label { id: volText; renderType: bar.only ? Text.QtRendering : Text.NativeRendering; visible: Store.get("bar.soundPercent", true) !== false; text: Math.round(bar.volume * 100) + (bar.mopt("sound.sign", false) === true ? "%" : ""); font.pixelSize: Theme.sizeSmall
+                TextMetrics { id: volWidest; font: volText.font; text: "100" + (bar.mopt("sound.sign", false) === true ? "%" : "") } }
             // the wheel over it: the volume, a step at a time
             WheelHandler {
                 enabled: !bar.only && bar.mopt("sound.scroll", true) === true
