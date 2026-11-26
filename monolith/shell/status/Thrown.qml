@@ -31,6 +31,8 @@ PanelWindow {
         for (let i = rows.count - 1; i >= 0; i--)
             if (ids.indexOf(rows.get(i).fid) === -1) rows.remove(i);
         for (const f of mine) {
+            // (a copy with no real place to start never shows: it would sit at 0,0, the corner)
+            if (!isFinite(f.x) || !isFinite(f.y) || !(f.w > 0) || !(f.h > 0)) { Qt.callLater(() => Throw.land(f.id)); continue; }
             let have = false;
             for (let i = 0; i < rows.count; i++) if (rows.get(i).fid === f.id) { have = true; break; }
             if (!have) rows.append({ fid: f.id, url: f.url, fx: f.x, fy: f.y, fw: f.w, fh: f.h, fink: f.ink ? JSON.stringify(f.ink) : "" });

@@ -64,14 +64,28 @@ Pressable {
         const rp = card.rippleItem;
         const ink = rp && rp.alpha > 0.001 ? { cx: rp.cx, cy: rp.cy, spread: rp.spread, alpha: rp.alpha, color: rp.ink, radius: card.radius } : null;
         if (rp) rp.visible = false;
+        const at = card.startOn(scr, p);
+        if (!at) { swipeX = sx; if (rp) rp.visible = true; return; }
         const ok = card.grabToImage(r => {
             if (rp) rp.visible = true;
-            card.throwId = Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height, ink);
+            card.throwId = Throw.launch(scr, r.url, at.x, at.y, card.width, card.height, ink);
             Throw.dragTo(card.throwId, card.swipeX);
             handoff.restart();
         });
         swipeX = sx;
         if (!ok) { throwId = -1; if (rp) rp.visible = true; }
+    }
+    // Where the copy would start on its screen, or null when that can't be trusted: not a number
+    // (a window being remade as a monitor wakes has no screen for a moment: Qt turns that into 0,
+    // and cards flew from the top-left corner), or not on that screen at all. Then the card isn't
+    // thrown: it just goes, like the rest of the list.
+    function startOn(scr, p) {
+        const x = p.x + card.windowOffset.x, y = p.y + card.windowOffset.y;
+        if (!isFinite(x) || !isFinite(y) || !isFinite(card.width) || !isFinite(card.height) || card.width <= 0) return null;
+        const s = Quickshell.screens.find(q => q.name === scr);
+        if (!s) return null;
+        if (x + card.width <= 0 || y + card.height <= 0 || x >= s.width || y >= s.height) return null;
+        return Qt.point(x, y);
     }
     function handOver() {
         if (handed || throwId < 0) return;
@@ -119,12 +133,18 @@ Pressable {
         if (shownPart() < 0.5 || shownOpacity() < 0.5) return;
         const p = card.mapToItem(null, -swipeX, 0);
         const scr = card.screenName || HubState.screenName || Niri.focusedOutput || "";
+        const at = card.startOn(scr, p);
+        // (what each Clear threw and from where, in the shell's log: if one ever looks wrong again
+        // the numbers are there)
+        console.info("Clear throws a card:", at ? "from " + Math.round(at.x) + "," + Math.round(at.y) : "no (not on its screen)",
+                     "on", scr, "| in its window at", Math.round(p.x), Math.round(p.y), "| window offset", card.windowOffset.x, card.windowOffset.y);
+        if (!at) return;
         const dir = Math.random() < 0.5 ? -1 : 1;
         const falls = Throw.mode === "fall";
         const vx = dir * (falls ? 300 + Math.random() * 1700 : 1100 + Math.random() * 1600);
         const vy = -(500 + Math.random() * 1100);
         const ok = card.grabToImage(r => {
-            const id = Throw.launch(scr, r.url, p.x + card.windowOffset.x, p.y + card.windowOffset.y, card.width, card.height);
+            const id = Throw.launch(scr, r.url, at.x, at.y, card.width, card.height);
             card.throwId = id;
             card.pending = null;
             handoff.restart();
