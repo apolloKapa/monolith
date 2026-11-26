@@ -51,3 +51,16 @@ the same folder. On Gentoo:
     sudo emerge --oneshot gui-wm/niri
 
 then log out and in. Apps opened after that have the button.
+
+## niri-move-across-monitors.patch: dragging a window from one screen to another
+
+niri draws each window on one screen only: a window dragged towards the next screen was cut off
+at its own screen's edge, then jumped over whole once the pointer crossed. With this patch a
+window being dragged is also drawn on every other screen it reaches over, where it is in the
+layout of your screens, so it slides across (not in the overview). Made for niri 26.04; it goes in
+the same folder as the others, and they all build together:
+
+    sudo cp niri-move-across-monitors.patch /etc/portage/patches/gui-wm/niri-26.04/
+    sudo emerge --oneshot gui-wm/niri
+
+then log out and in.

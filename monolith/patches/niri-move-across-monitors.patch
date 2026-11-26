@@ -1,0 +1,33 @@
+diff --git a/src/layout/mod.rs b/src/layout/mod.rs
+index 5c4dd63..6c42ee6 100644
+--- a/src/layout/mod.rs
++++ b/src/layout/mod.rs
+@@ -4820,13 +4820,24 @@ impl<W: LayoutElement> Layout<W> {
+             return;
+         };
+ 
++        let zoom = self.overview_zoom();
++        let mut pos_in_backdrop = move_.tile_render_location(zoom);
+         if &move_.output != output {
+-            return;
++            // A window being dragged also shows on the other monitors it reaches over, where it
++            // is in the global space: it was cut off at its own monitor's edge, then jumped across
++            // whole. Not in the overview, where each monitor is zoomed on its own.
++            if zoom != 1. {
++                return;
++            }
++            let offset = (move_.output.current_location() - output.current_location()).to_f64();
++            pos_in_backdrop += offset;
++            let tile = Rectangle::new(pos_in_backdrop, move_.tile.tile_size());
++            if !tile.overlaps(Rectangle::from_size(output_size(output))) {
++                return;
++            }
+         }
+ 
+-        let scale = Scale::from(move_.output.current_scale().fractional_scale());
+-        let zoom = self.overview_zoom();
+-        let pos_in_backdrop = move_.tile_render_location(zoom);
++        let scale = Scale::from(output.current_scale().fractional_scale());
+         let xray_pos = XrayPos::new(pos_in_backdrop, zoom);
+ 
+         move_
