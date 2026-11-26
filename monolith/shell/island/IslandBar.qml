@@ -799,24 +799,31 @@ Item {
                 HubState.toggleDrop("system", bar.screenName, p.x, p.y);
             }
             Repeater {
+                id: statRep
                 model: [["cpu", "memory", Math.round(Stats.cpu * 100) + "%"], ["mem", "data_usage", Math.round(Stats.mem * 100) + "%"],
                         ["temp", "thermostat", Math.round(Stats.temp) + "°"], ["gpu", "videogame_asset", Math.round(Stats.gpu * 100) + "%"],
                         ["vram", "developer_board", Math.round(Stats.vram * 100) + "%"], ["gtemp", "device_thermostat", Math.round(Stats.gpuTemp) + "°"]].filter(x => parent.parent.which.indexOf(x[0]) !== -1)
                 Line {
                     required property var modelData
                     spacing: bar.vertical ? 0 : 3
+                    // (what it's short of its widest value, 100 %: made up at the end of the module)
+                    readonly property real slack: bar.vertical ? 0 : Math.max(0, widest.width - statText.implicitWidth)
                     Icon { visible: bar.mopt("stats.icons", true) === true; name: modelData[1]; size: 15; color: Theme.subtext }
-                    // (as wide as its widest value, 100 %: the number changing width moved
-                    // everything after it, and a bar that fits its modules changed length)
                     Label {
                         id: statText
                         renderType: bar.only ? Text.QtRendering : Text.NativeRendering
                         text: modelData[2]; font.pixelSize: Theme.sizeSmall
-                        width: bar.vertical ? implicitWidth : Math.max(implicitWidth, widest.width)
-                        horizontalAlignment: Text.AlignRight
                         TextMetrics { id: widest; font: statText.font; text: "100" + modelData[2].slice(-1) }
                     }
                 }
+            }
+            // the room the values are short of 100 %, all together after the last one: the module
+            // stays one width (a number changing width moved everything after it, and a bar that
+            // fits its modules changed length), without a gap before every short number
+            Item {
+                visible: !bar.vertical
+                width: { let w = 0; for (let i = 0; i < statRep.count; i++) { const it = statRep.itemAt(i); if (it) w += it.slack; } return w; }
+                height: 1
             }
         }
     }
