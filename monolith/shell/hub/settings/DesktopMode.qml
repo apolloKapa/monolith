@@ -77,9 +77,34 @@ ColumnLayout {
         key: "desktop.titlebars"; def: true;
         icon: "web_asset"; title: "Title bars"
         desc: Niri.hyprland
-            ? "Apps that draw their own title bars (GTK apps, browsers) get minimise, maximise and close. Hyprland asks the rest (terminals, Qt apps) to leave theirs off"
+            ? (Desk.barsReady ? "Every window gets a title bar like a desktop's: its name, minimise, maximise and close, a double click maximises, drag it to move the window"
+                              : "Apps that draw their own title bars (GTK apps, browsers) get minimise, maximise and close. For a bar on every window, Hyprland needs a plugin: below")
             : "Apps draw their own title bars, with minimise, maximise and close (niri's prefer-no-csd is off meanwhile). Apps open before you switched get theirs once they're opened again"
         Toggle { checked: Desk.titlebars; onToggled: on => Store.set("desktop.titlebars", on) }
+    }
+    // Hyprland: the hyprbars plugin, built here (scripts/hyprbars.sh)
+    SettingRow {
+        show: Niri.hyprland
+        icon: "build"; title: "Title bars on every window"
+        desc: Desk.barsState === "ready" ? "Built for this Hyprland (the hyprbars plugin, from Hyprland's own plugins). Build it again after Hyprland updates"
+            : Desk.barsState === "old" ? "Built for another Hyprland version: build it again for this one"
+            : "Hyprland draws no title bars itself: this builds its hyprbars plugin from Hyprland's own plugins, in a terminal (a minute or so, no password)"
+        Button {
+            text: Desk.barsState === "ready" ? "Build again" : (Desk.barsState === "old" ? "Build again" : "Build")
+            icon: "build"; primary: Desk.barsState !== "ready"
+            onClicked: Desk.buildBars()
+        }
+    }
+    SettingRow {
+        key: "desktop.noBar"
+        show: Niri.hyprland && Desk.barsReady
+        icon: "web_asset_off"; title: "No title bar for"
+        desc: "Apps that draw their own bar (browsers, GNOME apps, Discord…), by app id, separated by commas. * matches anything"
+        Field {
+            width: 300
+            text: Desk.noBar.join(", ")
+            onAccepted: v => Store.set("desktop.noBar", v.split(",").map(x => x.trim()).filter(x => x !== ""))
+        }
     }
     SettingRow {
         icon: "minimize"; title: "Minimising"

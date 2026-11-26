@@ -102,7 +102,7 @@ Singleton {
     Component.onCompleted: settle()
     Connections { target: Store; function onLoading() { desk.settle(); } function onLoadedChanged() { desk.settle(); } }
     // (Hyprland: which kind of config it has is known a moment after the start; its rules wait for it)
-    Connections { target: Niri; function onHyprKnownChanged() { if (desk.on && Niri.hyprland) desk.hyprRules(true); } }
+    Connections { target: Niri; function onHyprKnownChanged() { if (desk.on && Niri.hyprland) { desk.hyprRules(true); if (desk.titlebars) desk.hyprBars(true); } } }
     onWantedChanged: { if (!started) return; if (wanted) enter(); else leave(); }
     // (Settings was open, where it's switched: open again once it's all moved)
     property string reopen: ""
@@ -267,7 +267,7 @@ Singleton {
     // the apps' own title bars, on or back to how you had them
     function bars(want) {
         if (gtkButtons.want === want && !gtkButtons.running) gtkButtons.go(); else gtkButtons.want = want;
-        if (Niri.hyprland) return;
+        if (Niri.hyprland) { hyprBars(want); return; }
         if (want) NiriConf.read(["-|prefer-no-csd"], r => {
             if (r && r["-|prefer-no-csd"] !== null && r["-|prefer-no-csd"] !== undefined) {
                 Store.set("desktop.was.noCsd", true);
@@ -279,6 +279,64 @@ Singleton {
             Store.unset("desktop.was.noCsd");
         }
     }
+    // ── Hyprland: title bars on every window, like a desktop's (scripts/hyprbars.sh builds the
+    // hyprbars plugin once; loaded here while Desktop mode is on, in the theme's colours, with
+    // minimise, maximise and close on the right, a double click maximising). Apps that draw their
+    // own bar (browsers, GNOME apps, Electron apps) are left without one (desktop.noBar).
+    // Only into the Hyprland it was built for: another one could refuse it, or worse ──
+    readonly property string barsDir: (Quickshell.env("XDG_DATA_HOME") || (Quickshell.env("HOME") + "/.local/share")) + "/monolith/plugins"
+    readonly property string barsScript: Qt.resolvedUrl("../scripts/hyprbars.sh").toString().replace("file://", "")
+    property string barsFor: ""
+    property string hyprCommit: ""
+    readonly property string barsState: !Niri.hyprland ? "" : (barsFor === "" ? "none" : (hyprCommit !== "" && barsFor !== hyprCommit ? "old" : "ready"))
+    readonly property bool barsReady: barsState === "ready" && hyprCommit !== ""
+    FileView { path: desk.barsDir + "/hyprbars.for"; watchChanges: true; printErrors: false; onLoaded: desk.barsFor = text().trim(); onFileChanged: reload(); onLoadFailed: desk.barsFor = "" }
+    Process {
+        running: Niri.hyprland
+        command: ["hyprctl", "version", "-j"]
+        stdout: StdioCollector { onStreamFinished: { try { desk.hyprCommit = String(JSON.parse(text).commit || ""); } catch (e) {} } }
+    }
+    onBarsReadyChanged: if (started && on && titlebars) hyprBars(true)
+    // build it, in a terminal so you see it happen
+    function buildBars() {
+        const cmd = "sh \"$1\"; echo; echo 'You can close this window.'; read -r _";
+        Quickshell.execDetached(["sh", "-c", Prefs.terminal + " sh -c '" + cmd.replace(/'/g, "'\\''") + "' _ \"$0\"", barsScript]);
+    }
+    readonly property var noBarDefault: ["firefox", "librewolf", "zen", "brave-browser", "chromium", "google-chrome", "vivaldi-stable", "org.gnome.*", "discord", "vesktop", "spotify", "code", "codium", "vscodium", "obsidian", "steam"]
+    readonly property var noBar: { const v = Store.raw("desktop.noBar", null); return Array.isArray(v) ? v : noBarDefault; }
+    function hex(c) { const h = x => ("0" + Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16)).slice(-2); return "rgba(" + h(c.r) + h(c.g) + h(c.b) + h(c.a) + ")"; }
+    readonly property string barsLua: {
+        const dsp = a => "[[hyprctl dispatch '" + a + "']]";
+        const max = 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })';
+        const bg = Qt.alpha(Theme.frame, Math.max(0.55, Theme.frame.a));
+        const pat = noBar.filter(x => /^[A-Za-z0-9_.*+-]+$/.test(x)).map(x => x.replace(/\./g, "\\.").replace(/\*/g, ".*")).join("|");
+        return "MonolithDesk = MonolithDesk or {}; "
+            + "hl.config({ plugin = { hyprbars = { enabled = true, bar_height = 30, bar_color = \"" + hex(bg) + "\", "
+            + "col = { text = \"" + hex(Theme.text) + "\" }, bar_text_size = 11, bar_text_font = " + JSON.stringify(Theme.fontFamily) + ", "
+            + "bar_text_align = \"center\", bar_blur = " + (Theme.blur ? "true" : "false") + ", bar_part_of_window = true, bar_precedence_over_border = true, "
+            + "bar_padding = 10, bar_button_padding = 8, inactive_button_color = \"" + hex(Qt.alpha(Theme.subtext, 0.35)) + "\", "
+            + "on_double_click = " + dsp(max) + " } } }); "
+            // (buttons stay until a config reload clears them: added once per reload. Right to left)
+            + "if not MonolithDesk.barButtons then MonolithDesk.barButtons = true; "
+            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Theme.danger) + "\", fg_color = \"" + hex(Theme.card) + "\", size = 15, icon = \"×\", action = " + dsp("hl.dsp.window.close()") + " }); "
+            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Theme.containerHigh) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 15, icon = \"□\", action = " + dsp(max) + " }); "
+            +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Theme.containerHigh) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 15, icon = \"–\", action = " + dsp('hl.dsp.window.move({ workspace = "special:' + minName + '", follow = false })') + " }) end; "
+            + (pat === "" ? "" : "if MonolithDesk.noBar then MonolithDesk.noBar:set_enabled(false) end; MonolithDesk.noBar = hl.window_rule({ name = \"monolith-nobar-" + Qt.md5(pat).slice(0, 8) + "\", match = { class = [[(?i)^(" + pat + ")$]] }, [\"hyprbars:no_bar\"] = true })");
+    }
+    function hyprBars(want) {
+        if (!Niri.hyprland || !Niri.hyprLua || !barsReady) return;
+        if (want) { barsLoad.running = false; barsLoad.running = true; }
+        else Quickshell.execDetached(["hyprctl", "eval", "hl.config({ plugin = { hyprbars = { enabled = false } } })"]);
+    }
+    // loaded once (it stays loaded: taking a plugin out of a running Hyprland isn't safe), then set up
+    Process {
+        id: barsLoad
+        command: ["sh", "-c", "hyprctl plugin list 2>/dev/null | grep -q hyprbars || hyprctl plugin load \"$1\"", "_", desk.barsDir + "/hyprbars.so"]
+        onExited: if (desk.on && desk.titlebars) Quickshell.execDetached(["hyprctl", "eval", desk.barsLua])
+    }
+    // (the theme or the list changed: set up again)
+    onBarsLuaChanged: if (started && on && titlebars && barsReady && Niri.hyprLua) barsLater.restart()
+    Timer { id: barsLater; interval: 400; onTriggered: Quickshell.execDetached(["hyprctl", "eval", desk.barsLua]) }
     // (switched in Settings while it's on: at once)
     onTitlebarsChanged: if (started && on) bars(titlebars)
     onFloatingChanged: if (started && on && Niri.hyprland && Niri.hyprKnown) hyprRules(true)
@@ -371,7 +429,10 @@ Singleton {
         function onRawEvent(ev) {
             if (ev.name !== "configreloaded") return;
             Niri.hyprStill();
-            if (desk.on) desk.hyprRules(true);
+            if (desk.on) {
+                desk.hyprRules(true);
+                if (desk.titlebars && desk.barsReady) { Quickshell.execDetached(["hyprctl", "eval", "MonolithDesk = MonolithDesk or {}; MonolithDesk.barButtons = nil; MonolithDesk.noBar = nil"]); desk.hyprBars(true); }
+            }
         }
     }
     // GTK's title bar buttons (gsettings): minimise, maximise and close while it's on; yours back
