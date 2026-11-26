@@ -21,7 +21,10 @@ PanelWindow {
     // (a list, whatever the file holds: anything else is no mini bars)
     readonly property var all: { const v = Store.get("bar.minis", []); return v && typeof v === "object" && v.length !== undefined ? Array.prototype.slice.call(v) : []; }
     // the ones to draw (with something in them), each with its place in the list kept
-    readonly property var minis: all.map((m, i) => ({ i: i, place: places.indexOf(m && m.place) !== -1 ? m.place : "top-right", modules: (m && m.modules ? Array.prototype.slice.call(m.modules) : []).filter(k => k !== "taskbar"), reserve: !!(m && m.reserve),
+    readonly property var minis: all.map((m, i) => ({ i: i, place: places.indexOf(m && m.place) !== -1 ? m.place : "top-right", modules: (m && m.modules ? Array.prototype.slice.call(m.modules) : []).filter(k => k !== "taskbar"),
+                                     // windows keep clear of it unless you say otherwise (`clear`): over a maximised
+                                     // window's top it took the clicks meant for its title bar's buttons
+                                     clear: !(m && m.clear === false),
                                      show: m && ["always", "dodge", "edge"].indexOf(m.show) !== -1 ? m.show : "bar" }))
         .filter(m => m.modules.length > 0)
     readonly property var places: ["top-left", "top", "top-right", "left", "right", "bottom-left", "bottom", "bottom-right"]
@@ -40,14 +43,14 @@ PanelWindow {
     color: "transparent"
     mask: Region {
         item: win.editing ? full : null
-        Region { item: !win.editing && rep.count > 0 ? rep.itemAt(0) : null }
-        Region { item: !win.editing && rep.count > 1 ? rep.itemAt(1) : null }
-        Region { item: !win.editing && rep.count > 2 ? rep.itemAt(2) : null }
-        Region { item: !win.editing && rep.count > 3 ? rep.itemAt(3) : null }
-        Region { item: !win.editing && rep.count > 4 ? rep.itemAt(4) : null }
-        Region { item: !win.editing && rep.count > 5 ? rep.itemAt(5) : null }
-        Region { item: !win.editing && rep.count > 6 ? rep.itemAt(6) : null }
-        Region { item: !win.editing && rep.count > 7 ? rep.itemAt(7) : null }
+        Region { item: !win.editing && rep.count > 0 && rep.itemAt(0).visible ? rep.itemAt(0) : null }
+        Region { item: !win.editing && rep.count > 1 && rep.itemAt(1).visible ? rep.itemAt(1) : null }
+        Region { item: !win.editing && rep.count > 2 && rep.itemAt(2).visible ? rep.itemAt(2) : null }
+        Region { item: !win.editing && rep.count > 3 && rep.itemAt(3).visible ? rep.itemAt(3) : null }
+        Region { item: !win.editing && rep.count > 4 && rep.itemAt(4).visible ? rep.itemAt(4) : null }
+        Region { item: !win.editing && rep.count > 5 && rep.itemAt(5).visible ? rep.itemAt(5) : null }
+        Region { item: !win.editing && rep.count > 6 && rep.itemAt(6).visible ? rep.itemAt(6) : null }
+        Region { item: !win.editing && rep.count > 7 && rep.itemAt(7).visible ? rep.itemAt(7) : null }
         // (the edge strips of the ones that come back when touched)
         Region { item: sens.count > 0 && sens.itemAt(0).live ? sens.itemAt(0) : null }
         Region { item: sens.count > 1 && sens.itemAt(1).live ? sens.itemAt(1) : null }
@@ -150,6 +153,10 @@ PanelWindow {
             readonly property real along: vert ? height : width
             width: vert ? Theme.islandH : mbar.implicitWidth
             height: vert ? mbar.implicitHeight : Theme.islandH
+            // (nothing in it to show (a visualiser with nothing playing): not there at all, rather
+            // than an empty pill; while moving them it shows, so it can be moved)
+            readonly property bool hasContent: mbar.contentLen > 0
+            visible: hasContent || win.editing
             // its spot, and its place among others there
             readonly property real off: win.before(index, place)
             readonly property real homeX: vert ? (place === "left" ? win.room("left") : win.width - width - win.room("right"))
@@ -174,7 +181,7 @@ PanelWindow {
             onTuckedHereChanged: { tuckMoving = true; tuckTimer.restart(); }
             Timer { id: tuckTimer; interval: Theme.moveMs + 100; onTriggered: pill.tuckMoving = false }
             // (wholly on the screen: only then does it get blur behind it, see below)
-            readonly property bool inside: !tuckedHere && opacity > 0.99 && x >= 0 && y >= 0 && x + width <= win.width && y + height <= win.height
+            readonly property bool inside: visible && !tuckedHere && opacity > 0.99 && x >= 0 && y >= 0 && x + width <= win.width && y + height <= win.height
             property point grab: Qt.point(0, 0)
             property point at: Qt.point(0, 0)
             // (tucked: off its own edge)
@@ -278,8 +285,14 @@ PanelWindow {
     // thickest there (made anew when that changes: a strip's new size doesn't reach the compositor) ──
     readonly property var zones: {
         const z = {};
-        for (const m of minis) {
-            if (!m.reserve) continue;
+        for (let j = 0; j < rep.count; j++) {
+            const it = rep.itemAt(j);
+            if (!it || !it.hasContent) continue;
+            const m = it.modelData;
+            // (only one that stays out: always, or with a bar that does. One that goes away gets
+            // out of the way by itself)
+            const stays = m.show === "always" || (m.show === "bar" && !Theme.barTucks);
+            if (!m.clear || !stays) continue;
             const e = edgeOf(m.place);
             z[e] = Math.max(z[e] || 0, Theme.islandH + gap + 4);
         }

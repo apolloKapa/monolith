@@ -20,7 +20,7 @@ ColumnLayout {
         // (a spot no other one has yet, if there is one)
         const used = l.map(m => m.place);
         const free = ["top-right", "top-left", "bottom-right", "bottom-left", "top", "bottom", "right", "left"].find(p => used.indexOf(p) === -1) || "top-right";
-        l.push({ place: free, modules: [], reserve: false });
+        l.push({ place: free, modules: [] });
         Store.set("bar.minis", l);
     }
     function remove(i) { const l = copy(); l.splice(i, 1); Store.set("bar.minis", l); }
@@ -140,7 +140,7 @@ ColumnLayout {
                             }
                         }
                     }
-                    Label { visible: card.mods.length === 0; height: 34; verticalAlignment: Text.AlignVCenter; text: "Empty: add modules below (an empty one isn't shown)"; muted: true }
+                    Label { visible: card.mods.length === 0; height: 34; verticalAlignment: Text.AlignVCenter; text: "Empty: tap modules below (an empty one isn't shown)"; muted: true }
                 }
                 // when it shows: the bar's choices, and "like the bar" (it goes with the bar)
                 Item {
@@ -156,20 +156,40 @@ ColumnLayout {
                         onPicked: v => page.setOf(card.index, "show", v)
                     }
                 }
+                // every module, as pills: tap one to put it in (it goes at the end), again to take it out
+                Label { text: "Modules: tap to add or take out"; muted: true; font.pixelSize: Theme.sizeSmall }
+                Flow {
+                    width: col.width
+                    spacing: 6
+                    Repeater {
+                        model: Object.keys(BarMods.names)
+                        Pressable {
+                            required property string modelData
+                            readonly property bool on: card.mods.indexOf(modelData) !== -1
+                            height: 34
+                            width: pillRow.implicitWidth + 24
+                            radius: Theme.corner(34)
+                            color: on ? Theme.accent : (hovered ? Theme.containerHigh : Theme.control)
+                            ink: on ? Theme.onAccent : Theme.text
+                            onClicked: { if (on) page.removeModule(card.index, modelData); else page.addModule(card.index, modelData); }
+                            Row {
+                                id: pillRow
+                                anchors.centerIn: parent
+                                spacing: 6
+                                Icon { anchors.verticalCenter: parent.verticalCenter; name: on ? "check" : BarMods.names[modelData][1]; size: 16; color: on ? Theme.onAccent : Theme.text }
+                                Label { anchors.verticalCenter: parent.verticalCenter; text: BarMods.names[modelData][0]; font.pixelSize: Theme.sizeSmall; color: on ? Theme.onAccent : Theme.text }
+                            }
+                        }
+                    }
+                }
                 Item {
                     width: col.width; height: 40
-                    Dropdown {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 230
-                        opts: [["", "Add a module…"]].concat(Object.keys(BarMods.names).filter(k => card.mods.indexOf(k) === -1).map(k => [k, BarMods.names[k][0]]))
-                        value: ""
-                        onPicked: v => { if (v !== "") page.addModule(card.index, v); }
-                    }
+                    Label { anchors.verticalCenter: parent.verticalCenter; text: card.mods.indexOf("visualizer") !== -1 ? "The visualiser shows while something plays (Bar → its settings: Show with nothing playing)" : ""; muted: true; font.pixelSize: Theme.sizeSmall; width: col.width - 260; wrapMode: Text.WordWrap }
                     Row {
                         anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
                         spacing: 10
                         Label { anchors.verticalCenter: parent.verticalCenter; text: "Windows keep clear of it"; font.pixelSize: Theme.sizeSmall }
-                        Toggle { anchors.verticalCenter: parent.verticalCenter; checked: card.modelData.reserve === true; onToggled: on => page.setOf(card.index, "reserve", on) }
+                        Toggle { anchors.verticalCenter: parent.verticalCenter; checked: card.modelData.clear !== false; onToggled: on => page.setOf(card.index, "clear", on) }
                     }
                 }
             }
