@@ -4,13 +4,16 @@ import Quickshell
 import Quickshell.Io
 
 // The shell's own part of niri's config: ~/.config/niri/config/monolith-shell.kdl (included from
-// config.kdl, added once). Only what the shell's settings need from niri: the blur's strength.
+// config.kdl, added once). Only what the shell's settings need from niri: the blur's strength,
+// and Desktop mode's rule (core/Desk.qml).
 Singleton {
     id: ns
     readonly property string dir: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/niri"
     readonly property int passes: Number(Store.get("theme.blurStrength", 3))
     readonly property string text: "// Written by Monolith from its settings (Theme → Effects). Changes here are replaced.\n"
         + "blur {\n    passes " + passes + "\n    offset " + (1 + passes * 0.6).toFixed(1) + "\n}\n"
+        // Desktop mode (core/Desk.qml): windows open floating
+        + (Desk.on && Desk.floating ? "\n// Desktop mode\nwindow-rule {\n    open-floating true\n}\n" : "")
     // (niri's only: on Hyprland it made a stray ~/.config/niri with just this file in it)
     onTextChanged: if (Store.loaded && !Niri.hyprland) later.restart()
     Timer { id: later; interval: 500; onTriggered: { file.setText(ns.text); include.running = true; } }

@@ -11,6 +11,13 @@ import Quickshell.Services.UPower
 ColumnLayout {
     id: sec
     spacing: 8
+    // (Desktop mode stands in for some of these while it's on)
+    SettingRow {
+        show: Desk.on
+        icon: "desktop_windows"; title: "Desktop mode is on"
+        desc: "The taskbar has the bar's place, style, height and middle while it's on; what you change here is kept for when it's off"
+        Button { text: "Desktop mode"; icon: "arrow_forward"; onClicked: HubState.settingsSection = "desktopmode" }
+    }
     readonly property var names: ({
         cc: ["Control center", "page_info"], search: ["Search", "search"], clock: ["Clock", "schedule"], weather: ["Weather", "partly_cloudy_day"],
         workspaces: ["Workspaces", "view_week"], media: ["Now playing", "music_note"], title: ["Window title", "title"],
@@ -22,7 +29,8 @@ ColumnLayout {
         awake: ["Stay awake", "coffee"], shuffle: ["Shuffle wallpaper", "shuffle"]
     })
     readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["updates", "live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
-    readonly property var zones: Store.get("bar.modules", null) || defaults
+    // (your own layout, also while Desktop mode stands in for it: what you arrange here is yours)
+    readonly property var zones: Store.raw("bar.modules", null) || defaults
     // every zone: in the bar (left, between, middle, between, right), outside it, and free
     readonly property var allZones: ["outLeft", "left", "leftMid", "center", "midRight", "right", "outRight", "free"]
     readonly property var used: allZones.reduce((a, k) => a.concat(zones[k] || []), [])

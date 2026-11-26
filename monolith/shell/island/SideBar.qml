@@ -125,7 +125,10 @@ PanelWindow {
     // Smooth sailing (core/Intro): in from its side when the shell first starts
     Binding { target: win.contentItem; property: "x"; value: (Theme.barSide === "right" ? 1 : -1) * (1 - Intro.barK) * (Theme.islandH + Theme.barMargin + 28); when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
     Binding { target: win.contentItem; property: "opacity"; value: Intro.barK; when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
-    BackgroundEffect.blurRegion: Theme.blur && !Intro.playing && !(!Theme.blurOverFullscreen && Niri.fullscreenOn(modelData.name)) && !win.tucked && Theme.barStyle !== "modular" && !(Theme.barStyle === "frame" && Theme.frameBand) ? blurShape : null
+    // Desktop mode switching (core/Desk.qml): a bar down a side has a window of its own, so it
+    // doesn't travel across the screen: it slides in from its side as the trip goes
+    Binding { target: win.contentItem; property: "x"; value: (Theme.barSide === "right" ? 1 : -1) * (1 - Desk.travelK) * (Theme.islandH + Theme.barMargin + 28); when: Desk.moving && !Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
+    BackgroundEffect.blurRegion: Theme.blur && !Intro.playing && !Desk.moving && !(!Theme.blurOverFullscreen && Niri.fullscreenOn(modelData.name)) && !win.tucked && Theme.barStyle !== "modular" && !(Theme.barStyle === "frame" && Theme.frameBand) ? blurShape : null
     // (cut exactly like what's drawn: a square blur showed as a lighter patch in rounded corners)
     Region {
         id: blurShape

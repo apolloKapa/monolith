@@ -44,6 +44,8 @@ ShellRoot {
     Variants { model: soundL.on ? Quickshell.screens : []; SoundDrop {} }
     Lazy { id: trayL; when: HubState.dropScreen !== "" && HubState.dropKind === "tray"; linger: 400 }
     Variants { model: trayL.on ? Quickshell.screens : []; TrayMenu {} }
+    Lazy { id: taskL; when: HubState.dropScreen !== "" && HubState.dropKind === "task"; linger: 400 }
+    Variants { model: taskL.on ? Quickshell.screens : []; TaskMenu {} }
     Lazy { id: sysL; when: HubState.dropScreen !== "" && HubState.dropKind === "system"; linger: 400 }
     Variants { model: sysL.on ? Quickshell.screens : []; SysDrop {} }
     Variants { model: Quickshell.screens; Osd {} }
@@ -75,7 +77,7 @@ ShellRoot {
     LockScreen {}
     PolkitDialog {}
     // start the services that run on their own
-    Component.onCompleted: { Notifs.dnd; AudioBalance.value; HyprMouse.held; Idle.enabled; Wall.path; Wellbeing.loaded; Updates.available; NightLight.enabled; AppColours.targets; NiriShell.passes; AltTab.follow; HyprSwitch.on; Profiles.current; Eq.enabled; if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
+    Component.onCompleted: { Notifs.dnd; AudioBalance.value; HyprMouse.held; Idle.enabled; Wall.path; Wellbeing.loaded; Updates.available; NightLight.enabled; AppColours.targets; NiriShell.passes; AltTab.follow; HyprSwitch.on; Profiles.current; Eq.enabled; Desk.on; if (Store.loaded && Store.get("welcome.done", false) !== true) welcome.start(); }
     // the icon font (Material Symbols Rounded): every icon is drawn with it. Not there (a fresh
     // install, a distro without it): fetch it, then restart so the shell can use it
     Process {

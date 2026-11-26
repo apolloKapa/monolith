@@ -23,7 +23,10 @@ PanelWindow {
     readonly property color iconTint: { const v = String(Store.get("dock.iconTint", "") || ""); return /^#[0-9a-fA-F]{6}$/.test(v) ? v : Theme.accent; }
     readonly property bool exclusive: Store.get("dock.exclusive", false) === true
     exclusionMode: exclusive ? ExclusionMode.Normal : ExclusionMode.Ignore
-    exclusiveZone: exclusive ? (vertical ? capsule.width : capsule.height) + dock.margin : 0
+    // (Desktop mode: -1, so it sits at the screen's edge under the taskbar it sinks into, not
+    // above the taskbar's reserved strip: setting a zone at all makes the window keep clear of
+    // other windows' zones, whatever exclusionMode says)
+    exclusiveZone: exclusive ? (vertical ? capsule.width : capsule.height) + dock.margin : (Desk.on ? -1 : 0)
     anchors { bottom: side !== "top"; top: side !== "bottom"; left: side !== "right"; right: side !== "left" }
     // always this size: room for the editor's app picker. Growing the window when the editor
     // opened (280 → 620) resized it while it was drawing, which a layer window doesn't survive;
@@ -32,19 +35,29 @@ PanelWindow {
     implicitWidth: vertical ? 620 : 0
     WlrLayershell.keyboardFocus: editing ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     // on the same edge as the bar it sits clear of it (an exclusive dock is already moved by it)
-    readonly property bool barEdge: !exclusive && side === Theme.barEdge
+    // (not in Desktop mode: there the bar on its edge is the taskbar it sinks into)
+    readonly property bool barEdge: !exclusive && side === Theme.barEdge && !Desk.on
+    // Desktop mode (core/Desk.qml): on the taskbar's edge the dock sinks into it and becomes its
+    // apps (island/TaskStrip.qml): it moves into the taskbar's middle, shrinks to its size and its
+    // capsule melts away (fuse 0 → 1), then it's gone; on another edge it just slides away.
+    // Switching back, it rises out of it the same way.
+    readonly property bool fusing: Desk.on && side === Desk.edge
+    readonly property real fz: fusing ? Desk.fuse : 0
+    readonly property bool deskAway: Desk.on && (!fusing || Desk.fuse > 0.3)
     // (the Frame's border runs along every edge: the dock sits inside it, not on it)
     readonly property real frameIn: Theme.barStyle === "frame" && !exclusive && !barEdge ? Theme.frameW : 0
     readonly property real margin: Number(Store.get("dock.margin", 12)) + (barEdge ? Theme.islandH + Theme.barMargin : 0) + frameIn
     color: "transparent"
+    // (stays mapped in Desktop mode, empty and taking no clicks: mapped again later it came back
+    // above the taskbar's reserved strip instead of at the screen's edge, and rose out of thin air)
     visible: enabled
     // shown: where the dock ends up (not where it is while sliding in: the pointer at the edge
     // would be outside that for a moment, the dock would think it had been left and hide again)
     // stretched to the edge, so moving from the edge to the dock never leaves it; hidden: the strip
     mask: Region {
-        item: menu.open || dock.editing ? fullArea : (dock.shown ? reach : (dock.overFullscreen ? null : hotZone))
+        item: dock.deskAway ? null : (menu.open || dock.editing ? fullArea : (dock.shown ? reach : (dock.overFullscreen ? null : hotZone)))
         // the edge strip stays in while shown (resting on the edge away from the dock keeps it)
-        Region { item: dock.shown && !menu.open && !dock.editing ? hotZone : null }
+        Region { item: !dock.deskAway && dock.shown && !menu.open && !dock.editing ? hotZone : null }
     }
     Item { id: fullArea; anchors.fill: parent }
 
@@ -146,8 +159,10 @@ PanelWindow {
     // stays away (it sat over fullscreen on Hyprland, and its edge strip brought it up whenever
     // the pointer reached the bottom in a game); the strip is off too, so the game keeps the mouse
     readonly property bool overFullscreen: Niri.fullscreenOn(modelData.name)
-    readonly property bool shown: enabled && (editing || menu.open || !overFullscreen) && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || (showWhen === "dodge" && !covered) || hovering || leaveDelay.running || menu.open)
+    readonly property bool shown: enabled && !(Desk.on && !fusing) && (fusingNow || editing || menu.open || !overFullscreen) && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || (showWhen === "dodge" && !covered) || hovering || leaveDelay.running || menu.open)
 
+    // (shown while it sinks into the taskbar or rises out of it, whenever it shows otherwise)
+    readonly property bool fusingNow: fusing && Desk.fuse > 0.001 && Desk.fuse < 0.999
     // the shown dock's place, from its edge to its far side
     Item {
         id: reach
@@ -267,15 +282,25 @@ PanelWindow {
         radius: Number(Store.get("dock.radius", -1)) >= 0 ? Math.min(Number(Store.get("dock.radius", -1)), Math.min(width, height) / 2) : Theme.corner(Math.min(width, height), 8)
         // (its own liquid glass, Settings → Dock → Glass: nearly clear, as the Liquid glass style's
         // panes are; the glass draws the rest)
-        color: Qt.alpha(Theme.card, dock.ownGlass ? 0.08 * opacityBg : opacityBg)
+        color: Qt.alpha(Theme.card, (dock.ownGlass ? 0.08 * opacityBg : opacityBg) * (1 - dock.fz))
+        // sinking into Desktop mode's taskbar: to the middle of its strip, down to its size
+        readonly property real fk: 1 + dock.fz * ((Desk.size - 6) / cell - 1)
+        readonly property real fd: dock.fz * (dock.margin + (dock.vertical ? width : height) / 2 - Desk.size / 2)
+        transform: [
+            Scale { origin.x: capsule.width / 2; origin.y: capsule.height / 2; xScale: capsule.fk; yScale: capsule.fk },
+            Translate {
+                x: dock.side === "left" ? -capsule.fd : (dock.side === "right" ? capsule.fd : 0)
+                y: dock.side === "top" ? -capsule.fd : (dock.side === "bottom" ? capsule.fd : 0)
+            }
+        ]
         // liquid glass: the capsule is a pane of glass. Its window is a strip along the screen's
         // edge, so the pane is told where that strip is on the screen
         readonly property point glassOrigin: Qt.point(dock.side === "right" ? dock.screen.width - dock.width : 0, dock.side === "bottom" ? dock.screen.height - dock.height : 0)
-        LiquidPane { anchors.fill: parent; z: -1; radius: capsule.radius; visible: (Theme.liquid || dock.ownGlass) && capsule.opacityBg > 0.02 }
+        LiquidPane { anchors.fill: parent; z: -1; radius: capsule.radius; opacity: 1 - dock.fz; visible: (Theme.liquid || dock.ownGlass) && capsule.opacityBg > 0.02 && dock.fz < 0.99 }
         // a material: the capsule's colour, textured (over its fill, under the icons)
-        MaterialPane { anchors.fill: parent; radius: capsule.radius; color: capsule.color; visible: Theme.material !== "" && !dock.ownGlass && capsule.opacityBg > 0.02 }
+        MaterialPane { anchors.fill: parent; radius: capsule.radius; color: capsule.color; opacity: 1 - dock.fz; visible: Theme.material !== "" && !dock.ownGlass && capsule.opacityBg > 0.02 && dock.fz < 0.99 }
         // the outline: optional, and never on an invisible dock
-        border.width: Store.get("dock.border", true) !== false && opacityBg > 0.02 ? Math.max(1, Theme.outlineW) : 0
+        border.width: Store.get("dock.border", true) !== false && opacityBg > 0.02 && dock.fz < 0.4 ? Math.max(1, Theme.outlineW) : 0
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
 
         MouseArea {
@@ -297,10 +322,12 @@ PanelWindow {
                 if (v !== Number(Store.get("dock.margin", 12))) Store.set("dock.margin", v);
             }
         }
-        PanelFx { anchors.fill: parent; radius: capsule.radius; animate: false; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge || Theme.chamfer) }
+        PanelFx { anchors.fill: parent; radius: capsule.radius; animate: false; opacity: 1 - dock.fz; visible: capsule.opacityBg > 0.02 && (Theme.fxGrain || Theme.fxEdge || Theme.chamfer) && dock.fz < 0.99 }
         Grid {
             id: appsRow
             anchors.centerIn: parent
+            // (the taskbar's own apps take over as these fade, in the same place)
+            opacity: 1 - Math.max(0, Math.min(1, (dock.fz - 0.45) / 0.55))
             spacing: Number(Store.get("dock.spacing", 4))
             columns: dock.vertical ? 1 : Math.max(1, dock.items.length + (dock.editing ? 2 : 0))
             Repeater {
@@ -652,7 +679,7 @@ PanelWindow {
         x: x0; y: y0
         width: Math.max(0, Math.min(dock.width, capsule.x + capsule.width) - x0)
         height: Math.max(0, Math.min(dock.height, capsule.y + capsule.height) - y0)
-        readonly property bool some: width > 2 && height > 2 && (capsule.glitchy ? capsule.opacity > 0.01 : dock.shown || capsule.opacity > 0.01)
+        readonly property bool some: dock.fz < 0.01 && width > 2 && height > 2 && (capsule.glitchy ? capsule.opacity > 0.01 : dock.shown || capsule.opacity > 0.01)
     }
     // Smooth sailing (core/Intro): up from its edge, last, when the shell first starts
     Binding {

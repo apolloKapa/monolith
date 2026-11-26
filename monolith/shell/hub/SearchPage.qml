@@ -33,7 +33,11 @@ Page {
     onNaturalHChanged: Qt.callLater(keepRest)
     function keepRest() { if (!typing) restH = naturalH; }
     Component.onCompleted: { rebuildApps(); rebuildFavs(); restH = naturalH; }
-    implicitHeight: typing && restH > 0 ? restH : naturalH
+    implicitHeight: Math.max(railMinH, typing && restH > 0 ? restH : naturalH)
+    // Desktop mode (core/Desk.qml): the launcher is the start menu, with a rail of buttons down
+    // its side: you on top, then the file manager, the wallpaper, the widgets, Settings and power
+    readonly property real railW: Desk.on ? 56 : 0
+    readonly property real railMinH: Desk.on ? 7 * 44 + 8 : 0
     // all apps as a grid of icons while nothing is typed (Settings → Launcher)
     readonly property bool showGrid: Store.get("search.grid", false) === true && query.trim() === ""
     readonly property int gridColumns: Number(Store.get("search.gridColumns", 6))
@@ -237,7 +241,8 @@ Page {
 
     Item {
         id: catBar
-        width: parent.width
+        x: page.railW
+        width: parent.width - page.railW
         height: page.showCats ? 44 : 0
         visible: page.showCats
         Segmented {
@@ -250,9 +255,9 @@ Page {
     Item {
         id: favArea
         readonly property bool showing: page.showFavs
-        x: page.favPlace === "right" ? parent.width - width : 0
+        x: page.favPlace === "right" ? parent.width - width : page.railW
         y: page.favPlace === "bottom" ? parent.height - height : catBar.height
-        width: page.favSide ? page.favSideW : parent.width
+        width: page.favSide ? page.favSideW : parent.width - page.railW
         height: !showing ? 0 : (page.favSide ? parent.height - catBar.height : favGrid.height + 12)
         // (a new row of favourites slides the apps down instead of jumping)
         Behavior on height { enabled: !page.favSide; NumberAnimation { duration: Theme.shortMs; easing.type: Easing.OutCubic } }
@@ -362,6 +367,105 @@ Page {
         }
     }
 
+    // ── the start menu's rail (Desktop mode) ──
+    component RailButton: Pressable {
+        id: rb
+        property string icon: ""
+        property string tip: ""
+        property bool on: false
+        width: 44; height: 40
+        radius: Theme.corner(height, 4)
+        color: on ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
+        Icon { anchors.centerIn: parent; name: rb.icon; size: 20; filled: rb.on; color: rb.on ? Theme.accent : Theme.text }
+        // its name, beside it while the pointer's on it
+        SmoothRect {
+            smoothing: 0
+            visible: opacity > 0.01
+            opacity: rb.hovered && rb.tip !== "" ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
+            z: 60
+            x: rb.width + 6; anchors.verticalCenter: parent.verticalCenter
+            width: tipLabel.implicitWidth + 18; height: 28
+            radius: Theme.corner(28, 6)
+            color: Theme.containerHigh
+            border.width: 1; border.color: Theme.hairline
+            Label { id: tipLabel; anchors.centerIn: parent; text: rb.tip; font.pixelSize: Theme.sizeSmall }
+        }
+    }
+    Item {
+        id: rail
+        visible: Desk.on
+        z: 40
+        width: page.railW - 8
+        height: parent.height
+        // the line between it and the apps
+        Rectangle { x: parent.width + 3; width: 1; height: parent.height; color: Theme.ringTrack }
+        Pressable {
+            id: me
+            x: 2; y: 2
+            width: 40; height: 40
+            radius: Theme.corner(40)
+            color: "transparent"
+            onClicked: HubState.openSettings("general")
+            Avatar { anchors.centerIn: parent; size: 34 }
+        }
+        Column {
+            anchors.bottom: parent.bottom
+            spacing: 4
+            RailButton { icon: "folder_open"; tip: "Files"; onClicked: { HubState.close(); Quickshell.execDetached(["xdg-open", Quickshell.env("HOME")]); } }
+            RailButton { icon: "wallpaper"; tip: "Wallpaper"; onClicked: HubState.toggle("wallpaper") }
+            RailButton { icon: "widgets"; tip: "Widgets"; onClicked: HubState.editWidgetsOn("desktop") }
+            RailButton { icon: "settings"; tip: "Settings"; onClicked: HubState.show("settings") }
+            RailButton { id: powerBtn; icon: "power_settings_new"; tip: power.open ? "" : "Power"; on: power.open; onClicked: power.open = !power.open }
+        }
+    }
+    // power: a little card beside the rail, over the apps
+    SmoothRect {
+        id: power
+        property bool open: false
+        Connections { target: page; function onCurrentChanged() { if (!page.current) power.open = false; } }
+        visible: opacity > 0.01
+        opacity: open ? 1 : 0
+        scale: open ? 1 : 0.94
+        transformOrigin: Item.BottomLeft
+        Behavior on opacity { NumberAnimation { duration: Theme.fastMs } }
+        Behavior on scale { NumberAnimation { duration: Theme.ms(180); easing.type: Easing.OutCubic } }
+        z: 50
+        x: page.railW + 4
+        y: parent.height - height
+        width: 190
+        height: powerCol.implicitHeight + 12
+        radius: Theme.corner(60, 10)
+        color: Theme.card
+        border.width: Math.max(1, Theme.outlineW); border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
+        CardShadow {}
+        MouseArea { anchors.fill: parent }
+        Column {
+            id: powerCol
+            x: 6; y: 6
+            width: parent.width - 12
+            spacing: 2
+            Repeater {
+                model: [["lock", "Lock", "lock"], ["bedtime", "Sleep", "suspend"], ["logout", "Log out", "logout"], ["restart_alt", "Restart", "reboot"], ["power_settings_new", "Shut down", "poweroff"]]
+                Pressable {
+                    required property var modelData
+                    width: powerCol.width; height: 38
+                    color: hovered ? Theme.containerHigh : "transparent"
+                    onClicked: {
+                        power.open = false;
+                        HubState.close();
+                        if (modelData[2] === "lock") LockState.lock(); else Power.go(modelData[2]);
+                    }
+                    Row {
+                        x: 10; anchors.verticalCenter: parent.verticalCenter; spacing: 10
+                        Icon { anchors.verticalCenter: parent.verticalCenter; name: parent.parent.modelData[0]; size: 18; color: parent.parent.modelData[2] === "poweroff" ? Theme.danger : Theme.text }
+                        Label { anchors.verticalCenter: parent.verticalCenter; text: parent.parent.modelData[1] }
+                    }
+                }
+            }
+        }
+    }
+
     GridView {
         SmoothWheel {}
         id: appGrid
@@ -369,7 +473,7 @@ Page {
         anchors.fill: parent
         anchors.topMargin: (page.favPlace === "top" ? favArea.height : 0) + catBar.height
         anchors.bottomMargin: page.favPlace === "bottom" ? favArea.height : 0
-        anchors.leftMargin: page.favPlace === "left" && favArea.showing ? page.favSideW + 8 : 0
+        anchors.leftMargin: page.railW + (page.favPlace === "left" && favArea.showing ? page.favSideW + 8 : 0)
         anchors.rightMargin: page.favPlace === "right" && favArea.showing ? page.favSideW + 8 : 0
         clip: true
         cellWidth: width / page.gridColumns
@@ -401,7 +505,7 @@ Page {
         anchors.fill: parent
         anchors.topMargin: (page.favPlace === "top" ? favArea.height : 0) + catBar.height
         anchors.bottomMargin: page.favPlace === "bottom" ? favArea.height : 0
-        anchors.leftMargin: page.favPlace === "left" && favArea.showing ? page.favSideW + 8 : 0
+        anchors.leftMargin: page.railW + (page.favPlace === "left" && favArea.showing ? page.favSideW + 8 : 0)
         anchors.rightMargin: page.favPlace === "right" && favArea.showing ? page.favSideW + 8 : 0
         clip: true
         model: page.results

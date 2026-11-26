@@ -18,10 +18,11 @@ Singleton {
     // Hyprland's config is Lua (hyprland.lua, then its dispatchers are Lua) or classic: what the
     // running Hyprland loaded (scripts/hypr_files.py reads its log), as a file both may be there
     property bool hyprLua: false
+    property bool hyprKnown: false       // (which of the two: known once that's been read)
     Process {
         running: niri.hyprland
         command: ["python3", Qt.resolvedUrl("../scripts/hypr_files.py").toString().replace("file://", ""), "kind"]
-        stdout: StdioCollector { onStreamFinished: { niri.hyprLua = text.trim() === "lua"; niri.hyprStill(); } }
+        stdout: StdioCollector { onStreamFinished: { niri.hyprLua = text.trim() === "lua"; niri.hyprKnown = true; niri.hyprStill(); } }
     }
     // Monolith's panels (the bar's full-screen layer, the dock, the menus) animate themselves:
     // Hyprland's own open/close animation on top made the bar fly across the screen (a config
@@ -201,6 +202,7 @@ Singleton {
                 id: String(t.address), title: t.title || "",
                 app_id: o["class"] || (t.wayland ? t.wayland.appId : "") || "",
                 workspace_id: t.workspace ? t.workspace.id : null,
+                workspace_name: t.workspace ? String(t.workspace.name || "") : "",
                 is_focused: t.activated === true, is_floating: o.floating === true,
                 // (Hyprland: 0 none, 1 maximised, 2 fullscreen. Counting a maximised window as
                 // fullscreen put the live wallpaper to sleep whenever one was open)

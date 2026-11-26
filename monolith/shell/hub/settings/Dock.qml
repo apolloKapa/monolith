@@ -5,6 +5,13 @@ import "../../ui"
 
 ColumnLayout {
     spacing: 8
+    // (Desktop mode stands in for some of these while it's on)
+    SettingRow {
+        show: Desk.on
+        icon: "desktop_windows"; title: "Desktop mode is on"
+        desc: "The dock is the taskbar's apps while it's on (pinned apps and the icons' look still come from here)"
+        Button { text: "Desktop mode"; icon: "arrow_forward"; onClicked: HubState.settingsSection = "desktopmode" }
+    }
     SettingRow {
         key: "dock.enabled"; def: true;
         icon: "dock_to_bottom"; title: "Dock"; desc: "Your pinned and open apps at the bottom of the screen"

@@ -12,7 +12,19 @@ Singleton {
     property int revision: 0
     property bool loaded: false
 
+    // settings something else stands in for while it's on (Desktop mode, core/Desk.qml: the bar
+    // at the taskbar's edge, across the screen…): read through get(), never saved; your own
+    // values stay in the file and come back the moment it's off. raw() reads past them.
+    property var over: ({})
+    // the file has been read, before anything reads it (Desktop mode puts what it needs in first,
+    // so the bar starts out at the taskbar's edge instead of moving there)
+    signal loading()
     function get(path, fallback) {
+        const o = over;
+        if (o[path] !== undefined) return o[path];
+        return raw(path, fallback);
+    }
+    function raw(path, fallback) {
         let _ = revision;
         let cur = data;
         for (const k of path.split(".")) {
@@ -81,7 +93,7 @@ Singleton {
         path: store.file
         atomicWrites: true
         printErrors: false
-        onLoaded: { try { store.data = JSON.parse(text()); } catch (e) { store.data = {}; } store.revision++; store.loaded = true; }
+        onLoaded: { try { store.data = JSON.parse(text()); } catch (e) { store.data = {}; } store.loading(); store.revision++; store.loaded = true; }
         onLoadFailed: { store.data = {}; store.loaded = true; }
     }
 

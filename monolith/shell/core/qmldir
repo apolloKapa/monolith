@@ -39,3 +39,4 @@ singleton Brightness 1.0 Brightness.qml
 singleton HyprMouse 1.0 HyprMouse.qml
 singleton Intro 1.0 Intro.qml
 singleton AudioBalance 1.0 AudioBalance.qml
+singleton Desk 1.0 Desk.qml

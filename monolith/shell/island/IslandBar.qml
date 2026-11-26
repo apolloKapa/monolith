@@ -48,7 +48,7 @@ Item {
     // other way (a keybind, a command) grows out of its module too when that's on this bar
     property var modItems: ({})
     readonly property var menuMods: ({
-        quick: ["cc", "battery", "power"], search: ["search"], calendar: ["clock", "weather"], media: ["media", "visualizer"],
+        quick: ["cc", "battery", "power"], search: ["taskbar", "search"], calendar: ["clock", "weather"], media: ["media", "visualizer"],
         windows: ["title"], network: ["network", "bluetooth"], gaming: ["gaming"], tools: ["live"]
     })
     function moduleBox(page) {
@@ -370,8 +370,16 @@ Item {
         cc: ccC, search: searchC, clock: clockC, weather: weatherC, workspaces: wsC, media: mediaC, title: titleC,
         live: liveC, tray: trayC, stats: statsC, notifications: notifC, network: netC, sound: soundC,
         battery: batC, keyboard: kbC, gaming: gameC, power: powerC, updates: updC,
-        bluetooth: btC, visualizer: visC, nightlight: nightC, awake: awakeC, shuffle: shuffleC
+        bluetooth: btC, visualizer: visC, nightlight: nightC, awake: awakeC, shuffle: shuffleC,
+        taskbar: taskC
     })
+    // Desktop mode's taskbar: the start button and your apps (only there: core/Desk.qml puts it in)
+    Component { id: taskC; TaskStrip { host: bar } }
+    // the room it has: the bar, less the other zones (it's alone in its own, the middle or the left)
+    // (of the screen's room: the bar's own length grows as it's squeezed smaller to fit)
+    readonly property real taskRoom: (maxLen > 0 ? Math.min(maxLen, barLen) : barLen) - 2 * Theme.islandPad - freeLen - 2 * gap
+        - ((zones.center || []).indexOf("taskbar") !== -1 ? part(leftZone) + part(leftMidZone) + part(midRightZone) + part(rightZone)
+                                                          : part(midZone) + part(leftMidZone) + part(midRightZone) + part(rightZone))
 
     // the control center: a filled accent bubble
     Component {

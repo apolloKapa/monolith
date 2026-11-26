@@ -112,7 +112,7 @@ PanelWindow {
     MouseArea { anchors.fill: parent; enabled: win.shown && !win.pinned; onClicked: HubState.close() }
 
     readonly property var pageInfo: ({
-        "search":        { icon: "search",         title: "Search",        w: Number(Store.get("search.width", 640)) },
+        "search":        { icon: "search",         title: "Search",        w: Number(Store.get("search.width", 640)) + (Desk.on ? 56 : 0) },
         "quick":         { icon: "page_info",      title: "Control center", w: 1040 },
         "notifications": { icon: "notifications",  title: "Notifications", w: 680 },
         "media":         { icon: "music_note",     title: "Media",         w: 720 },
@@ -210,7 +210,9 @@ PanelWindow {
     readonly property string place: {
         Store.revision;
         const p = placeOf(cardPage);
-        return dynFrom && Theme.animOn && Theme.menuAnim === "dynamic" && p.startsWith("bar-") ? floatOf(cardPage) : p;
+        // (Desktop mode's start menu always comes up out of the taskbar, as a start menu does)
+        const start = Desk.on && cardPage === "search";
+        return !start && dynFrom && Theme.animOn && Theme.menuAnim === "dynamic" && p.startsWith("bar-") ? floatOf(cardPage) : p;
     }
     Connections {
         target: HubState
@@ -495,15 +497,17 @@ PanelWindow {
                       : (win.tucked ? away : Theme.barMargin)
         // growing into a menu: with a bit of spring (a little past, and back); going back to a bar:
         // smoothly and quicker. Its place along the bar moves the same way
-        Behavior on bodyW { NumberAnimation { duration: win.grown ? Theme.menuIn(Theme.growMs) : Theme.menuOut(Theme.shrinkMs); easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
+        Behavior on bodyW { NumberAnimation { duration: Desk.moving ? Desk.travelMs : (win.grown ? Theme.menuIn(Theme.growMs) : Theme.menuOut(Theme.shrinkMs)); easing.type: Easing.BezierSpline; easing.bezierCurve: Desk.moving ? [0.65, 0.0, 0.35, 1.0, 1, 1] : (win.grown ? Theme.springyCurve : Theme.sizeCurve) } }
         Behavior on height { NumberAnimation { duration: win.grown ? Theme.menuIn(Theme.growMs) : Theme.menuOut(Theme.shrinkMs); easing.type: Easing.BezierSpline; easing.bezierCurve: win.grown ? Theme.springyCurve : Theme.sizeCurve } }
         Behavior on r { NumberAnimation { duration: Theme.moveMs; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve } }
         // (the Frame's bar coming out of the frame and going back: a little longer, out with a
         // soft landing and back in gathering speed, so the frame's edge is seen swelling)
+        // (Desktop mode switching, core/Desk.qml: the bar travels across the screen to the
+        // taskbar's edge and back, slower, gathering speed and landing softly)
         Behavior on y { NumberAnimation {
-            duration: Theme.frameHide && Theme.animOn ? Math.max(200, Theme.ms(460)) : Theme.moveMs
+            duration: Desk.moving ? Desk.travelMs : (Theme.frameHide && Theme.animOn ? Math.max(200, Theme.ms(460)) : Theme.moveMs)
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: Theme.frameHide ? (win.tucked ? [0.4, 0.0, 0.7, 0.2, 1, 1] : [0.2, 0.9, 0.2, 1.0, 1, 1]) : Theme.standardCurve } }
+            easing.bezierCurve: Desk.moving ? [0.65, 0.0, 0.35, 1.0, 1, 1] : (Theme.frameHide ? (win.tucked ? [0.4, 0.0, 0.7, 0.2, 1, 1] : [0.2, 0.9, 0.2, 1.0, 1, 1]) : Theme.standardCurve) } }
 
         // Solid: one rounded floating bar; Modular gets one too while a notification drops out
         // (a SmoothRect: the Cyberpunk style cuts its corner)
@@ -1406,7 +1410,7 @@ PanelWindow {
     // frame the blur region lay outside the window and Hyprland blurred the whole screen, which
     // looked like the screen shaking. It comes on as the bar arrives, like the Intro's)
     readonly property bool islandIn: island.y >= -0.5 && island.y + island.height <= win.height + 0.5
-    BackgroundEffect.blurRegion: Theme.blur && !Intro.playing && !overFullscreen && islandIn && !(win.tucked && !win.toastGrows && !Theme.frameHide) ? blurShape : null
+    BackgroundEffect.blurRegion: Theme.blur && !Intro.playing && !Desk.moving && !overFullscreen && islandIn && !(win.tucked && !win.toastGrows && !Theme.frameHide) ? blurShape : null
     Region {
         id: blurShape
         // (a screen with the bar turned off has no bar to blur behind: only its open menu)

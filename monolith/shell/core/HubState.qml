@@ -13,7 +13,7 @@ Singleton {
     // the bar's dropdowns: the bell and the volume drop a small card right under them
     // (status/NotifDrop.qml, status/SoundDrop.qml); which one, and where it hangs, in that
     // screen's coordinates
-    property string dropKind: ""        // "notifications" | "sound" | "tray" | "system"
+    property string dropKind: ""        // "notifications" | "sound" | "tray" | "system" | "task"
     property string dropScreen: ""
     // auto-hide: the screens whose bar is out now ({ name: true }). The Frame makes room for it
     // (island/Frame.qml), told by the bar's own window (island/Island.qml)
@@ -52,6 +52,13 @@ Singleton {
         dropX = x; dropY = y; dropKind = kind; dropScreen = screen;
     }
     function closeDrop() { dropScreen = ""; }
+    // an app's menu on Desktop mode's taskbar (status/TaskMenu.qml): { id, name, icon, pinned }
+    property var taskApp: null
+    function toggleTask(app, screen, x, y) {
+        if (dropKind === "task" && dropScreen === screen && taskApp && app && taskApp.id === app.id) { dropScreen = ""; return; }
+        open = false; peekScreen = "";
+        taskApp = app; dropX = x; dropY = y; dropKind = "task"; dropScreen = screen;
+    }
     // a tray icon's menu (status/TrayMenu.qml): which icon's; a right click on another icon
     // switches to its menu, on the same one again puts it away
     property var trayItem: null
