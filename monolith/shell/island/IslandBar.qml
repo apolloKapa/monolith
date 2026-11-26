@@ -66,9 +66,13 @@ Item {
         return null;
     }
     // the point on a module's edge that faces into the screen (where its drop-downs hang from)
+    // (the edge this bar is on: the main bar's, or a mini bar's own, island/MiniBars.qml; what drops
+    // out of a module drops away from it, HubState.dropEdge)
+    property string edge: vertical ? (Theme.barSide || "left") : (Theme.barBottom ? "bottom" : "top")
     function edgePoint(it) {
-        if (vertical) return it.mapToItem(null, Theme.barSide === "right" ? 0 : it.width, it.height / 2);
-        return it.mapToItem(null, it.width / 2, Theme.barBottom ? 0 : it.height);
+        HubState.dropEdge = edge;
+        if (vertical) return it.mapToItem(null, edge === "right" ? 0 : it.width, it.height / 2);
+        return it.mapToItem(null, it.width / 2, edge === "bottom" ? 0 : it.height);
     }
 
     // the modules in each zone, and every module there is

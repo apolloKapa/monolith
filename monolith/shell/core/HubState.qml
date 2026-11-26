@@ -44,6 +44,11 @@ Singleton {
         if (on) c[screen] = true; else delete c[screen];
         barOut = c;
     }
+    // moving the mini bars (island/MiniBars.qml): on which screen ("" not)
+    property string miniEdit: ""
+    function editMinis(screen) { open = false; dropScreen = ""; miniEdit = target(screen); }
+    // the edge of the bar the drop-down came out of (a mini bar's can differ from the bar's)
+    property string dropEdge: ""
     property real dropX: 0
     property real dropY: 0
     function toggleDrop(kind, screen, x, y) {

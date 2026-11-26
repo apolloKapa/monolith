@@ -36,3 +36,4 @@ Windows 1.0 Windows.qml
 WorkspaceSwitch 1.0 WorkspaceSwitch.qml
 DefaultApps 1.0 DefaultApps.qml
 DesktopMode 1.0 DesktopMode.qml
+MiniBars 1.0 MiniBars.qml

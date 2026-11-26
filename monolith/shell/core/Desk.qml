@@ -71,6 +71,11 @@ Singleton {
             // bar, pills; only where it is and how tall it is are the taskbar's)
             "bar.position": edge,
             "bar.height": size,
+            // (across the screen, a set length: sized to what's in it, a set length shorter than the
+            // taskbar needs grew and shrank with every number that changed, the CPU's, the clock's.
+            // An island stays an island: fitting what's in it is what it is)
+            "bar.lengthMode": String(Store.raw("bar.style", "")) === "island" ? Store.raw("bar.lengthMode", "") : "percent",
+            "bar.length": String(Store.raw("bar.style", "")) === "island" ? Store.raw("bar.length", 1) : 1,
             "bar.modules": mods,
             "status.autohide": false,
             "dock.exclusive": false,

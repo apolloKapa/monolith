@@ -6,3 +6,4 @@ SideBar 1.0 SideBar.qml
 WorkspaceFade 1.0 WorkspaceFade.qml
 BarClock 1.0 BarClock.qml
 TaskStrip 1.0 TaskStrip.qml
+MiniBars 1.0 MiniBars.qml

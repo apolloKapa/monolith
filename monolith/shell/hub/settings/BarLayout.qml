@@ -4,6 +4,7 @@ import Quickshell
 import "../../core"
 import "../../ui"
 import "../../island"
+import "../../core/barmods.js" as BarMods
 import Quickshell.Services.UPower
 
 // Bar → Layout & modules: the bar's shape and height, which modules sit in each zone (left,
@@ -18,16 +19,7 @@ ColumnLayout {
         desc: "The taskbar is your bar, in its style, at the taskbar's edge with the apps in its middle; what you change here is kept (place and height come back when it's off)"
         Button { text: "Desktop mode"; icon: "arrow_forward"; onClicked: HubState.settingsSection = "desktopmode" }
     }
-    readonly property var names: ({
-        cc: ["Control center", "page_info"], search: ["Search", "search"], clock: ["Clock", "schedule"], weather: ["Weather", "partly_cloudy_day"],
-        workspaces: ["Workspaces", "view_week"], media: ["Now playing", "music_note"], title: ["Window title", "title"],
-        live: ["Running tasks", "radio_button_checked"], tray: ["Tray", "apps"], stats: ["System stats", "memory"],
-        notifications: ["Notifications", "notifications"], network: ["Network", "wifi"], sound: ["Sound", "volume_up"],
-        battery: ["Battery", "battery_full"], keyboard: ["Keyboard layout", "keyboard"], gaming: ["Game mode", "sports_esports"],
-        power: ["Power", "power_settings_new"], updates: ["Monolith updates", "upgrade"],
-        bluetooth: ["Bluetooth", "bluetooth"], visualizer: ["Visualizer", "graphic_eq"], nightlight: ["Night light", "nightlight"],
-        awake: ["Stay awake", "coffee"], shuffle: ["Shuffle wallpaper", "shuffle"]
-    })
+    readonly property var names: BarMods.names
     readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["updates", "live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
     // (your own layout, also while Desktop mode stands in for it: what you arrange here is yours)
     readonly property var zones: Store.raw("bar.modules", null) || defaults

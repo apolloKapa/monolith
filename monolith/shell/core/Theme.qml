@@ -255,12 +255,15 @@ Singleton {
     // where a card dropping out of the bar's module (sound, notifications, the media peek) goes:
     // under it, over it (bar at the bottom), or beside it (side bars); (px, py) is the module's
     // point on the bar's inner edge, the card w × h in an area aw × ah
+    // (from the bar it came out of: the main one, or a mini bar on another edge, HubState.dropEdge)
+    readonly property string dropEdge: HubState.dropEdge || barEdge
     function dropPos(px, py, w, h, aw, ah) {
-        if (barSide !== "")
-            return Qt.point(barSide === "left" ? px + 10 : px - w - 10, Math.max(12, Math.min(ah - h - 12, py - h / 2)));
-        return Qt.point(Math.max(12, Math.min(aw - w - 12, px - w / 2)), barBottom ? py - h - 10 : py + 10);
+        const e = dropEdge;
+        if (e === "left" || e === "right")
+            return Qt.point(e === "left" ? px + 10 : px - w - 10, Math.max(12, Math.min(ah - h - 12, py - h / 2)));
+        return Qt.point(Math.max(12, Math.min(aw - w - 12, px - w / 2)), Math.max(12, Math.min(ah - h - 12, e === "bottom" ? py - h - 10 : py + 10)));
     }
-    readonly property int dropOrigin: barSide === "left" ? Item.Left : (barSide === "right" ? Item.Right : (barBottom ? Item.Bottom : Item.Top))
+    readonly property int dropOrigin: dropEdge === "left" ? Item.Left : (dropEdge === "right" ? Item.Right : (dropEdge === "bottom" ? Item.Bottom : Item.Top))
     readonly property bool fullBar: barStyle !== "island"                         // spread across the screen
     readonly property bool barFloats: barStyle === "solid" || barStyle === "modular" // off the edge
     readonly property real barMargin: barFloats ? Number(Store.get("bar.margin", 8)) : 0
