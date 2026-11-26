@@ -1161,8 +1161,10 @@ PanelWindow {
         }
         // (the glide kept on the screen too: as the card grows on the way it would cross the edge)
         x: Math.round(Math.max(0, Math.min(win.width - width, Math.max(0, Math.min(win.width - width, homeX + (moved ? Number(moved.x) || 0 : 0) + dragBy.x)) + glideX)))
-        readonly property real topRoom: win.bottom || win.side ? 16 : Theme.islandH + Theme.barMargin + 14
-        readonly property real bottomRoom: joined === "bottom" ? edgeInset : (win.bottom ? Theme.islandH + Theme.barMargin + 14 : 16)
+        // (room for the bar only where it is: on a screen it's hidden on, a menu floated over an
+        // empty strip, the start menu a bar's height up from the bottom)
+        readonly property real topRoom: win.bottom || win.side || !win.barHere ? 16 : Theme.islandH + Theme.barMargin + 14
+        readonly property real bottomRoom: joined === "bottom" ? edgeInset : (win.bottom && win.barHere ? Theme.islandH + Theme.barMargin + 14 : 16)
         readonly property real homeY: onTop ? topRoom : (onBottom ? win.height - height - bottomRoom : Math.max(topRoom, Math.min(win.height - height - bottomRoom, Math.round((win.height - height) / 2))))
         // where it'd be, and how far a notification's card pushes it (down under a top bar, up over
         // a bottom one) while it shows over the menu, so the notification can be read
