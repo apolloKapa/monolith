@@ -94,8 +94,22 @@ Grid {
         width: strip.cell; height: strip.cell
         radius: Theme.corner(height, 4)
         color: on ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
-        onPressedChanged: if (pressed) { const p = start.mapToItem(null, 0, 0); strip.host.pressedAt = { screen: strip.host.screenName, x: p.x, y: p.y, w: start.width, h: start.height, t: Date.now() }; }
-        onClicked: strip.host.open("search")
+        onPressedChanged: {
+            if (pressed) { held = false; holdTimer.restart(); const p = start.mapToItem(null, 0, 0); strip.host.pressedAt = { screen: strip.host.screenName, x: p.x, y: p.y, w: start.width, h: start.height, t: Date.now() }; }
+            else holdTimer.stop();
+        }
+        // held a second: pick its logo (status/LogoMenu.qml) instead of opening the start menu
+        property bool held: false
+        Timer {
+            id: holdTimer; interval: 1000
+            onTriggered: {
+                if (!start.pressed) return;
+                start.held = true;
+                const p = strip.host.edgePoint(start);
+                HubState.toggleDrop("logo", strip.host.screenName, p.x, p.y);
+            }
+        }
+        onClicked: { if (held) { held = false; return; } strip.host.open("search"); }
         // the grid: on a tile of the accent
         SmoothRect {
             visible: !start.logo

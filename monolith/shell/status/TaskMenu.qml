@@ -21,6 +21,9 @@ PanelWindow {
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
     mask: Region { item: dd.shown ? full : null }
+    // blur behind the card (Theme → Effects), once it's fully out: it was see-through over windows
+    BackgroundEffect.blurRegion: Theme.blur && dd.shown && card.opacity > 0.99 ? blurShape : null
+    Region { id: blurShape; item: card; radius: card.radius }
     Item { id: full; anchors.fill: parent }
     MouseArea { anchors.fill: parent; onClicked: HubState.closeDrop() }
     Item { id: keys; focus: true; Keys.onEscapePressed: HubState.closeDrop() }

@@ -47,6 +47,9 @@ ShellRoot {
     Variants { model: trayL.on ? Quickshell.screens : []; TrayMenu {} }
     Lazy { id: taskL; when: HubState.dropScreen !== "" && HubState.dropKind === "task"; linger: 400 }
     Variants { model: taskL.on ? Quickshell.screens : []; TaskMenu {} }
+    // (the start button's logo, picked: holding it, island/TaskStrip.qml)
+    Lazy { id: logoL; when: HubState.dropScreen !== "" && HubState.dropKind === "logo"; linger: 400 }
+    Variants { model: logoL.on ? Quickshell.screens : []; LogoMenu {} }
     Lazy { id: sysL; when: HubState.dropScreen !== "" && HubState.dropKind === "system"; linger: 400 }
     Variants { model: sysL.on ? Quickshell.screens : []; SysDrop {} }
     Variants { model: Quickshell.screens; Osd {} }
