@@ -80,9 +80,15 @@ Pressable {
     // up and to a random side, spinning; sliding: off to a random side
     // how much of the card can actually be seen: a list makes cards a little past what it shows
     // (for smooth scrolling) and clips them off, but to Qt they're "visible"
+    // (and only inside its window: a card moved out past the window's edge isn't on screen)
     function shownPart() {
         const r = card.mapToItem(null, 0, 0, card.width, card.height);
         let x0 = r.x, y0 = r.y, x1 = r.x + r.width, y1 = r.y + r.height;
+        const w = card.Window.window;
+        if (w) {
+            x0 = Math.max(x0, 0); y0 = Math.max(y0, 0);
+            x1 = Math.min(x1, w.width); y1 = Math.min(y1, w.height);
+        }
         for (let it = card.parent; it; it = it.parent) {
             if (!it.clip) continue;
             const a = it.mapToItem(null, 0, 0, it.width, it.height);
@@ -92,11 +98,23 @@ Pressable {
         const area = Math.max(0, x1 - x0) * Math.max(0, y1 - y0);
         return r.width * r.height > 0 ? area / (r.width * r.height) : 0;
     }
+    // how see-through it really is: its own opacity times every parent's. A popup that has gone
+    // (its slot faded to nothing), a closed menu fading out, a page built ahead of time and kept
+    // hidden: all still "visible" to Qt, but at opacity 0, and they used to be thrown too: from
+    // where they sat unseen, so cards popped up out of nowhere around the screen and fell
+    function shownOpacity() {
+        let o = 1;
+        for (let it = card; it; it = it.parent) {
+            if (!it.visible) return 0;
+            o *= it.opacity;
+        }
+        return o;
+    }
     function scatter() {
         if (!card.visible || !card.Window.window || !card.Window.window.visible || throwId >= 0 || flying) return;
         // (only the cards you can see: the ones scrolled out of the list were thrown too, and
         // flew in from above or below it, from nowhere)
-        if (shownPart() < 0.5) return;
+        if (shownPart() < 0.5 || shownOpacity() < 0.5) return;
         const p = card.mapToItem(null, -swipeX, 0);
         const scr = card.screenName || HubState.screenName || Niri.focusedOutput || "";
         const dir = Math.random() < 0.5 ? -1 : 1;
