@@ -17,6 +17,10 @@ PanelWindow {
     // which edge (Settings → Dock), and whether windows keep clear of it
     readonly property string side: Store.get("dock.position", "bottom")
     readonly property bool vertical: side === "left" || side === "right"
+    // its look (Settings → Dock → Look): liquid glass of its own, and the icons' look and tint
+    readonly property bool ownGlass: Store.get("dock.glass", "theme") === "liquid" && !Theme.liquid
+    readonly property string iconLook: { const v = String(Store.get("dock.iconStyle", "normal")); return ["tinted", "clear", "dark"].indexOf(v) !== -1 ? v : "normal"; }
+    readonly property color iconTint: { const v = String(Store.get("dock.iconTint", "") || ""); return /^#[0-9a-fA-F]{6}$/.test(v) ? v : Theme.accent; }
     readonly property bool exclusive: Store.get("dock.exclusive", false) === true
     exclusionMode: exclusive ? ExclusionMode.Normal : ExclusionMode.Ignore
     exclusiveZone: exclusive ? (vertical ? capsule.width : capsule.height) + dock.margin : 0
@@ -261,13 +265,15 @@ PanelWindow {
         Behavior on scale { Anim { kind: dock.shown ? "enter" : "exit" } }
         // its own roundness (−1: the theme's)
         radius: Number(Store.get("dock.radius", -1)) >= 0 ? Math.min(Number(Store.get("dock.radius", -1)), Math.min(width, height) / 2) : Theme.corner(Math.min(width, height), 8)
-        color: Qt.alpha(Theme.card, opacityBg)
+        // (its own liquid glass, Settings → Dock → Glass: nearly clear, as the Liquid glass style's
+        // panes are; the glass draws the rest)
+        color: Qt.alpha(Theme.card, dock.ownGlass ? 0.08 * opacityBg : opacityBg)
         // liquid glass: the capsule is a pane of glass. Its window is a strip along the screen's
         // edge, so the pane is told where that strip is on the screen
         readonly property point glassOrigin: Qt.point(dock.side === "right" ? dock.screen.width - dock.width : 0, dock.side === "bottom" ? dock.screen.height - dock.height : 0)
-        LiquidPane { anchors.fill: parent; z: -1; radius: capsule.radius; visible: Theme.liquid && capsule.opacityBg > 0.02 }
+        LiquidPane { anchors.fill: parent; z: -1; radius: capsule.radius; visible: (Theme.liquid || dock.ownGlass) && capsule.opacityBg > 0.02 }
         // a material: the capsule's colour, textured (over its fill, under the icons)
-        MaterialPane { anchors.fill: parent; radius: capsule.radius; color: capsule.color; visible: Theme.material !== "" && capsule.opacityBg > 0.02 }
+        MaterialPane { anchors.fill: parent; radius: capsule.radius; color: capsule.color; visible: Theme.material !== "" && !dock.ownGlass && capsule.opacityBg > 0.02 }
         // the outline: optional, and never on an invisible dock
         border.width: Store.get("dock.border", true) !== false && opacityBg > 0.02 ? Math.max(1, Theme.outlineW) : 0
         border.color: Theme.outlineW > 0 ? Theme.outlineColor : Theme.hairline
@@ -395,12 +401,13 @@ PanelWindow {
                             if (e) { Sounds.play("launch"); e.execute(); }
                         }
                     }
-                    Image {
+                    DockIcon {
                         anchors.centerIn: parent
-                        width: Math.round(capsule.cell * 0.68); height: width
-                        sourceSize: Qt.size(128, 128)
+                        // (a tile is a little bigger than a bare icon: the icon sits inside it)
+                        size: Math.round(capsule.cell * (dock.iconLook === "normal" ? 0.68 : 0.78))
                         source: dock.iconFor(app.modelData.icon)
-                        smooth: true; mipmap: true
+                        look: dock.iconLook
+                        tint: dock.iconTint
                         scale: app.pressed ? 0.9 : (app.hovered ? (Store.get("dock.magnify", false) === true ? 1.3 : 1.08) : 1)
                         Behavior on scale { NumberAnimation { duration: Theme.ms(220); easing.type: Easing.OutCubic } }
                     }
@@ -482,13 +489,13 @@ PanelWindow {
         // pops up a little as it's picked up
         scale: dock.dragIndex >= 0 && !landing ? 1.12 : 1
         Behavior on scale { NumberAnimation { duration: Theme.ms(180); easing.type: Easing.OutBack; easing.overshoot: 1.6 } }
-        Image {
+        DockIcon {
             id: ghostIcon
             anchors.centerIn: parent
-            width: Math.round(capsule.cell * 0.68); height: width
-            sourceSize: Qt.size(128, 128)
+            size: Math.round(capsule.cell * (dock.iconLook === "normal" ? 0.68 : 0.78))
             source: ghost.app ? dock.iconFor(ghost.app.icon) : ""
-            smooth: true; mipmap: true
+            look: dock.iconLook
+            tint: dock.iconTint
             layer.enabled: ghost.visible
             layer.effect: MultiEffect { shadowEnabled: true; shadowBlur: 0.6; shadowColor: Qt.rgba(0, 0, 0, 0.45); shadowVerticalOffset: ghost.landing ? 1 : 6 }
         }
@@ -654,7 +661,8 @@ PanelWindow {
         when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue
     }
     Binding { target: dock.contentItem; property: "opacity"; value: Intro.dockK; when: Intro.playing; restoreMode: Binding.RestoreBindingOrValue }
-    BackgroundEffect.blurRegion: Theme.blur && !Intro.playing && blurPart.some ? blurShape : null
+    // (not under its own glass: the glass frosts what's behind it itself)
+    BackgroundEffect.blurRegion: Theme.blur && !dock.ownGlass && !Intro.playing && blurPart.some ? blurShape : null
     Region {
         id: blurShape
         item: blurPart.some ? blurPart : null

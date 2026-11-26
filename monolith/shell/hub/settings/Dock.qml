@@ -69,6 +69,36 @@ ColumnLayout {
         Button { text: "Reset"; onClicked: Store.set("dock.pinned", null) }
     }
 
+    Label { text: "Look"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
+    SettingRow {
+        key: "dock.glass"; def: "theme";
+        icon: "water_drop"; title: "Glass"
+        desc: Theme.liquid ? "The Liquid glass style makes everything glass, the dock too" : "Liquid glass: the dock as a pane of glass that bends and frosts what's behind it, whatever the style"
+        Dropdown { enabled: !Theme.liquid; opts: [["theme", "Like the style"], ["liquid", "Liquid glass"]]; value: Theme.liquid ? "liquid" : Store.get("dock.glass", "theme"); onPicked: v => Store.set("dock.glass", v) }
+    }
+    SettingRow {
+        key: "dock.iconStyle"; def: "normal";
+        icon: "palette"; title: "Icons"
+        desc: ({ normal: "As each app made them", tinted: "Every icon in shades of one colour, on dark tiles", clear: "Pale, see-through icons on clear glass tiles", dark: "A little dimmer, on dark tiles" })[Store.get("dock.iconStyle", "normal")] || "As each app made them"
+        Dropdown { opts: [["normal", "Full colour"], ["tinted", "Tinted"], ["clear", "Clear"], ["dark", "Dark"]]; value: Store.get("dock.iconStyle", "normal"); onPicked: v => Store.set("dock.iconStyle", v) }
+    }
+    SettingRow {
+        key: "dock.iconTint"; def: "";
+        visible: Store.get("dock.iconStyle", "normal") === "tinted"
+        icon: "format_color_fill"; title: "Tint colour"; desc: "Off: the theme's accent colour"
+        Row {
+            spacing: 8
+            Toggle { anchors.verticalCenter: parent.verticalCenter; checked: String(Store.get("dock.iconTint", "") || "") !== ""; onToggled: on => Store.set("dock.iconTint", on ? String(Theme.accent).slice(0, 7) : "") }
+            ColourPick {
+                visible: String(Store.get("dock.iconTint", "") || "") !== ""
+                anchors.verticalCenter: parent.verticalCenter
+                alpha: false
+                value: String(Store.get("dock.iconTint", "") || "#7aa2f7")
+                onPicked: c => Store.set("dock.iconTint", c.slice(0, 7))
+            }
+        }
+    }
+
     Label { text: "Where and how"; muted: true; font.pixelSize: Theme.sizeSmall; Layout.leftMargin: 6; Layout.topMargin: 8 }
     SettingRow {
         key: "dock.position"; def: "bottom";
