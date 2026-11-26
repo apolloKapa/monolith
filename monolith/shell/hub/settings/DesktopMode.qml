@@ -57,6 +57,17 @@ ColumnLayout {
         }
     }
     SettingRow {
+        key: "desktop.startIcon"; def: "distro";
+        icon: "apps"; title: "Start button"
+        desc: "Your distribution's logo (" + (Distro.name || "found in /etc/os-release") + "), or a grid"
+        Dropdown {
+            width: 230
+            opts: [["distro", "Distribution's logo"], ["grid", "Grid"]]
+            value: String(Store.raw("desktop.startIcon", "distro")) === "grid" ? "grid" : "distro"
+            onPicked: v => Store.set("desktop.startIcon", v)
+        }
+    }
+    SettingRow {
         key: "desktop.height"; def: 48;
         icon: "height"; title: "Taskbar size"
         NumberBox { from: 40; to: 72; step: 2; unit: "px"; value: Desk.size; onMoved: v => Store.set("desktop.height", v) }

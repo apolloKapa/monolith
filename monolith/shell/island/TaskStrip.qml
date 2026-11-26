@@ -90,6 +90,7 @@ Grid {
         id: start
         visible: strip.withStart
         readonly property bool on: HubState.open && HubState.page === "search"
+        readonly property bool logo: Store.get("desktop.startIcon", "distro") !== "grid"
         width: strip.cell; height: strip.cell
         radius: Theme.corner(height, 4)
         color: on ? Theme.selected : (hovered ? Theme.containerHigh : "transparent")
@@ -103,7 +104,16 @@ Grid {
             color: start.on ? Theme.accent : Theme.accentContainer
             scale: start.pressed ? 0.88 : 1
             Behavior on scale { NumberAnimation { duration: Theme.ms(160); easing.type: Easing.OutCubic } }
-            Icon { anchors.centerIn: parent; name: "grid_view"; size: Math.round(strip.cell * 0.4); filled: true; color: start.on ? Theme.onAccent : Theme.onAccentContainer }
+            // your distribution's logo (core/Distro.qml), or the grid (Settings → Desktop mode)
+            Icon { visible: !start.logo; anchors.centerIn: parent; name: "grid_view"; size: Math.round(strip.cell * 0.4); filled: true; color: start.on ? Theme.onAccent : Theme.onAccentContainer }
+            Text {
+                visible: start.logo
+                anchors.centerIn: parent
+                text: Distro.glyph
+                font.family: Distro.fontFamily
+                font.pixelSize: Math.round(strip.cell * 0.42)
+                color: start.on ? Theme.onAccent : Theme.onAccentContainer
+            }
         }
     }
 
