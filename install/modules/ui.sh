@@ -466,6 +466,11 @@ run_installer_ui() {
         # (a rebuild of Hyprland's display library, or of niri, with Monolith's patch: modules/hdmi.sh)
         labels+=("HDMI scaling for TVs that cut the edges off $(on_off "$OPT_HDMI") ${DIM}(rebuilds $(hdmi_target) with a patch)${RESET}")
         actions+=(hdmi)
+        # (niri patched: modules/niripatches.sh; all of niri's patches go in one build)
+        if [ "$DESKTOP" != hyprland ]; then
+            labels+=("niri extras: minimise buttons, windows drawn across screens while dragged $(on_off "$OPT_NIRI_EXTRAS") ${DIM}(rebuilds niri with patches)${RESET}")
+            actions+=(niriextras)
+        fi
         labels+=("Login screen (SDDM theme) $(on_off "$OPT_SDDM")" "Wallpapers $wp_label")
         actions+=(sddm wallpapers)
         # another shell found: replaced (uninstalled, its files backed up, its keys made Monolith's) or kept
@@ -515,6 +520,7 @@ run_installer_ui() {
                      cursor=0; printf "\033[2J\033[H" ;;
             hyprkeys) HYPR_KEYS=$([ "$HYPR_KEYS" = monolith ] && echo mine || echo monolith) ;;
             hdmi) OPT_HDMI=$([ "$OPT_HDMI" = true ] && echo false || echo true) ;;
+            niriextras) OPT_NIRI_EXTRAS=$([ "$OPT_NIRI_EXTRAS" = true ] && echo false || echo true) ;;
             replace) OPT_REPLACE_SHELLS=$([ "$OPT_REPLACE_SHELLS" = true ] && echo false || echo true) ;;
             packages) show_package_overview ;;
             keybind_apps) OPT_KEYBIND_APPS=$([ "$OPT_KEYBIND_APPS" = true ] && echo false || echo true) ;;

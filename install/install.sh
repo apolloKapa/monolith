@@ -83,6 +83,7 @@ source "$MODULES_DIR/migrate.sh"
 source "$MODULES_DIR/replace.sh"
 source "$MODULES_DIR/hyprland.sh"
 source "$MODULES_DIR/hdmi.sh"
+source "$MODULES_DIR/niripatches.sh"
 source "$MODULES_DIR/ui.sh"
 source "$MODULES_DIR/strings.sh"
 
@@ -101,6 +102,9 @@ HYPR_KEYS="$(hypr_keys_saved)"; HYPR_KEYS="${HYPR_KEYS:-mine}"
 # HDMI scaling (the compositor's display code patched): what was chosen before, else off
 OPT_HDMI=false
 { hdmi_wanted || hdmi_patched; } && OPT_HDMI=true
+# niri's extras (minimise buttons, windows across screens while dragged): niri patched, modules/niripatches.sh
+OPT_NIRI_EXTRAS=false
+{ niri_extras_wanted || niri_extras_patched; } && OPT_NIRI_EXTRAS=true
 
 # other shells on this PC (Noctalia, Caelestia, Waybar …): Monolith replaces them unless told not to
 OTHER_SHELLS_FOUND="$(found_shells | paste -sd ',' - | sed 's/,/, /g')"
@@ -123,7 +127,8 @@ fi
 STEP_TOTAL=5
 [ "$OPT_SDDM" = true ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 [ "$WALLPAPERS" != none ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
-[ "$OPT_HDMI" = true ] && ! hdmi_patched && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
+[ "$OPT_HDMI" = true ] && [ "$(hdmi_target)" = aquamarine ] && ! hdmi_patched && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
+[ "$(hdmi_target)" = niri ] && niri_patches_wanted && ! niri_all_patched && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 [ "$OPT_REPLACE_SHELLS" = true ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
 
 # the password once, up front: sudo forgets it after a few minutes, and a long build (Portage can
@@ -175,11 +180,20 @@ upgrade_local_bin_commands
 fi
 # HDMI scaling (aquamarine on Hyprland, niri on niri, patched): chosen in the menu, or patched
 # again after an upgrade replaced it
-if [ "$OPT_HDMI" = true ]; then
+# (on niri it's one of niri's patches: all of them in one build, with the extras, below)
+if [ "$OPT_HDMI" = true ] && [ "$(hdmi_target)" = aquamarine ]; then
     hdmi_patched || step "HDMI scaling"
     install_hdmi_scaling "$PROJECT_ROOT"
-elif [ -f "$HDMI_STATE_FILE" ]; then
+elif [ "$OPT_HDMI" != true ] && [ -f "$HDMI_STATE_FILE" ]; then
     echo off > "$HDMI_STATE_FILE"
+fi
+# niri, patched (HDMI scaling, minimise buttons, windows across screens while dragged): every one
+# wanted in one build, or patched again after an upgrade replaced it
+if [ "$(hdmi_target)" = niri ] && niri_patches_wanted; then
+    niri_all_patched || step "niri patches"
+    install_niri_patches "$PROJECT_ROOT"
+elif [ -f "$NIRI_EXTRAS_STATE_FILE" ] && [ "$OPT_NIRI_EXTRAS" != true ]; then
+    echo off > "$NIRI_EXTRAS_STATE_FILE"
 fi
 # an older config (the classic shell's monolithd, its zoom script) moves over to this shell
 "$BIN_DIR/monolith" migrate

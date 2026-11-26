@@ -48,7 +48,7 @@ install_hdmi_scaling() {
     case "$PM_NAME:$target" in
         portage:aquamarine) _hdmi_gentoo gui-libs aquamarine "$patch" ;;
         portage:niri) _hdmi_gentoo gui-wm niri "$patch" ;;
-        pacman:*) _hdmi_arch "$target" "$patch" ;;
+        pacman:*) _arch_patched_build "$target" "HDMI scaling" "$patch" ;;
         *) echo -e "  ${C_YELLOW}HDMI scaling:${RESET} not available on this system yet" ;;
     esac
     if hdmi_patched; then
@@ -75,23 +75,34 @@ _hdmi_gentoo() {
     fi
 }
 
-_hdmi_arch() {
-    local pn="$1" patch="$2" full rel pkgver_inst tag build log
+# Arch's own package for the installed version, rebuilt with Monolith's patches (all of them in one
+# build: a rebuild with only some lost the others) and installed over it.
+#   _arch_patched_build <package> <what, for the messages> <patch>...
+_arch_patched_build() {
+    local pn="$1" what="$2"; shift 2
+    local full rel pkgver_inst tag build log i
     full=$(pacman -Q "$pn" 2>/dev/null | awk '{print $2}')
-    [ -n "$full" ] || { echo -e "  ${C_YELLOW}HDMI scaling:${RESET} $pn isn't installed (a -git package isn't supported yet)"; return 0; }
+    [ -n "$full" ] || { echo -e "  ${C_YELLOW}$what:${RESET} $pn isn't installed (a -git package isn't supported yet)"; return 0; }
     # installed: [epoch:]version-release. Arch's own PKGBUILD has a tag per version-release; a
     # rebuild of it (CachyOS: 26.04-1.1 for Arch's 26.04-1) is built from the same one
     rel="${full##*-}"
     pkgver_inst="${full%-*}"; pkgver_inst="${pkgver_inst#*:}"
     tag="$pkgver_inst-${rel%%.*}"
     build="${XDG_CACHE_HOME:-"$HOME/.cache"}/monolith-$pn"
-    log="$(dirname "$HDMI_STATE_FILE")/hdmi-scaling.log"
+    log="$HOME/.local/state/monolith/$pn-patched-build.log"
     rm -rf "$build"
-    echo -e "\n\e[36m[ INFO ]\e[0m Building $pn $full with HDMI scaling (the log: $log)"
+    echo -e "\n\e[36m[ INFO ]\e[0m Building $pn $full with $what (the log: $log)"
     gitx clone -q --depth 1 --branch "$tag" "https://gitlab.archlinux.org/archlinux/packaging/packages/$pn.git" "$build" 2>/dev/null \
         || gitx clone -q --depth 1 "https://gitlab.archlinux.org/archlinux/packaging/packages/$pn.git" "$build" 2>/dev/null \
-        || { echo -e "  ${C_YELLOW}HDMI scaling:${RESET} couldn't download Arch's $pn package"; return 0; }
-    cp "$patch" "$build/monolith-underscan.patch"
+        || { echo -e "  ${C_YELLOW}$what:${RESET} couldn't download Arch's $pn package"; return 0; }
+    local names=() applies=""
+    i=0
+    for p in "$@"; do
+        i=$((i + 1))
+        cp "$p" "$build/monolith-$i.patch"
+        names+=("\"monolith-$i.patch\"")
+        applies+=" && patch -Np1 -i \"\$srcdir/monolith-$i.patch\""
+    done
     # The patch added to its sources and put in before the build (after Arch's own prepare, if it
     # has one). The package keeps the version that's installed, exactly, and is installed over it:
     # the repo's same version doesn't replace it, a newer one does (and the next Monolith update
@@ -101,22 +112,24 @@ _hdmi_arch() {
     sed -i 's/^prepare()/_arch_prepare()/' "$build/PKGBUILD"
     cat >> "$build/PKGBUILD" <<PKGBUILD_END
 
-# ── Monolith: HDMI scaling (underscan) ──
-source+=("monolith-underscan.patch")
-[ "\${#sha256sums[@]}" -gt 0 ] && sha256sums+=('SKIP')
-[ "\${#sha512sums[@]}" -gt 0 ] && sha512sums+=('SKIP')
-[ "\${#b2sums[@]}" -gt 0 ] && b2sums+=('SKIP')
+# ── Monolith: $what ──
+source+=(${names[*]})
+for _m in ${names[*]}; do
+	[ "\${#sha256sums[@]}" -gt 0 ] && sha256sums+=('SKIP')
+	[ "\${#sha512sums[@]}" -gt 0 ] && sha512sums+=('SKIP')
+	[ "\${#b2sums[@]}" -gt 0 ] && b2sums+=('SKIP')
+done
 [ "\$pkgver" = "$pkgver_inst" ] && pkgrel="$rel"
 prepare() {
 	if declare -f _arch_prepare >/dev/null; then (cd "\$srcdir" && _arch_prepare) || return 1; fi
-	cd "\$srcdir/\${_archive:-\$pkgname-\$pkgver}" && patch -Np1 -i "\$srcdir/monolith-underscan.patch"
+	cd "\$srcdir/\${_archive:-\$pkgname-\$pkgver}"$applies
 }
 PKGBUILD_END
     # (--nocheck: niri's test suite takes long and isn't what changed; no --needed: it's the
     # installed version on purpose)
     mkdir -p "$(dirname "$log")"
     if ! (set -o pipefail; cd "$build" && makepkg -si --noconfirm --nocheck 2>&1 | tee "$log"); then
-        echo -e "  ${C_YELLOW}HDMI scaling:${RESET} building $pn with the patch failed; left as it was (the log: $log)"
+        echo -e "  ${C_YELLOW}$what:${RESET} building $pn with the patches failed; left as it was (the log: $log)"
     fi
     rm -rf "$build"
 }

@@ -37,6 +37,15 @@ Gentoo:
 then log out and in. (On Arch the installer adds it to Arch's own PKGBUILD and builds it with
 makepkg, for both.)
 
+## The installer does these for you
+
+`monolith installer` → **niri extras** (minimise buttons, windows across screens while dragged)
+builds niri with niri-minimize.patch and niri-move-across-monitors.patch, and HDMI scaling adds
+niri-underscan.patch: every niri patch wanted goes into one build (a build with only some would
+lose the others), on Gentoo (Portage's user patches, kept for that version) and Arch (Arch's own
+PKGBUILD, installed over the same version). Remembered, and an update patches niri again after an
+upgrade replaced it. The steps below are the same by hand.
+
 ## niri-minimize.patch: minimise buttons on niri
 
 niri has no minimising, and tells apps so: kitty and GTK apps leave their minimise button out of
