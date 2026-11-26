@@ -124,3 +124,4 @@ eselect-repository        app-eselect/eselect-repository
 gentoolkit                app-portage/gentoolkit
 wlsunset                  gui-apps/wlsunset
 upower                    sys-power/upower
+qadwaitadecorations-qt6   x11-themes/QAdwaitaDecorations

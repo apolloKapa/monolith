@@ -58,6 +58,7 @@ REQUIRED_PKGS=(
     "wlsunset" "upower"   # night light, and batteries (the battery widgets, a mouse's or headset's)
     "fastfetch" "nano"   # Theme -> Fastfetchlings: the presets, and an editor to write them in
     "zenity"             # the file pickers (a picture for a widget or a fastfetch preset, adding wallpapers, importing a profile)
+    "qadwaitadecorations-qt6"   # Desktop mode on niri: Adwaita-like title bars on Qt apps (Qt's own are plain blue)
 )
 
 # what niri + the Monolith keybinds/autostart call
