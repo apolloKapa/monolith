@@ -1,5 +1,6 @@
 import QtQuick
 import "../core"
+import "../core/iconnames.js" as IconNames
 
 // A Material Symbols icon by name ("wifi", "volume_up"). `filled` switches to the solid form.
 Text {
@@ -19,7 +20,8 @@ Text {
         NumberAnimation { target: popS; properties: "xScale,yScale"; to: 0.55; duration: Theme.ms(80); easing.type: Easing.InCubic }
         NumberAnimation { target: popS; properties: "xScale,yScale"; to: 1; duration: Theme.ms(260); easing.type: Easing.OutBack; easing.overshoot: 2 }
     }
-    font.family: Theme.iconFont
+    // (the small set when it has this icon, else the full one: core/Theme.qml)
+    font.family: Theme.iconFontSmall !== "" && IconNames.names[name] === 1 ? Theme.iconFontSmall : Theme.iconFont
     font.pixelSize: size
     font.variableAxes: ({ "FILL": filled ? 1 : 0, "wght": 400, "opsz": Math.max(20, Math.min(48, size)) })
     color: Theme.text

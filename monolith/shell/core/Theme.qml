@@ -394,4 +394,11 @@ Singleton {
     // them from the Sharp set (square ends and corners) when it's installed
     readonly property bool sharpIcons: Qt.fontFamilies().indexOf("Material Symbols Sharp") !== -1
     readonly property string iconFont: chamfer && sharpIcons ? "Material Symbols Sharp" : "Material Symbols Rounded"
+    // Monolith Symbols (fonts/, made by scripts/icon-subset.py): just the icons the shell uses,
+    // 0.5 MB where the full set took about 40 MB of the shell's memory. ui/Icon.qml draws a name
+    // that isn't in it (core/iconnames.js) with the full font above
+    FontLoader { id: symRound; source: Qt.resolvedUrl("../fonts/MonolithSymbols-Rounded.ttf") }
+    FontLoader { id: symSharp; source: Qt.resolvedUrl("../fonts/MonolithSymbols-Sharp.ttf") }
+    readonly property string iconFontSmall: chamfer ? (symSharp.status === FontLoader.Ready ? symSharp.name : "")
+                                                    : (symRound.status === FontLoader.Ready ? symRound.name : "")
 }
