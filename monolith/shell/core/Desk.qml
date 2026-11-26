@@ -422,24 +422,27 @@ Singleton {
                 // put the pointer in its middle; yours back when Desktop mode is off)
                 + (want ? "if MonolithDesk.dragWas == nil then MonolithDesk.dragWas = hl.get_config(\"binds.drag_center_window\") end; hl.config({ binds = { drag_center_window = false } }); "
                         : "if MonolithDesk.dragWas ~= nil then hl.config({ binds = { drag_center_window = MonolithDesk.dragWas } }); MonolithDesk.dragWas = nil end; ")
-                + "if MonolithDesk.hv ~= 7 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\", \"fsHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 7 end; "
+                + "if MonolithDesk.hv ~= 8 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\", \"fsHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 8 end; "
                 // out of fullscreen, back to how it was before: Hyprland tells every app it's maximised
                 // (so they draw no title bars of their own) and takes any maximise or unmaximise an app
                 // asks for as "the other way round". Electron asks for one as it leaves fullscreen, so
                 // Discord out of a fullscreen stream (Escape, or a window opening over it: the
                 // screenshare picker) was put back maximised and at once shrunk to its floating size,
-                // its page still laid out for the big one. For a moment after, it goes back to what it was
+                // its page still laid out for the big one. For a moment after, it goes back to maximised if it was
+                // (or if it's not known, or it's maximised meanwhile: the app's own button). It never
+                // shrinks a window: that undid you maximising it straight after
                 + "if not MonolithDesk.fsHook then MonolithDesk.fsMode = { }; MonolithDesk.fsBack = { }; "
                 +   "for _, v in ipairs(hl.get_windows() or { }) do local a = tostring(v.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; MonolithDesk.fsMode[a] = v.fullscreen or 0 end; "
                 +   "MonolithDesk.fsFix = function(a) local b = MonolithDesk.fsBack[a]; if not b then return end; local s = \"address:\" .. a; local v = hl.get_window(s); "
-                +     "if not v then MonolithDesk.fsBack[a] = nil; return end; local m = v.fullscreen or 0; if m >= 2 or m == b.want then return end; "
-                +     "hl.dispatch(hl.dsp.window.fullscreen({ mode = \"maximized\", action = (b.want == 1) and \"set\" or \"unset\", window = s })) end; "
+                +     "if not v then MonolithDesk.fsBack[a] = nil; return end; local m = v.fullscreen or 0; if b.want ~= 1 or m ~= 0 then return end; "
+                +     "hl.dispatch(hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"set\", window = s })) end; "
                 +   "MonolithDesk.fsHook = hl.on(\"window.fullscreen\", function(w) "
                 +     "if not MonolithDesk.on or not w then return end; "
                 +     "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; "
                 +     "local m = w.fullscreen or 0; local was = MonolithDesk.fsMode[a] or 0; MonolithDesk.fsMode[a] = m; "
                 +     "if m >= 2 then if was < 2 then MonolithDesk.fsBack[a] = { want = was } end; return end; "
-                +     "local b = MonolithDesk.fsBack[a]; if not b then return end; "
+                +     "if was >= 2 and not MonolithDesk.fsBack[a] then MonolithDesk.fsBack[a] = { want = 1 } end; "
+                +     "local b = MonolithDesk.fsBack[a]; if not b then return end; if m == 1 then b.want = 1 end; "
                 +     "if was >= 2 then b.n = (b.n or 0) + 1; local n = b.n; "
                 +       "hl.timer(function() MonolithDesk.fsFix(a) end, { timeout = 120, type = \"oneshot\" }); "
                 +       "hl.timer(function() MonolithDesk.fsFix(a) end, { timeout = 700, type = \"oneshot\" }); "
