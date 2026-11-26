@@ -311,7 +311,7 @@ Singleton {
         const cmd = "sh \"$1\"; echo; echo 'You can close this window.'; read -r _";
         Quickshell.execDetached(["sh", "-c", Prefs.terminal + " sh -c '" + cmd.replace(/'/g, "'\\''") + "' _ \"$0\"", barsScript]);
     }
-    readonly property var noBarDefault: ["firefox", "librewolf", "zen", "brave-browser", "chromium", "google-chrome", "vivaldi-stable", "org.gnome.*", "discord", "vesktop", "spotify", "code", "codium", "vscodium", "obsidian", "steam"]
+    readonly property var noBarDefault: ["firefox", "librewolf", "zen", "brave-browser", "chromium", "google-chrome", "vivaldi-stable", "org.gnome.*", "*discord*", "*vesktop*", "*spotify*", "code", "codium", "*vscodium*", "obsidian", "steam"]
     readonly property var noBar: { const v = Store.raw("desktop.noBar", null); return Array.isArray(v) ? v : noBarDefault; }
     function hex(c) { const h = x => ("0" + Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16)).slice(-2); return "rgba(" + h(c.r) + h(c.g) + h(c.b) + h(c.a) + ")"; }
     readonly property string barsLua: {
@@ -328,6 +328,9 @@ Singleton {
             + "on_double_click = " + dsp(max) + " } } }); "
             // (buttons stay until a config reload clears them: added once per reload. Right to left)
             // (round buttons with the shell's icons: close in the theme's red, the others soft)
+            // (a config reload clears them: a hook in Hyprland notes that, once per reload. Noted
+            // from the shell, a reload reported twice put every button there twice)
+            + "if not MonolithDesk.reloadHook then MonolithDesk.reloadHook = hl.on(\"config.reloaded\", function() MonolithDesk.barButtons = nil end) end; "
             + "if not MonolithDesk.barButtons then MonolithDesk.barButtons = true; "
             +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.danger, 0.92)) + "\", fg_color = \"" + hex(Theme.card) + "\", size = 22, icon = \"\ue5cd\", action = " + dsp("hl.dsp.window.close()") + " }); "
             +   "hl.plugin.hyprbars.add_button({ bg_color = \"" + hex(Qt.alpha(Theme.text, 0.12)) + "\", fg_color = \"" + hex(Theme.text) + "\", size = 22, icon = \"\ue3c6\", action = " + dsp(max) + " }); "
@@ -356,11 +359,16 @@ Singleton {
     // in your config); a config reload forgets it, so it's sent again then
     function hyprRules(want) {
         if (Niri.hyprLua) {
-            const lua = "MonolithDesk = MonolithDesk or {}; MonolithDesk.on = " + (want ? "true" : "false") + "; "
+            // (hooks made by an older version are taken out first, so the ones below replace them)
+            const lua = "MonolithDesk = MonolithDesk or {}; "
+                + "if MonolithDesk.hv ~= 3 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 3 end; "
+                + "MonolithDesk.on = " + (want ? "true" : "false") + "; "
                 + "if MonolithDesk.rule then MonolithDesk.rule:set_enabled(MonolithDesk.on and " + (floating ? "true" : "false") + ") "
                 + "elseif MonolithDesk.on and " + (floating ? "true" : "false") + " then MonolithDesk.rule = hl.window_rule({ name = \"monolith-desktop\", match = { class = \".*\" }, float = true }) end; "
                 + "if not MonolithDesk.min then MonolithDesk.min = hl.on(\"window.minimize\", function(w, m) "
-                +   "if not MonolithDesk.on or not w or m == false or m == 0 then return end; "
+                // (only a request that really says minimise: one saying "not minimised" (an app
+                // bringing itself back, Discord as it starts sharing its screen) minimised it)
+                +   "if not MonolithDesk.on or not w or not (m == true or m == 1) then return end; "
                 +   "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; "
                 +   "hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = \"address:\" .. a })) end) end; "
                 + sizesLua() + " "
@@ -371,6 +379,11 @@ Singleton {
                 +   "local m = w.monitor; local z = w.size; local ww, wh = 0, 0; "
                 +   "if type(z) == \"table\" then ww = z[1] or z.x or 0; wh = z[2] or z.y or 0 end; "
                 +   "if ww < 300 or wh < 200 then return end; "
+                // (only an app's first window: its others (a screen-share picker, a dialog) were
+                // made as big as its main one, and didn't work)
+                +   "local cls = string.lower(tostring(w.class)); local n = 0; "
+                +   "for _, o in ipairs(hl.get_windows()) do if string.lower(tostring(o.class)) == cls then n = n + 1 end end; "
+                +   "if n > 1 then return end; "
                 +   "local s = MonolithDesk.sizes and MonolithDesk.sizes[string.lower(tostring(w.class))]; "
                 +   "if not s and m and ww >= m.width * 0.8 and wh >= m.height * 0.8 then s = { math.floor(m.width * 0.62), math.floor(m.height * 0.68) } end; "
                 +   "if not s then return end; "
@@ -402,9 +415,32 @@ Singleton {
         onTriggered: { Hyprland.refreshToplevels(); hyprRead.restart(); }
     }
     Timer { id: hyprRead; interval: 350; onTriggered: { Niri.hyprSync(); desk.noteSizes(); } }
-    Connections { target: Niri; function onWindowsChanged() { if (desk.on && desk.floating) sizeLater.restart(); } }
+    Connections { target: Niri; function onWindowsChanged() { if (desk.on && desk.floating) sizeLater.restart(); desk.niriOpened(); } }
+    // niri: a window opening, the first of its app, gets the size its app had (a rule per app
+    // made its other windows, a screen-share picker or a dialog, as big as its main one too)
+    property var seenIds: null
+    function niriOpened() {
+        if (Niri.hyprland) return;
+        const now = {}, fresh = [];
+        for (const k in Niri.windows) { now[k] = true; if (seenIds && !seenIds[k]) fresh.push(k); }
+        seenIds = now;
+        if (!on || !floating) return;
+        for (const k of fresh) {
+            const w = Niri.windows[k];
+            const id = String(w.app_id || "").toLowerCase();
+            const s = sizes[id];
+            if (!s || !w.is_floating) continue;
+            let n = 0;
+            for (const j in Niri.windows) if (String(Niri.windows[j].app_id || "").toLowerCase() === id) n++;
+            if (n > 1) continue;
+            niri(["set-window-width", "--id", String(w.id), String(Math.round(s[0]))]);
+            niri(["set-window-height", "--id", String(w.id), String(Math.round(s[1]))]);
+            niri(["center-window", "--id", String(w.id)]);
+        }
+    }
     function noteSizes() {
         const cur = Object.assign({}, sizes);
+        const biggest = {};
         let changed = false;
         // (the window you're in last: its size wins over another of the same app's)
         const ids = Object.keys(Niri.windows).sort((a, b) => (Niri.windows[a].is_focused ? 1 : 0) - (Niri.windows[b].is_focused ? 1 : 0));
@@ -418,6 +454,10 @@ Singleton {
             const scr = ws ? Quickshell.screens.find(x => x.name === ws.output) : null;
             if (scr && (sz[0] >= scr.width * 0.95 || sz[1] >= scr.height * 0.88)) continue;
             const v = [Math.round(sz[0]), Math.round(sz[1])];
+            // (an app with several windows: its biggest, its main one, not a dialog of it)
+            const big = biggest[id];
+            if (big && big[0] * big[1] > v[0] * v[1]) continue;
+            biggest[id] = v;
             if (!cur[id] || cur[id][0] !== v[0] || cur[id][1] !== v[1]) { cur[id] = v; changed = true; }
         }
         if (changed) Store.set("desktop.sizes", cur);
@@ -451,7 +491,7 @@ Singleton {
             Niri.hyprStill();
             if (desk.on) {
                 desk.hyprRules(true);
-                if (desk.titlebars && desk.barsReady) { Quickshell.execDetached(["hyprctl", "eval", "MonolithDesk = MonolithDesk or {}; MonolithDesk.barButtons = nil; MonolithDesk.noBar = nil"]); desk.hyprBars(true); }
+                if (desk.titlebars && desk.barsReady) desk.hyprBars(true);
             }
         }
     }
