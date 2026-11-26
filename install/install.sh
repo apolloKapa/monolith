@@ -123,23 +123,32 @@ else
 fi
 
 # --- install ------------------------------------------------------------------------------------
-# how many steps there are (for the progress bar in each step's header)
-STEP_TOTAL=5
-[ "$OPT_SDDM" = true ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
-[ "$WALLPAPERS" != none ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
-[ "$OPT_HDMI" = true ] && [ "$(hdmi_target)" = aquamarine ] && ! hdmi_patched && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
-[ "$(hdmi_target)" = niri ] && niri_patches_wanted && ! niri_all_patched && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
-[ "$OPT_REPLACE_SHELLS" = true ] && STEP_TOTAL=$(( STEP_TOTAL + 1 ))
+# the steps it will take, in order (the install panel's list; the plain bars' count)
+STEP_PLAN=("Packages")
+[ "$OPT_REPLACE_SHELLS" = true ] && STEP_PLAN+=("Other shells")
+STEP_PLAN+=("Monolith shell")
+if [ "$DESKTOP" = hyprland ]; then STEP_PLAN+=("Hyprland"); else STEP_PLAN+=("niri"); fi
+[ "$OPT_HDMI" = true ] && [ "$(hdmi_target)" = aquamarine ] && ! hdmi_patched && STEP_PLAN+=("HDMI scaling")
+[ "$(hdmi_target)" = niri ] && niri_patches_wanted && ! niri_all_patched && STEP_PLAN+=("niri patches")
+[ "$OPT_SDDM" = true ] && STEP_PLAN+=("Login screen")
+[ "$WALLPAPERS" != none ] && STEP_PLAN+=("Wallpapers")
+STEP_PLAN+=("Settings" "Services")
+STEP_TOTAL=${#STEP_PLAN[@]}
 
 # the password once, up front: sudo forgets it after a few minutes, and a long build (Portage can
 # take hours) left the next package asking again, halfway through, maybe with no one there. Kept
 # fresh every minute until the installer ends
 if [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null; then
+    sudo -n true 2>/dev/null || printf '\n%sMonolith needs your password once, to install its packages.%s\n' "$BOLD" "$RESET"
     sudo -v || die "Monolith needs sudo to install its packages."
     ( while kill -0 "$$" 2>/dev/null; do sudo -n true 2>/dev/null; sleep 60; done ) &
     SUDO_KEEPALIVE=$!
     trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null; cleanup_terminal' EXIT
 fi
+
+# from here on in the panel (progress, the steps, what it's doing), when the terminal can show it
+if [ "$UPDATE_ONLY" = true ]; then progress_begin "Updating Monolith ${OLD_VERSION:-?} → $TARGET_VERSION"
+else progress_begin "Installing Monolith $TARGET_VERSION"; fi
 
 step "Packages"
 install_dependencies "$PROJECT_ROOT" "$INSTALL_STATE"
@@ -236,7 +245,11 @@ elif [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ] && [ "$SHELL_WAS_RUNNING" = true ] &&
     MONOLITH_STARTED=true
 fi
 
-if [ "$UPDATE_ONLY" = true ]; then
+progress_end
+if [ "$TUI_ON" = true ]; then
+    # (the finish screen in the panel, updates too: Later / Restart now)
+    draw_completion_screen
+elif [ "$UPDATE_ONLY" = true ]; then
     printf "\n%s%sMonolith is up to date (%s).%s\n" "$BOLD" "$C_GREEN" "$TARGET_VERSION" "$RESET"
     if [ ${#FAILED_PKGS[@]} -gt 0 ]; then
         printf "%sThese packages failed to install: %s%s\n" "$C_RED" "${FAILED_PKGS[*]}" "$RESET"

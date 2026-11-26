@@ -90,6 +90,7 @@ GPU_INFO=$(lspci -nn 2>/dev/null | grep -iE 'vga|3d|display' | head -1 | cut -d:
 TUI_ON=false
 tui_begin() {
     [ "$TUI_ON" = true ] && return 0
+    PANEL_KEY=""
     printf '\e[?1049h\e[?25l\e[?7l'
     stty -echo 2>/dev/null || true
     TUI_ON=true
@@ -100,11 +101,20 @@ tui_end() {
     TUI_ON=false
 }
 cleanup_terminal() {
+    # (the install stopped halfway, an error or Ctrl+C: its last lines, and where the rest is)
+    local stopped=$PROG_ON
+    progress_end
     tui_end
     printf "\e[?25h\e[?7h" 2>/dev/null || true
     stty echo icanon 2>/dev/null || true
+    if [ "$stopped" = true ]; then
+        printf '\n%s%sThe install stopped.%s The last of what it did:\n\n' "$BOLD" "$C_RED" "$RESET"
+        log_tail 20 | sed 's/^/  /'
+        printf '\n%sEverything it printed: %s%s\n' "$DIM" "$PROG_LOG" "$RESET"
+    fi
 }
-trap cleanup_terminal EXIT INT TERM
+trap cleanup_terminal EXIT
+trap 'cleanup_terminal; exit 130' INT TERM
 
 # the terminal's size, in $TR rows and $TC columns
 term_size() {
@@ -162,7 +172,11 @@ panel_draw() {
     local total=$h; [ "$logo" = true ] && total=$(( h + 8 ))
     local top=$(( (TR - total) / 2 + 1 )); (( top < 1 )) && top=1
     local left=$(( (TC - w) / 2 + 1 )); (( left < 1 )) && left=1
-    local buf=$'\e[2J'
+    # the screen cleared only when the panel's size or place changed: redrawn over itself
+    # otherwise (the install's panel is drawn several times a second), in one synchronised update
+    local buf=$'\e[?2026h' key="$TR $TC $w $h $title"
+    [ "$key" != "$PANEL_KEY" ] && buf+=$'\e[2J'
+    PANEL_KEY=$key
     if [ "$logo" = true ]; then
         local ll=$(( (TC - lw) / 2 + 1 )) r=$top l
         for l in "${MONO_LOGO[@]}"; do
@@ -185,7 +199,7 @@ panel_draw() {
     local hl=$VL
     (( hl > w - 6 )) && { hint=""; hl=0; }
     buf+=$'\e['"$(( top + h - 1 ));${left}H${T_BORDER}╰$(rule_of $(( w - hl - 5 ))) ${RESET}${DIM}${hint}${RESET} ${T_BORDER}─╯${RESET}"
-    printf '%s' "$buf"
+    printf '%s\e[?2026l' "$buf"
 }
 
 # --- a menu ----------------------------------------------------------------------------------
@@ -216,6 +230,7 @@ menu_show() {
         case "${MK[$i]}" in
             gap) PL+=("") ;;
             text) PL+=("${DIM}${ML[$i]}${RESET}") ;;
+            line) PL+=("${ML[$i]}") ;;
             head) PL+=("${BOLD}${T_HEAD}${ML[$i]}${RESET}") ;;
             item)
                 local left="  ${ML[$i]}" right="${MV[$i]}"
@@ -609,12 +624,131 @@ run_installer_ui() {
     done
 }
 
-# each install step: "step 3/7", a bar that fills up to it (animated from the last one), its name
+# --- the install, in the panel ---------------------------------------------------------------
+# While it installs: a bar, the steps (✓ done and how long it took, a spinner on the one it's
+# on, ○ still to come) and the last lines of what it's doing, drawn by a little loop of its own
+# (progress_loop) several times a second. Everything the install prints goes to $PROG_LOG; if it
+# stops halfway, cleanup_terminal shows that log's last lines. Plain output instead (step's own
+# bars) with no terminal, MONOLITH_PLAIN=1, or a sudo that asks every time (a password asked for
+# behind the panel couldn't be seen).
+PROG_ON=false
+PROG_LOG="${PROG_LOG:-$HOME/.cache/monolith/install.log}"
+STEP_PLAN=()        # the steps it will take (install.sh), for the list
+STEP_DONE=()        # the ones it's been through, in order (the last is the one it's on)
+STEP_TIMES=()       # when each started
 STEP_N=0
 STEP_TOTAL=${STEP_TOTAL:-0}
+
+tui_ok() { [ -t 0 ] && [ -t 1 ] && [ "${TERM:-dumb}" != dumb ] && [ -z "${MONOLITH_PLAIN:-}" ]; }
+now_s() { printf -v NOW '%(%s)T' -1; }
+mmss() { printf '%d:%02d' $(( $1 / 60 )) $(( $1 % 60 )); }
+
+# the log's last lines, readable: progress bars' carriage returns as new lines, colours and other
+# terminal codes taken out, empty lines left out
+log_tail() {
+    tail -c 24000 "$PROG_LOG" 2>/dev/null | tr '\r\t' '\n ' \
+        | LC_ALL=C sed -e 's/\x1b\[[0-9;?<=>]*[ -\/]*[@-~]//g' -e 's/\x1b.//g' -e 's/[[:cntrl:]]//g' \
+        | grep -v '^[[:space:]]*$' | tail -n "$1"
+}
+
+# the steps, for the loop that draws them: "d name seconds", "c name started", "p name"
+steps_write() {
+    local i n=${#STEP_DONE[@]} out="" p seen
+    for (( i = 0; i < n; i++ )); do
+        if (( i < n - 1 )); then out+="d ${STEP_TIMES[$((i + 1))]} $(( STEP_TIMES[i + 1] - STEP_TIMES[i] )) ${STEP_DONE[$i]}"$'\n'
+        else out+="c ${STEP_TIMES[$i]} 0 ${STEP_DONE[$i]}"$'\n'; fi
+    done
+    for p in "${STEP_PLAN[@]}"; do
+        seen=false
+        for (( i = 0; i < n; i++ )); do [ "${STEP_DONE[$i]}" = "$p" ] && seen=true; done
+        [ "$seen" = false ] && out+="p 0 0 $p"$'\n'
+    done
+    printf '%s' "$out" > "$PROG_DIR/steps.new" && mv -f "$PROG_DIR/steps.new" "$PROG_DIR/steps"
+}
+
+progress_begin() {   # progress_begin TITLE
+    tui_ok || return 0
+    if [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null && ! sudo -n true 2>/dev/null; then return 0; fi
+    mkdir -p "${PROG_LOG%/*}" && : > "$PROG_LOG" || return 0
+    PROG_DIR=$(mktemp -d 2>/dev/null) || return 0
+    PROG_TITLE=$1
+    now_s; PROG_T0=$NOW
+    : > "$PROG_DIR/steps"
+    tui_begin
+    exec 3>&1 4>&2 >>"$PROG_LOG" 2>&1
+    PROG_ON=true
+    ( trap - EXIT INT TERM; progress_loop ) >&3 2>/dev/null &
+    PROG_PID=$!
+}
+progress_end() {
+    [ "$PROG_ON" = true ] || return 0
+    PROG_ON=false
+    kill "$PROG_PID" 2>/dev/null; wait "$PROG_PID" 2>/dev/null
+    exec 1>&3 2>&4 3>&- 4>&-
+    rm -rf "$PROG_DIR"
+}
+
+progress_loop() {
+    local f=0 spin=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
+    while true; do
+        progress_frame "${spin[$(( f % 10 ))]}"
+        f=$(( f + 1 ))
+        sleep 0.12
+    done
+}
+progress_frame() {
+    local sp=$1 rows=() r st t0 dur name i d=0 cur=0 n
+    mapfile -t rows < "$PROG_DIR/steps" 2>/dev/null
+    n=${#rows[@]}; (( n < 1 )) && n=1
+    for r in "${rows[@]}"; do case ${r:0:1} in d) d=$(( d + 1 )) ;; c) cur=1 ;; esac; done
+    now_s
+    term_size
+    local w=84; (( w > TC - 2 )) && w=$(( TC - 2 ))
+    local inner=$(( w - 4 ))
+    # the bar: half a step for the one it's on
+    local right; right="  $d of $n   $(mmss $(( NOW - PROG_T0 )))"
+    local bw=$(( inner - ${#right} )) fill line="" k
+    (( bw < 10 )) && bw=10
+    fill=$(( (2 * d + cur) * bw / (2 * n) ))
+    for (( k = 0; k < bw; k++ )); do
+        if (( k < fill )); then grad_set "$k" "$bw"; line+="$GA━"; else line+="${RESET}${DIM}─"; fi
+    done
+    PL=("${line}${RESET}${DIM}${right}${RESET}" "")
+    for r in "${rows[@]}"; do
+        read -r st t0 dur name <<<"$r"
+        local left rt=""
+        case $st in
+            d) left="  ${T_ON}✓${RESET} ${name}"; rt="${DIM}$(mmss "$dur")${RESET}" ;;
+            c) left="  ${BOLD}${T_ACC}${sp}${RESET} ${BOLD}${name}${RESET}"; rt="${T_ACC2}$(mmss $(( NOW - t0 )))${RESET}" ;;
+            *) left="  ${DIM}○ ${name}${RESET}" ;;
+        esac
+        vlen "$left"; local a=$VL; vlen "$rt"
+        printf -v line '%s%*s%s' "$left" $(( inner - a - VL - 1 )) '' "$rt"
+        PL+=("$line")
+    done
+    # what it's doing: as many of the log's last lines as fit (room left for the logo when it can)
+    local base=$(( ${#PL[@]} + 4 )) nl
+    nl=$(( TR - base - 10 )); (( nl < 5 )) && nl=$(( TR - base - 1 ))
+    (( nl > 12 )) && nl=12; (( nl < 2 )) && nl=2
+    PL+=("" "${T_BORDER}$(rule_of "$inner")${RESET}")
+    local logs=()
+    mapfile -t logs < <(log_tail "$nl")
+    for (( i = 0; i < nl; i++ )); do PL+=("${DIM}${logs[$i]:-}${RESET}"); done
+    panel_draw "$PROG_TITLE" "log: ${PROG_LOG/#$HOME/\~}" "$w"
+}
+
+# each install step: in the panel, the list moves on; plain, "3/7", a bar that fills up to it
+# (animated from the last one) and its name
 step() {
     STEP_N=$(( STEP_N + 1 ))
     local total=$STEP_TOTAL; [ "$total" -lt "$STEP_N" ] && total=$STEP_N
+    if [ "$PROG_ON" = true ]; then
+        now_s
+        STEP_DONE+=("$1"); STEP_TIMES+=("$NOW")
+        steps_write
+        printf '\n==> %s\n' "$1"
+        return 0
+    fi
     local w=30 from=$(( (STEP_N - 1) * 30 / total )) to=$(( STEP_N * 30 / total )) f i bar
     printf "\n"
     for (( f = from; f <= to; f++ )); do
@@ -628,8 +762,7 @@ step() {
     printf "\n"
 }
 
-# a panel printed where the text is (the finish screen, after the install's own output), in the
-# middle across: the lines in PL
+# a panel printed where the text is (the plain finish screen), in the middle across: the lines in PL
 panel_inline() {
     local title=$1 w=$2 i
     term_size
@@ -646,20 +779,22 @@ panel_inline() {
     INLINE_MARGIN=$m
 }
 
-draw_completion_screen() {
-    cleanup_terminal
-    printf "\n"
-    local w=84 inner=80 line
-    PL=("")
-    grad_build "Monolith $TARGET_VERSION ($TARGET_COMMIT) is installed."
-    PL+=("${BOLD}${GL}" "${DIM}really good desktop :3${RESET}" "")
+# what the finish screen says, in DONE_LINES (formatted lines; the messages wrapped to `inner`)
+completion_lines() {
+    local inner=$1 line k
+    DONE_LINES=("")
+    if [ "$UPDATE_ONLY" = true ]; then grad_build "Monolith is up to date: $TARGET_VERSION ($TARGET_COMMIT)."
+    else grad_build "Monolith $TARGET_VERSION ($TARGET_COMMIT) is installed."; fi
+    DONE_LINES+=("${BOLD}${GL}" "${DIM}really good desktop :3${RESET}" "")
     if [ ${#FAILED_PKGS[@]} -gt 0 ]; then
-        PL+=("${BOLD}${C_RED}These packages failed to install:${RESET}")
-        for fp in "${FAILED_PKGS[@]}"; do PL+=("  ${C_YELLOW}• ${fp}${RESET}"); done
-        PL+=("")
+        DONE_LINES+=("${BOLD}${C_RED}These packages failed to install:${RESET}")
+        for k in "${FAILED_PKGS[@]}"; do DONE_LINES+=("  ${C_YELLOW}• ${k}${RESET}"); done
+        DONE_LINES+=("")
     fi
     local msgs=()
-    if [ "$DESKTOP" = hyprland ] && [ "$MONOLITH_STARTED" = true ]; then
+    if [ "$UPDATE_ONLY" = true ]; then
+        msgs+=("A restart makes sure everything (keybinds, login screen, services) uses the new version.")
+    elif [ "$DESKTOP" = hyprland ] && [ "$MONOLITH_STARTED" = true ]; then
         msgs+=("Monolith is running again on Hyprland, updated."
                "Your keys are in the welcome tour (monolith welcome). \`monolith hyprland off\` puts your old config back.")
     elif [ "$DESKTOP" = hyprland ]; then
@@ -673,26 +808,67 @@ draw_completion_screen() {
                "Super+Space opens the hub: search, settings and everything else.")
     fi
     # niri chosen, Hyprland here too
-    if [ "$DESKTOP" != hyprland ] && hypr_present && ! hypr_switched; then
+    if [ "$UPDATE_ONLY" != true ] && [ "$DESKTOP" != hyprland ] && hypr_present && ! hypr_switched; then
         msgs+=("To use Monolith on Hyprland too: \`monolith hyprland on\` (backs up ~/.config/hypr first).")
     fi
-    msgs+=("Run \`monolith installer\` any time to update or change these choices.")
-    term_size
-    (( w > TC - 2 )) && { w=$(( TC - 2 )); inner=$(( w - 4 )); }
+    [ "$UPDATE_ONLY" = true ] || msgs+=("Run \`monolith installer\` any time to update or change these choices.")
     for line in "${msgs[@]}"; do
         wrap "$line" "$inner"
-        local k; for k in "${WRAP[@]}"; do PL+=("$k"); done
-        PL+=("")
+        for k in "${WRAP[@]}"; do DONE_LINES+=("$k"); done
+        DONE_LINES+=("")
     done
+}
+
+do_reboot() { systemctl reboot 2>/dev/null || loginctl reboot 2>/dev/null || sudo reboot; }
+
+# The finish screen: in the panel (Later / Restart now) after the install ran in it, else printed
+draw_completion_screen() {
+    local w=84
+    if [ "$TUI_ON" = true ]; then
+        term_size
+        (( w > TC - 2 )) && w=$(( TC - 2 ))
+        completion_lines $(( w - 4 ))
+        # (keys pressed while it installed thrown away: a stray Enter mustn't restart the PC)
+        while read -rsn1 -t 0.05 _ 2>/dev/null; do :; done
+        MENU_CUR=0
+        local pick="" l
+        while true; do
+            menu_reset
+            for l in "${DONE_LINES[@]}"; do menu_add line "$l"; done
+            menu_add btn "Later" "" "Close the installer and keep going; restart whenever you like." later
+            menu_add btn "Restart now" "" "Restart the computer now, so everything starts with the new version." reboot
+            menu_show "$([ "$UPDATE_ONLY" = true ] && echo Updated || echo Done)" "$w"
+            case "$MENU_PICK" in later|exit|reboot) pick=$MENU_PICK; break ;; esac
+        done
+        cleanup_terminal
+        if [ "$UPDATE_ONLY" = true ]; then
+            printf '%s%sMonolith is up to date (%s).%s\n' "$BOLD" "$C_GREEN" "$TARGET_VERSION" "$RESET"
+        else
+            printf '%s%sMonolith %s is installed.%s\n' "$BOLD" "$C_GREEN" "$TARGET_VERSION" "$RESET"
+        fi
+        [ ${#FAILED_PKGS[@]} -gt 0 ] && printf '%sThese packages failed to install: %s%s\n' "$C_RED" "${FAILED_PKGS[*]}" "$RESET"
+        printf '%sWhat the install printed: %s%s\n' "$DIM" "$PROG_LOG" "$RESET"
+        if [ "$pick" = reboot ]; then do_reboot
+        elif [ "$UPDATE_ONLY" = true ] && command -v notify-send >/dev/null 2>&1; then
+            notify-send -a "Monolith" "Monolith updated to $TARGET_VERSION" "Restart later so keybinds, login screen and services pick it up." 2>/dev/null || true
+        fi
+        return 0
+    fi
+
+    cleanup_terminal
+    printf "\n"
+    term_size
+    (( w > TC - 2 )) && w=$(( TC - 2 ))
+    completion_lines $(( w - 4 ))
+    PL=("${DONE_LINES[@]}")
     panel_inline "Done" "$w"
     printf "\n"
-
     local choice=""
     if [ -t 0 ]; then
         read -r -p "${INLINE_MARGIN}  Restart your computer now? [y/N] " choice
     elif [ -e /dev/tty ]; then
         { read -r -p "${INLINE_MARGIN}  Restart your computer now? [y/N] " choice; } 2>/dev/null < /dev/tty
     fi
-    [[ "$choice" =~ ^[Yy]$ ]] && { systemctl reboot 2>/dev/null || loginctl reboot 2>/dev/null || sudo reboot; }
+    [[ "$choice" =~ ^[Yy]$ ]] && do_reboot
     return 0
 }
