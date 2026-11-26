@@ -784,7 +784,16 @@ Item {
                     required property var modelData
                     spacing: bar.vertical ? 0 : 3
                     Icon { visible: bar.mopt("stats.icons", true) === true; name: modelData[1]; size: 15; color: Theme.subtext }
-                    Label { renderType: bar.only ? Text.QtRendering : Text.NativeRendering; text: modelData[2]; font.pixelSize: Theme.sizeSmall }
+                    // (as wide as its widest value, 100 %: the number changing width moved
+                    // everything after it, and a bar that fits its modules changed length)
+                    Label {
+                        id: statText
+                        renderType: bar.only ? Text.QtRendering : Text.NativeRendering
+                        text: modelData[2]; font.pixelSize: Theme.sizeSmall
+                        width: bar.vertical ? implicitWidth : Math.max(implicitWidth, widest.width)
+                        horizontalAlignment: Text.AlignRight
+                        TextMetrics { id: widest; font: statText.font; text: "100" + modelData[2].slice(-1) }
+                    }
                 }
             }
         }

@@ -142,6 +142,20 @@ ColumnLayout {
                     }
                     Label { visible: card.mods.length === 0; height: 34; verticalAlignment: Text.AlignVCenter; text: "Empty: add modules below (an empty one isn't shown)"; muted: true }
                 }
+                // when it shows: the bar's choices, and "like the bar" (it goes with the bar)
+                Item {
+                    width: col.width; height: 40
+                    Label { anchors.verticalCenter: parent.verticalCenter; text: "When it shows"; font.pixelSize: Theme.sizeSmall }
+                    Dropdown {
+                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                        width: 250
+                        opts: [["bar", "Like the bar", "Goes away and comes back with the bar"], ["always", "Always", "There all the time"],
+                               ["dodge", "Dodge windows", "Out of the way while a window is where it sits"],
+                               ["edge", "Only when you touch the edge", "Away until you touch its edge"]]
+                        value: ["always", "dodge", "edge"].indexOf(String(card.modelData.show || "")) !== -1 ? String(card.modelData.show) : "bar"
+                        onPicked: v => page.setOf(card.index, "show", v)
+                    }
+                }
                 Item {
                     width: col.width; height: 40
                     Dropdown {

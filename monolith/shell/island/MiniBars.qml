@@ -21,7 +21,8 @@ PanelWindow {
     // (a list, whatever the file holds: anything else is no mini bars)
     readonly property var all: { const v = Store.get("bar.minis", []); return v && typeof v === "object" && v.length !== undefined ? Array.prototype.slice.call(v) : []; }
     // the ones to draw (with something in them), each with its place in the list kept
-    readonly property var minis: all.map((m, i) => ({ i: i, place: places.indexOf(m && m.place) !== -1 ? m.place : "top-right", modules: (m && m.modules ? Array.prototype.slice.call(m.modules) : []).filter(k => k !== "taskbar"), reserve: !!(m && m.reserve) }))
+    readonly property var minis: all.map((m, i) => ({ i: i, place: places.indexOf(m && m.place) !== -1 ? m.place : "top-right", modules: (m && m.modules ? Array.prototype.slice.call(m.modules) : []).filter(k => k !== "taskbar"), reserve: !!(m && m.reserve),
+                                     show: m && ["always", "dodge", "edge"].indexOf(m.show) !== -1 ? m.show : "bar" }))
         .filter(m => m.modules.length > 0)
     readonly property var places: ["top-left", "top", "top-right", "left", "right", "bottom-left", "bottom", "bottom-right"]
     readonly property bool barHere: (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) === -1
@@ -47,6 +48,15 @@ PanelWindow {
         Region { item: !win.editing && rep.count > 5 ? rep.itemAt(5) : null }
         Region { item: !win.editing && rep.count > 6 ? rep.itemAt(6) : null }
         Region { item: !win.editing && rep.count > 7 ? rep.itemAt(7) : null }
+        // (the edge strips of the ones that come back when touched)
+        Region { item: sens.count > 0 && sens.itemAt(0).live ? sens.itemAt(0) : null }
+        Region { item: sens.count > 1 && sens.itemAt(1).live ? sens.itemAt(1) : null }
+        Region { item: sens.count > 2 && sens.itemAt(2).live ? sens.itemAt(2) : null }
+        Region { item: sens.count > 3 && sens.itemAt(3).live ? sens.itemAt(3) : null }
+        Region { item: sens.count > 4 && sens.itemAt(4).live ? sens.itemAt(4) : null }
+        Region { item: sens.count > 5 && sens.itemAt(5).live ? sens.itemAt(5) : null }
+        Region { item: sens.count > 6 && sens.itemAt(6).live ? sens.itemAt(6) : null }
+        Region { item: sens.count > 7 && sens.itemAt(7).live ? sens.itemAt(7) : null }
     }
     Item { id: full; anchors.fill: parent }
 
@@ -149,16 +159,30 @@ PanelWindow {
             readonly property real homeY: vert ? Math.round((win.height - win.group(place)) / 2) + off
                 : (place.startsWith("top") ? win.room("top") : win.height - height - win.room("bottom"))
             property bool dragging: false
+            // when it shows (Settings → Mini bars): like the bar (it goes and comes back with an
+            // auto-hidden or dodging bar), always, out of the way of windows, or only when you touch
+            // its edge, there where it sits (its own strip, `sens`)
+            readonly property string showMode: modelData.show
+            readonly property Item sensor: sens.count > index ? sens.itemAt(index) : null
+            readonly property bool touching: pillHover.hovered || (!!sensor && sensor.hovered)
+            readonly property bool dodged: showMode === "dodge" && Niri.overlaps(win.modelData.name, homeX, homeY, width, height)
+            readonly property bool tuckedHere: !win.editing && !dragging && (showMode === "bar" ? win.tucked
+                : (showMode === "always" ? false : (showMode === "edge" || dodged) && !touching))
+            HoverHandler { id: pillHover }
+            // (going and coming back: the bar's pace, no spring)
+            property bool tuckMoving: false
+            onTuckedHereChanged: { tuckMoving = true; tuckTimer.restart(); }
+            Timer { id: tuckTimer; interval: Theme.moveMs + 100; onTriggered: pill.tuckMoving = false }
             // (wholly on the screen: only then does it get blur behind it, see below)
-            readonly property bool inside: !win.tucked && opacity > 0.99 && x >= 0 && y >= 0 && x + width <= win.width && y + height <= win.height
+            readonly property bool inside: !tuckedHere && opacity > 0.99 && x >= 0 && y >= 0 && x + width <= win.width && y + height <= win.height
             property point grab: Qt.point(0, 0)
             property point at: Qt.point(0, 0)
             // (tucked: off its own edge)
-            readonly property real away: win.tucked ? (vert ? width : height) + win.room(edge) + 8 : 0
+            readonly property real away: tuckedHere ? (vert ? width : height) + win.room(edge) + 8 : 0
             x: dragging ? at.x - grab.x : homeX + (edge === "left" ? -away : (edge === "right" ? away : 0))
             y: dragging ? at.y - grab.y : homeY + (edge === "top" ? -away : (edge === "bottom" ? away : 0))
-            Behavior on x { enabled: !pill.dragging && Theme.animOn; NumberAnimation { duration: win.tuckMoving ? Theme.moveMs : Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: win.tuckMoving ? Theme.standardCurve : Theme.springyCurve } }
-            Behavior on y { enabled: !pill.dragging && Theme.animOn; NumberAnimation { duration: win.tuckMoving ? Theme.moveMs : Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: win.tuckMoving ? Theme.standardCurve : Theme.springyCurve } }
+            Behavior on x { enabled: !pill.dragging && Theme.animOn; NumberAnimation { duration: pill.tuckMoving ? Theme.moveMs : Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: pill.tuckMoving ? Theme.standardCurve : Theme.springyCurve } }
+            Behavior on y { enabled: !pill.dragging && Theme.animOn; NumberAnimation { duration: pill.tuckMoving ? Theme.moveMs : Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: pill.tuckMoving ? Theme.standardCurve : Theme.springyCurve } }
             z: dragging ? 50 : 10
             scale: dragging ? 1.04 : 1
             Behavior on scale { NumberAnimation { duration: Theme.fastMs } }
@@ -208,6 +232,27 @@ PanelWindow {
                 }
                 onCanceled: { pill.dragging = false; win.dragSpot = ""; }
             }
+        }
+    }
+
+    // each mini bar's own strip along its edge, where it sits: touching it brings back one set to
+    // dodge windows or to show only at its edge (out, the strip reaches up to it, so moving onto
+    // it from the edge doesn't send it away again)
+    Repeater {
+        id: sens
+        model: win.minis
+        Item {
+            required property int index
+            readonly property Item pill: rep.count > index ? rep.itemAt(index) : null
+            readonly property bool live: !!pill && !win.editing && (pill.showMode === "dodge" || pill.showMode === "edge")
+            readonly property bool hovered: hov.hovered
+            readonly property real t: !pill ? 3 : (pill.tuckedHere ? 3 : win.room(pill.edge) + 2)
+            visible: live
+            x: !pill ? 0 : (pill.edge === "left" ? 0 : (pill.edge === "right" ? win.width - t : pill.homeX))
+            y: !pill ? 0 : (pill.edge === "top" ? 0 : (pill.edge === "bottom" ? win.height - t : pill.homeY))
+            width: !pill ? 0 : (pill.vert ? t : pill.width)
+            height: !pill ? 0 : (pill.vert ? pill.height : t)
+            HoverHandler { id: hov }
         }
     }
 

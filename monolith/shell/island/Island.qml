@@ -174,7 +174,13 @@ PanelWindow {
     property real pageH: 200
     readonly property real wantPageH: currentPage ? currentPage.implicitHeight : -1
     onWantPageHChanged: if (wantPageH >= 0) pageH = wantPageH
-    readonly property real restW: Theme.barWidth(width, bar.needWidth)
+    readonly property real restWant: Theme.barWidth(width, bar.needWidth)
+    // (a bar that fits its modules: bigger at once, smaller only once it's stayed so a few seconds.
+    // Numbers changing width (a clock, a percentage) made it grow and shrink all the time, and
+    // everything on it, a taskbar's apps too, moved with it)
+    property real restW: restWant
+    onRestWantChanged: { if (Theme.barLengthMode !== "fit" || restWant > restW || !Theme.animOn) { shrinkLater.stop(); restW = restWant; } else if (restWant < restW) shrinkLater.restart(); }
+    Timer { id: shrinkLater; interval: 3000; onTriggered: win.restW = win.restWant }
     readonly property bool barShort: restW < width - 2 * Theme.barMargin - 1   // a full bar that doesn't reach the screen's sides
     // the bar can be off on some screens (Settings → Bar); menus still open there
     // (a bar down the side is its own window, SideBar: the island then only holds the menus)
