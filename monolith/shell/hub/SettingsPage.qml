@@ -494,7 +494,7 @@ Page {
                 onImplicitHeightChanged: Qt.callLater(() => { if (hyNote.parent) hyNote.parent.noteH = hyNote.implicitHeight; })
                 Component.onCompleted: parent.noteH = implicitHeight
                 text: (parent.niriPages[page.file] || "") + ": these settings are niri's, so they apply when you log into niri. On Hyprland, set them in ~/.config/hypr/hyprland.conf."
-                      + (page.file === "Input" ? " Mouse scroll speed and Menu scroll speed work on Hyprland too." : "")
+                      + (page.file === "Input" ? " Keyboard languages, Mouse scroll speed and Menu scroll speed work on Hyprland too." : "")
             }
         }
         Flickable {
