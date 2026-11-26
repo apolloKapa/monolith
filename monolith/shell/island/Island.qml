@@ -1186,8 +1186,12 @@ PanelWindow {
                : Theme.fxUnfold ? (win.shown || unfold > 0.02 ? 1 : 0) : (Theme.cyber ? (win.shown || win.cardZoom > 0.002 ? 1 : 0) : win.cardFade)
         // How menus open (Theme.menuAnim), driven by cardZoom (0 … 1), and back the same way
         // (Dynamic, from a module of the bar: in any style. With nothing to come out of, the usual way)
-        readonly property bool dyn: joined === "" && Theme.animOn && Theme.menuAnim === "dynamic" && !!win.dynFrom
-        readonly property string anim: joined !== "" ? "edge" : dyn ? "dynamic"
+        // (Desktop mode's start menu has its own: it rises out of the taskbar, straight, as one
+        // piece. Grown out of the start button it came in from off to the side, the button not
+        // being under the menu's middle)
+        readonly property bool startMenu: Desk.on && win.cardPage === "search" && joined === ""
+        readonly property bool dyn: joined === "" && !startMenu && Theme.animOn && Theme.menuAnim === "dynamic" && !!win.dynFrom
+        readonly property string anim: joined !== "" ? "edge" : startMenu && Theme.animOn && !Theme.cyber ? "rise" : dyn ? "dynamic"
             : (Theme.animOn && !Theme.cyber ? (Theme.menuAnim === "dynamic" ? "zoom" : Theme.menuAnim) : "none")
         // Dynamic: the module itself grows into the menu. A shape (`shell`, below) starts as the
         // module's own box and changes its real size and place into the menu's, quickly, a touch
@@ -1222,6 +1226,7 @@ PanelWindow {
         scale: dyn || joined !== "" ? 1 : Theme.fxKind === "fjord" ? 0.94 + 0.06 * (1 - Math.pow(1 - fjordIn, 3))
              : anim === "zoom" ? Theme.popScale + (1 - Theme.popScale) * win.cardZoom
              : anim === "pop" ? 0.84 + 0.16 * backOut(win.cardZoom)
+             : anim === "rise" ? 0.95 + 0.05 * win.cardZoom
              : 1
         transform: [
             Scale {
@@ -1230,9 +1235,13 @@ PanelWindow {
                 xScale: Theme.fxUnfold && floatCard.joined === "" ? 0.96 + 0.04 * floatCard.unfold : 1
             },
             Translate {
-                x: floatCard.dyn ? 0 : floatCard.joined === "left" ? -floatCard.slideBy : (floatCard.joined === "right" ? floatCard.slideBy : 0)
+                // (rise: from the taskbar's side, whichever edge it's on)
+                readonly property real rise: floatCard.anim === "rise" ? (1 - win.cardZoom) * 56 : 0
+                x: floatCard.dyn ? 0 : floatCard.joined === "left" ? -floatCard.slideBy : (floatCard.joined === "right" ? floatCard.slideBy
+                    : (Theme.barEdge === "left" ? -rise : (Theme.barEdge === "right" ? rise : 0)))
                 y: floatCard.dyn ? 0 : floatCard.joined === "bottom" ? floatCard.slideBy
-                    : floatCard.anim === "slide" ? (1 - win.cardZoom) * 40 : (floatCard.anim === "drop" ? -(1 - win.cardZoom) * 40 : 0)
+                    : floatCard.anim === "slide" ? (1 - win.cardZoom) * 40 : (floatCard.anim === "drop" ? -(1 - win.cardZoom) * 40
+                    : (Theme.barEdge === "bottom" ? rise : (Theme.barEdge === "top" ? -rise : 0)))
             }
         ]
         Rectangle {
