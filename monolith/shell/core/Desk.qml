@@ -5,7 +5,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 // Desktop mode (Settings → Desktop → Desktop mode; experimental): the shell as a desktop. The bar
-// goes to the taskbar's edge (where the dock is, unless you pick another) and spreads across it,
+// goes to the taskbar's edge (where the dock is, unless you pick another), in its own style,
 // the dock sinks into it and becomes its middle (island/TaskStrip.qml: a start button and your
 // apps), the launcher gets a rail of buttons down its side, and windows float like on a desktop:
 // they open floating, apps draw their own title bars with minimise, maximise and close, and a
@@ -42,6 +42,8 @@ Singleton {
         return Store.raw("dock.enabled", true) !== false ? dockOwnEdge : "bottom";
     }
     readonly property bool vertical: edge === "left" || edge === "right"
+    // the middle of the taskbar, from the screen's edge (a floating bar is off the edge by its margin)
+    readonly property real bandMid: Theme.barMargin + size / 2
     // how thick it is
     readonly property real size: Math.max(40, Math.min(72, Number(Store.raw("desktop.height", 48)) || 48))
     // windows open floating; apps draw their own title bars (minimise, maximise, close)
@@ -65,16 +67,18 @@ Singleton {
             ? { left: ["taskbar"], leftMid: [], center: [], midRight: [], right: left.concat(right), free: [], outLeft: [], outRight: [] }
             : { left: left, leftMid: [], center: ["taskbar"], midRight: [], right: right, free: [], outLeft: [], outRight: [] };
         return {
+            // (your bar's own style stays: the Frame's round inside corners, an island, a floating
+            // bar, pills; only where it is and how tall it is are the taskbar's)
             "bar.position": edge,
-            "bar.style": "fill",
-            "bar.lengthMode": "percent",
-            "bar.length": 1,
             "bar.height": size,
             "bar.modules": mods,
             "status.autohide": false,
             "dock.exclusive": false,
-            // the start menu comes up out of the taskbar, over its start button
-            "menus.barPlaces.search": appsAt === "start" ? "start" : "center"
+            // the start menu: a card just off the taskbar, over its start button (above a bottom
+            // taskbar, under a top one, beside a side one), opening the way your menus do
+            "menus.barPlaces.search": "off",
+            "menus.positions.search": appsAt === "start" ? "top-left" : "top-center",
+            "menus.moved.search": null
         };
     }
     // (handed on only when they really change: every saved setting makes them anew, and each new
@@ -289,7 +293,22 @@ Singleton {
                 + "if not MonolithDesk.min then MonolithDesk.min = hl.on(\"window.minimize\", function(w, m) "
                 +   "if not MonolithDesk.on or not w or m == false or m == 0 then return end; "
                 +   "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; "
-                +   "hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = \"address:\" .. a })) end) end";
+                +   "hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = \"address:\" .. a })) end) end; "
+                + sizesLua() + " "
+                // a window opening: the size its app had last, or, opening as big as the screen
+                // (a terminal that asks for no size), a size like a window's, centred
+                + "if not MonolithDesk.open then MonolithDesk.open = hl.on(\"window.open\", function(w) "
+                +   "if not MonolithDesk.on or not w or not w.floating then return end; "
+                +   "local m = w.monitor; local z = w.size; local ww, wh = 0, 0; "
+                +   "if type(z) == \"table\" then ww = z[1] or z.x or 0; wh = z[2] or z.y or 0 end; "
+                +   "if ww < 300 or wh < 200 then return end; "
+                +   "local s = MonolithDesk.sizes and MonolithDesk.sizes[string.lower(tostring(w.class))]; "
+                +   "if not s and m and ww >= m.width * 0.8 and wh >= m.height * 0.8 then s = { math.floor(m.width * 0.62), math.floor(m.height * 0.68) } end; "
+                +   "if not s then return end; "
+                +   "local sw, sh = s[1], s[2]; if m then sw = math.min(sw, m.width - 40); sh = math.min(sh, m.height - 80) end; "
+                +   "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; "
+                +   "hl.dispatch(hl.dsp.window.resize({ x = sw, y = sh, window = \"address:\" .. a })); "
+                +   "hl.dispatch(hl.dsp.window.center({ window = \"address:\" .. a })) end) end";
             Quickshell.execDetached(["hyprctl", "eval", lua]);
         } else if (want && floating) {
             // (the rule's wording changed in 0.53: both are sent, the one it doesn't know is refused)
@@ -299,6 +318,54 @@ Singleton {
             Quickshell.execDetached(["sh", "-c", "hyprctl reload"]);
         }
     }
+    // ── each app's window size, remembered (Store desktop.sizes: app id, lower case → [w, h]) ──
+    // noted as windows change (niri says when one is resized; Hyprland's sizes come with its other
+    // window events, a focus change among them), so the next window of that app opens that big.
+    // Not a maximised or minimised one, not a little one (a dialog)
+    readonly property var sizes: Store.raw("desktop.sizes", null) || ({})
+    Timer { id: sizeLater; interval: 900; onTriggered: desk.noteSizes() }
+    Connections { target: Niri; function onWindowsChanged() { if (desk.on && desk.floating) sizeLater.restart(); } }
+    function noteSizes() {
+        const cur = Object.assign({}, sizes);
+        let changed = false;
+        // (the window you're in last: its size wins over another of the same app's)
+        const ids = Object.keys(Niri.windows).sort((a, b) => (Niri.windows[a].is_focused ? 1 : 0) - (Niri.windows[b].is_focused ? 1 : 0));
+        for (const k of ids) {
+            const w = Niri.windows[k];
+            if (!w || !w.is_floating || w.is_fullscreen || isMin(w)) continue;
+            const sz = w.layout ? w.layout.window_size : null;
+            const id = String(w.app_id || "").toLowerCase();
+            if (!sz || id === "" || sz[0] < 300 || sz[1] < 200) continue;
+            const ws = Niri.workspaces.find(x => x.id === w.workspace_id);
+            const scr = ws ? Quickshell.screens.find(x => x.name === ws.output) : null;
+            if (scr && (sz[0] >= scr.width * 0.95 || sz[1] >= scr.height * 0.88)) continue;
+            const v = [Math.round(sz[0]), Math.round(sz[1])];
+            if (!cur[id] || cur[id][0] !== v[0] || cur[id][1] !== v[1]) { cur[id] = v; changed = true; }
+        }
+        if (changed) Store.set("desktop.sizes", cur);
+    }
+    function sizesLua() {
+        const parts = [];
+        for (const id in sizes) {
+            const v = sizes[id];
+            if (v && v.length === 2) parts.push("[" + JSON.stringify(id) + "] = { " + Math.round(v[0]) + ", " + Math.round(v[1]) + " }");
+        }
+        return "MonolithDesk.sizes = { " + parts.join(", ") + " };";
+    }
+    // (Hyprland: the table in it kept up to date)
+    onSizesChanged: if (on && Niri.hyprland && Niri.hyprLua && Niri.hyprKnown) Quickshell.execDetached(["hyprctl", "eval", "MonolithDesk = MonolithDesk or {}; " + sizesLua()])
+    // (niri: a rule per app, core/NiriShell.qml)
+    function regexEscape(t) { return String(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+    readonly property string niriSizeRules: {
+        let out = "";
+        for (const id in sizes) {
+            const v = sizes[id];
+            if (!v || v.length !== 2 || /["#]/.test(id)) continue;
+            out += "window-rule {\n    match app-id=r#\"(?i)^" + regexEscape(id) + "$\"#\n    default-column-width { fixed " + Math.round(v[0]) + "; }\n    default-window-height { fixed " + Math.round(v[1]) + "; }\n}\n";
+        }
+        return out;
+    }
+
     Connections {
         target: Niri.hyprland ? Hyprland : null
         function onRawEvent(ev) {

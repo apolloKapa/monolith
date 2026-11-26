@@ -285,7 +285,7 @@ PanelWindow {
         color: Qt.alpha(Theme.card, (dock.ownGlass ? 0.08 * opacityBg : opacityBg) * (1 - dock.fz))
         // sinking into Desktop mode's taskbar: to the middle of its strip, down to its size
         readonly property real fk: 1 + dock.fz * ((Desk.size - 6) / cell - 1)
-        readonly property real fd: dock.fz * (dock.margin + (dock.vertical ? width : height) / 2 - Desk.size / 2)
+        readonly property real fd: dock.fz * (dock.margin + (dock.vertical ? width : height) / 2 - Desk.bandMid)
         transform: [
             Scale { origin.x: capsule.width / 2; origin.y: capsule.height / 2; xScale: capsule.fk; yScale: capsule.fk },
             Translate {

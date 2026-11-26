@@ -15,7 +15,7 @@ ColumnLayout {
     SettingRow {
         show: Desk.on
         icon: "desktop_windows"; title: "Desktop mode is on"
-        desc: "The taskbar has the bar's place, style, height and middle while it's on; what you change here is kept for when it's off"
+        desc: "The taskbar is your bar, in its style, at the taskbar's edge with the apps in its middle; what you change here is kept (place and height come back when it's off)"
         Button { text: "Desktop mode"; icon: "arrow_forward"; onClicked: HubState.settingsSection = "desktopmode" }
     }
     readonly property var names: ({

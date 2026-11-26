@@ -64,8 +64,14 @@ ColumnLayout {
     SettingRow {
         key: "desktop.floating"; def: true;
         icon: "picture_in_picture"; title: "Windows float"
-        desc: "Windows open floating, like on a desktop, and the ones already open float too (they go back into their tiles when Desktop mode is off)"
+        desc: "Windows open floating, like on a desktop, and the ones already open float too (they go back into their tiles when Desktop mode is off). Each app's windows open as big as you last made them"
         Toggle { checked: Desk.floating; onToggled: on => Store.set("desktop.floating", on) }
+    }
+    SettingRow {
+        key: "desktop.sizes";
+        icon: "aspect_ratio"; title: "Remembered window sizes"
+        desc: Object.keys(Desk.sizes).length === 0 ? "None yet: resize a window and the next one of that app opens that big" : Object.keys(Desk.sizes).length + " apps open at the size you last made them"
+        Button { visible: Object.keys(Desk.sizes).length > 0; text: "Forget them"; onClicked: Store.unset("desktop.sizes") }
     }
     SettingRow {
         key: "desktop.titlebars"; def: true;
@@ -81,6 +87,6 @@ ColumnLayout {
     }
     SettingRow {
         icon: "info"; title: "Your bar and dock"
-        desc: "Desktop mode doesn't change their settings: it stands in for the ones it needs while it's on (position, style, height, the middle of the bar), and they're as you left them when it's off"
+        desc: "Desktop mode doesn't change their settings: the taskbar keeps your bar's style (Bar → Style), and it only stands in for where the bar is, how tall it is and its middle while it's on. They're as you left them when it's off"
     }
 }

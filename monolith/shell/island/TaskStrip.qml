@@ -26,6 +26,8 @@ Grid {
     readonly property real fullCell: Math.max(28, Theme.islandH - 6)
     readonly property real cell: { const n = apps.length + 1; return Math.floor(Math.max(24, Math.min(fullCell, ((host ? host.taskRoom : 1e6) - spacing * (n - 1)) / n))); }
     readonly property string edge: Theme.barEdge
+    // (the start menu comes out of the start button: IslandBar.moduleBox)
+    readonly property Item menuFrom: start
 
     // the dock's pinned apps, then the open ones that aren't
     readonly property var pinned: Store.get("dock.pinned", null) || Prefs.dockApps.map(a => ({ id: a.desktop_id, name: a.name, icon: a.icon }))

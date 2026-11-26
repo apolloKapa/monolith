@@ -42,12 +42,25 @@ Scope {
         // (the bar's band is along the bottom when the bar is)
         // (or down the side, with a bar there)
         readonly property string band: Theme.barEdge
+        // each side's thickness: the band on the bar's edge, the border on the rest. They glide,
+        // so the band can move to another edge smoothly (Desktop mode switching, core/Desk.qml:
+        // the bar carries its band across meanwhile, and here the band is only the border)
+        component Side: Item {
+            required property string edge
+            readonly property real want: win.band === edge && !Desk.moving ? fr.top : fr.w
+            property real t: want
+            Behavior on t { enabled: Theme.animOn; NumberAnimation { duration: Theme.ms(260); easing.type: Easing.OutCubic } }
+        }
+        Side { id: sideL; edge: "left" }
+        Side { id: sideR; edge: "right" }
+        Side { id: sideT; edge: "top" }
+        Side { id: sideB; edge: "bottom" }
         Item {
             id: hole
-            x: win.band === "left" ? fr.top : fr.w
-            y: win.band === "top" ? fr.top : fr.w
-            width: win.width - (win.band === "left" || win.band === "right" ? fr.top + fr.w : 2 * fr.w)
-            height: win.height - (win.band === "top" || win.band === "bottom" ? fr.top + fr.w : 2 * fr.w)
+            x: sideL.t
+            y: sideT.t
+            width: win.width - sideL.t - sideR.t
+            height: win.height - sideT.t - sideB.t
         }
 
         // the frame: the screen minus the inside

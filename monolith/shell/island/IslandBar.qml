@@ -57,9 +57,11 @@ Item {
         for (let i = 0; i < names.length; i++) {
             const l = modItems[names[i]];
             if (!l || !l.visible || !l.item || l.width < 4 || l.height < 4) continue;
-            const q = l.item.mapToItem(null, 0, 0);
-            if (q.x + l.item.width < 0 || q.y + l.item.height < 0) continue;      // (a bar that's tucked away)
-            return { screen: bar.screenName, x: q.x, y: q.y, w: l.item.width, h: l.item.height, t: Date.now() };
+            // (a module can name the part a menu comes out of: the taskbar's start button)
+            const it = l.item.menuFrom || l.item;
+            const q = it.mapToItem(null, 0, 0);
+            if (q.x + it.width < 0 || q.y + it.height < 0) continue;      // (a bar that's tucked away)
+            return { screen: bar.screenName, x: q.x, y: q.y, w: it.width, h: it.height, t: Date.now() };
         }
         return null;
     }
@@ -377,7 +379,9 @@ Item {
     Component { id: taskC; TaskStrip { host: bar } }
     // the room it has: the bar, less the other zones (it's alone in its own, the middle or the left)
     // (of the screen's room: the bar's own length grows as it's squeezed smaller to fit)
+    // (an island's curved ends hang outside its body: room for them too)
     readonly property real taskRoom: (maxLen > 0 ? Math.min(maxLen, barLen) : barLen) - 2 * Theme.islandPad - freeLen - 2 * gap
+        - (Theme.barStyle === "island" ? 2 * Theme.islandEar + 24 : 0)
         - ((zones.center || []).indexOf("taskbar") !== -1 ? part(leftZone) + part(leftMidZone) + part(midRightZone) + part(rightZone)
                                                           : part(midZone) + part(leftMidZone) + part(midRightZone) + part(rightZone))
 

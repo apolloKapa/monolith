@@ -13,7 +13,7 @@ Singleton {
     readonly property string text: "// Written by Monolith from its settings (Theme → Effects). Changes here are replaced.\n"
         + "blur {\n    passes " + passes + "\n    offset " + (1 + passes * 0.6).toFixed(1) + "\n}\n"
         // Desktop mode (core/Desk.qml): windows open floating
-        + (Desk.on && Desk.floating ? "\n// Desktop mode\nwindow-rule {\n    open-floating true\n}\n" : "")
+        + (Desk.on && Desk.floating ? "\n// Desktop mode\nwindow-rule {\n    open-floating true\n}\n" + Desk.niriSizeRules : "")
     // (niri's only: on Hyprland it made a stray ~/.config/niri with just this file in it)
     onTextChanged: if (Store.loaded && !Niri.hyprland) later.restart()
     Timer { id: later; interval: 500; onTriggered: { file.setText(ns.text); include.running = true; } }

@@ -210,9 +210,7 @@ PanelWindow {
     readonly property string place: {
         Store.revision;
         const p = placeOf(cardPage);
-        // (Desktop mode's start menu always comes up out of the taskbar, as a start menu does)
-        const start = Desk.on && cardPage === "search";
-        return !start && dynFrom && Theme.animOn && Theme.menuAnim === "dynamic" && p.startsWith("bar-") ? floatOf(cardPage) : p;
+        return dynFrom && Theme.animOn && Theme.menuAnim === "dynamic" && p.startsWith("bar-") ? floatOf(cardPage) : p;
     }
     Connections {
         target: HubState
@@ -476,7 +474,9 @@ PanelWindow {
         // a floating bar draws its own rounded background (Solid) or none at all (Modular: its
         // sections have pills), so the hanging shape stays empty
         // the Frame paints the bar's background itself (as part of one shape), so here it's empty
-        readonly property bool empty: Theme.barFloats || ((Theme.frameBand || Theme.frameHide) && !win.grown)
+        // (Desktop mode switching: the Frame's bar takes its band along while it travels to the
+        // other edge, island/Frame.qml thins its own band to the border meanwhile)
+        readonly property bool empty: Theme.barFloats || ((Theme.frameBand || Theme.frameHide) && !win.grown && !Desk.moving)
         // (the bar's own background while it's a bar; grown into a menu it's a menu's)
         readonly property color barCol: win.grown || win.toastGrows ? Theme.frame : Theme.barFill
         fill: empty ? "transparent" : (win.barSolid ? barCol : Qt.alpha(barCol, barCol.a * Theme.barOpacity))
