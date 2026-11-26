@@ -3,9 +3,11 @@
 one, add one, on niri and on Hyprland.
 
     keys.py list                       JSON: {"compositor", "items": [{key, label, section, title, action}]}
-    keys.py change OLD NEW             OLD/NEW like "Super+Shift+S"
+    keys.py change OLD NEW [--replace] OLD/NEW like "Super+Shift+S". A NEW that another shortcut has is
+                                       refused; with --replace that one loses it, in the same step
     keys.py remove KEY
-    keys.py add KEY ACTION_JSON        {"type": "app", "cmd": "firefox"} | {"type": "monolith", "sub": "msg toggle launcher"}
+    keys.py add KEY ACTION_JSON [--replace]
+                                       {"type": "app", "cmd": "firefox"} | {"type": "monolith", "sub": "msg toggle launcher"}
                                        | {"type": "window", "name": "close"} | {"type": "workspace", "n": 3}
     keys.py hypr-apply                 stdin -> stdout: Hyprland's freshly made keybinds with your changes
                                        put back on (the installer runs it after an update)
@@ -160,6 +162,26 @@ def describe_hypr(dispatch):
     m = re.search(r'exec_cmd\(\s*"((?:[^"\\]|\\.)*)"', dispatch) or re.match(r"^exec,\s*(.*)$", dispatch)
     if m:
         return describe_cmd(m.group(1))
+    # Monolith's own Lua for the keys niri has built in (install/modules/hypr_keys.py)
+    if "zoom_factor" in dispatch:
+        return "Zoom in" if "z *" in dispatch else "Zoom out" if "z /" in dispatch else "Zoom toggle"
+    m = re.search(r"monolith_ws_step\(\s*(-?\d+)\s*(,\s*true)?", dispatch)
+    if m:
+        way = "next" if int(m.group(1)) > 0 else "previous"
+        return "Move the window to the %s workspace" % way if m.group(2) else way.capitalize() + " workspace"
+    m = re.search(r'\blayout\("([^"]+)"\)', dispatch)
+    if m:
+        return {"consume_or_expel prev": ACTIONS["consume-or-expel-window-left"], "consume_or_expel next": ACTIONS["consume-or-expel-window-right"],
+                "consume": ACTIONS["consume-window-into-column"], "expel": "Push the window out of the column",
+                "center": ACTIONS["center-visible-columns"], "colresize +conf": "Next width",
+                "colresize -conf": ACTIONS["switch-preset-column-width-back"]}.get(m.group(1), "Layout: " + m.group(1))
+    m = re.search(r'global\("quickshell:monolith-alttab(-back)?"\)', dispatch)
+    if m:
+        return "Switch windows (backwards)" if m.group(1) else "Switch windows"
+    if re.search(r"window\.drag\(\)", dispatch):
+        return "Drag the window with the mouse"
+    if re.search(r"window\.resize\(\)", dispatch):
+        return "Resize the window with the mouse"
     for rx, t in ((r"window\.close|killactive", "Close the window"), (r'mode = "fullscreen"|fullscreen,\s*0', "Fullscreen"),
                   (r'mode = "maximized"|fullscreen,\s*1', "Maximise"), (r"window\.float|togglefloating", "Float or tile the window"),
                   (r"group\.toggle|togglegroup", "Tabbed group"), (r"\bexit\b", "Log out"), (r"dpms", "Turn the screens off")):
@@ -302,6 +324,9 @@ def hypr_items():
             got = hypr_line_key(line, lua)
             if not got:
                 continue
+            # (letting go of Alt ends Alt+Tab: the switcher's own wiring, not a shortcut to change)
+            if "monolith-alttab-done" in got[1]:
+                continue
             pk = parse_key(got[0])
             if not pk:
                 continue
@@ -332,6 +357,10 @@ def apply_ops(text, lua, ops):
     c = "--" if lua else "#"
     for op in ops:
         if op.get("op") == "add":
+            # (after the last line, not after the empty one a file ends with: every added key
+            # used to get a blank line above it)
+            while lines and not lines[-1].strip():
+                lines.pop()
             if c + HEAD not in lines:
                 lines += ["", c + HEAD]
             lines.append(op["lua"] if lua else op["conf"])
@@ -361,20 +390,21 @@ def hypr_errors():
     return "" if r.lower() in ("", "no errors") else r
 
 
-def hypr_change(op):
-    """Apply one change to the keybinds file and remember it (updates replay it); undone if
-    Hyprland then reports a new error."""
+def hypr_change(ops):
+    """Apply a change (or a few that belong together: the other shortcut loses a key, this one
+    takes it) to the keybinds file and remember it (updates replay it); all undone if Hyprland
+    then reports a new error."""
     path, mine, lua = hypr_paths()
     old_text = open(path, encoding="utf-8").read()
-    if op["op"] != "add":
-        c = "--" if lua else "#"
-        if not any((g := hypr_line_key(l, lua)) and same(g[0], op["key"]) for l in old_text.split("\n") if not l.strip().startswith(c)):
-            out({"ok": False, "error": "That key is in your my-keys file: change it there"})
+    c = "--" if lua else "#"
+    for op in ops:
+        if op["op"] != "add" and not any((g := hypr_line_key(l, lua)) and same(g[0], op["key"]) for l in old_text.split("\n") if not l.strip().startswith(c)):
+            out({"ok": False, "error": "%s is in your own config, not Monolith's keybinds file: change it there" % label(*parse_key(op["key"]))})
     o = load_over()
     old_o = json.loads(json.dumps(o))
-    o["ops"].append(op)
+    o["ops"] += ops
     before = hypr_errors()
-    new_text = apply_ops(old_text, lua, [op])
+    new_text = apply_ops(old_text, lua, ops)
     with open(path, "w", encoding="utf-8") as f:
         f.write(new_text if new_text.endswith("\n") else new_text + "\n")
     save_over(o)
@@ -541,6 +571,8 @@ def hypr_live_items():
         if not key:
             continue
         side = re.match(r"^(ALT|SUPER|CONTROL|SHIFT|META)_([LR])$", key, re.I)
+        if side and b.get("release"):
+            continue    # (letting go of a modifier: Alt+Tab's own wiring)
         if side:
             key = ("Left " if side.group(2).upper() == "L" else "Right ") + {"control": "Ctrl"}.get(side.group(1).lower(), side.group(1).capitalize())
         mods = [n for bit, n in HYPR_MODS if int(b.get("modmask") or 0) & bit]
@@ -592,7 +624,21 @@ def taken_by(key, skip=None):
 
 
 def main():
-    a = [x for x in sys.argv[1:] if x != "--hyprland"]
+    a = [x for x in sys.argv[1:] if x not in ("--hyprland", "--replace")]
+    replace = "--replace" in sys.argv
+
+    def holder(key, skip=None):
+        """The shortcut that has `key` already: None when it's free. Refused unless it's to be
+        replaced, and it can only be replaced when it's one of Monolith's."""
+        other = taken_by(key, skip)
+        if not other:
+            return None
+        what = "%s is already used in \u201c%s\u201d" % (label(*parse_key(key)), other["title"])
+        if not replace:
+            out({"ok": False, "error": what})
+        if other.get("mine"):
+            out({"ok": False, "error": what + ", which is in your own config: change it there, or pick another key"})
+        return other
     cmd = a[0] if a else "list"
     if cmd == "list":
         try:
@@ -609,13 +655,17 @@ def main():
         pn = parse_key(new)
         if not pn or not pn[1]:
             out({"ok": False, "error": "That isn't a key"})
-        other = taken_by(new, skip=old)
-        if other:
-            out({"ok": False, "error": "%s is already %s" % (label(*pn), other["title"])})
+        if same(old, new):
+            out({"ok": True})
+        other = holder(new, skip=old)
         if HYPR:
-            hypr_change({"op": "move", "key": old, "to": new})
+            hypr_change(([{"op": "remove", "key": other["key"]}] if other else []) + [{"op": "move", "key": old, "to": new}])
 
         def g(lines):
+            if other:
+                j, _ = niri_find(lines, other["key"])
+                if j is not None:
+                    del lines[j]
             i, m = niri_find(lines, old)
             if i is None:
                 return "That key isn't in the keybinds file"
@@ -625,7 +675,7 @@ def main():
     if cmd == "remove":
         key = a[1]
         if HYPR:
-            hypr_change({"op": "remove", "key": key})
+            hypr_change([{"op": "remove", "key": key}])
 
         def g(lines):
             i, _ = niri_find(lines, key)
@@ -639,9 +689,8 @@ def main():
         pk = parse_key(key)
         if not pk or not pk[1]:
             out({"ok": False, "error": "That isn't a key"})
-        other = taken_by(key)
-        if other:
-            out({"ok": False, "error": "%s is already %s" % (label(*pk), other["title"])})
+        other = holder(key)
+        gone = [{"op": "remove", "key": other["key"]}] if other else []
         if HYPR:
             _, _, lua = hypr_paths()
             d = hypr_action(action, lua)
@@ -649,12 +698,16 @@ def main():
                 out({"ok": False, "error": "Pick what it does"})
             entry = {"op": "add", "key": key, "lua": 'hl.bind("%s", %s)' % (hypr_key(*pk), d),
                      "conf": "bind = %s, %s, %s" % (" ".join(m.upper() for m in pk[0]), HYPR_KEY.get(pk[1], pk[1]), d)}
-            hypr_change(entry)
+            hypr_change(gone + [entry])
         d = niri_action(action)
         if not d:
             out({"ok": False, "error": "Pick what it does"})
 
         def g(lines):
+            if other:
+                j, _ = niri_find(lines, other["key"])
+                if j is not None:
+                    del lines[j]
             line = "    %s { %s; }" % (niri_key(*pk), d)
             head = "    // ── Added in Settings " + "─" * 41
             if head in lines:

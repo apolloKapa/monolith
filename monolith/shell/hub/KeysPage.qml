@@ -81,7 +81,8 @@ Page {
         SmoothWheel {}
         anchors.fill: parent
         clip: true
-        cellWidth: width / 2
+        // (two columns; one when that would leave a row too narrow for its keys and its text)
+        cellWidth: width < 700 ? width : width / 2
         cellHeight: 52
         model: page.shown
         boundsBehavior: Flickable.StopAtBounds
@@ -95,10 +96,23 @@ Page {
                 anchors.margins: 3
                 radius: Theme.corner(height)
                 color: Theme.containerHigh
-                Row {
-                    id: chips
+                // The keys get at most about 60% of the row: a long combination is drawn smaller
+                // (down to 70%), and what still doesn't fit ends at the box's edge. It used to
+                // run on over the text and into the row beside it.
+                Item {
+                    id: chipBox
                     x: 8
                     anchors.verticalCenter: parent.verticalCenter
+                    readonly property real room: Math.max(60, (parent.width - 16) * 0.6)
+                    readonly property real k: Math.max(0.7, Math.min(1, room / Math.max(1, chips.implicitWidth)))
+                    width: Math.min(room, chips.implicitWidth * k)
+                    height: 28
+                    clip: chips.implicitWidth * k > room + 0.5
+                Row {
+                    id: chips
+                    anchors.verticalCenter: parent.verticalCenter
+                    scale: chipBox.k
+                    transformOrigin: Item.Left
                     spacing: 4
                     Repeater {
                         model: modelData.keys.split("+")
@@ -113,13 +127,17 @@ Page {
                         }
                     }
                 }
+                }
                 Label {
-                    anchors.left: chips.right; anchors.leftMargin: 10
+                    anchors.left: chipBox.right; anchors.leftMargin: 10
                     anchors.right: parent.right; anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
                     text: modelData.what
                     font.pixelSize: Theme.sizeSmall
                     muted: true
+                    // (two lines before it's cut)
+                    wrapMode: Text.Wrap
+                    maximumLineCount: 2
                 }
             }
         }
