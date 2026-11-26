@@ -149,6 +149,8 @@ PanelWindow {
             readonly property real homeY: vert ? Math.round((win.height - win.group(place)) / 2) + off
                 : (place.startsWith("top") ? win.room("top") : win.height - height - win.room("bottom"))
             property bool dragging: false
+            // (wholly on the screen: only then does it get blur behind it, see below)
+            readonly property bool inside: !win.tucked && opacity > 0.99 && x >= 0 && y >= 0 && x + width <= win.width && y + height <= win.height
             property point grab: Qt.point(0, 0)
             property point at: Qt.point(0, 0)
             // (tucked: off its own edge)
@@ -210,17 +212,21 @@ PanelWindow {
     }
 
     // blur behind them (Theme → Effects), shaped like them
-    BackgroundEffect.blurRegion: Theme.blur && !win.editing && !win.overFullscreen ? blurShape : null
+    // (only the ones wholly on the screen, and none at all when none is: a blur region off the
+    // window, or an empty one, made Hyprland blur the whole window, the whole screen, whenever an
+    // auto-hidden bar took its mini bars away)
+    readonly property bool blurAny: { for (let j = 0; j < rep.count; j++) { const it = rep.itemAt(j); if (it && it.inside) return true; } return false; }
+    BackgroundEffect.blurRegion: Theme.blur && !win.editing && !win.overFullscreen && blurAny ? blurShape : null
     Region {
         id: blurShape
-        Region { readonly property Item it: rep.count > 0 ? rep.itemAt(0) : null; item: it; radius: it ? it.radius : 0 }
-        Region { readonly property Item it: rep.count > 1 ? rep.itemAt(1) : null; item: it; radius: it ? it.radius : 0 }
-        Region { readonly property Item it: rep.count > 2 ? rep.itemAt(2) : null; item: it; radius: it ? it.radius : 0 }
-        Region { readonly property Item it: rep.count > 3 ? rep.itemAt(3) : null; item: it; radius: it ? it.radius : 0 }
-        Region { readonly property Item it: rep.count > 4 ? rep.itemAt(4) : null; item: it; radius: it ? it.radius : 0 }
-        Region { readonly property Item it: rep.count > 5 ? rep.itemAt(5) : null; item: it; radius: it ? it.radius : 0 }
-        Region { readonly property Item it: rep.count > 6 ? rep.itemAt(6) : null; item: it; radius: it ? it.radius : 0 }
-        Region { readonly property Item it: rep.count > 7 ? rep.itemAt(7) : null; item: it; radius: it ? it.radius : 0 }
+        Region { readonly property Item it: rep.count > 0 ? rep.itemAt(0) : null; item: it && it.inside ? it : null; radius: it ? it.radius : 0 }
+        Region { readonly property Item it: rep.count > 1 ? rep.itemAt(1) : null; item: it && it.inside ? it : null; radius: it ? it.radius : 0 }
+        Region { readonly property Item it: rep.count > 2 ? rep.itemAt(2) : null; item: it && it.inside ? it : null; radius: it ? it.radius : 0 }
+        Region { readonly property Item it: rep.count > 3 ? rep.itemAt(3) : null; item: it && it.inside ? it : null; radius: it ? it.radius : 0 }
+        Region { readonly property Item it: rep.count > 4 ? rep.itemAt(4) : null; item: it && it.inside ? it : null; radius: it ? it.radius : 0 }
+        Region { readonly property Item it: rep.count > 5 ? rep.itemAt(5) : null; item: it && it.inside ? it : null; radius: it ? it.radius : 0 }
+        Region { readonly property Item it: rep.count > 6 ? rep.itemAt(6) : null; item: it && it.inside ? it : null; radius: it ? it.radius : 0 }
+        Region { readonly property Item it: rep.count > 7 ? rep.itemAt(7) : null; item: it && it.inside ? it : null; radius: it ? it.radius : 0 }
     }
 
     // ── windows keeping clear of the ones that want it: a strip along that edge, as thick as the

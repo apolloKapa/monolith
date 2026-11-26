@@ -121,7 +121,9 @@ SmoothRect {
                     width: dd.width - 12
                     height: modelData.length > 2 ? 52 : 38
                     color: on ? Theme.accentContainer : (hovered ? Theme.containerHigh : "transparent")
-                    onClicked: { dd.picked(String(modelData[0])); menu.close(); }
+                    // (closed first: picking can rebuild what holds the list, a mini bar's card, and
+                    // the list was gone by the time it was told to close)
+                    onClicked: { const v = String(modelData[0]); menu.close(); dd.picked(v); }
                     Column {
                         x: 12
                         anchors.verticalCenter: parent.verticalCenter
