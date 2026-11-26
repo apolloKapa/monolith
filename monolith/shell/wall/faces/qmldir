@@ -23,6 +23,7 @@ GreetingText 1.0 GreetingText.qml
 ImageRect 1.0 ImageRect.qml
 ImageRounded 1.0 ImageRounded.qml
 ImageRound 1.0 ImageRound.qml
+PictureFrame 1.0 PictureFrame.qml
 Inked 1.0 Inked.qml
 LobeDial 1.0 LobeDial.qml
 LyricLines 1.0 LyricLines.qml

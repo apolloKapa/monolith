@@ -3,36 +3,74 @@ import QtQuick.Layouts
 import "../../core"
 import "../../ui"
 
-// Battery: a glass bar filling from the left with liquid up to the charge (the wave keeps moving
-// while it charges), the icon, the percentage and the time left. Where the liquid covers the text
-// it turns dark, letter by letter, right at the liquid's edge.
+// Battery, bar: a glass bar with liquid filling it from the left up to the charge (its surface
+// keeps rolling while it charges); the battery icon, the percentage and the time left on top.
+// Where the liquid reaches, the icon and text turn dark, cut exactly at its edge.
 FaceBase {
-    id: f
-    Battery { id: b }
-    readonly property real r: Theme.corner(80, 12)
+    id: face
+    Battery { id: cell }
+    readonly property real corner: Theme.corner(80, 12)
     readonly property color dark: "#15161a"
-    Glass { anchors.fill: parent; ctx: f.ctx; radius: f.r }
-    WaveFill { id: fill; anchors.fill: parent; radius: f.r; horizontal: true; value: b.level; color: b.color; live: f.live; keepMoving: b.charging; maxAmp: b.charging ? 10 : 6.5 }
-    component Content: RowLayout {
-        property color ink: Theme.text
-        property color iconInk: b.color
-        anchors.leftMargin: 16; anchors.rightMargin: 16
+    Glass { anchors.fill: parent; ctx: face.ctx; radius: face.corner }
+    WaveFill {
+        id: tank
+        anchors.fill: parent
+        radius: face.corner
+        horizontal: true
+        value: cell.level
+        color: cell.color
+        live: face.live
+        keepMoving: cell.charging
+        maxAmp: cell.charging ? 10 : 6.5
+    }
+    // the icon and the two lines, drawn in `tone` (or, unless dark, the usual colours)
+    component Readout: RowLayout {
+        id: row
+        property bool darkened: false
+        readonly property color tone: darkened ? face.dark : Theme.text
+        anchors.leftMargin: 16
+        anchors.rightMargin: 16
         spacing: 14
-        Icon { Layout.alignment: Qt.AlignVCenter; name: b.icon; filled: true; size: Math.max(22, Math.min(36, f.height * 0.36)); color: parent.iconInk }
+        Icon {
+            Layout.alignment: Qt.AlignVCenter
+            name: cell.icon
+            filled: true
+            size: Math.max(22, Math.min(36, face.height * 0.36))
+            color: row.darkened ? face.dark : cell.color
+        }
         ColumnLayout {
-            Layout.fillWidth: true; Layout.alignment: Qt.AlignVCenter
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
             spacing: 2
-            Text { renderType: Text.CurveRendering; Layout.fillWidth: true; elide: Text.ElideRight; text: b.present ? Math.round(fill.level * 100) + "%" : "No battery found"; color: parent.parent.ink; font.family: Theme.fontFamily; font.weight: Font.Black; font.pixelSize: Math.max(14, Math.min(24, f.height * 0.26)) }
-            Text { renderType: Text.CurveRendering; Layout.fillWidth: true; elide: Text.ElideRight; text: b.time; color: parent.parent.ink === f.dark ? Qt.alpha(f.dark, 0.85) : (b.charging ? "#7bd88f" : Theme.subtext); font.family: Theme.fontFamily; font.weight: Font.Bold; font.pixelSize: Math.max(9, Math.min(12, f.height * 0.13)) }
+            Text {
+                Layout.fillWidth: true
+                renderType: Text.CurveRendering
+                elide: Text.ElideRight
+                text: cell.present ? Math.round(tank.level * 100) + "%" : "No battery found"
+                color: row.tone
+                font.family: Theme.fontFamily
+                font.weight: Font.Black
+                font.pixelSize: Math.max(14, Math.min(24, face.height * 0.26))
+            }
+            Text {
+                Layout.fillWidth: true
+                renderType: Text.CurveRendering
+                elide: Text.ElideRight
+                text: cell.time
+                color: row.darkened ? Qt.alpha(face.dark, 0.85) : (cell.charging ? "#7bd88f" : Theme.subtext)
+                font.family: Theme.fontFamily
+                font.weight: Font.Bold
+                font.pixelSize: Math.max(9, Math.min(12, face.height * 0.13))
+            }
         }
     }
-    Content { anchors.fill: parent }
-    // the dark copy, only over the liquid
+    Readout { anchors.fill: parent }
+    // the dark copy, cut to the liquid's width
     Item {
-        visible: b.present && fill.level > 0.001
-        width: Math.max(0, Math.min(f.width, f.width * fill.level))
-        height: f.height
+        visible: cell.present && tank.level > 0.001
+        width: Math.max(0, Math.min(face.width, face.width * tank.level))
+        height: face.height
         clip: true
-        Content { width: f.width; height: f.height; anchors.left: parent.left; ink: f.dark; iconInk: f.dark }
+        Readout { darkened: true; width: face.width; height: face.height; anchors.left: parent.left }
     }
 }
