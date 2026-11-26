@@ -1,0 +1,85 @@
+diff --git a/niri-ipc/src/lib.rs b/niri-ipc/src/lib.rs
+index 0aa3cb4..47e6bcc 100644
+--- a/niri-ipc/src/lib.rs
++++ b/niri-ipc/src/lib.rs
+@@ -1642,6 +1642,14 @@ pub enum Event {
+         /// The new focus timestamp.
+         focus_timestamp: Option<Timestamp>,
+     },
++    /// A window asked to be minimized (its minimize button).
++    ///
++    /// niri has no minimized state of its own: a desktop shell can act on this (move the window
++    /// out of sight and bring it back from its taskbar). Nothing happens without one.
++    WindowMinimizeRequested {
++        /// Id of the window.
++        id: u64,
++    },
+     /// Window urgency changed.
+     WindowUrgencyChanged {
+         /// Id of the window.
+diff --git a/src/handlers/xdg_shell.rs b/src/handlers/xdg_shell.rs
+index 38440c9..1954db2 100644
+--- a/src/handlers/xdg_shell.rs
++++ b/src/handlers/xdg_shell.rs
+@@ -406,6 +406,18 @@ impl XdgShellHandler for State {
+         });
+     }
+ 
++    fn minimize_request(&mut self, toplevel: ToplevelSurface) {
++        // niri has no minimized state: the request goes to the IPC event streams, for a desktop
++        // shell to move the window out of sight (and back from its taskbar)
++        let Some((mapped, _)) = self.niri.layout.find_window_and_output(toplevel.wl_surface()) else {
++            return;
++        };
++        let id = mapped.id().get();
++        if let Some(server) = &self.niri.ipc_server {
++            server.window_minimize_requested(id);
++        }
++    }
++
+     fn maximize_request(&mut self, toplevel: ToplevelSurface) {
+         if let Some((mapped, _)) = self
+             .niri
+diff --git a/src/ipc/client.rs b/src/ipc/client.rs
+index 40a58ef..521e9ce 100644
+--- a/src/ipc/client.rs
++++ b/src/ipc/client.rs
+@@ -465,6 +465,9 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+                     } => {
+                         println!("Window {id}: focus timestamp changed to {focus_timestamp:?}");
+                     }
++                    Event::WindowMinimizeRequested { id } => {
++                        println!("Window {id}: minimize requested");
++                    }
+                     Event::WindowUrgencyChanged { id, urgent } => {
+                         println!("Window {id}: urgency changed to {urgent}");
+                     }
+diff --git a/src/ipc/server.rs b/src/ipc/server.rs
+index db71da6..850f641 100644
+--- a/src/ipc/server.rs
++++ b/src/ipc/server.rs
+@@ -112,6 +112,11 @@ impl IpcServer {
+         })
+     }
+ 
++    /// A window asked to be minimized: passed on to the event streams (a desktop shell).
++    pub fn window_minimize_requested(&self, id: u64) {
++        self.send_event(Event::WindowMinimizeRequested { id });
++    }
++
+     fn send_event(&self, event: Event) {
+         let mut streams = self.event_streams.borrow_mut();
+         let mut to_remove = Vec::new();
+diff --git a/src/niri.rs b/src/niri.rs
+index ec40e01..72f799b 100644
+--- a/src/niri.rs
++++ b/src/niri.rs
+@@ -2258,7 +2258,7 @@ impl Niri {
+         let compositor_state = CompositorState::new_v6::<State>(&display_handle);
+         let xdg_shell_state = XdgShellState::new_with_capabilities::<State>(
+             &display_handle,
+-            [WmCapabilities::Fullscreen, WmCapabilities::Maximize],
++            [WmCapabilities::Fullscreen, WmCapabilities::Maximize, WmCapabilities::Minimize],
+         );
+         let xdg_decoration_state =
+             XdgDecorationState::new_with_filter::<State, _>(&display_handle, |client| {

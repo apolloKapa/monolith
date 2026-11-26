@@ -36,3 +36,18 @@ Gentoo:
 
 then log out and in. (On Arch the installer adds it to Arch's own PKGBUILD and builds it with
 makepkg, for both.)
+
+## niri-minimize.patch: minimise buttons on niri
+
+niri has no minimising, and tells apps so: kitty and GTK apps leave their minimise button out of
+their title bars. This patch has niri say it can minimise, and pass a window's minimise request on
+to the shell (an IPC event, `WindowMinimizeRequested`); Monolith's Desktop mode then minimises the
+window the way it does from the taskbar (out of sight, back from its taskbar button). Without
+Desktop mode the button does nothing. Made for niri 26.04; it goes beside the underscan patch, in
+the same folder. On Gentoo:
+
+    sudo mkdir -p /etc/portage/patches/gui-wm/niri-26.04
+    sudo cp niri-minimize.patch /etc/portage/patches/gui-wm/niri-26.04/
+    sudo emerge --oneshot gui-wm/niri
+
+then log out and in. Apps opened after that have the button.

@@ -190,8 +190,13 @@ Singleton {
             layoutIndex = ev.KeyboardLayoutsChanged.keyboard_layouts.current_idx || 0;
         } else if (ev.KeyboardLayoutSwitched) {
             layoutIndex = ev.KeyboardLayoutSwitched.idx || 0;
+        } else if (ev.WindowMinimizeRequested) {
+            // a window's own minimise button (niri with Monolith's patch, patches/niri-minimize.patch:
+            // niri has no minimising of its own; Desktop mode does it, core/Desk.qml)
+            minimizeRequested(ev.WindowMinimizeRequested.id);
         }
     }
+    signal minimizeRequested(var id)
 
     // a window has windows on it: for the status line's occupied dots
     function workspaceHasWindows(wsId) {
