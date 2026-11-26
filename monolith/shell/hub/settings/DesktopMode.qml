@@ -97,12 +97,13 @@ ColumnLayout {
         }
     }
     SettingRow {
-        key: "desktop.doubleClickMs"; def: 300
+        key: "desktop.doubleClickMs"; def: 180
         show: Niri.hyprland && Desk.barsReady
         icon: "ads_click"; title: "Double-click speed"
-        desc: Desk.barsDoubleClick ? "How quick the two clicks on a title bar have to be to maximise the window. Lower: they have to come closer together"
+        desc: Desk.barsDoubleClickLoaded ? "How quick the two clicks on a title bar have to be to maximise the window. Lower: they have to come closer together"
+            : Desk.barsDoubleClick ? "Built: log out and back in to use it (Hyprland loads the new title bars as it starts). Until then two clicks 0.4 s apart still count"
             : "Needs the title bars built again (Build again above): this build always takes two clicks 0.4 s apart as a double click"
-        NumberBox { from: 150; to: 700; step: 10; unit: "ms"; value: Desk.doubleClickMs; onMoved: v => Store.set("desktop.doubleClickMs", v) }
+        NumberBox { from: 100; to: 700; step: 10; unit: "ms"; value: Desk.doubleClickMs; onMoved: v => Store.set("desktop.doubleClickMs", v) }
     }
     SettingRow {
         key: "desktop.noBar"

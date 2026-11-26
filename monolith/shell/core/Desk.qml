@@ -315,7 +315,15 @@ Singleton {
     FileView { path: desk.barsDir + "/hyprbars.features"; watchChanges: true; printErrors: false; onLoaded: desk.barsFeatures = text().trim(); onFileChanged: reload(); onLoadFailed: desk.barsFeatures = "" }
     readonly property bool barsDoubleClick: barsFeatures.indexOf("double-click") !== -1
     // the longest time between the two clicks of a double click on a title bar (Settings)
-    readonly property int doubleClickMs: Math.max(150, Math.min(700, Number(Store.raw("desktop.doubleClickMs", 300)) || 300))
+    readonly property int doubleClickMs: Math.max(100, Math.min(700, Number(Store.raw("desktop.doubleClickMs", 180)) || 180))
+    // (and whether the build Hyprland has loaded knows it: a new build is only loaded when Hyprland
+    // starts, and the one before refuses the setting, as a config error)
+    property bool barsDoubleClickLoaded: false
+    Process {
+        id: askDouble
+        command: ["hyprctl", "getoption", "plugin:hyprbars:double_click_ms"]
+        stdout: StdioCollector { onStreamFinished: desk.barsDoubleClickLoaded = text.indexOf("int:") !== -1 }
+    }
     property string hyprCommit: ""
     readonly property string barsState: !Niri.hyprland ? "" : (barsFor === "" ? "none" : (hyprCommit !== "" && barsFor !== hyprCommit ? "old" : "ready"))
     readonly property bool barsReady: barsState === "ready" && hyprCommit !== ""
@@ -360,7 +368,7 @@ Singleton {
             + "on_double_click = " + act("max") + " } } }); "
             // (only to a build that has the setting: an older one reports it as a config error,
             // Hyprland's red banner over the screen)
-            + (barsDoubleClick ? "hl.config({ plugin = { hyprbars = { double_click_ms = " + doubleClickMs + " } } }); " : "")
+            + "if hl.get_config(\"plugin:hyprbars:double_click_ms\") ~= nil then hl.config({ plugin = { hyprbars = { double_click_ms = " + doubleClickMs + " } } }) end; "
             + "MonolithDesk.barAct = function(kind) "
             +   "local c = hl.get_cursor_pos(); if not c then return end; local cx, cy = c.x or c[1], c.y or c[2]; "
             +   "local bh = tonumber(hl.get_config(\"plugin:hyprbars:bar_height\")) or 34; "
@@ -394,7 +402,7 @@ Singleton {
     Process {
         id: barsLoad
         command: ["sh", "-c", "hyprctl plugin list 2>/dev/null | grep -q hyprbars || hyprctl plugin load \"$1\"", "_", desk.barsDir + "/hyprbars.so"]
-        onExited: if (desk.on && desk.titlebars) Quickshell.execDetached(["hyprctl", "eval", desk.barsLua])
+        onExited: { if (desk.on && desk.titlebars) Quickshell.execDetached(["hyprctl", "eval", desk.barsLua]); askDouble.running = true; }
     }
     // (the theme or the list changed: set up again)
     onBarsLuaChanged: if (started && on && titlebars && barsReady && Niri.hyprLua) barsLater.restart()
