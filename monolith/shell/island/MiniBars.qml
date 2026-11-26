@@ -229,6 +229,7 @@ PanelWindow {
             IslandBar {
                 id: mbar
                 only: JSON.parse(pill.modKey)
+                miniIndex: pill.modelData.i !== undefined ? pill.modelData.i : -1
                 vertical: pill.vert
                 edge: pill.edge
                 screenName: win.modelData.name

@@ -90,6 +90,24 @@ Item {
     readonly property var defaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["updates", "live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
     // previews (Settings → Bar) can show just some modules, in a style of their own
     property var only: null
+    // a mini bar's place in bar.minis (MiniBars.qml); -1: the bar itself. Its menu says which
+    property int miniIndex: -1
+    // a click on an empty part of it (the modules are over this): its menu, there
+    // (a preview of it, in Settings or the welcome tour, has none)
+    MouseArea {
+        anchors.fill: parent
+        z: -1
+        enabled: !bar.wsSample && bar.screenName !== ""
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        // (held on a mini bar: moving them, as holding its pill did before this was over it)
+        pressAndHoldInterval: 600
+        onPressAndHold: mouse => { if (bar.miniIndex >= 0 && mouse.button === Qt.LeftButton) HubState.miniEdit = bar.screenName; }
+        onClicked: mouse => {
+            if (HubState.open) { HubState.close(); return; }
+            const p = mapToItem(null, mouse.x, mouse.y);
+            HubState.openBarMenu(bar.screenName, p.x, p.y, bar.miniIndex);
+        }
+    }
     // the visualiser shown even with nothing playing, as a still curve (its settings' preview)
     property bool visPreview: false
     // a preview (Settings): nothing moves on its own. The time stays at when it was made, the

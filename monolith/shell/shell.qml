@@ -68,6 +68,9 @@ ShellRoot {
     Variants { model: Power.going !== "" ? Quickshell.screens : []; Goodbye {} }
     Lazy { id: wallL; when: HubState.wallOpen; linger: 1200 }
     Variants { model: wallL.on ? Quickshell.screens : []; WallpaperPicker {} }
+    // (the bar's menu: a click on an empty part of it, status/BarMenu.qml)
+    Lazy { id: barMenuL; when: HubState.barMenu.screen !== ""; linger: 400 }
+    Variants { model: barMenuL.on ? Quickshell.screens : []; BarMenu {} }
     Lazy { id: menuL; when: HubState.deskMenu.screen !== ""; linger: 400 }
     Variants { model: menuL.on ? Quickshell.screens : []; DesktopMenu {} }
     LazyLoader { active: AppImages.opened; AppImagesWindow {} }

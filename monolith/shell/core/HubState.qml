@@ -175,6 +175,11 @@ Singleton {
     property string editWidgets: ""
     property string editScreen: ""
     // the desktop's right-click menu: where, and on which widget (if any)
+    // the bar's menu (a click on an empty part of the bar or a mini bar, status/BarMenu.qml): where,
+    // and which mini bar (its place in bar.minis), -1 for the bar itself
+    property var barMenu: ({ screen: "", x: 0, y: 0, mini: -1 })
+    function openBarMenu(screen, x, y, mini) { open = false; dropScreen = ""; barMenu = { screen: screen, x: x, y: y, mini: mini === undefined ? -1 : mini }; }
+    function closeBarMenu() { barMenu = { screen: "", x: 0, y: 0, mini: -1 }; }
     property var deskMenu: ({ screen: "", x: 0, y: 0, widget: "" })
     function openDeskMenu(screen, x, y, widget) { open = false; deskMenu = { screen: screen, x: x, y: y, widget: widget || "" }; }
     function closeDeskMenu() { deskMenu = { screen: "", x: 0, y: 0, widget: "" }; }
