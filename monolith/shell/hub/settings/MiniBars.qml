@@ -5,8 +5,8 @@ import "../../ui"
 import "../../core/barmods.js" as BarMods
 
 // Mini bars (island/MiniBars.qml): little bars of their own, each with the modules you put in it,
-// at a corner or the middle of an edge. A module put in one leaves the bar (and any other mini
-// bar): it moves there. Add it to the bar again in Layout & modules.
+// at a corner or the middle of an edge. A module put in one stays in the bar too (it's a copy):
+// take it out of the bar in Layout & modules if you want it only here.
 ColumnLayout {
     id: page
     spacing: 8
@@ -25,18 +25,12 @@ ColumnLayout {
     }
     function remove(i) { const l = copy(); l.splice(i, 1); Store.set("bar.minis", l); }
     function setOf(i, k, v) { const l = copy(); if (!l[i]) return; l[i][k] = v; Store.set("bar.minis", l); }
-    // a module into mini bar i: out of the bar's layout and the other mini bars first
+    // a module into mini bar i (the bar keeps its own: it took it out before, and a module you
+    // wanted in both places vanished from the bar)
     function addModule(i, key) {
         const l = copy();
         if (!l[i]) return;
-        for (let j = 0; j < l.length; j++) l[j].modules = (l[j].modules || []).filter(k => k !== key);
-        l[i].modules = (l[i].modules || []).concat([key]);
-        const z = Store.raw("bar.modules", null);
-        if (z) {
-            const c = JSON.parse(JSON.stringify(z));
-            for (const zone in c) if (Array.isArray(c[zone])) c[zone] = c[zone].filter(k => k !== key);
-            Store.set("bar.modules", c);
-        }
+        l[i].modules = (l[i].modules || []).filter(k => k !== key).concat([key]);
         Store.set("bar.minis", l);
     }
     function removeModule(i, key) { const l = copy(); if (!l[i]) return; l[i].modules = (l[i].modules || []).filter(k => k !== key); Store.set("bar.minis", l); }
@@ -51,7 +45,7 @@ ColumnLayout {
     SettingRow {
         key: "bar.minis"
         icon: "view_agenda"; title: "Mini bars"
-        desc: "Little bars of their own, each with the modules you put in it, in a corner, the middle of an edge or down a side. A module you put in one moves there from the bar. Hold a mini bar to move it on the screen"
+        desc: "Little bars of their own, each with the modules you put in it, in a corner, the middle of an edge or down a side. Modules stay in the bar too (take one out in Layout & modules if you want it only here). Hold a mini bar to move it on the screen"
         Row {
             spacing: 6
             Button { visible: page.minis.length > 0; text: "Move them"; icon: "open_with"; onClicked: HubState.editMinis() }

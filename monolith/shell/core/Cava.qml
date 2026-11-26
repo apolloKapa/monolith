@@ -35,7 +35,9 @@ Singleton {
     readonly property var lines: {
         const _ = Store.revision;
         const method = ["pipewire", "pulse", "alsa", "jack", "sndio", "oss", "portaudio"].indexOf(String(get("method"))) !== -1 ? String(get("method")) : "pipewire";
-        const src = String(get("source") || "auto").replace(/[\r\n]/g, "");
+        // (auto: where the apps actually play, see `heard`; your own pick otherwise)
+        const own = String(get("source") || "auto").replace(/[\r\n]/g, "");
+        const src = own !== "auto" ? own : (heard === "" ? "auto" : (method === "pulse" ? heard + ".monitor" : heard));
         const lo = n("lowerCutoff", 10, 2000), hi = Math.max(lo + 100, n("higherCutoff", 1000, 22000));
         const out = ["[general]", "bars = " + count, "framerate = " + n("framerate", 1, 360),
             "autosens = " + b("autosens"), "overshoot = " + n("overshoot", 0, 100), "sensitivity = " + n("sensitivity", 1, 1000),
@@ -53,6 +55,18 @@ Singleton {
         for (let i = 1; i <= 5; i++) out.push(i + " = " + n("eq" + i, 0, 4));
         return out;
     }
+    // ── what it listens to on "auto": the output the most apps play into. The default output
+    // isn't always where the sound is: with EasyEffects the apps play into its own sink and it
+    // passes them on, and the hardware output's monitor heard nothing at all (an Audient EVO4:
+    // every frame silent), so every visualiser lay flat. Looked at as it starts and now and then ──
+    property string heard: ""
+    Process {
+        id: listen
+        command: ["sh", "-c", "command -v pactl >/dev/null || exit 0; s=$(pactl list short sink-inputs 2>/dev/null | awk '{print $2}' | sort | uniq -c | sort -rn | head -1 | awk '{print $2}'); "
+            + "[ -n \"$s\" ] && pactl list short sinks 2>/dev/null | awk -v i=\"$s\" '$1==i{print $2}'"]
+        stdout: StdioCollector { onStreamFinished: { const t = text.trim(); if (/^[A-Za-z0-9_.:-]*$/.test(t)) cv.heard = t; } }
+    }
+    Timer { interval: 20000; repeat: true; running: cv.users > 0 && String(cv.get("source") || "auto") === "auto"; triggeredOnStart: true; onTriggered: listen.running = true }
     // (restarted only when its own config really changes: `lines` is rebuilt on every settings
     // change, and each restart cut all sound for a moment, see `run`)
     property string written: ""

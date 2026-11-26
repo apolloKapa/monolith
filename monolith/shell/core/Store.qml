@@ -104,6 +104,8 @@ Singleton {
     IpcHandler {
         target: "store"
         function set(path: string, json: string): void { try { store.set(path, JSON.parse(json)); } catch (e) { store.set(path, json); } }
-        function get(path: string): string { return JSON.stringify(store.get(path, null)); }
+        // (your saved value, as `set` writes it: not what Desktop mode stands in for meanwhile,
+        // which read back and set again would have saved as yours)
+        function get(path: string): string { return JSON.stringify(store.raw(path, null)); }
     }
 }
