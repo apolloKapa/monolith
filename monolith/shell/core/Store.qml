@@ -87,6 +87,9 @@ Singleton {
         saveLater.restart();
     }
     Timer { id: saveLater; interval: 500; onTriggered: fv.setText(JSON.stringify(store.data, null, 2) + "\n") }
+    // (the shell going away, a reload or a restart, with a change not saved yet: saved now. A
+    // setting changed in the last half second before it was lost)
+    Component.onDestruction: if (saveLater.running) { saveLater.stop(); fv.blockWrites = true; fv.setText(JSON.stringify(store.data, null, 2) + "\n"); }
 
     FileView {
         id: fv

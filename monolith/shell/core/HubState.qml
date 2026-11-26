@@ -44,6 +44,14 @@ Singleton {
         if (on) c[screen] = true; else delete c[screen];
         barOut = c;
     }
+    // the bar tucked away (auto-hide) on these screens: mini bars go and come back with it
+    property var barTucked: ({})
+    function setBarTucked(screen, on) {
+        if ((barTucked[screen] === true) === on) return;
+        const c = Object.assign({}, barTucked);
+        if (on) c[screen] = true; else delete c[screen];
+        barTucked = c;
+    }
     // moving the mini bars (island/MiniBars.qml): on which screen ("" not)
     property string miniEdit: ""
     function editMinis(screen) { open = false; dropScreen = ""; miniEdit = target(screen); }

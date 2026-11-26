@@ -174,7 +174,8 @@ ColumnLayout {
             opts: [["top", "Up (top)", "Along the top edge"], ["bottom", "Down (bottom)", "Along the bottom edge"],
                    ["left", "Left", "Down the left side"], ["right", "Right", "Down the right side"]]
             value: Theme.barEdge
-            onPicked: v => Store.set("bar.position", v)
+            // (Desktop mode: where the taskbar goes)
+            onPicked: v => Store.set(Desk.on ? "desktop.edge" : "bar.position", v)
         }
     }
     // (it had a page of its own, Bar → Auto-hide, for this one switch)
@@ -224,7 +225,7 @@ ColumnLayout {
     SettingRow {
         key: "bar.height";
         icon: "height"; title: "Height"
-        NumberBox { from: 28; to: 72; slideTo: 60; unit: "px"; value: Theme.islandH; onMoved: v => Store.set("bar.height", v) }
+        NumberBox { from: 28; to: 72; slideTo: 60; unit: "px"; value: Theme.islandH; onMoved: v => Store.set(Desk.on ? "desktop.height" : "bar.height", v) }
     }
     // the bar's length: as long as its modules need, a share of the screen, or an exact size
     SettingRow {

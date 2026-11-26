@@ -18,7 +18,8 @@ PanelWindow {
     required property var modelData
     screen: modelData
 
-    readonly property var all: Store.get("bar.minis", []) || []
+    // (a list, whatever the file holds: anything else is no mini bars)
+    readonly property var all: { const v = Store.get("bar.minis", []); return v && typeof v === "object" && v.length !== undefined ? Array.prototype.slice.call(v) : []; }
     // the ones to draw (with something in them), each with its place in the list kept
     readonly property var minis: all.map((m, i) => ({ i: i, place: places.indexOf(m && m.place) !== -1 ? m.place : "top-right", modules: (m && m.modules ? Array.prototype.slice.call(m.modules) : []).filter(k => k !== "taskbar"), reserve: !!(m && m.reserve) }))
         .filter(m => m.modules.length > 0)
@@ -26,6 +27,8 @@ PanelWindow {
     readonly property bool barHere: (Store.get("bar.hiddenScreens", []) || []).indexOf(modelData.name) === -1
     readonly property bool editing: HubState.miniEdit === modelData.name
     readonly property bool overFullscreen: Niri.fullscreenOn(modelData.name)
+    // auto-hide: they go away with the bar and come back with it (while moving them they stay)
+    readonly property bool tucked: Store.get("status.autohide", false) === true && HubState.barTucked[modelData.name] === true && !editing
     visible: barHere && minis.length > 0
 
     WlrLayershell.namespace: "monolith-minibars"
@@ -102,6 +105,10 @@ PanelWindow {
         }
     }
     property string dragSpot: ""
+    // (going away and coming back with the bar: the bar's own pace, no spring)
+    property bool tuckMoving: false
+    onTuckedChanged: { tuckMoving = true; tuckDone.restart(); }
+    Timer { id: tuckDone; interval: Theme.moveMs + 100; onTriggered: win.tuckMoving = false }
     // done
     Pressable {
         visible: win.editing
@@ -144,10 +151,12 @@ PanelWindow {
             property bool dragging: false
             property point grab: Qt.point(0, 0)
             property point at: Qt.point(0, 0)
-            x: dragging ? at.x - grab.x : homeX
-            y: dragging ? at.y - grab.y : homeY
-            Behavior on x { enabled: !pill.dragging && Theme.animOn; NumberAnimation { duration: Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springyCurve } }
-            Behavior on y { enabled: !pill.dragging && Theme.animOn; NumberAnimation { duration: Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.springyCurve } }
+            // (tucked: off its own edge)
+            readonly property real away: win.tucked ? (vert ? width : height) + win.room(edge) + 8 : 0
+            x: dragging ? at.x - grab.x : homeX + (edge === "left" ? -away : (edge === "right" ? away : 0))
+            y: dragging ? at.y - grab.y : homeY + (edge === "top" ? -away : (edge === "bottom" ? away : 0))
+            Behavior on x { enabled: !pill.dragging && Theme.animOn; NumberAnimation { duration: win.tuckMoving ? Theme.moveMs : Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: win.tuckMoving ? Theme.standardCurve : Theme.springyCurve } }
+            Behavior on y { enabled: !pill.dragging && Theme.animOn; NumberAnimation { duration: win.tuckMoving ? Theme.moveMs : Theme.ms(380); easing.type: Easing.BezierSpline; easing.bezierCurve: win.tuckMoving ? Theme.standardCurve : Theme.springyCurve } }
             z: dragging ? 50 : 10
             scale: dragging ? 1.04 : 1
             Behavior on scale { NumberAnimation { duration: Theme.fastMs } }

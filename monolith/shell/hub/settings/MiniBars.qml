@@ -10,7 +10,7 @@ import "../../core/barmods.js" as BarMods
 ColumnLayout {
     id: page
     spacing: 8
-    readonly property var minis: Store.get("bar.minis", []) || []
+    readonly property var minis: { const v = Store.get("bar.minis", []); return v && typeof v === "object" && v.length !== undefined ? Array.prototype.slice.call(v) : []; }
     function copy() { return JSON.parse(JSON.stringify(minis)); }
     readonly property var places: [["top-left", "Top left corner"], ["top", "Top, in the middle"], ["top-right", "Top right corner"],
                                    ["left", "Left side"], ["right", "Right side"],

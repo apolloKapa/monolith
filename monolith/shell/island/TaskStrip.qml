@@ -24,7 +24,12 @@ Grid {
     // its buttons: the bar's height, smaller when there are more apps than room (they'd run under
     // the bar's other modules)
     readonly property real fullCell: Math.max(28, Theme.islandH - 6)
-    readonly property real cell: { const n = apps.length + 1; return Math.floor(Math.max(24, Math.min(fullCell, ((host ? host.taskRoom : 1e6) - spacing * (n - 1)) / n))); }
+    readonly property real wantCell: { const n = apps.length + 1; return Math.floor(Math.max(24, Math.min(fullCell, ((host ? host.taskRoom : 1e6) - spacing * (n - 1)) / n))); }
+    // (smaller at once when there's no room, bigger only once there's clearly more: the room
+    // changes by a pixel or two whenever a module's text does, the CPU's, the clock's, and the
+    // icons resized with it)
+    property real cell: wantCell
+    onWantCellChanged: if (wantCell < cell || wantCell >= cell + 4 || wantCell === fullCell) cell = wantCell
     readonly property string edge: Theme.barEdge
     // (the start menu comes out of the start button: IslandBar.moduleBox)
     readonly property Item menuFrom: start

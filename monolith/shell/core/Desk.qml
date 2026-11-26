@@ -54,6 +54,9 @@ Singleton {
 
     // what stands in for your settings while it's on
     readonly property var barDefaults: ({ left: ["cc", "search", "clock", "workspaces"], center: ["media"], right: ["updates", "live", "gaming", "tray", "stats", "notifications", "network", "sound", "battery", "power"] })
+    // (only what the taskbar can't do without: everything else of your bar's works as it does
+    // anywhere, its style, its length (the apps fit in it), auto-hide…. Bar → Position and Height
+    // set the taskbar's own while it's on, desktop.edge and desktop.height)
     readonly property var overrides: { Store.revision; return computeOverrides(); }
     function computeOverrides() {
         const m = Store.raw("bar.modules", null) || barDefaults;
@@ -71,13 +74,7 @@ Singleton {
             // bar, pills; only where it is and how tall it is are the taskbar's)
             "bar.position": edge,
             "bar.height": size,
-            // (across the screen, a set length: sized to what's in it, a set length shorter than the
-            // taskbar needs grew and shrank with every number that changed, the CPU's, the clock's.
-            // An island stays an island: fitting what's in it is what it is)
-            "bar.lengthMode": String(Store.raw("bar.style", "")) === "island" ? Store.raw("bar.lengthMode", "") : "percent",
-            "bar.length": String(Store.raw("bar.style", "")) === "island" ? Store.raw("bar.length", 1) : 1,
             "bar.modules": mods,
-            "status.autohide": false,
             "dock.exclusive": false,
             // the start menu: a card just off the taskbar, over its start button (above a bottom
             // taskbar, under a top one, beside a side one), opening the way your menus do

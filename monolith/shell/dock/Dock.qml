@@ -48,18 +48,21 @@ PanelWindow {
     readonly property real frameIn: Theme.barStyle === "frame" && !exclusive && !barEdge ? Theme.frameW : 0
     readonly property real margin: Number(Store.get("dock.margin", 12)) + (barEdge ? Theme.islandH + Theme.barMargin : 0) + frameIn
     color: "transparent"
-    // (stays mapped in Desktop mode, empty and taking no clicks: mapped again later it came back
-    // above the taskbar's reserved strip instead of at the screen's edge, and rose out of thin air)
+    // (stays mapped in Desktop mode, empty: mapped again it came back under the taskbar, and
+    // rose out of it unseen)
     visible: enabled
     // shown: where the dock ends up (not where it is while sliding in: the pointer at the edge
     // would be outside that for a moment, the dock would think it had been left and hide again)
     // stretched to the edge, so moving from the edge to the dock never leaves it; hidden: the strip
     mask: Region {
-        item: dock.deskAway ? null : (menu.open || dock.editing ? fullArea : (dock.shown ? reach : (dock.overFullscreen ? null : hotZone)))
+        // (in Desktop mode's taskbar: nothing, said with an item of no size. A region with no item
+        // took the whole window: it caught the pointer along the bottom edge, over the taskbar)
+        item: dock.deskAway ? noInput : (menu.open || dock.editing ? fullArea : (dock.shown ? reach : (dock.overFullscreen ? noInput : hotZone)))
         // the edge strip stays in while shown (resting on the edge away from the dock keeps it)
         Region { item: !dock.deskAway && dock.shown && !menu.open && !dock.editing ? hotZone : null }
     }
     Item { id: fullArea; anchors.fill: parent }
+    Item { id: noInput; width: 0; height: 0 }
 
     readonly property var activeWs: Niri.workspacesOn(modelData.name).find(w => w.is_active)
     readonly property bool emptyWs: !!activeWs && !Niri.workspaceHasWindows(activeWs.id)
@@ -159,10 +162,12 @@ PanelWindow {
     // stays away (it sat over fullscreen on Hyprland, and its edge strip brought it up whenever
     // the pointer reached the bottom in a game); the strip is off too, so the game keeps the mouse
     readonly property bool overFullscreen: Niri.fullscreenOn(modelData.name)
-    readonly property bool shown: enabled && !(Desk.on && !fusing) && (fusingNow || editing || menu.open || !overFullscreen) && (editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || (showWhen === "dodge" && !covered) || hovering || leaveDelay.running || menu.open)
+    readonly property bool shown: enabled && !(Desk.on && !fusing) && (fusingNow || editing || menu.open || !overFullscreen) && (fusingNow || editing || showWhen === "always" || exclusive || (emptyWs && showWhen === "empty") || (showWhen === "dodge" && !covered) || hovering || leaveDelay.running || menu.open)
 
     // (shown while it sinks into the taskbar or rises out of it, whenever it shows otherwise)
-    readonly property bool fusingNow: fusing && Desk.fuse > 0.001 && Desk.fuse < 0.999
+    // (all the while it's in the taskbar too: its window is gone then, and switching back it's
+    // already in place to rise out of it; afterwards it shows or not as you have it)
+    readonly property bool fusingNow: fusing && Desk.fuse > 0.001
     // the shown dock's place, from its edge to its far side
     Item {
         id: reach

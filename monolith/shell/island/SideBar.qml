@@ -29,6 +29,7 @@ PanelWindow {
     // started sliding back in from auto-hide)
     mask: Region {
         item: win.tucked && !win.covered ? sensor : null
+        Region { item: win.autohide && !win.tucked ? sensor : null }
         Region {
             x: box.x + hit.x; y: box.y + hit.y
             width: win.tucked ? 0 : hit.width; height: win.tucked ? 0 : hit.height
@@ -40,10 +41,14 @@ PanelWindow {
     // (Hyprland: slid away for a borderless window as big as the screen, see Island)
     readonly property bool covered: Niri.hyprland && Niri.fullscreenOn(modelData.name)
     readonly property bool tucked: (autohide || covered) && (covered || (!sensorHover.hovered && !barHover.hovered)) && !HubState.open && HubState.dropScreen === ""
+    onTuckedChanged: if (side !== "") HubState.setBarTucked(modelData.name, tucked && autohide)
+    Component.onCompleted: if (side !== "") HubState.setBarTucked(modelData.name, tucked && autohide)
     Item {
         id: sensor
-        x: win.onLeft ? 0 : win.width - 3
-        width: 3; height: win.height
+        // (out, from the edge to the bar: a floating one sits off the edge, see Island's sensor)
+        width: win.tucked ? 3 : Math.max(3, Theme.barMargin + 2)
+        x: win.onLeft ? 0 : win.width - width
+        height: win.height
         HoverHandler { id: sensorHover }
     }
 

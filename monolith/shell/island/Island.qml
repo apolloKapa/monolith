@@ -41,6 +41,8 @@ PanelWindow {
     Region {
         id: plainMask
         item: win.shown ? fullArea : (!(win.barHere || win.toastGrows) ? null : (win.tucked ? (win.covered ? null : sensor) : island))
+        // (auto-hide, the bar out: the edge up to it too, see the sensor)
+        Region { item: !win.shown && win.autohide && !win.tucked && win.barHere ? sensor : null }
         // a notification out of a full-width bar, or under a floating one
         Region { item: !win.shown && drop.height > 1 ? dropBody : null }
         // the sides a menu opens from by hover
@@ -103,10 +105,17 @@ PanelWindow {
     readonly property bool tucked: (autohide || covered) && !win.shown && (covered || (!sensorHover.hovered && !barHover.hovered))
     // the Frame, auto-hide: windows make room for the bar while it's out (island/Frame.qml)
     readonly property bool barIsOut: Theme.frameHide && barHere && !tucked && !covered
+    onTuckedChanged: if (!side) HubState.setBarTucked(modelData.name, tucked && autohide)
     onBarIsOutChanged: HubState.setBarOut(modelData.name, barIsOut)
     // (the Frame's border on the bar's edge is the whole strip you touch to bring the bar back)
     readonly property real sensorH: Theme.frameHide ? Math.max(3, Theme.frameW) : 3
-    Item { id: sensor; x: Theme.frameHide ? 0 : island.x; y: Theme.barBottom ? win.height - win.sensorH : 0; width: Theme.frameHide ? win.width : island.width; height: win.sensorH; HoverHandler { id: sensorHover } }
+    // (out, it reaches from the edge to the bar: a floating bar (Solid, Modular) sits off the edge
+    // by its margin, and the pointer resting on the edge that brought it out wasn't on it: it went
+    // away at once, and never stayed out)
+    Item { id: sensor; x: Theme.frameHide ? 0 : island.x; width: Theme.frameHide ? win.width : island.width
+        height: win.tucked ? win.sensorH : Math.max(win.sensorH, Theme.barMargin + 2)
+        y: Theme.barBottom ? win.height - height : 0
+        HoverHandler { id: sensorHover } }
     readonly property bool bottom: Theme.barBottom
 
     MouseArea { anchors.fill: parent; enabled: win.shown && !win.pinned; onClicked: HubState.close() }
@@ -266,7 +275,7 @@ PanelWindow {
     // spot (each menu keeps its own: its position, or where it was dragged) instead of jumping
     // (set here only, not bound: bound, it would move before the old spot could be read)
     property string cardPage: ""
-    Component.onCompleted: cardPage = HubState.page
+    Component.onCompleted: { cardPage = HubState.page; if (!side) HubState.setBarTucked(modelData.name, tucked && autohide); }
     Connections {
         target: HubState
         function onPageChanged() {
