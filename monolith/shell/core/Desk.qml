@@ -215,9 +215,32 @@ Singleton {
         if (on) m[id] = true; else delete m[id];
         minIds = m;
     }
+    // the workspace you were on last (not one where minimised windows wait): where a minimised
+    // window comes back to when something else than the taskbar brings it up
+    property var lastWs: null
+    function noteWs() {
+        const f = Niri.workspaces.find(x => x.is_focused);
+        if (!f) return;
+        for (const id in minIds) { const w = Niri.windows[id]; if (w && w.workspace_id === f.id) return; }
+        lastWs = { id: f.id, idx: f.idx, name: f.name || "", output: f.output };
+    }
     Connections {
         target: Niri
-        function onFocusedWindowIdChanged() { if (Niri.focusedWindowId !== null && desk.minIds[Niri.focusedWindowId]) desk.noteMin(Niri.focusedWindowId, false); }
+        function onWorkspacesChanged() { if (!Niri.hyprland) desk.noteWs(); }
+        // niri: a minimised window focused some other way (Alt+Tab, a notification): niri went over
+        // to the empty workspace it waits on, and it stayed there. It comes back onto the workspace
+        // you were on, with you
+        function onFocusedWindowIdChanged() {
+            const id = Niri.focusedWindowId;
+            if (id === null || !desk.minIds[id]) return;
+            desk.noteMin(id, false);
+            const back = desk.lastWs;
+            if (Niri.hyprland || !back || !Niri.workspaces.find(x => x.id === back.id)) return;
+            const w = Niri.windows[id], at = w ? Niri.workspaces.find(x => x.id === w.workspace_id) : null;
+            if (at && at.output !== back.output) desk.niri(["move-window-to-monitor", back.output]);
+            desk.niri(["move-window-to-workspace", "--window-id", String(id), "--focus", "true", back.name ? back.name : String(back.idx)]);
+            desk.niri(["focus-window", "--id", String(id)]);
+        }
     }
     function addr(w) { return "address:0x" + String(w.id).replace(/^0x/, ""); }
     function hypr(lua, classic) { if (Niri.hyprLua) Hyprland.dispatch(lua); else if (classic) Hyprland.dispatch(classic); }
