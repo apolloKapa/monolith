@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Installer UI: banner, main menu, SDDM submenu, completion screen.
+# Installer UI: a rounded panel in the middle of the screen (the main menu, the login screen's,
+# the packages), the install steps, the finish screen.
+shopt -s extglob
 
 RESET=$'\e[0m'
 BOLD=$'\e[1m'
@@ -49,15 +51,19 @@ grad_rule() {
     for (( i = 0; i < w; i++ )); do line+="$ch"; done
     grad_line "$line"
 }
-# the highlighted menu row: an accent bar and a soft background
-row_on() {
-    if [ "$TRUECOLOR" = true ]; then
-        printf '\r\e[K\e[48;2;58;40;78m%s\e[38;2;255;140;220m ▌%s\e[48;2;58;40;78m %s \e[K%s\n' "$BOLD" "$RESET" "$1" "$RESET"
-    else
-        printf '\r\e[K%s%s ▸ %s%s\n' "$BOLD" "$C_CYAN" "$RESET" "$1"
-    fi
-}
-row_off() { printf '\r\e[K   %s\n' "$1"; }
+
+# the panel's colours (plainer without 24-bit colour)
+if [ "$TRUECOLOR" = true ]; then
+    T_BORDER=$'\e[38;2;118;98;160m'
+    T_ACC=$'\e[38;2;255;150;225m'
+    T_ACC2=$'\e[38;2;150;200;255m'
+    T_SEL=$'\e[48;2;62;44;84m'
+    T_ON=$'\e[38;2;140;230;160m'
+    T_HEAD=$'\e[38;2;175;150;220m'
+    T_BTN=$'\e[48;2;44;38;60m'
+else
+    T_BORDER=$DIM; T_ACC=$C_CYAN; T_ACC2=$C_CYAN; T_SEL=$'\e[7m'; T_ON=$C_GREEN; T_HEAD=$C_CYAN; T_BTN=""
+fi
 
 IS_REINSTALL=false
 NIRI_MODE=replace
@@ -79,17 +85,204 @@ CPU_INFO=$(grep -m 1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2 | xarg
 GPU_INFO=$(lspci -nn 2>/dev/null | grep -iE 'vga|3d|display' | head -1 | cut -d: -f3 | sed -E 's/ \(rev [0-9a-f]+\)//g; s/\[[0-9a-f:]+\]//g' | xargs)
 [[ -z "$GPU_INFO" ]] && GPU_INFO="unknown"
 
+# --- the screen ------------------------------------------------------------------------------
+# The menus draw on the terminal's other screen, so what was there before is back afterwards
+TUI_ON=false
+tui_begin() {
+    [ "$TUI_ON" = true ] && return 0
+    printf '\e[?1049h\e[?25l\e[?7l'
+    stty -echo 2>/dev/null || true
+    TUI_ON=true
+}
+tui_end() {
+    [ "$TUI_ON" = true ] || return 0
+    printf '\e[2J\e[H\e[?1049l'
+    TUI_ON=false
+}
 cleanup_terminal() {
+    tui_end
     printf "\e[?25h\e[?7h" 2>/dev/null || true
     stty echo icanon 2>/dev/null || true
 }
 trap cleanup_terminal EXIT INT TERM
 
+# the terminal's size, in $TR rows and $TC columns
+term_size() {
+    local s
+    s=$(stty size 2>/dev/null </dev/tty)
+    TR=${s%% *}; TC=${s##* }
+    [[ "$TR" =~ ^[0-9]+$ ]] || TR=24
+    [[ "$TC" =~ ^[0-9]+$ ]] || TC=80
+}
+# how wide a text is on screen ($VL), its colours not counted
+vlen() { local s="${1//$'\e['*([0-9;])m/}"; VL=${#s}; }
+# a text made exactly `w` wide ($FT): padded with spaces, or cut with … when it's longer
+fit() {
+    local text=$1 w=$2
+    vlen "$text"
+    if (( VL <= w )); then
+        printf -v FT '%s%*s' "$text" $(( w - VL )) ''
+    else
+        local plain="${text//$'\e['*([0-9;])m/}"
+        FT="${plain:0:$(( w - 1 ))}…"
+    fi
+}
+# a text in lines at most `w` wide (plain text), in the array WRAP
+wrap() {
+    local text=$1 w=$2 line="" word
+    WRAP=()
+    for word in $text; do
+        if [ -z "$line" ]; then line=$word
+        elif (( ${#line} + 1 + ${#word} <= w )); then line+=" $word"
+        else WRAP+=("$line"); line=$word; fi
+    done
+    [ -n "$line" ] && WRAP+=("$line")
+}
+rule_of() { local n=$1 ch=${2:-─} out="" i; for (( i = 0; i < n; i++ )); do out+=$ch; done; printf '%s' "$out"; }
+
+MONO_LOGO=(
+" ███╗   ███╗ ██████╗ ███╗   ██╗ ██████╗ ██╗     ██╗████████╗██╗  ██╗"
+" ████╗ ████║██╔═══██╗████╗  ██║██╔═══██╗██║     ██║╚══██╔══╝██║  ██║"
+" ██╔████╔██║██║   ██║██╔██╗ ██║██║   ██║██║     ██║   ██║   ███████║"
+" ██║╚██╔╝██║██║   ██║██║╚██╗██║██║   ██║██║     ██║   ██║   ██╔══██║"
+" ██║ ╚═╝ ██║╚██████╔╝██║ ╚████║╚██████╔╝███████╗██║   ██║   ██║  ██║"
+" ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═╝"
+)
+
+# The panel: the lines in PL inside a rounded box, `title` in its top edge and `hint` in its
+# bottom one, `w` wide, in the middle of the screen; the logo above it when there's room.
+panel_draw() {
+    local title=$1 hint=$2 w=$3 i
+    term_size
+    (( w > TC - 2 )) && w=$(( TC - 2 ))
+    (( w < 40 )) && w=40
+    local inner=$(( w - 4 )) h=$(( ${#PL[@]} + 2 ))
+    local logo=false lw=${#MONO_LOGO[0]}
+    (( TR >= h + 9 && TC >= lw + 2 )) && logo=true
+    local total=$h; [ "$logo" = true ] && total=$(( h + 8 ))
+    local top=$(( (TR - total) / 2 + 1 )); (( top < 1 )) && top=1
+    local left=$(( (TC - w) / 2 + 1 )); (( left < 1 )) && left=1
+    local buf=$'\e[2J'
+    if [ "$logo" = true ]; then
+        local ll=$(( (TC - lw) / 2 + 1 )) r=$top l
+        for l in "${MONO_LOGO[@]}"; do
+            grad_build "$l"; buf+=$'\e['"${r};${ll}H${BOLD}${GL}"; r=$(( r + 1 ))
+        done
+        local tag="really good desktop :3"
+        buf+=$'\e['"$(( r + 1 ));$(( (TC - ${#tag}) / 2 + 1 ))H${DIM}${tag}${RESET}"
+        top=$(( top + 8 ))
+    fi
+    # the top edge, with its title
+    vlen "$title"
+    local tl=$VL
+    buf+=$'\e['"${top};${left}H${T_BORDER}╭─${RESET} ${BOLD}${T_ACC}${title}${RESET} ${T_BORDER}$(rule_of $(( w - tl - 5 )))╮${RESET}"
+    for (( i = 0; i < ${#PL[@]}; i++ )); do
+        fit "${PL[$i]}" "$inner"
+        buf+=$'\e['"$(( top + 1 + i ));${left}H${T_BORDER}│${RESET} ${FT}${RESET} ${T_BORDER}│${RESET}"
+    done
+    # the bottom edge, with what the keys do
+    vlen "$hint"
+    local hl=$VL
+    (( hl > w - 6 )) && { hint=""; hl=0; }
+    buf+=$'\e['"$(( top + h - 1 ));${left}H${T_BORDER}╰$(rule_of $(( w - hl - 5 ))) ${RESET}${DIM}${hint}${RESET} ${T_BORDER}─╯${RESET}"
+    printf '%s' "$buf"
+}
+
+# --- a menu ----------------------------------------------------------------------------------
+# Its rows, set by the screen that shows it:
+#   MK  kind: head (a heading), item (a choice, its value on the right), btn (a button along the
+#       bottom), text (a line of information), gap (an empty line)
+#   ML  label   MV  value (items)   MD  what it does (shown under the menu for the one you're on)
+#   MA  its action (what the menu returns in $MENU_PICK)
+# menu_show TITLE WIDTH: draws it with MENU_CUR on, reads one key; the pick in MENU_PICK ("" if
+# none yet), "exit" for q / Esc
+menu_reset() { MK=(); ML=(); MV=(); MD=(); MA=(); }
+menu_add() { MK+=("$1"); ML+=("$2"); MV+=("${3:-}"); MD+=("${4:-}"); MA+=("${5:-}"); }
+MENU_CUR=0
+menu_selectable() { MSEL=(); local i; for i in "${!MK[@]}"; do [[ "${MK[$i]}" == item || "${MK[$i]}" == btn ]] && MSEL+=("$i"); done; }
+menu_show() {
+    local title=$1 w=$2 i
+    menu_selectable
+    local n=${#MSEL[@]}
+    (( MENU_CUR >= n )) && MENU_CUR=$(( n - 1 ))
+    (( MENU_CUR < 0 )) && MENU_CUR=0
+    local on=${MSEL[$MENU_CUR]}
+    term_size
+    (( w > TC - 2 )) && w=$(( TC - 2 ))
+    local inner=$(( w - 4 ))
+    PL=()
+    local btns="" btnw=0
+    for i in "${!MK[@]}"; do
+        case "${MK[$i]}" in
+            gap) PL+=("") ;;
+            text) PL+=("${DIM}${ML[$i]}${RESET}") ;;
+            head) PL+=("${BOLD}${T_HEAD}${ML[$i]}${RESET}") ;;
+            item)
+                local left="  ${ML[$i]}" right="${MV[$i]}"
+                [ "$i" = "$on" ] && left=" ${T_ACC}▌${RESET}${T_SEL}${BOLD}${ML[$i]}"
+                vlen "$left"; local a=$VL; vlen "$right"; local b=$VL
+                local gapw=$(( inner - a - b - 2 )); (( gapw < 1 )) && gapw=1
+                local line
+                printf -v line '%s%*s%s  ' "$left" "$gapw" '' "$right"
+                if [ "$i" = "$on" ]; then
+                    # (the highlight under the whole row: every colour reset in it puts it back)
+                    line="${line//$RESET/$RESET$T_SEL}"
+                    fit "$line" "$inner"
+                    PL+=("${T_SEL}${FT}${RESET}")
+                else
+                    PL+=("$line")
+                fi ;;
+            btn)
+                local b
+                if [ "$i" = "$on" ]; then b="${T_SEL}${BOLD}${T_ACC} ${ML[$i]} ${RESET}"
+                else b="${T_BTN} ${ML[$i]} ${RESET}"; fi
+                btns+="$b   "; btnw=$(( btnw + ${#ML[$i]} + 5 )) ;;
+        esac
+    done
+    if [ -n "$btns" ]; then
+        PL+=("")
+        local pad=$(( (inner - btnw + 3) / 2 )); (( pad < 0 )) && pad=0
+        PL+=("$(printf '%*s' "$pad" '')${btns}")
+    fi
+    # what the one you're on does
+    PL+=("" "${T_BORDER}$(rule_of "$inner")${RESET}")
+    wrap "${MD[$on]}" "$inner"
+    local k
+    for k in 0 1 2; do PL+=("${T_ACC2}${WRAP[$k]:-}${RESET}"); done
+    panel_draw "$title" "↑↓ move   ⏎ choose   q quit" "$w"
+
+    MENU_PICK=""
+    local key
+    key=$(read_key)
+    case "$key" in
+        UP|[kK]) MENU_CUR=$(( (MENU_CUR - 1 + n) % n )) ;;
+        DOWN|[jJ]) MENU_CUR=$(( (MENU_CUR + 1) % n )) ;;
+        LEFT|[hH]) [ "${MK[$on]}" = btn ] && MENU_CUR=$(( (MENU_CUR - 1 + n) % n )) ;;
+        RIGHT|[lL]) [ "${MK[$on]}" = btn ] && MENU_CUR=$(( (MENU_CUR + 1) % n )) ;;
+        [1-9]) (( key <= n )) && { MENU_CUR=$(( key - 1 )); MENU_PICK="${MA[${MSEL[$MENU_CUR]}]}"; } ;;
+        ENTER|SPACE) MENU_PICK="${MA[$on]}" ;;
+        ESC|[qQ]) MENU_PICK="exit" ;;
+    esac
+}
+# how a choice's value looks: on (green), off (dim), or a word in the accent
+v_on() { [ "$1" = true ] && printf '%s● On%s' "$T_ON" "$RESET" || printf '%s○ Off%s' "$DIM" "$RESET"; }
+v_word() { printf '%s%s%s' "$T_ACC2" "$1" "$RESET"; }
+
 read_key() {
     local key=""
     local rest=""
-    # no more input (closed stdin): behave like Esc so menus exit instead of spinning
-    IFS= read -rsn1 key 2>/dev/null || { echo "ESC"; return; }
+    # (waiting half a second at a time: a terminal made bigger or smaller meanwhile gives RESIZE,
+    # and the menu is drawn again in its middle; it stayed where it was until a key was pressed)
+    local size0 size1 rc
+    size0=$(stty size 2>/dev/null </dev/tty)
+    while true; do
+        IFS= read -rsn1 -t 0.5 key 2>/dev/null; rc=$?
+        [ "$rc" -eq 0 ] && break
+        # no more input (closed stdin): behave like Esc so menus exit instead of spinning
+        [ "$rc" -le 128 ] && { echo "ESC"; return; }
+        size1=$(stty size 2>/dev/null </dev/tty)
+        [ "$size1" != "$size0" ] && { echo "RESIZE"; return; }
+    done
     if [[ "$key" == $'\x1b' ]]; then
         read -rsn2 -t 0.05 rest 2>/dev/null
         if [[ "$rest" == "[A" || "$rest" == "OA" ]]; then
@@ -127,12 +320,8 @@ read_key() {
     echo "$key"
 }
 
+# the login screen: Monolith's SDDM theme, the display manager that's there now, Wayland or X11
 manage_sddm_menu() {
-    draw_banner
-    stty -echo 2>/dev/null || true
-    printf "\e[?25l\e[?7l"
-    printf "%s%s$(t "installer.ui.sddm_title")%s\n\n" "$BOLD" "$C_CYAN" "$RESET"
-
     local current_dm=""
     local dms=("gdm" "gdm3" "lightdm" "sddm" "lxdm" "lxdm-gtk3" "ly")
     for dm in "${dms[@]}"; do
@@ -155,123 +344,38 @@ manage_sddm_menu() {
         fi
     fi
 
-    if [ -n "$current_dm" ]; then
-        printf "$(t "installer.ui.sddm_detected_active" "dm=${BOLD}${C_YELLOW}%s${RESET}")\n\n" "$current_dm"
-    else
-        printf "%s\n\n" "$(t "installer.ui.sddm_detected_none")"
-    fi
-
-    local cursor=0
-    local rendered_lines=0
-
+    local keep_cur=$MENU_CUR
+    MENU_CUR=0
     while true; do
-        local S_SDDM="${DIM}[Disabled]${RESET}"
-        local S_RDM="${DIM}[No]${RESET}"
-        local S_WAY="${DIM}[X11/Default]${RESET}"
-
-        [ "$OPT_SDDM" = true ] && S_SDDM="${C_GREEN}[Enabled]${RESET}"
-        [ "$REPLACE_DM" = true ] && S_RDM="${C_GREEN}[Yes]${RESET}"
-        [ "$SDDM_WAYLAND" = true ] && S_WAY="${C_GREEN}[Wayland]${RESET}"
-
-        local items=()
-        items+=("1. $(t "installer.ui.sddm_opt_install") $S_SDDM")
+        menu_reset
+        if [ -n "$current_dm" ]; then menu_add text "You log in with $current_dm now."
+        else menu_add text "No login screen (display manager) is set up now."; fi
+        menu_add gap
+        menu_add item "Monolith's login screen" "$(v_on "$OPT_SDDM")" \
+            "SDDM with Monolith's theme: your wallpaper and colours, a clock, your picture. The login screen you see when the PC starts." sddm
         if [ -n "$current_dm" ] && [ "$current_dm" != "sddm" ]; then
-            items+=("2. $(t "installer.ui.sddm_opt_disable" "dm=$current_dm") $S_RDM")
+            menu_add item "Turn off $current_dm" "$([ "$REPLACE_DM" = true ] && v_word Yes || printf '%sNo%s' "$DIM" "$RESET")" \
+                "Only one login screen can run: $current_dm is switched off so Monolith's can start instead." rdm
         fi
-        items+=("3. $(t "installer.ui.sddm_opt_wayland") $S_WAY")
-        items+=("4. ${BOLD}${C_GREEN}$(t "installer.ui.done")${RESET}")
-
-        if [ "$rendered_lines" -gt 0 ]; then
-            printf "\033[%dA" "$rendered_lines"
-        fi
-
-        for i in "${!items[@]}"; do
-            if [ "$i" -eq "$cursor" ]; then
-                row_on "${items[$i]}"
-            else
-                row_off "${items[$i]}"
-            fi
-        done
-        rendered_lines=${#items[@]}
-
-        local key
-        key=$(read_key)
-
-        case "$key" in
-            UP|[kK])
-                if [ "$cursor" -gt 0 ]; then
-                    cursor=$(( cursor - 1 ))
-                else
-                    cursor=$(( ${#items[@]} - 1 ))
-                fi
-                ;;
-            DOWN|[jJ])
-                if [ "$cursor" -lt $(( ${#items[@]} - 1 )) ]; then
-                    cursor=$(( cursor + 1 ))
-                else
-                    cursor=0
-                fi
-                ;;
-            ENTER|SPACE)
-                local selected_str="${items[$cursor]}"
-                case "$selected_str" in
-                    *"1."*)
-                        OPT_SDDM=$([ "$OPT_SDDM" = true ] && echo false || echo true)
-                        if [ "$OPT_SDDM" = true ] && [ -n "$current_dm" ] && [ "$current_dm" != "sddm" ]; then
-                            REPLACE_DM=true
-                        fi
-                        ;;
-                    *"2."*)
-                        REPLACE_DM=$([ "$REPLACE_DM" = true ] && echo false || echo true)
-                        ;;
-                    *"3."*)
-                        SDDM_WAYLAND=$([ "$SDDM_WAYLAND" = true ] && echo false || echo true)
-                        ;;
-                    *"4."*)
-                        break
-                        ;;
-                esac
-                ;;
-            ESC|[qQ])
-                break
-                ;;
+        menu_add item "Login screen runs on" "$([ "$SDDM_WAYLAND" = true ] && v_word Wayland || v_word X11)" \
+            "Wayland is newer and smoother; X11 works on more graphics drivers. If the login screen stays black, pick X11." way
+        menu_add btn "Done" "" "Back to the main menu." done
+        menu_show "Login screen" 76
+        case "$MENU_PICK" in
+            sddm)
+                OPT_SDDM=$([ "$OPT_SDDM" = true ] && echo false || echo true)
+                if [ "$OPT_SDDM" = true ] && [ -n "$current_dm" ] && [ "$current_dm" != "sddm" ]; then
+                    REPLACE_DM=true
+                fi ;;
+            rdm) REPLACE_DM=$([ "$REPLACE_DM" = true ] && echo false || echo true) ;;
+            way) SDDM_WAYLAND=$([ "$SDDM_WAYLAND" = true ] && echo false || echo true) ;;
+            done|exit) break ;;
         esac
     done
+    MENU_CUR=$keep_cur
 }
 
-draw_banner() {
-    clear
-    local logo=(
-" ███╗   ███╗ ██████╗ ███╗   ██╗ ██████╗ ██╗     ██╗████████╗██╗  ██╗"
-" ████╗ ████║██╔═══██╗████╗  ██║██╔═══██╗██║     ██║╚══██╔══╝██║  ██║"
-" ██╔████╔██║██║   ██║██╔██╗ ██║██║   ██║██║     ██║   ██║   ███████║"
-" ██║╚██╔╝██║██║   ██║██║╚██╗██║██║   ██║██║     ██║   ██║   ██╔══██║"
-" ██║ ╚═╝ ██║╚██████╔╝██║ ╚████║╚██████╔╝███████╗██║   ██║   ██║  ██║"
-" ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝ ╚══════╝╚═╝   ╚═╝   ╚═╝  ╚═╝"
-    )
-    local w=${#logo[0]} l c
-    printf '\e[?25l'
-    if [ "$ANIM" = true ] && [ "$BANNER_SHOWN" = false ]; then
-        # the first time: the logo sweeps in from the left, in the gradient
-        for (( c = 4; c <= w + 4; c += 4 )); do
-            printf '\e[H'
-            for l in "${logo[@]}"; do grad_build "$l" "$c"; printf '%s%s\e[K\n' "$BOLD" "$GL"; done
-            sleep 0.012
-        done
-    else
-        for l in "${logo[@]}"; do grad_build "$l"; printf '%s%s\n' "$BOLD" "$GL"; done
-    fi
-    BANNER_SHOWN=true
-    printf " %s%sreally good desktop :3%s\n" "$BOLD" "$(grad_at 0 2)" "$RESET"
-    printf "%s\n" "$(grad_rule 80)"
-    local k="$BOLD$(grad_at 1 2)"
-    printf " %sUser:%s %-25s %s│%s %sOS:%s  %s\n" "$k" "$RESET" "$USER_NAME" "$DIM" "$RESET" "$k" "$RESET" "$OS_NAME"
-    printf " %sCPU:%s  %-25.25s %s│%s %sGPU:%s %.40s\n" "$k" "$RESET" "$CPU_INFO" "$DIM" "$RESET" "$k" "$RESET" "$GPU_INFO"
-    printf " %sRepo:%s %-25s %s│%s %sMode:%s %s\n" "$k" "$RESET" "$REPO_SLUG@$MONOLITH_BRANCH" "$DIM" "$RESET" "$k" "$RESET" "$INSTALL_STATE"
-    printf " %sVersion:%s %s (%s)" "$k" "$RESET" "$TARGET_VERSION" "$TARGET_COMMIT"
-    [ -n "$OLD_VERSION" ] && printf "  %sinstalled: %s%s" "$DIM" "$OLD_VERSION" "$RESET"
-    printf "\n%s\n\n" "$(grad_rule 80 ━)"
-}
+draw_banner() { :; }   # (the logo is drawn above the panel now)
 
 # The packages Monolith wants, and how each is installed: a ▶ on the one you're on (↑/↓), ←/→
 # to change it. Gentoo: Compile, Binary (Gentoo's prebuilt package when its version and USE
@@ -296,7 +400,8 @@ show_package_overview() {
     declare -A has_bin=()
     local bin_known=false
     if [ "$PM_NAME" = portage ] && declare -f pm_binary_pkgs >/dev/null; then
-        printf "\033[2J\033[H %sChecking which packages Gentoo prebuilds…%s" "$DIM" "$RESET"
+        PL=("" "${DIM}Checking which packages Gentoo prebuilds…${RESET}" "")
+        panel_draw "Packages" "" 64
         local got=()
         mapfile -t got < <(pm_binary_pkgs "${list[@]}")
         if [ ${#got[@]} -gt 0 ]; then
@@ -309,10 +414,10 @@ show_package_overview() {
     local modes labels
     if [ "$PM_NAME" = portage ]; then modes=(c b x); labels=(Compile Binary Off)
     else modes=(c x); labels=(Install Off); fi
-    local mcolor=("$C_GREEN" $'\e[36m' "$C_RED")
-    [ "$PM_NAME" = portage ] || mcolor=("$C_GREEN" "$C_RED")
+    local mcolor=("$T_ON" "$T_ACC2" "$C_RED")
+    [ "$PM_NAME" = portage ] || mcolor=("$T_ON" "$C_RED")
 
-    local total=${#list[@]} cur=0 top=0 rows msg="" i j k
+    local total=${#list[@]} cur=0 top=0 msg="" i j k
     set_pick() {   # set_pick name mode
         if pkg_needed "$1"; then
             msg="$1 is important: the shell needs it to start, so it's always installed$([ "$PM_NAME" = portage ] && echo ", as a binary")"
@@ -322,9 +427,8 @@ show_package_overview() {
         PKG_PICK["$1"]="$2"
     }
     while true; do
-        rows=$(stty size 2>/dev/null </dev/tty | cut -d' ' -f1)
-        [[ "$rows" =~ ^[0-9]+$ ]] || rows=24
-        local page=$(( rows - 7 )); (( page < 3 )) && page=3
+        term_size
+        local page=$(( TR - 12 )); (( page < 3 )) && page=3
         (( cur < 0 )) && cur=0; (( cur >= total )) && cur=$(( total - 1 ))
         (( cur < top )) && top=$cur
         (( cur >= top + page )) && top=$(( cur - page + 1 ))
@@ -335,20 +439,23 @@ show_package_overview() {
             case $m in c) ((++nc)) ;; b) ((++nb)) ;; x) ((++nx)) ;; esac
             [[ -n "${is_missing[$p]}" ]] && ((++n_missing))
         done
-        printf "\033[2J\033[H"
-        printf " %sPackages%s  %d: %s%d to install%s, %d installed    " "$BOLD" "$RESET" "$total" "$C_YELLOW" "$n_missing" "$RESET" "$(( total - n_missing ))"
+        PL=()
+        local counts
         if [ "$PM_NAME" = portage ]; then
-            printf "%s%d compile%s · %s%d binary%s · %s%d off%s\n" "$C_GREEN" "$nc" "$RESET" $'\e[36m' "$nb" "$RESET" "$C_RED" "$nx" "$RESET"
-            printf " %sBinary: Gentoo's prebuilt package (and its dependencies') when the version and USE match, else compiled. ° Gentoo doesn't prebuild it.%s\n\n" "$DIM" "$RESET"
+            counts="${T_ON}${nc} compile${RESET} · ${T_ACC2}${nb} binary${RESET} · ${C_RED}${nx} off${RESET}"
+            PL+=("${BOLD}${total} packages${RESET}: ${C_YELLOW}${n_missing} to install${RESET}, $(( total - n_missing )) installed     ${counts}")
+            PL+=("${DIM}Binary: Gentoo's prebuilt package when version and USE match, else compiled. ° not prebuilt.${RESET}")
         else
-            printf "%s%d install%s · %s%d off%s\n" "$C_GREEN" "$nc" "$RESET" "$C_RED" "$nx" "$RESET"
-            printf " %sOff: Monolith doesn't install it (what it needs can't be off).%s\n\n" "$DIM" "$RESET"
+            counts="${T_ON}${nc} install${RESET} · ${C_RED}${nx} off${RESET}"
+            PL+=("${BOLD}${total} packages${RESET}: ${C_YELLOW}${n_missing} to install${RESET}, $(( total - n_missing )) installed     ${counts}")
+            PL+=("${DIM}Off: Monolith doesn't install it (what it needs can't be off).${RESET}")
         fi
+        PL+=("")
         for (( i = top; i < top + page && i < total; i++ )); do
             p=${list[$i]}
             pick_of_r "$p"; m=$REPLY
             local mark="  " st name opts=""
-            [ "$i" -eq "$cur" ] && mark="${BOLD}${C_GREEN}▶${RESET} "
+            [ "$i" -eq "$cur" ] && mark="${BOLD}${T_ACC}▶${RESET} "
             if [[ -n "${is_missing[$p]}" ]]; then st="${C_YELLOW}to install${RESET}"; else st="${DIM}installed ${RESET}"; fi
             name="$p"; no_bin "$p" && name="$name°"
             # (one Gentoo doesn't prebuild, saved as Binary before: it's compiled)
@@ -356,9 +463,9 @@ show_package_overview() {
             if pkg_needed "$p"; then
                 # important: fixed (binary on Gentoo; one Gentoo doesn't prebuild compiles on binaries)
                 if [ "$PM_NAME" = portage ]; then
-                    no_bin "$p" && opts=" ${BOLD}${C_GREEN}[Compile]${RESET} ${DIM}on binaries${RESET}" || opts=" ${BOLD}"$'\e[36m'"[Binary]${RESET}"
+                    no_bin "$p" && opts=" ${BOLD}${T_ON}[Compile]${RESET} ${DIM}on binaries${RESET}" || opts=" ${BOLD}${T_ACC2}[Binary]${RESET}"
                 else
-                    opts=" ${BOLD}${C_GREEN}[Install]${RESET}"
+                    opts=" ${BOLD}${T_ON}[Install]${RESET}"
                 fi
                 opts+="  ${C_YELLOW}important${RESET}"
             fi
@@ -371,17 +478,18 @@ show_package_overview() {
                     opts+=" ${DIM} ${labels[$k]} ${RESET}"
                 fi
             done
+            local nm; fit "$name" 28; nm=$FT
             if [ "$i" -eq "$cur" ]; then
-                printf "%s%s  %s%-28.28s%s%s\033[K\n" "$mark" "$st" "$BOLD" "$name" "$RESET" "$opts"
+                PL+=("${mark}${st}  ${BOLD}${nm}${RESET}${opts}")
             else
-                printf "%s%s  %-28.28s%s\033[K\n" "$mark" "$st" "$name" "$opts"
+                PL+=("${mark}${st}  ${nm}${opts}")
             fi
         done
-        printf "\n %s%d/%d   ↑/↓ package   ←/→ how it's installed   %s this one, %s all   important: always installed   q / Esc / Enter: back%s" \
-            "$DIM" "$(( cur + 1 ))" "$total" "$([ "$PM_NAME" = portage ] && echo "c/b/x" || echo "c/x")" \
-            "$([ "$PM_NAME" = portage ] && echo "C/B/X" || echo "C/X")" "$RESET"
-        [ -n "$msg" ] && printf "\n %s%s%s" "$C_YELLOW" "$msg" "$RESET"
+        PL+=("")
+        if [ -n "$msg" ]; then PL+=("${C_YELLOW}${msg}${RESET}")
+        else PL+=("${DIM}$(( cur + 1 ))/${total}   ←/→ how it's installed   $([ "$PM_NAME" = portage ] && echo "c/b/x" || echo "c/x") this one, $([ "$PM_NAME" = portage ] && echo "C/B/X" || echo "C/X") all${RESET}"); fi
         msg=""
+        panel_draw "Packages" "↑↓ package   ←→ change   ⏎ back" 104
         local key; key=$(read_key)
         p=${list[$cur]}
         pick_of_r "$p"; m=$REPLY
@@ -417,107 +525,73 @@ show_package_overview() {
         esac
     done
     picks_save
-    printf "\033[2J\033[H"
 }
 
 on_off() { [ "$1" = true ] && printf "%s[ON]%s" "$C_GREEN" "$RESET" || printf "%s[OFF]%s" "$DIM" "$RESET"; }
 
+# The main menu: what Monolith sets up, in groups, each choice's value on the right and what it
+# does under the menu; Install (or Update / Reinstall) and Exit along the bottom
 run_installer_ui() {
-    local cursor=0
+    tui_begin
+    MENU_CUR=0
+    local cpu=${CPU_INFO// Processor/} gpu=${GPU_INFO#Advanced Micro Devices, Inc. }
     while true; do
-        draw_banner
-        stty -echo 2>/dev/null || true
-        printf "\e[?25l\e[?7l"
+        menu_reset
+        local ver="Monolith $TARGET_VERSION ($TARGET_COMMIT)"
+        [ -n "$OLD_VERSION" ] && ver+="   installed: $OLD_VERSION"
+        menu_add text "$ver"
+        menu_add text "$USER_NAME · $OS_NAME · $cpu"
+        menu_add gap
 
-        local niri_label wp_label
-        [ "$NIRI_MODE" = replace ] \
-            && niri_label="${C_GREEN}[replace, backup kept]${RESET}" \
-            || niri_label="${DIM}[keep mine]${RESET}"
-        case "$WALLPAPERS" in
-            full)   wp_label="${C_GREEN}[full pack, ~1.1 GB with live]${RESET}" ;;
-            random) wp_label="${C_GREEN}[3 random + 1 live]${RESET}" ;;
-            *)      wp_label="${DIM}[none]${RESET}" ;;
-        esac
-
-        local desk_label
-        [ "$DESKTOP" = hyprland ] \
-            && desk_label="${C_GREEN}[Hyprland]${RESET} ${DIM}(Monolith replaces its shell, backup kept)${RESET}" \
-            || desk_label="${C_GREEN}[niri]${RESET}"
-        local labels=(
-            "Desktop $desk_label"
-            "Packages $([ "$PM_NAME" = portage ] && echo "(compile, binary or off, each)" || echo "(install or off, each)")"
-            "Apps for the keybinds (kitty, librewolf, thunar, mission center) $(on_off "$OPT_KEYBIND_APPS")"
-        )
-        local actions=(desktop packages keybind_apps)
-        # Hyprland: which keys (Monolith's layout, the same as on niri, or your own)
+        menu_add head "Setup"
+        menu_add item "Desktop" "$([ "$DESKTOP" = hyprland ] && v_word Hyprland || v_word niri)" \
+            "$([ "$DESKTOP" = hyprland ] && echo "Monolith runs as Hyprland's shell (your Hyprland config is backed up first). Enter switches to niri." || echo "Monolith on niri: a scrolling desktop with Monolith's own keybinds and layout. Enter switches to Hyprland.")" desktop
         if [ "$DESKTOP" = hyprland ]; then
-            local keys_label
-            [ "$HYPR_KEYS" = monolith ] \
-                && keys_label="${C_GREEN}[Monolith's, the same as on niri]${RESET} ${DIM}(your other keys are turned off)${RESET}" \
-                || keys_label="${C_GREEN}[keep mine]${RESET}"
-            labels+=("Hyprland keys $keys_label")
-            actions+=(hyprkeys)
-        fi
-        # (niri's own config only matters on niri)
-        if [ "$DESKTOP" != hyprland ]; then
-            labels+=("niri config (keybinds, displays, workspaces) $niri_label")
-            actions+=(niri)
-        fi
-        # (a rebuild of Hyprland's display library, or of niri, with Monolith's patch: modules/hdmi.sh)
-        labels+=("HDMI scaling for TVs that cut the edges off $(on_off "$OPT_HDMI") ${DIM}(rebuilds $(hdmi_target) with a patch)${RESET}")
-        actions+=(hdmi)
-        # (niri patched: modules/niripatches.sh; all of niri's patches go in one build)
-        if [ "$DESKTOP" != hyprland ]; then
-            labels+=("niri extras: minimise buttons, windows drawn across screens while dragged $(on_off "$OPT_NIRI_EXTRAS") ${DIM}(rebuilds niri with patches)${RESET}")
-            actions+=(niriextras)
-        fi
-        labels+=("Login screen (SDDM theme) $(on_off "$OPT_SDDM")" "Wallpapers $wp_label")
-        actions+=(sddm wallpapers)
-        # another shell found: replaced (uninstalled, its files backed up, its keys made Monolith's) or kept
-        if [ -n "${OTHER_SHELLS_FOUND:-}" ]; then
-            local rep_label
-            [ "$OPT_REPLACE_SHELLS" = true ] \
-                && rep_label="${C_GREEN}[remove]${RESET} ${DIM}(uninstalled, its files backed up, its keys become Monolith's)${RESET}" \
-                || rep_label="${C_YELLOW}[keep]${RESET} ${DIM}(stays installed, kept out of Monolith's sessions)${RESET}"
-            labels+=("Other shells: ${OTHER_SHELLS_FOUND} $rep_label")
-            actions+=(replace)
-        fi
-        if [ "$INSTALL_STATE" = current ]; then
-            labels+=("${BOLD}${C_GREEN}Update${RESET}" "${BOLD}${C_YELLOW}Reinstall (fresh settings)${RESET}" "${DIM}Exit${RESET}")
-            actions+=(install reinstall exit)
+            menu_add item "Keybinds" "$([ "$HYPR_KEYS" = monolith ] && v_word "Monolith's" || v_word "Keep mine")" \
+                "$([ "$HYPR_KEYS" = monolith ] && echo "Monolith's keys, the same as on niri (your other Hyprland keys are turned off)." || echo "Your own Hyprland keybinds stay as they are.")" hyprkeys
         else
-            labels+=("${BOLD}${C_GREEN}Install${RESET}" "${DIM}Exit${RESET}")
-            actions+=(install exit)
+            menu_add item "niri config" "$([ "$NIRI_MODE" = replace ] && v_word "Monolith's" || v_word "Keep mine")" \
+                "$([ "$NIRI_MODE" = replace ] && echo "Monolith's keybinds, screens and workspaces for niri. Your config is backed up first." || echo "Your niri config stays; Monolith only adds what it needs.")" niri
+        fi
+        menu_add item "Packages" "$(v_word "Choose…")" \
+            "What Monolith installs, and how: $([ "$PM_NAME" = portage ] && echo "compiled, as Gentoo's binary, or not at all" || echo "installed or not"), one by one." packages
+
+        menu_add gap
+        menu_add head "Extras"
+        menu_add item "Apps for the keybinds" "$(v_on "$OPT_KEYBIND_APPS")" \
+            "kitty, LibreWolf, Thunar and Mission Center: the terminal, browser, files and task manager the keybinds open." keybind_apps
+        menu_add item "Login screen" "$(v_on "$OPT_SDDM")" \
+            "Monolith's login screen (SDDM), with your wallpaper and colours. Enter for its options." sddm
+        local wp
+        case "$WALLPAPERS" in full) wp="Full pack" ;; random) wp="3 + 1 live" ;; *) wp="None" ;; esac
+        menu_add item "Wallpapers" "$(v_word "$wp")" \
+            "3 random wallpapers and a live one, the full pack (about 1.1 GB with the live ones), or none. Enter goes through them." wallpapers
+        if [ -n "${OTHER_SHELLS_FOUND:-}" ]; then
+            menu_add item "Other shells ($OTHER_SHELLS_FOUND)" "$([ "$OPT_REPLACE_SHELLS" = true ] && v_word Remove || v_word Keep)" \
+                "$([ "$OPT_REPLACE_SHELLS" = true ] && echo "Uninstalled, their files backed up, their keybinds become Monolith's." || echo "They stay installed, kept out of Monolith's sessions.")" replace
         fi
 
-        local rendered=0 chosen=""
-        while [ -z "$chosen" ]; do
-            [ "$rendered" -gt 0 ] && printf "\033[%dA" "$rendered"
-            for i in "${!labels[@]}"; do
-                if [ "$i" -eq "$cursor" ]; then
-                    row_on "$((i + 1)). ${labels[$i]}"
-                else
-                    row_off "$((i + 1)). ${labels[$i]}"
-                fi
-            done
-            rendered=${#labels[@]}
-            printf "\r\033[K%s   ↑/↓ or j/k to move, Enter to pick, q to quit%s" "$DIM" "$RESET"
-            printf "\r"
+        menu_add gap
+        menu_add head "Rebuilds (take a while)"
+        menu_add item "HDMI scaling for TVs" "$(v_on "$OPT_HDMI")" \
+            "For a TV that cuts off the edges of the picture: rebuilds $(hdmi_target) with Monolith's patch, then Settings → Displays can shrink the picture to fit." hdmi
+        if [ "$DESKTOP" != hyprland ]; then
+            menu_add item "niri extras" "$(v_on "$OPT_NIRI_EXTRAS")" \
+                "Minimise buttons on windows, and windows drawn on both screens while you drag them across: rebuilds niri with Monolith's patches." niriextras
+        fi
 
-            local key
-            key=$(read_key)
-            case "$key" in
-                UP|[kK]) cursor=$(( (cursor - 1 + ${#labels[@]}) % ${#labels[@]} )) ;;
-                DOWN|[jJ]) cursor=$(( (cursor + 1) % ${#labels[@]} )) ;;
-                [1-9]) [ "$key" -le "${#labels[@]}" ] && { cursor=$((key - 1)); chosen="${actions[$cursor]}"; } ;;
-                ENTER|SPACE) chosen="${actions[$cursor]}" ;;
-                ESC|[qQ]) chosen="exit" ;;
-            esac
-        done
+        if [ "$INSTALL_STATE" = current ]; then
+            menu_add btn "Update" "" "Bring Monolith up to date, keeping your settings." install
+            menu_add btn "Reinstall" "" "Install again from scratch, with fresh settings (yours are backed up)." reinstall
+        else
+            menu_add btn "Install" "" "Install Monolith with these choices." install
+        fi
+        menu_add btn "Exit" "" "Leave without changing anything." exit
 
-        case "$chosen" in
-            desktop) DESKTOP=$([ "$DESKTOP" = hyprland ] && echo niri || echo hyprland)
-                     cursor=0; printf "\033[2J\033[H" ;;
+        menu_show "Monolith installer" 84
+        case "$MENU_PICK" in
+            "") ;;
+            desktop) DESKTOP=$([ "$DESKTOP" = hyprland ] && echo niri || echo hyprland) ;;
             hyprkeys) HYPR_KEYS=$([ "$HYPR_KEYS" = monolith ] && echo mine || echo monolith) ;;
             hdmi) OPT_HDMI=$([ "$OPT_HDMI" = true ] && echo false || echo true) ;;
             niriextras) OPT_NIRI_EXTRAS=$([ "$OPT_NIRI_EXTRAS" = true ] && echo false || echo true) ;;
@@ -554,58 +628,70 @@ step() {
     printf "\n"
 }
 
+# a panel printed where the text is (the finish screen, after the install's own output), in the
+# middle across: the lines in PL
+panel_inline() {
+    local title=$1 w=$2 i
+    term_size
+    (( w > TC - 2 )) && w=$(( TC - 2 ))
+    local inner=$(( w - 4 )) margin=$(( (TC - w) / 2 )); (( margin < 0 )) && margin=0
+    local m; printf -v m '%*s' "$margin" ''
+    vlen "$title"
+    printf '%s%s╭─%s %s%s%s%s %s%s╮%s\n' "$m" "$T_BORDER" "$RESET" "$BOLD" "$T_ACC" "$title" "$RESET" "$T_BORDER" "$(rule_of $(( w - VL - 5 )))" "$RESET"
+    for (( i = 0; i < ${#PL[@]}; i++ )); do
+        fit "${PL[$i]}" "$inner"
+        printf '%s%s│%s %s%s %s│%s\n' "$m" "$T_BORDER" "$RESET" "$FT" "$RESET" "$T_BORDER" "$RESET"
+    done
+    printf '%s%s╰%s╯%s\n' "$m" "$T_BORDER" "$(rule_of $(( w - 2 )))" "$RESET"
+    INLINE_MARGIN=$m
+}
+
 draw_completion_screen() {
     cleanup_terminal
     printf "\n"
-    # a little sparkle runs across, then settles into the gradient line
-    if [ "$ANIM" = true ]; then
-        local sparks=("✦" "✧" "·" "⋆") w=60 p i line
-        printf '\e[?25l'
-        for (( p = 0; p <= w + 6; p += 2 )); do
-            line=""
-            for (( i = 0; i < w; i++ )); do
-                if [ "$i" -le "$p" ] && [ "$i" -gt $(( p - 6 )) ]; then grad_set "$i" "$w"; line+="$GA${sparks[$(( (i + p) % 4 ))]}"
-                elif [ "$i" -le "$p" ]; then grad_set "$i" "$w"; line+="$GA─"
-                else line+=" "; fi
-            done
-            printf '\r  %s%s' "$line" "$RESET"
-            sleep 0.015
-        done
-        printf '\e[?25h\n\n'
-    else
-        printf "  %s\n\n" "$(grad_rule 60)"
-    fi
-    printf "  %s%s\n" "$BOLD" "$(grad_line "Monolith $TARGET_VERSION ($TARGET_COMMIT) is installed.")"
-    printf "  %s%sreally good desktop :3%s\n\n" "$BOLD" "$(grad_at 1 2)" "$RESET"
+    local w=84 inner=80 line
+    PL=("")
+    grad_build "Monolith $TARGET_VERSION ($TARGET_COMMIT) is installed."
+    PL+=("${BOLD}${GL}" "${DIM}really good desktop :3${RESET}" "")
     if [ ${#FAILED_PKGS[@]} -gt 0 ]; then
-        printf "%s%s  These packages failed to install:%s\n" "$BOLD" "$C_RED" "$RESET"
-        for fp in "${FAILED_PKGS[@]}"; do printf "    - %s%s%s\n" "$C_YELLOW" "$fp" "$RESET"; done
-        printf "\n"
+        PL+=("${BOLD}${C_RED}These packages failed to install:${RESET}")
+        for fp in "${FAILED_PKGS[@]}"; do PL+=("  ${C_YELLOW}• ${fp}${RESET}"); done
+        PL+=("")
     fi
+    local msgs=()
     if [ "$DESKTOP" = hyprland ] && [ "$MONOLITH_STARTED" = true ]; then
-        printf "  Monolith is running again on %sHyprland%s, updated.\n" "$BOLD" "$RESET"
-        printf "  Your keys are listed in the welcome tour (%smonolith welcome%s). %smonolith hyprland off%s puts your old config back.\n" "$BOLD" "$RESET" "$BOLD" "$RESET"
+        msgs+=("Monolith is running again on Hyprland, updated."
+               "Your keys are in the welcome tour (monolith welcome). \`monolith hyprland off\` puts your old config back.")
     elif [ "$DESKTOP" = hyprland ]; then
-        printf "  Log out of %sHyprland%s and back in: Monolith starts there instead of your old shell.\n" "$BOLD" "$RESET"
-        printf "  Your keys are listed in the welcome tour (%smonolith welcome%s, Getting around). %smonolith hyprland off%s undoes the switch.\n" "$BOLD" "$RESET" "$BOLD" "$RESET"
+        msgs+=("Log out of Hyprland and back in: Monolith starts there instead of your old shell."
+               "Your keys are in the welcome tour (monolith welcome). \`monolith hyprland off\` undoes the switch.")
     elif [ "$MONOLITH_STARTED" = true ]; then
-        printf "  Monolith is running now. Next time you log in, pick %sniri%s for the Monolith keybinds and layout.\n" "$BOLD" "$RESET"
-        printf "  Super+Space opens the hub: search, settings and everything else.\n"
+        msgs+=("Monolith is running now. Next time you log in, pick niri for Monolith's keybinds and layout."
+               "Super+Space opens the hub: search, settings and everything else.")
     else
-        printf "  Log in to %sniri%s and Monolith starts by itself.\n" "$BOLD" "$RESET"
-        printf "  Super+Space opens the hub: search, settings and everything else.\n"
+        msgs+=("Log in to niri and Monolith starts by itself."
+               "Super+Space opens the hub: search, settings and everything else.")
     fi
     # niri chosen, Hyprland here too
     if [ "$DESKTOP" != hyprland ] && hypr_present && ! hypr_switched; then
-        printf "  To use Monolith on Hyprland too: %smonolith hyprland on%s (backs up ~/.config/hypr first).\n" "$BOLD" "$RESET"
+        msgs+=("To use Monolith on Hyprland too: \`monolith hyprland on\` (backs up ~/.config/hypr first).")
     fi
-    printf "  Run %smonolith installer%s any time to update or change these choices.\n\n" "$BOLD" "$RESET"
+    msgs+=("Run \`monolith installer\` any time to update or change these choices.")
+    term_size
+    (( w > TC - 2 )) && { w=$(( TC - 2 )); inner=$(( w - 4 )); }
+    for line in "${msgs[@]}"; do
+        wrap "$line" "$inner"
+        local k; for k in "${WRAP[@]}"; do PL+=("$k"); done
+        PL+=("")
+    done
+    panel_inline "Done" "$w"
+    printf "\n"
 
     local choice=""
     if [ -t 0 ]; then
-        read -r -p "  Restart your computer now? [y/N] " choice
+        read -r -p "${INLINE_MARGIN}  Restart your computer now? [y/N] " choice
     elif [ -e /dev/tty ]; then
-        read -r -p "  Restart your computer now? [y/N] " choice < /dev/tty
+        { read -r -p "${INLINE_MARGIN}  Restart your computer now? [y/N] " choice; } 2>/dev/null < /dev/tty
     fi
     [[ "$choice" =~ ^[Yy]$ ]] && { systemctl reboot 2>/dev/null || loginctl reboot 2>/dev/null || sudo reboot; }
     return 0
