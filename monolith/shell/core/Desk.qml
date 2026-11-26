@@ -19,7 +19,10 @@ import Quickshell.Hyprland
 Singleton {
     id: desk
 
-    readonly property bool wanted: Store.loaded && Store.raw("desktop.enabled", false) === true
+    // experimental features (Settings → Updates & about): Desktop mode is one. Never set, it's on
+    // for whoever had Desktop mode on already, so nothing goes away under them
+    readonly property bool experimental: Store.raw("experimental.enabled", Store.raw("desktop.enabled", false) === true) === true
+    readonly property bool wanted: Store.loaded && experimental && Store.raw("desktop.enabled", false) === true
     // the taskbar is up: what it needs stands in for your bar's settings
     property bool on: false
     // the dock inside the taskbar: 0 apart (the dock as it is), 1 one piece (the taskbar's apps)
@@ -113,7 +116,7 @@ Singleton {
     function settle() {
         if (started || (!Store.loaded && Object.keys(Store.data).length === 0)) return;
         started = true;
-        if (Store.raw("desktop.enabled", false) === true) {
+        if (Store.raw("desktop.enabled", false) === true && experimental) {
             on = true; fuse = 1; travelK = 1;
             Store.over = computeOverrides();
             overJson = JSON.stringify(Store.over);

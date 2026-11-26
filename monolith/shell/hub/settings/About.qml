@@ -148,6 +148,50 @@ ColumnLayout {
         icon: "schedule"; title: "Check every"; desc: "How often Monolith looks for a new version"
         NumberBox { from: 1; to: 60; step: 1; unit: "min"; value: Updates.everyMin; onMoved: v => Store.set("updates.interval", v) }
     }
+    // experimental features: Desktop mode for now. Switching them on asks first
+    property bool askingExperimental: false
+    SettingRow {
+        key: "experimental.enabled"; def: false;
+        icon: "science"; title: "Experimental features"
+        desc: Desk.experimental ? "On: Desktop mode is in Settings → Desktop. Turning this off turns Desktop mode off too"
+                                : "Things still being made, like Desktop mode (a taskbar, a start menu and floating windows)"
+        Toggle {
+            checked: Desk.experimental || sec.askingExperimental
+            onToggled: on => { if (on) sec.askingExperimental = true; else { sec.askingExperimental = false; Store.set("experimental.enabled", false); } }
+        }
+    }
+    // (the warning, before they're on)
+    SmoothRect {
+        visible: sec.askingExperimental && !Desk.experimental
+        Layout.fillWidth: true
+        implicitHeight: warnCol.implicitHeight + 32
+        readonly property color warn: "#e8a33d"
+        radius: Theme.corner(80, 12)
+        color: Qt.alpha(warn, 0.12)
+        border.width: 1; border.color: Qt.alpha(warn, 0.5)
+        Column {
+            id: warnCol
+            x: 16; y: 16
+            width: parent.width - 32
+            spacing: 12
+            Row {
+                spacing: 10
+                Icon { anchors.verticalCenter: parent.verticalCenter; name: "warning"; size: 20; filled: true; color: parent.parent.parent.warn }
+                Label { anchors.verticalCenter: parent.verticalCenter; text: "Expect bugs and unfinished things"; strong: true }
+            }
+            Label {
+                width: warnCol.width
+                wrapMode: Text.WordWrap
+                text: "Experimental features are still being worked on. Some parts may not work, may look unfinished, or may change or go away in an update. If something goes wrong, turning them off here puts everything back."
+                muted: true
+            }
+            Row {
+                spacing: 8
+                Button { text: "Turn on anyway"; icon: "science"; primary: true; onClicked: { Store.set("experimental.enabled", true); sec.askingExperimental = false; } }
+                Button { text: "Cancel"; onClicked: sec.askingExperimental = false }
+            }
+        }
+    }
     SettingRow {
         icon: "waving_hand"; title: "Welcome tour"; desc: "The first-launch setup again"
         Button { text: "Show it"; onClicked: HubState.openWelcome() }

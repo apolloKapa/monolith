@@ -26,7 +26,9 @@ Page {
         { id: "bar", desc: "What the bar shows and where it sits", title: "Bar", icon: "toolbar", gap: true, tabs: [["bar", "Layout & modules", "BarLayout"], ["minibars", "Mini bars", "MiniBars"], ["barscreens", "Bar & dock per screen", "BarScreens"]] },
         { id: "menus", desc: "The launcher, its apps, and where menus open", title: "Menus & launcher", icon: "apps", tabs: [["search", "Launcher", "Search"], ["apps", "Apps in the launcher", "Apps"], ["menus", "Where menus open", "Menus"]] },
         { id: "dock", desc: "Your pinned and running apps", title: "Dock", icon: "dock_to_bottom", tabs: [["dock", "Dock", "Dock"]] },
-        { id: "desktop", desc: "Desktop mode, widgets and the screen edges", title: "Desktop", icon: "widgets", tabs: [["desktopmode", "Desktop mode", "DesktopMode"], ["desktop", "Widgets", "Desktop"], ["quickaccess", "Quick access (screen edges)", "QuickAccess"]] },
+        // (Desktop mode only with experimental features on: Updates & about)
+        { id: "desktop", desc: Desk.experimental ? "Desktop mode, widgets and the screen edges" : "Widgets and the screen edges", title: "Desktop", icon: "widgets",
+          tabs: [["desktopmode", "Desktop mode", "DesktopMode"], ["desktop", "Widgets", "Desktop"], ["quickaccess", "Quick access (screen edges)", "QuickAccess"]].filter(t => t[0] !== "desktopmode" || Desk.experimental) },
         { id: "windows", desc: "Gaps, borders, window corners and workspaces", title: "Windows", icon: "select_window", tabs: [["windows", "Windows", "Windows"], ["workspaces", "Workspaces per screen", "Workspaces"]] },
         { id: "display", desc: "Monitors, scaling and night light", title: "Displays", icon: "monitor", gap: true, tabs: [["display", "Monitors", "Display"], ["nightlight", "Night light", "Night"]] },
         { id: "devices", desc: "Keyboard, mouse, microphone and camera", title: "Devices", icon: "keyboard", tabs: [["input", "Keyboard & mouse", "Input"], ["devices", "Microphone & camera", "Devices"]] },
