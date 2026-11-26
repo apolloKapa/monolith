@@ -382,6 +382,15 @@ Singleton {
     // Not a maximised or minimised one, not a little one (a dialog)
     readonly property var sizes: Store.raw("desktop.sizes", null) || ({})
     Timer { id: sizeLater; interval: 900; onTriggered: desk.noteSizes() }
+    // (Hyprland says nothing when a window is resized: its windows are read again every couple of
+    // seconds while windows float here, then their sizes noted. A Hyprland event read them
+    // before, often still the old sizes, and a window resized and closed was never noted)
+    Timer {
+        interval: 2000; repeat: true
+        running: desk.on && desk.floating && Niri.hyprland
+        onTriggered: { Hyprland.refreshToplevels(); hyprRead.restart(); }
+    }
+    Timer { id: hyprRead; interval: 350; onTriggered: { Niri.hyprSync(); desk.noteSizes(); } }
     Connections { target: Niri; function onWindowsChanged() { if (desk.on && desk.floating) sizeLater.restart(); } }
     function noteSizes() {
         const cur = Object.assign({}, sizes);
