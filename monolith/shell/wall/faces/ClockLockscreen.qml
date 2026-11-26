@@ -3,37 +3,56 @@ import QtQuick.Layouts
 import "../../core"
 import "../../ui"
 
-// Lock screen: big bold hours (accent) and minutes, the date in spaced capitals under them.
-// Narrow: the hours stack over the minutes.
+// Lock screen: the hours in the accent and the minutes in the text colour, big and bold, a colon
+// between them, and today's date in spaced capitals underneath. When the widget is narrow the
+// hours sit on top of the minutes instead (and the colon goes). The whole block is scaled to fit.
 FaceBase {
-    id: f
-    readonly property bool stacked: width / height < 1.25
-    readonly property string date: Qt.formatDate(f.now, "dddd, d MMMM").toUpperCase()
-    // Colouring → Gradient: laid over the digits (drawn white)
-    layer.enabled: f.gradientOn
-    layer.effect: GradientTint { from: f.gradFrom; to: f.gradTo; dir: f.gradVec }
-    component Big: Inked { font.weight: Font.Bold; shadowY: 3; shadowStrength: 0.4 }
+    id: face
+    readonly property bool tall: width < height * 1.25
+    readonly property real digitPx: tall ? 150 : 120
+    layer.enabled: face.gradientOn
+    layer.effect: GradientTint { from: face.gradFrom; to: face.gradTo; dir: face.gradVec }
+    component Part: Inked { font.family: face.fontOr(Theme.fontFamily); font.weight: Font.Bold; shadowY: 3; shadowStrength: 0.4 }
     ColumnLayout {
-        visible: f.stacked
+        id: block
         anchors.centerIn: parent
         spacing: 8
-        scale: Math.min(f.width / Math.max(1, implicitWidth), f.height / Math.max(1, implicitHeight))
-        Big { font.family: f.fontOr(Theme.fontFamily); Layout.alignment: Qt.AlignHCenter; Layout.bottomMargin: -28; text: f.inked(Qt.formatTime(f.now, "HH"), f.accentC, 0); textFormat: f.textFormatFor; color: f.inkColor(f.accentC); font.pixelSize: 150 }
-        Big { font.family: f.fontOr(Theme.fontFamily); Layout.alignment: Qt.AlignHCenter; text: f.inked(Qt.formatTime(f.now, "mm"), Theme.text, 2); textFormat: f.textFormatFor; color: f.inkColor(Theme.text); font.pixelSize: 150 }
-        Big { font.family: f.fontOr(Theme.fontFamily); Layout.alignment: Qt.AlignHCenter; text: f.date; color: f.subC; font.pixelSize: 16; font.weight: Font.Medium; font.letterSpacing: 1.4 }
-    }
-    ColumnLayout {
-        visible: !f.stacked
-        anchors.centerIn: parent
-        spacing: 8
-        scale: Math.min(f.width / Math.max(1, implicitWidth), f.height / Math.max(1, implicitHeight))
-        RowLayout {
+        scale: Math.min(face.width / Math.max(1, implicitWidth), face.height / Math.max(1, implicitHeight))
+        GridLayout {
             Layout.alignment: Qt.AlignHCenter
-            spacing: 4
-            Big { font.family: f.fontOr(Theme.fontFamily); text: f.inked(Qt.formatTime(f.now, "HH"), f.accentC, 0); textFormat: f.textFormatFor; color: f.inkColor(f.accentC); font.pixelSize: 120 }
-            Big { font.family: f.fontOr(Theme.fontFamily); text: ":"; color: f.inkColor(f.subC); font.pixelSize: 80; Layout.alignment: Qt.AlignVCenter }
-            Big { font.family: f.fontOr(Theme.fontFamily); text: f.inked(Qt.formatTime(f.now, "mm"), Theme.text, 2); textFormat: f.textFormatFor; color: f.inkColor(Theme.text); font.pixelSize: 120 }
+            columns: face.tall ? 1 : 3
+            columnSpacing: 4
+            rowSpacing: 8
+            Part {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.bottomMargin: face.tall ? -28 : 0
+                font.pixelSize: face.digitPx
+                textFormat: face.textFormatFor
+                text: face.inked(Qt.formatTime(face.now, "HH"), face.accentC, 0)
+                color: face.inkColor(face.accentC)
+            }
+            Part {
+                visible: !face.tall
+                Layout.alignment: Qt.AlignVCenter
+                font.pixelSize: 80
+                text: ":"
+                color: face.inkColor(face.subC)
+            }
+            Part {
+                Layout.alignment: Qt.AlignHCenter
+                font.pixelSize: face.digitPx
+                textFormat: face.textFormatFor
+                text: face.inked(Qt.formatTime(face.now, "mm"), Theme.text, 2)
+                color: face.inkColor(Theme.text)
+            }
         }
-        Big { font.family: f.fontOr(Theme.fontFamily); Layout.alignment: Qt.AlignHCenter; text: f.date; color: f.subC; font.pixelSize: 16; font.weight: Font.Medium; font.letterSpacing: 1.4 }
+        Part {
+            Layout.alignment: Qt.AlignHCenter
+            font.pixelSize: 16
+            font.weight: Font.Medium
+            font.letterSpacing: 1.4
+            text: Qt.formatDate(face.now, "dddd, d MMMM").toUpperCase()
+            color: face.subC
+        }
     }
 }

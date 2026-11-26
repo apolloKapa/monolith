@@ -2,26 +2,19 @@ import QtQuick
 import "../../core"
 import "../../ui"
 
-// Minimal: just HH:mm, heavy, filling the widget.
+// Minimal: the time with its colon and nothing else, heavy, filling the widget.
 FaceBase {
-    id: f
+    id: face
     clip: true
-    // Colouring → Gradient: laid over the digits (drawn white)
-    layer.enabled: f.gradientOn
-    layer.effect: GradientTint { from: f.gradFrom; to: f.gradTo; dir: f.gradVec }
-    Inked {
-        anchors.fill: parent
-        anchors.margins: Math.min(parent.width, parent.height) * 0.05
-        text: f.inked(Qt.formatTime(f.now, "HH:mm"), f.mainC, 0)
-        textFormat: f.textFormatFor
-        font.family: f.fontOr(Theme.fontFamily)
-        font.pixelSize: height
-        fontSizeMode: Text.Fit
+    layer.enabled: face.gradientOn
+    layer.effect: GradientTint { from: face.gradFrom; to: face.gradTo; dir: face.gradVec }
+    FillText {
         minimumPixelSize: 10
+        font.family: face.fontOr(Theme.fontFamily)
         font.weight: Font.Black
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+        textFormat: face.textFormatFor
+        text: face.inked(Qt.formatTime(face.now, "HH:mm"), face.mainC, 0)
+        color: face.inkColor(face.mainC)
         shadowY: 1.5
-        color: f.inkColor(f.mainC)
     }
 }

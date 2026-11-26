@@ -2,145 +2,146 @@ import QtQuick
 import "../../core"
 import "../../ui"
 
-// Lumen: a twelve-lobed dial (primary container) whose lobe at each hour swells as a hand passes
-// it; the hand lights that hour's number in its own colour, and it fades again as the hand moves on.
+// Lumen: a raised, softly lit disc with a lobe towards every hour. As a hand comes near an hour
+// its lobe swells, a halo opens behind that hour's number and the number lights up in the hand's
+// colour; they settle back as the hand moves on. The second hand sweeps smoothly.
 FaceBase {
-    id: f
-    readonly property real d: Math.min(width, height)
-    readonly property bool secs: opt("showSeconds", true)
-    readonly property color dial: Theme.m("primary_container", Theme.accentContainer)
-    readonly property color hourC: f.hasMain ? f.mainC : Theme.m("secondary", Theme.subtext)
-    readonly property color minC: f.hasAccent ? f.accentC : Theme.m("primary", Theme.accent)
-    readonly property color secC: f.hasAccent ? f.accentC : Theme.m("tertiary", Theme.accent)
-    readonly property color numC: f.hasMain ? f.mainC : Theme.m("on_primary_container", Theme.text)
-    property real hourA: 0
-    property real minA: 0
-    property real secA: 0
-    function beam(hand, target, spread) {
-        let diff = Math.abs((((hand - target) % 360) + 540) % 360 - 180);
-        if (diff >= spread) return 0;
-        const c = Math.cos(diff / spread * Math.PI / 2);
-        return c * c;
-    }
-    function tick() {
-        const t = new Date(), s = t.getSeconds(), m = t.getMinutes();
-        hourA = (t.getHours() % 12) * 30 + m * 0.5 + s / 120;
-        minA = m * 6 + s * 0.1;
-        secA = (s + t.getMilliseconds() / 1000) * 6;
-        const g = [];
-        for (let k = 0; k < 12; k++) g.push(Math.max(beam(hourA, k * 30, 45), beam(minA, k * 30, 40), secs ? beam(secA, k * 30, 32) * 0.85 : 0));
-        glow = g;
-    }
-    property var glow: new Array(12).fill(0)
-    // the sweeping second hand moves every frame (a 40 ms timer stepped visibly on fast screens);
-    // without it, once a second is plenty
-    // (30 times a second: a hand turning 6° a second moves a fifth of a degree a step, smooth to
-    // the eye; every frame, at 165 Hz, kept the whole desktop redrawing that often)
-    Timer { interval: 33; repeat: true; running: f.secs && f.live && f.visible; onTriggered: f.tick() }
-    Timer { interval: 1000; running: !f.secs && f.live && f.visible; repeat: true; triggeredOnStart: true; onTriggered: f.tick() }
-    Component.onCompleted: tick()
+    id: face
+    readonly property real side: Math.min(width, height)
+    readonly property bool seconds: opt("showSeconds", true)
+    readonly property color dialInk: Theme.m("primary_container", Theme.accentContainer)
+    readonly property color hourInk: face.hasMain ? face.mainC : Theme.m("secondary", Theme.subtext)
+    readonly property color minuteInk: face.hasAccent ? face.accentC : Theme.m("primary", Theme.accent)
+    readonly property color secondInk: face.hasAccent ? face.accentC : Theme.m("tertiary", Theme.accent)
+    readonly property color figureInk: face.hasMain ? face.mainC : Theme.m("on_primary_container", Theme.text)
 
-    // the dial: a circle with a soft lobe towards each hour, bigger where it's lit
-    Canvas {
-        antialiasing: true
-        id: dialC
-        anchors.fill: parent
-        // what it was last painted with: the glow follows the sweeping second hand, so it changes
-        // every frame. Painting this canvas (in software) every frame, up to 165 times a second,
-        // was most of the shell's CPU with the clock on screen; now it repaints at most 30 times
-        // a second, and only when a lobe has visibly changed. (The hands still move every frame)
-        property var g: f.glow
-        property var painted: []
-        property bool dirty: false
-        function changed() {
-            const a = g, b = painted;
-            if (!b || b.length !== a.length) return true;
-            for (let i = 0; i < a.length; i++) if (Math.abs(a[i] - b[i]) > 0.012) return true;
-            return false;
-        }
-        onGChanged: { if (!f.secs) requestPaint(); else if (changed()) dirty = true; }
-        Timer { interval: 33; repeat: true; running: dialC.dirty && f.live && f.visible; onTriggered: { dialC.dirty = false; dialC.requestPaint(); } }
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-        property color c: f.dial
-        onCChanged: requestPaint()
-        onPaint: {
-            painted = g.slice();
-            const ctx = getContext("2d");
-            ctx.reset();
-            const cx = width / 2, cy = height / 2, base = f.d * 0.435, amp = f.d * 0.042;
-            ctx.beginPath();
-            const n = 360;
-            for (let i = 0; i <= n; i++) {
-                const deg = i * 360 / n;
-                const h = Math.round(deg / 30) % 12;
-                let diff = Math.abs(deg - h * 30); if (diff > 180) diff = 360 - diff;
-                const bump = 0.5 * (1 + Math.cos(diff / 15 * Math.PI));
-                const r = base + amp * (0.28 + 0.72 * (g[h] || 0)) * bump;
-                const a = deg * Math.PI / 180;
-                const x = cx + r * Math.sin(a), y = cy - r * Math.cos(a);
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-            }
-            ctx.closePath();
-            // shaded like a raised disc lit from the top left, a hairline of light round its rim
-            const gr = ctx.createRadialGradient(cx - f.d * 0.16, cy - f.d * 0.2, 0, cx, cy, base + amp);
-            gr.addColorStop(0, Qt.lighter(c, 1.16));
-            gr.addColorStop(0.6, c);
-            gr.addColorStop(1, Qt.darker(c, 1.1));
-            ctx.fillStyle = gr;
-            ctx.fill();
-            ctx.lineWidth = Math.max(1, f.d * 0.0035);
-            ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.12);
-            ctx.stroke();
-        }
+    // the hands' angles (degrees from twelve, clockwise); the seconds include milliseconds
+    property real hourDeg: 0
+    property real minuteDeg: 0
+    property real secondDeg: 0
+    // how lit each hour is (0–1): whichever hand is nearest it counts
+    property var lit: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    // light from a hand at `hand` on the mark at `mark`: full on it, nothing `reach` degrees off,
+    // easing out like the square of a cosine in between
+    function lightOf(hand, mark, reach) {
+        const off = ((hand - mark) % 360 + 360) % 360;
+        const gap = Math.min(off, 360 - off);
+        return gap >= reach ? 0 : Math.pow(Math.cos(gap / reach * Math.PI / 2), 2);
     }
+    // each hand's reach (degrees) and how strongly it lights
+    function hourLight(mark) { return lightOf(hourDeg, mark, 45); }
+    function minuteLight(mark) { return lightOf(minuteDeg, mark, 40); }
+    function secondLight(mark) { return seconds ? lightOf(secondDeg, mark, 32) * 0.85 : 0; }
+
+    function update() {
+        const t = new Date();
+        const s = t.getSeconds(), m = t.getMinutes();
+        hourDeg = (t.getHours() % 12) * 30 + m / 2 + s / 120;
+        minuteDeg = m * 6 + s / 10;
+        secondDeg = (s + t.getMilliseconds() / 1000) * 6;
+        lit = lit.map((_, k) => Math.max(hourLight(k * 30), minuteLight(k * 30), secondLight(k * 30)));
+    }
+    Component.onCompleted: update()
+    // sweeping: 30 updates a second (smooth to the eye, and not every frame of a 165 Hz screen);
+    // without the second hand, once a second
+    Timer { interval: face.seconds ? 33 : 1000; repeat: true; running: face.live && face.visible; triggeredOnStart: !face.seconds; onTriggered: face.update() }
+
+    LobeDial {
+        id: disc
+        anchors.fill: parent
+        steps: 360
+        readonly property real base: face.side * 0.435
+        readonly property real swell: face.side * 0.042
+        // a lobe per hour, its height following how lit that hour is (28 % of it always there)
+        radiusAt: deg => {
+            const hour = Math.round(deg / 30) % 12;
+            const off = Math.min(Math.abs(deg - hour * 30), 360 - Math.abs(deg - hour * 30));
+            return base + swell * (0.28 + 0.72 * (face.lit[hour] || 0)) * (1 + Math.cos(off / 15 * Math.PI)) / 2;
+        }
+        // lit from the top left: lighter there, darker at the far edge, a faint light rim
+        shade: g => {
+            const grad = g.createRadialGradient(width / 2 - face.side * 0.16, height / 2 - face.side * 0.2, 0, width / 2, height / 2, base + swell);
+            grad.addColorStop(0, Qt.lighter(face.dialInk, 1.16));
+            grad.addColorStop(0.6, face.dialInk);
+            grad.addColorStop(1, Qt.darker(face.dialInk, 1.1));
+            return grad;
+        }
+        rimWidth: Math.max(1, face.side * 0.0035)
+        rimColor: Qt.rgba(1, 1, 1, 0.12)
+        fill: face.dialInk
+        // Painting it is the costly part (in software), so with the sweeping second hand it's
+        // redrawn at most 30 times a second and only once a lobe has moved visibly.
+        property var drawnWith: []
+        property bool stale: false
+        onPaint: drawnWith = face.lit.slice()
+        function moved() {
+            if (drawnWith.length !== face.lit.length) return true;
+            return face.lit.some((v, i) => Math.abs(v - drawnWith[i]) > 0.012);
+        }
+        Connections {
+            target: face
+            function onLitChanged() { if (!face.seconds) disc.redraw(); else if (disc.moved()) disc.stale = true; }
+        }
+        Timer { interval: 33; repeat: true; running: disc.stale && face.live && face.visible; onTriggered: { disc.stale = false; disc.redraw(); } }
+    }
+    // the hours: a small dot when unlit, a halo and the number when a hand is near
     Repeater {
         model: 12
         Item {
+            id: mark
             required property int index
             readonly property int hour: index + 1
-            readonly property real ang: (hour % 12) * 30
-            readonly property real ih: f.beam(f.hourA, ang, 45)
-            readonly property real im: f.beam(f.minA, ang, 40)
-            readonly property real isec: f.secs ? f.beam(f.secA, ang, 32) * 0.85 : 0
-            readonly property real lit: Math.max(ih, im, isec)
-            readonly property color col: isec >= ih && isec >= im ? f.secC : (im >= ih ? f.minC : f.hourC)
-            readonly property real dist: f.d * (0.382 + 0.028 * lit)
-            width: f.d * 0.11; height: width
-            x: f.width / 2 + dist * Math.sin(ang * Math.PI / 180) - width / 2
-            y: f.height / 2 - dist * Math.cos(ang * Math.PI / 180) - height / 2
-            Rectangle { anchors.centerIn: parent; width: f.d * (parent.hour % 3 === 0 ? 0.016 : 0.011); height: width; radius: width / 2; color: f.numC; opacity: (1 - parent.lit) * 0.3; antialiasing: true }
-            Rectangle { anchors.centerIn: parent; width: parent.width * 0.92; height: width; radius: width / 2; color: parent.col; opacity: parent.lit * 0.24; visible: parent.lit > 0.001 }
-            Text { renderType: Text.CurveRendering;
+            readonly property real deg: (hour % 12) * 30
+            readonly property real fromHour: face.hourLight(deg)
+            readonly property real fromMinute: face.minuteLight(deg)
+            readonly property real fromSecond: face.secondLight(deg)
+            readonly property real glow: Math.max(fromHour, fromMinute, fromSecond)
+            readonly property color handInk: fromSecond >= fromHour && fromSecond >= fromMinute ? face.secondInk : (fromMinute >= fromHour ? face.minuteInk : face.hourInk)
+            readonly property real out: face.side * (0.382 + 0.028 * glow)
+            width: face.side * 0.11
+            height: width
+            x: face.width / 2 + out * Math.sin(deg * Math.PI / 180) - width / 2
+            y: face.height / 2 - out * Math.cos(deg * Math.PI / 180) - height / 2
+            Rectangle { width: face.side * (mark.hour % 3 === 0 ? 0.016 : 0.011); height: width; radius: width / 2; antialiasing: true
+                        color: face.figureInk; opacity: (1 - mark.glow) * 0.3; anchors.centerIn: parent }
+            Rectangle { visible: mark.glow > 0.001; width: mark.width * 0.92; height: width; radius: width / 2
+                        color: mark.handInk; opacity: mark.glow * 0.24; anchors.centerIn: parent }
+            Text {
+                visible: mark.glow > 0.001
                 anchors.centerIn: parent
-                text: parent.hour
-                font.family: f.fontOr(Theme.fontFamily); font.pixelSize: f.d * 0.054; font.weight: Font.Bold
-                color: parent.lit > 0.5 ? f.numC : parent.col
-                opacity: parent.lit
-                visible: parent.lit > 0.001
+                renderType: Text.CurveRendering
+                text: mark.hour
+                font.family: face.fontOr(Theme.fontFamily)
+                font.pixelSize: face.side * 0.054
+                font.weight: Font.Bold
+                color: mark.glow > 0.5 ? face.figureInk : mark.handInk
+                opacity: mark.glow
             }
         }
     }
-    // hands: the hour broad, the minute slimmer, the second a fine line with a short tail; all
-    // meet under a cap in the middle
-    component Hand: Item {
-        property real angle
-        property real len
-        property real w: f.d * 0.05
-        property real tail: 0
-        property color col
+    // the hands, all turning about the middle: broad hours, slimmer minutes, a fine second hand
+    // that also reaches a little way back past the middle
+    component Arm: Item {
+        id: arm
+        property real deg
+        property real reach
+        property real thick
+        property real backReach: 0
+        property color ink
         anchors.centerIn: parent
-        rotation: angle
-        Rectangle { width: parent.w; height: parent.len + parent.tail; radius: width / 2; color: parent.col; antialiasing: true
-                    anchors.horizontalCenter: parent.horizontalCenter; y: -parent.len }
+        rotation: deg
+        Rectangle { y: -arm.reach; width: arm.thick; height: arm.reach + arm.backReach; radius: width / 2; color: arm.ink; antialiasing: true
+                    anchors.horizontalCenter: parent.horizontalCenter }
     }
-    Hand { angle: f.hourA; len: f.d * 0.22; w: f.d * 0.06; col: f.hourC }
-    Hand { angle: f.minA; len: f.d * 0.32; w: f.d * 0.042; col: f.minC }
-    Hand { visible: f.secs; angle: f.secA; len: f.d * 0.37; w: Math.max(2, f.d * 0.014); tail: f.d * 0.07; col: f.secC }
+    Arm { deg: face.hourDeg; reach: face.side * 0.22; thick: face.side * 0.06; ink: face.hourInk }
+    Arm { deg: face.minuteDeg; reach: face.side * 0.32; thick: face.side * 0.042; ink: face.minuteInk }
+    Arm { visible: face.seconds; deg: face.secondDeg; reach: face.side * 0.37; thick: Math.max(2, face.side * 0.014); backReach: face.side * 0.07; ink: face.secondInk }
+    // the cap over the pivot, with a darker centre
     Rectangle {
+        width: face.side * 0.085; height: width; radius: width / 2; antialiasing: true
+        color: face.seconds ? face.secondInk : face.minuteInk
         anchors.centerIn: parent
-        width: f.d * 0.085; height: width; radius: width / 2; antialiasing: true
-        color: f.secs ? f.secC : f.minC
-        Rectangle { anchors.centerIn: parent; width: parent.width * 0.4; height: width; radius: width / 2; color: Qt.darker(f.dial, 1.1); antialiasing: true }
+        Rectangle { width: parent.width * 0.4; height: width; radius: width / 2; antialiasing: true; color: Qt.darker(face.dialInk, 1.1); anchors.centerIn: parent }
     }
 }

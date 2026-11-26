@@ -2,23 +2,18 @@ import QtQuick
 import "../../core"
 import "../../ui"
 
-// Text: your own words, bold, as big as the widget allows (set them in the editor).
+// Text: whatever you typed in the editor, bold and as large as fits (wrapping onto more lines
+// when that's larger); a faint "Your text" until there's something.
 FaceBase {
-    id: f
+    id: face
     clip: true
-    readonly property string t: f.opt("textContent", "")
-    Inked {
-        anchors.fill: parent
-        anchors.margins: Math.min(parent.width, parent.height) * 0.05
-        text: f.t.trim() === "" ? "Your text" : f.t
-        opacity: f.t.trim() === "" ? 0.4 : 1
-        font.pixelSize: height
-        fontSizeMode: Text.Fit
+    readonly property string words: String(face.opt("textContent", "")).trim()
+    FillText {
         minimumPixelSize: 8
         font.weight: Font.Bold
         wrapMode: Text.Wrap
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+        text: face.words !== "" ? face.opt("textContent", "") : "Your text"
+        opacity: face.words !== "" ? 1 : 0.4
         shadowY: 1.5
     }
 }

@@ -3,107 +3,112 @@ import QtQuick.Shapes
 import "../../core"
 import "../../ui"
 
-// Stretched: HH:MM drawn as thick rounded strokes, each digit built from lines and arcs, tall and
-// narrow, filling the widget's width.
+// Stretched: the time as tall, narrow digits drawn with one thick pen (round ends, round joins),
+// the colon as two dots, together as wide as the widget allows. When a digit changes, the old one
+// drops away and fades while the new one comes down into place.
 FaceBase {
-    id: f
+    id: face
     clip: true
-    readonly property real areaH: Math.max(1, height * 0.94)
-    readonly property real gapR: 0.12
-    readonly property real colonR: 0.4
-    readonly property real cw: Math.max(1, Math.min(areaH * 0.32, width * 0.94 / (4 + colonR + 4 * gapR)))
-    readonly property real gap: cw * gapR
-    readonly property real stroke: cw * 0.24
-    readonly property var chars: Qt.formatTime(f.now, "HH:mm").split("")
+    // the room: 94 % of the height; a digit is at most a third as wide as it is tall, and the
+    // four digits, the colon (0.4 of a digit) and the four gaps (0.12 each) share 94 % of the width
+    readonly property real tallness: Math.max(1, height * 0.94)
+    readonly property real digitW: Math.max(1, Math.min(tallness * 0.32, width * 0.94 / 4.88))
+    readonly property real pen: digitW * 0.24
+    readonly property string shown: Qt.formatTime(face.now, "HH:mm")
+    // the digits are drawn fully opaque in one layer and made see-through as a whole, so where a
+    // digit's strokes cross (the 4, the 8, the middle of the 3) there's no brighter seam
+    readonly property color opaqueInk: Qt.rgba(face.mainC.r, face.mainC.g, face.mainC.b, 1)
 
-    function rr(x0, y0, x1, y1, r) {
-        return `M${x0 + r} ${y0} H${x1 - r} A${r} ${r} 0 0 1 ${x1} ${y0 + r} V${y1 - r} A${r} ${r} 0 0 1 ${x1 - r} ${y1} H${x0 + r} A${r} ${r} 0 0 1 ${x0} ${y1 - r} V${y0 + r} A${r} ${r} 0 0 1 ${x0 + r} ${y0} Z`;
-    }
-    // each digit as an SVG path in a w×h cell, strokes `s` wide
-    function glyph(ch, w, h, s) {
-        const x0 = s / 2, x1 = w - s / 2, y0 = s / 2, y1 = h - s / 2, ym = h / 2, r = (x1 - x0) / 2;
-        const top = `M${x0} ${y0 + r} A${r} ${r} 0 0 1 ${x1} ${y0 + r}`;
-        switch (ch) {
-        case "0": return rr(x0, y0, x1, y1, r);
-        case "1": return `M${x0} ${y0 + r} L${x1} ${y0} V${y1}`;
-        case "2": { const d = (y1 - y0 - r) * 0.45; return `${top} C${x1} ${y0 + r + d} ${x0} ${y1 - d} ${x0} ${y1} H${x1}`; }
-        case "3": return `${top} V${ym - r} A${r} ${r} 0 0 1 ${x1 - r} ${ym} H${x0 + r * 0.3} M${x1 - r} ${ym} A${r} ${r} 0 0 1 ${x1} ${ym + r} V${y1 - r} A${r} ${r} 0 0 1 ${x0} ${y1 - r}`;
-        // one line: up the stem, down the slant, along the bar (three loose strokes left seams and stubs)
-        case "4": { const xs = x0 + (x1 - x0) * 0.68, yb = y0 + (y1 - y0) * 0.7; return `M${xs} ${y1} V${y0} L${x0} ${yb} H${x1}`; }
-        case "5": { const yq = ym + 0.04 * h; return `M${x1} ${y0} H${x0} V${yq} H${x1 - r} A${r} ${r} 0 0 1 ${x1} ${yq + r} V${y1 - r} A${r} ${r} 0 0 1 ${x1 - r} ${y1} H${x0}`; }
-        case "6": case "9": { const yq = ym + 0.04 * h; return `M${x1} ${y0} H${x0 + r} A${r} ${r} 0 0 0 ${x0} ${y0 + r} V${y1 - r} A${r} ${r} 0 0 0 ${x0 + r} ${y1} H${x1 - r} A${r} ${r} 0 0 0 ${x1} ${y1 - r} V${yq + r} A${r} ${r} 0 0 0 ${x1 - r} ${yq} H${x0}`; }
-        case "7": return `M${x0} ${y0} H${x1} L${x0 + (x1 - x0) * 0.3} ${y1 - r * 0.6} V${y1}`;
-        case "8": return rr(x0, y0, x1, ym, r) + " " + rr(x0, ym, x1, y1, r);
+    // A digit as a path, in a box w wide and h tall drawn with a pen p wide: a tiny builder that
+    // writes SVG path data (move, line, horizontal/vertical runs, quarter arcs, a curve).
+    function digitPath(d, w, h, p) {
+        const L = p / 2, R = w - p / 2, T = p / 2, B = h - p / 2, M = h / 2, rad = (R - L) / 2;
+        const out = [];
+        const go = (x, y) => out.push("M" + x + " " + y);
+        const line = (x, y) => out.push("L" + x + " " + y);
+        const across = x => out.push("H" + x);
+        const down = y => out.push("V" + y);
+        const bend = (x, y, ccw) => out.push("A" + rad + " " + rad + " 0 0 " + (ccw ? 0 : 1) + " " + x + " " + y);
+        const curve = (ax, ay, bx, by, x, y) => out.push("C" + ax + " " + ay + " " + bx + " " + by + " " + x + " " + y);
+        // a rounded box from (x0, y0) to (x1, y1), clockwise from the top edge
+        const capsule = (x0, y0, x1, y1) => { go(x0 + rad, y0); across(x1 - rad); bend(x1, y0 + rad); down(y1 - rad); bend(x1 - rad, y1);
+                                              across(x0 + rad); bend(x0, y1 - rad); down(y0 + rad); bend(x0 + rad, y0); out.push("Z"); };
+        const dome = () => { go(L, T + rad); bend(R, T + rad); };          // the arch over a 2 or a 3
+        const belly = M + h * 0.04;                                        // where a 5's and 6's bowl starts
+        switch (d) {
+        case "0": capsule(L, T, R, B); break;
+        case "1": go(L, T + rad); line(R, T); down(B); break;
+        case "2": { const pull = (B - T - rad) * 0.45; dome(); curve(R, T + rad + pull, L, B - pull, L, B); across(R); break; }
+        case "3": dome(); down(M - rad); bend(R - rad, M); across(L + rad * 0.3); go(R - rad, M); bend(R, M + rad); down(B - rad); bend(L, B - rad); break;
+        // one stroke: up the stem, down the slant, along the bar (three separate ones left seams)
+        case "4": { const stem = L + (R - L) * 0.68; go(stem, B); down(T); line(L, T + (B - T) * 0.7); across(R); break; }
+        case "5": go(R, T); across(L); down(belly); across(R - rad); bend(R, belly + rad); down(B - rad); bend(R - rad, B); across(L); break;
+        // (a 9 is a 6 turned over: the cell is rotated)
+        case "6": case "9": go(R, T); across(L + rad); bend(L, T + rad, true); down(B - rad); bend(L + rad, B, true); across(R - rad);
+                            bend(R, B - rad, true); down(belly + rad); bend(R - rad, belly, true); across(L); break;
+        case "7": go(L, T); across(R); line(L + (R - L) * 0.3, B - rad * 0.6); down(B); break;
+        case "8": capsule(L, T, R, M); capsule(L, M, R, B); break;
         }
-        return "";
+        return out.join(" ");
     }
-    // the digits drawn opaque in one layer, the see-through applied to the whole: where a digit's
-    // strokes cross (the 4, the middle of the 3 and the 8) they no longer show brighter seams
-    readonly property color solid: Qt.rgba(f.mainC.r, f.mainC.g, f.mainC.b, 1)
+
+    // one digit's drawing, slid by `drop` (in pens) and faded to `alpha`
+    component Stroke: Shape {
+        id: stroke
+        property string digit: ""
+        property real drop: 0
+        property real alpha: 1
+        anchors.fill: parent
+        visible: digit !== "" && alpha > 0.001
+        opacity: alpha
+        rotation: digit === "9" ? 180 : 0
+        transform: Translate { y: drop * face.pen * 0.8 }
+        preferredRendererType: Shape.CurveRenderer
+        ShapePath {
+            strokeWidth: face.pen
+            strokeColor: face.opaqueInk
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+            joinStyle: ShapePath.RoundJoin
+            PathSvg { path: face.digitPath(stroke.digit, stroke.width, stroke.height, face.pen) }
+        }
+    }
+
     Row {
         anchors.centerIn: parent
-        spacing: f.gap
-        opacity: 0.85 * f.mainC.a
+        spacing: face.digitW * 0.12
+        opacity: 0.85 * face.mainC.a
         layer.enabled: true
         layer.smooth: true
-        // (by position, not by character: the cells stay, so a digit that changes can fade over)
+        // (one box per position, not per character: a box stays while its digit changes)
         Repeater {
-            model: f.chars.length
+            model: 5
             Item {
-                id: cell
+                id: slot
                 required property int index
-                readonly property string ch: f.chars[index] || ""
-                readonly property bool colon: ch === ":"
-                width: colon ? f.cw * f.colonR : f.cw
-                height: f.areaH
-                // the digit shown and the one it's turning from; t: 0 … 1 through the change
-                property string cur: ch
-                property string old: ""
-                property real t: 1
-                onChChanged: { old = cur; cur = ch; turn.restart(); }
-                NumberAnimation on t { id: turn; running: false; from: 0; to: 1; duration: Theme.ms(520); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve }
-                // the old digit slips down and fades as the new one settles in from just above
-                // (round stroke ends: flat ones read as cut off)
-                Shape {
-                    anchors.fill: parent
-                    visible: !cell.colon && cell.old !== "" && opacity > 0.001
-                    opacity: 1 - cell.t
-                    rotation: cell.old === "9" ? 180 : 0
-                    transform: Translate { y: cell.t * f.stroke * 0.8 }
-                    preferredRendererType: Shape.CurveRenderer
-                    ShapePath {
-                        strokeWidth: f.stroke
-                        strokeColor: f.solid
-                        fillColor: "transparent"
-                        capStyle: ShapePath.RoundCap
-                        joinStyle: ShapePath.RoundJoin
-                        PathSvg { path: f.glyph(cell.old, cell.width, cell.height, f.stroke) }
-                    }
-                }
-                Shape {
-                    anchors.fill: parent
-                    visible: !cell.colon && cell.cur !== "" && opacity > 0.001
-                    opacity: cell.t
-                    rotation: cell.cur === "9" ? 180 : 0
-                    transform: Translate { y: (cell.t - 1) * f.stroke * 0.8 }
-                    preferredRendererType: Shape.CurveRenderer
-                    ShapePath {
-                        strokeWidth: f.stroke
-                        strokeColor: f.solid
-                        fillColor: "transparent"
-                        capStyle: ShapePath.RoundCap
-                        joinStyle: ShapePath.RoundJoin
-                        PathSvg { path: f.glyph(cell.cur, cell.width, cell.height, f.stroke) }
-                    }
-                }
+                readonly property string now: face.shown.charAt(index)
+                readonly property bool dots: index === 2
+                width: dots ? face.digitW * 0.4 : face.digitW
+                height: face.tallness
+                // the digit on show, the one it's leaving, and how far through (0 → 1)
+                property string showing: now
+                property string leaving: ""
+                property real k: 1
+                onNowChanged: { leaving = showing; showing = now; swap.restart(); }
+                NumberAnimation on k { id: swap; running: false; from: 0; to: 1; duration: Theme.ms(520); easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.standardCurve }
+                Stroke { digit: slot.dots ? "" : slot.leaving; alpha: 1 - slot.k; drop: slot.k }
+                Stroke { digit: slot.dots ? "" : slot.showing; alpha: slot.k; drop: slot.k - 1 }
+                // the colon: two dots, a third and two thirds of the way down
                 Repeater {
-                    model: cell.colon ? 2 : 0
+                    model: slot.dots ? [0.35, 0.65] : []
                     Rectangle {
-                        required property int index
-                        width: f.stroke * 1.1; height: width; radius: width / 2
-                        color: f.solid
-                        x: (cell.width - width) / 2
-                        y: cell.height * (index === 0 ? 0.35 : 0.65) - height / 2
+                        required property real modelData
+                        width: face.pen * 1.1
+                        height: width
+                        radius: width / 2
+                        color: face.opaqueInk
+                        x: (slot.width - width) / 2
+                        y: slot.height * modelData - height / 2
                     }
                 }
             }

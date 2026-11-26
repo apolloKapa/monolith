@@ -23,7 +23,10 @@ Item {
     property string defaultMode: "blur"
     readonly property string mode: ctx && ctx.opt ? String(ctx.opt("background", defaultMode)) : defaultMode
     readonly property real cardOpacity: ctx && ctx.opt ? Math.max(0, Math.min(1, Number(ctx.opt("bgOpacity", 1)))) : 1
-    readonly property Item backdrop: ctx && mode === "blur" ? ctx.backdrop : null
+    // (game mode, stripped down: no frosting either. The widgets blur the wallpaper themselves,
+    // so turning the panels' blur off (Theme.blur) left theirs on, a live copy of the wallpaper
+    // blurred for every card. The card is then just the tinted one, as where there's no backdrop.)
+    readonly property Item backdrop: ctx && mode === "blur" && !GameMode.lean ? ctx.backdrop : null
     // Blur strength (0.1..1): the wallpaper behind is shrunk before it's blurred, so the blur
     // reaches much further than the effect's own radius (and costs less)
     readonly property real strength: ctx && ctx.opt ? Math.max(0.1, Math.min(1, Number(ctx.opt("blurStrength", 0.8)))) : 0.8
@@ -81,5 +84,5 @@ Item {
     // Cyberpunk: scanlines and the HUD marks
     PanelFx { anchors.fill: parent; radius: g.r; animate: false; visible: Theme.chamfer && g.mode !== "clear" }
     // liquid glass: the card is a pane of glass, under the tint
-    LiquidPane { anchors.fill: parent; z: -1; radius: g.r; visible: Theme.liquid && g.mode === "blur" }
+    LiquidPane { anchors.fill: parent; z: -1; radius: g.r; visible: Theme.liquid && g.mode === "blur" && !GameMode.lean }
 }

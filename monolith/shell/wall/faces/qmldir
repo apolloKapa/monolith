@@ -15,6 +15,7 @@ ClockStretched 1.0 ClockStretched.qml
 DateCompact 1.0 DateCompact.qml
 DateFull 1.0 DateFull.qml
 FaceBase 1.0 FaceBase.qml
+FillText 1.0 FillText.qml
 Fit 1.0 Fit.qml
 GithubGrid 1.0 GithubGrid.qml
 Glass 1.0 Glass.qml
@@ -23,6 +24,7 @@ ImageRect 1.0 ImageRect.qml
 ImageRounded 1.0 ImageRounded.qml
 ImageRound 1.0 ImageRound.qml
 Inked 1.0 Inked.qml
+LobeDial 1.0 LobeDial.qml
 LyricLines 1.0 LyricLines.qml
 MetricCard 1.0 MetricCard.qml
 MetricCircle 1.0 MetricCircle.qml

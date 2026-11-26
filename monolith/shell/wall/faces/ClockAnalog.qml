@@ -2,27 +2,44 @@ import QtQuick
 import "../../core"
 import "../../ui"
 
-// Analog: a round glass dial with three rounded hands that sweep to each second.
+// Analog: a round pane of glass with three rounded hands standing on its centre, each sweeping
+// on to its next position over a second, and an accent dot over where they meet.
 FaceBase {
-    id: f
-    readonly property real d: Math.min(width, height)
-    readonly property bool secs: opt("showSeconds", true)
+    id: face
+    readonly property real side: Math.min(width, height)
+    readonly property int h: face.now.getHours() % 12
+    readonly property int m: face.now.getMinutes()
+    readonly property int s: face.now.getSeconds()
+    // each hand: how long and how thick (parts of the dial), its colour and where it points
+    readonly property var hands: [
+        { len: 0.32, thick: 0.045, ink: face.mainC, deg: h * 30 + m / 2 + s / 120, show: true },
+        { len: 0.42, thick: 0.03, ink: face.subC, deg: m * 6 + s / 10, show: true },
+        { len: 0.46, thick: 0.015, ink: face.accentC, deg: s * 6, show: face.opt("showSeconds", true) }
+    ]
     Item {
+        id: dial
+        width: face.side
+        height: face.side
         anchors.centerIn: parent
-        width: f.d; height: f.d
-        Glass { anchors.fill: parent; ctx: f.ctx; radius: width / 2; dx: (f.width - f.d) / 2; dy: (f.height - f.d) / 2 }
-        component Hand: Rectangle {
-            property real angle: 0
-            anchors.bottom: parent.verticalCenter
-            anchors.horizontalCenter: parent.horizontalCenter
-            transformOrigin: Item.Bottom
-            rotation: angle
-            radius: width / 2
-            Behavior on rotation { enabled: f.live; RotationAnimation { duration: 1000; direction: RotationAnimation.Clockwise } }
+        Glass { anchors.fill: parent; ctx: face.ctx; radius: width / 2; dx: (face.width - face.side) / 2; dy: (face.height - face.side) / 2 }
+        Repeater {
+            model: 3
+            Rectangle {
+                required property int index
+                readonly property var spec: face.hands[index]
+                visible: spec.show
+                width: face.side * spec.thick
+                height: face.side * spec.len
+                radius: width / 2
+                color: spec.ink
+                // standing on the centre (on a whole pixel across, as centring does), turned about its foot
+                x: Math.round((dial.width - width) / 2)
+                y: dial.height / 2 - height
+                transformOrigin: Item.Bottom
+                rotation: spec.deg
+                Behavior on rotation { enabled: face.live; RotationAnimation { duration: 1000; direction: RotationAnimation.Clockwise } }
+            }
         }
-        Hand { width: f.d * 0.045; height: f.d * 0.32; color: f.mainC; angle: (f.now.getHours() % 12) * 30 + f.now.getMinutes() * 0.5 + f.now.getSeconds() / 120 }
-        Hand { width: f.d * 0.03; height: f.d * 0.42; color: f.subC; angle: f.now.getMinutes() * 6 + f.now.getSeconds() * 0.1 }
-        Hand { visible: f.secs; width: f.d * 0.015; height: f.d * 0.46; color: f.accentC; angle: f.now.getSeconds() * 6 }
-        Rectangle { anchors.centerIn: parent; width: f.d * 0.05; height: width; radius: width / 2; color: f.accentC }
+        Rectangle { width: face.side / 20; height: width; radius: width / 2; color: face.accentC; anchors.centerIn: parent }
     }
 }

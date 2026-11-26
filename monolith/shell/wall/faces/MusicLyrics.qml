@@ -3,7 +3,8 @@ import QtQuick.Effects
 import "../../core"
 import "../../ui"
 
-// Lyrics: a card with the cover blurred and darkened behind the synced lines.
+// Lyrics: a card with the cover blurred and darkened behind the synced lines (not blurred in
+// game mode's stripped-down shell).
 FaceBase {
     id: f
     readonly property var p: f.player
@@ -12,7 +13,7 @@ FaceBase {
     Item {
         anchors.fill: parent
         Image { id: cov; anchors.fill: parent; source: f.p ? (f.p.trackArtUrl || "") : ""; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(200, 200); visible: false; asynchronous: true }
-        MultiEffect { anchors.fill: parent; source: cov; visible: cov.status === Image.Ready; blurEnabled: true; blur: 1; blurMax: 48; opacity: 0.6; maskEnabled: true; maskSource: lm }
+        MultiEffect { anchors.fill: parent; source: cov; visible: cov.status === Image.Ready; blurEnabled: !GameMode.lean; blur: 1; blurMax: 48; opacity: 0.6; maskEnabled: true; maskSource: lm }
         SmoothRect { smoothing: 0; id: lm; anchors.fill: parent; radius: f.r; visible: false; antialiasing: true; layer.enabled: true; layer.smooth: true }
         SmoothRect { smoothing: 0; anchors.fill: parent; radius: f.r; color: Qt.rgba(0, 0, 0, cov.status === Image.Ready ? 0.4 : 0) }
     }

@@ -2,53 +2,73 @@ import QtQuick
 import "../../core"
 import "../../ui"
 
-// Material: the four digits in a tight 2×2 grid, rounded and as heavy as they get, coloured
-// like a checkerboard (on-surface and primary) with a soft double shadow under each.
+// Material: hours over minutes as a 2 × 2 block of digits, set in the font's heaviest, roundest
+// cut. The digits alternate between the main colour and the accent like a chequerboard, and each
+// sits on two soft shadows (a near one and a farther, fainter one).
 FaceBase {
-    id: f
+    id: face
     clip: true
-    // Colouring → Gradient: laid over the digits (drawn white)
-    layer.enabled: f.gradientOn
-    layer.effect: GradientTint { from: f.gradFrom; to: f.gradTo; dir: f.gradVec }
-    readonly property string hh: Qt.formatTime(f.now, "HH")
-    readonly property string mm: Qt.formatTime(f.now, "mm")
-    readonly property string fam: f.fontOr("Google Sans Flex")
-    // the widest and tallest ink of any digit at 100 px, so every digit gets the same cell
-    FontMetrics { id: ref; font.family: f.fam; font.pixelSize: 100; font.weight: Font.Black; font.variableAxes: f.axes }
-    // as heavy and as round as the font goes
+    layer.enabled: face.gradientOn
+    layer.effect: GradientTint { from: face.gradFrom; to: face.gradTo; dir: face.gradVec }
+    readonly property string family: face.fontOr("Google Sans Flex")
     readonly property var axes: ({ "wght": 1000, "ROND": 100, "wdth": 100 })
-    readonly property var ink: { const r = []; for (let i = 0; i < 10; i++) r.push(ref.tightBoundingRect(String(i))); return r; }
-    readonly property real refW: Math.max(1, ...ink.map(r => r.width))
-    readonly property real refH: Math.max(1, ...ink.map(r => r.height))
-    readonly property real px: Math.min(width * 0.94 / (2 * refW), height * 0.94 / (2 * refH)) * 100
-    readonly property real cw: refW * px / 100
-    readonly property real chh: refH * px / 100
+    readonly property string digits: Qt.formatTime(face.now, "HHmm")
+
+    // Every digit gets the same cell: the largest ink box of 0–9, measured once at 100 px.
+    FontMetrics { id: probe; font.family: face.family; font.pixelSize: 100; font.weight: Font.Black; font.variableAxes: face.axes }
+    readonly property var glyphBox: Array.from({ length: 10 }, (_, n) => probe.tightBoundingRect(String(n)))
+    readonly property size unit: Qt.size(Math.max(1, ...glyphBox.map(b => b.width)), Math.max(1, ...glyphBox.map(b => b.height)))
+    // the size the digits are set at so the block takes 94 % of the widget either way
+    readonly property real fontPx: 100 * Math.min(width * 0.94 / (2 * unit.width), height * 0.94 / (2 * unit.height))
+    readonly property real cellW: unit.width * fontPx / 100
+    readonly property real cellH: unit.height * fontPx / 100
+
+    // one digit drawn once: dropped by `drop` (of the font size), in `tone`
+    component Glyph: Text {
+        property real drop: 0
+        property color tone
+        renderType: Text.CurveRendering
+        font.family: face.family
+        font.pixelSize: face.fontPx
+        font.weight: Font.Black
+        font.variableAxes: face.axes
+        color: tone
+    }
+
     Item {
+        width: face.cellW * 2
+        height: face.cellH * 2
         anchors.centerIn: parent
-        width: f.cw * 2; height: f.chh * 2
         Repeater {
             model: 4
             Item {
                 id: cell
                 required property int index
-                readonly property int col: index % 2
-                readonly property int row: Math.floor(index / 2)
-                readonly property string digit: (row === 0 ? f.hh : f.mm).charAt(col)
-                readonly property var r: f.ink[Number(digit) || 0]
-                readonly property real tx: (f.cw - r.width * f.px / 100) / 2 - r.x * f.px / 100
-                x: col * f.cw; y: row * f.chh
-                width: f.cw; height: f.chh
+                readonly property string digit: face.digits.charAt(index)
+                readonly property rect box: face.glyphBox[Number(digit) || 0]
+                // centred in its cell by its own ink, not its advance
+                readonly property real inkX: (face.cellW - box.width * face.fontPx / 100) / 2 - box.x * face.fontPx / 100
+                readonly property color own: (index === 0 || index === 3) ? face.mainC : face.accentC
+                x: (index % 2) * face.cellW
+                y: (index > 1 ? 1 : 0) * face.cellH
+                width: face.cellW
+                height: face.cellH
+                // shadows first (far, then near), the digit on top
                 Repeater {
-                    model: [[0.045, 0.14], [0.022, 0.26], [0, -1]]
-                    Text { renderType: Text.CurveRendering;
+                    model: [{ drop: 0.045, a: 0.14 }, { drop: 0.022, a: 0.26 }]
+                    Glyph {
                         required property var modelData
-                        x: cell.tx
-                        y: cell.height - baselineOffset + f.px * modelData[0]
+                        x: cell.inkX
+                        y: cell.height - baselineOffset + face.fontPx * modelData.drop
                         text: cell.digit
-                        font.family: f.fam; font.pixelSize: f.px; font.weight: Font.Black; font.variableAxes: f.axes
-                        readonly property color own: (cell.row + cell.col) % 2 === 0 ? f.mainC : f.accentC
-                        color: modelData[1] < 0 ? f.inkColor(f.digitsOn ? f.digitColor(cell.index, own) : own) : Qt.rgba(0, 0, 0, modelData[1])
+                        tone: Qt.rgba(0, 0, 0, modelData.a)
                     }
+                }
+                Glyph {
+                    x: cell.inkX
+                    y: cell.height - baselineOffset
+                    text: cell.digit
+                    tone: face.inkColor(face.digitsOn ? face.digitColor(cell.index, cell.own) : cell.own)
                 }
             }
         }
