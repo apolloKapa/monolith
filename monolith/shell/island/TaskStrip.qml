@@ -20,11 +20,18 @@ Grid {
     horizontalItemAlignment: Grid.AlignHCenter
     verticalItemAlignment: Grid.AlignVCenter
     // (comes in as the dock sinks into the bar, and goes as it rises out)
-    opacity: host && host.still ? 1 : Math.max(0, Math.min(1, (Desk.fuse - 0.45) / 0.55))
+    // two modules out of one: the start button ("start") and the apps ("taskbar"), each placed where
+    // you like (Bar → Layout & modules, or a mini bar); Desktop mode puts them in the middle unless
+    // you have
+    property bool withStart: true
+    property bool withApps: true
+    // (in the bar of Desktop mode: in as the dock sinks into it, out as it rises. Anywhere else,
+    // a mini bar or a bar without Desktop mode, simply there)
+    opacity: !host || host.still || host.only || !Desk.on ? 1 : Math.max(0, Math.min(1, (Desk.fuse - 0.45) / 0.55))
     // its buttons: the bar's height, smaller when there are more apps than room (they'd run under
     // the bar's other modules)
     readonly property real fullCell: Math.max(28, Theme.islandH - 6)
-    readonly property real wantCell: { const n = apps.length + 1; return Math.floor(Math.max(24, Math.min(fullCell, ((host ? host.taskRoom : 1e6) - spacing * (n - 1)) / n))); }
+    readonly property real wantCell: { const n = Math.max(1, (withApps ? apps.length : 0) + (withStart ? 1 : 0)); return Math.floor(Math.max(24, Math.min(fullCell, ((host ? host.taskRoom : 1e6) - spacing * (n - 1)) / n))); }
     // (smaller at once when there's no room, bigger only once there's clearly more: the room
     // changes by a pixel or two whenever a module's text does, the CPU's, the clock's, and the
     // icons resized with it)
@@ -32,7 +39,7 @@ Grid {
     onWantCellChanged: if (wantCell < cell || wantCell >= cell + 4 || wantCell === fullCell) cell = wantCell
     readonly property string edge: Theme.barEdge
     // (the start menu comes out of the start button: IslandBar.moduleBox)
-    readonly property Item menuFrom: start
+    readonly property Item menuFrom: withStart ? start : null
 
     // the dock's pinned apps, then the open ones that aren't
     readonly property var pinned: Store.get("dock.pinned", null) || Prefs.dockApps.map(a => ({ id: a.desktop_id, name: a.name, icon: a.icon }))
@@ -81,6 +88,7 @@ Grid {
     // the start button: the launcher (Desktop mode gives it its rail)
     Pressable {
         id: start
+        visible: strip.withStart
         readonly property bool on: HubState.open && HubState.page === "search"
         width: strip.cell; height: strip.cell
         radius: Theme.corner(height, 4)
@@ -100,7 +108,7 @@ Grid {
     }
 
     Repeater {
-        model: strip.apps
+        model: strip.withApps ? strip.apps : []
         Pressable {
             id: app
             required property var modelData

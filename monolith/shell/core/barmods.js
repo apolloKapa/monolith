@@ -9,5 +9,6 @@ var names = {
     battery: ["Battery", "battery_full"], keyboard: ["Keyboard layout", "keyboard"], gaming: ["Game mode", "sports_esports"],
     power: ["Power", "power_settings_new"], updates: ["Monolith updates", "upgrade"],
     bluetooth: ["Bluetooth", "bluetooth"], visualizer: ["Visualizer", "graphic_eq"], nightlight: ["Night light", "nightlight"],
-    awake: ["Stay awake", "coffee"], shuffle: ["Shuffle wallpaper", "shuffle"]
+    awake: ["Stay awake", "coffee"], shuffle: ["Shuffle wallpaper", "shuffle"],
+    start: ["Start menu", "grid_view"], taskbar: ["Taskbar apps", "apps"]
 };

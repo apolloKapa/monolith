@@ -21,7 +21,7 @@ PanelWindow {
     // (a list, whatever the file holds: anything else is no mini bars)
     readonly property var all: { const v = Store.get("bar.minis", []); return v && typeof v === "object" && v.length !== undefined ? Array.prototype.slice.call(v) : []; }
     // the ones to draw (with something in them), each with its place in the list kept
-    readonly property var minis: all.map((m, i) => ({ i: i, place: places.indexOf(m && m.place) !== -1 ? m.place : "top-right", modules: (m && m.modules ? Array.prototype.slice.call(m.modules) : []).filter(k => k !== "taskbar"),
+    readonly property var minis: all.map((m, i) => ({ i: i, place: places.indexOf(m && m.place) !== -1 ? m.place : "top-right", modules: (m && m.modules ? Array.prototype.slice.call(m.modules) : []),
                                      // windows keep clear of it unless you say otherwise (`clear`): over a maximised
                                      // window's top it took the clicks meant for its title bar's buttons
                                      clear: !(m && m.clear === false),

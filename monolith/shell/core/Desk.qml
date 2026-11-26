@@ -61,15 +61,27 @@ Singleton {
     readonly property var overrides: { Store.revision; return computeOverrides(); }
     function computeOverrides() {
         const m = Store.raw("bar.modules", null) || barDefaults;
-        const no = k => k !== "taskbar";
+        // (the start button and the apps placed by you, in the bar or a mini bar: as you put them)
+        const minis = Store.raw("bar.minis", []) || [];
+        const placed = k => Object.keys(m).some(z => Array.isArray(m[z]) && m[z].indexOf(k) !== -1)
+            || (Array.isArray(minis) && minis.some(x => x && x.modules && Array.prototype.slice.call(x.modules).indexOf(k) !== -1));
+        if (placed("taskbar") || placed("start")) {
+            const own = { left: [], leftMid: [], center: [], midRight: [], right: [], free: [], outLeft: [], outRight: [] };
+            for (const z in own) own[z] = (m[z] || []).slice();
+            return base(own);
+        }
+        const no = k => k !== "taskbar" && k !== "start";
         // (the bar's own middle and in-between modules move to the start of its right end: the
         // taskbar's apps have the middle; at the start, they lead the left end)
         const left = (m.outLeft || []).concat(m.left || []).filter(no);
         const moved = (m.leftMid || []).concat(m.center || [], m.midRight || [], m.free || []).filter(no);
         const right = moved.concat(m.right || [], m.outRight || []).filter(no);
         const mods = appsAt === "start"
-            ? { left: ["taskbar"], leftMid: [], center: [], midRight: [], right: left.concat(right), free: [], outLeft: [], outRight: [] }
-            : { left: left, leftMid: [], center: ["taskbar"], midRight: [], right: right, free: [], outLeft: [], outRight: [] };
+            ? { left: ["start", "taskbar"], leftMid: [], center: [], midRight: [], right: left.concat(right), free: [], outLeft: [], outRight: [] }
+            : { left: left, leftMid: [], center: ["start", "taskbar"], midRight: [], right: right, free: [], outLeft: [], outRight: [] };
+        return base(mods);
+    }
+    function base(mods) {
         return {
             // (your bar's own style stays: the Frame's round inside corners, an island, a floating
             // bar, pills; only where it is and how tall it is are the taskbar's)
@@ -200,8 +212,10 @@ Singleton {
     function niri(args) { Quickshell.execDetached(["niri", "msg", "action"].concat(args)); }
     function minimize(w) {
         if (!w) return;
-        if (Niri.hyprland) hypr('hl.dsp.window.move({ workspace = "special:' + minName + '", follow = false, window = "' + addr(w) + '" })',
-                                "movetoworkspacesilent special:" + minName + "," + addr(w));
+        if (Niri.hyprland) {
+            if (Niri.hyprLua) Quickshell.execDetached(["hyprctl", "eval", 'if MonolithDesk and MonolithDesk.minimizeWin then MonolithDesk.minimizeWin("' + addr(w) + '") else hl.dispatch(hl.dsp.window.move({ workspace = "special:' + minName + '", follow = false, window = "' + addr(w) + '" })) end'])
+            else Hyprland.dispatch("movetoworkspacesilent special:" + minName + "," + addr(w));
+        }
         else {
             // (niri always keeps an empty workspace at the end of each screen)
             const ws = Niri.workspaces.find(x => x.id === w.workspace_id);
@@ -349,7 +363,7 @@ Singleton {
             +   "local a = tostring(win.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; local s = \"address:\" .. a; "
             +   "if kind == \"close\" then hl.dispatch(hl.dsp.window.close({ window = s })) "
             +   "elseif kind == \"max\" then hl.dispatch(hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", window = s })) "
-            +   "elseif kind == \"min\" then hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = s })) end "
+            +   "elseif kind == \"min\" then MonolithDesk.minimizeWin(s) end "
             + "end; "
             // (buttons stay until a config reload clears them: added once per reload. Right to left)
             // (round buttons with the shell's icons: close in the theme's red, the others soft)
@@ -390,7 +404,23 @@ Singleton {
                 // put the pointer in its middle; yours back when Desktop mode is off)
                 + (want ? "if MonolithDesk.dragWas == nil then MonolithDesk.dragWas = hl.get_config(\"binds.drag_center_window\") end; hl.config({ binds = { drag_center_window = false } }); "
                         : "if MonolithDesk.dragWas ~= nil then hl.config({ binds = { drag_center_window = MonolithDesk.dragWas } }); MonolithDesk.dragWas = nil end; ")
-                + "if MonolithDesk.hv ~= 3 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 3 end; "
+                + "if MonolithDesk.hv ~= 4 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 4 end; "
+                // minimising: noted for a moment (see the hook below), then off to the minimised workspace
+                + "MonolithDesk.minimizeWin = function(s) MonolithDesk.justMin = true; "
+                +   "hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = s })); "
+                +   "hl.timer(function() MonolithDesk.justMin = false end, { timeout = 700, type = \"oneshot\" }) end; "
+                // the minimised workspace never shows: Hyprland opened it over the screen when the last
+                // window of a workspace was minimised, or a minimised one was focused (Alt+Tab), and its
+                // dimmed layer took every click behind it. Hidden at once; a window being focused comes back
+                + "if not MonolithDesk.spHook then MonolithDesk.spHook = hl.on(\"workspace.special_active\", function() "
+                +   "for _, m in ipairs(hl.get_monitors()) do local sp = hl.get_active_special_workspace(m); "
+                +     "if sp and sp.name == \"special:" + minName + "\" then "
+                +       "local w = hl.get_active_window(); local ws = m.active_workspace; "
+                +       "hl.dispatch(hl.dsp.workspace.toggle_special(\"" + minName + "\")); "
+                +       "if not MonolithDesk.justMin and w and w.workspace and w.workspace.name == \"special:" + minName + "\" and ws then "
+                +         "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; "
+                +         "hl.dispatch(hl.dsp.window.move({ workspace = ws.id, window = \"address:\" .. a })); hl.dispatch(hl.dsp.focus({ window = \"address:\" .. a })) end "
+                +     "end end end) end; "
                 + "MonolithDesk.on = " + (want ? "true" : "false") + "; "
                 + "if MonolithDesk.rule then MonolithDesk.rule:set_enabled(MonolithDesk.on and " + (floating ? "true" : "false") + ") "
                 + "elseif MonolithDesk.on and " + (floating ? "true" : "false") + " then MonolithDesk.rule = hl.window_rule({ name = \"monolith-desktop\", match = { class = \".*\" }, float = true }) end; "
@@ -399,7 +429,7 @@ Singleton {
                 // bringing itself back, Discord as it starts sharing its screen) minimised it)
                 +   "if not MonolithDesk.on or not w or not (m == true or m == 1) then return end; "
                 +   "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; "
-                +   "hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = \"address:\" .. a })) end) end; "
+                +   "MonolithDesk.minimizeWin(\"address:\" .. a) end) end; "
                 + sizesLua() + " "
                 // a window opening: the size its app had last, or, opening as big as the screen
                 // (a terminal that asks for no size), a size like a window's, centred

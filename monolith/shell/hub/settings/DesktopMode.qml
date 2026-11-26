@@ -48,7 +48,7 @@ ColumnLayout {
     SettingRow {
         key: "desktop.appsAt"; def: "center";
         icon: "align_horizontal_center"; title: "Apps on the taskbar"
-        desc: "In the middle with the start button, or at the start of the taskbar"
+        desc: "In the middle with the start button, or at the start of the taskbar. Or put Start menu and Taskbar apps where you like yourself (Bar → Layout & modules, or a mini bar): then they stay there"
         Dropdown {
             width: 230
             opts: [["center", "In the middle"], ["start", "At the start"]]

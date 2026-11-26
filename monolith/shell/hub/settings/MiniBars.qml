@@ -60,7 +60,7 @@ ColumnLayout {
             required property var modelData
             required property int index
             // (lists handed through a Repeater aren't always JS Arrays: read it from the store itself)
-            readonly property var mods: { const m = page.minis[index]; const l = m && m.modules ? Array.prototype.slice.call(m.modules) : []; return l.filter(k => k !== "taskbar"); }
+            readonly property var mods: { const m = page.minis[index]; const l = m && m.modules ? Array.prototype.slice.call(m.modules) : []; return l; }
             Layout.fillWidth: true
             implicitHeight: col.implicitHeight + 28
             radius: Theme.corner(80, 10)

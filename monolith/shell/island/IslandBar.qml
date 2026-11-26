@@ -48,7 +48,7 @@ Item {
     // other way (a keybind, a command) grows out of its module too when that's on this bar
     property var modItems: ({})
     readonly property var menuMods: ({
-        quick: ["cc", "battery", "power"], search: ["taskbar", "search"], calendar: ["clock", "weather"], media: ["media", "visualizer"],
+        quick: ["cc", "battery", "power"], search: ["start", "search"], calendar: ["clock", "weather"], media: ["media", "visualizer"],
         windows: ["title"], network: ["network", "bluetooth"], gaming: ["gaming"], tools: ["live"]
     })
     function moduleBox(page) {
@@ -377,10 +377,12 @@ Item {
         live: liveC, tray: trayC, stats: statsC, notifications: notifC, network: netC, sound: soundC,
         battery: batC, keyboard: kbC, gaming: gameC, power: powerC, updates: updC,
         bluetooth: btC, visualizer: visC, nightlight: nightC, awake: awakeC, shuffle: shuffleC,
-        taskbar: taskC
+        taskbar: taskC, start: startC
     })
-    // Desktop mode's taskbar: the start button and your apps (only there: core/Desk.qml puts it in)
-    Component { id: taskC; TaskStrip { host: bar } }
+    // the start button and your apps, two modules (Desktop mode puts them in the middle unless you
+    // place them: core/Desk.qml)
+    Component { id: taskC; TaskStrip { host: bar; withStart: false } }
+    Component { id: startC; TaskStrip { host: bar; withApps: false } }
     // the room it has: the bar, less the other zones (it's alone in its own, the middle or the left)
     // (of the screen's room: the bar's own length grows as it's squeezed smaller to fit)
     // (an island's curved ends hang outside its body: room for them too)
@@ -389,10 +391,21 @@ Item {
     // (a set length, % or px: that length, not the bar's as it is now, which the taskbar itself
     // made longer: the apps fit in the length you set instead of stretching the bar)
     readonly property real setLen: maxLen > 0 ? Theme.barWidth(maxLen + 2 * Theme.barMargin, 0) : barLen
-    readonly property real taskRoom: (Theme.barSpread ? setLen : (maxLen > 0 ? maxLen : 100000)) - 2 * Theme.islandPad - freeLen - 2 * gap
-        - (Theme.barStyle === "island" ? 2 * Theme.islandEar + 24 : 0)
-        - ((zones.center || []).indexOf("taskbar") !== -1 ? part(leftZone) + part(leftMidZone) + part(midRightZone) + part(rightZone)
-                                                          : part(midZone) + part(leftMidZone) + part(midRightZone) + part(rightZone))
+    // (a mini bar (`only`) has no length of its own: as long as its modules need)
+    readonly property real taskRoom: only ? 100000
+        : (Theme.barSpread ? setLen : (maxLen > 0 ? maxLen : 100000)) - 2 * Theme.islandPad - freeLen - 2 * gap
+          - (Theme.barStyle === "island" ? 2 * Theme.islandEar + 24 : 0) - taskOthers
+    // (what the taskbar's apps leave to the rest: every zone but its own, and the start button)
+    readonly property real taskOthers: {
+        const zs = [[leftZone, "left"], [leftMidZone, "leftMid"], [midZone, "center"], [midRightZone, "midRight"], [rightZone, "right"]];
+        let n = 0;
+        for (const z of zs) {
+            const keys = zones[z[1]] || [];
+            if (keys.indexOf("taskbar") === -1) n += part(z[0]);
+            else n += (keys.length - 1) * (Theme.islandH + Number(Store.get("bar.gap", 2)));
+        }
+        return n;
+    }
 
     // the control center: a filled accent bubble
     Component {
