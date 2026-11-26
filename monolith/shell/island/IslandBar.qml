@@ -763,7 +763,10 @@ Item {
         }
     }
     // a new version of Monolith: shows only then; opens Settings → About & updates
-    Component { id: updC; Glyph { property bool want: Updates.newer; icon: "upgrade"; on: true; tint: Theme.accent; onClicked: HubState.openSettings("about", bar.screenName) } }
+    // Monolith's updates: always there once it's on the bar (it only showed while one was waiting,
+    // so a bar with it looked as if it had lost it); filled in the accent while one is waiting
+    Component { id: updC; Glyph { icon: Updates.newer ? "upgrade" : "system_update_alt"; on: Updates.newer; tint: Updates.newer ? Theme.accent : Theme.text
+                                  onClicked: HubState.openSettings("about", bar.screenName) } }
     // game mode: always there once it's on the bar (it only showed while game mode was on, so
     // a bar with it looked as if it had lost it); lit up in the accent while game mode is on.
     // Click: the Gaming menu; right-click: game mode on or off
@@ -801,6 +804,9 @@ Item {
         id: statsC
         Mod {
             id: statsMod
+            // (the round icon modules' padding: with its own wider one, the gap after the stats was
+            // a little bigger than between the others)
+            pad: 7
             spacing: bar.vertical ? 2 : Number(bar.mopt("stats.gap", 6))
             // as wide as with every value at 100 % (a number changing width moved everything after
             // it, and a bar that fits its modules changed length), the values against their icons
@@ -824,14 +830,16 @@ Item {
                 Line {
                     required property var modelData
                     spacing: bar.vertical ? 0 : 3
-                    // (as wide as it gets: its icon and its widest value, 100 %)
+                    // (as wide as it nearly always gets: its icon and two digits, 99 %. Room for
+                    // 100 % left a digit or two of empty space round every short reading; a real
+                    // 100 % (a game, with the bar out of sight) widens it for that moment)
                     readonly property real fullW: (statIcon.visible ? statIcon.implicitWidth + spacing : 0) + Math.ceil(widest.width)
                     Icon { id: statIcon; visible: bar.mopt("stats.icons", true) === true; name: modelData[1]; size: 15; color: Theme.subtext }
                     Label {
                         id: statText
                         renderType: bar.only ? Text.QtRendering : Text.NativeRendering
                         text: modelData[2]; font.pixelSize: Theme.sizeSmall
-                        TextMetrics { id: widest; font: statText.font; text: "100" + modelData[2].slice(-1) }
+                        TextMetrics { id: widest; font: statText.font; text: "99" + modelData[2].slice(-1) }
                     }
                 }
             }
@@ -998,7 +1006,9 @@ Item {
         Mod {
             readonly property var adapter: Bluetooth.defaultAdapter
             readonly property int connected: Bluetooth.devices.values.filter(d => d.connected).length
-            property bool want: !!adapter && (bar.only || bar.mopt("bt.hideOff", false) !== true || adapter.enabled)
+            // (there once it's on the bar, crossed out with no adapter or with it off: it hid without
+            // one, and a bar with it looked as if it had lost it. "Hide when off" still hides it)
+            property bool want: bar.only || bar.mopt("bt.hideOff", false) !== true || (!!adapter && adapter.enabled)
             pad: 7
             onClicked: bar.open("network")
             Icon {
