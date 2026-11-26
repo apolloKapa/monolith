@@ -422,7 +422,18 @@ Singleton {
                 // put the pointer in its middle; yours back when Desktop mode is off)
                 + (want ? "if MonolithDesk.dragWas == nil then MonolithDesk.dragWas = hl.get_config(\"binds.drag_center_window\") end; hl.config({ binds = { drag_center_window = false } }); "
                         : "if MonolithDesk.dragWas ~= nil then hl.config({ binds = { drag_center_window = MonolithDesk.dragWas } }); MonolithDesk.dragWas = nil end; ")
-                + "if MonolithDesk.hv ~= 5 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 5 end; "
+                + "if MonolithDesk.hv ~= 6 then for _, k in ipairs({ \"min\", \"open\", \"reloadHook\", \"spHook\", \"fsHook\" }) do if MonolithDesk[k] then pcall(function() MonolithDesk[k]:remove() end); MonolithDesk[k] = nil end end; MonolithDesk.hv = 6 end; "
+                // out of fullscreen, a floating window gets its size nudged a pixel and back: Electron apps
+                // (Discord) kept laying themselves out for the fullscreen they'd left, the stream left
+                // hanging over the chat, until they were resized
+                + "if not MonolithDesk.fsHook then MonolithDesk.fsHook = hl.on(\"window.fullscreen\", function(w) "
+                +   "if not MonolithDesk.on or not w then return end; "
+                +   "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; local s = \"address:\" .. a; "
+                +   "hl.timer(function() local v = hl.get_window(s); if not v or not v.floating or (v.fullscreen or 0) ~= 0 then return end; "
+                +     "local z = v.size; local zw, zh = (z.x or z[1] or 0), (z.y or z[2] or 0); if zw < 50 or zh < 50 then return end; "
+                +     "hl.dispatch(hl.dsp.window.resize({ x = zw + 1, y = zh, window = s })); "
+                +     "hl.timer(function() hl.dispatch(hl.dsp.window.resize({ x = zw, y = zh, window = s })) end, { timeout = 80, type = \"oneshot\" }) "
+                +   "end, { timeout = 150, type = \"oneshot\" }) end) end; "
                 // minimising: noted for a moment (see the hook below), then off to the minimised workspace
                 + "MonolithDesk.minimizeWin = function(s) MonolithDesk.justMin = true; "
                 +   "hl.dispatch(hl.dsp.window.move({ workspace = \"special:" + minName + "\", follow = false, window = s })); "
