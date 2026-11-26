@@ -52,6 +52,15 @@ ColumnLayout {
         }
     }
     SettingRow {
+        icon: "share"; title: "Share a profile"
+        desc: "Export the look you're on to a file for someone, or import theirs into your profiles. Only the look goes in: nothing about who you are"
+        RowLayout {
+            spacing: 6
+            Button { text: "Import…"; icon: "file_open"; onClicked: Profiles.shareImport() }
+            Button { text: "Export…"; icon: "ios_share"; primary: true; onClicked: Profiles.shareExport() }
+        }
+    }
+    SettingRow {
         icon: "keyboard"; title: "From a keybind"; desc: "monolith profile <name>   (e.g. in niri: Mod+F9 { spawn \"monolith\" \"profile\" \"Gaming\"; })"
     }
 

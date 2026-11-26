@@ -124,6 +124,51 @@ Singleton {
     }
     Timer { id: removeLater; interval: 300; onTriggered: pr.refresh() }
 
+    // ── sharing: the look you're on to a file, and someone's profile file into your list ──
+    function shareExport() {
+        const name = current || "My look";
+        const p = jobC.createObject(pr, { command: ["sh", "-c",
+            "zenity --file-selection --save --confirm-overwrite --title='Export a Monolith profile' --filename=\"$HOME/$1.monolith.json\" 2>/dev/null", "_", name.replace(/[^\w .-]/g, "_")] });
+        const out = outC.createObject(p);
+        p.stdout = out;
+        out.streamFinished.connect(() => {
+            const f = out.text.trim();
+            p.destroy();
+            if (f === "") return;
+            // (the look only, as a profile is: safe to give to someone)
+            writeJson(f, { monolith: "profile", name: name, saved: new Date().toISOString(), wallpaper: true, data: snapshot(true) },
+                ok => pr.message = ok ? "Exported “" + name + "” to " + f.replace(Quickshell.env("HOME"), "~") : "Couldn't write " + f);
+        });
+        p.running = true;
+    }
+    function shareImport() {
+        const p = jobC.createObject(pr, { command: ["sh", "-c", "zenity --file-selection --title='Import a Monolith profile' --file-filter='Monolith profiles | *.json' 2>/dev/null"] });
+        const out = outC.createObject(p);
+        p.stdout = out;
+        out.streamFinished.connect(() => {
+            const f = out.text.trim();
+            p.destroy();
+            if (f === "") return;
+            readJson(f, j => {
+                const data = j && typeof j.data === "object" ? j.data : null;
+                if (!data) { pr.message = "That isn't a Monolith profile"; return; }
+                // its name (or the file's), made unique among yours
+                let base = String(j.name || f.replace(/^.*\//, "").replace(/(\.monolith)?\.json$/i, "")).trim() || "Imported";
+                base = base.slice(0, 60);
+                let name = base, n = 2;
+                while (pr.list.some(x => x.name.toLowerCase() === name.toLowerCase())) name = base + " (" + (n++) + ")";
+                // (cleaned again: nothing of whoever made it about who they are, no foreign home paths)
+                const d = JSON.parse(JSON.stringify(data));
+                pr.dropPaths(d, pr.keep.concat(pr.personal));
+                writeJson(fileOf(name), { name: name, saved: new Date().toISOString(), wallpaper: j.wallpaper !== false, data: pr.homeOut(d) }, ok => {
+                    pr.message = ok ? "Added “" + name + "”: Switch to use it" : "Couldn't add it";
+                    pr.refresh();
+                });
+            });
+        });
+        p.running = true;
+    }
+
     // ── a backup file of everything (all of next.json), and bringing one back ──
     function exportTo() {
         const p = jobC.createObject(pr, { command: ["sh", "-c",
