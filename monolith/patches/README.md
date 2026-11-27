@@ -41,7 +41,7 @@ makepkg, for both.)
 
 `monolith installer` → **niri extras** (minimise buttons, windows tiled when dragged to an edge,
 windows across screens while dragged, X11 apps' own buttons) builds niri with niri-minimize.patch,
-niri-drag-edges.patch and niri-move-across-monitors.patch, and xwayland-satellite with
+niri-drag-edges.patch, niri-move-across-monitors.patch and niri-move-shrink.patch, and xwayland-satellite with
 xwayland-satellite-wm-buttons.patch; HDMI scaling adds
 niri-underscan.patch: every niri patch wanted goes into one build (a build with only some would
 lose the others), on Gentoo (Portage's user patches, kept for that version) and Arch (Arch's own
@@ -108,3 +108,16 @@ Gentoo:
 
 then open the app again (niri starts xwayland-satellite when an X11 app needs it; log out and in
 to be sure the new one runs).
+
+## niri-move-shrink.patch: a window a little smaller while it's dragged
+
+KDE Plasma's feel: a floating window you pick up shrinks a little (to 94 %) around the pointer, and
+grows back as you let go before it's put down, instead of moving at full size. Only floating
+windows (tiled ones have niri's own see-through look while dragged), not in the overview. It
+changes the code niri-move-across-monitors.patch changes, so it's written on top of that one and
+named to come after it; the installer's niri extras build them together. By hand, on Gentoo:
+
+    sudo cp niri-move-shrink.patch /etc/portage/patches/gui-wm/niri-26.04/
+    sudo emerge --oneshot gui-wm/niri
+
+then log out and in.

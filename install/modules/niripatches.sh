@@ -7,6 +7,8 @@
 #     niri-move-across-monitors.patch  a window being dragged is drawn on every screen it reaches
 #     niri-drag-edges.patch            a floating window dragged to a screen's edge or corner: niri
 #                                      says which (WindowDragEdge), Desktop mode tiles it there
+#     niri-move-shrink.patch           a floating window shrinks a little while dragged and grows
+#                                      back as it's let go (KDE's feel; after move-across-monitors)
 #   HDMI scaling (modules/hdmi.sh), on niri:
 #     niri-underscan.patch
 #   Gentoo: the patches go in Portage's user patches for the installed version and niri is emerged
@@ -17,7 +19,7 @@
 # it. Patches that don't fit a new version are left out (niri stays as it is).
 
 NIRI_EXTRAS_STATE_FILE="$HOME/.local/state/monolith/niri-extras"
-NIRI_EXTRA_PATCHES=(niri-minimize.patch niri-move-across-monitors.patch niri-drag-edges.patch)
+NIRI_EXTRA_PATCHES=(niri-minimize.patch niri-move-across-monitors.patch niri-drag-edges.patch niri-move-shrink.patch)
 # and xwayland-satellite (X11 apps on niri), with the extras: an X11 app's own maximise and minimise
 # buttons (Steam's) did nothing, satellite passing on only fullscreen
 SATELLITE_PATCHES=(xwayland-satellite-wm-buttons.patch)
@@ -33,7 +35,8 @@ niri_extras_wanted() { [ "$(cat "$NIRI_EXTRAS_STATE_FILE" 2>/dev/null)" = on ]; 
 niri_extras_patched() {
     local f
     f="$(command -v niri 2>/dev/null)"
-    [ -n "$f" ] && grep -q "WindowMinimizeRequested" "$f" 2>/dev/null && grep -q "WindowDragEdge" "$f" 2>/dev/null
+    [ -n "$f" ] && grep -q "WindowMinimizeRequested" "$f" 2>/dev/null && grep -q "WindowDragEdge" "$f" 2>/dev/null \
+        && grep -q "monolith drag shrink" "$f" 2>/dev/null
 }
 # HDMI scaling is one of niri's patches here (on Hyprland it's aquamarine's: hdmi.sh)
 niri_hdmi_wanted() { [ "${OPT_HDMI:-false}" = true ] && [ "$(hdmi_target)" = niri ]; }

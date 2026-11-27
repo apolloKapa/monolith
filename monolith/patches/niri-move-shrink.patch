@@ -1,0 +1,222 @@
+diff --git a/src/layout/mod.rs b/src/layout/mod.rs
+index 6c42ee6..7e0ef5f 100644
+--- a/src/layout/mod.rs
++++ b/src/layout/mod.rs
+@@ -98,6 +98,8 @@ const INTERACTIVE_MOVE_START_THRESHOLD: f64 = 256. * 256.;
+ 
+ /// Opacity of interactively moved tiles targeting the scrolling layout.
+ const INTERACTIVE_MOVE_ALPHA: f64 = 0.75;
++/// How small a floating window being dragged gets (Monolith's patch).
++const MOVE_SHRINK: f64 = 0.94;
+ 
+ /// Amount of touchpad movement to toggle the overview.
+ const OVERVIEW_GESTURE_MOVEMENT: f64 = 300.;
+@@ -435,6 +437,9 @@ struct InteractiveMoveData<W: LayoutElement> {
+     ///
+     /// This helps the pointer remain inside the window as it resizes.
+     pub(self) pointer_ratio_within_window: (f64, f64),
++    /// A floating window shrinks a little around the pointer while it's dragged, and grows back
++    /// as it's let go (Monolith's patch: KDE Plasma's feel).
++    pub(self) shrink: Option<Animation>,
+     /// Config overrides for the output where the window is currently located.
+     ///
+     /// Cached here to be accessible while an output is removed.
+@@ -2738,6 +2743,11 @@ impl<W: LayoutElement> Layout<W> {
+                     return true;
+                 }
+ 
++                // (shrinking as it's picked up, growing back as it's let go)
++                if move_.shrink.as_ref().is_some_and(|a| !a.is_done()) {
++                    return true;
++                }
++
+                 // Keep advancing animations if we might need to scroll the view.
+                 if !move_.is_floating || self.overview_open {
+                     return true;
+@@ -3999,6 +4009,15 @@ impl<W: LayoutElement> Layout<W> {
+                     tile.hold_alpha_animation_after_done();
+                 }
+ 
++                let shrink = is_floating.then(|| {
++                    Animation::new(
++                        self.clock.clone(),
++                        1.,
++                        MOVE_SHRINK,
++                        0.,
++                        self.options.animations.window_movement.0,
++                    )
++                });
+                 let mut data = InteractiveMoveData {
+                     tile,
+                     output,
+@@ -4007,6 +4026,7 @@ impl<W: LayoutElement> Layout<W> {
+                     is_full_width,
+                     is_floating,
+                     pointer_ratio_within_window,
++                    shrink,
+                     output_config,
+                     workspace_config,
+                 };
+@@ -4132,6 +4152,18 @@ impl<W: LayoutElement> Layout<W> {
+             unreachable!()
+         };
+ 
++        // A floating window let go while shrunk grows back where it's put down, around the spot
++        // it was held by (Monolith's patch), instead of jumping to its full size.
++        if let Some(anim) = &move_.shrink {
++            let s = anim.value();
++            if s < 0.999 && self.overview_zoom() == 1. {
++                let ws = move_.tile.window_size();
++                let (rx, ry) = move_.pointer_ratio_within_window;
++                debug!("monolith drag shrink: growing back from {s}");
++                move_.tile.start_drop_animation(s, Point::from((ws.w * rx, ws.h * ry)));
++            }
++        }
++
+         for mon in self.monitors_mut() {
+             mon.dnd_scroll_gesture_end();
+         }
+@@ -4822,6 +4854,7 @@ impl<W: LayoutElement> Layout<W> {
+ 
+         let zoom = self.overview_zoom();
+         let mut pos_in_backdrop = move_.tile_render_location(zoom);
++        let mut pointer = move_.pointer_pos_within_output;
+         if &move_.output != output {
+             // A window being dragged also shows on the other monitors it reaches over, where it
+             // is in the global space: it was cut off at its own monitor's edge, then jumped across
+@@ -4831,6 +4864,7 @@ impl<W: LayoutElement> Layout<W> {
+             }
+             let offset = (move_.output.current_location() - output.current_location()).to_f64();
+             pos_in_backdrop += offset;
++            pointer += offset;
+             let tile = Rectangle::new(pos_in_backdrop, move_.tile.tile_size());
+             if !tile.overlaps(Rectangle::from_size(output_size(output))) {
+                 return;
+@@ -4840,14 +4874,22 @@ impl<W: LayoutElement> Layout<W> {
+         let scale = Scale::from(output.current_scale().fractional_scale());
+         let xray_pos = XrayPos::new(pos_in_backdrop, zoom);
+ 
++        // (a floating window a little smaller around the pointer while dragged; not in the
++        // overview, which zooms on its own)
++        let shrink = match &move_.shrink {
++            Some(anim) if zoom == 1. => anim.value(),
++            _ => 1.,
++        };
++        let (origin, factor) = if shrink != 1. {
++            (pointer.to_physical_precise_round(scale), shrink)
++        } else {
++            (pos_in_backdrop.to_physical_precise_round(scale), zoom)
++        };
++
+         move_
+             .tile
+             .render(ctx, pos_in_backdrop, xray_pos, true, &mut |elem| {
+-                push(RescaleRenderElement::from_element(
+-                    elem,
+-                    pos_in_backdrop.to_physical_precise_round(scale),
+-                    zoom,
+-                ));
++                push(RescaleRenderElement::from_element(elem, origin, factor));
+             });
+     }
+ 
+@@ -4856,6 +4898,7 @@ impl<W: LayoutElement> Layout<W> {
+ 
+         self.is_active = is_active;
+ 
++
+         let mut ongoing_scrolling_dnd = self.dnd.is_some().then_some(true);
+ 
+         if let Some(InteractiveMoveState::Moving(move_)) = &mut self.interactive_move {
+diff --git a/src/layout/opening_window.rs b/src/layout/opening_window.rs
+index 5ba97a3..83e9255 100644
+--- a/src/layout/opening_window.rs
++++ b/src/layout/opening_window.rs
+@@ -22,6 +22,9 @@ pub struct OpenAnimation {
+     anim: Animation,
+     random_seed: f32,
+     buffer: OffscreenBuffer,
++    /// Growing back after a drag (Monolith's patch): from this scale, around this point in the
++    /// window, with no fade and no custom shader.
++    drop_from: Option<(f64, Point<f64, Logical>)>,
+ }
+ 
+ niri_render_elements! {
+@@ -37,6 +40,16 @@ impl OpenAnimation {
+             anim,
+             random_seed: fastrand::f32(),
+             buffer: OffscreenBuffer::default(),
++            drop_from: None,
++        }
++    }
++
++    pub fn new_drop(anim: Animation, from_scale: f64, origin: Point<f64, Logical>) -> Self {
++        Self {
++            anim,
++            random_seed: fastrand::f32(),
++            buffer: OffscreenBuffer::default(),
++            drop_from: Some((from_scale, origin)),
+         }
+     }
+ 
+@@ -63,7 +76,7 @@ impl OpenAnimation {
+             .render(renderer, scale, elements)
+             .context("error rendering to offscreen buffer")?;
+ 
+-        if Shaders::get(renderer).program(ProgramType::Open).is_some() {
++        if self.drop_from.is_none() && Shaders::get(renderer).program(ProgramType::Open).is_some() {
+             // OffscreenBuffer renders with Transform::Normal and the scale that we passed, so we
+             // can assume that below.
+             let offset = elem.offset();
+@@ -122,13 +135,20 @@ impl OpenAnimation {
+             return Ok((elem.into(), data));
+         }
+ 
+-        let elem = elem.with_alpha(clamped_progress as f32 * alpha);
++        let (fade, center, factor) = match self.drop_from {
++            Some((from, origin)) => (1f32, origin, from + (1. - from) * progress),
++            None => (
++                clamped_progress as f32,
++                geo_size.to_point().downscale(2.),
++                (progress / 2. + 0.5).max(0.),
++            ),
++        };
++        let elem = elem.with_alpha(fade * alpha);
+ 
+-        let center = geo_size.to_point().downscale(2.);
+         let elem = RescaleRenderElement::from_element(
+             elem,
+             center.to_physical_precise_round(scale),
+-            (progress / 2. + 0.5).max(0.),
++            factor,
+         );
+ 
+         let elem = RelocateRenderElement::from_element(
+diff --git a/src/layout/tile.rs b/src/layout/tile.rs
+index 86c7eba..5106db2 100644
+--- a/src/layout/tile.rs
++++ b/src/layout/tile.rs
+@@ -568,6 +568,23 @@ impl<W: LayoutElement> Tile<W> {
+         )));
+     }
+ 
++    /// Growing back from `from_scale` around `origin` (within the window), as a window let go
++    /// after being dragged shrunk does (Monolith's patch). The open animation's offscreen, without
++    /// its fade or shader.
++    pub fn start_drop_animation(&mut self, from_scale: f64, origin: Point<f64, Logical>) {
++        self.open_animation = Some(OpenAnimation::new_drop(
++            Animation::new(
++                self.clock.clone(),
++                0.,
++                1.,
++                0.,
++                self.options.animations.window_movement.0,
++            ),
++            from_scale,
++            origin,
++        ));
++    }
++
+     pub fn resize_animation(&self) -> Option<&Animation> {
+         self.resize_animation.as_ref().map(|resize| &resize.anim)
+     }
