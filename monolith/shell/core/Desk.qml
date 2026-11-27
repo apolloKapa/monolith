@@ -647,20 +647,83 @@ Singleton {
         const w = target || Niri.windows[Niri.focusedWindowId];
         if (!w) return;
         const id = String(w.id);
-        let acts;
-        if (w.is_floating) {
-            acts = ["toggle-window-floating --id " + id, "maximize-column"];
-            if (on) { const n = Object.assign({}, maxFloated); n[id] = true; maxFloated = n; }
-        } else if (on && maxFloated[id]) {
-            const n = Object.assign({}, maxFloated); delete n[id]; maxFloated = n;
-            acts = ["maximize-column", "toggle-window-floating --id " + id];
-        } else if (on) {
-            acts = ["toggle-window-floating --id " + id];
-        } else {
-            acts = ["maximize-column"];
-        }
+        if (on) { floatMax(w); return; }
+        // (without Desktop mode, as before: into the tiling layout, its column maximised or back)
+        const acts = w.is_floating ? ["toggle-window-floating --id " + id, "maximize-column"] : ["maximize-column"];
         // (in order, one niri at a time: the column is the focused window's)
         Quickshell.execDetached(["sh", "-c", ["focus-window --id " + id].concat(acts).map(a => "niri msg action " + a).join("; ")]);
+    }
+
+    // niri, Desktop mode: maximised and staying floating, so it stacks like every other window. A
+    // maximised window used to go into the tiling layout, which niri always draws under floating
+    // windows: clicked or dragged, it never came up over them. As big as the screen's working area
+    // less a small gap (its border showing, like Hyprland's); again: back to where and how big it
+    // was. An app's own maximise button the same (below)
+    property var workAreas: ({})      // output -> [w, h]: what windows can use (from niri when it says)
+    function outputOf(w) { const ws = w ? Niri.workspaces.find(x => x.id === w.workspace_id) : null; return ws ? String(ws.output || "") : (Niri.focusedOutput || ""); }
+    function workArea(out) {
+        if (workAreas[out]) return workAreas[out];
+        const sc = screenNamed(out);
+        if (!sc) return null;
+        // (until niri has said: the screen less the taskbar's strip, island/Reserve.qml)
+        const t = Theme.barTucks ? 0 : Theme.islandH + Theme.barMargin + 4;
+        const side = Theme.barEdge === "left" || Theme.barEdge === "right";
+        return [sc.width - (side ? t : 0), sc.height - (side ? 0 : t)];
+    }
+    function noteWorkArea(out, wh) {
+        if (!out || !wh || wh[0] < 200 || wh[1] < 200) return;
+        const cur = workAreas[out];
+        if (cur && Math.abs(cur[0] - wh[0]) < 1 && Math.abs(cur[1] - wh[1]) < 1) return;
+        const n = Object.assign({}, workAreas); n[out] = [Math.round(wh[0]), Math.round(wh[1])]; workAreas = n;
+    }
+    function floatMax(w, from) {
+        const id = String(w.id);
+        const saved = maxFloated[id];
+        const n = Object.assign({}, maxFloated);
+        if (saved) {
+            delete n[id]; maxFloated = n;
+            niriSize(id, saved.w, saved.h, saved.x, saved.y, !w.is_floating);
+            return;
+        }
+        const a = workArea(outputOf(w));
+        if (!a) return;
+        // (where and how big it was: as it is now, or as it was floating before an app maximised it)
+        const g = from || { size: w.layout ? w.layout.window_size : null, pos: w.layout ? w.layout.tile_pos_in_workspace_view : null };
+        if (g.size && g.pos) n[id] = { w: g.size[0], h: g.size[1], x: g.pos[0], y: g.pos[1] };
+        else n[id] = { w: Math.round(a[0] * 0.6), h: Math.round(a[1] * 0.65), x: Math.round(a[0] * 0.2), y: Math.round(a[1] * 0.17) };
+        maxFloated = n;
+        const G = 6;
+        niriSize(id, a[0] - 2 * G, a[1] - 2 * G, G, G, !w.is_floating);
+    }
+    // the last floating place and size of each window (what an app's own maximise started from)
+    property var lastFloat: ({})
+    Connections {
+        target: Niri
+        function onWindowsChanged() {
+            if (Niri.hyprland || !desk.on) return;
+            const lf = Object.assign({}, desk.lastFloat);
+            for (const k in Niri.windows) {
+                const w = Niri.windows[k];
+                const L = w.layout || {};
+                if (w.is_floating && L.window_size && L.tile_pos_in_workspace_view) {
+                    lf[k] = { size: L.window_size, pos: L.tile_pos_in_workspace_view };
+                    continue;
+                }
+                // an app's own maximise button: niri puts it in the tiling layout, as big as the
+                // working area (which is then known exactly). Floated again and maximised our way
+                const before = desk.lastFloat[k];
+                if (!w.is_floating && before && !desk.isMin(w) && L.window_size) {
+                    const sc = desk.screenNamed(desk.outputOf(w));
+                    if (sc && L.window_size[0] >= sc.width * 0.9 && L.window_size[1] >= sc.height * 0.8) {
+                        desk.noteWorkArea(desk.outputOf(w), L.window_size);
+                        delete lf[k];
+                        // (pressed again while ours: back to how it was)
+                        desk.floatMax(w, before);
+                    }
+                }
+            }
+            desk.lastFloat = lf;
+        }
     }
 
     // niri (with patches/niri-drag-edges.patch, a niri extra): the same, niri telling the edge
@@ -690,6 +753,7 @@ Singleton {
         target: Niri
         function onDragEdge(id, output, zone, area, ended) {
             if (!desk.on || Niri.hyprland) return;
+            desk.noteWorkArea(output, [area[2], area[3]]);
             if (!desk.niriDrag || desk.niriDrag.id !== id) {
                 desk.niriDrag = { id: id, output: output, zone: "", area: area, shown: false };
                 // a tiled window taken away: the size it had (niri keeps it under the pointer)
@@ -717,9 +781,10 @@ Singleton {
             }
         }
     }
-    function niriSize(id, w, h, x, y) {
+    function niriSize(id, w, h, x, y, floatFirst) {
         // (one after the other: each its own process, they could come in any order)
-        let cmd = "niri msg action set-window-width --id \"$1\" \"$2\"; niri msg action set-window-height --id \"$1\" \"$3\"";
+        let cmd = (floatFirst ? "niri msg action toggle-window-floating --id \"$1\"; " : "")
+            + "niri msg action set-window-width --id \"$1\" \"$2\"; niri msg action set-window-height --id \"$1\" \"$3\"";
         if (x !== undefined) cmd += "; niri msg action move-floating-window --id \"$1\" -x \"$4\" -y \"$5\"";
         Quickshell.execDetached(["sh", "-c", cmd, "_", String(id), String(Math.round(w)), String(Math.round(h)), String(Math.round(x || 0)), String(Math.round(y || 0))]);
     }
