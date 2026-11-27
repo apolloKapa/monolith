@@ -672,6 +672,7 @@ progress_begin() {   # progress_begin TITLE
     mkdir -p "${PROG_LOG%/*}" && : > "$PROG_LOG" || return 0
     PROG_DIR=$(mktemp -d 2>/dev/null) || return 0
     PROG_TITLE=$1
+    PROG_TTY=$(tty 2>/dev/null); PROG_TTY=${PROG_TTY#/dev/}
     now_s; PROG_T0=$NOW
     : > "$PROG_DIR/steps"
     tui_begin
@@ -691,6 +692,13 @@ progress_end() {
 progress_loop() {
     local f=0 spin=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
     while true; do
+        # something on the installer's terminal waiting to be typed to (a password sudo asks for,
+        # a question): its prompt is under the panel, so the panel says so. A program reading the
+        # terminal sleeps in the kernel's tty read (wait_woken, n_tty_read); nothing else of the
+        # install does. Twice a second
+        if (( f % 4 == 0 )) && [ -n "$PROG_TTY" ]; then
+            PROG_WAITING=$(ps -t "$PROG_TTY" -o wchan:32=,comm= 2>/dev/null | awk '$1 == "wait_woken" || $1 == "n_tty_read" { print $2; exit }')
+        fi
         progress_frame "${spin[$(( f % 10 ))]}"
         f=$(( f + 1 ))
         sleep 0.12
@@ -731,6 +739,13 @@ progress_frame() {
     nl=$(( TR - base - 10 )); (( nl < 5 )) && nl=$(( TR - base - 1 ))
     (( nl > 12 )) && nl=12; (( nl < 2 )) && nl=2
     PL+=("" "${T_BORDER}$(rule_of "$inner")${RESET}")
+    if [ -n "${PROG_WAITING:-}" ]; then
+        case "$PROG_WAITING" in
+            sudo|sudo-rs|su|doas|run0|pkexec) PL+=("${BOLD}${C_YELLOW}⚠ ${PROG_WAITING} wants your password: type it (it stays hidden), then Enter${RESET}") ;;
+            *) PL+=("${BOLD}${C_YELLOW}⚠ ${PROG_WAITING} is waiting for an answer: type it, then Enter${RESET}") ;;
+        esac
+        nl=$(( nl - 1 )); (( nl < 1 )) && nl=1
+    fi
     local logs=()
     mapfile -t logs < <(log_tail "$nl")
     for (( i = 0; i < nl; i++ )); do PL+=("${DIM}${logs[$i]:-}${RESET}"); done

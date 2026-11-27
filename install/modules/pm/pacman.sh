@@ -223,8 +223,15 @@ package() {
   DESTDIR="$pkgdir" make -C build install
 }
 PKG
-    (cd "$build" && env MAKEFLAGS="-j$safe_jobs" makepkg -si --noconfirm --needed)
-    local rc=$?
+    # (makepkg never asks for root itself: its -s / -i ran their own sudo, whose password prompt
+    # the installer's panel drew over. What it needs comes the way every other package does, and
+    # the package goes in the same way)
+    pm_pacman_install base-devel git cmake qt6-base qt6-wayland qt6-svg || { rm -rf "$build"; return 1; }
+    local rc=1 f
+    if (cd "$build" && env MAKEFLAGS="-j$safe_jobs" makepkg --noconfirm -f); then
+        f=$(ls "$build"/monolith-qadwaitadecorations-qt6-[0-9]*.pkg.tar.* 2>/dev/null | head -1)
+        [ -n "$f" ] && _pm_pacman -U --noconfirm --needed "$f" && rc=0
+    fi
     rm -rf "$build"
     return $rc
 }
