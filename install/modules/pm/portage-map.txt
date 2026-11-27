@@ -4,6 +4,7 @@
 #   <arch name>  -            nothing to install (built into another package, or Qt 5, which Gentoo dropped)
 #   <arch name>  src:<name>   not packaged for Gentoo: built from source into ~/.local (portage.sh)
 # Overlays: (guru) needs ::guru, (librewolf) needs ::librewolf; portage.sh enables them.
+# (guru), (librewolf) and (testing: Gentoo has it, as testing only) get the testing keyword.
 
 # --- installer bootstrap ---
 fzf                       app-shells/fzf
@@ -80,7 +81,7 @@ qt6-wayland               dev-qt/qtwayland
 qt6ct                     gui-apps/qt6ct
 adwaita-icon-theme        x11-themes/adwaita-icon-theme
 gpu-screen-recorder       media-video/gpu-screen-recorder     # (guru)
-wf-recorder               gui-apps/wf-recorder
+wf-recorder               gui-apps/wf-recorder                # (testing)
 adw-gtk-theme             x11-themes/adw-gtk3                 # (guru)
 wl-gammarelay-rs          src:wl-gammarelay-rs
 fastfetch                 app-misc/fastfetch
@@ -122,7 +123,7 @@ emptty                    -
 # --- Portage tools the backend itself uses ---
 eselect-repository        app-eselect/eselect-repository
 gentoolkit                app-portage/gentoolkit
-wlsunset                  gui-apps/wlsunset
+wlsunset                  gui-apps/wlsunset                   # (guru)
 upower                    sys-power/upower
 qadwaitadecorations-qt6   x11-themes/QAdwaitaDecorations
 xdg-utils                 x11-misc/xdg-utils

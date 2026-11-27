@@ -25,6 +25,10 @@ qml="$here/shell/shell.qml"
 niri_conf="${XDG_CONFIG_HOME:-$HOME/.config}/niri"
 shots="$HOME/Pictures/Screenshots"
 
+# what Monolith builds into ~/.local/bin (wooz on Gentoo) found when the session's PATH lacks it
+# (niri started without systemd, from a bash whose .bashrc stops at its first line when not interactive)
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) PATH="$HOME/.local/bin:$PATH"; export PATH ;; esac
+
 ipc() { quickshell ipc -p "$qml" call "$@"; }
 # Every running copy of the shell (an installed one, a checkout), by pid. Not only by command
 # line: after a crash Quickshell starts itself again as plain "quickshell", with no "-p …", and a

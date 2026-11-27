@@ -151,16 +151,19 @@ portage_write_conf() {
             ${librewolf_llvm:+"$librewolf_llvm"} \
             | sudo tee "$f" >/dev/null
     fi
-    # GURU and LibreWolf ebuilds are testing-only (~arch)
+    # GURU and LibreWolf ebuilds are testing-only (~arch), and a few of Gentoo's
     if f="$(portage_conf_file package.accept_keywords monolith)"; then
         local arch; arch="$(portageq envvar ARCH 2>/dev/null || echo amd64)"
         {
             echo "# Written by the Monolith installer: overlay packages Monolith uses (testing keyword only)."
             # map lines only: a comment that mentions "(guru)" isn't a package
-            grep -E '^[^#[:space:]]+[[:space:]]+[a-z0-9-]+/[^[:space:]]+.*\((guru|librewolf)\)' "$PORTAGE_MAP_FILE" \
+            grep -E '^[^#[:space:]]+[[:space:]]+[a-z0-9-]+/[^[:space:]]+.*\((guru|librewolf|testing)\)' "$PORTAGE_MAP_FILE" \
                 | awk -v k="~$arch" '{print $2, k}' | sort -u
             # (LibreWolf picked as Binary comes as the overlay's librewolf-bin)
             echo "www-client/librewolf-bin ~$arch"
+            # quickshell's crash handler (its crash-handler flag): testing only, like quickshell
+            echo "dev-cpp/cpptrace ~$arch"
+            echo "dev-libs/libdwarf ~$arch"
         } | sudo tee "$f" >/dev/null
     fi
     # autounmask writes into the last file of each folder: give it ours

@@ -67,7 +67,7 @@ index 6c42ee6..8b81e9c 100644
 +            if s < 0.999 && self.overview_zoom() == 1. {
 +                let ws = move_.tile.window_size();
 +                let (rx, ry) = move_.pointer_ratio_within_window;
-+                debug!("monolith drag shrink: growing back from {s}");
++                debug!("monolith drag shrink v2: growing back from {s}");
 +                move_.tile.start_drop_animation(s, Point::from((ws.w * rx, ws.h * ry)));
 +            }
 +        }

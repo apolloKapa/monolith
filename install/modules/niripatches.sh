@@ -36,7 +36,7 @@ niri_extras_patched() {
     local f
     f="$(command -v niri 2>/dev/null)"
     [ -n "$f" ] && grep -q "WindowMinimizeRequested" "$f" 2>/dev/null && grep -q "WindowDragEdge" "$f" 2>/dev/null \
-        && grep -q "monolith drag shrink" "$f" 2>/dev/null
+        && grep -q "monolith drag shrink v2" "$f" 2>/dev/null
 }
 # HDMI scaling is one of niri's patches here (on Hyprland it's aquamarine's: hdmi.sh)
 niri_hdmi_wanted() { [ "${OPT_HDMI:-false}" = true ] && [ "$(hdmi_target)" = niri ]; }

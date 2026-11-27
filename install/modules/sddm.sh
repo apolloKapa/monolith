@@ -189,7 +189,8 @@ EOF
     if declare -f pm_enable_display_manager >/dev/null; then
         pm_enable_display_manager "sddm" "$init_sys"
     elif declare -f enable_system_service >/dev/null; then
-        enable_system_service "sddm" "$init_sys"
+        # (at the next boot: "Restart now" at the end; started now it took the screen mid-install)
+        enable_system_service "sddm" "$init_sys" later
     else
         case "$init_sys" in
             systemd)
