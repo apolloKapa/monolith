@@ -64,15 +64,25 @@ Singleton {
     readonly property var overrides: { Store.revision; return computeOverrides(); }
     function computeOverrides() {
         const m = Store.raw("bar.modules", null) || barDefaults;
-        // (the start button and the apps placed by you, in the bar or a mini bar: as you put them)
+        // the start button and the apps where you put them: in the bar, or in a mini bar. One in a
+        // mini bar stays there and the taskbar is made as ever around what's left (it kept your
+        // whole bar as it was: a mini bar with the apps left the bar with no start button)
         const minis = Store.raw("bar.minis", []) || [];
-        const placed = k => Object.keys(m).some(z => Array.isArray(m[z]) && m[z].indexOf(k) !== -1)
-            || (Array.isArray(minis) && minis.some(x => x && x.modules && Array.prototype.slice.call(x.modules).indexOf(k) !== -1));
-        if (placed("taskbar") || placed("start")) {
-            const own = { left: [], leftMid: [], center: [], midRight: [], right: [], free: [], outLeft: [], outRight: [] };
-            for (const z in own) own[z] = (m[z] || []).slice();
+        const inBar = k => Object.keys(m).some(z => Array.isArray(m[z]) && m[z].indexOf(k) !== -1);
+        const inMini = k => Array.isArray(minis) && minis.some(x => x && x.modules && Array.prototype.slice.call(x.modules).indexOf(k) !== -1);
+        const wanted = ["start", "taskbar"].filter(k => !inBar(k) && !inMini(k));
+        const own = { left: [], leftMid: [], center: [], midRight: [], right: [], free: [], outLeft: [], outRight: [] };
+        for (const z in own) own[z] = (m[z] || []).slice();
+        // (in your bar: your layout as it is, the other one next to it if it's nowhere)
+        if (inBar("start") || inBar("taskbar")) {
+            for (const z in own) {
+                if (wanted.indexOf("taskbar") !== -1 && own[z].indexOf("start") !== -1) own[z].splice(own[z].indexOf("start") + 1, 0, "taskbar");
+                if (wanted.indexOf("start") !== -1 && own[z].indexOf("taskbar") !== -1) own[z].splice(own[z].indexOf("taskbar"), 0, "start");
+            }
             return base(own);
         }
+        // (both in mini bars: nothing for the middle, your bar as it is)
+        if (wanted.length === 0) return base(own);
         const no = k => k !== "taskbar" && k !== "start";
         // (the bar's own middle and in-between modules move to the start of its right end: the
         // taskbar's apps have the middle; at the start, they lead the left end)
@@ -80,8 +90,8 @@ Singleton {
         const moved = (m.leftMid || []).concat(m.center || [], m.midRight || [], m.free || []).filter(no);
         const right = moved.concat(m.right || [], m.outRight || []).filter(no);
         const mods = appsAt === "start"
-            ? { left: ["start", "taskbar"], leftMid: [], center: [], midRight: [], right: left.concat(right), free: [], outLeft: [], outRight: [] }
-            : { left: left, leftMid: [], center: ["start", "taskbar"], midRight: [], right: right, free: [], outLeft: [], outRight: [] };
+            ? { left: wanted, leftMid: [], center: [], midRight: [], right: left.concat(right), free: [], outLeft: [], outRight: [] }
+            : { left: left, leftMid: [], center: wanted, midRight: [], right: right, free: [], outLeft: [], outRight: [] };
         return base(mods);
     }
     function base(mods) {
