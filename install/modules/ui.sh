@@ -93,7 +93,7 @@ PY
 [ -n "$SDDM_LOOK" ] || SDDM_LOOK=wallpaper; [ -n "$SDDM_ANIM" ] || SDDM_ANIM=true
 
 USER_NAME="${USER:-$(whoami)}"
-OS_NAME=$(grep '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d "\"'")
+OS_NAME=$(grep '^PRETTY_NAME=' "${OS_RELEASE:-/etc/os-release}" 2>/dev/null | cut -d= -f2 | tr -d "\"'")
 [[ -z "$OS_NAME" ]] && OS_NAME="Linux"
 CPU_INFO=$(grep -m 1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2 | xargs || true)
 [[ -z "$CPU_INFO" ]] && CPU_INFO="unknown"
@@ -857,7 +857,7 @@ completion_lines() {
     done
 }
 
-do_reboot() { systemctl reboot 2>/dev/null || loginctl reboot 2>/dev/null || sudo reboot; }
+do_reboot() { declare -f enable_later_services >/dev/null && enable_later_services; systemctl reboot 2>/dev/null || loginctl reboot 2>/dev/null || sudo reboot; }
 
 # The finish screen: in the panel (Later / Restart now) after the install ran in it, else printed
 draw_completion_screen() {

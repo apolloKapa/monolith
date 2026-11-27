@@ -134,9 +134,25 @@ keep_clipboard() {
     setsid -f wl-clip-persist --clipboard regular >/dev/null 2>&1 < /dev/null
 }
 
+# sound, where nothing else starts it: without systemd (Gentoo's or Artix's OpenRC, runit, dinit,
+# s6) PipeWire has no user services. Once, at login, when it isn't running yet: Gentoo's launcher,
+# else PipeWire, WirePlumber and its PulseAudio side straight
+start_sound() {
+    [ -d /run/systemd/system ] && return 0
+    pgrep -u "$(id -u)" -x 'pipewire|wireplumber' >/dev/null && return 0
+    # (Gentoo's launcher already on it: its process name, cut to 15 letters)
+    pgrep -u "$(id -u)" -x gentoo-pipewire >/dev/null && return 0
+    if command -v gentoo-pipewire-launcher >/dev/null; then
+        setsid -f gentoo-pipewire-launcher >/dev/null 2>&1 < /dev/null
+    elif command -v pipewire >/dev/null; then
+        setsid -f sh -c 'pipewire & sleep 1; command -v wireplumber >/dev/null && wireplumber & command -v pipewire-pulse >/dev/null && pipewire-pulse & wait' >/dev/null 2>&1 < /dev/null
+    fi
+}
+
 case "$1" in
     start)
         t0=$(date +%s)
+        [ "$2" = "--login" ] && start_sound
         start
         keep_clipboard
         [ "$2" = "--login" ] && (reclaim_notifications "$t0") >/dev/null 2>&1 &

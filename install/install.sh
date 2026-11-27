@@ -267,6 +267,7 @@ elif [ "$UPDATE_ONLY" = true ]; then
             "Monolith updated to $TARGET_VERSION" "Restart now so everything uses the new version?" 2>/dev/null)
     fi
     if [[ "$answer" =~ ^[Yy] ]]; then
+        enable_later_services
         systemctl reboot 2>/dev/null || loginctl reboot 2>/dev/null || sudo reboot
     else
         printf "OK, the new version is active; restart whenever you like.\n"
@@ -275,3 +276,6 @@ elif [ "$UPDATE_ONLY" = true ]; then
 else
     draw_completion_screen
 fi
+
+# (runit: the login screen switched on now that the install is over: switching it on starts it)
+enable_later_services

@@ -22,7 +22,7 @@ done < <(sed -e 's/#.*//' "$PORTAGE_MAP_FILE" | awk 'NF>1{n=$1; $1=""; sub(/^ /,
 unset _name _rest
 
 pm_supports_os() {
-    grep -qsE '^ID(_LIKE)?="?[^"]*\bgentoo\b' /etc/os-release
+    grep -qsE '^ID(_LIKE)?="?[^"]*\bgentoo\b' "${OS_RELEASE:-/etc/os-release}"
 }
 
 # Arch name -> atoms ("" when there's nothing to install, "src:x" for a source build)

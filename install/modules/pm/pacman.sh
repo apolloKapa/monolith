@@ -2,10 +2,35 @@
 
 PM_BOOTSTRAP_TOOLS=(fzf jq curl git pciutils unzip fontconfig base-devel)
 
+# Artix: a service's start script is a package of its own, one for each init (networkmanager-openrc,
+# sddm-runit, bluez-dinit...): without it the service can't be switched on (no login screen at
+# boot, no network menu)
+pm_service_pkgs() {
+    grep -qsE '^ID(_LIKE)?="?[^"]*\bartix\b' "${OS_RELEASE:-/etc/os-release}" || return 0
+    local init p
+    init=$(detect_init_system)
+    case "$init" in openrc | runit | dinit | s6) ;; *) return 0 ;; esac
+    for p in "$@"; do echo "$p-$init"; done
+}
+
 # Nothing Monolith installs needs an extra repository, so pacman.conf is left alone (it used to
 # switch multilib on for Steam, which isn't part of the install any more).
+# Artix: some of what Monolith uses is only in Arch Linux's [extra] repository (matugen, which the
+# colours come from; songrec, wmctrl, Mission Center), which Artix leaves out. Artix's own way to
+# have it: its artix-archlinux-support package (Arch's mirror list and keys) and an [extra]
+# section after Artix's repositories (wiki.artixlinux.org, "Repositories")
 pm_prepare_repos() {
-    return 0
+    grep -qsE '^ID(_LIKE)?="?[^"]*\bartix\b' "${OS_RELEASE:-/etc/os-release}" || return 0
+    grep -qE '^[[:space:]]*\[extra\]' /etc/pacman.conf 2>/dev/null && return 0
+    echo -e "\n\e[36m[ INFO ]\e[0m Artix: adding Arch Linux's [extra] repository (artix-archlinux-support): matugen, songrec, wmctrl and Mission Center are only there"
+    sudo pacman -S --noconfirm --needed artix-archlinux-support 2>/dev/null \
+        || sudo pacman -Sy --noconfirm --needed artix-archlinux-support || return 0
+    [ -f /etc/pacman.d/mirrorlist-arch ] || return 0
+    printf '\n# Added by the Monolith installer: Arch Linux packages Artix has no own of (artix-archlinux-support)\n[extra]\nInclude = /etc/pacman.d/mirrorlist-arch\n' \
+        | sudo tee -a /etc/pacman.conf >/dev/null
+    sudo pacman-key --populate archlinux >/dev/null 2>&1 || true
+    # (its list, for the overview to find those packages; the full upgrade follows)
+    sudo pacman -Sy >/dev/null || true
 }
 
 # A mirror can list a package and still not serve it. CachyOS's cdn77 mirror answers 404 for

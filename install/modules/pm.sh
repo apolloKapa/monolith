@@ -3,6 +3,10 @@
 # Gentoo-based distros (Portage, everything built from source; see pm/portage.sh).
 
 PM_MODULES_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/pm"
+# which distro: /etc/os-release, else /usr/lib/os-release (where the standard says to look next;
+# Artix's filesystem package ships only that one)
+OS_RELEASE=/etc/os-release
+[ -f "$OS_RELEASE" ] || OS_RELEASE=/usr/lib/os-release
 if command -v pacman &>/dev/null; then
     PM_NAME="pacman"
 elif command -v emerge &>/dev/null; then

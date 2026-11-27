@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
 detect_init_system() {
+    # what runs as PID 1 says it for sure (Artix: whichever of OpenRC, runit, dinit or s6 it was
+    # installed with, the others' folders possibly there too); the folders and commands otherwise
+    case "$(cat /proc/1/comm 2>/dev/null)" in
+        systemd) echo systemd; return ;;
+        openrc-init) echo openrc; return ;;
+        runit) echo runit; return ;;
+        dinit) echo dinit; return ;;
+        s6-svscan) echo s6; return ;;
+    esac
     if [[ -d /run/systemd/system ]] || command -v systemctl &>/dev/null; then
         echo "systemd"
     elif command -v openrc-init &>/dev/null || [[ -d /run/openrc ]]; then
@@ -18,6 +27,44 @@ detect_init_system() {
 
 # (a third argument "later": set to start at boot, not started now. The login screen is: started
 # in the middle of the install it took the screen from the installer, which went on unseen)
+# runit's folders: Artix's (/etc/runit/sv, switched on in /etc/runit/runsvdir/default, which is
+# what runs) or Void's (/etc/sv, into /var/service)
+runit_dirs() {
+    if [ -d /etc/runit/sv ]; then echo "/etc/runit/sv /etc/runit/runsvdir/default"; else echo "/etc/sv /var/service"; fi
+}
+
+# the first of these service names this system has (Gentoo's Bluetooth is "bluetooth", Artix's
+# "bluetoothd"); the first when none is found
+service_pick() {
+    local init_sys="$1" n sv on; shift
+    read -r sv on <<< "$(runit_dirs)"
+    for n in "$@"; do
+        case "$init_sys" in
+            openrc) [ -e "/etc/init.d/$n" ] && { echo "$n"; return; } ;;
+            runit) [ -d "$sv/$n" ] && { echo "$n"; return; } ;;
+            dinit) [ -e "/etc/dinit.d/$n" ] && { echo "$n"; return; } ;;
+            s6) { [ -d "/etc/s6/sv/$n" ] || [ -d "/etc/s6/sv/$n-srv" ]; } && { echo "$n"; return; } ;;
+            *) echo "$1"; return ;;
+        esac
+    done
+    echo "$1"
+}
+
+# runit can't switch a service on without starting it: the ones for later (the login screen) are
+# switched on at the very end, after the finish screen, or just before a restart
+SVC_LATER=()
+enable_later_services() {
+    [ ${#SVC_LATER[@]} -gt 0 ] || return 0
+    local s sv on
+    read -r sv on <<< "$(runit_dirs)"
+    for s in "${SVC_LATER[@]}"; do
+        [ -e "$on/$s" ] && continue
+        sudo -n ln -s "$sv/$s" "$on/$s" 2>/dev/null || sudo ln -s "$sv/$s" "$on/$s" 2>/dev/null \
+            || echo "  To start $s at boot: sudo ln -s $sv/$s $on/"
+    done
+    SVC_LATER=()
+}
+
 enable_system_service() {
     local svc="$1"
     local init_sys="$2"
@@ -49,17 +96,35 @@ enable_system_service() {
         dinit)
             if [ "$now" = true ]; then
                 sudo dinitctl enable "$svc" 2>/dev/null || sudo dinitctl start "$svc" 2>/dev/null || true
+            elif [ -d /etc/dinit.d/boot.d ]; then
+                # (at boot only: what `dinitctl enable` does, without the starting)
+                [ -e "/etc/dinit.d/boot.d/$svc" ] || sudo ln -s "../$svc" "/etc/dinit.d/boot.d/$svc" 2>/dev/null || true
             else
-                sudo dinitctl enable --from boot "$svc" 2>/dev/null || true
+                sudo dinitctl enable "$svc" 2>/dev/null || true
             fi
             ;;
         runit)
-            if [ -d "/etc/sv/$svc" ]; then
-                sudo ln -sf "/etc/sv/$svc" /var/service/ 2>/dev/null || true
+            local sv on
+            read -r sv on <<< "$(runit_dirs)"
+            if [ -d "$sv/$svc" ]; then
+                if [ "$now" = true ]; then
+                    [ -e "$on/$svc" ] || sudo ln -s "$sv/$svc" "$on/$svc" 2>/dev/null || true
+                else
+                    SVC_LATER+=("$svc")
+                fi
             fi
             ;;
         s6)
-            sudo s6-rc-bundle-update -b add default "$svc" 2>/dev/null || true
+            if command -v s6 >/dev/null 2>&1; then
+                # Artix's s6 (s6-frontend), as its package hook does it: by the service's name,
+                # which is its pipeline's (sddm: sddm-srv and its sddm-log), with what it needs
+                # (elogind, dbus): without them the set doesn't commit
+                sudo s6 set enable --pull-dependencies "$svc" >/dev/null 2>&1 || true
+                { sudo s6 set commit && sudo s6 live install; } >/dev/null 2>&1 || true
+                [ "$now" = true ] && { sudo s6-rc -u change "$svc" >/dev/null 2>&1 || true; }
+            else
+                sudo s6-rc-bundle-update -b add default "$svc" 2>/dev/null || true
+            fi
             ;;
         *)
             true
@@ -84,12 +149,22 @@ disable_system_service() {
             sudo dinitctl disable "$svc" 2>/dev/null || true
             ;;
         runit)
-            if [ -L "/var/service/$svc" ] || [ -d "/var/service/$svc" ]; then
-                sudo rm -f "/var/service/$svc" 2>/dev/null || true
+            local sv on
+            read -r sv on <<< "$(runit_dirs)"
+            if [ -L "$on/$svc" ] || [ -d "$on/$svc" ]; then
+                sudo sv down "$svc" >/dev/null 2>&1 || true
+                sudo rm -f "$on/$svc" 2>/dev/null || true
             fi
             ;;
         s6)
-            sudo s6-rc-bundle-update -b del default "$svc" 2>/dev/null || true
+            if command -v s6 >/dev/null 2>&1; then
+                [ -d "/etc/s6/sv/$svc" ] || [ -d "/etc/s6/sv/$svc-srv" ] || return 0
+                sudo s6-rc -d change "$svc" >/dev/null 2>&1 || true
+                sudo s6 set disable "$svc" >/dev/null 2>&1 || true
+                { sudo s6 set commit && sudo s6 live install; } >/dev/null 2>&1 || true
+            else
+                sudo s6-rc-bundle-update -b del default "$svc" 2>/dev/null || true
+            fi
             ;;
         *)
             true
@@ -161,6 +236,6 @@ setup_services() {
     # Bluetooth (the Bluetooth menu): bluez is installed, but its service is off by default on most
     # systems. Only on a PC with a Bluetooth adapter
     if compgen -G "/sys/class/bluetooth/*" >/dev/null; then
-        enable_system_service "bluetooth" "$init_sys"
+        enable_system_service "$(service_pick "$init_sys" bluetooth bluetoothd)" "$init_sys"
     fi
 }

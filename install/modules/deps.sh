@@ -69,7 +69,7 @@ KEYBIND_PKGS=(
     "niri" "xwayland-satellite" "xdg-desktop-portal-gnome"
     "jq" "cliphist" "wl-clipboard" "playerctl" "brightnessctl"
     "grim" "slurp" "swaylock" "wireplumber"
-    "kitty" "thunar" "tumbler" "ffmpegthumbnailer" "mission-center" "librewolf|librewolf-bin" "wooz"
+    "kitty" "thunar" "tumbler" "ffmpegthumbnailer" "mission-center" "librewolf|librewolf-bin" "wooz|wooz-git"
     "ttf-jetbrains-mono" "noto-fonts-cjk" "breeze"
 )
 
@@ -164,6 +164,11 @@ all_target_packages() {
     fi
     if [ "$OPT_SDDM" = true ]; then sddm_packages; fi
     for p in "${PM_EXTRA_PKGS[@]}"; do echo "$p"; done
+    # (Artix: the services' start scripts, their own packages there)
+    if declare -f pm_service_pkgs >/dev/null; then
+        pm_service_pkgs networkmanager power-profiles-daemon bluez
+        [ "$OPT_SDDM" = true ] && pm_service_pkgs sddm
+    fi
 }
 
 # the ones to install: those not set to Off (what Monolith needs stays in)
@@ -186,9 +191,9 @@ check_supported_os() {
         exit 1
     fi
 
-    if [ -f /etc/os-release ]; then
+    if [ -f "${OS_RELEASE:-/etc/os-release}" ]; then
         local DETECTED_OS
-        DETECTED_OS=$(awk -F= '/^ID=/{gsub(/"/, "", $2); print $2}' /etc/os-release)
+        DETECTED_OS=$(awk -F= '/^ID=/{gsub(/"/, "", $2); print $2}' "${OS_RELEASE:-/etc/os-release}")
 
         for os in "${SUPPORTED_DISTROS[@]}"; do
             if [ "$DETECTED_OS" = "$os" ]; then
