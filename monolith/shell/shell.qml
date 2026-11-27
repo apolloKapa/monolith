@@ -71,6 +71,12 @@ ShellRoot {
     // (the bar's menu: a click on an empty part of it, status/BarMenu.qml)
     Lazy { id: barMenuL; when: HubState.barMenu.screen !== ""; linger: 400 }
     Variants { model: barMenuL.on ? Quickshell.screens : []; BarMenu {} }
+    // (Desktop mode on Hyprland: where a dragged window will go, and a window's menu from its
+    // title bar: status/TilePreview.qml, status/WindowMenu.qml)
+    Lazy { id: tileL; when: Desk.preview.on; linger: 700 }
+    Variants { model: tileL.on ? Quickshell.screens : []; TilePreview {} }
+    Lazy { id: winMenuL; when: Desk.winMenu !== null; linger: 400 }
+    Variants { model: winMenuL.on ? Quickshell.screens : []; WindowMenu {} }
     Lazy { id: menuL; when: HubState.deskMenu.screen !== ""; linger: 400 }
     Variants { model: menuL.on ? Quickshell.screens : []; DesktopMenu {} }
     LazyLoader { active: AppImages.opened; AppImagesWindow {} }

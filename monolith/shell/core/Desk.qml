@@ -406,7 +406,7 @@ Singleton {
         command: ["hyprctl", "version", "-j"]
         stdout: StdioCollector { onStreamFinished: { try { desk.hyprCommit = String(JSON.parse(text).commit || ""); } catch (e) {} } }
     }
-    onBarsReadyChanged: if (started && on && titlebars) hyprBars(true)
+    onBarsReadyChanged: { if (started && on && titlebars) hyprBars(true); if (started && on && Niri.hyprland && Niri.hyprKnown) hyprRules(true); }
     // build it, in a terminal so you see it happen
     function buildBars() {
         const cmd = "sh \"$1\"; echo; echo 'You can close this window.'; read -r _";
@@ -482,8 +482,9 @@ Singleton {
     onBarsLuaChanged: if (started && on && titlebars && barsReady && Niri.hyprLua) barsLater.restart()
     Timer { id: barsLater; interval: 400; onTriggered: Quickshell.execDetached(["hyprctl", "eval", desk.barsLua]) }
     // (switched in Settings while it's on: at once)
-    onTitlebarsChanged: if (started && on) bars(titlebars)
     onFloatingChanged: if (started && on && Niri.hyprland && Niri.hyprKnown) hyprRules(true)
+    // (the window menu needs our title bars: told again when they're ready or switched)
+    onTitlebarsChanged: { if (started && on) bars(titlebars); if (started && on && Niri.hyprland && Niri.hyprKnown) hyprRules(true); }
     // Hyprland: a rule that floats every window as it opens, and its minimise requests (an app's
     // own minimise button) send the window to the minimised workspace. Sent at runtime (it isn't
     // in your config); a config reload forgets it, so it's sent again then
@@ -569,7 +570,8 @@ Singleton {
                 +   "local sw, sh = s[1], s[2]; if m then sw = math.min(sw, m.width - 40); sh = math.min(sh, m.height - 80) end; "
                 +   "local a = tostring(w.address); if a:sub(1, 2) ~= \"0x\" then a = \"0x\" .. a end; "
                 +   "hl.dispatch(hl.dsp.window.resize({ x = sw, y = sh, window = \"address:\" .. a })); "
-                +   "hl.dispatch(hl.dsp.window.center({ window = \"address:\" .. a })) end) end";
+                +   "hl.dispatch(hl.dsp.window.center({ window = \"address:\" .. a })) end) end"
+                + (want ? kdeLua() : "");
             Quickshell.execDetached(["hyprctl", "eval", lua]);
         } else if (want && floating) {
             // (the rule's wording changed in 0.53: both are sent, the one it doesn't know is refused)
@@ -579,6 +581,46 @@ Singleton {
             Quickshell.execDetached(["sh", "-c", "hyprctl reload"]);
         }
     }
+    // ── windows like KDE Plasma's (scripts/desk-windows.lua, Hyprland): snapping, a window
+    // dragged to an edge tiled to that half (a corner: a quarter, the top: maximised) with an
+    // outline of where it goes (status/TilePreview.qml), a tiled one dragged away its size again,
+    // and a right click on a title bar its menu (status/WindowMenu.qml) ──
+    readonly property string kdeScript: Qt.resolvedUrl("../scripts/desk-windows.lua").toString().replace("file://", "")
+    readonly property string shellQml: Qt.resolvedUrl("../shell.qml").toString().replace("file://", "")
+    function kdeLua() {
+        // (the apps without our title bar, by exact name: theirs is under the top of the window)
+        const nb = noBar.filter(x => /^[A-Za-z0-9_.+-]+$/.test(x)).map(x => JSON.stringify(String(x).toLowerCase())).join(", ");
+        return "; MonolithDesk.kdeCfg = { ipc = " + JSON.stringify(shellQml) + ", bars = " + (titlebars && barsReady ? "true" : "false")
+            + ", noBar = { " + nb + " } }; dofile(" + JSON.stringify(kdeScript) + ")";
+    }
+    // the outline, in screen coordinates (the whole desktop's): { on, x, y, w, h }
+    property var preview: ({ on: false, x: 0, y: 0, w: 0, h: 0 })
+    // the window menu: { addr, x, y, max, pin, title } while it's open, else null
+    property var winMenu: null
+    onOnChanged: if (!on) { preview = { on: false, x: preview.x, y: preview.y, w: preview.w, h: preview.h }; winMenu = null; }
+    function winAct(kind, a, arg) {
+        const s = "address:" + a;
+        const lua = {
+            min: "MonolithDesk.minimizeWin('" + s + "')",
+            max: "hl.dispatch(hl.dsp.window.fullscreen({ mode = 'maximized', action = 'toggle', window = '" + s + "' }))",
+            full: "hl.dispatch(hl.dsp.window.fullscreen({ mode = 'fullscreen', action = 'toggle', window = '" + s + "' }))",
+            left: "MonolithDesk.tileWin('" + s + "', 'left')",
+            right: "MonolithDesk.tileWin('" + s + "', 'right')",
+            pin: "hl.dispatch(hl.dsp.window.pin({ action = 'toggle', window = '" + s + "' }))",
+            ws: "hl.dispatch(hl.dsp.window.move({ workspace = " + Number(arg) + ", follow = false, window = '" + s + "' }))",
+            close: "hl.dispatch(hl.dsp.window.close({ window = '" + s + "' }))"
+        }[kind];
+        if (lua && /^0x[0-9a-fA-F]+$/.test(a)) Quickshell.execDetached(["hyprctl", "eval", lua]);
+    }
+    IpcHandler {
+        target: "desk"
+        function preview(x: int, y: int, w: int, h: int): void { if (desk.on) desk.preview = { on: true, x: x, y: y, w: w, h: h }; }
+        function previewOff(): void { const p = desk.preview; desk.preview = { on: false, x: p.x, y: p.y, w: p.w, h: p.h }; }
+        function windowMenu(addr: string, x: int, y: int, max: bool, pin: bool, title: string): void {
+            if (desk.on) desk.winMenu = { addr: addr, x: x, y: y, max: max, pin: pin, title: title };
+        }
+    }
+
     // ── each app's window size, remembered (Store desktop.sizes: app id, lower case → [w, h]) ──
     // noted as windows change (niri says when one is resized; Hyprland's sizes come with its other
     // window events, a focus change among them), so the next window of that app opens that big.
