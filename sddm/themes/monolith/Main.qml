@@ -315,17 +315,20 @@ Rectangle {
         pwd.text = ""; message = "";
     }
 
-    // ── the corners: the session (a click goes to the next), the power buttons ──
+    // ── the corners: the session (a click opens the list of them above it), the power buttons ──
     component Corner: Rectangle {
         id: cb
         property string icon
         property string label
         property bool wide: false
+        property bool lit: false          // held highlighted (its menu is open)
+        property string trail: ""         // an icon after the label
+        property real trailTurn: 0
         signal clicked
         height: 44 * root.s
         width: wide ? row.implicitWidth + 32 * root.s : height
         radius: height / 2
-        color: ma.containsMouse ? Qt.alpha(c.container, 0.85) : "transparent"
+        color: ma.containsMouse || lit ? Qt.alpha(c.container, 0.85) : "transparent"
         Behavior on color { ColorAnimation { duration: 150 } }
         Row {
             id: row
@@ -338,8 +341,17 @@ Rectangle {
                 font.family: root.font
                 font.pixelSize: 15 * root.s
                 font.weight: Font.Medium
-                color: ma.containsMouse ? c.text : c.sub
+                color: ma.containsMouse || cb.lit ? c.text : c.sub
                 anchors.verticalCenter: parent.verticalCenter
+            }
+            Sym {
+                visible: cb.trail !== ""
+                name: cb.trail
+                size: 20 * root.s
+                color: ma.containsMouse || cb.lit ? c.text : c.sub
+                anchors.verticalCenter: parent.verticalCenter
+                rotation: cb.trailTurn
+                Behavior on rotation { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
             }
         }
         MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: cb.clicked() }
@@ -347,6 +359,7 @@ Rectangle {
     }
 
     Corner {
+        id: sessionChip
         x: 28 * root.s
         y: root.height - height - 28 * root.s
         opacity: root.part(0.5, 0.5)
@@ -354,7 +367,142 @@ Rectangle {
         wide: true
         icon: "desktop_windows"
         label: root.sessionName
-        onClicked: if (root.sessionCount > 1) root.sessionIndex = (root.sessionIndex + 1) % root.sessionCount
+        trail: root.sessionCount > 1 ? "expand_more" : ""
+        trailTurn: root.sessionsOpen ? 0 : 180
+        lit: root.sessionsOpen
+        onClicked: if (root.sessionCount > 1) root.openSessions()
+    }
+
+    // ── the sessions, in a menu rising out of the chip: the one picked ticked, ↑ ↓ and Enter
+    // work, Esc or a click anywhere else closes it ──
+    property bool sessionsOpen: false
+    property int menuIndex: 0
+    function openSessions() { menuIndex = sessionIndex; sessionsOpen = true; sessMenu.forceActiveFocus(); }
+    function closeSessions() { sessionsOpen = false; pwd.forceActiveFocus(); }
+    function pickSession(i) { sessionIndex = i; closeSessions(); }
+
+    MouseArea {
+        anchors.fill: parent
+        z: 5
+        visible: root.sessionsOpen
+        onClicked: root.closeSessions()
+    }
+    Rectangle {
+        id: sessMenu
+        z: 6
+        readonly property real pad: 6 * root.s
+        x: sessionChip.x
+        y: sessionChip.y - height - 10 * root.s
+        width: Math.max(sessionChip.width, 260 * root.s)
+        height: sessList.implicitHeight + 2 * pad
+        radius: 22 * root.s + pad
+        color: Qt.alpha(c.container, 0.94)
+        border.width: Math.max(1, root.s)
+        border.color: Qt.alpha(c.outline, 0.6)
+        // rising out of the chip: grows from its corner and slides up into place, a touch of
+        // bounce coming in, straight going out
+        transformOrigin: Item.BottomLeft
+        opacity: root.sessionsOpen ? 1 : 0
+        scale: root.sessionsOpen ? 1 : 0.9
+        visible: opacity > 0.01
+        transform: Translate { id: sessSlide; y: root.sessionsOpen ? 0 : 10 * root.s }
+        Behavior on opacity { NumberAnimation { duration: root.sessionsOpen ? 200 : 150; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: root.sessionsOpen ? 320 : 160; easing.type: root.sessionsOpen ? Easing.OutBack : Easing.InCubic; easing.overshoot: 1.3 } }
+        Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
+        Keys.onUpPressed: root.menuIndex = (root.menuIndex - 1 + root.sessionCount) % root.sessionCount
+        Keys.onDownPressed: root.menuIndex = (root.menuIndex + 1) % root.sessionCount
+        Keys.onReturnPressed: root.pickSession(root.menuIndex)
+        Keys.onEnterPressed: root.pickSession(root.menuIndex)
+        Keys.onSpacePressed: root.pickSession(root.menuIndex)
+        Keys.onEscapePressed: root.closeSessions()
+        MouseArea { anchors.fill: parent }   // (clicks between the rows don't close it)
+
+        Column {
+            id: sessList
+            x: sessMenu.pad; y: sessMenu.pad
+            spacing: 2 * root.s
+            Repeater {
+                model: typeof sessionModel !== "undefined" ? sessionModel : null
+                delegate: Rectangle {
+                    id: row
+                    required property string name
+                    required property int index
+                    readonly property bool current: index === root.sessionIndex
+                    readonly property bool lit: index === root.menuIndex
+                    width: sessMenu.width - 2 * sessMenu.pad
+                    height: 44 * root.s
+                    radius: height / 2
+                    color: lit ? Qt.alpha(c.primary, rowMouse.pressed ? 0.26 : 0.16) : "transparent"
+                    Behavior on color { ColorAnimation { duration: 140 } }
+                    // each row in a moment after the one above it
+                    opacity: 0
+                    property real slide: 6 * root.s
+                    transform: Translate { y: row.slide }
+                    states: State {
+                        name: "open"
+                        when: root.sessionsOpen
+                        PropertyChanges { target: row; opacity: 1; slide: 0 }
+                    }
+                    transitions: [
+                        Transition {
+                            from: ""; to: "open"
+                            SequentialAnimation {
+                                PauseAnimation { duration: 40 + row.index * 35 }
+                                ParallelAnimation {
+                                    NumberAnimation { target: row; property: "opacity"; duration: 200; easing.type: Easing.OutCubic }
+                                    NumberAnimation { target: row; property: "slide"; duration: 260; easing.type: Easing.OutCubic }
+                                }
+                            }
+                        },
+                        Transition {
+                            from: "open"; to: ""
+                            NumberAnimation { target: row; properties: "opacity,slide"; duration: 120; easing.type: Easing.InCubic }
+                        }
+                    ]
+                    Sym {
+                        id: rowIcon
+                        x: 14 * root.s
+                        anchors.verticalCenter: parent.verticalCenter
+                        name: "desktop_windows"
+                        size: 20 * root.s
+                        color: row.current ? c.primary : c.sub
+                    }
+                    Text {
+                        id: label
+                        anchors.left: rowIcon.right; anchors.leftMargin: 12 * root.s
+                        anchors.right: tick.left; anchors.rightMargin: 8 * root.s
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: row.name
+                        elide: Text.ElideRight
+                        font.family: root.font
+                        font.pixelSize: 15 * root.s
+                        font.weight: row.current ? Font.DemiBold : Font.Medium
+                        color: c.text
+                    }
+                    Sym {
+                        id: tick
+                        anchors.right: parent.right; anchors.rightMargin: 14 * root.s
+                        anchors.verticalCenter: parent.verticalCenter
+                        name: "check"
+                        size: 20 * root.s
+                        color: c.primary
+                        opacity: row.current ? 1 : 0
+                        scale: row.current ? 1 : 0.4
+                        Behavior on opacity { NumberAnimation { duration: 160 } }
+                        Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack } }
+                    }
+                    MouseArea {
+                        id: rowMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onEntered: root.menuIndex = row.index
+                        onClicked: root.pickSession(row.index)
+                    }
+                }
+            }
+        }
     }
 
     Row {
