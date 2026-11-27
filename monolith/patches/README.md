@@ -40,8 +40,9 @@ makepkg, for both.)
 ## The installer does these for you
 
 `monolith installer` → **niri extras** (minimise buttons, windows tiled when dragged to an edge,
-windows across screens while dragged) builds niri with niri-minimize.patch, niri-drag-edges.patch
-and niri-move-across-monitors.patch, and HDMI scaling adds
+windows across screens while dragged, X11 apps' own buttons) builds niri with niri-minimize.patch,
+niri-drag-edges.patch and niri-move-across-monitors.patch, and xwayland-satellite with
+xwayland-satellite-wm-buttons.patch; HDMI scaling adds
 niri-underscan.patch: every niri patch wanted goes into one build (a build with only some would
 lose the others), on Gentoo (Portage's user patches, kept for that version) and Arch (Arch's own
 PKGBUILD, installed over the same version). Remembered, and an update patches niri again after an
@@ -90,3 +91,20 @@ nothing changes. Made for niri 26.04; it goes in the same folder as the others:
     sudo emerge --oneshot gui-wm/niri
 
 then log out and in.
+
+## xwayland-satellite-wm-buttons.patch: an X11 app's own minimise and maximise buttons on niri
+
+X11 apps (Steam, for one) run on niri through xwayland-satellite, which passed on only full screen:
+their own minimise and maximise buttons did nothing (close worked: the app closes its own window).
+This patch passes maximise (`_NET_WM_STATE_MAXIMIZED_*`) and minimise (ICCCM's `WM_CHANGE_STATE`
+to Iconic) on to the compositor as Wayland's own requests, and writes the maximised state back so
+the app's button shows the right way round. With niri-minimize.patch, Monolith's Desktop mode then
+minimises the window. Made for xwayland-satellite 0.8.3; the installer's niri extras build it. On
+Gentoo:
+
+    sudo mkdir -p /etc/portage/patches/gui-apps/xwayland-satellite-0.8.3
+    sudo cp xwayland-satellite-wm-buttons.patch /etc/portage/patches/gui-apps/xwayland-satellite-0.8.3/
+    sudo emerge --oneshot gui-apps/xwayland-satellite
+
+then open the app again (niri starts xwayland-satellite when an X11 app needs it; log out and in
+to be sure the new one runs).

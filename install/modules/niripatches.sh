@@ -18,6 +18,14 @@
 
 NIRI_EXTRAS_STATE_FILE="$HOME/.local/state/monolith/niri-extras"
 NIRI_EXTRA_PATCHES=(niri-minimize.patch niri-move-across-monitors.patch niri-drag-edges.patch)
+# and xwayland-satellite (X11 apps on niri), with the extras: an X11 app's own maximise and minimise
+# buttons (Steam's) did nothing, satellite passing on only fullscreen
+SATELLITE_PATCHES=(xwayland-satellite-wm-buttons.patch)
+satellite_patched() {
+    local f
+    f="$(command -v xwayland-satellite 2>/dev/null)"
+    [ -z "$f" ] || grep -aq "WM_CHANGE_STATE" "$f" 2>/dev/null
+}
 
 niri_extras_wanted() { [ "$(cat "$NIRI_EXTRAS_STATE_FILE" 2>/dev/null)" = on ]; }
 # the installed niri has them all (their events' names are in it: one built with only the older
@@ -31,7 +39,7 @@ niri_extras_patched() {
 niri_hdmi_wanted() { [ "${OPT_HDMI:-false}" = true ] && [ "$(hdmi_target)" = niri ]; }
 niri_patches_wanted() { [ "${OPT_NIRI_EXTRAS:-false}" = true ] || niri_hdmi_wanted; }
 niri_all_patched() {
-    { [ "${OPT_NIRI_EXTRAS:-false}" != true ] || niri_extras_patched; } && { ! niri_hdmi_wanted || hdmi_patched; }
+    { [ "${OPT_NIRI_EXTRAS:-false}" != true ] || { niri_extras_patched && satellite_patched; }; } && { ! niri_hdmi_wanted || hdmi_patched; }
 }
 
 install_niri_patches() {
@@ -51,11 +59,24 @@ install_niri_patches() {
         [ -f "$p" ] || { echo -e "  ${C_YELLOW}niri patches:${RESET} ${p##*/} is missing from this copy of Monolith"; missing=1; }
     done
     [ "$missing" = 0 ] || return 0
-    case "$PM_NAME" in
-        portage) _niri_patches_gentoo "${patches[@]}" ;;
-        pacman) _arch_patched_build niri "Monolith's niri patches" "${patches[@]}" ;;
-        *) echo -e "  ${C_YELLOW}niri patches:${RESET} not available on this system yet"; return 0 ;;
-    esac
+    # (niri only when it's missing some: the satellite can be the one left)
+    if ! { { [ "${OPT_NIRI_EXTRAS:-false}" != true ] || niri_extras_patched; } && { ! niri_hdmi_wanted || hdmi_patched; }; }; then
+        case "$PM_NAME" in
+            portage) _niri_patches_gentoo "${patches[@]}" ;;
+            pacman) _arch_patched_build niri "Monolith's niri patches" "${patches[@]}" ;;
+            *) echo -e "  ${C_YELLOW}niri patches:${RESET} not available on this system yet"; return 0 ;;
+        esac
+    fi
+    if [ "${OPT_NIRI_EXTRAS:-false}" = true ] && command -v xwayland-satellite >/dev/null && ! satellite_patched; then
+        local sp=()
+        for p in "${SATELLITE_PATCHES[@]}"; do [ -f "$root/monolith/patches/$p" ] && sp+=("$root/monolith/patches/$p"); done
+        if [ ${#sp[@]} -gt 0 ]; then
+            case "$PM_NAME" in
+                portage) _gentoo_user_patch_build gui-apps/xwayland-satellite "xwayland-satellite patch" "${sp[@]}" ;;
+                pacman) _arch_patched_build xwayland-satellite "Monolith's xwayland-satellite patch" "${sp[@]}" ;;
+            esac
+        fi
+    fi
     if niri_all_patched; then
         echo "  niri: patched; ready after you log out and in again"
     else
@@ -64,13 +85,18 @@ install_niri_patches() {
     return 0
 }
 
-_niri_patches_gentoo() {
-    local pkg ver dir p added=()
-    pkg=$(ls -d /var/db/pkg/gui-wm/niri-[0-9]* 2>/dev/null | tail -1)
-    [ -n "$pkg" ] || { echo -e "  ${C_YELLOW}niri patches:${RESET} niri isn't installed"; return 0; }
-    ver="${pkg##*/niri-}"
-    dir="/etc/portage/patches/gui-wm/niri-$ver"
-    echo -e "\n\e[36m[ INFO ]\e[0m Building niri $ver with Monolith's patches"
+_niri_patches_gentoo() { _gentoo_user_patch_build gui-wm/niri "niri patches" "$@"; }
+
+# Portage's user patches for the installed version of a package, and it emerged again (they stay
+# for rebuilds of that version); ones that don't fit are taken out again
+_gentoo_user_patch_build() {
+    local atom="$1" what="$2"; shift 2
+    local cat="${atom%/*}" pn="${atom#*/}" pkg ver dir p added=()
+    pkg=$(ls -d /var/db/pkg/$cat/$pn-[0-9]* 2>/dev/null | tail -1)
+    [ -n "$pkg" ] || { echo -e "  ${C_YELLOW}$what:${RESET} $pn isn't installed"; return 0; }
+    ver="${pkg##*/$pn-}"; ver="${ver%-r[0-9]*}"
+    dir="/etc/portage/patches/$cat/$pn-$ver"
+    echo -e "\n\e[36m[ INFO ]\e[0m Building $pn $ver with Monolith's patches"
     sudo mkdir -p "$dir" || return 0
     for p in "$@"; do
         # (the same one there already, from by hand or before: left as it is)
@@ -79,10 +105,11 @@ _niri_patches_gentoo() {
             added+=("$dir/${p##*/}")
         fi
     done
-    if ! sudo emerge --oneshot --ask=n "=gui-wm/niri-$ver"; then
+    # (~: that version at any revision, the installed one being -r1 say)
+    if ! sudo emerge --oneshot --ask=n "~$cat/$pn-$ver"; then
         # (patches that don't fit this version: the ones put there now taken out again)
         for p in "${added[@]}"; do sudo rm -f "$p"; done
         sudo rmdir "$dir" 2>/dev/null || true
-        echo -e "  ${C_YELLOW}niri patches:${RESET} they don't fit niri $ver; left as it was"
+        echo -e "  ${C_YELLOW}$what:${RESET} they don't fit $pn $ver; left as it was"
     fi
 }

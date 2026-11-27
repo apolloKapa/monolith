@@ -1,0 +1,212 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index d3bf003..81ef0c3 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -19,6 +19,8 @@ pub trait XConnection: Sized + 'static {
+ 
+     fn set_window_dims(&mut self, window: x::Window, dims: PendingSurfaceState) -> bool;
+     fn set_fullscreen(&mut self, window: x::Window, fullscreen: bool);
++    /// The window's whole _NET_WM_STATE: fullscreen and maximized (Monolith's patch).
++    fn set_window_state(&mut self, _window: x::Window, _fullscreen: bool, _maximized: bool) {}
+     fn focus_window(&mut self, window: x::Window, output_name: Option<String>);
+     fn send_take_focus(&mut self, window: x::Window);
+     fn close_window(&mut self, window: x::Window);
+diff --git a/src/server/event.rs b/src/server/event.rs
+index acf51d9..014fe58 100644
+--- a/src/server/event.rs
++++ b/src/server/event.rs
+@@ -388,8 +388,11 @@ impl SurfaceEvents {
+                 let mut role = data.get::<&mut SurfaceRole>().unwrap();
+                 if let SurfaceRole::Toplevel(Some(toplevel)) = &mut *role {
+                     let prev_fs = toplevel.fullscreen;
++                    let prev_max = toplevel.maximized;
+                     toplevel.fullscreen =
+                         states.contains(&(u32::from(xdg_toplevel::State::Fullscreen) as u8));
++                    toplevel.maximized =
++                        states.contains(&(u32::from(xdg_toplevel::State::Maximized) as u8));
+                     if toplevel.fullscreen != prev_fs {
+                         state.connection.set_fullscreen(
+                             *data.get::<&x::Window>().unwrap(),
+@@ -399,6 +402,14 @@ impl SurfaceEvents {
+                             decorations.handle_fullscreen(toplevel.fullscreen);
+                         }
+                     }
++                    // (after fullscreen's own write, which leaves maximised out: the app's own maximise button shows the right way round)
++                    if toplevel.maximized != prev_max || (toplevel.maximized && toplevel.fullscreen != prev_fs) {
++                        state.connection.set_window_state(
++                            *data.get::<&x::Window>().unwrap(),
++                            toplevel.fullscreen,
++                            toplevel.maximized,
++                        );
++                    }
+                 };
+ 
+                 role.xdg_mut().unwrap().pending = Some(PendingSurfaceState {
+diff --git a/src/server/mod.rs b/src/server/mod.rs
+index a436331..2b7fdb8 100644
+--- a/src/server/mod.rs
++++ b/src/server/mod.rs
+@@ -240,6 +240,7 @@ struct ToplevelData {
+     toplevel: XdgToplevel,
+     xdg: XdgSurfaceData,
+     fullscreen: bool,
++    maximized: bool,
+     decoration: decoration::DecorationsData,
+ }
+ 
+@@ -1228,6 +1229,61 @@ impl<S: X11Selection + 'static> InnerServerState<S> {
+         }
+     }
+ 
++    // (Monolith's patch: an app's own maximise and minimise buttons, passed on to the compositor)
++    fn toplevel_of(&self, window: x::Window) -> Option<XdgToplevel> {
++        let data = self
++            .windows
++            .get(&window)
++            .copied()
++            .and_then(|id| self.world.entity(id).ok())?;
++        let role = data.get::<&SurfaceRole>()?;
++        let SurfaceRole::Toplevel(Some(toplevel)) = &*role else {
++            return None;
++        };
++        Some(toplevel.toplevel.clone())
++    }
++
++    fn is_maximized(&self, window: x::Window) -> bool {
++        let Some(data) = self
++            .windows
++            .get(&window)
++            .copied()
++            .and_then(|id| self.world.entity(id).ok())
++        else {
++            return false;
++        };
++        let Some(role) = data.get::<&SurfaceRole>() else {
++            return false;
++        };
++        matches!(&*role, SurfaceRole::Toplevel(Some(t)) if t.maximized)
++    }
++
++    pub fn set_maximized(&mut self, window: x::Window, state: super::xstate::SetState) {
++        let Some(toplevel) = self.toplevel_of(window) else {
++            warn!("Tried to maximize an unknown or unmapped window {window:?}");
++            return;
++        };
++        use crate::xstate::SetState;
++        let want = match state {
++            SetState::Add => true,
++            SetState::Remove => false,
++            SetState::Toggle => !self.is_maximized(window),
++        };
++        if want {
++            toplevel.set_maximized();
++        } else {
++            toplevel.unset_maximized();
++        }
++    }
++
++    pub fn minimize_window(&mut self, window: x::Window) {
++        let Some(toplevel) = self.toplevel_of(window) else {
++            warn!("Tried to minimize an unknown or unmapped window {window:?}");
++            return;
++        };
++        toplevel.set_minimized();
++    }
++
+     pub fn set_transient_for(&mut self, window: x::Window, parent: x::Window) {
+         let Some(mut win) = self
+             .windows
+@@ -1589,6 +1645,7 @@ impl<S: X11Selection + 'static> InnerServerState<S> {
+             },
+             toplevel,
+             fullscreen: false,
++            maximized: false,
+             decoration: DecorationsData {
+                 wl: wl_decoration,
+                 satellite: sat_decoration,
+diff --git a/src/xstate/mod.rs b/src/xstate/mod.rs
+index 6f08eb9..ab0356b 100644
+--- a/src/xstate/mod.rs
++++ b/src/xstate/mod.rs
+@@ -293,6 +293,8 @@ impl XState {
+                 self.atoms.motif_wm_hints,
+                 self.atoms.net_wm_state,
+                 self.atoms.wm_fullscreen,
++                self.atoms.wm_max_vert,
++                self.atoms.wm_max_horz,
+                 self.atoms.moveresize,
+             ],
+         );
+@@ -551,15 +553,32 @@ impl XState {
+ 
+                 trace!("_NET_WM_STATE ({action:?}) props: {prop1:?} {prop2:?}");
+ 
++                // (maximised comes as both of its atoms in one message: acted on once)
++                let mut maximized = false;
+                 for prop in [prop1, prop2] {
+                     match prop {
+                         x if x == self.atoms.wm_fullscreen => {
+                             server_state.set_fullscreen(e.window(), action);
+                         }
++                        x if (x == self.atoms.wm_max_vert || x == self.atoms.wm_max_horz)
++                            && !maximized =>
++                        {
++                            maximized = true;
++                            server_state.set_maximized(e.window(), action);
++                        }
+                         _ => {}
+                     }
+                 }
+             }
++            // an app's own minimise button: ICCCM's WM_CHANGE_STATE to IconicState
++            x if x == self.atoms.wm_change_state => {
++                let x::ClientMessageData::Data32(data) = e.data() else {
++                    unreachable!();
++                };
++                if data[0] == WmState::Iconic as u32 {
++                    server_state.minimize_window(e.window());
++                }
++            }
+             x if x == self.atoms.active_win => {
+                 server_state.activate_window(e.window());
+             }
+@@ -905,6 +924,9 @@ xcb::atoms_struct! {
+         wm_pid => b"_NET_WM_PID" only_if_exists = false,
+         net_wm_state => b"_NET_WM_STATE" only_if_exists = false,
+         wm_fullscreen => b"_NET_WM_STATE_FULLSCREEN" only_if_exists = false,
++        wm_max_vert => b"_NET_WM_STATE_MAXIMIZED_VERT" only_if_exists = false,
++        wm_max_horz => b"_NET_WM_STATE_MAXIMIZED_HORZ" only_if_exists = false,
++        wm_change_state => b"WM_CHANGE_STATE" only_if_exists = false,
+         active_win => b"_NET_ACTIVE_WINDOW" only_if_exists = false,
+         client_list => b"_NET_CLIENT_LIST" only_if_exists = false,
+         supported => b"_NET_SUPPORTED" only_if_exists = false,
+@@ -1378,6 +1400,29 @@ impl XConnection for RealConnection {
+         }
+     }
+ 
++    fn set_window_state(&mut self, window: x::Window, fullscreen: bool, maximized: bool) {
++        let mut data = Vec::new();
++        if fullscreen {
++            data.push(self.atoms.wm_fullscreen);
++        }
++        if maximized {
++            data.push(self.atoms.wm_max_vert);
++            data.push(self.atoms.wm_max_horz);
++        }
++        if let Err(e) = self
++            .connection
++            .send_and_check_request(&x::ChangeProperty::<x::Atom> {
++                mode: x::PropMode::Replace,
++                window,
++                property: self.atoms.net_wm_state,
++                r#type: x::ATOM_ATOM,
++                data: &data,
++            })
++        {
++            warn!("Failed to set the state of {window:?} ({e})");
++        }
++    }
++
+     fn focus_window(&mut self, window: x::Window, output_name: Option<String>) {
+         trace!("{window:?} {output_name:?}");
+         if let Err(e) = self.connection.send_and_check_request(&x::SetInputFocus {

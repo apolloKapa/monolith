@@ -592,7 +592,7 @@ run_installer_ui() {
             "For a TV that cuts off the edges of the picture: rebuilds $(hdmi_target) with Monolith's patch, then Settings → Displays can shrink the picture to fit." hdmi
         if [ "$DESKTOP" != hyprland ]; then
             menu_add item "niri extras" "$(v_on "$OPT_NIRI_EXTRAS")" \
-                "Minimise buttons, windows tiled when dragged to a screen's edge, and drawn on both screens while dragged across: rebuilds niri with Monolith's patches." niriextras
+                "Minimise buttons (X11 apps' too), windows tiled when dragged to a screen's edge, drawn on both screens while dragged across: rebuilds niri and xwayland-satellite with Monolith's patches." niriextras
         fi
 
         if [ "$INSTALL_STATE" = current ]; then

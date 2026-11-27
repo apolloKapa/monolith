@@ -127,8 +127,21 @@ prepare() {
 PKGBUILD_END
     # (--nocheck: niri's test suite takes long and isn't what changed; no --needed: it's the
     # installed version on purpose)
+    # makepkg only builds: its -s and -i ran their own sudo, whose password prompt the installer's
+    # panel drew over (the install looked stuck). What it needs to build comes the way every package
+    # does, and the package goes in with the installer's own pacman
     mkdir -p "$(dirname "$log")"
-    if ! (set -o pipefail; cd "$build" && makepkg -si --noconfirm --nocheck 2>&1 | tee "$log"); then
+    local need=() f pkgs=()
+    mapfile -t need < <(cd "$build" && makepkg --printsrcinfo 2>/dev/null | awk -F' = ' '/^\t(make|check)?depends = /{print $2}' | sed 's/[<>=].*//' | sort -u)
+    [ ${#need[@]} -gt 0 ] && { pm_pacman_install "${need[@]}" || true; }
+    if (set -o pipefail; cd "$build" && makepkg --noconfirm --nocheck -f 2>&1 | tee "$log"); then
+        for f in "$build"/*.pkg.tar.*; do
+            case "$f" in *-debug-*|*.sig) ;; *) [ -f "$f" ] && pkgs+=("$f") ;; esac
+        done
+        if [ ${#pkgs[@]} -eq 0 ] || ! (set -o pipefail; _pm_pacman -U --noconfirm "${pkgs[@]}" 2>&1 | tee -a "$log"); then
+            echo -e "  ${C_YELLOW}$what:${RESET} installing the patched $pn failed; left as it was (the log: $log)"
+        fi
+    else
         echo -e "  ${C_YELLOW}$what:${RESET} building $pn with the patches failed; left as it was (the log: $log)"
     fi
     rm -rf "$build"
