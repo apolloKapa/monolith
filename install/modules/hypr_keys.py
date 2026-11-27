@@ -176,7 +176,9 @@ def translate(path, monolith):
             # niri's own commands mean nothing on Hyprland: a script around niri actions (Mod+T:
             # take the window out of floating, then maximize its column) becomes its last action
             z = re.match(r"^\S*monolith zoom (in|out|toggle|off)$", cmd)
-            if "niri msg" in cmd:
+            if re.match(r"^\S*monolith desk maximize$", cmd):
+                got = action("maximize-column", [])
+            elif "niri msg" in cmd:
                 acts = re.findall(r"niri msg action ([a-z-]+)", cmd)
                 got = action(acts[-1], []) if acts else None
             elif z:

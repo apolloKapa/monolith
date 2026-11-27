@@ -162,6 +162,10 @@ case "$1" in
         esac
         ;;
     hub) ipc hub toggle "$(page_for "${2:-search}")" ;;
+    # Meta+T on niri: maximise or back (core/Desk.qml: in Desktop mode a floating window keeps its
+    # border and gaps and floats again after); without the shell, niri's own way
+    desk) ipc desk "${2:-maximize}" 2>/dev/null \
+            || { niri msg -j focused-window | jq -e .is_floating >/dev/null && niri msg action toggle-window-floating; niri msg action maximize-column; } ;;
     search) ipc hub search "$2" ;;
     settings) ipc settings open "${2:-appearance}" ;;
     appimages) ipc appimages open ;;

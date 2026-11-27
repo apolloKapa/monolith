@@ -117,6 +117,9 @@ rules = [
     (r'Mod\+Tab', r'spawn "rofi" "-show" "window"[^}\n]*', 'Mod+Tab { spawn "monolith" "msg" "toggle" "switcher"; }'),
     (r'Mod\+Alt\+V', r'spawn-sh "cliphist list \| rofi -dmenu \| cliphist decode \| wl-copy";', 'Mod+Alt+V { spawn "monolith" "msg" "toggle" "clipboard"; }'),
     (r'Mod\+Alt\+S', r'spawn "(?:[^"]*/)?setwall" "pick";', None),
+    # (Meta+T: maximise through the shell, which keeps a floating window floating in Desktop mode)
+    (r'Mod\+T', r'spawn-sh "niri msg -j focused-window \| jq -e \.is_floating >/dev/null && niri msg action toggle-window-floating; niri msg action maximize-column";',
+     'Mod+T { spawn "monolith" "desk" "maximize"; }'),
 ]
 for key, body, new in rules:
     pat = re.compile(r'^([ \t]*)' + key + r'\s*\{\s*' + body + r'\s*\}[ \t]*\n', re.M)

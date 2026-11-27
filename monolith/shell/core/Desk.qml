@@ -615,10 +615,41 @@ Singleton {
     IpcHandler {
         target: "desk"
         function preview(x: int, y: int, w: int, h: int): void { if (desk.on) desk.preview = { on: true, x: x, y: y, w: w, h: h }; }
+        function maximize(): void { desk.toggleMax(); }
         function previewOff(): void { const p = desk.preview; desk.preview = { on: false, x: p.x, y: p.y, w: p.w, h: p.h }; }
         function windowMenu(addr: string, x: int, y: int, max: bool, pin: bool, title: string): void {
             if (desk.on) desk.winMenu = { addr: addr, x: x, y: y, max: max, pin: pin, title: title };
         }
+    }
+
+    // Meta+T on niri (monolith desk maximize): maximised like on Hyprland, border and gaps kept.
+    // niri draws neither on a window it maximises "to edges", and maximising a column takes the
+    // window out of floating: in Desktop mode it goes into the tiling layout with its column
+    // maximised, and the next press floats it again where it was (it stayed tiled, the column
+    // unmaximised: stuck in the tiling layout). Without Desktop mode, as before
+    property var maxFloated: ({})
+    function toggleMax() {
+        if (Niri.hyprland) {
+            Hyprland.dispatch(Niri.hyprLua ? 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })' : "fullscreen 1");
+            return;
+        }
+        const w = Niri.windows[Niri.focusedWindowId];
+        if (!w) return;
+        const id = String(w.id);
+        let acts;
+        if (w.is_floating) {
+            acts = ["toggle-window-floating --id " + id, "maximize-column"];
+            if (on) { const n = Object.assign({}, maxFloated); n[id] = true; maxFloated = n; }
+        } else if (on && maxFloated[id]) {
+            const n = Object.assign({}, maxFloated); delete n[id]; maxFloated = n;
+            acts = ["maximize-column", "toggle-window-floating --id " + id];
+        } else if (on) {
+            acts = ["toggle-window-floating --id " + id];
+        } else {
+            acts = ["maximize-column"];
+        }
+        // (in order, one niri at a time: the column is the focused window's)
+        Quickshell.execDetached(["sh", "-c", ["focus-window --id " + id].concat(acts).map(a => "niri msg action " + a).join("; ")]);
     }
 
     // niri (with patches/niri-drag-edges.patch, a niri extra): the same, niri telling the edge

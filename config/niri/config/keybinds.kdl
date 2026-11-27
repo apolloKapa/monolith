@@ -64,7 +64,7 @@ binds {
     Mod+R { toggle-window-floating; }
     Mod+F { fullscreen-window; }
     Mod+Shift+F { maximize-column; }
-    Mod+T { spawn-sh "niri msg -j focused-window | jq -e .is_floating >/dev/null && niri msg action toggle-window-floating; niri msg action maximize-column"; }
+    Mod+T { spawn "monolith" "desk" "maximize"; }
     Mod+Ctrl+C { center-visible-columns; }
     Mod+Shift+V { switch-focus-between-floating-and-tiling; }
     Mod+Shift+W { toggle-column-tabbed-display; }

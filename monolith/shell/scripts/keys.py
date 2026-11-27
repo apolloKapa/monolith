@@ -112,7 +112,7 @@ def describe_cmd(cmd):
         if t:
             return MENU.get(t.group(1), t.group(1).capitalize())
         first = sub.split()[0] if sub else ""
-        return {"lock": "Lock the screen", "restart": "Restart the shell", "appimages": "AppImages",
+        return {"lock": "Lock the screen", "restart": "Restart the shell", "appimages": "AppImages", "desk": "Maximise (floating windows too)",
                 "screenshot": "Screenshot" + (" of the whole screen" if "--full" in sub else " of an area") + (", edit it" if "--edit" in sub else ""),
                 "zoom": "Zoom " + (sub.split()[1] if len(sub.split()) > 1 else "")}.get(first, "Monolith: " + sub)
     if re.search(r"wpctl.*SOURCE.*mute", cmd):
