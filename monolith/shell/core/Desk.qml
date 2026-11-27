@@ -676,10 +676,16 @@ Singleton {
         if (cur && Math.abs(cur[0] - wh[0]) < 1 && Math.abs(cur[1] - wh[1]) < 1) return;
         const n = Object.assign({}, workAreas); n[out] = [Math.round(wh[0]), Math.round(wh[1])]; workAreas = n;
     }
-    function floatMax(w, from) {
+    function floatMax(w, from, keep) {
         const id = String(w.id);
         const saved = maxFloated[id];
         const n = Object.assign({}, maxFloated);
+        // (keep: maximised it stays; an app asking again just after full screen, below)
+        if (saved && keep) {
+            const a0 = workArea(outputOf(w));
+            if (a0) niriSize(id, a0[0] - 12, a0[1] - 12, 6, 6, !w.is_floating);
+            return;
+        }
         if (saved) {
             delete n[id]; maxFloated = n;
             niriSize(id, saved.w, saved.h, saved.x, saved.y, !w.is_floating);
@@ -697,32 +703,83 @@ Singleton {
     }
     // the last floating place and size of each window (what an app's own maximise started from)
     property var lastFloat: ({})
+    // which windows are full screen (niri says nothing of it: a tiled window as big as the whole
+    // screen, the taskbar's strip too), and when each last stopped being
+    property var fsNow: ({})
+    property var fsEnd: ({})
+    // niri's own maximise is exactly the working area: as wide as the screen and shorter than it
+    // with the taskbar at the top or bottom (as tall, narrower, at a side), or the working area
+    // niri told us, exactly
+    function looksMaximised(w, sc) {
+        const ws = w.layout ? w.layout.window_size : null;
+        if (!ws || !sc) return false;
+        const known = workAreas[outputOf(w)];
+        if (known) return Math.abs(ws[0] - known[0]) <= 2 && Math.abs(ws[1] - known[1]) <= 2;
+        const side = Theme.barEdge === "left" || Theme.barEdge === "right";
+        return side ? (ws[1] >= sc.height - 2 && ws[0] < sc.width - 2 && ws[0] >= sc.width * 0.85)
+                    : (ws[0] >= sc.width - 2 && ws[1] < sc.height - 2 && ws[1] >= sc.height * 0.8);
+    }
+    property var maxPending: ({})
+    Timer {
+        id: maxCheck
+        interval: 250
+        onTriggered: {
+            const pm = desk.maxPending;
+            desk.maxPending = ({});
+            for (const k in pm) {
+                const w = Niri.windows[k];
+                if (!w || w.is_floating || desk.fsNow[k]) continue;
+                const sc = desk.screenNamed(desk.outputOf(w));
+                if (!desk.looksMaximised(w, sc)) continue;
+                desk.noteWorkArea(desk.outputOf(w), w.layout.window_size);
+                const lf = Object.assign({}, desk.lastFloat); delete lf[k]; desk.lastFloat = lf;
+                // (an app asking for maximised again as it leaves full screen, Electron's way: it
+                // stays maximised. Otherwise pressed again while ours: back to how it was)
+                desk.floatMax(w, pm[k].before, pm[k].keep);
+            }
+        }
+    }
     Connections {
         target: Niri
         function onWindowsChanged() {
             if (Niri.hyprland || !desk.on) return;
             const lf = Object.assign({}, desk.lastFloat);
+            const fn = {}, fe = Object.assign({}, desk.fsEnd);
             for (const k in Niri.windows) {
                 const w = Niri.windows[k];
                 const L = w.layout || {};
+                const scr = desk.screenNamed(desk.outputOf(w));
+                const isFs = !w.is_floating && !!scr && !!L.window_size && L.window_size[0] >= scr.width - 2 && L.window_size[1] >= scr.height - 2;
+                if (isFs) fn[k] = true;
+                else if (desk.fsNow[k]) fe[k] = Date.now();
                 if (w.is_floating && L.window_size && L.tile_pos_in_workspace_view) {
                     lf[k] = { size: L.window_size, pos: L.tile_pos_in_workspace_view };
                     continue;
                 }
                 // an app's own maximise button: niri puts it in the tiling layout, as big as the
-                // working area (which is then known exactly). Floated again and maximised our way
+                // working area (which is then known exactly). Floated again and maximised our way.
+                // Not full screen (a video, a game): that covers the whole screen, the taskbar's
+                // strip too, and was taken for a maximise and undone at once (Discord shrank). With
+                // no strip (the taskbar hiding) the two can't be told apart: left as niri does it
                 const before = desk.lastFloat[k];
                 if (!w.is_floating && before && !desk.isMin(w) && L.window_size) {
                     const sc = desk.screenNamed(desk.outputOf(w));
-                    if (sc && L.window_size[0] >= sc.width * 0.9 && L.window_size[1] >= sc.height * 0.8) {
-                        desk.noteWorkArea(desk.outputOf(w), L.window_size);
-                        delete lf[k];
-                        // (pressed again while ours: back to how it was)
-                        desk.floatMax(w, before);
+                    if (!sc) continue;
+                    const ws = L.window_size;
+                    if (isFs) continue;
+                    // (looked at again a moment later, once it's settled: going full screen, niri
+                    // first tiles it at the size it has, then makes it the screen's. A window we'd
+                    // maximised is as big as a maximise in between, and its full screen was undone)
+                    if (!Theme.barTucks && desk.looksMaximised(w, sc)) {
+                        const pm = Object.assign({}, desk.maxPending); pm[k] = { before: before, keep: Date.now() - (fe[k] || 0) < 2500 };
+                        desk.maxPending = pm;
+                        maxCheck.restart();
                     }
                 }
             }
             desk.lastFloat = lf;
+            desk.fsNow = fn;
+            desk.fsEnd = fe;
         }
     }
 
