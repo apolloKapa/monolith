@@ -35,8 +35,8 @@ PanelWindow {
     Component.onCompleted: app = HubState.taskApp
     readonly property var wins: {
         if (!app) return [];
-        const id = String(app.id).toLowerCase(), out = [];
-        for (const k in Niri.windows) if (String(Niri.windows[k].app_id || "").toLowerCase() === id) out.push(Niri.windows[k]);
+        const out = [];
+        for (const k in Niri.windows) if (Desk.isAppWindow(app.id, Niri.windows[k])) out.push(Niri.windows[k]);
         return out;
     }
     readonly property bool allMin: wins.length > 0 && wins.every(w => Desk.isMin(w))

@@ -45,22 +45,23 @@ Grid {
     readonly property var pinned: Store.get("dock.pinned", null) || Prefs.dockApps.map(a => ({ id: a.desktop_id, name: a.name, icon: a.icon }))
     readonly property var apps: {
         const out = pinned.map(a => ({ id: a.id, name: a.name, icon: a.icon, pinned: true }));
-        const known = out.map(a => String(a.id).toLowerCase());
+        const known = out.map(a => Desk.appKey(a.id));
         const ids = Object.keys(Niri.windows).sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
         for (const k of ids) {
             const w = Niri.windows[k];
-            const id = String(w.app_id || "").toLowerCase();
-            if (id === "" || known.indexOf(id) !== -1) continue;
-            known.push(id);
-            const e = DesktopEntries.byId(w.app_id);
-            out.push({ id: w.app_id, name: e ? e.name : w.app_id, icon: e ? e.icon : w.app_id, pinned: false });
+            if (!w.app_id) continue;
+            // (its app: by its id, or its launcher's: a pinned app's window isn't an app of its own)
+            const app = Desk.windowApp(w);
+            if (known.indexOf(app) !== -1 || known.indexOf(Desk.appKey(w.app_id)) !== -1) continue;
+            known.push(app);
+            const e = DesktopEntries.heuristicLookup(w.app_id);
+            out.push({ id: e ? e.id : w.app_id, name: e ? e.name : w.app_id, icon: e ? e.icon : w.app_id, pinned: false });
         }
         return out;
     }
     function windowsOf(appId) {
         const out = [];
-        const id = String(appId).toLowerCase();
-        for (const k in Niri.windows) if (String(Niri.windows[k].app_id || "").toLowerCase() === id) out.push(Niri.windows[k]);
+        for (const k in Niri.windows) if (Desk.isAppWindow(appId, Niri.windows[k])) out.push(Niri.windows[k]);
         // the one used last first (Hyprland keeps that order; niri: as they are)
         return out.sort((a, b) => (a.focus_history !== undefined ? a.focus_history : 0) - (b.focus_history !== undefined ? b.focus_history : 0));
     }

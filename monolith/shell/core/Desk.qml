@@ -294,6 +294,10 @@ Singleton {
         if (Niri.hyprland) {
             if (Niri.hyprLua) Hyprland.dispatch('hl.dsp.window.fullscreen({ mode = "maximized", window = "' + addr(w) + '" })');
             else { Hyprland.dispatch("focuswindow " + addr(w)); Hyprland.dispatch("fullscreen 1"); }
+        } else if (on) {
+            // (as Meta+T: border and gaps kept, floating again after; niri's own maximising goes
+            // edge to edge, under every floating window)
+            toggleMax(w);
         } else {
             niri(["focus-window", "--id", String(w.id)]);
             niri(["maximize-window-to-edges"]);
@@ -625,12 +629,22 @@ Singleton {
     // maximised, and the next press floats it again where it was (it stayed tiled, the column
     // unmaximised: stuck in the tiling layout). Without Desktop mode, as before
     property var maxFloated: ({})
-    function toggleMax() {
+    // a window's app: windows and their launchers don't always go by one name (a ".desktop"
+    // ending, a window whose app id isn't its launcher's: the launcher's StartupWMClass). The
+    // taskbar's pinned apps missed their own windows: no marks, the window again as an app of its
+    // own, and the pinned app's menu without minimise, maximise or close
+    function appKey(id) { return String(id || "").toLowerCase().replace(/\.desktop$/, ""); }
+    function windowApp(w) {
+        const e = w && w.app_id ? DesktopEntries.heuristicLookup(w.app_id) : null;
+        return e ? appKey(e.id) : appKey(w ? w.app_id : "");
+    }
+    function isAppWindow(appId, w) { const k = appKey(appId); return k !== "" && (appKey(w.app_id) === k || windowApp(w) === k); }
+    function toggleMax(target) {
         if (Niri.hyprland) {
             Hyprland.dispatch(Niri.hyprLua ? 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })' : "fullscreen 1");
             return;
         }
-        const w = Niri.windows[Niri.focusedWindowId];
+        const w = target || Niri.windows[Niri.focusedWindowId];
         if (!w) return;
         const id = String(w.id);
         let acts;
