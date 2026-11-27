@@ -187,9 +187,56 @@ pm_is_installed() {
     pacman -Q "$1" &>/dev/null
 }
 
+# QAdwaitaDecorations (Desktop mode's Adwaita-like title bars on Qt apps): the Qt 6 plugin built
+# here, alone. The AUR's recipe builds the Qt 5 one with it, which needs qt5-wayland-decorations,
+# and that conflicts with Arch's qt5-wayland: yay stopped there ("conflicting dependencies") on
+# most systems. Same source and commit; a name of its own (it provides qadwaitadecorations-qt6), so
+# yay never tries to update it from the AUR's recipe
+_pm_build_qadwaita() {
+    local safe_jobs="$1"
+    local build="${XDG_CACHE_HOME:-"$HOME/.cache"}/monolith-qadwaitadecorations"
+    rm -rf "$build" && mkdir -p "$build" || return 1
+    cat > "$build/PKGBUILD" <<'PKG'
+# built by Monolith's installer: only the Qt 6 half of the AUR's qadwaitadecorations
+pkgname=monolith-qadwaitadecorations-qt6
+pkgver=0.1.7
+pkgrel=1
+_commit=22a97da98a8d91021c63600250711adf4ccf11d7
+pkgdesc='Qt6 decoration plugin implementing Adwaita-like client-side decorations'
+arch=('x86_64' 'x86_64_v3' 'aarch64')
+url='https://github.com/FedoraQt/QAdwaitaDecorations'
+license=('LGPL-2.1-or-later')
+depends=(qt6-base qt6-wayland qt6-svg)
+makedepends=(cmake git make)
+options=('!debug')
+provides=(qadwaitadecorations-qt6)
+conflicts=(qadwaitadecorations-qt6)
+source=("git+https://github.com/FedoraQt/QAdwaitaDecorations.git#commit=$_commit")
+sha256sums=('dab1d24a75ab1efb09153575347db39894b44af8ae80d622e9e2c5f0a36a4b3f')
+
+build() {
+  cmake -B build -S QAdwaitaDecorations -DCMAKE_INSTALL_PREFIX=/usr -DUSE_QT6=true
+  make -C build
+}
+
+package() {
+  DESTDIR="$pkgdir" make -C build install
+}
+PKG
+    (cd "$build" && env MAKEFLAGS="-j$safe_jobs" makepkg -si --noconfirm --needed)
+    local rc=$?
+    rm -rf "$build"
+    return $rc
+}
+
 pm_install_pkg() {
     local pkg="$1"
     local safe_jobs="$2"
+
+    if [ "$pkg" = qadwaitadecorations-qt6 ] && ! pacman -Si "$pkg" &>/dev/null; then
+        _pm_build_qadwaita "$safe_jobs"
+        return
+    fi
 
     # (the lists up to date first: an AUR package's dependencies come from the repos too)
     pm_sync || true
