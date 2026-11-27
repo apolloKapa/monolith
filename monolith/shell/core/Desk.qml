@@ -361,13 +361,14 @@ Singleton {
         Quickshell.execDetached(["sh", "-c",
             'd="${XDG_CONFIG_HOME:-$HOME/.config}/kitty"; [ -f "$d/kitty.conf" ] || exit 0; '
             + 'printf "%s\\n" "# Written by Monolith: Desktop mode on niri turns kitty\'s own title bar on here (niri draws none). Changes here are replaced." > "$d/monolith-desktop.conf"; '
-            + '[ "$1" = on ] && printf "hide_window_decorations no\\n" >> "$d/monolith-desktop.conf"; '
+            + '[ "$1" = on ] && printf "hide_window_decorations no\\nclick_interval 0.22\\n" >> "$d/monolith-desktop.conf"; '
             + 'grep -q "include monolith-desktop.conf" "$d/kitty.conf" || printf "\\n# Monolith Desktop mode (niri): kitty\'s title bar\\ninclude monolith-desktop.conf\\n" >> "$d/kitty.conf"',
             "_", want ? "on" : "off"]);
     }
     // the apps' own title bars, on or back to how you had them
     function bars(want) {
         if (gtkButtons.want === want && !gtkButtons.running) gtkButtons.go(); else gtkButtons.want = want;
+        if (fastClick.want === want && !fastClick.running) fastClick.go(); else fastClick.want = want;
         // (on Hyprland its title bars plugin draws one: kitty's own would make two)
         kittyBars(want && !Niri.hyprland);
         if (Niri.hyprland) { hyprBars(want); return; }
@@ -1075,5 +1076,45 @@ Singleton {
             }
         }
         onExited: { if (!ran) Store.unset("desktop.was.buttons"); if (want !== ran) go(); }
+    }
+    // a quick double click (220 ms, KDE-quick) on the apps' own title bars maximising: GTK's
+    // (gsettings) and Qt's (qt6ct.conf) double-click time while it's on, yours back after (kitty's
+    // is in monolith-desktop.conf; Hyprland's title bars have their own, Desktop mode's setting).
+    // At the usual 400 ms, two clicks on a title bar to move a window maximised it
+    readonly property int fastClickMs: 220
+    Process {
+        id: fastClick
+        property bool want: false
+        property bool ran: false
+        onWantChanged: if (!running) go()
+        function go() {
+            ran = want;
+            command = ["sh", "-c",
+                'k="org.gnome.desktop.peripherals.mouse"; q="${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qt6ct.conf"; '
+                // GTK
+                + 'if command -v gsettings >/dev/null; then '
+                +   'if [ "$1" = on ]; then echo "gtk:$(gsettings get $k double-click 2>/dev/null)"; gsettings set $k double-click "$4"; '
+                +   'elif [ -n "$2" ]; then gsettings set $k double-click "$2"; else gsettings reset $k double-click; fi; fi; '
+                // Qt (qt6ct): the [Interface] key, added when missing; removed again if it wasn't there
+                + 'if [ -f "$q" ]; then '
+                +   'if [ "$1" = on ]; then echo "qt:$(sed -n "s/^double_click_interval=//p" "$q" | head -1)"; v="$4"; '
+                +   'elif [ -n "$3" ]; then v="$3"; else sed -i "/^double_click_interval=/d" "$q"; exit 0; fi; '
+                +   'if grep -q "^double_click_interval=" "$q"; then sed -i "s/^double_click_interval=.*/double_click_interval=$v/" "$q"; '
+                +   'elif grep -q "^\\[Interface\\]" "$q"; then sed -i "/^\\[Interface\\]/a double_click_interval=$v" "$q"; '
+                +   'else printf "\\n[Interface]\\ndouble_click_interval=%s\\n" "$v" >> "$q"; fi; fi',
+                "_", ran ? "on" : "off", String(Store.raw("desktop.was.dblclick", "") || ""), String(Store.raw("desktop.was.qtdblclick", "") || ""), String(fastClickMs)];
+            running = true;
+        }
+        stdout: SplitParser {
+            onRead: line => {
+                // (only the first time: on again after a restart, the value now is ours)
+                const m = /^(gtk|qt):(.*)$/.exec(line);
+                if (!m) return;
+                const v = m[2].replace(/^\D*(\d+).*$/, "$1");
+                const key = m[1] === "gtk" ? "desktop.was.dblclick" : "desktop.was.qtdblclick";
+                if (v !== "" && v !== String(desk.fastClickMs) && Store.raw(key, "") === "") Store.set(key, v);
+            }
+        }
+        onExited: { if (!ran) { Store.unset("desktop.was.dblclick"); Store.unset("desktop.was.qtdblclick"); } if (want !== ran) go(); }
     }
 }

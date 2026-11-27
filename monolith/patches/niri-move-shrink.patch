@@ -1,17 +1,24 @@
 diff --git a/src/layout/mod.rs b/src/layout/mod.rs
-index 6c42ee6..7e0ef5f 100644
+index 6c42ee6..8b81e9c 100644
 --- a/src/layout/mod.rs
 +++ b/src/layout/mod.rs
-@@ -98,6 +98,8 @@ const INTERACTIVE_MOVE_START_THRESHOLD: f64 = 256. * 256.;
+@@ -98,6 +98,15 @@ const INTERACTIVE_MOVE_START_THRESHOLD: f64 = 256. * 256.;
  
  /// Opacity of interactively moved tiles targeting the scrolling layout.
  const INTERACTIVE_MOVE_ALPHA: f64 = 0.75;
 +/// How small a floating window being dragged gets (Monolith's patch).
-+const MOVE_SHRINK: f64 = 0.94;
++const MOVE_SHRINK: f64 = 0.92;
++
++/// The shrink and grow-back's own smooth easing, in real time: the animation slowdown setting
++/// (and a stiff window-movement spring) made it a jump (Monolith's patch).
++pub(crate) fn drag_scale_anim(clock: &Clock, from: f64, to: f64, real_ms: f64) -> Animation {
++    let ms = (real_ms * clock.rate()).round().max(1.) as u64;
++    Animation::ease(clock.clone(), from, to, 0., ms, crate::animation::Curve::EaseOutCubic)
++}
  
  /// Amount of touchpad movement to toggle the overview.
  const OVERVIEW_GESTURE_MOVEMENT: f64 = 300.;
-@@ -435,6 +437,9 @@ struct InteractiveMoveData<W: LayoutElement> {
+@@ -435,6 +444,9 @@ struct InteractiveMoveData<W: LayoutElement> {
      ///
      /// This helps the pointer remain inside the window as it resizes.
      pub(self) pointer_ratio_within_window: (f64, f64),
@@ -21,7 +28,7 @@ index 6c42ee6..7e0ef5f 100644
      /// Config overrides for the output where the window is currently located.
      ///
      /// Cached here to be accessible while an output is removed.
-@@ -2738,6 +2743,11 @@ impl<W: LayoutElement> Layout<W> {
+@@ -2738,6 +2750,11 @@ impl<W: LayoutElement> Layout<W> {
                      return true;
                  }
  
@@ -33,23 +40,15 @@ index 6c42ee6..7e0ef5f 100644
                  // Keep advancing animations if we might need to scroll the view.
                  if !move_.is_floating || self.overview_open {
                      return true;
-@@ -3999,6 +4009,15 @@ impl<W: LayoutElement> Layout<W> {
+@@ -3999,6 +4016,7 @@ impl<W: LayoutElement> Layout<W> {
                      tile.hold_alpha_animation_after_done();
                  }
  
-+                let shrink = is_floating.then(|| {
-+                    Animation::new(
-+                        self.clock.clone(),
-+                        1.,
-+                        MOVE_SHRINK,
-+                        0.,
-+                        self.options.animations.window_movement.0,
-+                    )
-+                });
++                let shrink = is_floating.then(|| drag_scale_anim(&self.clock, 1., MOVE_SHRINK, 160.));
                  let mut data = InteractiveMoveData {
                      tile,
                      output,
-@@ -4007,6 +4026,7 @@ impl<W: LayoutElement> Layout<W> {
+@@ -4007,6 +4025,7 @@ impl<W: LayoutElement> Layout<W> {
                      is_full_width,
                      is_floating,
                      pointer_ratio_within_window,
@@ -57,7 +56,7 @@ index 6c42ee6..7e0ef5f 100644
                      output_config,
                      workspace_config,
                  };
-@@ -4132,6 +4152,18 @@ impl<W: LayoutElement> Layout<W> {
+@@ -4132,6 +4151,18 @@ impl<W: LayoutElement> Layout<W> {
              unreachable!()
          };
  
@@ -76,7 +75,7 @@ index 6c42ee6..7e0ef5f 100644
          for mon in self.monitors_mut() {
              mon.dnd_scroll_gesture_end();
          }
-@@ -4822,6 +4854,7 @@ impl<W: LayoutElement> Layout<W> {
+@@ -4822,6 +4853,7 @@ impl<W: LayoutElement> Layout<W> {
  
          let zoom = self.overview_zoom();
          let mut pos_in_backdrop = move_.tile_render_location(zoom);
@@ -84,7 +83,7 @@ index 6c42ee6..7e0ef5f 100644
          if &move_.output != output {
              // A window being dragged also shows on the other monitors it reaches over, where it
              // is in the global space: it was cut off at its own monitor's edge, then jumped across
-@@ -4831,6 +4864,7 @@ impl<W: LayoutElement> Layout<W> {
+@@ -4831,6 +4863,7 @@ impl<W: LayoutElement> Layout<W> {
              }
              let offset = (move_.output.current_location() - output.current_location()).to_f64();
              pos_in_backdrop += offset;
@@ -92,7 +91,7 @@ index 6c42ee6..7e0ef5f 100644
              let tile = Rectangle::new(pos_in_backdrop, move_.tile.tile_size());
              if !tile.overlaps(Rectangle::from_size(output_size(output))) {
                  return;
-@@ -4840,14 +4874,22 @@ impl<W: LayoutElement> Layout<W> {
+@@ -4840,14 +4873,22 @@ impl<W: LayoutElement> Layout<W> {
          let scale = Scale::from(output.current_scale().fractional_scale());
          let xray_pos = XrayPos::new(pos_in_backdrop, zoom);
  
@@ -120,7 +119,7 @@ index 6c42ee6..7e0ef5f 100644
              });
      }
  
-@@ -4856,6 +4898,7 @@ impl<W: LayoutElement> Layout<W> {
+@@ -4856,6 +4897,7 @@ impl<W: LayoutElement> Layout<W> {
  
          self.is_active = is_active;
  
@@ -193,10 +192,10 @@ index 5ba97a3..83e9255 100644
  
          let elem = RelocateRenderElement::from_element(
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 86c7eba..5106db2 100644
+index 86c7eba..a5348f1 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
-@@ -568,6 +568,23 @@ impl<W: LayoutElement> Tile<W> {
+@@ -568,6 +568,17 @@ impl<W: LayoutElement> Tile<W> {
          )));
      }
  
@@ -205,13 +204,7 @@ index 86c7eba..5106db2 100644
 +    /// its fade or shader.
 +    pub fn start_drop_animation(&mut self, from_scale: f64, origin: Point<f64, Logical>) {
 +        self.open_animation = Some(OpenAnimation::new_drop(
-+            Animation::new(
-+                self.clock.clone(),
-+                0.,
-+                1.,
-+                0.,
-+                self.options.animations.window_movement.0,
-+            ),
++            super::drag_scale_anim(&self.clock, 0., 1., 220.),
 +            from_scale,
 +            origin,
 +        ));
