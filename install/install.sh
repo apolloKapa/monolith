@@ -223,6 +223,8 @@ fi
 step "Settings"
 [ "$IS_REINSTALL" = true ] && rm -f "$SETTINGS_FILE" "$HOME/.config/monolith/next.json"
 init_settings "$PROJECT_ROOT" "$(get_wallpaper_dir)"
+# (the login screen's background, picked in the installer's menu)
+[ "$OPT_SDDM" = true ] && sddm_save_look
 # another shell (Serpantinum) on this PC: leave it and its app colours alone
 share_with_other_shell
 quiet_other_shells

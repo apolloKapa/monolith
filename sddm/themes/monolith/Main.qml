@@ -22,17 +22,24 @@ Rectangle {
         return v !== undefined && v !== null && String(v) !== "" ? String(v) : d;
     }
 
+    // the background you picked (the installer's login screen menu): your wallpaper, monochrome
+    // (it in greys, and everything else in greys and white), your colours (soft light in them) or
+    // black (a dim glow of your accent); moving (slowly drifting and zooming) or still
+    readonly property string look: { const v = cfg("look", "wallpaper"); return ["wallpaper", "mono", "colours", "black"].indexOf(v) !== -1 ? v : "wallpaper"; }
+    readonly property bool moving: cfg("animated", "true") !== "false"
     QtObject {
         id: c
-        readonly property bool light: root.cfg("mode", "dark") === "light"
-        readonly property color primary: root.cfg("primary", light ? "#5d5791" : "#c6bfff")
-        readonly property color onPrimary: root.cfg("onPrimary", light ? "#ffffff" : "#2e295f")
-        readonly property color surface: root.cfg("surface", light ? "#fcf8ff" : "#131318")
-        readonly property color text: root.cfg("onSurface", light ? "#1c1b20" : "#e5e1e9")
-        readonly property color sub: root.cfg("onSurfaceVariant", light ? "#47464f" : "#c8c5d0")
-        readonly property color container: root.cfg("container", light ? "#eae7ef" : "#2a292f")
-        readonly property color error: root.cfg("error", light ? "#ba1a1a" : "#ffb4ab")
-        readonly property color outline: root.cfg("outline", light ? "#c8c5d0" : "#47464f")
+        readonly property bool mono: root.look === "mono"
+        readonly property bool black: root.look === "black"
+        readonly property bool light: !mono && !black && root.cfg("mode", "dark") === "light"
+        readonly property color primary: mono ? "#ececec" : root.cfg("primary", light ? "#5d5791" : "#c6bfff")
+        readonly property color onPrimary: mono ? "#111111" : root.cfg("onPrimary", light ? "#ffffff" : "#2e295f")
+        readonly property color surface: mono ? "#121212" : black ? "#000000" : root.cfg("surface", light ? "#fcf8ff" : "#131318")
+        readonly property color text: mono ? "#f4f4f4" : root.cfg("onSurface", light ? "#1c1b20" : "#e5e1e9")
+        readonly property color sub: mono ? "#b4b4b4" : root.cfg("onSurfaceVariant", light ? "#47464f" : "#c8c5d0")
+        readonly property color container: mono ? "#262626" : black ? "#141414" : root.cfg("container", light ? "#eae7ef" : "#2a292f")
+        readonly property color error: mono ? "#f2a1a1" : root.cfg("error", light ? "#ba1a1a" : "#ffb4ab")
+        readonly property color outline: mono ? "#3c3c3c" : black ? "#2a2a2a" : root.cfg("outline", light ? "#c8c5d0" : "#47464f")
     }
 
     FontLoader { id: sans; source: "font/GoogleSans-VariableFont_GRAD,opsz,wght.ttf" }
@@ -109,24 +116,72 @@ Rectangle {
     }
     Timer { id: msgTimer; interval: 4000; onTriggered: root.message = "" }
 
-    // ── the background: the wallpaper, blurred already (by the shell: no shader needed here,
-    // so it looks the same with software rendering), under a fade; a soft gradient without one ──
+    // ── the background: the picture for the look (blurred and made by the shell already: no
+    // shader needed here, so it looks the same with software rendering), under a fade; a soft
+    // gradient without one (black: black) ──
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0; color: Qt.lighter(c.container, c.light ? 1.0 : 1.15) }
+            GradientStop { position: 0; color: c.black ? "#060608" : Qt.lighter(c.container, c.light ? 1.0 : 1.15) }
             GradientStop { position: 1; color: c.surface }
         }
     }
+    readonly property string bgFile: {
+        const k = look === "mono" ? "backgroundMono" : look === "colours" ? "backdrop" : look === "black" ? "backdropBlack" : "background";
+        return cfg(k, "") !== "" ? "file://" + cfg(k, "") : "";
+    }
+    // moving: drifting a little each way and zooming in and out, each on its own slow beat so it
+    // never quite repeats; the colour looks also shimmer (a mirrored copy fading in and out)
+    property real driftX: 0
+    property real driftY: 0
+    property real zoom: 0
+    property real shimmer: 0
+    SequentialAnimation on driftX {
+        running: root.moving; loops: Animation.Infinite
+        NumberAnimation { from: -1; to: 1; duration: 46000; easing.type: Easing.InOutSine }
+        NumberAnimation { from: 1; to: -1; duration: 46000; easing.type: Easing.InOutSine }
+    }
+    SequentialAnimation on driftY {
+        running: root.moving; loops: Animation.Infinite
+        NumberAnimation { from: -1; to: 1; duration: 33000; easing.type: Easing.InOutSine }
+        NumberAnimation { from: 1; to: -1; duration: 33000; easing.type: Easing.InOutSine }
+    }
+    SequentialAnimation on zoom {
+        running: root.moving; loops: Animation.Infinite
+        NumberAnimation { from: 0; to: 1; duration: 59000; easing.type: Easing.InOutSine }
+        NumberAnimation { from: 1; to: 0; duration: 59000; easing.type: Easing.InOutSine }
+    }
+    SequentialAnimation on shimmer {
+        running: root.moving && (root.look === "colours" || root.look === "black"); loops: Animation.Infinite
+        NumberAnimation { from: 0; to: 1; duration: 17000; easing.type: Easing.InOutSine }
+        NumberAnimation { from: 1; to: 0; duration: 17000; easing.type: Easing.InOutSine }
+    }
     Image {
         id: wall
-        anchors.fill: parent
-        source: root.cfg("background", "") !== "" ? "file://" + root.cfg("background", "") : ""
+        // (a little bigger than the screen, so drifting never shows its edges)
+        width: root.width * 1.12; height: root.height * 1.12
+        x: (root.width - width) / 2 + root.driftX * root.width * 0.035
+        y: (root.height - height) / 2 + root.driftY * root.height * 0.035
+        scale: 1 + root.zoom * 0.06
+        source: root.bgFile
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         smooth: true
         opacity: status === Image.Ready ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+    }
+    Image {
+        visible: (root.look === "colours" || root.look === "black") && root.moving
+        width: wall.width; height: wall.height
+        x: (root.width - width) / 2 - root.driftY * root.width * 0.05
+        y: (root.height - height) / 2 + root.driftX * root.height * 0.04
+        scale: 1.04 + (1 - root.zoom) * 0.06
+        source: visible ? root.bgFile : ""
+        mirror: true
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        smooth: true
+        opacity: status === Image.Ready ? root.shimmer * 0.55 : 0
     }
     Rectangle {
         anchors.fill: parent

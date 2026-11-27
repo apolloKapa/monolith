@@ -76,6 +76,21 @@ _sddm_theme="$(grep -hs '^Current=' /etc/sddm.conf /etc/sddm.conf.d/*.conf 2>/de
 unset _sddm_theme
 REPLACE_DM=false
 SDDM_WAYLAND="$PM_SDDM_WAYLAND_DEFAULT"
+# the login screen's background (sddm.sh: sddm_save_look): your wallpaper, monochrome, your colours
+# or black, moving or still. As set before, on an update
+SDDM_LOOK=wallpaper
+SDDM_ANIM=true
+read -r SDDM_LOOK SDDM_ANIM < <(python3 - "$HOME/.config/monolith/next.json" 2>/dev/null <<'PY' || echo "wallpaper true"
+import json, sys
+try:
+    l = json.load(open(sys.argv[1])).get("login", {})
+except Exception:
+    l = {}
+look = l.get("background", "wallpaper")
+print(look if look in ("wallpaper", "mono", "colours", "black") else "wallpaper", "false" if l.get("animated") is False else "true")
+PY
+)
+[ -n "$SDDM_LOOK" ] || SDDM_LOOK=wallpaper; [ -n "$SDDM_ANIM" ] || SDDM_ANIM=true
 
 USER_NAME="${USER:-$(whoami)}"
 OS_NAME=$(grep '^PRETTY_NAME=' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d "\"'")
@@ -372,6 +387,12 @@ manage_sddm_menu() {
             menu_add item "Turn off $current_dm" "$([ "$REPLACE_DM" = true ] && v_word Yes || printf '%sNo%s' "$DIM" "$RESET")" \
                 "Only one login screen can run: $current_dm is switched off so Monolith's can start instead." rdm
         fi
+        local lookname
+        case "$SDDM_LOOK" in mono) lookname="Monochrome" ;; colours) lookname="Your colours" ;; black) lookname="Black" ;; *) lookname="Your wallpaper" ;; esac
+        menu_add item "Background" "$(v_word "$lookname")" \
+            "Your wallpaper, blurred; Monochrome: it in greys, the rest in greys and white; Your colours: soft light in your theme's colours; Black: a dim glow of your accent. Enter goes through them." look
+        menu_add item "Moving background" "$(v_on "$SDDM_ANIM")" \
+            "The background drifts and zooms very slowly (and shimmers with Your colours and Black). Off: it stays still." anim
         menu_add item "Login screen runs on" "$([ "$SDDM_WAYLAND" = true ] && v_word Wayland || v_word X11)" \
             "Wayland is newer and smoother; X11 works on more graphics drivers. If the login screen stays black, pick X11." way
         menu_add btn "Done" "" "Back to the main menu." done
@@ -384,6 +405,8 @@ manage_sddm_menu() {
                 fi ;;
             rdm) REPLACE_DM=$([ "$REPLACE_DM" = true ] && echo false || echo true) ;;
             way) SDDM_WAYLAND=$([ "$SDDM_WAYLAND" = true ] && echo false || echo true) ;;
+            look) case "$SDDM_LOOK" in wallpaper) SDDM_LOOK=mono ;; mono) SDDM_LOOK=colours ;; colours) SDDM_LOOK=black ;; *) SDDM_LOOK=wallpaper ;; esac ;;
+            anim) SDDM_ANIM=$([ "$SDDM_ANIM" = true ] && echo false || echo true) ;;
             done|exit) break ;;
         esac
     done

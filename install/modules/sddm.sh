@@ -219,3 +219,27 @@ EOF
     echo -e "  \e[32m$(t "installer.deploy.sddm_success")\e[0m"
 }
 
+# the login screen's background, picked in the installer, into Monolith's settings (login.background,
+# login.animated): the shell hands it to the login screen with the rest of your look
+# (core/LoginSync.qml, scripts/login_sync.py). After the settings are made, which a reinstall starts afresh
+sddm_save_look() {
+    local f="$HOME/.config/monolith/next.json"
+    mkdir -p "$(dirname "$f")"
+    python3 - "$f" "${SDDM_LOOK:-wallpaper}" "${SDDM_ANIM:-true}" <<'PY' || true
+import json, os, sys
+path, look, anim = sys.argv[1:4]
+try:
+    data = json.load(open(path))
+except Exception:
+    data = {}
+login = data.get("login") if isinstance(data.get("login"), dict) else {}
+login["background"] = look if look in ("wallpaper", "mono", "colours", "black") else "wallpaper"
+login["animated"] = anim != "false"
+data["login"] = login
+tmp = path + ".tmp"
+with open(tmp, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+os.replace(tmp, path)
+PY
+}

@@ -28,7 +28,11 @@ Singleton {
     readonly property var colors: [
         "primary=" + hex(Theme.accent), "onPrimary=" + hex(Theme.onAccent),
         "surface=" + hex(base), "onSurface=" + hex(Theme.text), "onSurfaceVariant=" + hex(Theme.subtext),
-        "container=" + hex(over(Theme.containerHigh, base)), "error=" + hex(Theme.danger), "outline=" + hex(over(Theme.hairline, base))
+        "container=" + hex(over(Theme.containerHigh, base)), "error=" + hex(Theme.danger), "outline=" + hex(over(Theme.hairline, base)),
+        "accent2=" + hex(over(Theme.accentContainer, base)), "accent3=" + hex(over(Theme.selected, base)),
+        // the login screen's background (the installer's login screen menu): your wallpaper,
+        // monochrome, your colours or black, moving or still
+        "look=" + String(Store.get("login.background", "wallpaper")), "animated=" + (Store.get("login.animated", true) !== false)
     ]
     readonly property string key: [wall, avatar, font, light].concat(colors).join("|")
     onKeyChanged: if (Store.loaded) later.restart()
