@@ -39,8 +39,9 @@ makepkg, for both.)
 
 ## The installer does these for you
 
-`monolith installer` → **niri extras** (minimise buttons, windows across screens while dragged)
-builds niri with niri-minimize.patch and niri-move-across-monitors.patch, and HDMI scaling adds
+`monolith installer` → **niri extras** (minimise buttons, windows tiled when dragged to an edge,
+windows across screens while dragged) builds niri with niri-minimize.patch, niri-drag-edges.patch
+and niri-move-across-monitors.patch, and HDMI scaling adds
 niri-underscan.patch: every niri patch wanted goes into one build (a build with only some would
 lose the others), on Gentoo (Portage's user patches, kept for that version) and Arch (Arch's own
 PKGBUILD, installed over the same version). Remembered, and an update patches niri again after an
@@ -70,6 +71,22 @@ layout of your screens, so it slides across (not in the overview). Made for niri
 the same folder as the others, and they all build together:
 
     sudo cp niri-move-across-monitors.patch /etc/portage/patches/gui-wm/niri-26.04/
+    sudo emerge --oneshot gui-wm/niri
+
+then log out and in.
+
+## niri-drag-edges.patch: tiling a window by dragging it to a screen's edge
+
+KDE Plasma's quick tiling, for Monolith's Desktop mode on niri: a floating window dragged to a
+screen's left or right edge tiles to that half, to a corner (the outer quarter of an edge) that
+quarter, to the top edge it's maximised, with an outline of where it will go once the pointer has
+been there a moment; a tiled window dragged away gets its size back. niri tells other programs
+nothing while a window is dragged: this patch has it say which edge zone the pointer is in (an IPC
+event, `WindowDragEdge`: as the drag starts, when the zone changes, and when the window is let
+go). niri doesn't move the window itself; the shell does (core/Desk.qml), so without Desktop mode
+nothing changes. Made for niri 26.04; it goes in the same folder as the others:
+
+    sudo cp niri-drag-edges.patch /etc/portage/patches/gui-wm/niri-26.04/
     sudo emerge --oneshot gui-wm/niri
 
 then log out and in.

@@ -1,0 +1,293 @@
+diff --git a/niri-ipc/src/lib.rs b/niri-ipc/src/lib.rs
+index 0aa3cb4..25e3dfb 100644
+--- a/niri-ipc/src/lib.rs
++++ b/niri-ipc/src/lib.rs
+@@ -1669,6 +1669,25 @@ pub enum Event {
+         /// The new state of the overview.
+         is_open: bool,
+     },
++    /// A floating window being dragged: the screen edge zone under the pointer.
++    ///
++    /// For a desktop shell to tile it there (a half, a quarter, the whole screen) and to show
++    /// where it will go while it's held. Sent as the drag starts (no zone yet), whenever the zone
++    /// under the pointer changes, and when the window is let go (`ended`). niri doesn't move the
++    /// window itself.
++    WindowDragEdge {
++        /// Id of the window.
++        id: u64,
++        /// Name of the output under the pointer.
++        output: String,
++        /// The zone: `left`, `right`, `top`, `top-left`, `top-right`, `bottom-left`,
++        /// `bottom-right`, or none.
++        zone: Option<String>,
++        /// That output's working area, logical, within the output: x, y, width, height.
++        working_area: (f64, f64, f64, f64),
++        /// Whether the window was let go.
++        ended: bool,
++    },
+     /// The configuration was reloaded.
+     ///
+     /// You will always receive this event when connecting to the event stream, indicating the last
+diff --git a/src/input/move_grab.rs b/src/input/move_grab.rs
+index 8834b10..4cf5d48 100644
+--- a/src/input/move_grab.rs
++++ b/src/input/move_grab.rs
+@@ -14,11 +14,12 @@ use smithay::input::touch::{
+ };
+ use smithay::input::SeatHandler;
+ use smithay::output::Output;
+-use smithay::utils::{IsAlive, Logical, Point, Serial, SERIAL_COUNTER};
++use smithay::utils::{IsAlive, Logical, Point, Serial, Size, SERIAL_COUNTER};
++use smithay::wayland::seat::WaylandFocus;
+ 
+ use crate::input::PointerOrTouchStartData;
+ use crate::niri::State;
+-use crate::utils::get_monotonic_time;
++use crate::utils::{get_monotonic_time, output_size};
+ 
+ pub struct MoveGrab {
+     start_data: PointerOrTouchStartData<State>,
+@@ -30,6 +31,12 @@ pub struct MoveGrab {
+     enable_view_offset: bool,
+     move_icon: CursorIcon,
+ 
++    // A floating window being dragged reports the screen edge zone under the pointer to the IPC
++    // event streams, for a desktop shell to tile it there.
++    floating: bool,
++    edge_zone: Option<&'static str>,
++    edge_started: bool,
++
+     // Accumulated and applied in frame().
+     new_location: Point<f64, Logical>,
+     event_timestamp: Option<Duration>,
+@@ -64,6 +71,9 @@ impl MoveGrab {
+             enable_view_offset,
+             // Moving windows by their titlebars uses the default cursor by default.
+             move_icon: move_icon.unwrap_or(CursorIcon::Default),
++            floating: false,
++            edge_zone: None,
++            edge_started: false,
+             new_location: location,
+             event_timestamp: None,
+             relative_delta: None,
+@@ -99,7 +109,16 @@ impl MoveGrab {
+ 
+                 layout.activate_window(&self.window);
+             }
+-            GestureState::Move => layout.interactive_move_end(&self.window),
++            GestureState::Move => {
++                let under = data
++                    .niri
++                    .output_under(self.last_location)
++                    .map(|(output, pos)| (output.clone(), pos));
++                if let Some((output, pos)) = under {
++                    self.edge_report(data, &output, pos, true);
++                }
++                data.niri.layout.interactive_move_end(&self.window);
++            }
+             GestureState::ViewOffset => {
+                 layout.view_offset_gesture_end(Some(false));
+             }
+@@ -116,6 +135,17 @@ impl MoveGrab {
+     }
+ 
+     fn begin_move(&mut self, data: &mut State) -> bool {
++        self.floating = data
++            .niri
++            .layout
++            .workspaces()
++            .find_map(|(_, _, ws)| {
++                ws.windows()
++                    .any(|w| w.window == self.window)
++                    .then(|| ws.is_floating(&self.window))
++            })
++            .unwrap_or(false);
++
+         if !data.niri.layout.interactive_move_begin(
+             self.window.clone(),
+             &self.start_output,
+@@ -133,9 +163,51 @@ impl MoveGrab {
+                 .set_cursor_image(CursorImageStatus::Named(self.move_icon));
+         }
+ 
++        let output = self.start_output.clone();
++        self.edge_report(data, &output, self.start_pos_within_output, false);
++
+         true
+     }
+ 
++    /// The edge zone under the pointer, to the IPC event streams: as the drag starts, when it
++    /// changes, and when the window is let go. Floating windows only.
++    fn edge_report(
++        &mut self,
++        data: &mut State,
++        output: &Output,
++        pos: Point<f64, Logical>,
++        ended: bool,
++    ) {
++        if !self.floating {
++            return;
++        }
++        let zone = edge_zone(pos, output_size(output));
++        if !ended && self.edge_started && zone == self.edge_zone {
++            return;
++        }
++        self.edge_zone = zone;
++        self.edge_started = true;
++
++        let Some(server) = &data.niri.ipc_server else {
++            return;
++        };
++        let Some(surface) = self.window.wl_surface() else {
++            return;
++        };
++        let Some((mapped, _)) = data.niri.layout.find_window_and_output(&surface) else {
++            return;
++        };
++        let id = mapped.id().get();
++        let area = data
++            .niri
++            .layout
++            .monitor_for_output(output)
++            .map(|mon| mon.working_area())
++            .map(|a| (a.loc.x, a.loc.y, a.size.w, a.size.h))
++            .unwrap_or((0., 0., 0., 0.));
++        server.window_drag_edge(id, output.name(), zone, area, ended);
++    }
++
+     fn begin_view_offset(&mut self, data: &mut State) -> bool {
+         let layout = &mut data.niri.layout;
+         let Some(ws_idx) = layout.workspaces().find_map(|(mon, ws_idx, ws)| {
+@@ -231,10 +303,11 @@ impl MoveGrab {
+                 let ongoing = data.niri.layout.interactive_move_update(
+                     &self.window,
+                     delta,
+-                    output,
++                    output.clone(),
+                     pos_within_output,
+                 );
+                 if ongoing {
++                    self.edge_report(data, &output, pos_within_output, false);
+                     // FIXME: only redraw the previous and the new output.
+                     data.niri.queue_redraw_all();
+                     return true;
+@@ -290,10 +363,68 @@ impl MoveGrab {
+         data.niri.layout.toggle_window_floating(Some(&self.window));
+         data.niri.queue_redraw_all();
+ 
++        // (no longer floating: no edge zone; floating now: reported from the next motion on)
++        if self.floating && self.edge_zone.is_some() {
++            let under = data
++                .niri
++                .output_under(self.last_location)
++                .map(|(output, pos)| (output.clone(), pos));
++            if let Some((output, _)) = under {
++                self.edge_report(data, &output, Point::from((-1., -1.)), false);
++            }
++        }
++        self.floating = !self.floating;
++        self.edge_started = false;
++
+         true
+     }
+ }
+ 
++/// The screen edge zone a point is in (logical, within the output): the left or right half, a
++/// quarter at a corner (the outer quarter of an edge), the top (the whole screen), or none.
++fn edge_zone(pos: Point<f64, Logical>, size: Size<f64, Logical>) -> Option<&'static str> {
++    let e = 2.;
++    let (l, r) = (pos.x <= e && pos.x >= 0., pos.x >= size.w - 1. - e);
++    let (t, b) = (pos.y <= e && pos.y >= 0., pos.y >= size.h - 1. - e);
++    let (qx, qy) = (size.w * 0.25, size.h * 0.25);
++    if l {
++        return Some(if pos.y < qy {
++            "top-left"
++        } else if pos.y > size.h - qy {
++            "bottom-left"
++        } else {
++            "left"
++        });
++    }
++    if r {
++        return Some(if pos.y < qy {
++            "top-right"
++        } else if pos.y > size.h - qy {
++            "bottom-right"
++        } else {
++            "right"
++        });
++    }
++    if t {
++        return Some(if pos.x < qx {
++            "top-left"
++        } else if pos.x > size.w - qx {
++            "top-right"
++        } else {
++            "top"
++        });
++    }
++    if b {
++        if pos.x < qx {
++            return Some("bottom-left");
++        }
++        if pos.x > size.w - qx {
++            return Some("bottom-right");
++        }
++    }
++    None
++}
++
+ impl PointerGrab<State> for MoveGrab {
+     fn motion(
+         &mut self,
+diff --git a/src/ipc/client.rs b/src/ipc/client.rs
+index 40a58ef..7b950da 100644
+--- a/src/ipc/client.rs
++++ b/src/ipc/client.rs
+@@ -480,6 +480,17 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+                     Event::OverviewOpenedOrClosed { is_open: opened } => {
+                         println!("Overview toggled: {opened}");
+                     }
++                    Event::WindowDragEdge {
++                        id,
++                        output,
++                        zone,
++                        ended,
++                        ..
++                    } => {
++                        let zone = zone.as_deref().unwrap_or("none");
++                        let what = if ended { "let go" } else { "dragged" };
++                        println!("Window {id}: {what} on {output}, edge zone {zone}");
++                    }
+                     Event::ConfigLoaded { failed } => {
+                         let status = if failed {
+                             "with an error"
+diff --git a/src/ipc/server.rs b/src/ipc/server.rs
+index db71da6..e80fd62 100644
+--- a/src/ipc/server.rs
++++ b/src/ipc/server.rs
+@@ -134,6 +134,24 @@ impl IpcServer {
+             let _ = stream.disconnect.send_blocking(());
+         }
+     }
++
++    /// A floating window being dragged: the edge zone under the pointer, for a desktop shell.
++    pub fn window_drag_edge(
++        &self,
++        id: u64,
++        output: String,
++        zone: Option<&str>,
++        working_area: (f64, f64, f64, f64),
++        ended: bool,
++    ) {
++        self.send_event(Event::WindowDragEdge {
++            id,
++            output,
++            zone: zone.map(String::from),
++            working_area,
++            ended,
++        });
++    }
+ }
+ 
+ impl Drop for IpcServer {

@@ -621,6 +621,78 @@ Singleton {
         }
     }
 
+    // niri (with patches/niri-drag-edges.patch, a niri extra): the same, niri telling the edge
+    // zone under the pointer as a floating window is dragged (core/Niri.qml dragEdge)
+    property var niriTiled: ({})      // window id -> [w, h]: its size before it was tiled
+    property var niriDrag: null       // { id, output, zone, area, shown } while one is dragged
+    Timer { id: zoneDwell; interval: 75; onTriggered: desk.showNiriZone() }
+    // a zone's box in an output's working area ([x, y, w, h] of it): [x, y, w, h] within the area
+    function zoneRect(z, area) {
+        const G = 6, x = G, y = G, w = area[2] - 2 * G, h = area[3] - 2 * G;
+        const hw = Math.floor((w - G) / 2), hh = Math.floor((h - G) / 2);
+        return ({ "top": [x, y, w, h], "left": [x, y, hw, h], "right": [x + w - hw, y, hw, h],
+                  "top-left": [x, y, hw, hh], "top-right": [x + w - hw, y, hw, hh],
+                  "bottom-left": [x, y + h - hh, hw, hh], "bottom-right": [x + w - hw, y + h - hh, hw, hh] })[z] || null;
+    }
+    function screenNamed(name) { for (const sc of Quickshell.screens) if (sc.name === name) return sc; return null; }
+    function showNiriZone() {
+        const d = niriDrag;
+        if (!d || d.zone === "") return;
+        const r = zoneRect(d.zone, d.area), sc = screenNamed(d.output);
+        if (!r || !sc) return;
+        d.shown = true;
+        preview = { on: true, x: sc.x + d.area[0] + r[0], y: sc.y + d.area[1] + r[1], w: r[2], h: r[3] };
+    }
+    function hidePreview() { const p = preview; if (p.on) preview = { on: false, x: p.x, y: p.y, w: p.w, h: p.h }; }
+    Connections {
+        target: Niri
+        function onDragEdge(id, output, zone, area, ended) {
+            if (!desk.on || Niri.hyprland) return;
+            if (!desk.niriDrag || desk.niriDrag.id !== id) {
+                desk.niriDrag = { id: id, output: output, zone: "", area: area, shown: false };
+                // a tiled window taken away: the size it had (niri keeps it under the pointer)
+                const t = desk.niriTiled[id];
+                if (t && !ended) {
+                    const n = Object.assign({}, desk.niriTiled); delete n[id]; desk.niriTiled = n;
+                    desk.niriSize(id, t[0], t[1]);
+                }
+            }
+            const d = desk.niriDrag;
+            if (ended) {
+                // (put there only when its outline was showing, as KDE does)
+                const go = zone !== "" && zone === d.zone && d.shown;
+                desk.niriDrag = null;
+                zoneDwell.stop();
+                desk.hidePreview();
+                if (go) desk.niriTile(id, zone, area);
+                return;
+            }
+            if (zone !== d.zone || output !== d.output) {
+                d.zone = zone; d.output = output; d.area = area; d.shown = false;
+                desk.hidePreview();
+                zoneDwell.stop();
+                if (zone !== "") zoneDwell.restart();
+            }
+        }
+    }
+    function niriSize(id, w, h, x, y) {
+        // (one after the other: each its own process, they could come in any order)
+        let cmd = "niri msg action set-window-width --id \"$1\" \"$2\"; niri msg action set-window-height --id \"$1\" \"$3\"";
+        if (x !== undefined) cmd += "; niri msg action move-floating-window --id \"$1\" -x \"$4\" -y \"$5\"";
+        Quickshell.execDetached(["sh", "-c", cmd, "_", String(id), String(Math.round(w)), String(Math.round(h)), String(Math.round(x || 0)), String(Math.round(y || 0))]);
+    }
+    function niriTile(id, zone, area) {
+        const w = Niri.windows[id];
+        if (zone === "top") { if (w) maximize(w); return; }
+        const r = zoneRect(zone, area);
+        if (!r) return;
+        if (w && w.layout && w.layout.window_size && !niriTiled[id]) {
+            const n = Object.assign({}, niriTiled); n[id] = [w.layout.window_size[0], w.layout.window_size[1]]; niriTiled = n;
+        }
+        // (move-floating-window counts from the working area's corner, as the zone does)
+        niriSize(id, r[2], r[3], r[0], r[1]);
+    }
+
     // ── each app's window size, remembered (Store desktop.sizes: app id, lower case → [w, h]) ──
     // noted as windows change (niri says when one is resized; Hyprland's sizes come with its other
     // window events, a focus change among them), so the next window of that app opens that big.

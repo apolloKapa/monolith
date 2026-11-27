@@ -5,6 +5,8 @@
 #     niri-minimize.patch              minimise buttons: niri says it can minimise and passes a
 #                                      window's request to the shell (Desktop mode minimises it)
 #     niri-move-across-monitors.patch  a window being dragged is drawn on every screen it reaches
+#     niri-drag-edges.patch            a floating window dragged to a screen's edge or corner: niri
+#                                      says which (WindowDragEdge), Desktop mode tiles it there
 #   HDMI scaling (modules/hdmi.sh), on niri:
 #     niri-underscan.patch
 #   Gentoo: the patches go in Portage's user patches for the installed version and niri is emerged
@@ -15,14 +17,15 @@
 # it. Patches that don't fit a new version are left out (niri stays as it is).
 
 NIRI_EXTRAS_STATE_FILE="$HOME/.local/state/monolith/niri-extras"
-NIRI_EXTRA_PATCHES=(niri-minimize.patch niri-move-across-monitors.patch)
+NIRI_EXTRA_PATCHES=(niri-minimize.patch niri-move-across-monitors.patch niri-drag-edges.patch)
 
 niri_extras_wanted() { [ "$(cat "$NIRI_EXTRAS_STATE_FILE" 2>/dev/null)" = on ]; }
-# the installed niri has them (the minimise request's name is in it)
+# the installed niri has them all (their events' names are in it: one built with only the older
+# extras is patched again)
 niri_extras_patched() {
     local f
     f="$(command -v niri 2>/dev/null)"
-    [ -n "$f" ] && grep -q "WindowMinimizeRequested" "$f" 2>/dev/null
+    [ -n "$f" ] && grep -q "WindowMinimizeRequested" "$f" 2>/dev/null && grep -q "WindowDragEdge" "$f" 2>/dev/null
 }
 # HDMI scaling is one of niri's patches here (on Hyprland it's aquamarine's: hdmi.sh)
 niri_hdmi_wanted() { [ "${OPT_HDMI:-false}" = true ] && [ "$(hdmi_target)" = niri ]; }

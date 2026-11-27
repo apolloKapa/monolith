@@ -194,9 +194,15 @@ Singleton {
             // a window's own minimise button (niri with Monolith's patch, patches/niri-minimize.patch:
             // niri has no minimising of its own; Desktop mode does it, core/Desk.qml)
             minimizeRequested(ev.WindowMinimizeRequested.id);
+        } else if (ev.WindowDragEdge) {
+            // a floating window being dragged, the screen edge zone under the pointer (niri with
+            // Monolith's patches/niri-drag-edges.patch): Desktop mode tiles it there, core/Desk.qml
+            const d = ev.WindowDragEdge;
+            dragEdge(d.id, String(d.output || ""), d.zone || "", d.working_area || [0, 0, 0, 0], d.ended === true);
         }
     }
     signal minimizeRequested(var id)
+    signal dragEdge(var id, string output, string zone, var area, bool ended)
 
     // a window has windows on it: for the status line's occupied dots
     function workspaceHasWindows(wsId) {
