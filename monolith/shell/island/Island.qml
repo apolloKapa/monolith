@@ -108,7 +108,24 @@ PanelWindow {
     // sits under the bar, so the bar slides away for it (real fullscreen covers the bar already);
     // the screen's top edge doesn't bring it back then, it would catch the game's mouse
     readonly property bool covered: Niri.hyprland && Niri.fullscreenOn(modelData.name)
-    readonly property bool tucked: (wantsAway || covered) && !win.shown && (covered || (!sensorHover.hovered && !barHover.hovered))
+    readonly property bool tucked: (wantsAway || covered) && !win.shown && (covered || (!sensorHover.hovered && !(barHover.hovered && !hoverStale)))
+    // A menu closing under a pointer that doesn't move: its "hovered" stays on (nothing says the
+    // pointer left: the menu it was on shrank away from under it), and an auto-hidden bar stayed
+    // out over the windows until the pointer came back to it and left again. Where the pointer was
+    // last seen tells: outside the bar's own row (on the menu), it isn't on the bar. It counts
+    // again the moment the pointer moves over the bar
+    property bool hoverStale: false
+    Timer {
+        id: staleCheck
+        interval: 450
+        onTriggered: {
+            if (!barHover.hovered || win.shown) return;
+            const p = barHover.point.position;
+            const q = body.mapToItem(bar, p.x, p.y);
+            win.hoverStale = q.x < 0 || q.y < -4 || q.x > bar.width || q.y > bar.height + 4;
+        }
+    }
+    Connections { target: win; function onShownChanged() { if (win.shown) { staleCheck.stop(); win.hoverStale = false; } else staleCheck.restart(); } }
     // the Frame, auto-hide: windows make room for the bar while it's out (island/Frame.qml)
     readonly property bool barIsOut: Theme.frameHide && barHere && !tucked && !covered
     onTuckedChanged: if (!side) HubState.setBarTucked(modelData.name, tucked && autohide)
@@ -580,7 +597,12 @@ PanelWindow {
             // at rest the clip would cut the bar's own shadows (Modular's pills) with a hard edge
             clip: win.shown || win.toastGrows || island.height > Theme.islandH + 0.5
 
-            HoverHandler { id: barHover }
+            HoverHandler {
+                id: barHover
+                // (the pointer moving on the bar: it's really there)
+                onPointChanged: if (win.hoverStale) win.hoverStale = false
+                onHoveredChanged: win.hoverStale = false
+            }
             // Theme → Effects (grain, edge light) while it's a menu
             PanelFx { anchors.fill: parent; radius: Theme.rnd(island.rr); visible: win.grown && (Theme.fxGrain || Theme.fxEdge) }
 
