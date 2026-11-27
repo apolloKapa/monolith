@@ -64,13 +64,12 @@ Singleton {
     readonly property var overrides: { Store.revision; return computeOverrides(); }
     function computeOverrides() {
         const m = Store.raw("bar.modules", null) || barDefaults;
-        // the start button and the apps where you put them: in the bar, or in a mini bar. One in a
-        // mini bar stays there and the taskbar is made as ever around what's left (it kept your
-        // whole bar as it was: a mini bar with the apps left the bar with no start button)
-        const minis = Store.raw("bar.minis", []) || [];
+        // the start button and the apps: where you put them in the bar, else the taskbar's middle.
+        // Always in the taskbar: one in a mini bar is left out of it meanwhile (island/MiniBars.qml),
+        // like the dock going into the taskbar. A mini bar with the apps kept your whole bar as it
+        // was (no start button, no apps), then the apps in their own pill beside the taskbar
         const inBar = k => Object.keys(m).some(z => Array.isArray(m[z]) && m[z].indexOf(k) !== -1);
-        const inMini = k => Array.isArray(minis) && minis.some(x => x && x.modules && Array.prototype.slice.call(x.modules).indexOf(k) !== -1);
-        const wanted = ["start", "taskbar"].filter(k => !inBar(k) && !inMini(k));
+        const wanted = ["start", "taskbar"].filter(k => !inBar(k));
         const own = { left: [], leftMid: [], center: [], midRight: [], right: [], free: [], outLeft: [], outRight: [] };
         for (const z in own) own[z] = (m[z] || []).slice();
         // (in your bar: your layout as it is, the other one next to it if it's nowhere)
@@ -81,8 +80,6 @@ Singleton {
             }
             return base(own);
         }
-        // (both in mini bars: nothing for the middle, your bar as it is)
-        if (wanted.length === 0) return base(own);
         const no = k => k !== "taskbar" && k !== "start";
         // (the bar's own middle and in-between modules move to the start of its right end: the
         // taskbar's apps have the middle; at the start, they lead the left end)
